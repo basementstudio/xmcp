@@ -10,6 +10,8 @@ import { createFolder } from "./utils/fs-utils";
 import path from "path";
 import { deleteSync } from "del";
 import { type z } from "zod";
+import { spawn } from "child_process";
+import nodemon from "nodemon";
 
 export type CompilerMode = "development" | "production";
 
@@ -25,11 +27,11 @@ export async function compile({
   const startTime = Date.now();
   let compilerStarted = false;
 
-  const xmpcConfig = getConfig(configFilePath);
-  let config = getWebpackConfig(mode, xmpcConfig);
+  const xmcpConfig = getConfig(configFilePath);
+  let config = getWebpackConfig(mode, xmcpConfig);
 
-  if (xmpcConfig.webpack) {
-    config = xmpcConfig.webpack(config);
+  if (xmcpConfig.webpack) {
+    config = xmcpConfig.webpack(config);
   }
 
   let pathList: string[] = [];
@@ -85,10 +87,65 @@ export async function compile({
           const endTime = Date.now();
           const duration = endTime - startTime;
           console.log(`Compiled in ${chalk.bold.green(`${duration}ms`)}`);
-          onFirstBuild(mode, xmpcConfig);
+          onFirstBuild(mode, xmcpConfig);
         }
       });
     });
+}
+
+function startSseServer() {
+  console.log(chalk.bold.green("Starting SSE server..."));
+
+  nodemon({
+    script: path.join(process.cwd(), "dist/sse.js"),
+    watch: [path.join(process.cwd(), "dist")],
+    ext: "js",
+    delay: 1000, // Delay to avoid excessive restarts
+  });
+
+  // Log when nodemon starts/restarts the server
+  nodemon
+    .on("start", () => {
+      console.log(chalk.green("SSE server started"));
+    })
+    .on("restart", (files) => {
+      console.log(chalk.yellow("SSE server restarted"));
+    })
+    .on("crash", () => {
+      console.error(chalk.red("SSE server crashed"));
+      // Optional: restart the server after a delay
+      setTimeout(() => {
+        nodemon.emit("restart");
+      }, 5000);
+    })
+    .on("quit", () => {
+      console.log(chalk.yellow("SSE server terminated"));
+      process.exit();
+    });
+
+  process.on("SIGINT", () => {
+    nodemon.emit("quit");
+  });
+
+  process.on("SIGTERM", () => {
+    nodemon.emit("quit");
+  });
+
+  process.on("SIGUSR2", () => {
+    nodemon.emit("restart");
+  });
+
+  process.on("SIGUSR1", () => {
+    nodemon.emit("restart");
+  });
+
+  process.on("exit", () => {
+    nodemon.emit("quit");
+  });
+
+  process.on("uncaughtException", () => {
+    nodemon.emit("quit");
+  });
 }
 
 function generateCode(pathlist: string[]) {
@@ -98,9 +155,13 @@ function generateCode(pathlist: string[]) {
 
 function onFirstBuild(mode: CompilerMode, xmcpConfig: XmcpConfig) {
   if (mode === "development") {
-    console.log(chalk.bold.green("Starting inspector..."));
-    const { spawn } = require("child_process");
+    if (xmcpConfig.sse) {
+      startSseServer();
+    }
 
+    console.log(chalk.bold.green("Starting inspector..."));
+
+    // start inspector
     const inspectorArgs = ["@modelcontextprotocol/inspector@latest"];
 
     if (xmcpConfig.stdio) {

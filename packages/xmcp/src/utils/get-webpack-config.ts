@@ -32,12 +32,13 @@ export function getWebpackConfig(
       alias: {
         "node:process": "process",
       },
+      extensions: [".ts", ".js"],
     },
     plugins: [new InjectRuntimePlugin()],
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.(ts|js)$/,
           use: "swc-loader",
         },
       ],
