@@ -332,6 +332,11 @@ export class StatelessStreamableHTTPTransport {
   }
 
   private setupRoutes(): void {
+    this.app.options("*", (_req: Request, res: Response) => {
+      // CORS middleware has already run, so we just need to return OK
+      res.status(200).end();
+    })
+
     this.app.get("/health", (_req: Request, res: Response) => {
       res.status(200).json({
         status: "ok",
