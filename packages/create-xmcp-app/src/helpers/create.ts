@@ -6,6 +6,7 @@ import { renameFiles } from "./rename.js";
 import { updatePackageJson } from "./update-package.js";
 import { install } from "./install.js";
 import { generateConfig } from "./generate-config.js";
+import { initGit } from "./git.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,7 @@ interface ProjectOptions {
   useLocalXmcp?: boolean;
   deployToVercel?: boolean;
   skipInstall?: boolean;
+  initializeGit?: boolean;
 }
 
 /**
@@ -41,6 +43,7 @@ export function createProject(options: ProjectOptions): void {
     useLocalXmcp,
     deployToVercel,
     skipInstall,
+    initializeGit,
   } = options;
 
   // Ensure the project directory exists
@@ -75,5 +78,10 @@ export function createProject(options: ProjectOptions): void {
   // Install project dependencies
   if (!skipInstall) {
     install(projectPath, packageManager);
+  }
+
+  // Initialize git repository if requested
+  if (initializeGit) {
+    initGit(projectPath);
   }
 }
