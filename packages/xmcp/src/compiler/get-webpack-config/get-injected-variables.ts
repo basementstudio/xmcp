@@ -19,6 +19,12 @@ type CorsConfig = {
   maxAge?: number;
 };
 
+const DEFAULT_CORS: CorsConfig = {
+  origin: "*",
+  allowedHeaders: ["content-type", "mcp-session-id", "mcp-protocol-version"],
+  exposedHeaders: ["mcp-session-id"],
+};
+
 /**
  * The XMCP runtime uses variables that are not defined by default.
  *
@@ -29,20 +35,19 @@ export function getInjectedVariables(xmcpConfig: XmcpParsedConfig) {
 
   const definedVariables: Record<string, string | number | boolean> = {};
 
-  if (xmcpConfig["http"]) {
+  const httpConfig = xmcpConfig["http"];
+  if (httpConfig) {
     // define variables
     definedVariables.HTTP_DEBUG = mode === "development";
     let cors: CorsConfig = {};
-    if (typeof xmcpConfig["http"] === "object") {
-      definedVariables.HTTP_PORT = xmcpConfig["http"].port;
+    if (typeof httpConfig === "object") {
+      definedVariables.HTTP_PORT = httpConfig.port;
       definedVariables.HTTP_BODY_SIZE_LIMIT = JSON.stringify(
-        xmcpConfig["http"].bodySizeLimit
+        httpConfig.bodySizeLimit
       );
-      definedVariables.HTTP_ENDPOINT = JSON.stringify(
-        xmcpConfig["http"].endpoint
-      );
+      definedVariables.HTTP_ENDPOINT = JSON.stringify(httpConfig.endpoint);
       definedVariables.HTTP_STATELESS = DEFAULT_HTTP_STATELESS;
-      cors = xmcpConfig["http"].cors || {};
+      cors = httpConfig.cors === true ? DEFAULT_CORS : httpConfig.cors || {};
     } else {
       // http config is boolean
       definedVariables.HTTP_PORT = DEFAULT_HTTP_PORT;
