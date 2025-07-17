@@ -13,14 +13,17 @@ export const DEFAULT_HTTP_STATELESS = true;
 export const DEFAULT_TOOLS_DIR = "src/tools";
 
 // cors config schema
-const corsConfigSchema = z.object({
-  origin: z.union([z.string(), z.array(z.string()), z.boolean()]).optional(),
-  methods: z.union([z.string(), z.array(z.string())]).optional(),
-  allowedHeaders: z.union([z.string(), z.array(z.string())]).optional(),
-  exposedHeaders: z.union([z.string(), z.array(z.string())]).optional(),
-  credentials: z.boolean().optional(),
-  maxAge: z.number().optional(),
-});
+const corsConfigSchema = z.union([
+  z.object({
+    origin: z.union([z.string(), z.array(z.string()), z.boolean()]).optional(),
+    methods: z.union([z.string(), z.array(z.string())]).optional(),
+    allowedHeaders: z.union([z.string(), z.array(z.string())]).optional(),
+    exposedHeaders: z.union([z.string(), z.array(z.string())]).optional(),
+    credentials: z.boolean().optional(),
+    maxAge: z.number().optional(),
+  }),
+  z.literal(true),
+]);
 
 // oauth endpoints schema
 const oauthEndpointsSchema = z.object({
