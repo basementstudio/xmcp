@@ -35,10 +35,12 @@ const program = new Command()
   .option("--use-npm", "Use npm as package manager (default: use npm)")
   .option("--use-yarn", "Use yarn as package manager")
   .option("--use-pnpm", "Use pnpm as package manager")
+  .option("--use-bun", "Use bun as package manager")
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--vercel", "Add Vercel support for deployment", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--skip-git", "Skip initializing git repository", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -83,6 +85,7 @@ const program = new Command()
     let deployToVercel = options.vercel;
     let skipInstall = options.skipInstall;
     let transports = ["http"];
+    let initializeGit = !options.skipGit;
 
     // Handle transport selection from CLI options
     if (options.http || options.stdio) {
@@ -94,8 +97,14 @@ const program = new Command()
     if (!options.yes) {
       if (options.useYarn) packageManager = "yarn";
       if (options.usePnpm) packageManager = "pnpm";
+      if (options.useBun) packageManager = "bun";
 
-      if (!options.useYarn && !options.usePnpm && !options.useNpm) {
+      if (
+        !options.useYarn &&
+        !options.usePnpm &&
+        !options.useBun &&
+        !options.useNpm
+      ) {
         const pmAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -105,6 +114,7 @@ const program = new Command()
               { name: "npm", value: "npm" },
               { name: "yarn", value: "yarn" },
               { name: "pnpm", value: "pnpm" },
+              { name: "bun", value: "bun" },
             ],
             default: "npm",
           },
@@ -176,6 +186,7 @@ const program = new Command()
       // Use command-line options when --yes is provided
       if (options.useYarn) packageManager = "yarn";
       if (options.usePnpm) packageManager = "pnpm";
+      if (options.useBun) packageManager = "bun";
     }
 
     const spinner = ora("Creating your xmcp app...").start();
@@ -188,6 +199,7 @@ const program = new Command()
         useLocalXmcp,
         deployToVercel,
         skipInstall,
+        initializeGit,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
@@ -205,6 +217,9 @@ const program = new Command()
       } else if (packageManager === "pnpm") {
         skipInstall && console.log(`  ${chalk.cyan("pnpm install")}`);
         console.log(`  ${chalk.cyan("pnpm dev")}`);
+      } else if (packageManager === "bun") {
+        skipInstall && console.log(`  ${chalk.cyan("bun install")}`);
+        console.log(`  ${chalk.cyan("bun dev")}`);
       } else {
         skipInstall && console.log(`  ${chalk.cyan("npm install")}`);
         console.log(`  ${chalk.cyan("npm run dev")}`);

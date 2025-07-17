@@ -12,6 +12,8 @@ function getInstallCommand(packageManager: string): string {
       return "yarn install --check-engines xmcp@latest";
     case "pnpm":
       return "pnpm install xmcp@latest";
+    case "bun":
+      return "bun install xmcp@latest";
     case "npm":
     default:
       // npm automatically checks engines by default
