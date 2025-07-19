@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from "http";
 
 export interface HttpTransportOptions {
   port?: number;
+  host?: string;
   endpoint?: string;
   bodySizeLimit?: string;
   debug?: boolean;

@@ -1,29 +1,40 @@
 // TODO create a shaded utility to type injected variables shaded between the runtime and the xmcp compiler
 
-import {
-  DEFAULT_HTTP_BODY_SIZE_LIMIT,
-  DEFAULT_HTTP_ENDPOINT,
-  DEFAULT_HTTP_PORT,
-  DEFAULT_HTTP_STATELESS,
-  XmcpParsedConfig,
-} from "@/compiler/parse-xmcp-config";
+import { XmcpParsedConfig } from "@/compiler/parse-xmcp-config";
 import { compilerContext } from "../compiler-context";
-
-// Add this type for local use
-type CorsConfig = {
-  origin?: string | string[] | boolean;
-  methods?: string | string[];
-  allowedHeaders?: string | string[];
-  exposedHeaders?: string | string[];
-  credentials?: boolean;
-  maxAge?: number;
-};
+import {
+  injectCorsVariables,
+  InjectedVariables,
+  injectHttpVariables,
+  injectOAuthVariables,
+  injectPathsVariables,
+} from "../config/injection";
 
 /**
  * The XMCP runtime uses variables that are not defined by default.
  *
  * This utility will define those variables based on the user's config.
  */
+
+export function getInjectedVariables(
+  xmcpConfig: XmcpParsedConfig
+): InjectedVariables {
+  const { mode } = compilerContext.getContext();
+
+  const httpVariables = injectHttpVariables(xmcpConfig.http, mode);
+  const corsVariables = injectCorsVariables(xmcpConfig.http);
+  const oauthVariables = injectOAuthVariables(xmcpConfig);
+  const pathsVariables = injectPathsVariables(xmcpConfig);
+
+  return {
+    ...httpVariables,
+    ...corsVariables,
+    ...oauthVariables,
+    ...pathsVariables,
+  };
+}
+
+/*
 export function getInjectedVariables(xmcpConfig: XmcpParsedConfig) {
   const { mode } = compilerContext.getContext();
 
@@ -77,3 +88,4 @@ export function getInjectedVariables(xmcpConfig: XmcpParsedConfig) {
 
   return definedVariables;
 }
+*/

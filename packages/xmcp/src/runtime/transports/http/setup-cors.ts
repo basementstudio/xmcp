@@ -1,7 +1,7 @@
 import { Response } from "express";
-import { CorsOptions } from "./stateless-streamable-http";
+import { CorsConfig } from "@/compiler/config/schemas";
 
-export function setResponseCorsHeaders(cors: CorsOptions, res: Response) {
+export function setResponseCorsHeaders(cors: CorsConfig, res: Response) {
   // set cors headers dynamically
   if (cors.origin !== undefined)
     res.setHeader(

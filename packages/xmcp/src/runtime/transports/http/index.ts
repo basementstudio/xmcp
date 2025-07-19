@@ -3,17 +3,26 @@ import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "../../../types/middleware";
+import { CorsConfig } from "@/compiler/config/schemas";
+
+// by the time this is run, the config is already parsed and injected as object
+// the injection handles the boolean case
+// perhaps this should be an exported type from the compiler config
+type RuntimeHttpConfig = {
+  port?: number;
+  host?: string;
+  bodySizeLimit?: number;
+  debug?: boolean;
+  endpoint?: string;
+  stateless?: boolean; // stateless right now is the only option supported
+};
 
 // @ts-expect-error: injected by compiler
-const port = HTTP_PORT as number;
+const httpConfig = HTTP_CONFIG as RuntimeHttpConfig;
 // @ts-expect-error: injected by compiler
-const debug = HTTP_DEBUG as boolean;
-// @ts-expect-error: injected by compiler
-const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
-// @ts-expect-error: injected by compiler
-const endpoint = HTTP_ENDPOINT as string;
-// @ts-expect-error: injected by compiler
-const stateless = HTTP_STATELESS as boolean;
+const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
+
+// middleware
 // @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
@@ -21,40 +30,26 @@ const middleware = INJECTED_MIDDLEWARE as () =>
     }>
   | undefined;
 
-// cors config
-// @ts-expect-error: injected by compiler
-const corsOrigin = HTTP_CORS_ORIGIN as string;
-// @ts-expect-error: injected by compiler
-const corsMethods = HTTP_CORS_METHODS as string;
-// @ts-expect-error: injected by compiler
-const corsAllowedHeaders = HTTP_CORS_ALLOWED_HEADERS as string;
-// @ts-expect-error: injected by compiler
-const corsExposedHeaders = HTTP_CORS_EXPOSED_HEADERS as string;
-// @ts-expect-error: injected by compiler
-const corsCredentials = HTTP_CORS_CREDENTIALS as boolean;
-// @ts-expect-error: injected by compiler
-const corsMaxAge = HTTP_CORS_MAX_AGE as number;
-
 // oauth config
 // @ts-expect-error: injected by compiler
 const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
 
 async function main() {
   const options = {
-    port,
-    debug,
-    bodySizeLimit,
-    endpoint,
-    stateless,
+    port: httpConfig?.port,
+    host: httpConfig?.host,
+    debug: httpConfig?.debug,
+    bodySizeLimit: httpConfig?.bodySizeLimit?.toString(),
+    endpoint: httpConfig?.endpoint,
   };
 
   const corsOptions = {
-    origin: corsOrigin,
-    methods: corsMethods,
-    allowedHeaders: corsAllowedHeaders,
-    exposedHeaders: corsExposedHeaders,
-    credentials: corsCredentials,
-    maxAge: corsMaxAge,
+    origin: corsConfig.origin,
+    methods: corsConfig.methods,
+    allowedHeaders: corsConfig.allowedHeaders,
+    exposedHeaders: corsConfig.exposedHeaders,
+    credentials: corsConfig.credentials,
+    maxAge: corsConfig.maxAge,
   };
 
   let middlewareFn: RequestHandler[] | undefined = undefined;
@@ -82,7 +77,6 @@ async function main() {
     }
   }
 
-  // should validate for stateless but it is currently the only option supported
   const transport = new StatelessStreamableHTTPTransport(
     createServer,
     options,
