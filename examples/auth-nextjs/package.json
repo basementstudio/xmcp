@@ -1,0 +1,30 @@
+{
+  "name": "auth-nextjs",
+  "description": "Add xmcp to a nextjs app with auth",
+  "scripts": {
+    "dev": "xmcp dev & next dev --turbopack",
+    "build": "xmcp build && next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@vercel/mcp-adapter": "^0.11.1",
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "xmcp": "workspace:*",
+    "zod": "3.24.4"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "swc-loader": "^0.2.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
