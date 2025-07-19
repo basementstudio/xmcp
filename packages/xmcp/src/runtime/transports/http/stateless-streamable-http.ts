@@ -287,7 +287,7 @@ export class StatelessStreamableHTTPTransport {
     middlewares?: RequestHandler[]
   ) {
     this.options = {
-      bindToLocalhost: true,
+      bindToLocalhost: false,
       ...options,
     };
     this.app = express();
