@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# xmcp <> Better Auth Example
 
-## Getting Started
+This example demonstrates how to integrate Better Auth with xmcp in a Next.js application, using PostgreSQL as the database.
 
-First, run the development server:
+## Quick Start
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. **Install dependencies:**
+
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables:**
+   Create a `.env` file with:
+
+   ```
+   DATABASE_URL=postgresql://username:password@localhost:5432/your_database
+   ```
+
+   (or the connection options for your database of choice)
+
+3. **Set up the database:**
+
+   ```bash
+   npx @better-auth/cli generate
+   ```
+
+   This will output a file with the database schema, which you can then use to create your database tables. <- this has to be done manually or with an ORM.
+
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+## How It Works
+
+The MCP server is protected with Better Auth authentication. The key integration is in `src/app/mcp/route.ts`:
+
+```typescript
+import { withMcpAuth } from "better-auth/plugins";
+
+const handler = withMcpAuth(auth, (req) => {
+  return xmcpHandler(req);
+});
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This ensures all MCP requests are authenticated before being processed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Authentication Flow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Connecting from a client to the MCP server will trigger the authentication flow.
+2. Users visit `/login` to authenticate
+3. Better Auth handles OAuth and email/password authentication
+4. You can now access the MCP server tools
+
+## Project Structure
+
+- `src/app/mcp/route.ts` - Protected MCP endpoint
+- `src/app/login/page.tsx` - Login page
+- `src/app/api/auth/[...all]/route.ts` - Auth API routes
+- `src/lib/auth.ts` - Better Auth configuration (database, plugins, etc.)
+- `src/lib/auth-client.ts` - Better Auth client (for the login page)
+- `src/app/.well-known/oauth-authorization-server/route.ts` - OAuth Authorization Server
+- `src/tools/` - Your MCP tools (example: `greet.ts`)
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Better Auth Documentation](https://www.better-auth.com/docs/installation)
+- [xmcp Documentation](https://xmcp.dev)
