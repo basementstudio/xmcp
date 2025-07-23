@@ -1,4 +1,4 @@
-// packages/xmcp/src/types/tool.ts
+import { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp";
 import { z } from "zod";
 
 export interface ToolAnnotations {
@@ -24,17 +24,12 @@ export interface ToolMetadata {
   annotations?: ToolAnnotations;
 }
 
-export interface Tool {
-  type: string;
-  handler: (args: any) => any;
-  metadata: ToolMetadata;
-  schema: Record<string, z.ZodType>;
-}
-
 export type ToolSchema = Record<
   string,
   z.ZodType<unknown, z.ZodTypeDef, unknown>
 >;
+
+export type ToolExtraArguments = Parameters<ToolCallback<undefined>>[0];
 
 export type InferSchema<T extends ToolSchema> = {
   [K in keyof T]: z.infer<T[K]>;
