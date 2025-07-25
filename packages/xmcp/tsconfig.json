@@ -2,9 +2,7 @@
   "extends": "./xmcp.tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "declarationMap": false,
+    "declarationMap": false
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

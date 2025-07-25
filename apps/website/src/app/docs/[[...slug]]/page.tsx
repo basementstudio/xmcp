@@ -13,10 +13,11 @@ export async function generateMetadata({
 }) {
   const slug = (await params).slug;
   const articleSlug = slug ? slug.join("/") : "index";
-  
-  const canonicalUrl = articleSlug === "index" 
-    ? "https://xmcp.dev/docs"
-    : `https://xmcp.dev/docs/${articleSlug}`;
+
+  const canonicalUrl =
+    articleSlug === "index"
+      ? "https://xmcp.dev/docs"
+      : `https://xmcp.dev/docs/${articleSlug}`;
 
   return {
     alternates: {

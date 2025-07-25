@@ -10,13 +10,6 @@
     "skipLibCheck": true,
     "rootDir": "./src"
   },
-  "include": [
-    "xmcp-env.d.ts",
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "templates"
-  ]
+  "include": ["xmcp-env.d.ts", "src/**/*"],
+  "exclude": ["node_modules", "dist", "templates"]
 }

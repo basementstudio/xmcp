@@ -7,13 +7,8 @@
     "strict": true,
     "skipLibCheck": true,
     "paths": {
-      "@xmcp/*": [
-        "./.xmcp/*"
-      ]
-    },
+      "@xmcp/*": ["./.xmcp/*"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "xmcp-env.d.ts"
-  ],
+  "include": ["src/**/*", "xmcp-env.d.ts"]
 }
