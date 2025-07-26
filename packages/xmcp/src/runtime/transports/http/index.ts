@@ -84,7 +84,7 @@ async function main() {
     oauthConfig,
     middlewareFn
   );
-  transport.start();
+  await transport.start();
 }
 
 main();

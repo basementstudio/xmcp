@@ -20,6 +20,7 @@ import { httpContextProvider } from "./http-context";
 import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
 import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
+import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
 
@@ -283,7 +284,7 @@ export class StatelessStreamableHTTPTransport {
     };
     this.app = express();
     this.server = http.createServer(this.app);
-    this.port = options.port ?? parseInt(process.env.PORT || "3001", 10);
+    this.port = options.port ?? parseInt(process.env.PORT || "3002", 10);
     this.endpoint = options.endpoint ?? "/mcp";
     this.debug = options.debug ?? false;
     this.createServerFn = createServerFn;
@@ -397,26 +398,27 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
-  public start(): void {
+  public async start(): Promise<void> {
     const host = this.options.host || "127.0.0.1";
+    const port = await findAvailablePort(this.port, host);
 
-    this.server.listen(this.port, host, () => {
+    this.server.listen(port, host, () => {
       console.log(
-        `${greenCheck} MCP Server running on http://${host}:${this.port}${this.endpoint}`
+        `${greenCheck} MCP Server running on http://${host}:${port}${this.endpoint}`
       );
 
       if (this.oauthProxy && this.debug) {
         console.log(`🔐 OAuth endpoints available:`);
         console.log(
-          `   Discovery: http://${host}:${this.port}/.well-known/oauth-authorization-server`
+          `   Discovery: http://${host}:${port}/.well-known/oauth-authorization-server`
         );
         console.log(
-          `   Authorize: http://${host}:${this.port}/oauth2/authorize`
+          `   Authorize: http://${host}:${port}/oauth2/authorize`
         );
-        console.log(`   Token: http://${host}:${this.port}/oauth2/token`);
-        console.log(`   Revoke: http://${host}:${this.port}/oauth2/revoke`);
+        console.log(`   Token: http://${host}:${port}/oauth2/token`);
+        console.log(`   Revoke: http://${host}:${port}/oauth2/revoke`);
         console.log(
-          `   Introspect: http://${host}:${this.port}/oauth2/introspect`
+          `   Introspect: http://${host}:${port}/oauth2/introspect`
         );
       }
 
