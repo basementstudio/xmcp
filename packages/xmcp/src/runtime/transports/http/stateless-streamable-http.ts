@@ -332,7 +332,7 @@ export class StatelessStreamableHTTPTransport {
     });
 
     this.app.get("/", (_req: Request, res: Response) => {
-      res.send(homeTemplate(this.endpoint));
+      res.send(homeTemplate(this.endpoint, process.cwd()));
     });
 
     if (this.oauthProxy) {
