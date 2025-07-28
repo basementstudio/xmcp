@@ -1,9 +1,10 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Router } from "express";
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "../../../types/middleware";
 import { CorsConfig } from "@/compiler/config/schemas";
+import { processMiddleware } from "@/auth";
 
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
@@ -26,7 +27,7 @@ const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
-      default: Middleware;
+      default: Middleware[];
     }>
   | undefined;
 
@@ -56,13 +57,26 @@ async function main() {
     maxAge: corsConfig.maxAge,
   };
 
-  let middlewareFn: RequestHandler[] | undefined = undefined;
+  let middlewares;
+  let routers;
 
+  // process the middleware content
   if (middleware) {
     const middlewareModule = await middleware();
     if (middlewareModule && middlewareModule.default) {
       const defaultExport = middlewareModule.default;
 
+      const { middlewaresList, routersList } = processMiddleware(defaultExport);
+
+      middlewares = middlewaresList;
+      routers = routersList;
+    }
+  }
+
+  /* if (middleware) {
+    const middlewareModule = await middleware();
+    if (middlewareModule && middlewareModule.default) {
+      const defaultExport = middlewareModule.default;
       if (Array.isArray(defaultExport)) {
         // Handle array of middlewares
         middlewareFn = defaultExport.filter(
@@ -79,15 +93,15 @@ async function main() {
     } else {
       throw new Error("Middleware module does not export a default middleware");
     }
-  }
+  } */
 
   const transport = new StatelessStreamableHTTPTransport(
     createServer,
     options,
     corsOptions,
     oauthConfig,
-    middlewareFn,
-    betterAuth
+    middlewares,
+    routers
   );
   await transport.start();
 }
