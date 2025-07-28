@@ -10,14 +10,10 @@ export type {
 } from "./types/tool";
 
 export type { XmcpConfigOuputSchema as XmcpConfig } from "./compiler/config";
-export { apiKeyAuthMiddleware } from "./auth/api-key";
-export { jwtAuthMiddleware } from "./auth/jwt";
 export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
-
-// dummy middleware
-export {
-  dummyMiddleware,
-  dummyMiddlewareAndRouter,
-  betterAuthMiddlewareAndRouter,
-} from "./auth";
+export { apiKeyAuthMiddleware } from "./auth/api-key";
+export { jwtAuthMiddleware } from "./auth/jwt";
+export { betterAuthProvider } from "./auth/better-auth";
+// TO DO remove dummy middleware
+export { dummyMiddleware, dummyMiddlewareAndRouter } from "./auth/dummy";
