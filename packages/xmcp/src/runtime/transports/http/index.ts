@@ -1,4 +1,3 @@
-import { RequestHandler, Router } from "express";
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
@@ -34,10 +33,6 @@ const middleware = INJECTED_MIDDLEWARE as () =>
 // oauth config
 // @ts-expect-error: injected by compiler
 const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
-
-// better auth
-// @ts-expect-error: injected by compiler
-const betterAuth = BETTER_AUTH as BetterAuthInstance | undefined;
 
 async function main() {
   const options = {
