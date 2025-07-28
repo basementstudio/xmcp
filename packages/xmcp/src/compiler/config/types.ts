@@ -4,6 +4,7 @@ export type {
   StdioTransportConfig,
   CorsConfig,
   OAuthConfig,
+  BetterAuthConfig,
   ExperimentalConfig,
   PathsConfig,
   WebpackConfig,

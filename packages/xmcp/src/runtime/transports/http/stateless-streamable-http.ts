@@ -22,7 +22,11 @@ import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
-import { CorsConfig } from "@/compiler/config/schemas";
+import { BetterAuthConfig, CorsConfig } from "@/compiler/config/schemas";
+
+// better auth stuff
+import { toNodeHandler } from "better-auth/node";
+import { BetterAuthInstance, betterAuthProvider } from "@/auth/better-auth";
 
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
@@ -271,13 +275,16 @@ export class StatelessStreamableHTTPTransport {
   private corsConfig: CorsConfig;
   private oauthProxy: OAuthProxy | undefined;
   private middlewares: RequestHandler[] | undefined;
+  private betterAuth: BetterAuthConfig | undefined;
+  private auth: BetterAuthInstance | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = {},
     oauthConfig?: OAuthProxyConfig | null,
-    middlewares?: RequestHandler[]
+    middlewares?: RequestHandler[],
+    betterAuth?: BetterAuthConfig // todo pass the auth config injected
   ) {
     this.options = {
       ...options,
@@ -290,6 +297,13 @@ export class StatelessStreamableHTTPTransport {
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
     this.middlewares = middlewares;
+
+    this.betterAuth = betterAuth;
+    this.auth = betterAuthProvider(this.betterAuth);
+
+    /*     console.log("betterAuth", this.betterAuth);
+    console.log("auth", this.auth);
+ */
 
     // setup oauth proxy if configuration is provided
     if (oauthConfig) {
@@ -307,6 +321,69 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
+  private setupBetterAuth(): RequestHandler | null {
+    if (!this.betterAuth) {
+      return null;
+    }
+
+    // setup discovery route
+    this.app.get(
+      "/.well-known/oauth-authorization-server",
+      async (_req, res) => {
+        try {
+          const config = await (this.auth as any).api.getMcpOAuthConfig();
+          res.json(config);
+        } catch (error) {
+          res.status(500).json({ error: "Failed to get OAuth config" });
+        }
+      }
+    );
+
+    this.app.all("/api/auth/*", toNodeHandler(this.auth as any));
+
+    // return the authentication middleware
+    return async (req: Request, res: Response, next: NextFunction) => {
+      // Only apply auth middleware to the MCP endpoint
+      if (req.path !== this.endpoint) {
+        return next();
+      }
+
+      try {
+        const config = await (this.betterAuth as any).api.getMcpOAuthConfig();
+
+        // get session
+        const session = await (this.betterAuth as any).api.getMcpSession({
+          headers: req.headers as unknown as HeadersInit,
+        });
+
+        if (!session || !session.user) {
+          // return oauth authorization server config
+          res.status(401).json(config);
+          return;
+        }
+
+        // session is valid, proceed to next middleware
+        next();
+      } catch (error) {
+        console.error("[better auth] Authentication check failed:", error);
+        // on auth error, return authorization server config
+        try {
+          const config = await (this.betterAuth as any).api.getMcpOAuthConfig();
+          res.status(401).json(config);
+        } catch (configError) {
+          res.status(500).json({
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Authentication required but OAuth config unavailable",
+            },
+            id: null,
+          });
+        }
+      }
+    };
+  }
+
   private setupMiddleware(bodySizeLimit: string): void {
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const cors = this.corsConfig;
@@ -314,6 +391,19 @@ export class StatelessStreamableHTTPTransport {
       setResponseCorsHeaders(cors, res);
       next();
     });
+
+    // --------------- login page from better auth ---------------
+    /*     this.app.get("/login", (req, res) => {
+      res.send(loginTemplate(req.query as Record<string, string>));
+    }); */
+
+    // --------------- better auth ---------------
+    // Mount express json middleware after Better Auth handler
+    // or only apply it to routes that don't interact with Better Auth
+    const betterAuthMiddleware = this.setupBetterAuth();
+    if (betterAuthMiddleware) {
+      this.app.use(betterAuthMiddleware);
+    }
 
     this.app.use(express.json({ limit: bodySizeLimit }));
 
@@ -353,10 +443,13 @@ export class StatelessStreamableHTTPTransport {
       this.app.use(this.middlewares);
     }
 
+    // --------------- oauth proxy ---------------
+    // TO DO validate theyoauth and better auth are not both present
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.middleware);
     }
 
+    // /mcp endpoint handler - authentication is handled by middleware
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       await this.handleStatelessRequest(req, res);
     });
@@ -412,14 +505,10 @@ export class StatelessStreamableHTTPTransport {
         console.log(
           `   Discovery: http://${host}:${port}/.well-known/oauth-authorization-server`
         );
-        console.log(
-          `   Authorize: http://${host}:${port}/oauth2/authorize`
-        );
+        console.log(`   Authorize: http://${host}:${port}/oauth2/authorize`);
         console.log(`   Token: http://${host}:${port}/oauth2/token`);
         console.log(`   Revoke: http://${host}:${port}/oauth2/revoke`);
-        console.log(
-          `   Introspect: http://${host}:${port}/oauth2/introspect`
-        );
+        console.log(`   Introspect: http://${host}:${port}/oauth2/introspect`);
       }
 
       this.setupShutdownHandlers();

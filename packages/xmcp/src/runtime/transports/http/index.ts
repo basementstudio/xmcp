@@ -34,6 +34,10 @@ const middleware = INJECTED_MIDDLEWARE as () =>
 // @ts-expect-error: injected by compiler
 const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
 
+// better auth
+// @ts-expect-error: injected by compiler
+const betterAuth = BETTER_AUTH as BetterAuthInstance | undefined;
+
 async function main() {
   const options = {
     port: httpConfig?.port,
@@ -82,7 +86,8 @@ async function main() {
     options,
     corsOptions,
     oauthConfig,
-    middlewareFn
+    middlewareFn,
+    betterAuth
   );
   await transport.start();
 }
