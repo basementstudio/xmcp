@@ -298,13 +298,6 @@ export class StatelessStreamableHTTPTransport {
     this.middlewares = middlewares;
     this.routers = routers;
 
-    /*     this.betterAuth = betterAuth;
-    this.auth = betterAuthProvider(this.betterAuth); */
-
-    /*     console.log("betterAuth", this.betterAuth);
-    console.log("auth", this.auth);
- */
-
     // setup oauth proxy if configuration is provided
     if (oauthConfig) {
       this.oauthProxy = createOAuthProxy(oauthConfig);
@@ -389,7 +382,9 @@ export class StatelessStreamableHTTPTransport {
 
     // routes beyond this point get intercepted by the middleware
     if (this.middlewares && this.middlewares.length > 0) {
-      this.app.use(this.middlewares);
+      for (const middleware of this.middlewares) {
+        this.app.use(middleware);
+      }
     }
 
     // --------------- oauth proxy ---------------

@@ -1,4 +1,5 @@
 import { toNodeHandler } from "better-auth/node";
+import { betterAuth } from "better-auth";
 import {
   NextFunction,
   Router,
@@ -7,6 +8,7 @@ import {
   Response,
 } from "express";
 import { Pool } from "pg";
+import { mcp } from "better-auth/plugins";
 
 export type MiddlewareAndRouter = {
   middleware: RequestHandler;
@@ -98,7 +100,13 @@ export function dummyMiddlewareAndRouter(): Middleware {
       console.log("dummyMiddlewareAndRouter");
       next();
     },
-    router: Router(),
+    router: (() => {
+      const router = Router();
+      router.get("/random", (_req, res) => {
+        res.json({ random: Math.random() });
+      });
+      return router;
+    })(),
   };
 }
 
@@ -112,45 +120,67 @@ type BetterAuthConfig = {
   loginPage: string;
 };
 
+type BetterAuthInstance = ReturnType<typeof betterAuth>;
+
 export function betterAuthMiddlewareAndRouter(
   auth: BetterAuthConfig
 ): Middleware {
+  const betterAuthInstance = betterAuth({
+    database: auth.database,
+    baseURL: auth.baseURL,
+    secret: auth.secret,
+    emailAndPassword: {
+      enabled: auth.emailAndPassword.enabled,
+    },
+    plugins: [mcp({ loginPage: auth.loginPage })],
+  });
+
   return {
-    middleware: betterAuthMiddleware(auth),
-    router: betterAuthRouter(auth),
+    middleware: betterAuthMiddleware(betterAuthInstance),
+    router: betterAuthRouter(betterAuthInstance),
   };
 }
 
-export function betterAuthRouter(auth: BetterAuthConfig): Router {
+export function betterAuthRouter(
+  betterAuthInstance: BetterAuthInstance
+): Router {
   const router = Router();
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
-      const config = await (auth as any).api.getMcpOAuthConfig();
+      const config = await (betterAuthInstance as any).api.getMcpOAuthConfig();
       res.json(config);
     } catch (error) {
       res.status(500).json({ error: "Failed to get OAuth config" });
     }
   });
 
-  router.all("/api/auth/*", toNodeHandler(auth as any));
+  router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
 
   return router;
 }
 
-export function betterAuthMiddleware(auth: BetterAuthConfig): RequestHandler {
+export function betterAuthMiddleware(
+  betterAuthInstance: BetterAuthInstance
+): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // Only apply auth middleware to the MCP endpoint
+    // TO DO:
+    // this should actually be reading from the endpoint config
+    // harcoded temp
+    if (!req.path.startsWith("/mcp")) {
+      next();
+      return;
+    }
 
     try {
-      const config = await (auth as any).api.getMcpOAuthConfig();
+      const config = await (betterAuthInstance as any).api.getMcpOAuthConfig();
 
       // get session
-      const session = await (auth as any).api.getMcpSession({
+      const session = await (betterAuthInstance as any).api.getMcpSession({
         headers: req.headers as unknown as HeadersInit,
       });
 
-      if (!session || !session.user) {
+      if (!session) {
         // return oauth authorization server config
         res.status(401).json(config);
         return;
@@ -162,7 +192,9 @@ export function betterAuthMiddleware(auth: BetterAuthConfig): RequestHandler {
       console.error("[better auth] Authentication check failed:", error);
       // on auth error, return authorization server config
       try {
-        const config = await (auth as any).api.getMcpOAuthConfig();
+        const config = await (
+          betterAuthInstance as any
+        ).api.getMcpOAuthConfig();
         res.status(401).json(config);
       } catch (configError) {
         res.status(500).json({

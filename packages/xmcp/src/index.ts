@@ -14,3 +14,10 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
+
+// dummy middleware
+export {
+  dummyMiddleware,
+  dummyMiddlewareAndRouter,
+  betterAuthMiddlewareAndRouter,
+} from "./auth";
