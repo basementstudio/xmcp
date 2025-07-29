@@ -1,12 +1,12 @@
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import type { XmcpConfigOuputSchema } from "@/compiler/config";
 import { compilerContext } from "../compiler-context";
 import {
   injectCorsVariables,
-  InjectedVariables,
   injectHttpVariables,
   injectOAuthVariables,
   injectPathsVariables,
   injectStdioVariables,
+  InjectedVariables,
 } from "../config/injection";
 
 /**
@@ -15,7 +15,8 @@ import {
  * This utility will define those variables based on the user's config.
  */
 export function getInjectedVariables(
-  xmcpConfig: XmcpConfigOuputSchema
+  xmcpConfig: XmcpConfigOuputSchema,
+  projectPath?: string
 ): InjectedVariables {
   const { mode } = compilerContext.getContext();
 
@@ -23,7 +24,7 @@ export function getInjectedVariables(
   const corsVariables = injectCorsVariables(xmcpConfig.http);
   const oauthVariables = injectOAuthVariables(xmcpConfig);
   const pathsVariables = injectPathsVariables(xmcpConfig);
-  const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
+  const stdioVariables = injectStdioVariables(xmcpConfig.stdio, projectPath);
 
   return {
     ...httpVariables,

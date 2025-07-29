@@ -4,7 +4,7 @@ import {
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
 } from "./utils";
-import { HttpTransportConfig } from "./schemas/transport/http";
+import type { HttpTransportConfig } from "./schemas/transport/http";
 
 export function injectHttpVariables(
   httpConfig: HttpTransportConfig | boolean,
@@ -64,7 +64,7 @@ export function injectPathsVariables(userConfig: any) {
 
 export type PathsVariables = ReturnType<typeof injectPathsVariables>;
 
-export function injectStdioVariables(stdioConfig: any) {
+export function injectStdioVariables(stdioConfig: any, projectPath?: string) {
   if (!stdioConfig) return {};
 
   const debug = typeof stdioConfig === "object" ? stdioConfig.debug : false;
@@ -72,6 +72,7 @@ export function injectStdioVariables(stdioConfig: any) {
   return {
     STDIO_CONFIG: JSON.stringify({
       debug,
+      projectPath: projectPath || process.cwd(),
     }),
   };
 }

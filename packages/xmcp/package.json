@@ -70,6 +70,7 @@
     "memfs": "^4.17.2",
     "raw-body": "^3.0.0",
     "swc-loader": "^0.2.6",
+    "terminal-link": "^4.0.0",
     "tsx": "^4.19.4",
     "webpack": "^5.99.7",
     "webpack-node-externals": "^3.0.0",

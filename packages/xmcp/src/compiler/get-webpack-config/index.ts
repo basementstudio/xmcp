@@ -1,8 +1,8 @@
 import {
-  Configuration,
   DefinePlugin,
   ProvidePlugin,
   BannerPlugin,
+  Configuration,
 } from "webpack";
 import path from "path";
 import { distOutputPath, adapterOutputPath } from "@/utils/constants";
@@ -93,7 +93,7 @@ export function getWebpackConfig(
   config.plugins!.push(new ProvidePlugin(providedPackages));
 
   // add defined variables to config
-  const definedVariables = getInjectedVariables(xmcpConfig);
+  const definedVariables = getInjectedVariables(xmcpConfig, processFolder);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
   // add clean plugin
