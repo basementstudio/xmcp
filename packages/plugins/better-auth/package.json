@@ -41,9 +41,9 @@
   ],
   "scripts": {
     "dev": "pnpm run dev:main & pnpm run dev:ui",
-    "dev:main": "cross-env NODE_ENV=development tsx --watch --tsconfig ./tsconfig.json ./bundler/build-main.ts",
+    "dev:main": "tsc --watch",
     "dev:ui": "vite --config ./ui/vite.config.mjs",
-    "build": "rm -rf dist && cross-env NODE_ENV=production tsx --tsconfig ./tsconfig.json ./bundler/index.ts",
+    "build": "rm -rf dist && tsc && pnpm run build:ui",
     "build:ui": "cd ui && vite build --config ./vite.config.mjs",
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
