@@ -73,14 +73,6 @@ export function getExternals(): Configuration["externals"] {
         return callback(null, `commonjs ${pathRequest}`);
       }
 
-      /**
-       * Externalize npm packages - anything that doesn't start with . or /
-       * and isn't already handled above should be treated as an external dependency
-       */
-      if (!request.startsWith(".") && !request.startsWith("/")) {
-        return callback(null, `commonjs ${request}`);
-      }
-
       // Bundle relative imports and absolute paths
       callback();
     },
