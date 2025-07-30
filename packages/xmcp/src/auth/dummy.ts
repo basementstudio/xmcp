@@ -1,4 +1,4 @@
-import { XmcpMiddleware } from ".";
+import { XmcpMiddleware } from "@/types/middleware";
 import { Router } from "express";
 
 // create a dummy middleware that is the type of middleware

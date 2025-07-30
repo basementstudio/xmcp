@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-export { type Middleware } from "./types/middleware";
+export { type XmcpMiddleware } from "./types/middleware";
 dotenv.config();
 
 export type {
@@ -14,6 +14,5 @@ export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
-export { betterAuthProvider } from "./auth/better-auth";
 // TO DO remove dummy middleware
 export { dummyMiddleware, dummyMiddlewareAndRouter } from "./auth/dummy";
