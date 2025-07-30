@@ -1,0 +1,80 @@
+{
+  "name": "@xmcp-dev/better-auth",
+  "description": "Better Auth integration for xmcp",
+  "version": "0.0.1",
+  "author": {
+    "name": "Basement Studio",
+    "email": "hello@basement.studio",
+    "url": "https://basement.studio"
+  },
+  "contributors": [
+    {
+      "name": "Valentina Bearzotti",
+      "email": "valebearzotti1@gmail.com",
+      "url": "https://github.com/valebearzotti"
+    },
+    {
+      "name": "Matias Gonzalez Fernandez",
+      "email": "matiasngf@hotmail.com",
+      "url": "https://github.com/matiasngf"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "better-auth",
+    "authentication",
+    "mcp",
+    "oauth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/better-auth"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "pnpm run dev:main & pnpm run dev:ui",
+    "dev:main": "cross-env NODE_ENV=development tsx --watch --tsconfig ./tsconfig.json ./bundler/build-main.ts",
+    "dev:ui": "vite --config ./ui/vite.config.mjs",
+    "build": "rm -rf dist && cross-env NODE_ENV=production tsx --tsconfig ./tsconfig.json ./bundler/index.ts",
+    "build:ui": "cd ui && vite build --config ./vite.config.mjs",
+    "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
+  },
+  "dependencies": {
+    "better-auth": "^1.3.4",
+    "express": "^4.19.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router": "^7.7.1",
+    "react-router-dom": "^7.7.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22",
+    "@types/pg": "^8.15.4",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "chalk": "^5.2.0",
+    "cross-env": "^7.0.3",
+    "fs-extra": "^11.3.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.0.4",
+    "vite": "^5.1.0",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "pg": "^8.16.3",
+    "xmcp": "^0.1.7"
+  }
+}
