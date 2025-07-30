@@ -1,6 +1,6 @@
 import { IncomingHttpHeaders } from "http";
 import { BetterAuthInstanceWithMcp } from "./better-auth.js";
-import { createContext } from "./context.js";
+import { createContext } from "xmcp/development";
 
 interface BetterAuthContext {
   api: BetterAuthInstanceWithMcp["api"];
