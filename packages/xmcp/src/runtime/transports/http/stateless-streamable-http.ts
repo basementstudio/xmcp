@@ -24,6 +24,7 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
+import { Provider } from "@/auth";
 
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
@@ -271,19 +272,14 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private oauthProxy: OAuthProxy | undefined;
-  private middlewares: RequestHandler[] | undefined;
-  private routers: Router[] | undefined;
-  /*   private betterAuth: BetterAuthConfig | undefined;
-  private auth: BetterAuthInstance | undefined; */
+  private providers: Provider[] | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = {},
     oauthConfig?: OAuthProxyConfig | null,
-    middlewares?: RequestHandler[],
-    routers?: Router[]
-    /* betterAuth?: BetterAuthConfig // todo pass the auth config injected */
+    providers?: Provider[]
   ) {
     this.options = {
       ...options,
@@ -295,17 +291,21 @@ export class StatelessStreamableHTTPTransport {
     this.debug = options.debug ?? false;
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
-    this.middlewares = middlewares;
-    this.routers = routers;
+    this.providers = providers;
 
     // setup oauth proxy if configuration is provided
     if (oauthConfig) {
       this.oauthProxy = createOAuthProxy(oauthConfig);
     }
 
-    this.setupMiddleware(options.bodySizeLimit || "10mb");
+    this.setupInitialRoutes();
+    this.setupInitialMiddleware();
 
-    this.setupRoutes();
+    this.setupProviders();
+
+    this.setupEndpointRoute();
+
+    this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
   }
 
   private log(message: string, ...args: any[]): void {
@@ -314,7 +314,21 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
-  private setupMiddleware(bodySizeLimit: string): void {
+  private setupProviders(): void {
+    if (this.providers) {
+      for (const provider of this.providers) {
+        if (provider.router) {
+          this.app.use(provider.router);
+        }
+
+        if (provider.middleware) {
+          this.app.use(provider.middleware);
+        }
+      }
+    }
+  }
+
+  private setupInitialMiddleware(): void {
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const cors = this.corsConfig;
       // set cors headers dynamically
@@ -322,34 +336,13 @@ export class StatelessStreamableHTTPTransport {
       next();
     });
 
-    // --------------- login page from better auth ---------------
-    /*     this.app.get("/login", (req, res) => {
-      res.send(loginTemplate(req.query as Record<string, string>));
-    }); */
-
-    if (this.middlewares && this.middlewares.length > 0) {
-      for (const middleware of this.middlewares) {
-        this.app.use(middleware);
-      }
-    }
-
-    // --------------- better auth ---------------
-    // Mount express json middleware after Better Auth handler
-    // or only apply it to routes that don't interact with Better Auth
-    /* const betterAuthMiddleware = this.setupBetterAuth();
-    if (betterAuthMiddleware) {
-      this.app.use(betterAuthMiddleware);
-    } */
-
-    this.app.use(express.json({ limit: bodySizeLimit }));
-
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       this.log(`${req.method} ${req.path}`);
       next();
     });
   }
 
-  private setupRoutes(): void {
+  private setupInitialRoutes(): void {
     this.app.get("/health", (_req: Request, res: Response) => {
       res.status(200).json({
         status: "ok",
@@ -362,12 +355,7 @@ export class StatelessStreamableHTTPTransport {
       res.send(homeTemplate(this.endpoint));
     });
 
-    if (this.routers && this.routers.length > 0) {
-      for (const router of this.routers) {
-        this.app.use(router);
-      }
-    }
-
+    // to do move this to a separate provider with the same approach as better auth
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.router);
     }
@@ -380,20 +368,15 @@ export class StatelessStreamableHTTPTransport {
       });
     });
 
-    // routes beyond this point get intercepted by the middleware
-    if (this.middlewares && this.middlewares.length > 0) {
-      for (const middleware of this.middlewares) {
-        this.app.use(middleware);
-      }
-    }
-
     // --------------- oauth proxy ---------------
     // TO DO validate theyoauth and better auth are not both present
+    // move this to a separate provider with the same approach as better auth
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.middleware);
     }
+  }
 
-    // /mcp endpoint handler - authentication is handled by middleware
+  private setupEndpointRoute(): void {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       await this.handleStatelessRequest(req, res);
     });

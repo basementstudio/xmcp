@@ -1,9 +1,9 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
-import { Middleware } from "../../../types/middleware";
+import { XmcpMiddleware } from "@/types/middleware";
 import { CorsConfig } from "@/compiler/config/schemas";
-import { processMiddleware } from "@/auth";
+import { Provider, processProviders } from "@/auth";
 
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
@@ -26,7 +26,7 @@ const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
-      default: Middleware[];
+      default: XmcpMiddleware[];
     }>
   | undefined;
 
@@ -52,51 +52,24 @@ async function main() {
     maxAge: corsConfig.maxAge,
   };
 
-  let middlewares;
-  let routers;
+  let providers: Provider[] = [];
 
-  // process the middleware content
+  // process the middleware file content splitting into providers (middlewares and/or routers) preserving sequence
   if (middleware) {
     const middlewareModule = await middleware();
     if (middlewareModule && middlewareModule.default) {
       const defaultExport = middlewareModule.default;
 
-      const { middlewaresList, routersList } = processMiddleware(defaultExport);
-
-      middlewares = middlewaresList;
-      routers = routersList;
+      providers = processProviders(defaultExport);
     }
   }
-
-  /* if (middleware) {
-    const middlewareModule = await middleware();
-    if (middlewareModule && middlewareModule.default) {
-      const defaultExport = middlewareModule.default;
-      if (Array.isArray(defaultExport)) {
-        // Handle array of middlewares
-        middlewareFn = defaultExport.filter(
-          (mw): mw is RequestHandler => typeof mw === "function"
-        );
-      } else if (typeof defaultExport === "function") {
-        // Handle single middleware
-        middlewareFn = [defaultExport];
-      } else {
-        throw new Error(
-          "Middleware module does not export a valid RequestHandler or array of RequestHandlers"
-        );
-      }
-    } else {
-      throw new Error("Middleware module does not export a default middleware");
-    }
-  } */
 
   const transport = new StatelessStreamableHTTPTransport(
     createServer,
     options,
     corsOptions,
     oauthConfig,
-    middlewares,
-    routers
+    providers
   );
   await transport.start();
 }
