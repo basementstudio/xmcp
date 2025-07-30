@@ -2,7 +2,7 @@
   <a href="https://xmcp.dev">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://assets.basehub.com/bf7c3bb1/303b8a62053c9d86ca3b972b5597ab5c/x.png">
-      <img alt="XMCP logo" src="https://assets.basehub.com/bf7c3bb1/303b8a62053c9d86ca3b972b5597ab5c/x.png" height="128">
+      <img alt="xmcp logo" src="https://assets.basehub.com/bf7c3bb1/303b8a62053c9d86ca3b972b5597ab5c/x.png" height="128">
     </picture>
   </a>
   <h1>xmcp</h1>
