@@ -9,6 +9,11 @@ export default defineConfig({
     outDir: "../dist/auth-ui",
     emptyOutDir: true,
     rollupOptions: {
+      input: {
+        email: path.resolve(__dirname, "email.html"),
+        google: path.resolve(__dirname, "google.html"),
+        "email-google": path.resolve(__dirname, "email-google.html"),
+      },
       output: {
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith(".css")) {
