@@ -1,12 +1,12 @@
-import type { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOuputSchema } from "@/compiler/config";
 import { compilerContext } from "../compiler-context";
 import {
-    type InjectedVariables,
-    injectCorsVariables,
-    injectHttpVariables,
-    injectOAuthVariables,
-    injectPathsVariables,
-    injectStdioVariables,
+  injectCorsVariables,
+  InjectedVariables,
+  injectHttpVariables,
+  injectOAuthVariables,
+  injectPathsVariables,
+  injectStdioVariables,
 } from "../config/injection";
 
 /**
@@ -15,21 +15,21 @@ import {
  * This utility will define those variables based on the user's config.
  */
 export function getInjectedVariables(
-	xmcpConfig: XmcpConfigOuputSchema,
+  xmcpConfig: XmcpConfigOuputSchema
 ): InjectedVariables {
-	const { mode } = compilerContext.getContext();
+  const { mode } = compilerContext.getContext();
 
-	const httpVariables = injectHttpVariables(xmcpConfig.http, mode);
-	const corsVariables = injectCorsVariables(xmcpConfig.http);
-	const oauthVariables = injectOAuthVariables(xmcpConfig);
-	const pathsVariables = injectPathsVariables(xmcpConfig);
-	const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
+  const httpVariables = injectHttpVariables(xmcpConfig.http, mode);
+  const corsVariables = injectCorsVariables(xmcpConfig.http);
+  const oauthVariables = injectOAuthVariables(xmcpConfig);
+  const pathsVariables = injectPathsVariables(xmcpConfig);
+  const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
 
-	return {
-		...httpVariables,
-		...corsVariables,
-		...oauthVariables,
-		...pathsVariables,
-		...stdioVariables,
-	};
+  return {
+    ...httpVariables,
+    ...corsVariables,
+    ...oauthVariables,
+    ...pathsVariables,
+    ...stdioVariables,
+  };
 }
