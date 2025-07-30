@@ -110,29 +110,24 @@ export function betterAuthRouter(
   });
 
   router.get("/auth/sign-in", (_req, res) => {
-    // Determine which HTML file to serve based on provider configuration
     let htmlFileName = "email.html"; // default fallback
 
     if (authConfig?.providers) {
       const { emailAndPassword, google } = authConfig.providers;
 
-      // If both providers are enabled, use combined template
       if (emailAndPassword && google) {
         htmlFileName = "email-google.html";
       }
-      // If only Google is enabled
+      // to do review why the callback does not perform the redirect ??
       else if (google && !emailAndPassword) {
         htmlFileName = "google.html";
-      }
-      // If only email is enabled
-      else if (emailAndPassword && !google) {
+      } else if (emailAndPassword && !google) {
         htmlFileName = "email.html";
       }
     }
 
     const htmlPath = path.join(authUiPath, htmlFileName);
 
-    // Check if file exists, fallback to email.html
     if (fs.existsSync(htmlPath)) {
       res.sendFile(htmlPath);
     } else {
