@@ -1,7 +1,7 @@
-import { Pool } from "pg";
 import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { Pool } from "pg";
 
-const auth = {
+export default betterAuthProvider({
   database: new Pool({
     connectionString: process.env.DATABASE_URL,
   }),
@@ -10,6 +10,4 @@ const auth = {
   emailAndPassword: {
     enabled: true,
   },
-};
-
-export default betterAuthProvider(auth);
+});

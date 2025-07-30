@@ -7,12 +7,12 @@ import {
   Request,
   Response,
 } from "express";
-import { Pool } from "pg";
 import { mcp } from "better-auth/plugins";
 import path from "path";
 import express from "express";
-import { betterAuthContextProvider } from "./better-auth-context.js";
+import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
+import { Database } from "./databases.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +21,7 @@ const packageRoot = path.join(__dirname, "..");
 const authUiPath = path.join(packageRoot, "auth-ui");
 
 export type BetterAuthConfig = {
-  database: Pool;
+  database: Database;
   baseURL: string;
   secret: string;
   emailAndPassword: {
@@ -98,10 +98,10 @@ export function betterAuthRouter(
     res.sendFile(indexPath);
   });
 
-  router.get("/auth/sign-up", (_req, res) => {
+  /*   router.get("/auth/sign-up", (_req, res) => {
     const indexPath = path.join(authUiPath, "index.html");
     res.sendFile(indexPath);
-  });
+  }); */
 
   return router;
 }

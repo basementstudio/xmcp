@@ -56,6 +56,7 @@
     "react-router-dom": "^7.7.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.1",
     "@types/node": "^22",
     "@types/pg": "^8.15.4",
@@ -75,6 +76,8 @@
   },
   "peerDependencies": {
     "pg": "^8.16.3",
+    "better-sqlite3": "^12.2.0",
+    "mysql2": "^3.14.3",
     "xmcp": "^0.1.7"
   }
 }

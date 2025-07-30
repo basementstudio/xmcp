@@ -4,6 +4,8 @@ import { authClient } from "./auth-client";
 export const SignInPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
   const session = authClient.useSession();
 
   const handleSignIn = async () => {
@@ -16,11 +18,30 @@ export const SignInPage: React.FC = () => {
     }
   };
 
+  const handleSignUp = async () => {
+    const { error } = await authClient.signUp.email({
+      email,
+      name,
+      password,
+    });
+    if (error) {
+      console.error("[SignInPage] SignUp error:", error);
+    }
+  };
+
   const handleSignOut = async () => {
     const { error } = await authClient.signOut();
     if (error) {
       console.error("[SignInPage] SignOut error:", error);
     }
+  };
+
+  const toggleMode = () => {
+    setIsSignUpMode(!isSignUpMode);
+    // Clear form fields when switching modes
+    setEmail("");
+    setPassword("");
+    setName("");
   };
 
   return (
@@ -34,12 +55,36 @@ export const SignInPage: React.FC = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              Welcome Back
+              {isSignUpMode ? "Get Started" : "Welcome Back"}
             </h1>
-            <p className="text-gray-600 text-sm">Sign in to your account</p>
+            <p className="text-gray-600 text-sm">
+              {isSignUpMode
+                ? "Create your account to continue"
+                : "Sign in to your account"}
+            </p>
           </div>
 
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            {isSignUpMode && (
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  placeholder="Enter your full name"
+                  required
+                />
+              </div>
+            )}
+
             <div>
               <label
                 htmlFor="email"
@@ -79,10 +124,10 @@ export const SignInPage: React.FC = () => {
             <div className="space-y-4 pt-4">
               <button
                 type="button"
-                onClick={handleSignIn}
+                onClick={isSignUpMode ? handleSignUp : handleSignIn}
                 className="w-full bg-gray-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In
+                {isSignUpMode ? "Create Account" : "Sign In"}
               </button>
 
               <button
@@ -98,13 +143,15 @@ export const SignInPage: React.FC = () => {
 
         <div className="text-center">
           <p className="text-sm text-gray-500">
-            Don't have an account?{" "}
-            <a
-              href="/auth/sign-up"
-              className="font-medium text-gray-900 hover:underline"
+            {isSignUpMode
+              ? "Already have an account?"
+              : "Don't have an account?"}{" "}
+            <button
+              onClick={toggleMode}
+              className="font-medium text-gray-900 hover:underline bg-transparent border-none cursor-pointer"
             >
-              Sign up
-            </a>
+              {isSignUpMode ? "Sign in" : "Sign up"}
+            </button>
           </p>
         </div>
       </div>
