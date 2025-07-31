@@ -4,11 +4,12 @@ import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { XmcpMiddleware } from "@/types/middleware";
 import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider, processProviders } from "@/auth";
+import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
 // perhaps this should be an exported type from the compiler config
-type RuntimeHttpConfig = {
+export type RuntimeHttpConfig = {
   port?: number;
   host?: string;
   bodySizeLimit?: number;
@@ -64,14 +65,24 @@ async function main() {
     }
   }
 
-  const transport = new StatelessStreamableHTTPTransport(
-    createServer,
-    options,
-    corsOptions,
-    oauthConfig,
-    providers
+  httpTransportContextProvider(
+    {
+      config: {
+        http: httpConfig,
+      },
+    },
+    async () => {
+      const transport = new StatelessStreamableHTTPTransport(
+        createServer,
+        options,
+        corsOptions,
+        oauthConfig,
+        providers
+      );
+
+      await transport.start();
+    }
   );
-  await transport.start();
 }
 
 main();

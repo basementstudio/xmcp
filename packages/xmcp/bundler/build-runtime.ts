@@ -23,7 +23,7 @@ const libsToExcludeFromCompilation = [
   "ts-loader",
   "fork-ts-checker-webpack-plugin",
   "xmcp/headers",
-  "xmcp/development",
+  "xmcp/utils",
 ];
 
 interface RuntimeRoot {
@@ -33,7 +33,7 @@ interface RuntimeRoot {
 
 const runtimeRoots: RuntimeRoot[] = [
   { name: "headers", path: "headers" },
-  { name: "development", path: "development" },
+  { name: "utils", path: "utils" },
   { name: "stdio", path: "transports/stdio" },
   { name: "http", path: "transports/http" },
   { name: "adapter-express", path: "adapters/express" },

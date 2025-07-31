@@ -4,6 +4,7 @@ declare module "xmcp/headers" {
 
 // export context so all packages relate to the same definition
 // list of utilities and stuff needed for plugins development
-declare module "xmcp/development" {
-  export const createContext: typeof import("../runtime/development").createContext;
+declare module "xmcp/utils" {
+  export const createContext: typeof import("../runtime/utils").createContext;
+  export const getHttpTransportContext: typeof import("../runtime/utils").getHttpTransportContext;
 }

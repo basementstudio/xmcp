@@ -1,12 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, {
-  Express,
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler,
-  Router,
-} from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
@@ -17,7 +10,6 @@ import {
   HttpTransportOptions,
 } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
-import { httpContextProvider } from "./http-context";
 import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
 import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
@@ -25,6 +17,7 @@ import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider } from "@/auth";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
@@ -363,7 +356,7 @@ export class StatelessStreamableHTTPTransport {
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
-      httpContextProvider({ id, headers: req.headers }, () => {
+      httpRequestContextProvider({ id, headers: req.headers }, () => {
         next();
       });
     });
