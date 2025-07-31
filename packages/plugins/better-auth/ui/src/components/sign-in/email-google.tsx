@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { authClient } from "../auth-client";
 
-export const SignInPage: React.FC = () => {
+export const SignInPageEmailGoogle: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const session = authClient.useSession();
 
   const handleEmailSignIn = async () => {
     const { error } = await authClient.signIn.email({
@@ -38,13 +37,6 @@ export const SignInPage: React.FC = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    const { error } = await authClient.signOut();
-    if (error) {
-      console.error("[SignInPage] SignOut error:", error);
-    }
-  };
-
   const toggleMode = () => {
     setIsSignUpMode(!isSignUpMode);
     // Clear form fields when switching modes
@@ -57,14 +49,9 @@ export const SignInPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {/* Debug session info - remove this in production */}
-          <div className="mb-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 font-mono">
-            {JSON.stringify({ session }, null, 2)}
-          </div>
-
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-              {isSignUpMode ? "Get Started" : "Welcome Back"}
+              {isSignUpMode ? "Get Started" : "Welcome back"}
             </h1>
             <p className="text-gray-600 text-sm">
               {isSignUpMode
@@ -177,21 +164,13 @@ export const SignInPage: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-4 pt-4">
+            <div className="pt-4">
               <button
                 type="button"
                 onClick={isSignUpMode ? handleEmailSignUp : handleEmailSignIn}
                 className="w-full bg-gray-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSignUpMode ? "Create Account" : "Sign In"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="w-full bg-white text-gray-700 py-3 px-4 rounded-xl font-medium border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-all duration-200"
-              >
-                Sign Out
               </button>
             </div>
           </form>

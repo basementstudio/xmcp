@@ -13,7 +13,8 @@ import express from "express";
 import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
 import { Database } from "./databases.js";
-import fs from "fs";
+import { XmcpMiddleware } from "xmcp";
+import { getHttpTransportContext } from "xmcp/utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,8 @@ export type BetterAuthConfig = {
   loginPage?: string;
 };
 
+export type SignInPage = "google" | "email" | "email-google";
+
 function getBetterAuthInstance(auth: BetterAuthConfig): any {
   const betterAuthInstance = betterAuth({
     database: auth.database,
@@ -50,6 +53,7 @@ function getBetterAuthInstance(auth: BetterAuthConfig): any {
         google: {
           clientId: auth.providers.google.clientId,
           clientSecret: auth.providers.google.clientSecret,
+          redirectURI: `${auth.baseURL}/auth/callback/google`,
         },
       },
     }),
@@ -62,11 +66,6 @@ function getBetterAuthInstance(auth: BetterAuthConfig): any {
 export type BetterAuthInstanceWithMcp = ReturnType<
   typeof getBetterAuthInstance
 >;
-
-export interface XmcpMiddleware {
-  middleware?: RequestHandler;
-  router?: Router;
-}
 
 export function betterAuthProvider(auth: BetterAuthConfig): XmcpMiddleware {
   const betterAuthInstance = getBetterAuthInstance(auth);
@@ -95,10 +94,39 @@ export function betterAuthRouter(
     );
   });
 
+  // get config to render sign in page
+  router.get("/auth/config", (_req, res) => {
+    if (
+      authConfig.providers?.google &&
+      !authConfig.providers.emailAndPassword
+    ) {
+      res.json("google");
+    } else if (
+      authConfig.providers?.emailAndPassword &&
+      !authConfig.providers.google
+    ) {
+      res.json("email");
+    } else if (
+      authConfig.providers?.emailAndPassword &&
+      authConfig.providers.google
+    ) {
+      res.json("email-google");
+    } else {
+      res.status(500).json({ error: "No providers configured" });
+    }
+  });
+
   // serve auth ui
   router.use("/auth", express.static(authUiPath));
 
   router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
+
+  // google callback custom to handle redirect
+  if (authConfig.providers?.google) {
+    router.get("/auth/callback/google", (_req, res) => {
+      res.sendFile(path.join(authUiPath, "index.html"));
+    });
+  }
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
@@ -110,30 +138,7 @@ export function betterAuthRouter(
   });
 
   router.get("/auth/sign-in", (_req, res) => {
-    let htmlFileName = "email.html"; // default fallback
-
-    if (authConfig?.providers) {
-      const { emailAndPassword, google } = authConfig.providers;
-
-      if (emailAndPassword && google) {
-        htmlFileName = "email-google.html";
-      }
-      // to do review why the callback does not perform the redirect ??
-      else if (google && !emailAndPassword) {
-        htmlFileName = "google.html";
-      } else if (emailAndPassword && !google) {
-        htmlFileName = "email.html";
-      }
-    }
-
-    const htmlPath = path.join(authUiPath, htmlFileName);
-
-    if (fs.existsSync(htmlPath)) {
-      res.sendFile(htmlPath);
-    } else {
-      const fallbackPath = path.join(authUiPath, "email.html");
-      res.sendFile(fallbackPath);
-    }
+    res.sendFile(path.join(authUiPath, "index.html"));
   });
 
   return router;
@@ -143,10 +148,11 @@ export function betterAuthMiddleware(
   betterAuthInstance: BetterAuthInstanceWithMcp
 ): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // TO DO:
-    // this should actually be reading from the endpoint config
-    // harcoded temp
-    if (!req.path.startsWith("/mcp")) {
+    const { endpoint } = getHttpTransportContext().config.http || {};
+
+    console.log(getHttpTransportContext());
+
+    if (!req.path.startsWith(endpoint || "/mcp")) {
       next();
       return;
     }
