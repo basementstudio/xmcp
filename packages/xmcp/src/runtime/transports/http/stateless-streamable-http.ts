@@ -345,7 +345,7 @@ export class StatelessStreamableHTTPTransport {
     });
 
     this.app.get("/", (_req: Request, res: Response) => {
-      res.send(homeTemplate(this.endpoint));
+      res.send(homeTemplate(this.endpoint, process.cwd()));
     });
 
     // to do move this to a separate provider with the same approach as better auth
