@@ -14,5 +14,3 @@ export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
-// TO DO remove dummy middleware
-export { dummyMiddleware, dummyMiddlewareAndRouter } from "./auth/dummy";
