@@ -1,11 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, {
-  Express,
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler,
-} from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
@@ -16,13 +10,14 @@ import {
   HttpTransportOptions,
 } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
-import { httpContextProvider } from "./http-context";
 import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
 import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
+import { Provider } from "@/auth";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
@@ -270,14 +265,14 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private oauthProxy: OAuthProxy | undefined;
-  private middlewares: RequestHandler[] | undefined;
+  private providers: Provider[] | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = {},
     oauthConfig?: OAuthProxyConfig | null,
-    middlewares?: RequestHandler[]
+    providers?: Provider[]
   ) {
     this.options = {
       ...options,
@@ -289,16 +284,21 @@ export class StatelessStreamableHTTPTransport {
     this.debug = options.debug ?? false;
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
-    this.middlewares = middlewares;
+    this.providers = providers;
 
     // setup oauth proxy if configuration is provided
     if (oauthConfig) {
       this.oauthProxy = createOAuthProxy(oauthConfig);
     }
 
-    this.setupMiddleware(options.bodySizeLimit || "10mb");
+    this.setupInitialRoutes();
+    this.setupInitialMiddleware();
 
-    this.setupRoutes();
+    this.setupProviders();
+
+    this.setupEndpointRoute();
+
+    this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
   }
 
   private log(message: string, ...args: any[]): void {
@@ -307,7 +307,21 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
-  private setupMiddleware(bodySizeLimit: string): void {
+  private setupProviders(): void {
+    if (this.providers) {
+      for (const provider of this.providers) {
+        if (provider.router) {
+          this.app.use(provider.router);
+        }
+
+        if (provider.middleware) {
+          this.app.use(provider.middleware);
+        }
+      }
+    }
+  }
+
+  private setupInitialMiddleware(): void {
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       const cors = this.corsConfig;
       // set cors headers dynamically
@@ -315,15 +329,13 @@ export class StatelessStreamableHTTPTransport {
       next();
     });
 
-    this.app.use(express.json({ limit: bodySizeLimit }));
-
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       this.log(`${req.method} ${req.path}`);
       next();
     });
   }
 
-  private setupRoutes(): void {
+  private setupInitialRoutes(): void {
     this.app.get("/health", (_req: Request, res: Response) => {
       res.status(200).json({
         status: "ok",
@@ -336,6 +348,7 @@ export class StatelessStreamableHTTPTransport {
       res.send(homeTemplate(this.endpoint));
     });
 
+    // to do move this to a separate provider with the same approach as better auth
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.router);
     }
@@ -343,20 +356,20 @@ export class StatelessStreamableHTTPTransport {
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
-      httpContextProvider({ id, headers: req.headers }, () => {
+      httpRequestContextProvider({ id, headers: req.headers }, () => {
         next();
       });
     });
 
-    // routes beyond this point get intercepted by the middleware
-    if (this.middlewares && this.middlewares.length > 0) {
-      this.app.use(this.middlewares);
-    }
-
+    // --------------- oauth proxy ---------------
+    // TO DO validate theyoauth and better auth are not both present
+    // move this to a separate provider with the same approach as better auth
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.middleware);
     }
+  }
 
+  private setupEndpointRoute(): void {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       await this.handleStatelessRequest(req, res);
     });
