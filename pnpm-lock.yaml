@@ -227,7 +227,7 @@ importers:
   examples/better-auth-http:
     dependencies:
       '@xmcp-dev/better-auth':
-        specifier: 0.0.2
+        specifier: latest
         version: 0.0.2(better-sqlite3@12.2.0)(mysql2@3.14.3)(pg@8.16.3)(xmcp@packages+xmcp)
       pg:
         specifier: ^8.16.3
