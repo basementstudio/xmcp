@@ -8,6 +8,7 @@ export type PostgresDatabase = Pool;
 // only supporting postgres for now
 export type Database = PostgresDatabase;
 
+// TODO: add sqlite and mysql support
 /* 
 export type SqliteDatabase = ReturnType<typeof Database>;
 
