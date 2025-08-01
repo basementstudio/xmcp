@@ -33,7 +33,6 @@ export type BetterAuthConfig = {
       clientSecret: string;
     };
   };
-  loginPage?: string;
 };
 
 export type SignInPage = "google" | "email" | "email-google";
