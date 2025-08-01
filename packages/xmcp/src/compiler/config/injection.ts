@@ -3,7 +3,6 @@ import {
   getResolvedCorsConfig,
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
-  getResolvedBetterAuthConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 
@@ -55,15 +54,6 @@ export function injectOAuthVariables(userConfig: any) {
 
 export type OAuthVariables = ReturnType<typeof injectOAuthVariables>;
 
-export function injectBetterAuthVariables(userConfig: any) {
-  const betterAuthConfig = getResolvedBetterAuthConfig(userConfig);
-  return {
-    BETTER_AUTH: JSON.stringify(betterAuthConfig),
-  };
-}
-
-export type BetterAuthVariables = ReturnType<typeof injectBetterAuthVariables>;
-
 export function injectPathsVariables(userConfig: any) {
   const pathsConfig = getResolvedPathsConfig(userConfig);
 
@@ -92,6 +82,5 @@ export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
-  | BetterAuthVariables
   | PathsVariables
   | StdioVariables;

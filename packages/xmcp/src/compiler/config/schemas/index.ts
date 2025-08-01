@@ -14,9 +14,5 @@ export {
   experimentalConfigSchema,
   type ExperimentalConfig,
 } from "./experimental";
-export {
-  betterAuthConfigSchema,
-  type BetterAuthConfig,
-} from "./experimental/better-auth";
 export { pathsConfigSchema, type PathsConfig } from "./paths";
 export { webpackConfigSchema, type WebpackConfig } from "./webpack";

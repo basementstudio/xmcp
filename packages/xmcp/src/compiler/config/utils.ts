@@ -4,7 +4,6 @@ import {
   PathsConfig,
   OAuthConfig,
   StdioTransportConfig,
-  BetterAuthConfig,
 } from "./schemas";
 import {
   DEFAULT_HTTP_CONFIG,
@@ -43,12 +42,6 @@ export function getResolvedPathsConfig(userConfig: any): PathsConfig {
 
 export function getResolvedOAuthConfig(userConfig: any): OAuthConfig | null {
   return userConfig?.experimental?.oauth || null;
-}
-
-export function getResolvedBetterAuthConfig(
-  userConfig: any
-): BetterAuthConfig | null {
-  return userConfig?.experimental?.betterAuth || null;
 }
 
 export function getResolvedStdioConfig(
