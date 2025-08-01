@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router";
 import { SignInPage } from "./components/sign-in";
 import "./index.css";
 import ReactDOM from "react-dom/client";
-import { SignInPageGoogle } from "./components/sign-in/google";
+import { GoogleCallback } from "./components/callback/google";
 
 const root = document.getElementById("root");
 
@@ -17,7 +17,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/auth/callback/google",
-    element: <SignInPageGoogle />,
+    element: <GoogleCallback />,
   },
 ]);
 

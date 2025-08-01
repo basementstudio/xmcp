@@ -1,8 +1,3 @@
-// allow for three different databases
-// 1. postgres
-// 2. sqlite
-// 3. mysql
-
 // these will be provided by the user
 // but should handle typing
 
