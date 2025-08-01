@@ -5,6 +5,8 @@ import { XmcpMiddleware } from "@/types/middleware";
 import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider, processProviders } from "@/auth";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
+import dotenv from "dotenv";
+dotenv.config();
 
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
