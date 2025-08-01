@@ -11,7 +11,7 @@ const SignInPage = () => {
     fetch("/auth/config")
       .then((response) => response.json())
       .then((config) => setConfig(config))
-      .catch((error) => console.error("Error fetching config:", error));
+      .catch(() => {});
   }, []);
 
   if (config === "email") {

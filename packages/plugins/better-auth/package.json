@@ -42,7 +42,7 @@
   "scripts": {
     "dev": "pnpm run dev:main & pnpm run dev:ui",
     "dev:main": "tsc --watch",
-    "dev:ui": "vite --config ./ui/vite.config.mjs",
+    "dev:ui": "cd ui && vite --config ./vite.config.mjs",
     "build": "rm -rf dist && tsc && pnpm run build:ui",
     "build:ui": "cd ui && vite build --config ./vite.config.mjs",
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"

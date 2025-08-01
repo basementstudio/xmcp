@@ -1,50 +1,81 @@
 import React, { useState } from "react";
 import { authClient } from "../auth-client";
+import logo from "../../assets/logo.svg";
 
 export const SignInPageEmail: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isSignUpMode, setIsSignUpMode] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    const { error } = await authClient.signIn.email({
-      email,
-      password,
-    });
-    if (error) {
-      console.error("[SignInPage] SignIn error:", error);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+      if (error) {
+        setError(
+          error.message ||
+            "Failed to sign in. Please check your credentials and try again."
+        );
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSignUp = async () => {
-    const { error } = await authClient.signUp.email({
-      email,
-      name,
-      password,
-    });
-    if (error) {
-      console.error("[SignInPage] SignUp error:", error);
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const { error } = await authClient.signUp.email({
+        email,
+        name,
+        password,
+      });
+      if (error) {
+        setError(
+          error.message || "Failed to create account. Please try again."
+        );
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const toggleMode = () => {
     setIsSignUpMode(!isSignUpMode);
-    // Clear form fields when switching modes
     setEmail("");
     setPassword("");
     setName("");
+    setError(null);
+  };
+
+  const clearError = () => {
+    setError(null);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+    <div className="min-h-screen bg-black flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-white">
+      <div className="max-w-md w-full space-y-8 flex flex-col items-center">
+        <img src={logo} alt="logo" />
+        <div className="border border-gray-100 p-8 w-full">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-2xl font-semibold mb-2">
               {isSignUpMode ? "Get Started" : "Welcome back"}
             </h1>
-            <p className="text-gray-600 text-sm">
+            <p className="text-base text-gray-400">
               {isSignUpMode
                 ? "Create your account to continue"
                 : "Sign in to your account"}
@@ -56,7 +87,7 @@ export const SignInPageEmail: React.FC = () => {
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-xs font-medium mb-2 uppercase text-white"
                 >
                   Name
                 </label>
@@ -64,10 +95,14 @@ export const SignInPageEmail: React.FC = () => {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    clearError();
+                  }}
+                  className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
                   placeholder="Enter your full name"
                   required
+                  disabled={isLoading}
                 />
               </div>
             )}
@@ -75,7 +110,7 @@ export const SignInPageEmail: React.FC = () => {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-medium mb-2 uppercase text-white"
               >
                 Email
               </label>
@@ -83,17 +118,21 @@ export const SignInPageEmail: React.FC = () => {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  clearError();
+                }}
+                className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
                 placeholder="Enter your email"
                 required
+                disabled={isLoading}
               />
             </div>
 
-            <div>
+            <div className="mb-2">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-xs font-medium mb-2 uppercase text-white"
               >
                 Password
               </label>
@@ -101,20 +140,59 @@ export const SignInPageEmail: React.FC = () => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError();
+                }}
+                className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
                 placeholder="Enter your password"
                 required
+                disabled={isLoading}
               />
             </div>
 
-            <div className="pt-4">
+            {error && (
+              <div className="bg-red-900/20 border border-red-500 rounded p-3">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div>
               <button
                 type="button"
                 onClick={isSignUpMode ? handleSignUp : handleSignIn}
-                className="w-full bg-gray-900 text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-800 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
+                className="w-full bg-white text-black py-3 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
               >
-                {isSignUpMode ? "Create Account" : "Sign In"}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    {isSignUpMode ? "Creating Account..." : "Signing In..."}
+                  </span>
+                ) : isSignUpMode ? (
+                  "Create Account"
+                ) : (
+                  "Sign In"
+                )}
               </button>
             </div>
           </form>
@@ -127,7 +205,8 @@ export const SignInPageEmail: React.FC = () => {
               : "Don't have an account?"}{" "}
             <button
               onClick={toggleMode}
-              className="font-medium text-gray-900 hover:underline bg-transparent border-none cursor-pointer"
+              disabled={isLoading}
+              className="font-medium text-white hover:underline bg-transparent border-none cursor-pointer focus-visible:ring-2 focus-visible:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSignUpMode ? "Sign in" : "Sign up"}
             </button>
