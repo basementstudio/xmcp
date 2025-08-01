@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import logo from "../../assets/logo.svg";
 
+const baseUrl = window.location.origin;
+
 export const GoogleCallback = () => {
   const [message, setMessage] = useState("Do not close this window");
   const [isError, setIsError] = useState(false);
@@ -8,7 +10,7 @@ export const GoogleCallback = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const callbackUrl = `http://127.0.0.1:3002/api/auth/callback/google?${params.toString()}`;
+    const callbackUrl = `${baseUrl}/api/auth/callback/google?${params.toString()}`;
 
     fetch(callbackUrl, {
       credentials: "include",
