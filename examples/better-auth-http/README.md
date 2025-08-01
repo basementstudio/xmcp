@@ -73,13 +73,16 @@ export default betterAuthProvider({
 
 This config object is used to configure the Better Auth instance through the provider function.
 
-`database`: type exported from `pg`. Must be a valid instance of `Pool`.
-
-`baseURL`: the base URL of your xmcp app. This is used to generate the OAuth callback URL. This variable should be the same as the host/port of your xmcp app.
-
-`secret`: the secret used to sign the JWT tokens. You can generate a random secret here
-
-`providers`: an object with the providers you want to enable. Currently, only `emailAndPassword` and `google` are supported.
+| Parameter                       | Type               | Description                                                                                            | Required                 |
+| ------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| `database`                      | `Pool` (from `pg`) | Must be a valid instance of `Pool` for PostgreSQL connection                                           | Yes                      |
+| `baseURL`                       | `string`           | The base URL of your xmcp app. Used to generate OAuth callback URLs. Should match your app's host/port | Yes                      |
+| `secret`                        | `string`           | Secret used to sign JWT tokens. Generate a random secret for security                                  | Yes                      |
+| `providers`                     | `object`           | Configuration object for authentication providers                                                      | Yes                      |
+| `providers.emailAndPassword`    | `boolean`          | Set to `true` to enable email/password authentication                                                  | No                       |
+| `providers.google`              | `object`           | Google OAuth configuration object                                                                      | No                       |
+| `providers.google.clientId`     | `string`           | Google OAuth client ID from Google Cloud Console                                                       | Required if using Google |
+| `providers.google.clientSecret` | `string`           | Google OAuth client secret from Google Cloud Console                                                   | Required if using Google |
 
 #### Email and Password
 
