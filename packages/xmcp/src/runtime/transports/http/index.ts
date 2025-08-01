@@ -27,7 +27,7 @@ const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
-      default: XmcpMiddleware;
+      default: XmcpMiddleware | XmcpMiddleware[];
     }>
   | undefined;
 
