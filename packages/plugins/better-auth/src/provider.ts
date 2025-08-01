@@ -150,8 +150,6 @@ export function betterAuthMiddleware(
   return async (req: Request, res: Response, next: NextFunction) => {
     const { endpoint } = getHttpTransportContext().config.http || {};
 
-    console.log(getHttpTransportContext());
-
     if (!req.path.startsWith(endpoint || "/mcp")) {
       next();
       return;
@@ -174,12 +172,9 @@ export function betterAuthMiddleware(
       // session is valid, proceed to next middleware
       next();
     } catch (error) {
-      console.error("[better auth] Authentication check failed:", error);
       // on auth error, return authorization server config
       try {
-        const config = await (
-          betterAuthInstance as any
-        ).api.getMcpOAuthConfig();
+        const config = await betterAuthInstance.api.getMcpOAuthConfig();
         res.status(401).json(config);
       } catch (configError) {
         res.status(500).json({
