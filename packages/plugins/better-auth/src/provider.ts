@@ -93,6 +93,7 @@ export function betterAuthRouter(
     );
   });
 
+  // TODO: create an object
   // get config to render sign in page
   router.get("/auth/config", (_req, res) => {
     if (
