@@ -7,7 +7,7 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "@xmcp-dev/better-auth": "latest",
+    "@xmcp-dev/better-auth": "workspace:*",
     "pg": "^8.16.3",
     "xmcp": "workspace:*",
     "zod": "3.24.4"

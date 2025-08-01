@@ -23,12 +23,6 @@ export const metadata: ToolMetadata = {
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const session = getBetterAuthSession();
 
-  if (!session) {
-    return {
-      content: [{ type: "text", text: "You are not authenticated" }],
-    };
-  }
-
   const result = `Hello, ${name}! Your user id is ${session.userId}`;
 
   return {
