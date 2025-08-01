@@ -75,9 +75,9 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "pg": "^8.16.3",
-    "better-sqlite3": "^12.2.0",
-    "mysql2": "^3.14.3",
     "xmcp": "^0.1.7"
+  },
+  "optionalDependencies": {
+    "pg": "^8.16.3"
   }
 }
