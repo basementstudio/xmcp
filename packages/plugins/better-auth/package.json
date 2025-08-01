@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/better-auth",
   "description": "Better Auth integration for xmcp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": {
     "name": "Basement Studio",
     "email": "hello@basement.studio",
