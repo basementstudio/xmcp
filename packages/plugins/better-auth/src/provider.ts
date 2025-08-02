@@ -14,7 +14,7 @@ import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
 import { Database } from "./databases.js";
 import { XmcpMiddleware } from "xmcp";
-import { getHttpTransportContext } from "xmcp/utils";
+import { getHttpTransportContext } from "xmcp/dist/utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

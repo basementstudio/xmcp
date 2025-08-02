@@ -3,6 +3,6 @@ declare module "xmcp/headers" {
 }
 
 declare module "xmcp/utils" {
-  export const createContext: typeof import("../runtime/utils").createContext;
-  export const getHttpTransportContext: typeof import("../runtime/utils").getHttpTransportContext;
+  export const createContext: typeof import("../utils").createContext;
+  export const getHttpTransportContext: typeof import("../utils").getHttpTransportContext;
 }

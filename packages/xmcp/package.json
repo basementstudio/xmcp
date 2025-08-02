@@ -34,6 +34,20 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "require": "./dist/utils.js",
+      "import": "./dist/utils.js",
+      "default": "./dist/utils.js"
+    }
+  },
   "bin": {
     "xmcp": "dist/cli.js"
   },
