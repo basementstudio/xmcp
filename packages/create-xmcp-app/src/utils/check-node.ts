@@ -11,7 +11,7 @@ export function checkNodeVersion(): void {
     console.error(
       chalk.red(`❌ Node.js version ${nodeVersion} is not supported.`)
     );
-    console.error(chalk.red(`XMCP requires Node.js 20 or higher.`));
+    console.error(chalk.red(`xmcp requires Node.js 20 or higher.`));
     console.error(
       chalk.yellow(`Please upgrade your Node.js version and try again.`)
     );
