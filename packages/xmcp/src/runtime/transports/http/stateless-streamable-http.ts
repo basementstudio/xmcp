@@ -18,6 +18,7 @@ import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider } from "@/auth";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
@@ -380,22 +381,35 @@ export class StatelessStreamableHTTPTransport {
     res: Response
   ): Promise<void> {
     try {
-      // Create new instances for complete isolation
-      const server = await this.createServerFn();
-      const transport = new StatelessHttpServerTransport(
-        this.debug,
-        this.options.bodySizeLimit || "10mb"
+      httpTransportContextProvider(
+        {
+          config: {
+            http: {
+              port: this.port,
+              host: this.options.host,
+              endpoint: this.endpoint,
+            },
+          },
+        },
+        async () => {
+          // Create new instances for complete isolation
+          const server = await this.createServerFn();
+          const transport = new StatelessHttpServerTransport(
+            this.debug,
+            this.options.bodySizeLimit || "10mb"
+          );
+
+          // cleanup when request/connection closes
+          res.on("close", () => {
+            transport.close();
+            server.close();
+          });
+
+          await server.connect(transport);
+
+          await transport.handleRequest(req, res, req.body);
+        }
       );
-
-      // cleanup when request/connection closes
-      res.on("close", () => {
-        transport.close();
-        server.close();
-      });
-
-      await server.connect(transport);
-
-      await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
       if (!res.headersSent) {

@@ -67,24 +67,15 @@ async function main() {
     }
   }
 
-  httpTransportContextProvider(
-    {
-      config: {
-        http: httpConfig,
-      },
-    },
-    async () => {
-      const transport = new StatelessStreamableHTTPTransport(
-        createServer,
-        options,
-        corsOptions,
-        oauthConfig,
-        providers
-      );
-
-      await transport.start();
-    }
+  const transport = new StatelessStreamableHTTPTransport(
+    createServer,
+    options,
+    corsOptions,
+    oauthConfig,
+    providers
   );
+
+  await transport.start();
 }
 
 main();
