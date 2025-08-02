@@ -40,6 +40,7 @@ const program = new Command()
   .option("--vercel", "Add Vercel support for deployment", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--skip-git", "Skip initializing git repository", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -83,6 +84,7 @@ const program = new Command()
     let deployToVercel = options.vercel;
     let skipInstall = options.skipInstall;
     let transports = ["http"];
+    let initializeGit = !options.skipGit;
 
     // Handle transport selection from CLI options
     if (options.http || options.stdio) {
@@ -196,6 +198,7 @@ const program = new Command()
         packageVersion: packageJson.version,
         deployToVercel,
         skipInstall,
+        initializeGit,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
