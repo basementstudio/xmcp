@@ -14,3 +14,5 @@ export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
+
+export { createContext } from "./utils/context";

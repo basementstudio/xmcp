@@ -68,7 +68,6 @@ function getConfig() {
     entry: {
       index: path.join(srcPath, "index.ts"),
       cli: path.join(srcPath, "cli.ts"),
-      utils: path.join(srcPath, "utils.ts"),
     },
     mode,
     devtool: mode === "production" ? false : "source-map",

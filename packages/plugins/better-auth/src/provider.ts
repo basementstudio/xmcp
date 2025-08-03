@@ -14,7 +14,6 @@ import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
 import { Database } from "./databases.js";
 import { XmcpMiddleware } from "xmcp";
-import { getHttpTransportContext } from "xmcp/utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -148,9 +147,7 @@ export function betterAuthMiddleware(
   betterAuthInstance: BetterAuthInstanceWithMcp
 ): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const { endpoint } = getHttpTransportContext().config.http || {};
-
-    if (!req.path.startsWith(endpoint || "/mcp")) {
+    if (!req.path.startsWith("/mcp")) {
       next();
       return;
     }
