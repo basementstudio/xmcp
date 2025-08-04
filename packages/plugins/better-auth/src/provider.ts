@@ -17,9 +17,8 @@ import { XmcpMiddleware } from "xmcp";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const packageRoot = path.join(__dirname, "..");
 
-const authUiPath = path.join(packageRoot, "auth-ui");
+const authUiPath = path.join(__dirname, "auth-ui");
 
 export type BetterAuthConfig = {
   database: Database;
