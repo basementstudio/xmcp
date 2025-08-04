@@ -1,5 +1,5 @@
 import { fromNodeHeaders } from "better-auth/node";
-import { getBetterAuthContext } from "./context";
+import { getBetterAuthContext } from "./context.js";
 import { OAuthAccessToken } from "better-auth/plugins";
 
 export function getBetterAuthSession(): OAuthAccessToken {
