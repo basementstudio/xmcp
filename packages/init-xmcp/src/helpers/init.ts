@@ -13,7 +13,7 @@ interface InitOptions {
   framework: Framework;
   toolsPath: string | undefined;
   routePath: string | undefined;
-  packageManager: "npm" | "yarn" | "pnpm";
+  packageManager: "npm" | "yarn" | "pnpm" | "bun";
 }
 
 export async function init(options: InitOptions) {

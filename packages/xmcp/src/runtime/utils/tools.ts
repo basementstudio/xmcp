@@ -1,7 +1,8 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer, ToolCallback } from "@modelcontextprotocol/sdk/server/mcp";
 import { ZodTypeAny } from "zod";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
+import { CallToolResult } from "@modelcontextprotocol/sdk/types";
 
 export type ZodRawShape = {
   [k: string]: ZodTypeAny;
@@ -43,6 +44,25 @@ export function addToolsToServer(
 
     const { default: handler, metadata, schema } = toolModule;
 
+    const interceptedHandler: ToolCallback = async (...args) => {
+      const response = (await handler.apply(null, args)) as
+        | CallToolResult
+        | string
+        | number;
+
+      if (typeof response === "string" || typeof response === "number") {
+        return {
+          content: [
+            {
+              type: "text",
+              text: typeof response === "number" ? `${response}` : response,
+            },
+          ],
+        };
+      }
+      return response;
+    };
+
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
@@ -69,7 +89,7 @@ export function addToolsToServer(
       toolConfig.description,
       toolSchema as any,
       toolConfig.annotations,
-      handler
+      interceptedHandler
     );
   });
 

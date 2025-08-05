@@ -48,6 +48,7 @@ export function getWebpackConfig(
       alias: {
         "node:process": "process",
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
+        "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
         ...resolveTsconfigPathsToAlias(),
       },
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],

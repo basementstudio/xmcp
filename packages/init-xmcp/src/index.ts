@@ -35,7 +35,7 @@ const program = new Command()
   .option("-y, --yes", "Skip confirmation prompts", false)
   .option(
     "--package-manager <manager>",
-    "Specify package manager (npm, yarn, pnpm)",
+    "Specify package manager (npm, yarn, pnpm, bun)",
     ""
   )
   .option("--tools-path <path>", "Specify custom tools path", "")
@@ -102,11 +102,15 @@ const program = new Command()
     }
 
     // determine package manager
-    let packageManager: "npm" | "yarn" | "pnpm";
+    let packageManager: "npm" | "yarn" | "pnpm" | "bun";
     if (detectedPackageManager) {
       packageManager = detectedPackageManager;
     } else if (options.packageManager) {
-      packageManager = options.packageManager as "npm" | "yarn" | "pnpm";
+      packageManager = options.packageManager as
+        | "npm"
+        | "yarn"
+        | "pnpm"
+        | "bun";
     } else {
       // no package manager detected, will prompt user
       packageManager = "npm"; // default fallback

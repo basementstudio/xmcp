@@ -27,7 +27,7 @@ npx init-xmcp@latest
 
 - `-v, --version`: Output the current version of init-xmcp.
 - `-y, --yes`: Skip confirmation prompts (default: false)
-- `--package-manager <manager>`: Specify package manager (npm, yarn, pnpm) (default: "")
+- `--package-manager <manager>`: Specify package manager (npm, yarn, pnpm, bun) (default: "")
 - `--tools-path <path>`: Specify custom tools path (default: "")
 - `--route-path <path>`: Specify custom route path (default: "")
 - `--skip-tools`: Skip tool creation (default: false)

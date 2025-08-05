@@ -3,6 +3,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { createServer } from "../../utils/server";
 import terminalLink from "terminal-link";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 class StdioTransport {
   private mcpServer: McpServer;
   private transport: StdioServerTransport;

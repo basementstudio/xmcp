@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+body {
+  margin: 0;
+  font-family: "Geist Mono", monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #000;
+  color: #fff;
+}
+
+/* Custom focus styles for better accessibility */
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.2);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(31, 41, 55, 0.2);
+}
