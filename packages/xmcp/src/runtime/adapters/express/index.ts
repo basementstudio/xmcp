@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { createServer } from "@/runtime/utils/server";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
 import { setResponseCorsHeaders } from "@/runtime/transports/http/setup-cors";
-import { httpContextProvider } from "@/runtime/transports/http/http-context";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 
 // cors config
@@ -27,7 +27,7 @@ const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
 export async function xmcpHandler(req: Request, res: Response) {
   return new Promise((resolve) => {
     const id = randomUUID();
-    httpContextProvider({ id, headers: req.headers }, async () => {
+    httpRequestContextProvider({ id, headers: req.headers }, async () => {
       try {
         setResponseCorsHeaders(
           {

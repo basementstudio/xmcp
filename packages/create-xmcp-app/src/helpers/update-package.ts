@@ -6,13 +6,11 @@ import fs from "fs-extra";
  * @param projectPath - Project directory path
  * @param projectName - Name of the project
  * @param transports - Array of selected transport types
- * @param useLocalXmcp - Whether to use local xmcp dependency
  */
 export function updatePackageJson(
   projectPath: string,
   projectName: string,
-  transports: string[],
-  useLocalXmcp?: boolean
+  transports: string[]
 ): void {
   const packageJsonPath = path.join(projectPath, "package.json");
   const packageJson = fs.readJsonSync(packageJsonPath);
@@ -44,12 +42,7 @@ export function updatePackageJson(
     };
   }
 
-  if (useLocalXmcp) {
-    const xmcpPath = path.resolve(__dirname, "../../../packages/xmcp");
-    packageJson.dependencies["xmcp"] = `file:${xmcpPath}`;
-  } else {
-    packageJson.dependencies["xmcp"] = "latest";
-  }
+  packageJson.dependencies["xmcp"] = "latest";
 
   fs.writeJsonSync(packageJsonPath, packageJson, { spaces: 2 });
 }

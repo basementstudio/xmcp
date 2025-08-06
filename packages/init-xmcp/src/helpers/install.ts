@@ -12,7 +12,10 @@ import { execSync } from "child_process";
  */
 export function detectPackageManager(
   projectPath: string
-): "npm" | "yarn" | "pnpm" | null {
+): "npm" | "yarn" | "pnpm" | "bun" | null {
+  if (fs.existsSync(path.join(projectPath, "bun.lockb"))) {
+    return "bun";
+  }
   if (fs.existsSync(path.join(projectPath, "yarn.lock"))) {
     return "yarn";
   }
@@ -31,7 +34,7 @@ export function detectPackageManager(
  */
 export async function install(
   projectPath: string,
-  packageManager: "npm" | "pnpm" | "yarn"
+  packageManager: "npm" | "pnpm" | "yarn" | "bun"
 ) {
   const dependencies = ["xmcp", "zod"];
   const devDependencies = ["swc-loader"];
@@ -40,6 +43,7 @@ export async function install(
     npm: `npm install ${dependencies.join(" ")} && npm install --save-dev ${devDependencies.join(" ")}`,
     pnpm: `pnpm add ${dependencies.join(" ")} && pnpm add --save-dev ${devDependencies.join(" ")}`,
     yarn: `yarn add ${dependencies.join(" ")} && yarn add --dev ${devDependencies.join(" ")}`,
+    bun: `bun add ${dependencies.join(" ")} && bun add --dev ${devDependencies.join(" ")}`,
   };
 
   try {

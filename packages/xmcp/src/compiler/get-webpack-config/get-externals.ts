@@ -22,7 +22,7 @@ export function getExternals(): Configuration["externals"] {
       }
 
       /**
-       * Externalize Node.js built-in modules, bundle everything else
+       * Externalize Node.js built-in modules
        */
       const isBuiltinModule =
         builtinModules.includes(request) ||
@@ -73,6 +73,7 @@ export function getExternals(): Configuration["externals"] {
         return callback(null, `commonjs ${pathRequest}`);
       }
 
+      // Bundle relative imports and absolute paths
       callback();
     },
   ];
