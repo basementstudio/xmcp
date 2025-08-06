@@ -83,8 +83,8 @@ jobs:
           npm version "$VERSION" --no-git-tag-version
           echo "✅ Updated init-xmcp version to $VERSION"
 
-          - name: Install dependencies
-          run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build packages
         run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
