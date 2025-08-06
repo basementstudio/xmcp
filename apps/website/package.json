@@ -33,6 +33,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.22.0",
     "gray-matter": "^4.0.3",
+    "html2canvas": "^1.4.1",
     "next": "15.3.4",
     "next-mdx-remote": "^5.0.0",
     "react": "^19.0.0",
