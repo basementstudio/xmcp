@@ -22,14 +22,16 @@ function SyntaxTerminal({
 }) {
   if (!code.trim()) {
     return (
-      <div
-        className={cn("border relative bg-black p-4 inline-block", className)}
-        style={{ borderColor: "#333" }}
-      >
-        <div className="min-h-[200px] flex items-center justify-center">
-          <span className="text-gray-500">
-            Enter TypeScript code to see syntax highlighting...
-          </span>
+      <div id="terminal-output" className="mb-4">
+        <div
+          className={cn("border relative bg-black p-4 inline-block", className)}
+          style={{ borderColor: "#333" }}
+        >
+          <div className="min-h-[200px] flex items-center justify-center">
+            <span className="text-gray-500">
+              Enter TypeScript code to see syntax highlighting...
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -41,18 +43,19 @@ function SyntaxTerminal({
   });
 
   return (
-    <div
-      className={cn(
-        "border relative bg-black p-4 [&_span]:!font-mono inline-block",
-        className
-      )}
-      style={{ borderColor: "#333" }}
-      id="terminal-output"
-    >
+    <div id="terminal-output" className="mb-4">
       <div
-        className="[&>pre]:p-0 [&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:!leading-relaxed [&_*]:!text-sm [&_*]:!font-mono"
-        dangerouslySetInnerHTML={{ __html: codeHTML }}
-      />
+        className={cn(
+          "border relative bg-black p-4 pb-8 [&_span]:!font-mono inline-block",
+          className
+        )}
+        style={{ borderColor: "#333" }}
+      >
+        <div
+          className="[&>pre]:p-0 [&>pre]:!bg-transparent [&>pre]:!m-0 [&>pre]:!leading-6 [&_*]:!text-sm [&_*]:!font-mono [&>pre>code]:!block [&>pre>code]:!pb-2"
+          dangerouslySetInnerHTML={{ __html: codeHTML }}
+        />
+      </div>
     </div>
   );
 }
