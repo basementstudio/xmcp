@@ -28,9 +28,7 @@ function SyntaxTerminal({
           style={{ borderColor: "#333" }}
         >
           <div className="min-h-[200px] flex items-center justify-center">
-            <span className="text-gray-500">
-              Enter TypeScript code to see syntax highlighting...
-            </span>
+            <span className="text-gray-500">No code to preview</span>
           </div>
         </div>
       </div>
@@ -61,8 +59,7 @@ function SyntaxTerminal({
 }
 
 export default function TerminalPage() {
-  const [code, setCode] = useState(`// Welcome to the Terminal Generator
-import { createServer } from "http";
+  const [code, setCode] = useState(`import { createServer } from "http";
 
 const server = createServer((req, res) => {
   res.writeHead(200, { "Content-Type": "text/plain" });
@@ -78,16 +75,14 @@ server.listen(3000, () => {
     if (!element) return;
 
     try {
-      // Dynamically import html2canvas to avoid SSR issues
       const html2canvas = (await import("html2canvas")).default;
 
       const canvas = await html2canvas(element, {
         backgroundColor: null,
-        scale: 2, // Higher quality
+        scale: 2,
         useCORS: true,
       });
 
-      // Create download link
       const link = document.createElement("a");
       link.download = `terminal-code.png`;
       link.href = canvas.toDataURL("image/png");
@@ -101,26 +96,9 @@ server.listen(3000, () => {
   return (
     <div className="min-h-screen bg-transparent py-12">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            TypeScript Terminal Generator
-          </h1>
-          <p className="text-white max-w-2xl mx-auto">
-            Enter TypeScript code and generate beautiful terminal-styled images
-            perfect for presentations or social media.
-          </p>
-        </div>
-
         <div className="flex flex-col gap-8 max-w-none">
-          {/* Input Section */}
           <div className="space-y-4">
             <div>
-              <label
-                htmlFor="code"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                TypeScript Code
-              </label>
               <textarea
                 id="code"
                 value={code}
@@ -129,22 +107,18 @@ server.listen(3000, () => {
                 placeholder="Enter your TypeScript code here..."
               />
             </div>
-
-            <button
-              onClick={downloadAsImage}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
-              Download as Image
-            </button>
           </div>
 
-          {/* Preview Section */}
-          <div>
-            <h3 className="text-sm font-medium text-white mb-4">Preview</h3>
-            <div className="flex justify-center">
-              <SyntaxTerminal code={code} />
-            </div>
+          <div className="flex justify-center">
+            <SyntaxTerminal code={code} />
           </div>
+
+          <button
+            onClick={downloadAsImage}
+            className="w-[200px] mx-auto bg-white text-black py-3 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
+          >
+            Download as Image
+          </button>
         </div>
       </div>
     </div>
