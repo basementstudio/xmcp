@@ -66,6 +66,8 @@ export type AnalyticsKeyScope = 'query' | 'send'
 export interface ArticleComponent {
     _analyticsKey: Scalars['String']
     _dashboardUrl: Scalars['String']
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight: (SearchHighlight_0cd24929507ac825726cb[] | null)
     _id: Scalars['String']
     _idPath: Scalars['String']
     _slug: Scalars['String']
@@ -149,7 +151,7 @@ export interface BlockColor {
     __typename: 'BlockColor'
 }
 
-export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | SidebarTree | SidebarTreeComponent | _AgentSTART | articleComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
 
 export interface BlockDocumentSys {
     apiNamePath: Scalars['String']
@@ -335,11 +337,13 @@ export interface Mutation {
 }
 
 export interface Query {
-    _agent: (_AgentSTART | null)
+    _agent: (_AgentStart | null)
     /** Query across the custom AI agents in the repository. */
     _agents: _agents
     /** Query across all of the instances of a component. Pass in filters and sorts if you want, and get each instance via the `items` key. */
     _componentInstances: _components
+    /** The diff between the current branch and the head commit. */
+    _diff: Scalars['JSON']
     /** The structure of the repository. Used by START. */
     _structure: Scalars['JSON']
     _sys: RepoSys
@@ -359,6 +363,22 @@ export interface RepoSys {
 }
 
 export type RichTextJson = (BaseRichTextJson | BodyRichText) & { __isUnion?: true }
+
+export interface SearchHighlight_0cd24929507ac825726cb {
+    /** The field/path that was matched (e.g., "title", "body.content") */
+    by: Scalars['String']
+    /** HTML snippet with <mark> tags around the matched terms */
+    snippet: Scalars['String']
+    __typename: 'SearchHighlight_0cd24929507ac825726cb'
+}
+
+export interface SearchHighlight_dcc95c0b5e8df1e14452a {
+    /** The field/path that was matched (e.g., "title", "body.content") */
+    by: Scalars['String']
+    /** HTML snippet with <mark> tags around the matched terms */
+    snippet: Scalars['String']
+    __typename: 'SearchHighlight_dcc95c0b5e8df1e14452a'
+}
 
 export interface SidebarTree {
     _analyticsKey: Scalars['String']
@@ -382,6 +402,8 @@ export interface SidebarTree {
 export interface SidebarTreeComponent {
     _analyticsKey: Scalars['String']
     _dashboardUrl: Scalars['String']
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight: (SearchHighlight_dcc95c0b5e8df1e14452a[] | null)
     _id: Scalars['String']
     _idPath: Scalars['String']
     _slug: Scalars['String']
@@ -393,7 +415,7 @@ export interface SidebarTreeComponent {
     __typename: 'SidebarTreeComponent'
 }
 
-export type SidebarTreeComponentOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'collection__ASC' | 'collection__DESC' | 'target__ASC' | 'target__DESC'
+export type SidebarTreeComponentOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'collection__ASC' | 'collection__DESC' | 'target__ASC' | 'target__DESC' | 'untitled__ASC' | 'untitled__DESC'
 
 export interface TransactionStatus {
     /** Duration in milliseconds. */
@@ -417,7 +439,7 @@ export interface Variant {
     __typename: 'Variant'
 }
 
-export interface _AgentSTART {
+export interface _AgentStart {
     _agentKey: Scalars['String']
     _analyticsKey: Scalars['String']
     _dashboardUrl: Scalars['String']
@@ -442,7 +464,7 @@ export interface _AgentSTART {
     searchTheWeb: Scalars['Boolean']
     slackInstallUrl: Scalars['String']
     systemPrompt: Scalars['String']
-    __typename: '_AgentSTART'
+    __typename: '_AgentStart'
 }
 
 export interface _BranchInfo {
@@ -511,7 +533,7 @@ export type _ResolveTargetsWithEnum = 'id' | 'objectName'
 export type _StructureFormatEnum = 'json' | 'xml'
 
 export interface _agents {
-    start: _AgentSTART
+    start: _AgentStart
     __typename: '_agents'
 }
 
@@ -568,6 +590,8 @@ export interface ArticleComponentGenqlSelection{
      */
     scope?: (AnalyticsKeyScope | null)} } | boolean | number
     _dashboardUrl?: boolean | number
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight?: SearchHighlight_0cd24929507ac825726cbGenqlSelection
     _id?: boolean | number
     _idPath?: boolean | number
     _slug?: boolean | number
@@ -580,6 +604,12 @@ export interface ArticleComponentGenqlSelection{
 }
 
 export interface ArticleComponentFilterInput {AND?: (ArticleComponentFilterInput | null),OR?: (ArticleComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null)}
+
+export interface ArticleComponentSearchInput {
+/** Searchable fields for query */
+by?: (Scalars['String'][] | null),
+/** Search query */
+q?: (Scalars['String'] | null)}
 
 export interface ArticlesGenqlSelection{
     _analyticsKey?: { __args: {
@@ -687,7 +717,7 @@ export interface BlockDocumentGenqlSelection{
     on_Documentation?: DocumentationGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
     on_SidebarTreeComponent?: SidebarTreeComponentGenqlSelection
-    on__AgentSTART?: _AgentSTARTGenqlSelection
+    on__AgentStart?: _AgentStartGenqlSelection
     on_articleComponent_AsList?: articleComponent_AsListGenqlSelection
     on_sidebarTreeComponent_AsList?: sidebarTreeComponent_AsListGenqlSelection
     __typename?: boolean | number
@@ -885,6 +915,8 @@ export interface DocumentationGenqlSelection{
     first?: (Scalars['Int'] | null), 
     /** Order by a field. */
     orderBy?: (ArticleComponentOrderByEnum | null), 
+    /** Search configuration */
+    search?: (ArticleComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     sidebarTree?: (SidebarTreeGenqlSelection & { __args?: {
@@ -894,6 +926,8 @@ export interface DocumentationGenqlSelection{
     first?: (Scalars['Int'] | null), 
     /** Order by a field. */
     orderBy?: (SidebarTreeComponentOrderByEnum | null), 
+    /** Search configuration */
+    search?: (SidebarTreeComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
@@ -997,13 +1031,17 @@ export interface MutationGenqlSelection{
 export interface NumberFilter {eq?: (Scalars['Float'] | null),gt?: (Scalars['Float'] | null),gte?: (Scalars['Float'] | null),isNull?: (Scalars['Boolean'] | null),lt?: (Scalars['Float'] | null),lte?: (Scalars['Float'] | null),neq?: (Scalars['Float'] | null)}
 
 export interface QueryGenqlSelection{
-    _agent?: (_AgentSTARTGenqlSelection & { __args: {
+    _agent?: (_AgentStartGenqlSelection & { __args: {
     /** The ID of the agent. */
     id: Scalars['String']} })
     /** Query across the custom AI agents in the repository. */
     _agents?: _agentsGenqlSelection
     /** Query across all of the instances of a component. Pass in filters and sorts if you want, and get each instance via the `items` key. */
     _componentInstances?: _componentsGenqlSelection
+    /** The diff between the current branch and the head commit. */
+    _diff?: { __args: {
+    /** Simplified diff returns only the items array showing statuses. */
+    simplified?: (Scalars['Boolean'] | null)} } | boolean | number
     /** The structure of the repository. Used by START. */
     _structure?: { __args: {
     /** The format of the structure. */
@@ -1039,6 +1077,22 @@ export interface RichTextJsonGenqlSelection{
     toc?: boolean | number
     on_BaseRichTextJson?: BaseRichTextJsonGenqlSelection
     on_BodyRichText?: BodyRichTextGenqlSelection
+    __typename?: boolean | number
+}
+
+export interface SearchHighlight_0cd24929507ac825726cbGenqlSelection{
+    /** The field/path that was matched (e.g., "title", "body.content") */
+    by?: boolean | number
+    /** HTML snippet with <mark> tags around the matched terms */
+    snippet?: boolean | number
+    __typename?: boolean | number
+}
+
+export interface SearchHighlight_dcc95c0b5e8df1e14452aGenqlSelection{
+    /** The field/path that was matched (e.g., "title", "body.content") */
+    by?: boolean | number
+    /** HTML snippet with <mark> tags around the matched terms */
+    snippet?: boolean | number
     __typename?: boolean | number
 }
 
@@ -1078,6 +1132,8 @@ export interface SidebarTreeComponentGenqlSelection{
      */
     scope?: (AnalyticsKeyScope | null)} } | boolean | number
     _dashboardUrl?: boolean | number
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight?: SearchHighlight_dcc95c0b5e8df1e14452aGenqlSelection
     _id?: boolean | number
     _idPath?: boolean | number
     _slug?: boolean | number
@@ -1091,6 +1147,8 @@ export interface SidebarTreeComponentGenqlSelection{
     first?: (Scalars['Int'] | null), 
     /** Order by a field. */
     orderBy?: (SidebarTreeComponentOrderByEnum | null), 
+    /** Search configuration */
+    search?: (SidebarTreeComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     target?: ArticleComponentGenqlSelection
@@ -1100,6 +1158,12 @@ export interface SidebarTreeComponentGenqlSelection{
 export interface SidebarTreeComponentFilterInput {AND?: (SidebarTreeComponentFilterInput | null),OR?: (SidebarTreeComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),collection?: (ListFilter | null),target?: (SidebarTreeComponentFilterInput__target_0___article | null)}
 
 export interface SidebarTreeComponentFilterInput__target_0___article {_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null)}
+
+export interface SidebarTreeComponentSearchInput {
+/** Searchable fields for query */
+by?: (Scalars['String'][] | null),
+/** Search query */
+q?: (Scalars['String'] | null)}
 
 export interface StringFilter {contains?: (Scalars['String'] | null),endsWith?: (Scalars['String'] | null),eq?: (Scalars['String'] | null),in?: (Scalars['String'][] | null),isNull?: (Scalars['Boolean'] | null),matches?: (StringMatchesFilter | null),notEq?: (Scalars['String'] | null),notIn?: (Scalars['String'][] | null),startsWith?: (Scalars['String'] | null)}
 
@@ -1127,7 +1191,7 @@ export interface VariantGenqlSelection{
     __typename?: boolean | number
 }
 
-export interface _AgentSTARTGenqlSelection{
+export interface _AgentStartGenqlSelection{
     _agentKey?: boolean | number
     _analyticsKey?: { __args: {
     /**
@@ -1223,7 +1287,7 @@ export interface _PlaygroundInfoGenqlSelection{
 }
 
 export interface _agentsGenqlSelection{
-    start?: _AgentSTARTGenqlSelection
+    start?: _AgentStartGenqlSelection
     __typename?: boolean | number
 }
 
@@ -1235,6 +1299,8 @@ export interface _componentsGenqlSelection{
     first?: (Scalars['Int'] | null), 
     /** Order by a field. */
     orderBy?: (ArticleComponentOrderByEnum | null), 
+    /** Search configuration */
+    search?: (ArticleComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     sidebarTree?: (sidebarTreeComponent_AsListGenqlSelection & { __args?: {
@@ -1244,6 +1310,8 @@ export interface _componentsGenqlSelection{
     first?: (Scalars['Int'] | null), 
     /** Order by a field. */
     orderBy?: (SidebarTreeComponentOrderByEnum | null), 
+    /** Search configuration */
+    search?: (SidebarTreeComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
@@ -1404,6 +1472,14 @@ export interface FragmentsMap {
     root: RichTextJson,
     selection: RichTextJsonGenqlSelection,
 }
+  SearchHighlight_0cd24929507ac825726cb: {
+    root: SearchHighlight_0cd24929507ac825726cb,
+    selection: SearchHighlight_0cd24929507ac825726cbGenqlSelection,
+}
+  SearchHighlight_dcc95c0b5e8df1e14452a: {
+    root: SearchHighlight_dcc95c0b5e8df1e14452a,
+    selection: SearchHighlight_dcc95c0b5e8df1e14452aGenqlSelection,
+}
   SidebarTree: {
     root: SidebarTree,
     selection: SidebarTreeGenqlSelection,
@@ -1420,9 +1496,9 @@ export interface FragmentsMap {
     root: Variant,
     selection: VariantGenqlSelection,
 }
-  _AgentSTART: {
-    root: _AgentSTART,
-    selection: _AgentSTARTGenqlSelection,
+  _AgentStart: {
+    root: _AgentStart,
+    selection: _AgentStartGenqlSelection,
 }
   _BranchInfo: {
     root: _BranchInfo,
