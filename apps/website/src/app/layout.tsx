@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { Toolbar } from "basehub/next-toolbar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import localFont from "next/font/local";
+import { Metadata } from "next";
 
 const geistMono = localFont({
   variable: "--font-geist-mono",
@@ -105,6 +105,10 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "xmcp — The TypeScript MCP framework",
   description: "The framework for building & shipping MCP applications.",
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -144,7 +148,7 @@ export const metadata: Metadata = {
     title: "xmcp",
   },
   alternates: {
-    canonical: "https://xmcp.dev/",
+    canonical: "https://xmcp.dev",
   },
 };
 
