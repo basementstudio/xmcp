@@ -1,5 +1,5 @@
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { betterAuth, User } from "better-auth";
+import { betterAuth } from "better-auth";
 import {
   NextFunction,
   Router,
@@ -12,9 +12,8 @@ import path from "path";
 import express from "express";
 import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
-import { Database } from "./databases.js";
 import { XmcpMiddleware } from "xmcp";
-import { BetterAuthConfig, EmailAndPassword } from "./types.js";
+import { BetterAuthConfig } from "./types.js";
 import { processProvidersResponse } from "./utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
