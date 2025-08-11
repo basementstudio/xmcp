@@ -91,24 +91,7 @@ export function betterAuthRouter(
     res.json(config);
   });
 
-  // serve auth ui
-  router.use("/auth", express.static(authUiPath));
-
   router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
-
-  // email callback to handle verify email redirect
-  if (authConfig.providers?.emailAndPassword) {
-    router.get("/auth/callback/email", (_req, res) => {
-      res.sendFile(path.join(authUiPath, "index.html"));
-    });
-  }
-
-  // google callback custom to handle redirect
-  if (authConfig.providers?.google) {
-    router.get("/auth/callback/google", (_req, res) => {
-      res.sendFile(path.join(authUiPath, "index.html"));
-    });
-  }
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
@@ -119,9 +102,8 @@ export function betterAuthRouter(
     }
   });
 
-  router.get("/auth/sign-in", (_req, res) => {
-    res.sendFile(path.join(authUiPath, "index.html"));
-  });
+  // serve auth ui static assets AFTER specific routes
+  router.use("/auth", express.static(authUiPath));
 
   return router;
 }
