@@ -5,12 +5,14 @@ interface GoogleButtonProps {
   setError: (error: string | null) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  isDisabled?: boolean;
 }
 
 export const GoogleButton: React.FC<GoogleButtonProps> = ({
   setError,
   isLoading,
   setIsLoading,
+  isDisabled = false,
 }) => {
   const handleSignIn = async () => {
     setError(null);
@@ -33,11 +35,13 @@ export const GoogleButton: React.FC<GoogleButtonProps> = ({
     }
   };
 
+  const isButtonDisabled = isLoading || isDisabled;
+
   return (
     <button
       type="button"
       onClick={handleSignIn}
-      disabled={isLoading}
+      disabled={isButtonDisabled}
       className="w-full bg-white text-black py-3 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm uppercase"
     >
       {isLoading ? (

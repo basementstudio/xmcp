@@ -7,6 +7,7 @@ interface EmailFormProps {
   setError: (error: string | null) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  isDisabled?: boolean;
 }
 
 export const EmailForm: React.FC<EmailFormProps> = ({
@@ -14,6 +15,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
   setError,
   isLoading,
   setIsLoading,
+  isDisabled = false,
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,6 +79,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
   };
 
   const isSignUpDisabled = config.disableSignUp;
+  const isFormDisabled = isLoading || isDisabled;
 
   return (
     <>
@@ -100,7 +103,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
               className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
               placeholder="Enter your full name"
               required
-              disabled={isLoading}
+              disabled={isFormDisabled}
             />
           </div>
         )}
@@ -123,7 +126,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
             className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
             placeholder="Enter your email"
             required
-            disabled={isLoading}
+            disabled={isFormDisabled}
           />
         </div>
 
@@ -145,7 +148,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
             className="w-full px-4 py-3 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
             placeholder="Enter your password"
             required
-            disabled={isLoading}
+            disabled={isFormDisabled}
             minLength={config.minPasswordLength}
             maxLength={config.maxPasswordLength}
           />
@@ -155,7 +158,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
           <button
             type="button"
             onClick={isSignUpMode ? handleSignUp : handleSignIn}
-            disabled={isLoading}
+            disabled={isFormDisabled}
             className="w-full bg-white text-black py-3 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
           >
             {isLoading ? (
@@ -199,7 +202,7 @@ export const EmailForm: React.FC<EmailFormProps> = ({
               : "Don't have an account?"}{" "}
             <button
               onClick={toggleMode}
-              disabled={isLoading}
+              disabled={isFormDisabled}
               className="font-medium text-white hover:underline bg-transparent border-none cursor-pointer focus-visible:ring-2 focus-visible:ring-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSignUpMode ? "Sign in" : "Sign up"}

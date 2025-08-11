@@ -12,7 +12,8 @@ export const DynamicSignInPage: React.FC<DynamicSignInPageProps> = ({
   config,
 }) => {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const hasEmailAndPassword = config.providers.emailAndPassword?.enabled;
   const hasGoogle = config.providers.google?.enabled;
@@ -53,8 +54,9 @@ export const DynamicSignInPage: React.FC<DynamicSignInPageProps> = ({
               <EmailForm
                 config={config.providers.emailAndPassword}
                 setError={setError}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
+                isLoading={isEmailLoading}
+                setIsLoading={setIsEmailLoading}
+                isDisabled={isGoogleLoading}
               />
             )}
 
@@ -72,8 +74,9 @@ export const DynamicSignInPage: React.FC<DynamicSignInPageProps> = ({
             {hasGoogle && (
               <GoogleButton
                 setError={setError}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
+                isLoading={isGoogleLoading}
+                setIsLoading={setIsGoogleLoading}
+                isDisabled={isEmailLoading}
               />
             )}
           </div>
