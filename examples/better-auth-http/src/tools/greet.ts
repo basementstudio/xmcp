@@ -21,7 +21,7 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const session = getBetterAuthSession();
+  const session = await getBetterAuthSession();
 
   const result = `Hello, ${name}! Your user id is ${session.userId}`;
 
