@@ -37,5 +37,6 @@ export default defineConfig({
     port: 3001,
     host: true,
   },
+  // Use /auth/ base path for both dev and production to match routing
   base: "/auth/",
 });
