@@ -1,5 +1,5 @@
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
-import { betterAuth } from "better-auth";
+import { betterAuth, User } from "better-auth";
 import {
   NextFunction,
   Router,
@@ -14,36 +14,21 @@ import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
 import { Database } from "./databases.js";
 import { XmcpMiddleware } from "xmcp";
+import { BetterAuthConfig, EmailAndPassword } from "./types.js";
+import { processProvidersResponse } from "./utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const authUiPath = path.join(__dirname, "auth-ui");
 
-export type BetterAuthConfig = {
-  database: Database;
-  baseURL: string;
-  secret: string;
-  providers?: {
-    emailAndPassword?: boolean;
-    google?: {
-      clientId: string;
-      clientSecret: string;
-    };
-  };
-};
-
-export type SignInPage = "google" | "email" | "email-google";
-
 function getBetterAuthInstance(auth: BetterAuthConfig): any {
   const betterAuthInstance = betterAuth({
     database: auth.database,
     baseURL: auth.baseURL,
     secret: auth.secret,
-    ...(auth.providers?.emailAndPassword && {
-      emailAndPassword: {
-        enabled: auth.providers.emailAndPassword,
-      },
+    ...(auth.providers?.emailAndPassword?.enabled && {
+      emailAndPassword: auth.providers.emailAndPassword,
     }),
     ...(auth.providers?.google && {
       socialProviders: {
@@ -91,33 +76,32 @@ export function betterAuthRouter(
     );
   });
 
-  // TODO: create an object
   // get config to render sign in page
   router.get("/auth/config", (_req, res) => {
+    const config = processProvidersResponse(authConfig.providers);
+
     if (
-      authConfig.providers?.google &&
-      !authConfig.providers.emailAndPassword
+      !config.providers.emailAndPassword?.enabled &&
+      !config.providers.google?.enabled
     ) {
-      res.json("google");
-    } else if (
-      authConfig.providers?.emailAndPassword &&
-      !authConfig.providers.google
-    ) {
-      res.json("email");
-    } else if (
-      authConfig.providers?.emailAndPassword &&
-      authConfig.providers.google
-    ) {
-      res.json("email-google");
-    } else {
       res.status(500).json({ error: "No providers configured" });
+      return;
     }
+
+    res.json(config);
   });
 
   // serve auth ui
   router.use("/auth", express.static(authUiPath));
 
   router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
+
+  // email callback to handle verify email redirect
+  if (authConfig.providers?.emailAndPassword) {
+    router.get("/auth/callback/email", (_req, res) => {
+      res.sendFile(path.join(authUiPath, "index.html"));
+    });
+  }
 
   // google callback custom to handle redirect
   if (authConfig.providers?.google) {
