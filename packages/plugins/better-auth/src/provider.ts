@@ -92,6 +92,23 @@ export function betterAuthRouter(
 
   router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
 
+  // serve index.html for auth routes in development so react router can handle them
+  const serveAuthHtml = (_req: Request, res: Response) => {
+    res.sendFile(path.join(authUiPath, "index.html"));
+  };
+
+  router.get("/auth/sign-in", serveAuthHtml);
+
+  // email callback to handle verify email redirect
+  /*   if (authConfig.providers?.emailAndPassword) {
+    router.get("/auth/callback/email", serveAuthHtml);
+  }
+ */
+  // google callback custom to handle redirect
+  if (authConfig.providers?.google) {
+    router.get("/auth/callback/google", serveAuthHtml);
+  }
+
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
       const config = await betterAuthInstance.api.getMcpOAuthConfig();
