@@ -33,28 +33,41 @@ jobs:
       - name: Generate canary version
         id: version
         run: |
-          # Get the latest published version from NPM (fallback to package.json if not published)
+          # Get the latest published stable version from NPM (fallback to package.json if not published)
           LATEST_NPM_VERSION=$(npm view xmcp version 2>/dev/null || echo "")
 
           if [ -z "$LATEST_NPM_VERSION" ]; then
-            # If package not published yet, use version from package.json
-            BASE_VERSION=$(cat packages/xmcp/package.json | grep '"version"' | cut -d'"' -f4)
-            echo "Package not published yet, using package.json version: $BASE_VERSION"
-            CANARY_NUMBER=1
+            # If package not published yet, use version from package.json and increment patch
+            CURRENT_VERSION=$(cat packages/xmcp/package.json | grep '"version"' | cut -d'"' -f4)
+            echo "Package not published yet, using package.json version: $CURRENT_VERSION"
+            # Parse version and increment patch version for canary base
+            MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+            PATCH_INCREMENTED=$((PATCH + 1))
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH_INCREMENTED}"
+            echo "Incremented base version for canary: $BASE_VERSION"
+            CANARY_NUMBER=0
           else
-            BASE_VERSION="$LATEST_NPM_VERSION"
-            echo "Using latest stable NPM version as base: $BASE_VERSION"
+            echo "Latest stable NPM version: $LATEST_NPM_VERSION"
+            # Parse stable version and increment patch version for canary base
+            MAJOR=$(echo "$LATEST_NPM_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$LATEST_NPM_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_NPM_VERSION" | cut -d. -f3)
+            PATCH_INCREMENTED=$((PATCH + 1))
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH_INCREMENTED}"
+            echo "Using incremented base version for canary: $BASE_VERSION"
             
-            # Get all published versions and find existing canary versions for this base
+            # Get all published versions and find existing canary versions for this incremented base
             ALL_VERSIONS=$(npm view xmcp versions --json 2>/dev/null || echo "[]")
             
             # Find the highest canary number for this base version
             HIGHEST_CANARY=$(echo "$ALL_VERSIONS" | jq -r ".[]" | grep "^${BASE_VERSION}-canary\." | sed "s/^${BASE_VERSION}-canary\.//" | sort -n | tail -1)
             
             if [ -z "$HIGHEST_CANARY" ] || [ "$HIGHEST_CANARY" = "null" ]; then
-              # No existing canary versions for this base, start at 1
-              CANARY_NUMBER=1
-              echo "No existing canary versions found for base $BASE_VERSION, starting at canary.1"
+              # No existing canary versions for this base, start at 0
+              CANARY_NUMBER=0
+              echo "No existing canary versions found for base $BASE_VERSION, starting at canary.0"
             else
               # Increment from the highest existing canary number
               CANARY_NUMBER=$((HIGHEST_CANARY + 1))
