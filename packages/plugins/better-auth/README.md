@@ -6,7 +6,7 @@
 
 > [!IMPORTANT]
 > This example shows how to add authentication to your xmcp app using Better Auth and a PostgreSQL database. This is currently the only supported DB provider for this plugin.
-> It only protects the `/mcp` endpoint. Modifying the endpoint to match the xmcp config is not supported yet.
+> It only protects the `/mcp` endpoint.
 
 To integrate Better Auth to your xmcp app, you need to:
 
@@ -145,7 +145,7 @@ Use the `getBetterAuthSession` function to get the current session in your tools
 import { getBetterAuthSession } from "@xmcp-dev/better-auth";
 
 export default async function getMySession() {
-  const session = getBetterAuthSession();
+  const session = await getBetterAuthSession();
 
   return `Your user id is ${session.userId}`;
 }
