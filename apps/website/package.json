@@ -42,7 +42,7 @@
     "tailwind-merge": "^3.3.1",
     "three": "^0.178.0",
     "xmcp": "0.0.17",
-    "zod": "3.24.4",
+    "zod": "^3.25.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

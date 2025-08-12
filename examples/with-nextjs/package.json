@@ -12,7 +12,7 @@
     "react-dom": "^19.0.0",
     "next": "15.3.5",
     "xmcp": "workspace:*",
-    "zod": "3.24.4"
+    "zod": "3.25.0"
   },
   "devDependencies": {
     "typescript": "^5",
