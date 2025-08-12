@@ -124,6 +124,11 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
   return new Promise((resolve, reject) => {
     const compiler = webpack(webpackConfig);
 
+    if (!compiler) {
+      reject(new Error("Failed to create webpack compiler"));
+      return;
+    }
+
     // Use memory filesystem for output
     compiler.outputFileSystem = memoryFs as any;
 

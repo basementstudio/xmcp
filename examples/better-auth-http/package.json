@@ -10,7 +10,7 @@
     "@xmcp-dev/better-auth": "workspace:*",
     "pg": "^8.16.3",
     "xmcp": "workspace:*",
-    "zod": "3.25.0"
+    "zod": "3.24.4"
   },
   "devDependencies": {
     "@types/pg": "^8.15.4",
