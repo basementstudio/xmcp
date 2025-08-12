@@ -2,7 +2,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import { getBetterAuthContext } from "./context.js";
 import { OAuthAccessToken } from "better-auth/plugins";
 
-export function getBetterAuthSession(): OAuthAccessToken {
+export async function getBetterAuthSession(): Promise<OAuthAccessToken> {
   const context = getBetterAuthContext();
 
   const session = context.api.api.getMcpSession({

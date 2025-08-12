@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/better-auth",
   "description": "Better Auth integration for xmcp",
-  "version": "0.0.6-canary.2",
+  "version": "0.0.10",
   "author": {
     "name": "Basement Studio",
     "email": "hello@basement.studio",
@@ -48,7 +48,7 @@
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
   "dependencies": {
-    "better-auth": "^1.3.4",
+    "better-auth": "1.3.4",
     "express": "^4.19.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -75,7 +75,7 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "^0.1.7-canary.8"
+    "xmcp": "^0.1.9-canary.1"
   },
   "optionalDependencies": {
     "pg": "^8.16.3"

@@ -3,7 +3,7 @@ import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { XmcpMiddleware } from "@/types/middleware";
 import { CorsConfig } from "@/compiler/config/schemas";
-import { Provider, processProviders } from "@/auth";
+import { Provider, processProviders } from "@/runtime/middlewares/utils";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 import dotenv from "dotenv";
 dotenv.config();

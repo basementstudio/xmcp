@@ -6,6 +6,7 @@
 
 > [!IMPORTANT]
 > This example shows how to add authentication to your xmcp app using Better Auth and a PostgreSQL database. This is currently the only supported DB provider for this plugin.
+> It only protects the `/mcp` endpoint. Modifying the endpoint to match the xmcp config is not supported yet.
 
 To integrate Better Auth to your xmcp app, you need to:
 
