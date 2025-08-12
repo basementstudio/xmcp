@@ -2,8 +2,17 @@ import { IntroSection } from "./sections/intro-section";
 import { AllYouNeedIsToolsSection } from "./sections/all-you-need-is-tools";
 import { FeaturesSection } from "./sections/features-section";
 import { GetStartedSection } from "./sections/get-started-section";
+import { Metadata } from "next";
 
 export const dynamic = "force-static";
+
+export const metadata: Metadata = {
+  title: "xmcp — The TypeScript MCP framework",
+  description: "The framework for building & shipping MCP applications.",
+  alternates: {
+    canonical: "https://xmcp.dev",
+  },
+};
 
 export default async function Home() {
   return (

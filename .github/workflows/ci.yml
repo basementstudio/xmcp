@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, canary]
 
 env:
   # Set this to 'true' to skip CLI tests in CI
@@ -110,7 +110,7 @@ jobs:
           # Create a test project using non-interactive flags
           cd "$TEST_DIR"
           echo "Creating test project..."
-          create-xmcp-app test-project --yes --use-npm --local || {
+          create-xmcp-app test-project --yes --use-npm || {
             echo "❌ create-xmcp-app failed to create project"
             exit 1
           }

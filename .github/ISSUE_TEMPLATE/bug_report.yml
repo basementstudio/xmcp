@@ -1,0 +1,65 @@
+name: Report an issue
+description: Report an xmcp issue.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is used for reporting issues with xmcp.
+
+        Before opening an issue, please check if there is already an issue open for the same problem and :+1: upvote the existing instead. This will result in a quicker resolution.
+
+        If you need help with your project, please use [Discord](https://discord.gg/DzsXJcUmQN) instead.
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: A step-by-step description of how to reproduce the issue. Screenshots can be provided in the issue body below. If using code blocks, make sure that [syntax highlighting is correct](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#syntax-highlighting) and double check that the rendered preview is not broken.
+      placeholder: |
+        1. Run the development server
+        2. X happens
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Current vs. Expected behavior
+      description: A clear and concise description of what the bug is (e.g., screenshots, logs, etc.), and what you expected to happen.
+      placeholder: "Following the steps from the previous section, I expected A to happen, but I observed B instead."
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected Package
+      description: Which package is affected?
+      options:
+        - xmcp (core framework)
+        - create-xmcp-app
+        - init-xmcp
+        - Examples
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Provide environment information
+      render: bash
+      value: |
+        - Operating System:
+          - Platform: darwin
+          - Arch: arm64
+          - Version: Darwin Kernel Version 23.6.0
+        - Binaries:
+          - Node: 20.17.0
+          - npm: 10.8.2
+          - Yarn: 1.22.22
+          - pnpm: 9.10.0
+        - xmcp version:
+        - Adapter (if applicable): Next.js/Express
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: |
+        Any extra information that might help us investigate.

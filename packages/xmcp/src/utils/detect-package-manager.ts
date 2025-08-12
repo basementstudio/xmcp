@@ -10,8 +10,15 @@ export function detectPackageManager(): {
   const pnpmLock = path.join(processFolder, "pnpm-lock.yaml");
   const npmLock = path.join(processFolder, "package-lock.json");
   const yarnLock = path.join(processFolder, "yarn.lock");
+  const bunLock = path.join(processFolder, "bun.lockb");
 
-  if (fs.existsSync(pnpmLock)) {
+  if (fs.existsSync(bunLock)) {
+    return {
+      manager: "bun",
+      lockFile: "bun.lockb",
+      installCmd: "bun install",
+    };
+  } else if (fs.existsSync(pnpmLock)) {
     return {
       manager: "pnpm",
       lockFile: "pnpm-lock.yaml",

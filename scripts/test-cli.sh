@@ -45,7 +45,7 @@ npm install -g "$PACK_FILE"
 # Create test project using non-interactive flags
 cd "$TEST_DIR"
 echo "Creating test project..."
-create-xmcp-app test-project --yes --use-npm --local || {
+create-xmcp-app test-project --yes --use-npm || {
   echo "❌ create-xmcp-app failed to create project"
   npm uninstall -g create-xmcp-app || true
   exit 1

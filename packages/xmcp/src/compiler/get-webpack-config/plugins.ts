@@ -24,6 +24,33 @@ export class InjectRuntimePlugin {
   }
 }
 
+const nextJsTypeDefinition = `
+export const xmcpHandler: (req: Request) => Promise<Response>;
+export const withAuth: (handler: (req: Request) => Promise<Response>, authConfig: AuthConfig) => (req: Request) => Promise<Response>;
+export type VerifyToken = (req: Request, bearerToken?: string) => Promise<AuthInfo | undefined>;
+export type Options = {
+  required?: boolean;
+  requiredScopes?: string[];
+  resourceMetadataPath?: string;
+};
+export type AuthConfig = {
+  verifyToken: VerifyToken;
+  options?: Options;
+};
+export type AuthInfo = {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  resource?: URL;
+  extra?: Record<string, unknown>;
+};
+`;
+
+const expressTypeDefinition = `
+export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
+`;
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -41,12 +68,9 @@ export class CreateTypeDefinitionPlugin {
         if (xmcpConfig.experimental?.adapter) {
           let typeDefinitionContent = "";
           if (xmcpConfig.experimental?.adapter == "nextjs") {
-            typeDefinitionContent = `export const xmcpHandler: (req: Request) => Promise<void>;
-  `;
+            typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "express") {
-            typeDefinitionContent = `import { Request, Response } from "express";
-export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
-  `;
+            typeDefinitionContent = expressTypeDefinition;
           }
           fs.writeFileSync(
             path.join(adapterOutputPath, "index.d.ts"),

@@ -23,12 +23,19 @@ export const DEFAULT_CORS_CONFIG = {
  * Default values for the HTTP transport
  */
 export const DEFAULT_HTTP_CONFIG = {
-  port: 3002,
+  port: 3001,
   host: "127.0.0.1",
   bodySizeLimit: 1024 * 1024 * 10, // 10MB
   debug: false,
   endpoint: "/mcp",
   cors: DEFAULT_CORS_CONFIG,
+};
+
+/**
+ * Default values for the STDIO transport
+ */
+export const DEFAULT_STDIO_CONFIG = {
+  debug: false,
 };
 
 /**

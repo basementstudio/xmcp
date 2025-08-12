@@ -15,7 +15,7 @@ interface ProjectOptions {
   projectName: string;
   packageManager: string;
   transports: string[];
-  useLocalXmcp?: boolean;
+  packageVersion: string;
   deployToVercel?: boolean;
   skipInstall?: boolean;
 }
@@ -29,7 +29,7 @@ function createProjectDirectories(projectPath: string): void {
 }
 
 /**
- * Create a new XMCP project by orchestrating all the setup steps
+ * Create a new xmcp project by orchestrating all the setup steps
  * @param options - Configuration options for project creation
  */
 export function createProject(options: ProjectOptions): void {
@@ -38,7 +38,7 @@ export function createProject(options: ProjectOptions): void {
     projectName,
     packageManager,
     transports,
-    useLocalXmcp,
+    packageVersion,
     deployToVercel,
     skipInstall,
   } = options;
@@ -59,7 +59,7 @@ export function createProject(options: ProjectOptions): void {
   generateConfig(projectPath, transports);
 
   // Update package.json with project configuration
-  updatePackageJson(projectPath, projectName, transports, useLocalXmcp);
+  updatePackageJson(projectPath, projectName, transports);
 
   // Add vercel.json if deployToVercel is true
   if (deployToVercel) {
@@ -74,6 +74,6 @@ export function createProject(options: ProjectOptions): void {
 
   // Install project dependencies
   if (!skipInstall) {
-    install(projectPath, packageManager);
+    install(projectPath, packageManager, packageVersion);
   }
 }

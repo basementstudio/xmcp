@@ -19,10 +19,6 @@ export const metadata: ToolMetadata = {
 };
 
 // Tool implementation
-export default async function greet({ name }: InferSchema<typeof schema>) {
-  const result = `Hello, ${name}!`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+export default function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!!`;
 }

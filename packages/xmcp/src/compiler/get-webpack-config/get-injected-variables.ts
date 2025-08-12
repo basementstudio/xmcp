@@ -6,6 +6,7 @@ import {
   injectHttpVariables,
   injectOAuthVariables,
   injectPathsVariables,
+  injectStdioVariables,
 } from "../config/injection";
 
 /**
@@ -22,11 +23,13 @@ export function getInjectedVariables(
   const corsVariables = injectCorsVariables(xmcpConfig.http);
   const oauthVariables = injectOAuthVariables(xmcpConfig);
   const pathsVariables = injectPathsVariables(xmcpConfig);
+  const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
 
   return {
     ...httpVariables,
     ...corsVariables,
     ...oauthVariables,
     ...pathsVariables,
+    ...stdioVariables,
   };
 }

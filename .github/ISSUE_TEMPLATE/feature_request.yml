@@ -1,0 +1,36 @@
+name: Feature Request
+description: Request a new feature
+title: "[Feature]: "
+labels: ["feature-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide a clear description of the requested feature and its use case.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this feature solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe the solution you'd like
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package should this feature be added to?
+      options:
+        - xmcp (core framework)
+        - create-xmcp-app
+        - init-xmcp
+        - Examples
+        - New package
+    validations:
+      required: true

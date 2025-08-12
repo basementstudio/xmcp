@@ -1,6 +1,6 @@
-# CI/CD Setup for XMCP
+# CI/CD Setup for xmcp
 
-This directory contains the GitHub Actions workflows for continuous integration of the XMCP monorepo.
+This directory contains the GitHub Actions workflows for continuous integration of the xmcp monorepo.
 
 ## Workflows
 

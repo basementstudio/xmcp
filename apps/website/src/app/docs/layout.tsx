@@ -42,6 +42,9 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: "xmcp",
   },
+  alternates: {
+    canonical: "https://xmcp.dev/docs",
+  },
 };
 
 export default function DocsLayout({

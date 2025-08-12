@@ -3,8 +3,13 @@ import {
   CorsConfig,
   PathsConfig,
   OAuthConfig,
+  StdioTransportConfig,
 } from "./schemas";
-import { DEFAULT_HTTP_CONFIG, DEFAULT_PATHS_CONFIG } from "./constants";
+import {
+  DEFAULT_HTTP_CONFIG,
+  DEFAULT_PATHS_CONFIG,
+  DEFAULT_STDIO_CONFIG,
+} from "./constants";
 
 export function getResolvedHttpConfig(
   userConfig: HttpTransportConfig | undefined
@@ -37,4 +42,10 @@ export function getResolvedPathsConfig(userConfig: any): PathsConfig {
 
 export function getResolvedOAuthConfig(userConfig: any): OAuthConfig | null {
   return userConfig?.experimental?.oauth || null;
+}
+
+export function getResolvedStdioConfig(
+  userConfig: any
+): StdioTransportConfig | null {
+  return userConfig?.stdio || DEFAULT_STDIO_CONFIG;
 }

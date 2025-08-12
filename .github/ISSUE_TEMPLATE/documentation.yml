@@ -1,0 +1,21 @@
+name: Documentation
+description: Report documentation issues or improvements
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report documentation issues, inaccuracies, or improvement suggestions. Is this something you can help us with? Your contributions are welcomed and appreciated.
+  - type: textarea
+    attributes:
+      label: What is the documentation issue?
+      description: "Example: There is incorrect or stale information about the `headers` feature."
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Is there any context that might help us understand?
+      description: A clear description of any added context that might help us understand.
+    validations:
+      required: true

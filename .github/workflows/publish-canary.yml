@@ -1,0 +1,179 @@
+name: Publish Canary Release to NPM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-canary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Generate canary version
+        id: version
+        run: |
+          # Get the latest published stable version from NPM (fallback to package.json if not published)
+          LATEST_NPM_VERSION=$(npm view xmcp version 2>/dev/null || echo "")
+
+          if [ -z "$LATEST_NPM_VERSION" ]; then
+            # If package not published yet, use version from package.json and increment patch
+            CURRENT_VERSION=$(cat packages/xmcp/package.json | grep '"version"' | cut -d'"' -f4)
+            echo "Package not published yet, using package.json version: $CURRENT_VERSION"
+            # Parse version and increment patch version for canary base
+            MAJOR=$(echo "$CURRENT_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$CURRENT_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$CURRENT_VERSION" | cut -d. -f3)
+            PATCH_INCREMENTED=$((PATCH + 1))
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH_INCREMENTED}"
+            echo "Incremented base version for canary: $BASE_VERSION"
+            CANARY_NUMBER=0
+          else
+            echo "Latest stable NPM version: $LATEST_NPM_VERSION"
+            # Parse stable version and increment patch version for canary base
+            MAJOR=$(echo "$LATEST_NPM_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$LATEST_NPM_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$LATEST_NPM_VERSION" | cut -d. -f3)
+            PATCH_INCREMENTED=$((PATCH + 1))
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH_INCREMENTED}"
+            echo "Using incremented base version for canary: $BASE_VERSION"
+            
+            # Get all published versions and find existing canary versions for this incremented base
+            ALL_VERSIONS=$(npm view xmcp versions --json 2>/dev/null || echo "[]")
+            
+            # Find the highest canary number for this base version
+            HIGHEST_CANARY=$(echo "$ALL_VERSIONS" | jq -r ".[]" | grep "^${BASE_VERSION}-canary\." | sed "s/^${BASE_VERSION}-canary\.//" | sort -n | tail -1)
+            
+            if [ -z "$HIGHEST_CANARY" ] || [ "$HIGHEST_CANARY" = "null" ]; then
+              # No existing canary versions for this base, start at 0
+              CANARY_NUMBER=0
+              echo "No existing canary versions found for base $BASE_VERSION, starting at canary.0"
+            else
+              # Increment from the highest existing canary number
+              CANARY_NUMBER=$((HIGHEST_CANARY + 1))
+              echo "Found existing canary versions up to canary.$HIGHEST_CANARY, using canary.$CANARY_NUMBER"
+            fi
+          fi
+
+          # Generate canary version with incremental number per stable version
+          CANARY_VERSION="${BASE_VERSION}-canary.${CANARY_NUMBER}"
+
+          echo "version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing canary version: $CANARY_VERSION"
+
+      - name: Update package versions
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update xmcp package version
+          cd packages/xmcp
+          npm version "$VERSION" --no-git-tag-version
+          echo "✅ Updated xmcp version to $VERSION"
+
+          # Update create-xmcp-app package version
+          cd ../create-xmcp-app
+          npm version "$VERSION" --no-git-tag-version
+          echo "✅ Updated create-xmcp-app version to $VERSION"
+
+          # Update init-xmcp package version
+          cd ../init-xmcp
+          npm version "$VERSION" --no-git-tag-version
+          echo "✅ Updated init-xmcp version to $VERSION"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+
+      - name: Verify build outputs
+        run: |
+          # Verify xmcp package build
+          cd packages/xmcp
+          if [ ! -f "dist/index.js" ] || [ ! -f "dist/index.d.ts" ] || [ ! -f "dist/cli.js" ]; then
+            echo "❌ xmcp package build verification failed"
+            exit 1
+          fi
+          echo "✅ xmcp package build verified"
+
+          # Verify create-xmcp-app CLI build
+          cd ../create-xmcp-app
+          if [ ! -f "index.js" ]; then
+            echo "❌ create-xmcp-app CLI build verification failed"
+            exit 1
+          fi
+          echo "✅ create-xmcp-app CLI build verified"
+
+          # Verify init-xmcp CLI build
+          cd ../init-xmcp
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ init-xmcp CLI build verification failed"
+            exit 1
+          fi
+          echo "✅ init-xmcp CLI build verified"
+
+      - name: Publish xmcp package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/xmcp
+          echo "Publishing xmcp package with canary tag"
+          npm publish --access public --tag canary
+          echo "✅ Successfully published xmcp@${{ steps.version.outputs.version }} with tag canary"
+
+      - name: Publish create-xmcp-app package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/create-xmcp-app
+          echo "Publishing create-xmcp-app package with canary tag"
+          npm publish --access public --tag canary
+          echo "✅ Successfully published create-xmcp-app@${{ steps.version.outputs.version }} with tag canary"
+
+      - name: Publish init-xmcp package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/init-xmcp
+          echo "Publishing init-xmcp package with canary tag"
+          npm publish --access public --tag canary
+          echo "✅ Successfully published init-xmcp@${{ steps.version.outputs.version }} with tag canary"
+
+      - name: Create publish summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # Canary Release Published
+
+          **Canary version \`${{ steps.version.outputs.version }}\`** published:
+
+          - **xmcp@${{ steps.version.outputs.version }}** - [View on NPM](https://www.npmjs.com/package/xmcp)
+          - **create-xmcp-app@${{ steps.version.outputs.version }}** - [View on NPM](https://www.npmjs.com/package/create-xmcp-app)
+          - **init-xmcp@${{ steps.version.outputs.version }}** - [View on NPM](https://www.npmjs.com/package/init-xmcp)
+
+          **Install canary version:**
+          \`\`\`bash
+          npm install xmcp@${{ steps.version.outputs.version }}
+          \`\`\`
+
+          This is a canary release. Use with caution in production.
+          EOF

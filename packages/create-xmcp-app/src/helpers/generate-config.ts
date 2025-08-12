@@ -19,9 +19,7 @@ const config: XmcpConfig = {`;
 
   if (hasHttp) {
     configContent += `
-  http: {
-    port: 3002,
-  },`;
+  http: true,`;
   }
 
   if (hasStdio) {

@@ -64,8 +64,23 @@ export function injectPathsVariables(userConfig: any) {
 
 export type PathsVariables = ReturnType<typeof injectPathsVariables>;
 
+export function injectStdioVariables(stdioConfig: any) {
+  if (!stdioConfig) return {};
+
+  const debug = typeof stdioConfig === "object" ? stdioConfig.debug : false;
+
+  return {
+    STDIO_CONFIG: JSON.stringify({
+      debug,
+    }),
+  };
+}
+
+export type StdioVariables = ReturnType<typeof injectStdioVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
-  | PathsVariables;
+  | PathsVariables
+  | StdioVariables;
