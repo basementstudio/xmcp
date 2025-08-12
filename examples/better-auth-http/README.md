@@ -62,7 +62,9 @@ export default betterAuthProvider({
   baseURL: process.env.BETTER_AUTH_BASE_URL || "http://127.0.0.1:3002",
   secret: process.env.BETTER_AUTH_SECRET || "super-secret-key",
   providers: {
-    emailAndPassword: true,
+    emailAndPassword: {
+      enabled: true,
+    },
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
@@ -73,16 +75,17 @@ export default betterAuthProvider({
 
 This config object is used to configure the Better Auth instance through the provider function.
 
-| Parameter                       | Type               | Description                                                                                            | Required                 |
-| ------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------ |
-| `database`                      | `Pool` (from `pg`) | Must be a valid instance of `Pool` for PostgreSQL connection                                           | Yes                      |
-| `baseURL`                       | `string`           | The base URL of your xmcp app. Used to generate OAuth callback URLs. Should match your app's host/port | Yes                      |
-| `secret`                        | `string`           | Secret used to sign JWT tokens. Generate a random secret for security                                  | Yes                      |
-| `providers`                     | `object`           | Configuration object for authentication providers                                                      | Yes                      |
-| `providers.emailAndPassword`    | `boolean`          | Set to `true` to enable email/password authentication                                                  | No                       |
-| `providers.google`              | `object`           | Google OAuth configuration object                                                                      | No                       |
-| `providers.google.clientId`     | `string`           | Google OAuth client ID from Google Cloud Console                                                       | Required if using Google |
-| `providers.google.clientSecret` | `string`           | Google OAuth client secret from Google Cloud Console                                                   | Required if using Google |
+| Parameter                            | Type               | Description                                                                                            | Required                 |
+| ------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| `database`                           | `Pool` (from `pg`) | Must be a valid instance of `Pool` for PostgreSQL connection                                           | Yes                      |
+| `baseURL`                            | `string`           | The base URL of your xmcp app. Used to generate OAuth callback URLs. Should match your app's host/port | Yes                      |
+| `secret`                             | `string`           | Secret used to sign JWT tokens. Generate a random secret for security                                  | Yes                      |
+| `providers`                          | `object`           | Configuration object for authentication providers                                                      | Yes                      |
+| `providers.emailAndPassword`         | `object`           | Configuration object for email/password authentication                                                 | No                       |
+| `providers.emailAndPassword.enabled` | `boolean`          | Set to `true` to enable email/password authentication                                                  | No                       |
+| `providers.google`                   | `object`           | Google OAuth configuration object                                                                      | No                       |
+| `providers.google.clientId`          | `string`           | Google OAuth client ID from Google Cloud Console                                                       | Required if using Google |
+| `providers.google.clientSecret`      | `string`           | Google OAuth client secret from Google Cloud Console                                                   | Required if using Google |
 
 #### Email and Password
 
@@ -140,7 +143,7 @@ Use the `getBetterAuthSession` function to get the current session in your tools
 import { getBetterAuthSession } from "@xmcp-dev/better-auth";
 
 export default async function getMySession() {
-  const session = getBetterAuthSession();
+  const session = await getBetterAuthSession();
 
   return `Your user id is ${session.userId}`;
 }
