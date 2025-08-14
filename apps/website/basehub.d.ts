@@ -46,8 +46,7 @@ export interface Scalars {
   options: string[];
   multiple: boolean
 } | {
-  type: "file";
-  private: boolean
+  type: "file"
 }))[],
     BSHBRichTextContentSchema: RichTextNode[],
     BSHBRichTextTOCSchema: RichTextTocNode[],
@@ -59,6 +58,8 @@ export interface Scalars {
     Int: number,
     JSON: any,
     String: string,
+    bshb_event__1212762555: `bshb_event__1212762555:${string}`,
+    schema_bshb_event__1212762555: {notifications?: boolean;repositoryUrl?: string;xAccount?: string;newField?: string;keywords: string;logo: File;http?: string;projectName: string;tagline: string;contactEmail: string;},
 }
 
 export type AnalyticsKeyScope = 'query' | 'send'
@@ -67,7 +68,7 @@ export interface ArticleComponent {
     _analyticsKey: Scalars['String']
     _dashboardUrl: Scalars['String']
     /** Array of search highlight information with field names and HTML markup */
-    _highlight: (SearchHighlight_0cd24929507ac825726cb[] | null)
+    _highlight: (SearchHighlight_710cca4a89c2822a920cb[] | null)
     _id: Scalars['String']
     _idPath: Scalars['String']
     _slug: Scalars['String']
@@ -110,7 +111,6 @@ export interface Assets {
     _sys: BlockDocumentSys
     _title: Scalars['String']
     glLogoMatcap: BlockImage
-    repoLogoDark: BlockImage
     __typename: 'Assets'
 }
 
@@ -151,7 +151,7 @@ export interface BlockColor {
     __typename: 'BlockColor'
 }
 
-export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | Showcase | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
 
 export interface BlockDocumentSys {
     apiNamePath: Scalars['String']
@@ -349,6 +349,7 @@ export interface Query {
     _sys: RepoSys
     assets: Assets
     documentation: Documentation
+    showcase: Showcase
     __typename: 'Query'
 }
 
@@ -364,12 +365,12 @@ export interface RepoSys {
 
 export type RichTextJson = (BaseRichTextJson | BodyRichText) & { __isUnion?: true }
 
-export interface SearchHighlight_0cd24929507ac825726cb {
+export interface SearchHighlight_710cca4a89c2822a920cb {
     /** The field/path that was matched (e.g., "title", "body.content") */
     by: Scalars['String']
     /** HTML snippet with <mark> tags around the matched terms */
     snippet: Scalars['String']
-    __typename: 'SearchHighlight_0cd24929507ac825726cb'
+    __typename: 'SearchHighlight_710cca4a89c2822a920cb'
 }
 
 export interface SearchHighlight_dcc95c0b5e8df1e14452a {
@@ -378,6 +379,19 @@ export interface SearchHighlight_dcc95c0b5e8df1e14452a {
     /** HTML snippet with <mark> tags around the matched terms */
     snippet: Scalars['String']
     __typename: 'SearchHighlight_dcc95c0b5e8df1e14452a'
+}
+
+export interface Showcase {
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    submissions: Submissions
+    __typename: 'Showcase'
 }
 
 export interface SidebarTree {
@@ -416,6 +430,15 @@ export interface SidebarTreeComponent {
 }
 
 export type SidebarTreeComponentOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'collection__ASC' | 'collection__DESC' | 'target__ASC' | 'target__DESC' | 'untitled__ASC' | 'untitled__DESC'
+
+export interface Submissions {
+    /** The `adminKey` gives clients the ability to query, delete and update this block's data. **It's not meant to be exposed to the public.** */
+    adminKey: Scalars['bshb_event__1212762555']
+    /** The `ingestKey` gives clients the ability to send new events to this block. Generally, it's safe to expose it to the public. */
+    ingestKey: Scalars['bshb_event__1212762555']
+    schema: Scalars['BSHBEventSchema']
+    __typename: 'Submissions'
+}
 
 export interface TransactionStatus {
     /** Duration in milliseconds. */
@@ -591,7 +614,7 @@ export interface ArticleComponentGenqlSelection{
     scope?: (AnalyticsKeyScope | null)} } | boolean | number
     _dashboardUrl?: boolean | number
     /** Array of search highlight information with field names and HTML markup */
-    _highlight?: SearchHighlight_0cd24929507ac825726cbGenqlSelection
+    _highlight?: SearchHighlight_710cca4a89c2822a920cbGenqlSelection
     _id?: boolean | number
     _idPath?: boolean | number
     _slug?: boolean | number
@@ -652,7 +675,6 @@ export interface AssetsGenqlSelection{
     _sys?: BlockDocumentSysGenqlSelection
     _title?: boolean | number
     glLogoMatcap?: BlockImageGenqlSelection
-    repoLogoDark?: BlockImageGenqlSelection
     __typename?: boolean | number
 }
 
@@ -715,6 +737,7 @@ export interface BlockDocumentGenqlSelection{
     on_Assets?: AssetsGenqlSelection
     on_Collection?: CollectionGenqlSelection
     on_Documentation?: DocumentationGenqlSelection
+    on_Showcase?: ShowcaseGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
     on_SidebarTreeComponent?: SidebarTreeComponentGenqlSelection
     on__AgentStart?: _AgentStartGenqlSelection
@@ -1059,6 +1082,7 @@ export interface QueryGenqlSelection{
     _sys?: RepoSysGenqlSelection
     assets?: AssetsGenqlSelection
     documentation?: DocumentationGenqlSelection
+    showcase?: ShowcaseGenqlSelection
     __typename?: boolean | number
 }
 
@@ -1080,7 +1104,7 @@ export interface RichTextJsonGenqlSelection{
     __typename?: boolean | number
 }
 
-export interface SearchHighlight_0cd24929507ac825726cbGenqlSelection{
+export interface SearchHighlight_710cca4a89c2822a920cbGenqlSelection{
     /** The field/path that was matched (e.g., "title", "body.content") */
     by?: boolean | number
     /** HTML snippet with <mark> tags around the matched terms */
@@ -1097,6 +1121,25 @@ export interface SearchHighlight_dcc95c0b5e8df1e14452aGenqlSelection{
 }
 
 export interface SelectFilter {excludes?: (Scalars['String'] | null),excludesAll?: (Scalars['String'][] | null),includes?: (Scalars['String'] | null),includesAll?: (Scalars['String'][] | null),includesAny?: (Scalars['String'][] | null),isEmpty?: (Scalars['Boolean'] | null)}
+
+export interface ShowcaseGenqlSelection{
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    submissions?: SubmissionsGenqlSelection
+    __typename?: boolean | number
+}
 
 export interface SidebarTreeGenqlSelection{
     _analyticsKey?: { __args: {
@@ -1168,6 +1211,15 @@ q?: (Scalars['String'] | null)}
 export interface StringFilter {contains?: (Scalars['String'] | null),endsWith?: (Scalars['String'] | null),eq?: (Scalars['String'] | null),in?: (Scalars['String'][] | null),isNull?: (Scalars['Boolean'] | null),matches?: (StringMatchesFilter | null),notEq?: (Scalars['String'] | null),notIn?: (Scalars['String'][] | null),startsWith?: (Scalars['String'] | null)}
 
 export interface StringMatchesFilter {caseSensitive?: (Scalars['Boolean'] | null),pattern: Scalars['String']}
+
+export interface SubmissionsGenqlSelection{
+    /** The `adminKey` gives clients the ability to query, delete and update this block's data. **It's not meant to be exposed to the public.** */
+    adminKey?: boolean | number
+    /** The `ingestKey` gives clients the ability to send new events to this block. Generally, it's safe to expose it to the public. */
+    ingestKey?: boolean | number
+    schema?: boolean | number
+    __typename?: boolean | number
+}
 
 export interface TargetBlock {focus?: (Scalars['Boolean'] | null),id: Scalars['String'],label: Scalars['String']}
 
@@ -1472,13 +1524,17 @@ export interface FragmentsMap {
     root: RichTextJson,
     selection: RichTextJsonGenqlSelection,
 }
-  SearchHighlight_0cd24929507ac825726cb: {
-    root: SearchHighlight_0cd24929507ac825726cb,
-    selection: SearchHighlight_0cd24929507ac825726cbGenqlSelection,
+  SearchHighlight_710cca4a89c2822a920cb: {
+    root: SearchHighlight_710cca4a89c2822a920cb,
+    selection: SearchHighlight_710cca4a89c2822a920cbGenqlSelection,
 }
   SearchHighlight_dcc95c0b5e8df1e14452a: {
     root: SearchHighlight_dcc95c0b5e8df1e14452a,
     selection: SearchHighlight_dcc95c0b5e8df1e14452aGenqlSelection,
+}
+  Showcase: {
+    root: Showcase,
+    selection: ShowcaseGenqlSelection,
 }
   SidebarTree: {
     root: SidebarTree,
@@ -1487,6 +1543,10 @@ export interface FragmentsMap {
   SidebarTreeComponent: {
     root: SidebarTreeComponent,
     selection: SidebarTreeComponentGenqlSelection,
+}
+  Submissions: {
+    root: Submissions,
+    selection: SubmissionsGenqlSelection,
 }
   TransactionStatus: {
     root: TransactionStatus,
