@@ -5,7 +5,7 @@ export const ShowcaseSchema = z
     projectName: z.string().min(1, "Project name is required"),
     tagline: z.string().min(1, "Tagline is required"),
     keywords: z.string(),
-    logo: z.string().min(1, "Logo is required"),
+    logo: z.string().optional(),
     repositoryUrl: z
       .string()
       .optional()

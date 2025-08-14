@@ -58,10 +58,6 @@ export function ShowcaseForm() {
       logo: file,
     }));
 
-    if (file && errors.logo) {
-      setErrors((prev) => ({ ...prev, logo: "" }));
-    }
-
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -222,7 +218,7 @@ export function ShowcaseForm() {
 
         <div className="space-y-2">
           <label className="block text-xs font-medium uppercase text-white">
-            Logo *
+            Logo
           </label>
           <div className="flex items-start gap-4">
             <div className="relative">
@@ -236,11 +232,9 @@ export function ShowcaseForm() {
               />
               <div
                 className={`w-20 h-20 flex items-center justify-center bg-transparent hover:bg-white hover:bg-opacity-10 transition-colors cursor-pointer ${
-                  errors.logo
-                    ? "border-2 border-red-500"
-                    : logoPreview
-                      ? "border border-white"
-                      : "border border-dashed border-gray-400"
+                  logoPreview
+                    ? "border border-white"
+                    : "border border-dashed border-gray-400"
                 }`}
               >
                 {logoPreview ? (
