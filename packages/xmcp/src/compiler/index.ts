@@ -142,13 +142,13 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       }
 
       // Choose color based on compilation time
-      let timeColor;
-      if (compilationTime > 1000) {
-        timeColor = chalk.bold.red;
-      } else if (compilationTime > 500) {
-        timeColor = chalk.bold.yellow;
-      } else {
-        timeColor = (str: string) => str;
+      let timeColor = (str: string) => str;
+      if (mode === "development") {
+        if (compilationTime > 1000) {
+          timeColor = chalk.bold.red;
+        } else if (compilationTime > 500) {
+          timeColor = chalk.bold.yellow;
+        }
       }
 
       console.log(
