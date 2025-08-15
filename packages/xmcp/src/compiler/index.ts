@@ -118,6 +118,21 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         return;
       }
 
+      if (firstBuild) {
+        onFirstBuild(mode, xmcpConfig);
+        // user defined callback
+        onBuild?.();
+      } else {
+        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
+        if (
+          mode === "development" &&
+          xmcpConfig["http"] &&
+          !xmcpConfig.experimental?.adapter
+        ) {
+          startHttpServer();
+        }
+      }
+
       // Track compilation time for all builds
       let compilationTime: number;
       if (stats?.endTime && stats?.startTime) {
@@ -133,27 +148,12 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       } else if (compilationTime > 500) {
         timeColor = chalk.bold.yellow;
       } else {
-        timeColor = chalk.bold.green;
+        timeColor = (str: string) => str;
       }
 
       console.log(
         `${greenCheck} Compiled in ${timeColor(`${compilationTime}ms`)}`
       );
-
-      if (firstBuild) {
-        onFirstBuild(mode, xmcpConfig);
-        // user defined callback
-        onBuild?.();
-      } else {
-        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
-        if (
-          mode === "development" &&
-          xmcpConfig["http"] &&
-          !xmcpConfig.experimental?.adapter
-        ) {
-          startHttpServer();
-        }
-      }
 
       firstBuild = false;
       // Compiler callback ends
