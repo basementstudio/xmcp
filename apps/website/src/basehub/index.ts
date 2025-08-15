@@ -24,3 +24,20 @@ export const fetchAssets = async () => {
 
   return res.assets;
 };
+
+const ShowcaseFragment = fragmentOn("Showcase", {
+  submissions: {
+    ingestKey: true,
+    schema: true,
+  },
+});
+
+export const fetchShowcaseForm = async () => {
+  const res = await client().query({
+    showcase: {
+      ...ShowcaseFragment,
+    },
+  });
+
+  return res.showcase;
+};

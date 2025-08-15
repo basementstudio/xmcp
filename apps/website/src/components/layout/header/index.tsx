@@ -20,7 +20,7 @@ export const Header = () => {
       </div>
       <div className="z-[6] relative max-w-[800px] w-full flex justify-center items-center px-4 py-8 text-center text-md text-white font-mono gap-8">
         <AnimatedLink href="/">Home</AnimatedLink>
-        <span
+        {/* <span
           className="bg-clip-text text-transparent [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] text-[1.3em] leading-none relative top-[-1px] md:top-[-2px]"
           style={{
             background:
@@ -31,8 +31,9 @@ export const Header = () => {
           }}
         >
           xmcp
-        </span>
+        </span> */}
         <AnimatedLink href="/docs">Docs</AnimatedLink>
+        <AnimatedLink href="/showcase">Showcase</AnimatedLink>
       </div>
       <GithubButton />
     </header>
