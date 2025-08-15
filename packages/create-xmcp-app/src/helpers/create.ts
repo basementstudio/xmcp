@@ -16,7 +16,6 @@ interface ProjectOptions {
   packageManager: string;
   transports: string[];
   packageVersion: string;
-  deployToVercel?: boolean;
   skipInstall?: boolean;
 }
 

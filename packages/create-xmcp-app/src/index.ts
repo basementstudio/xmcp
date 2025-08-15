@@ -79,7 +79,6 @@ const program = new Command()
     }
 
     let packageManager = "npm";
-    let deployToVercel = options.vercel;
     let skipInstall = options.skipInstall;
     let transports = ["http"];
 
@@ -141,18 +140,6 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      if (!options.vercel && transports.includes("http")) {
-        const vercelAnswers = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "deployToVercel",
-            message: "Add Vercel deployment support?",
-            default: true,
-          },
-        ]);
-        deployToVercel = vercelAnswers.deployToVercel;
-      }
-
       console.log();
       console.log(
         `Creating a new xmcp app in ${chalk.green(resolvedProjectPath)}.\n`
@@ -186,7 +173,6 @@ const program = new Command()
         packageManager,
         transports: transports,
         packageVersion: packageJson.version,
-        deployToVercel,
         skipInstall,
       });
 
