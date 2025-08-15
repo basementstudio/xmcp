@@ -2,7 +2,7 @@
   "name": "vercel-deploy",
   "description": "Deploy your xmcp server to vercel",
   "scripts": {
-    "build": "xmcp build",
+    "build": "xmcp build --vercel",
     "dev": "xmcp dev",
     "start": "node dist/http.js"
   },
