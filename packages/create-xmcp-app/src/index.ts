@@ -123,30 +123,23 @@ const program = new Command()
       if (!options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
-            type: "checkbox",
-            name: "transports",
-            message: "Select the transports you want to use:",
+            type: "list",
+            name: "transport",
+            message: "Select the transport you want to use:",
             choices: [
               {
                 name: "HTTP (runs on a server)",
                 value: "http",
-                checked: true,
               },
               {
                 name: "STDIO (runs on the user's machine)",
                 value: "stdio",
-                checked: false,
               },
             ],
-            validate: (input) => {
-              if (input.length === 0) {
-                return "You must select at least one transport.";
-              }
-              return true;
-            },
+            default: "http",
           },
         ]);
-        transports = transportAnswers.transports;
+        transports = [transportAnswers.transport];
       }
 
       if (!options.vercel && transports.includes("http")) {
