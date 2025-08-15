@@ -39,7 +39,6 @@ export function createProject(options: ProjectOptions): void {
     packageManager,
     transports,
     packageVersion,
-    deployToVercel,
     skipInstall,
   } = options;
 
@@ -60,14 +59,6 @@ export function createProject(options: ProjectOptions): void {
 
   // Update package.json with project configuration
   updatePackageJson(projectPath, projectName, transports);
-
-  // Add vercel.json if deployToVercel is true
-  if (deployToVercel) {
-    fs.copySync(
-      path.join(__dirname, "../../templates/typescript/vercel.json"),
-      path.join(projectPath, "vercel.json")
-    );
-  }
 
   // Create necessary project directories
   createProjectDirectories(projectPath);

@@ -37,7 +37,6 @@ const program = new Command()
   .option("--use-pnpm", "Use pnpm as package manager")
   .option("--use-bun", "Use bun as package manager")
   .option("--skip-install", "Skip installing dependencies", false)
-  .option("--vercel", "Add Vercel support for deployment", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .action(async (projectDir, options) => {
