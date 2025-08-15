@@ -59,7 +59,7 @@ export interface Scalars {
     JSON: any,
     String: string,
     bshb_event__1212762555: `bshb_event__1212762555:${string}`,
-    schema_bshb_event__1212762555: {notifications?: boolean;repositoryUrl?: string;xAccount?: string;newField?: string;keywords: string;logo: File;http?: string;projectName: string;tagline: string;contactEmail: string;},
+    schema_bshb_event__1212762555: {repositoryUrl?: string;xAccount?: string;newField?: string;keywords: string;logo?: File;http?: string;projectName: string;tagline: string;contactEmail: string;},
 }
 
 export type AnalyticsKeyScope = 'query' | 'send'

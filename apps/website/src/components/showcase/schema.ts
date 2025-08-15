@@ -5,7 +5,7 @@ export const ShowcaseSchema = z
     projectName: z.string().min(1, "Project name is required"),
     tagline: z.string().min(1, "Tagline is required"),
     keywords: z.string(),
-    logo: z.string().optional(),
+    logo: z.string().min(1, "Logo is required"),
     repositoryUrl: z
       .string()
       .optional()
@@ -25,7 +25,6 @@ export const ShowcaseSchema = z
     http: z.string().optional(),
     contactEmail: z.string().email("Please enter a valid email address"),
     xAccount: z.string().optional(),
-    notifications: z.boolean().optional(),
   })
   .refine((data) => data.stdio?.trim() || data.http?.trim(), {
     message: "Please provide at least one connection method.",

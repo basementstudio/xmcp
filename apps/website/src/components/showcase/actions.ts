@@ -63,7 +63,6 @@ export async function createShowcaseSubmission(
       http: formData.http || "",
       contactEmail: formData.contactEmail,
       xAccount: formData.xAccount || "",
-      notifications: formData.notifications || false,
     };
 
     if (showcaseConfig?.submissions?.ingestKey) {
