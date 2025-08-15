@@ -1,6 +1,8 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer } from "../../utils/server";
+import terminalLink from "terminal-link";
+
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -9,7 +11,7 @@ class StdioTransport {
   private transport: StdioServerTransport;
   private debug: boolean;
 
-  constructor(mcpServer: McpServer, debug: boolean = false) {
+  constructor(mcpServer: McpServer, debug = false) {
     this.mcpServer = mcpServer;
     this.transport = new StdioServerTransport();
     this.debug = debug;
@@ -21,6 +23,7 @@ class StdioTransport {
       if (this.debug) {
         console.log("[STDIO] MCP Server running with STDIO transport");
       }
+      this.displayAddToCursorButton();
       this.setupShutdownHandlers();
     } catch (error) {
       if (this.debug) {
@@ -28,6 +31,28 @@ class StdioTransport {
       }
       process.exit(1);
     }
+  }
+
+  private displayAddToCursorButton(): void {
+    // @ts-expect-error: injected by compiler
+    const projectPath = STDIO_CONFIG.projectPath;
+    
+    // Create the configuration object for Cursor
+    const config = {
+      command: "node",
+      args: [`${projectPath}/dist/stdio.js`]
+    };
+    
+    // Encode the configuration as base64
+    const encodedConfig = Buffer.from(JSON.stringify(config)).toString('base64');
+    
+    // Create the proper Cursor deep link URL
+    const cursorUrl = `cursor://anysphere.cursor-deeplink/mcp/install?name=xmcp-server&config=${encodedConfig}`;
+    
+    // Create a clickable link using terminal-link
+    const link = terminalLink("Click me to add this MCP server to Cursor", cursorUrl);
+    
+    console.log(`\n${link}`);
   }
 
   private setupShutdownHandlers(): void {
