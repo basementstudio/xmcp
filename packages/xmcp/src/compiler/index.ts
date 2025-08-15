@@ -31,14 +31,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   const startTime = Date.now();
   let compilerStarted = false;
 
-  const xmpcConfig = await getConfig();
+  const xmcpConfig = await getConfig();
   compilerContext.setContext({
-    xmcpConfig: xmpcConfig,
+    xmcpConfig: xmcpConfig,
   });
-  let webpackConfig = getWebpackConfig(xmpcConfig);
+  let webpackConfig = getWebpackConfig(xmcpConfig);
 
-  if (xmpcConfig.webpack) {
-    webpackConfig = xmpcConfig.webpack(webpackConfig);
+  if (xmcpConfig.webpack) {
+    webpackConfig = xmcpConfig.webpack(webpackConfig);
   }
 
   const watcher = new Watcher({
@@ -49,7 +49,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   });
 
   let toolsPath = isValidPath(
-    getResolvedPathsConfig(xmpcConfig).tools,
+    getResolvedPathsConfig(xmcpConfig).tools,
     "tools"
   );
 
@@ -70,7 +70,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   });
 
   // if adapter is not enabled, handle middleware
-  if (!xmpcConfig.experimental?.adapter) {
+  if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
     watcher.watch("./src/middleware.ts", {
       onAdd: () => {
@@ -118,26 +118,45 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         return;
       }
 
+      // Track compilation time for all builds
+      let compilationTime: number;
+      if (stats?.endTime && stats?.startTime) {
+        compilationTime = stats.endTime - stats.startTime;
+      } else {
+        compilationTime = Date.now() - startTime;
+      }
+
+      // Choose color based on compilation time
+      let timeColor;
+      if (compilationTime > 1000) {
+        timeColor = chalk.bold.red;
+      } else if (compilationTime > 500) {
+        timeColor = chalk.bold.yellow;
+      } else {
+        timeColor = chalk.bold.green;
+      }
+
+      console.log(
+        `${greenCheck} Compiled in ${timeColor(`${compilationTime}ms`)}`
+      );
+
       if (firstBuild) {
-        firstBuild = false;
-        const endTime = Date.now();
-        const duration = endTime - startTime;
-        console.log(
-          `${greenCheck} Compiled in ${chalk.bold.green(`${duration}ms`)}`
-        );
-        onFirstBuild(mode, xmpcConfig);
+        onFirstBuild(mode, xmcpConfig);
         // user defined callback
         onBuild?.();
       } else {
         // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
         if (
           mode === "development" &&
-          xmpcConfig["http"] &&
-          !xmpcConfig.experimental?.adapter
+          xmcpConfig["http"] &&
+          !xmcpConfig.experimental?.adapter
         ) {
           startHttpServer();
         }
       }
+
+      firstBuild = false;
+      // Compiler callback ends
     });
   });
 }
