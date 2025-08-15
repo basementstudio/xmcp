@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
+import { readTsConfigFile } from "../utils/read-config-file.js";
 
 export type Framework = "nextjs" | "express";
 
@@ -38,14 +39,13 @@ export function detectTypeScript(projectRoot: string): boolean {
   // if typescript is in the dependencies, check for tsconfig.json and validate it
   if (fs.existsSync(path.join(projectRoot, "tsconfig.json"))) {
     try {
-      const tsconfigContent = fs.readJsonSync(
-        path.join(projectRoot, "tsconfig.json")
-      );
+      const tsconfigPath = path.join(projectRoot, "tsconfig.json");
+      const tsconfigContent = readTsConfigFile(tsconfigPath);
       return typeof tsconfigContent === "object" && tsconfigContent !== null;
-    } catch {
+    } catch (error) {
       console.log(
         chalk.yellow(
-          "Please initialize xmcp within a TypeScript project. Invalid tsconfig.json file"
+          `Please initialize xmcp within a TypeScript project. ${error instanceof Error ? error.message : "Invalid tsconfig.json file"}`
         )
       );
       return false;
