@@ -38,6 +38,7 @@
     "next-mdx-remote": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-error-boundary": "^6.0.0",
     "shiki": "^3.7.0",
     "sugar-high": "^0.9.3",
     "tailwind-merge": "^3.3.1",
