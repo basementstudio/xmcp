@@ -37,7 +37,6 @@ const program = new Command()
   .option("--use-pnpm", "Use pnpm as package manager")
   .option("--use-bun", "Use bun as package manager")
   .option("--skip-install", "Skip installing dependencies", false)
-  .option("--vercel", "Add Vercel support for deployment", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .action(async (projectDir, options) => {
@@ -80,7 +79,6 @@ const program = new Command()
     }
 
     let packageManager = "npm";
-    let deployToVercel = options.vercel;
     let skipInstall = options.skipInstall;
     let transports = ["http"];
 
@@ -123,42 +121,23 @@ const program = new Command()
       if (!options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
-            type: "checkbox",
-            name: "transports",
-            message: "Select the transports you want to use:",
+            type: "list",
+            name: "transport",
+            message: "Select the transport you want to use:",
             choices: [
               {
                 name: "HTTP (runs on a server)",
                 value: "http",
-                checked: true,
               },
               {
                 name: "STDIO (runs on the user's machine)",
                 value: "stdio",
-                checked: false,
               },
             ],
-            validate: (input) => {
-              if (input.length === 0) {
-                return "You must select at least one transport.";
-              }
-              return true;
-            },
+            default: "http",
           },
         ]);
-        transports = transportAnswers.transports;
-      }
-
-      if (!options.vercel && transports.includes("http")) {
-        const vercelAnswers = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "deployToVercel",
-            message: "Add Vercel deployment support?",
-            default: true,
-          },
-        ]);
-        deployToVercel = vercelAnswers.deployToVercel;
+        transports = [transportAnswers.transport];
       }
 
       console.log();
@@ -194,7 +173,6 @@ const program = new Command()
         packageManager,
         transports: transports,
         packageVersion: packageJson.version,
-        deployToVercel,
         skipInstall,
       });
 

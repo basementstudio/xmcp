@@ -14,6 +14,7 @@ import { useShader } from "@/hooks/use-shader";
 import { animate, useMotionValue, useMotionValueEvent } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { clamp } from "three/src/math/MathUtils.js";
+import { ErrorBoundary } from "react-error-boundary";
 
 const revealStart = 0.2;
 const revealEnd = 0.8;
@@ -236,16 +237,18 @@ useGLTF.preload("/xmcp.glb");
 
 export const XmcpLogo = ({ matcap }: { matcap: string }) => {
   return (
-    <Canvas
-      gl={{ antialias: true, alpha: false }}
-      className={cn("absolute inset-0 w-full h-full", {})}
-    >
-      <Suspense fallback={null}>
-        <ThreeLogo matcap={matcap} />
-        <PerspectiveCamera makeDefault position={[0, 0, 3]} fov={25} />
-        <color attach="background" args={["#000000"]} />
-      </Suspense>
-    </Canvas>
+    <ErrorBoundary fallback={<div>Error</div>}>
+      <Canvas
+        gl={{ antialias: true, alpha: false }}
+        className={cn("absolute inset-0 w-full h-full", {})}
+      >
+        <Suspense fallback={null}>
+          <ThreeLogo matcap={matcap} />
+          <PerspectiveCamera makeDefault position={[0, 0, 3]} fov={25} />
+          <color attach="background" args={["#000000"]} />
+        </Suspense>
+      </Canvas>
+    </ErrorBoundary>
   );
 };
 

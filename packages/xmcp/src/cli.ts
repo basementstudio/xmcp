@@ -33,17 +33,19 @@ program
   .option("--vercel", "Build for Vercel deployment")
   .action(async (options) => {
     console.log(`${xmcpLogo} Building for production...`);
+    const isVercelBuild = options.vercel || process.env.VERCEL === "1";
+
     compilerContextProvider(
       {
         mode: "production",
         platforms: {
-          vercel: options.vercel,
+          vercel: isVercelBuild,
         },
       },
       () => {
         compile({
           onBuild: async () => {
-            if (options.vercel) {
+            if (isVercelBuild) {
               console.log(`${xmcpLogo} Building for Vercel...`);
               try {
                 await buildVercelOutput();
