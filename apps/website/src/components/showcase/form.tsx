@@ -347,7 +347,7 @@ export function ShowcaseForm() {
 
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end pt-4 gap-4">
         <div className="flex-1">
-          <p className="text-xs text-[#747474]">
+          <p className="text-xs text-[#747474] max-w-[40rem]">
             By submitting, you agree to feature in our showcase. Any questions,
             contact{" "}
             <a href="mailto:xmcp@basement.studio" className="text-white">

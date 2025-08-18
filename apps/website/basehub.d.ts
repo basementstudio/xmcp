@@ -151,7 +151,7 @@ export interface BlockColor {
     __typename: 'BlockColor'
 }
 
-export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | McPs | McpTemplateComponent | Showcase | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | McpTemplateComponent | Mcps | Showcase | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
 
 export interface BlockDocumentSys {
     apiNamePath: Scalars['String']
@@ -210,7 +210,7 @@ export interface BlockImage {
     __typename: 'BlockImage'
 }
 
-export type BlockList = (Articles | Collection | McPs | SidebarTree | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockList = (Articles | Collection | Mcps | SidebarTree | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
 
 export interface BlockOgImage {
     height: Scalars['Int']
@@ -299,25 +299,6 @@ export interface ListMeta {
     __typename: 'ListMeta'
 }
 
-export interface McPs {
-    _analyticsKey: Scalars['String']
-    _dashboardUrl: Scalars['String']
-    _id: Scalars['String']
-    _idPath: Scalars['String']
-    _meta: ListMeta
-    /** The key used to search from the frontend. */
-    _searchKey: Scalars['String']
-    _slug: Scalars['String']
-    _slugPath: Scalars['String']
-    _sys: BlockDocumentSys
-    _title: Scalars['String']
-    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
-    item: (McpTemplateComponent | null)
-    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
-    items: McpTemplateComponent[]
-    __typename: 'McPs'
-}
-
 export interface McpTemplateComponent {
     _analyticsKey: Scalars['String']
     _dashboardUrl: Scalars['String']
@@ -333,11 +314,31 @@ export interface McpTemplateComponent {
     logo: BlockImage
     name: Scalars['String']
     repositoryUrl: (Scalars['String'] | null)
+    tag: (Scalars['String'] | null)
     tagline: Scalars['String']
     __typename: 'McpTemplateComponent'
 }
 
-export type McpTemplateComponentOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'connection__ASC' | 'connection__DESC' | 'logo__ASC' | 'logo__DESC' | 'name__ASC' | 'name__DESC' | 'repositoryUrl__ASC' | 'repositoryUrl__DESC' | 'tagline__ASC' | 'tagline__DESC' | 'untitled__ASC' | 'untitled__DESC'
+export type McpTemplateComponentOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'connection__ASC' | 'connection__DESC' | 'logo__ASC' | 'logo__DESC' | 'name__ASC' | 'name__DESC' | 'repositoryUrl__ASC' | 'repositoryUrl__DESC' | 'tag__ASC' | 'tag__DESC' | 'tagline__ASC' | 'tagline__DESC'
+
+export interface Mcps {
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _meta: ListMeta
+    /** The key used to search from the frontend. */
+    _searchKey: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
+    item: (McpTemplateComponent | null)
+    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
+    items: McpTemplateComponent[]
+    __typename: 'Mcps'
+}
 
 export type MediaBlock = (BlockAudio | BlockFile | BlockImage | BlockVideo) & { __isUnion?: true }
 
@@ -438,7 +439,7 @@ export interface Showcase {
     _slugPath: Scalars['String']
     _sys: BlockDocumentSys
     _title: Scalars['String']
-    mcPs: McPs
+    mcps: Mcps
     submissions: Submissions
     __typename: 'Showcase'
 }
@@ -806,8 +807,8 @@ export interface BlockDocumentGenqlSelection{
     on_Assets?: AssetsGenqlSelection
     on_Collection?: CollectionGenqlSelection
     on_Documentation?: DocumentationGenqlSelection
-    on_McPs?: McPsGenqlSelection
     on_McpTemplateComponent?: McpTemplateComponentGenqlSelection
+    on_Mcps?: McpsGenqlSelection
     on_Showcase?: ShowcaseGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
     on_SidebarTreeComponent?: SidebarTreeComponentGenqlSelection
@@ -895,7 +896,7 @@ export interface BlockListGenqlSelection{
     _title?: boolean | number
     on_Articles?: ArticlesGenqlSelection
     on_Collection?: CollectionGenqlSelection
-    on_McPs?: McPsGenqlSelection
+    on_Mcps?: McpsGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
     on_articleComponent_AsList?: articleComponent_AsListGenqlSelection
     on_mcpTemplateComponent_AsList?: mcpTemplateComponent_AsListGenqlSelection
@@ -1046,7 +1047,41 @@ export interface ListMetaGenqlSelection{
     __typename?: boolean | number
 }
 
-export interface McPsGenqlSelection{
+export interface McpTemplateComponentGenqlSelection{
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight?: SearchHighlight_cbfbaf6535d46c3fa29abGenqlSelection
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    connection?: boolean | number
+    logo?: BlockImageGenqlSelection
+    name?: boolean | number
+    repositoryUrl?: boolean | number
+    tag?: boolean | number
+    tagline?: boolean | number
+    __typename?: boolean | number
+}
+
+export interface McpTemplateComponentFilterInput {AND?: (McpTemplateComponentFilterInput | null),OR?: (McpTemplateComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),connection?: (StringFilter | null),name?: (StringFilter | null),repositoryUrl?: (StringFilter | null),tag?: (StringFilter | null),tagline?: (StringFilter | null)}
+
+export interface McpTemplateComponentSearchInput {
+/** Searchable fields for query */
+by?: (Scalars['String'][] | null),
+/** Search query */
+q?: (Scalars['String'] | null)}
+
+export interface McpsGenqlSelection{
     _analyticsKey?: { __args: {
     /**
      * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
@@ -1070,39 +1105,6 @@ export interface McPsGenqlSelection{
     items?: McpTemplateComponentGenqlSelection
     __typename?: boolean | number
 }
-
-export interface McpTemplateComponentGenqlSelection{
-    _analyticsKey?: { __args: {
-    /**
-     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
-     * 
-     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
-     */
-    scope?: (AnalyticsKeyScope | null)} } | boolean | number
-    _dashboardUrl?: boolean | number
-    /** Array of search highlight information with field names and HTML markup */
-    _highlight?: SearchHighlight_cbfbaf6535d46c3fa29abGenqlSelection
-    _id?: boolean | number
-    _idPath?: boolean | number
-    _slug?: boolean | number
-    _slugPath?: boolean | number
-    _sys?: BlockDocumentSysGenqlSelection
-    _title?: boolean | number
-    connection?: boolean | number
-    logo?: BlockImageGenqlSelection
-    name?: boolean | number
-    repositoryUrl?: boolean | number
-    tagline?: boolean | number
-    __typename?: boolean | number
-}
-
-export interface McpTemplateComponentFilterInput {AND?: (McpTemplateComponentFilterInput | null),OR?: (McpTemplateComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),connection?: (StringFilter | null),name?: (StringFilter | null),repositoryUrl?: (StringFilter | null),tagline?: (StringFilter | null)}
-
-export interface McpTemplateComponentSearchInput {
-/** Searchable fields for query */
-by?: (Scalars['String'][] | null),
-/** Search query */
-q?: (Scalars['String'] | null)}
 
 export interface MediaBlockGenqlSelection{
     fileName?: boolean | number
@@ -1277,7 +1279,7 @@ export interface ShowcaseGenqlSelection{
     _slugPath?: boolean | number
     _sys?: BlockDocumentSysGenqlSelection
     _title?: boolean | number
-    mcPs?: (McPsGenqlSelection & { __args?: {
+    mcps?: (McpsGenqlSelection & { __args?: {
     /** Filter by a field. */
     filter?: (McpTemplateComponentFilterInput | null), 
     /** Limit the number of items returned. Defaults to 500. */
@@ -1691,13 +1693,13 @@ export interface FragmentsMap {
     root: ListMeta,
     selection: ListMetaGenqlSelection,
 }
-  McPs: {
-    root: McPs,
-    selection: McPsGenqlSelection,
-}
   McpTemplateComponent: {
     root: McpTemplateComponent,
     selection: McpTemplateComponentGenqlSelection,
+}
+  Mcps: {
+    root: Mcps,
+    selection: McpsGenqlSelection,
 }
   MediaBlock: {
     root: MediaBlock,

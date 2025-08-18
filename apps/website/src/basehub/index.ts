@@ -50,16 +50,19 @@ const MCPTemplateFragment = fragmentOn("McpTemplateComponent", {
   },
   connection: true,
   repositoryUrl: true,
+  tag: true,
 });
 
 export const fetchMCPs = async () => {
   const res = await client().query({
     showcase: {
       mcps: {
-        ...MCPTemplateFragment,
+        items: {
+          ...MCPTemplateFragment,
+        },
       },
     },
   });
 
-  return res.showcase.mcps;
+  return res.showcase.mcps.items;
 };
