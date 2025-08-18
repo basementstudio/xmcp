@@ -22,8 +22,8 @@ export default function ShowcasePage() {
             Discover MCP servers from the community
           </h1>
           <p className="text-[#BABABA] text-[1rem]">
-            From productivity enhancers to specialized utilities, find the
-            perfect MCP server for your workflow.
+            Explore the first wave of production-ready MCP servers built by
+            developers worldwide.
           </p>
         </div>
 
