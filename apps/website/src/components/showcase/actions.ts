@@ -20,10 +20,7 @@ async function validateShowcase(
     });
   }
 
-  if (!formData.stdio && !formData.http) {
-    errors.transport =
-      "Please select at least one transport method (STDIO or HTTP)";
-  }
+  // Connection method validation is handled by the schema
 
   return {
     isValid: Object.keys(errors).length === 0,
@@ -54,15 +51,12 @@ export async function createShowcaseSubmission(
     const showcaseConfig = await fetchShowcaseForm();
 
     const submissionData = {
-      projectName: formData.projectName,
+      name: formData.name,
       tagline: formData.tagline,
-      keywords: formData.keywords,
       logo: formData.logoFile,
       repositoryUrl: formData.repositoryUrl || "",
-      stdio: formData.stdio || "",
-      http: formData.http || "",
+      connectionMethod: formData.connectionMethod,
       contactEmail: formData.contactEmail,
-      xAccount: formData.xAccount || "",
     };
 
     if (showcaseConfig?.submissions?.ingestKey) {

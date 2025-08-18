@@ -6,28 +6,22 @@ import Image from "next/image";
 import { cn } from "@/utils/cn";
 
 interface FormData {
-  projectName: string;
+  name: string;
   tagline: string;
-  keywords: string;
   logo: File | null;
   repositoryUrl: string;
-  stdio: string;
-  http: string;
+  connectionMethod: string;
   contactEmail: string;
-  xAccount: string;
 }
 
 export function ShowcaseForm() {
   const [formData, setFormData] = useState<FormData>({
-    projectName: "",
+    name: "",
     tagline: "",
-    keywords: "",
     logo: null,
     repositoryUrl: "",
-    stdio: "",
-    http: "",
+    connectionMethod: "",
     contactEmail: "",
-    xAccount: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,18 +31,14 @@ export function ShowcaseForm() {
 
   const isFormValid = () => {
     const requiredFields = [
-      formData.projectName.trim(),
+      formData.name.trim(),
       formData.tagline.trim(),
       formData.logo,
+      formData.connectionMethod.trim(),
       formData.contactEmail.trim(),
     ];
 
-    const hasRequiredFields = requiredFields.every((field) => !!field);
-    const hasConnectionMethod = !!(
-      formData.stdio.trim() || formData.http.trim()
-    );
-
-    return hasRequiredFields && hasConnectionMethod;
+    return requiredFields.every((field) => !!field);
   };
 
   const handleInputChange = (
@@ -91,15 +81,12 @@ export function ShowcaseForm() {
 
     try {
       const submissionData = {
-        projectName: formData.projectName,
+        name: formData.name,
         tagline: formData.tagline,
-        keywords: formData.keywords,
         logo: formData.logo?.name || "",
         repositoryUrl: formData.repositoryUrl,
-        stdio: formData.stdio,
-        http: formData.http,
+        connectionMethod: formData.connectionMethod,
         contactEmail: formData.contactEmail,
-        xAccount: formData.xAccount,
         logoFile: formData.logo,
       };
 
@@ -159,81 +146,38 @@ export function ShowcaseForm() {
           <p className="text-red-400 text-sm">{errors.root}</p>
         </div>
       )}
+      <h4 className="text-base font-medium text-white uppercase">
+        Project Details
+      </h4>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h4 className="text-base font-medium text-white">
-            1. Project Details
-          </h4>
-
           <div className="space-y-2">
             <label
-              htmlFor="projectName"
-              className="block text-xs font-medium uppercase text-white"
+              htmlFor="name"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
             >
               Name *
             </label>
             <input
-              id="projectName"
-              name="projectName"
+              id="name"
+              name="name"
               type="text"
-              value={formData.projectName}
+              value={formData.name}
               onChange={handleInputChange}
               placeholder="Your MCP server name"
               className={cn(
-                "w-full px-3 py-2 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm",
-                errors.projectName ? "border-red-500" : "border-white"
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.name ? "border-red-500" : "border-[#333333]"
               )}
             />
-            {errors.projectName && (
-              <p className="text-red-400 text-xs mt-1">{errors.projectName}</p>
+            {errors.name && (
+              <p className="text-red-400 text-xs mt-1">{errors.name}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="tagline"
-              className="block text-xs font-medium uppercase text-white"
-            >
-              Tagline *
-            </label>
-            <input
-              id="tagline"
-              name="tagline"
-              type="text"
-              value={formData.tagline}
-              onChange={handleInputChange}
-              placeholder="A short description of what your MCP does"
-              className={cn(
-                "w-full px-3 py-2 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm",
-                errors.tagline ? "border-red-500" : "border-white"
-              )}
-            />
-            {errors.tagline && (
-              <p className="text-red-400 text-xs mt-1">{errors.tagline}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="keywords"
-              className="block text-xs font-medium uppercase text-white"
-            >
-              Keywords
-            </label>
-            <input
-              id="keywords"
-              name="keywords"
-              type="text"
-              value={formData.keywords}
-              onChange={handleInputChange}
-              placeholder="ai, productivity, automation"
-              className="w-full px-3 py-2 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-xs font-medium uppercase text-white">
+          <div className="space-y-2 min-h-[102px] flex flex-col">
+            <label className="block text-xs font-medium uppercase text-[#DBDBDB]">
               Logo *
             </label>
             <div className="flex items-center gap-3">
@@ -244,16 +188,16 @@ export function ShowcaseForm() {
                   type="file"
                   accept="image/png,image/jpeg,image/svg+xml"
                   onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer focus:outline-none peer"
                 />
                 <div
                   className={cn(
-                    "w-16 h-16 flex items-center justify-center bg-transparent hover:bg-white hover:bg-opacity-10 transition-colors cursor-pointer",
+                    "w-16 h-16 flex items-center justify-center bg-transparent hover:bg-white hover:bg-opacity-10 transition-colors cursor-pointer peer-focus:border-white",
                     errors.logo
                       ? "border border-red-500"
                       : logoPreview
-                        ? "border border-white"
-                        : "border border-dashed border-gray-400"
+                        ? "border border-[#333333]"
+                        : "border border-dashed border-[#333333]"
                   )}
                 >
                   {logoPreview ? (
@@ -281,7 +225,7 @@ export function ShowcaseForm() {
                   )}
                 </div>
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-[#747474]">
                 <p>PNG, JPG, or SVG</p>
                 <p>Max 2MB, 512x512px recommended</p>
               </div>
@@ -289,12 +233,65 @@ export function ShowcaseForm() {
             {errors.logo && (
               <p className="text-red-400 text-xs mt-1">{errors.logo}</p>
             )}
+            <div className="flex-1"></div>
           </div>
 
           <div className="space-y-2">
             <label
+              htmlFor="connectionMethod"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Connection Method *
+            </label>
+            <input
+              id="connectionMethod"
+              name="connectionMethod"
+              type="text"
+              value={formData.connectionMethod}
+              onChange={handleInputChange}
+              placeholder="STDIO command or HTTP endpoint"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.connectionMethod ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.connectionMethod && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.connectionMethod}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="tagline"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Tagline *
+            </label>
+            <input
+              id="tagline"
+              name="tagline"
+              type="text"
+              value={formData.tagline}
+              onChange={handleInputChange}
+              placeholder="A short description of what your MCP does"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.tagline ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.tagline && (
+              <p className="text-red-400 text-xs mt-1">{errors.tagline}</p>
+            )}
+          </div>
+
+          <div className="space-y-2 min-h-[102px] flex flex-col">
+            <label
               htmlFor="repositoryUrl"
-              className="block text-xs font-medium uppercase text-white"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
             >
               Repository URL
             </label>
@@ -306,8 +303,8 @@ export function ShowcaseForm() {
               onChange={handleInputChange}
               placeholder="https://github.com/username/project"
               className={cn(
-                "w-full px-3 py-2 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm",
-                errors.repositoryUrl ? "border-red-500" : "border-white"
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.repositoryUrl ? "border-red-500" : "border-[#333333]"
               )}
             />
             {errors.repositoryUrl ? (
@@ -315,118 +312,45 @@ export function ShowcaseForm() {
                 {errors.repositoryUrl}
               </p>
             ) : (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[#747474]">
                 Optional - for open source projects
               </p>
             )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <h4 className="text-base font-medium text-white">
-              2. Connection Methods *
-            </h4>
-
-            {errors.transport && (
-              <p className="text-red-400 text-sm">{errors.transport}</p>
-            )}
-
-            <div className="space-y-2">
-              <label
-                htmlFor="stdio"
-                className="block text-xs font-medium uppercase text-white"
-              >
-                STDIO Command
-              </label>
-              <input
-                id="stdio"
-                name="stdio"
-                type="text"
-                value={formData.stdio}
-                onChange={handleInputChange}
-                placeholder="npx my-mcp-server"
-                className="w-full px-3 py-2 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="http"
-                className="block text-xs font-medium uppercase text-white"
-              >
-                HTTP Endpoint
-              </label>
-              <input
-                id="http"
-                name="http"
-                type="url"
-                value={formData.http}
-                onChange={handleInputChange}
-                placeholder="https://your-server.com/mcp"
-                className="w-full px-3 py-2 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
-              />
-            </div>
+            <div className="flex-1"></div>
           </div>
 
-          <div className="space-y-4">
-            <h4 className="text-base font-medium text-white">
-              3. Contact Information
-            </h4>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="contactEmail"
-                className="block text-xs font-medium uppercase text-white"
-              >
-                Contact Email *
-              </label>
-              <input
-                id="contactEmail"
-                name="contactEmail"
-                type="email"
-                value={formData.contactEmail}
-                onChange={handleInputChange}
-                placeholder="your.email@example.com"
-                className={cn(
-                  "w-full px-3 py-2 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm",
-                  errors.contactEmail ? "border-red-500" : "border-white"
-                )}
-              />
-              {errors.contactEmail && (
-                <p className="text-red-400 text-xs mt-1">
-                  {errors.contactEmail}
-                </p>
+          <div className="space-y-2">
+            <label
+              htmlFor="contactEmail"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Contact Email *
+            </label>
+            <input
+              id="contactEmail"
+              name="contactEmail"
+              type="email"
+              value={formData.contactEmail}
+              onChange={handleInputChange}
+              placeholder="your.email@example.com"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.contactEmail ? "border-red-500" : "border-[#333333]"
               )}
-            </div>
-
-            <div className="space-y-2">
-              <label
-                htmlFor="xAccount"
-                className="block text-xs font-medium uppercase text-white"
-              >
-                X Account
-              </label>
-              <input
-                id="xAccount"
-                name="xAccount"
-                type="text"
-                value={formData.xAccount}
-                onChange={handleInputChange}
-                placeholder="@username"
-                className="w-full px-3 py-2 border border-white focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-gray-400 bg-transparent text-sm"
-              />
-            </div>
+            />
+            {errors.contactEmail && (
+              <p className="text-red-400 text-xs mt-1">{errors.contactEmail}</p>
+            )}
           </div>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end pt-4 gap-4">
         <div className="flex-1">
-          <p className="text-xs text-[#BABABA]">
+          <p className="text-xs text-[#747474]">
             By submitting, you agree to feature in our showcase. Any questions,
             contact{" "}
-            <a href="mailto:xmcp@basement.studio" className="underline">
+            <a href="mailto:xmcp@basement.studio" className="text-white">
               xmcp@basement.studio
             </a>
           </p>

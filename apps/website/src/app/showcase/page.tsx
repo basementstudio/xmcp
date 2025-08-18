@@ -31,9 +31,7 @@ export default function ShowcasePage() {
           </p>
         </div>
 
-        <div className="border border-white p-8">
-          <ShowcaseForm />
-        </div>
+        <ShowcaseForm />
 
         {/* <div className="mt-16 space-y-8">
           <div className="text-center">

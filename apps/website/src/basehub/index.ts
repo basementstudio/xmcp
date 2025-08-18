@@ -41,3 +41,25 @@ export const fetchShowcaseForm = async () => {
 
   return res.showcase;
 };
+
+const MCPTemplateFragment = fragmentOn("McpTemplateComponent", {
+  name: true,
+  tagline: true,
+  logo: {
+    url: true,
+  },
+  connection: true,
+  repositoryUrl: true,
+});
+
+export const fetchMCPs = async () => {
+  const res = await client().query({
+    showcase: {
+      mcps: {
+        ...MCPTemplateFragment,
+      },
+    },
+  });
+
+  return res.showcase.mcps;
+};
