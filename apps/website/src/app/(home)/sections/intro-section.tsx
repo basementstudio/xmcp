@@ -4,7 +4,7 @@ import { Terminal } from "@/components/terminal/terminal";
 
 export function IntroSection() {
   return (
-    <div className="min-h-[calc(100vh-88px)] flex flex-col items-stretch justify-center">
+    <div className="h-full flex flex-col items-stretch justify-start lg:justify-center">
       <div className="space-y-6 pb-24">
         <div className="relative w-[150px] md:w-[200px] lg:w-[220px] aspect-square flex items-center justify-center mx-auto">
           <XmcpLogo />
