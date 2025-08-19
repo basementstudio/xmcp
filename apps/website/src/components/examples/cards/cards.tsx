@@ -84,7 +84,7 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
         )}
       </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[60vh]">
         {filteredExamples.length > 0 ? (
           filteredExamples.map((example: ExampleItem, index: number) => (
             <ExampleCard key={`${example.name}-${index}`} {...example} />
