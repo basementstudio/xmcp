@@ -1,6 +1,11 @@
 {
   "name": "custom-webpack-config",
-  "description": "xmcp server with custom webpack config",
+  "description": "Customize webpack configuration for xmcp builds",
+  "keywords": [
+    "webpack",
+    "config",
+    "build"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

@@ -1,6 +1,11 @@
 {
   "name": "oauth-provider",
-  "description": "OAuth provider",
+  "description": "Complete OAuth provider implementation with xmcp [experimental]",
+  "keywords": [
+    "oauth",
+    "auth",
+    "provider"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

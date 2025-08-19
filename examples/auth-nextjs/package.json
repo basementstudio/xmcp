@@ -1,6 +1,11 @@
 {
   "name": "auth-nextjs",
-  "description": "Add xmcp to a nextjs app with auth",
+  "description": "A Next.js application with xmcp and authentication handler",
+  "keywords": [
+    "nextjs",
+    "auth",
+    "authentication"
+  ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",

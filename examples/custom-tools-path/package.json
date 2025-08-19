@@ -1,6 +1,11 @@
 {
   "name": "custom-tools-path",
-  "description": "xmcp server with custom tools path",
+  "description": "Configure custom file paths for xmcp tools directory",
+  "keywords": [
+    "config",
+    "tools",
+    "path"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

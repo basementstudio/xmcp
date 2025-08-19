@@ -1,6 +1,11 @@
 {
   "name": "stdio-transport",
-  "description": "A simple xmcp server with stdio transport",
+  "description": "Build a command-line xmcp server using STDIO transport",
+  "keywords": [
+    "stdio",
+    "transport",
+    "cli"
+  ],
   "main": "./dist/stdio.js",
   "bin": {
     "stdio-transport": "./dist/stdio.js"
