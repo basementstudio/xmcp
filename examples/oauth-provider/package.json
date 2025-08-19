@@ -1,5 +1,5 @@
 {
-  "name": "oauth-provider",
+  "name": "OAuth Provider",
   "description": "Complete OAuth provider implementation with xmcp [experimental]",
   "keywords": [
     "authentication"

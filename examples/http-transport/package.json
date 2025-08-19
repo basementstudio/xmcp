@@ -1,5 +1,5 @@
 {
-  "name": "http-transport",
+  "name": "HTTP Transport",
   "description": "Learn how to set up an xmcp server using HTTP transport",
   "keywords": [
     "http"

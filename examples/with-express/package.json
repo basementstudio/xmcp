@@ -1,5 +1,5 @@
 {
-  "name": "with-express",
+  "name": "Express with Adapter",
   "description": "Build a Node.js Express server with xmcp's adapter",
   "main": "dist/index.js",
   "scripts": {

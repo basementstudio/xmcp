@@ -1,5 +1,5 @@
 {
-  "name": "custom-tools-path",
+  "name": "Custom Tools Path",
   "description": "Configure custom file paths for xmcp tools directory",
   "keywords": [
     "config"

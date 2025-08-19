@@ -1,5 +1,5 @@
 {
-  "name": "headers",
+  "name": "Request Headers",
   "description": "Access and utilize HTTP request headers in xmcp tool calls",
   "keywords": [
     "headers",
