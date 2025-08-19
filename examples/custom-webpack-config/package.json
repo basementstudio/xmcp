@@ -1,5 +1,5 @@
 {
-  "name": "custom-webpack-config",
+  "name": "Custom Webpack Config",
   "description": "Customize webpack configuration for xmcp builds",
   "keywords": [
     "config"

@@ -1,5 +1,5 @@
 {
-  "name": "middlewares-array",
+  "name": "Middleware Array",
   "description": "Chain multiple middlewares together in xmcp servers",
   "keywords": [
     "middleware"

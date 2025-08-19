@@ -1,5 +1,5 @@
 {
-  "name": "better-auth-http",
+  "name": "HTTP with Better Auth",
   "description": "HTTP-based xmcp server with better-auth integration",
   "keywords": [
     "http",

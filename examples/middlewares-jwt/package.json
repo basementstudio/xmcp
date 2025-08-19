@@ -1,5 +1,5 @@
 {
-  "name": "middlewares-jwt",
+  "name": "JWT Middleware",
   "description": "Implement JWT token validation middleware for xmcp servers",
   "keywords": [
     "middleware",
