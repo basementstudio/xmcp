@@ -3,8 +3,7 @@
   "description": "HTTP-based xmcp server with better-auth integration",
   "keywords": [
     "http",
-    "auth",
-    "better-auth"
+    "authentication"
   ],
   "scripts": {
     "build": "xmcp build",

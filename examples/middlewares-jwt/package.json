@@ -3,8 +3,7 @@
   "description": "Implement JWT token validation middleware for xmcp servers",
   "keywords": [
     "middleware",
-    "jwt",
-    "auth"
+    "authentication"
   ],
   "scripts": {
     "build": "xmcp build",

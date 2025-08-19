@@ -3,8 +3,7 @@
   "description": "Integrate xmcp into a Next.js application using the adapter",
   "keywords": [
     "nextjs",
-    "react",
-    "framework"
+    "adapter"
   ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",

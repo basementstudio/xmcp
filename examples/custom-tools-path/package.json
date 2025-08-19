@@ -2,9 +2,7 @@
   "name": "custom-tools-path",
   "description": "Configure custom file paths for xmcp tools directory",
   "keywords": [
-    "config",
-    "tools",
-    "path"
+    "config"
   ],
   "scripts": {
     "build": "xmcp build",
