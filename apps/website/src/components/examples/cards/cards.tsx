@@ -66,7 +66,7 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
               key={tag}
               onClick={() => toggleTag(tag)}
               className={cn(
-                "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide",
+                "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide cursor-pointer",
                 selectedTags.includes(tag)
                   ? "border-white bg-white text-black"
                   : "border-white/20 text-white/80 hover:border-white/40 hover:text-white"
