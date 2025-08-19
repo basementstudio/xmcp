@@ -146,9 +146,6 @@ export function ShowcaseForm() {
           <p className="text-red-400 text-sm">{errors.root}</p>
         </div>
       )}
-      <h4 className="text-base font-medium text-white uppercase">
-        Project Details
-      </h4>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
@@ -173,6 +170,112 @@ export function ShowcaseForm() {
             />
             {errors.name && (
               <p className="text-red-400 text-xs mt-1">{errors.name}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="connectionMethod"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Connection Method *
+            </label>
+            <input
+              id="connectionMethod"
+              name="connectionMethod"
+              type="text"
+              value={formData.connectionMethod}
+              onChange={handleInputChange}
+              placeholder="STDIO command or HTTP endpoint"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.connectionMethod ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.connectionMethod && (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.connectionMethod}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="repositoryUrl"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Repository URL
+            </label>
+            <input
+              id="repositoryUrl"
+              name="repositoryUrl"
+              type="url"
+              value={formData.repositoryUrl}
+              onChange={handleInputChange}
+              placeholder="https://github.com/username/project"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.repositoryUrl ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.repositoryUrl ? (
+              <p className="text-red-400 text-xs mt-1">
+                {errors.repositoryUrl}
+              </p>
+            ) : (
+              <p className="text-xs text-[#747474]">
+                Optional - for open source projects
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="tagline"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Tagline *
+            </label>
+            <input
+              id="tagline"
+              name="tagline"
+              type="text"
+              value={formData.tagline}
+              onChange={handleInputChange}
+              placeholder="A short description of what your MCP does"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.tagline ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.tagline && (
+              <p className="text-red-400 text-xs mt-1">{errors.tagline}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="contactEmail"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
+              Contact Email *
+            </label>
+            <input
+              id="contactEmail"
+              name="contactEmail"
+              type="email"
+              value={formData.contactEmail}
+              onChange={handleInputChange}
+              placeholder="your.email@example.com"
+              className={cn(
+                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
+                errors.contactEmail ? "border-red-500" : "border-[#333333]"
+              )}
+            />
+            {errors.contactEmail && (
+              <p className="text-red-400 text-xs mt-1">{errors.contactEmail}</p>
             )}
           </div>
 
@@ -235,118 +338,11 @@ export function ShowcaseForm() {
             )}
             <div className="flex-1"></div>
           </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="connectionMethod"
-              className="block text-xs font-medium uppercase text-[#DBDBDB]"
-            >
-              Connection Method *
-            </label>
-            <input
-              id="connectionMethod"
-              name="connectionMethod"
-              type="text"
-              value={formData.connectionMethod}
-              onChange={handleInputChange}
-              placeholder="STDIO command or HTTP endpoint"
-              className={cn(
-                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.connectionMethod ? "border-red-500" : "border-[#333333]"
-              )}
-            />
-            {errors.connectionMethod && (
-              <p className="text-red-400 text-xs mt-1">
-                {errors.connectionMethod}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="tagline"
-              className="block text-xs font-medium uppercase text-[#DBDBDB]"
-            >
-              Tagline *
-            </label>
-            <input
-              id="tagline"
-              name="tagline"
-              type="text"
-              value={formData.tagline}
-              onChange={handleInputChange}
-              placeholder="A short description of what your MCP does"
-              className={cn(
-                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.tagline ? "border-red-500" : "border-[#333333]"
-              )}
-            />
-            {errors.tagline && (
-              <p className="text-red-400 text-xs mt-1">{errors.tagline}</p>
-            )}
-          </div>
-
-          <div className="space-y-2 min-h-[102px] flex flex-col">
-            <label
-              htmlFor="repositoryUrl"
-              className="block text-xs font-medium uppercase text-[#DBDBDB]"
-            >
-              Repository URL
-            </label>
-            <input
-              id="repositoryUrl"
-              name="repositoryUrl"
-              type="url"
-              value={formData.repositoryUrl}
-              onChange={handleInputChange}
-              placeholder="https://github.com/username/project"
-              className={cn(
-                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.repositoryUrl ? "border-red-500" : "border-[#333333]"
-              )}
-            />
-            {errors.repositoryUrl ? (
-              <p className="text-red-400 text-xs mt-1">
-                {errors.repositoryUrl}
-              </p>
-            ) : (
-              <p className="text-xs text-[#747474]">
-                Optional - for open source projects
-              </p>
-            )}
-            <div className="flex-1"></div>
-          </div>
-
-          <div className="space-y-2">
-            <label
-              htmlFor="contactEmail"
-              className="block text-xs font-medium uppercase text-[#DBDBDB]"
-            >
-              Contact Email *
-            </label>
-            <input
-              id="contactEmail"
-              name="contactEmail"
-              type="email"
-              value={formData.contactEmail}
-              onChange={handleInputChange}
-              placeholder="your.email@example.com"
-              className={cn(
-                "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.contactEmail ? "border-red-500" : "border-[#333333]"
-              )}
-            />
-            {errors.contactEmail && (
-              <p className="text-red-400 text-xs mt-1">{errors.contactEmail}</p>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end pt-4 gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col lg:flex-row justify-start lg:justify-end items-start lg:items-end pt-4 gap-4">
+        <div className="lg:text-right">
           <p className="text-xs text-[#747474] max-w-[40rem]">
             By submitting, you agree to feature in our showcase. Any questions,
             contact{" "}

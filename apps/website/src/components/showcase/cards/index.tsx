@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CopyButton } from "@/components/ui/copy-button";
 import { fetchMCPs } from "@/basehub";
-import { getRepoStars } from "@/utils/github";
+//import { getRepoStars } from "@/utils/github";
 
 export type ShowcaseItem = {
   name: string;
@@ -38,8 +38,7 @@ export async function ShowcaseCard({
 } & ShowcaseItem) {
   const { name, tagline, repositoryUrl, logo, connection, tag } = item;
 
-  // Fetch GitHub stars if repository URL is available
-  const stars = repositoryUrl ? await getRepoStars(repositoryUrl) : null;
+  //const stars = repositoryUrl ? await getRepoStars(repositoryUrl) : null;
 
   return (
     <div
@@ -111,7 +110,7 @@ export async function ShowcaseCard({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {stars && (
+              {/* {stars && (
                 <div className="flex items-center gap-1 text-xs text-[#BABABA]">
                   <svg
                     className="w-3 h-3"
@@ -122,7 +121,7 @@ export async function ShowcaseCard({
                   </svg>
                   {stars}
                 </div>
-              )}
+              )} */}
               {repositoryUrl && (
                 <Link
                   href={repositoryUrl}
