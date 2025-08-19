@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const LogoButton = async () => {
+export const LogoButton = () => {
   return (
     <Link
       href="/"
