@@ -1,6 +1,11 @@
 {
   "name": "http-transport",
-  "description": "xmcp server with http transport",
+  "description": "Learn how to set up an xmcp server using HTTP transport",
+  "keywords": [
+    "http",
+    "transport",
+    "server"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

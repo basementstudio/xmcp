@@ -1,6 +1,11 @@
 {
   "name": "better-auth-http",
-  "description": "xmcp server with better-auth http transport",
+  "description": "HTTP-based xmcp server with better-auth integration",
+  "keywords": [
+    "http",
+    "auth",
+    "better-auth"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

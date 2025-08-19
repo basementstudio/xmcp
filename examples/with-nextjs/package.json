@@ -1,6 +1,11 @@
 {
   "name": "with-nextjs",
-  "description": "Add xmcp to a nextjs app",
+  "description": "Integrate xmcp into a Next.js application using the adapter",
+  "keywords": [
+    "nextjs",
+    "react",
+    "framework"
+  ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",

@@ -1,6 +1,11 @@
 {
   "name": "headers",
-  "description": "Get request headers on a tool call",
+  "description": "Access and utilize HTTP request headers in xmcp tool calls",
+  "keywords": [
+    "headers",
+    "http",
+    "request"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

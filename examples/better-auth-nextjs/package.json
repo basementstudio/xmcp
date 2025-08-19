@@ -1,6 +1,11 @@
 {
   "name": "better-auth-nextjs",
-  "description": "Add xmcp to a nextjs app with better-auth",
+  "description": "Next.js app with xmcp and better-auth integration",
+  "keywords": [
+    "nextjs",
+    "auth",
+    "better-auth"
+  ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",

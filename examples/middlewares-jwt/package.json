@@ -1,6 +1,11 @@
 {
   "name": "middlewares-jwt",
-  "description": "JWT authentication middleware",
+  "description": "Implement JWT token validation middleware for xmcp servers",
+  "keywords": [
+    "middleware",
+    "jwt",
+    "auth"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",

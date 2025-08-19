@@ -1,6 +1,11 @@
 {
   "name": "middlewares-api-key",
-  "description": "API key authentication middleware",
+  "description": "Secure your xmcp server with API key authentication middleware",
+  "keywords": [
+    "middleware",
+    "api-key",
+    "auth"
+  ],
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",
