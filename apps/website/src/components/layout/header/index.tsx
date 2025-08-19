@@ -27,6 +27,7 @@ export const Header = () => {
       <div className="z-[6] relative max-w-[800px] w-full flex justify-center items-center px-4 py-8 text-center text-md text-white font-mono gap-8">
         <AnimatedLink href="/">Home</AnimatedLink>
         <AnimatedLink href="/docs">Docs</AnimatedLink>
+        <AnimatedLink href="/examples">Examples</AnimatedLink>
         <AnimatedLink href="/showcase">Showcase</AnimatedLink>
       </div>
       {!isDocsPage && <LogoButton />}
