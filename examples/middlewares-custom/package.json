@@ -2,9 +2,7 @@
   "name": "middlewares-custom",
   "description": "Create custom middleware functions for xmcp servers",
   "keywords": [
-    "middleware",
-    "custom",
-    "jwt"
+    "middleware"
   ],
   "scripts": {
     "build": "xmcp build",

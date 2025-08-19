@@ -2,9 +2,7 @@
   "name": "oauth-provider",
   "description": "Complete OAuth provider implementation with xmcp [experimental]",
   "keywords": [
-    "oauth",
-    "auth",
-    "provider"
+    "authentication"
   ],
   "scripts": {
     "build": "xmcp build",

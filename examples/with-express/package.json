@@ -23,9 +23,7 @@
     "xmcp": "workspace:*"
   },
   "keywords": [
-    "express",
-    "typescript",
-    "api"
+    "adapter"
   ],
   "author": "",
   "license": "MIT"

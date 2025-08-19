@@ -3,7 +3,6 @@
   "description": "A Next.js application with xmcp and authentication handler",
   "keywords": [
     "nextjs",
-    "auth",
     "authentication"
   ],
   "scripts": {
