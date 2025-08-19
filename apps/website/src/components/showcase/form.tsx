@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createShowcaseSubmission } from "./actions";
 import Image from "next/image";
 import { cn } from "@/utils/cn";
@@ -25,9 +25,29 @@ export function ShowcaseForm() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+        setFormData({
+          name: "",
+          tagline: "",
+          logo: null,
+          repositoryUrl: "",
+          connectionMethod: "",
+          contactEmail: "",
+        });
+        setLogoPreview(null);
+        setErrors({});
+      }, 10000); // Reset after 10 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
 
   const isFormValid = () => {
     const requiredFields = [
@@ -96,7 +116,7 @@ export function ShowcaseForm() {
       );
 
       if (result.success) {
-        setIsSubmitted(true);
+        setShowSuccessMessage(true);
       } else {
         if (result.errors) {
           setErrors(result.errors);
@@ -111,36 +131,8 @@ export function ShowcaseForm() {
     }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 border border-white rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        </div>
-        <h3 className="text-xl font-semibold mb-2 text-white">
-          Thank you for your submission
-        </h3>
-        <p className="text-gray-400">
-          We&apos;ve received your application and will review it soon.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="relative space-y-6">
       {errors.root && (
         <div className="border border-red-500 p-3 mb-6 bg-red-900/20">
           <p className="text-red-400 text-sm">{errors.root}</p>
@@ -163,9 +155,11 @@ export function ShowcaseForm() {
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Your MCP server name"
+              disabled={showSuccessMessage}
               className={cn(
                 "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.name ? "border-red-500" : "border-[#333333]"
+                errors.name ? "border-red-500" : "border-[#333333]",
+                showSuccessMessage && "opacity-50 cursor-not-allowed"
               )}
             />
             {errors.name && (
@@ -187,9 +181,11 @@ export function ShowcaseForm() {
               value={formData.connectionMethod}
               onChange={handleInputChange}
               placeholder="STDIO command or HTTP endpoint"
+              disabled={showSuccessMessage}
               className={cn(
                 "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.connectionMethod ? "border-red-500" : "border-[#333333]"
+                errors.connectionMethod ? "border-red-500" : "border-[#333333]",
+                showSuccessMessage && "opacity-50 cursor-not-allowed"
               )}
             />
             {errors.connectionMethod && (
@@ -213,9 +209,11 @@ export function ShowcaseForm() {
               value={formData.repositoryUrl}
               onChange={handleInputChange}
               placeholder="https://github.com/username/project"
+              disabled={showSuccessMessage}
               className={cn(
                 "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.repositoryUrl ? "border-red-500" : "border-[#333333]"
+                errors.repositoryUrl ? "border-red-500" : "border-[#333333]",
+                showSuccessMessage && "opacity-50 cursor-not-allowed"
               )}
             />
             {errors.repositoryUrl ? (
@@ -245,9 +243,11 @@ export function ShowcaseForm() {
               value={formData.tagline}
               onChange={handleInputChange}
               placeholder="A short description of what your MCP does"
+              disabled={showSuccessMessage}
               className={cn(
                 "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.tagline ? "border-red-500" : "border-[#333333]"
+                errors.tagline ? "border-red-500" : "border-[#333333]",
+                showSuccessMessage && "opacity-50 cursor-not-allowed"
               )}
             />
             {errors.tagline && (
@@ -269,9 +269,11 @@ export function ShowcaseForm() {
               value={formData.contactEmail}
               onChange={handleInputChange}
               placeholder="your.email@example.com"
+              disabled={showSuccessMessage}
               className={cn(
                 "w-full px-3 py-3 border focus:ring-2 focus:ring-gray-100 focus:border-transparent outline-none transition-all duration-200 text-gray-200 placeholder-[#747474] bg-transparent text-sm",
-                errors.contactEmail ? "border-red-500" : "border-[#333333]"
+                errors.contactEmail ? "border-red-500" : "border-[#333333]",
+                showSuccessMessage && "opacity-50 cursor-not-allowed"
               )}
             />
             {errors.contactEmail && (
@@ -291,7 +293,8 @@ export function ShowcaseForm() {
                   type="file"
                   accept="image/png,image/jpeg,image/svg+xml"
                   onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer focus:outline-none peer"
+                  disabled={showSuccessMessage}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer focus:outline-none peer disabled:cursor-not-allowed"
                 />
                 <div
                   className={cn(
@@ -300,7 +303,9 @@ export function ShowcaseForm() {
                       ? "border border-red-500"
                       : logoPreview
                         ? "border border-[#333333]"
-                        : "border border-dashed border-[#333333]"
+                        : "border border-dashed border-[#333333]",
+                    showSuccessMessage &&
+                      "opacity-50 cursor-not-allowed hover:bg-transparent"
                   )}
                 >
                   {logoPreview ? (
@@ -353,7 +358,7 @@ export function ShowcaseForm() {
         </div>
         <button
           type="submit"
-          disabled={isSubmitting || !isFormValid()}
+          disabled={isSubmitting || !isFormValid() || showSuccessMessage}
           className="bg-white text-black py-2 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase whitespace-nowrap w-full lg:w-auto"
         >
           {isSubmitting ? (
@@ -385,6 +390,29 @@ export function ShowcaseForm() {
           )}
         </button>
       </div>
+
+      {showSuccessMessage && (
+        <div className="absolute right-0 mt-2">
+          <div className="flex items-center justify-end gap-2">
+            <svg
+              className="w-4 h-4 text-green-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <p className="text-green-400 text-sm font-medium">
+              Submission successful!
+            </p>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
