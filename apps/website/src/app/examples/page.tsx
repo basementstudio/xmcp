@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { ExampleCards } from "@/components/examples/cards";
+import { ExampleCardsList } from "@/components/examples/cards/list";
 
 export const dynamic = "force-static";
 
@@ -26,7 +26,7 @@ export default function ExamplesPage() {
           </p>
         </div>
 
-        <ExampleCards />
+        <ExampleCardsList />
       </div>
     </div>
   );
