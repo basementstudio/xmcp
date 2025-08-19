@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
     },
   },
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  images: {
+    formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        hostname: "assets.basehub.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

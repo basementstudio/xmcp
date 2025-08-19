@@ -24,3 +24,45 @@ export const fetchAssets = async () => {
 
   return res.assets;
 };
+
+const ShowcaseFragment = fragmentOn("Showcase", {
+  submissions: {
+    ingestKey: true,
+    schema: true,
+  },
+});
+
+export const fetchShowcaseForm = async () => {
+  const res = await client().query({
+    showcase: {
+      ...ShowcaseFragment,
+    },
+  });
+
+  return res.showcase;
+};
+
+const MCPTemplateFragment = fragmentOn("McpTemplateComponent", {
+  name: true,
+  tagline: true,
+  logo: {
+    url: true,
+  },
+  connection: true,
+  repositoryUrl: true,
+  tag: true,
+});
+
+export const fetchMCPs = async () => {
+  const res = await client().query({
+    showcase: {
+      mcps: {
+        items: {
+          ...MCPTemplateFragment,
+        },
+      },
+    },
+  });
+
+  return res.showcase.mcps.items;
+};
