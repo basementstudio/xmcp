@@ -95,8 +95,9 @@ const homeTemplate = (
       }
     </style>
     <script>
-      function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(function() {
+      function copyToClipboard(endpoint) {
+        const fullUrl = window.location.origin + endpoint;
+        navigator.clipboard.writeText(fullUrl).then(function() {
           const feedback = document.querySelector('.copied-feedback');
           feedback.classList.add('show');
           setTimeout(function() {
