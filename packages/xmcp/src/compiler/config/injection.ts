@@ -3,6 +3,7 @@ import {
   getResolvedCorsConfig,
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
+  getResolvedTemplateConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 
@@ -78,9 +79,20 @@ export function injectStdioVariables(stdioConfig: any) {
 
 export type StdioVariables = ReturnType<typeof injectStdioVariables>;
 
+export function injectTemplateVariables(userConfig: any) {
+  const resolvedConfig = getResolvedTemplateConfig(userConfig);
+
+  return {
+    TEMPLATE_CONFIG: JSON.stringify(resolvedConfig),
+  };
+}
+
+export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
   | PathsVariables
-  | StdioVariables;
+  | StdioVariables
+  | TemplateVariables;

@@ -9,7 +9,7 @@ import { createFolder } from "@/utils/fs-utils";
 import path from "path";
 import { deleteSync } from "del";
 import dotenv from "dotenv";
-export { type XmcpMiddleware } from "@/types/middleware";
+export { type Middleware } from "@/types/middleware";
 import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";

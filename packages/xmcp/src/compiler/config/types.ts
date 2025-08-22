@@ -7,4 +7,5 @@ export type {
   ExperimentalConfig,
   PathsConfig,
   WebpackConfig,
+  TemplateConfig,
 } from "./schemas";

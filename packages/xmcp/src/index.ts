@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-export { type XmcpMiddleware } from "./types/middleware";
+export { type Middleware } from "./types/middleware";
 dotenv.config();
 
 export type {

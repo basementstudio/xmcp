@@ -1,0 +1,19 @@
+{
+  "name": "Template Config",
+  "description": "Modify the template config in the xmcp.config.ts file.",
+  "keywords": [
+    "config"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "3.24.4"
+  },
+  "devDependencies": {
+    "swc-loader": "^0.2.6"
+  }
+}

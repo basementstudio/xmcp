@@ -12,7 +12,7 @@ import path from "path";
 import express from "express";
 import { betterAuthContextProvider } from "./context.js";
 import { fileURLToPath } from "url";
-import { XmcpMiddleware } from "xmcp";
+import { Middleware } from "xmcp";
 import { BetterAuthConfig } from "./types.js";
 import { processProvidersResponse } from "./utils.js";
 
@@ -48,7 +48,7 @@ export type BetterAuthInstanceWithMcp = ReturnType<
   typeof getBetterAuthInstance
 >;
 
-export function betterAuthProvider(auth: BetterAuthConfig): XmcpMiddleware {
+export function betterAuthProvider(auth: BetterAuthConfig): Middleware {
   const betterAuthInstance = getBetterAuthInstance(auth);
 
   return {
