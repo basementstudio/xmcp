@@ -426,22 +426,17 @@ const config: XmcpConfig = {
 
 ## Vercel Deployment
 
-xmcp can be deployed to Vercel with the `--vercel` flag. This will create `.vercel` directory with the built output.
+Vercel supports xmcp with zero-configuration.
+
+First, bootstrap a new project with `npx create-xmcp-app@latest`.
+
+Then, [connect your Git repository](https://vercel.com/new) or [use Vercel CLI](https://vercel.com/docs/cli):
 
 ```bash
-xmcp build --vercel
-
-vercel deploy --prod --prebuilt
+vc deploy
 ```
 
-You can also add a `vercel.json` file to configure deployment on Vercel:
-
-```json
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "xmcp build --vercel"
-}
-```
+Learn more about deploying xmcp to Vercel in the [Vercel documentation](https://vercel.com/docs/frameworks/backend/xmcp).
 
 ## Usage with Next.js
 
