@@ -46,9 +46,9 @@ export const DEFAULT_PATHS_CONFIG = {
 };
 
 /**
- * Default values for the server config
+ * Default values for the template config
  */
-export const DEFAULT_SERVER_CONFIG = {
+export const DEFAULT_TEMPLATE_CONFIG = {
   name: "xmcp server",
   description:
     "This MCP server was bootstrapped with xmcp. Click the button below to connect to the endpoint.",

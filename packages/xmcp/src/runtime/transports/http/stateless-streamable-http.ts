@@ -15,7 +15,7 @@ import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
-import { CorsConfig, ServerConfig } from "@/compiler/config/schemas";
+import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
@@ -348,8 +348,8 @@ export class StatelessStreamableHTTPTransport {
       res.send(
         homeTemplate(
           this.endpoint,
-          this.options.serverOptions?.name,
-          this.options.serverOptions?.description
+          this.options.template?.name,
+          this.options.template?.description
         )
       );
     });

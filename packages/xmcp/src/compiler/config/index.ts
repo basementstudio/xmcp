@@ -5,7 +5,7 @@ import {
   experimentalConfigSchema,
   pathsConfigSchema,
   webpackConfigSchema,
-  serverConfigSchema,
+  templateConfigSchema,
 } from "./schemas";
 import { Configuration } from "webpack";
 
@@ -18,7 +18,7 @@ export const configSchema = z.object({
   experimental: experimentalConfigSchema.optional(),
   paths: pathsConfigSchema.optional(),
   webpack: webpackConfigSchema.optional(),
-  server: serverConfigSchema.optional(),
+  template: templateConfigSchema.optional(),
 });
 
 type WebpackConfig = { webpack?: (config: Configuration) => Configuration };

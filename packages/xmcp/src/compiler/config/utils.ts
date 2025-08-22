@@ -4,13 +4,13 @@ import {
   PathsConfig,
   OAuthConfig,
   StdioTransportConfig,
-  ServerConfig,
+  TemplateConfig,
 } from "./schemas";
 import {
   DEFAULT_HTTP_CONFIG,
   DEFAULT_PATHS_CONFIG,
-  DEFAULT_SERVER_CONFIG,
   DEFAULT_STDIO_CONFIG,
+  DEFAULT_TEMPLATE_CONFIG,
 } from "./constants";
 
 export function getResolvedHttpConfig(
@@ -52,10 +52,12 @@ export function getResolvedStdioConfig(
   return userConfig?.stdio || DEFAULT_STDIO_CONFIG;
 }
 
-export function getResolvedServerConfig(userConfig: any): ServerConfig | null {
-  const userServer = userConfig?.server;
-  if (!userServer) {
-    return DEFAULT_SERVER_CONFIG;
+export function getResolvedTemplateConfig(
+  userConfig: any
+): TemplateConfig | null {
+  const userTemplate = userConfig?.template;
+  if (!userTemplate) {
+    return DEFAULT_TEMPLATE_CONFIG;
   }
-  return { ...DEFAULT_SERVER_CONFIG, ...userServer };
+  return { ...DEFAULT_TEMPLATE_CONFIG, ...userTemplate };
 }
