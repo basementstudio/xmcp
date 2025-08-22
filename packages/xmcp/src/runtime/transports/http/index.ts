@@ -1,7 +1,7 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
-import { XmcpMiddleware } from "@/types/middleware";
+import { Middleware } from "@/types/middleware";
 import { CorsConfig, TemplateConfig } from "@/compiler/config/schemas";
 import { Provider, processProviders } from "@/runtime/middlewares/utils";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
@@ -31,7 +31,7 @@ const templateConfig = TEMPLATE_CONFIG as TemplateConfig;
 // @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
-      default: XmcpMiddleware | XmcpMiddleware[];
+      default: Middleware | Middleware[];
     }>
   | undefined;
 

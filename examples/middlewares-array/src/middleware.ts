@@ -1,6 +1,6 @@
-import { apiKeyAuthMiddleware, type XmcpMiddleware } from "xmcp";
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
 
-const middleware: XmcpMiddleware[] = [
+const middleware: Middleware[] = [
   apiKeyAuthMiddleware({
     headerName: "x-api-key",
     apiKey: "12345",

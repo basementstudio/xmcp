@@ -5,4 +5,4 @@ export type RequestHandlerAndRouter = {
   router: Router;
 };
 
-export type XmcpMiddleware = RequestHandler | RequestHandlerAndRouter;
+export type Middleware = RequestHandler | RequestHandlerAndRouter;

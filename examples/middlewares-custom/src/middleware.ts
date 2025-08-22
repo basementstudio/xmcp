@@ -1,7 +1,7 @@
-import { type XmcpMiddleware } from "xmcp";
+import { type Middleware } from "xmcp";
 import jwt from "jsonwebtoken";
 
-const middleware: XmcpMiddleware = (req, res, next) => {
+const middleware: Middleware = (req, res, next) => {
   const EXAMPLE_SECRET = "a-string-secret-at-least-256-bits-long";
 
   const authHeader = req.headers.authorization;

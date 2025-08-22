@@ -1,4 +1,4 @@
-import { RequestHandlerAndRouter, XmcpMiddleware } from "@/types/middleware";
+import { RequestHandlerAndRouter, Middleware } from "@/types/middleware";
 import { Router, type RequestHandler } from "express";
 
 export type Provider = {
@@ -10,13 +10,13 @@ export type ProvidersModel = Provider[];
 
 // assertion functions to get the type of the middleware and router
 function isRequestHandler(
-  middleware: XmcpMiddleware
+  middleware: Middleware
 ): middleware is RequestHandler {
   return typeof middleware === "function";
 }
 
 function isRequestHandlerAndRouter(
-  middleware: XmcpMiddleware
+  middleware: Middleware
 ): middleware is RequestHandlerAndRouter {
   return (
     typeof middleware === "object" &&
@@ -41,7 +41,7 @@ function isExpressRouter(obj: any): obj is Router {
 
 // read from the array of providers (middlewares and/or routers) and split them into ordered items preserving sequence
 export function processProviders(
-  defaultExport: XmcpMiddleware | XmcpMiddleware[]
+  defaultExport: Middleware | Middleware[]
 ): ProvidersModel {
   const providers: ProvidersModel = [];
 
