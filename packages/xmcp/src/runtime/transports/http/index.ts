@@ -2,7 +2,7 @@ import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { XmcpMiddleware } from "@/types/middleware";
-import { CorsConfig } from "@/compiler/config/schemas";
+import { CorsConfig, TemplateConfig } from "@/compiler/config/schemas";
 import { Provider, processProviders } from "@/runtime/middlewares/utils";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 import dotenv from "dotenv";
@@ -24,6 +24,8 @@ export type RuntimeHttpConfig = {
 const httpConfig = HTTP_CONFIG as RuntimeHttpConfig;
 // @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
+// @ts-expect-error: injected by compiler
+const templateConfig = TEMPLATE_CONFIG as TemplateConfig;
 
 // middleware
 // @ts-expect-error: injected by compiler
@@ -44,6 +46,7 @@ async function main() {
     debug: httpConfig?.debug,
     bodySizeLimit: httpConfig?.bodySizeLimit?.toString(),
     endpoint: httpConfig?.endpoint,
+    template: templateConfig,
   };
 
   const corsOptions = {

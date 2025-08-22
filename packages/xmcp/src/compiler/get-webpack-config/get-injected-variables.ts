@@ -7,6 +7,7 @@ import {
   injectOAuthVariables,
   injectPathsVariables,
   injectStdioVariables,
+  injectTemplateVariables,
 } from "../config/injection";
 
 /**
@@ -24,6 +25,7 @@ export function getInjectedVariables(
   const oauthVariables = injectOAuthVariables(xmcpConfig);
   const pathsVariables = injectPathsVariables(xmcpConfig);
   const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
+  const templateVariables = injectTemplateVariables(xmcpConfig);
 
   return {
     ...httpVariables,
@@ -31,5 +33,6 @@ export function getInjectedVariables(
     ...oauthVariables,
     ...pathsVariables,
     ...stdioVariables,
+    ...templateVariables,
   };
 }
