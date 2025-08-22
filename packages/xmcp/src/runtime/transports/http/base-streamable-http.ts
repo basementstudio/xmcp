@@ -1,3 +1,4 @@
+import { ServerConfig } from "@/compiler/config/schemas";
 import { IncomingMessage, ServerResponse } from "http";
 
 export interface HttpTransportOptions {
@@ -6,6 +7,7 @@ export interface HttpTransportOptions {
   endpoint?: string;
   bodySizeLimit?: string;
   debug?: boolean;
+  serverOptions?: ServerConfig;
 }
 
 export interface JsonRpcMessage {

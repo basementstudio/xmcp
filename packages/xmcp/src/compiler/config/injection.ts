@@ -3,8 +3,10 @@ import {
   getResolvedCorsConfig,
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
+  getResolvedServerConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
+import { ServerConfig } from "./schemas/server";
 
 export function injectHttpVariables(
   httpConfig: HttpTransportConfig | boolean,
@@ -78,9 +80,20 @@ export function injectStdioVariables(stdioConfig: any) {
 
 export type StdioVariables = ReturnType<typeof injectStdioVariables>;
 
+export function injectServerVariables(userConfig: any) {
+  const resolvedConfig = getResolvedServerConfig(userConfig);
+
+  return {
+    SERVER_CONFIG: JSON.stringify(resolvedConfig),
+  };
+}
+
+export type ServerVariables = ReturnType<typeof injectServerVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
   | PathsVariables
-  | StdioVariables;
+  | StdioVariables
+  | ServerVariables;

@@ -4,10 +4,12 @@ import {
   PathsConfig,
   OAuthConfig,
   StdioTransportConfig,
+  ServerConfig,
 } from "./schemas";
 import {
   DEFAULT_HTTP_CONFIG,
   DEFAULT_PATHS_CONFIG,
+  DEFAULT_SERVER_CONFIG,
   DEFAULT_STDIO_CONFIG,
 } from "./constants";
 
@@ -48,4 +50,12 @@ export function getResolvedStdioConfig(
   userConfig: any
 ): StdioTransportConfig | null {
   return userConfig?.stdio || DEFAULT_STDIO_CONFIG;
+}
+
+export function getResolvedServerConfig(userConfig: any): ServerConfig | null {
+  const userServer = userConfig?.server;
+  if (!userServer) {
+    return DEFAULT_SERVER_CONFIG;
+  }
+  return { ...DEFAULT_SERVER_CONFIG, ...userServer };
 }

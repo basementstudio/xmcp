@@ -15,7 +15,7 @@ import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
-import { CorsConfig } from "@/compiler/config/schemas";
+import { CorsConfig, ServerConfig } from "@/compiler/config/schemas";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
@@ -345,7 +345,13 @@ export class StatelessStreamableHTTPTransport {
     });
 
     this.app.get("/", (_req: Request, res: Response) => {
-      res.send(homeTemplate(this.endpoint));
+      res.send(
+        homeTemplate(
+          this.endpoint,
+          this.options.serverOptions?.name,
+          this.options.serverOptions?.description
+        )
+      );
     });
 
     // to do move this to a separate provider with the same approach as better auth
