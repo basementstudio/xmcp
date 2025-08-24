@@ -23,6 +23,9 @@ export function injectHttpVariables(
       stateless: true,
       debug: mode === "development",
     }),
+    // Individual HTTP variables for adapters
+    HTTP_DEBUG: JSON.stringify(mode === "development"),
+    HTTP_BODY_SIZE_LIMIT: JSON.stringify(resolvedConfig.bodySizeLimit || "10mb"),
   };
 }
 
@@ -40,6 +43,13 @@ export function injectCorsVariables(httpConfig: HttpTransportConfig | null) {
       credentials: corsConfig.credentials ?? false,
       maxAge: corsConfig.maxAge ?? 0,
     }),
+    // Individual CORS variables for adapters
+    HTTP_CORS_ORIGIN: JSON.stringify(corsConfig.origin ?? ""),
+    HTTP_CORS_METHODS: JSON.stringify(corsConfig.methods ?? ""),
+    HTTP_CORS_ALLOWED_HEADERS: JSON.stringify(corsConfig.allowedHeaders ?? ""),
+    HTTP_CORS_EXPOSED_HEADERS: JSON.stringify(corsConfig.exposedHeaders ?? ""),
+    HTTP_CORS_CREDENTIALS: JSON.stringify(corsConfig.credentials ?? false),
+    HTTP_CORS_MAX_AGE: JSON.stringify(corsConfig.maxAge ?? 0),
   };
 }
 

@@ -4,7 +4,7 @@ import { oauthConfigSchema } from "./oauth";
 // ------------------------------------------------------------
 // Adapter config schema (perhaps a separate file but it's small yet)
 // ------------------------------------------------------------
-export const adapterConfigSchema = z.enum(["express", "nextjs"]);
+export const adapterConfigSchema = z.enum(["express", "nextjs", "nestjs"]);
 
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 

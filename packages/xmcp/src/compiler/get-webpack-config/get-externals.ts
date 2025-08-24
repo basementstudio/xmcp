@@ -47,31 +47,31 @@ export function getExternals(): Configuration["externals"] {
         }
       }
 
-      /**
-       * When using Next.js, we want them to bundle the code for the tool file,
-       * so just keep the reference for the import as external
-       */
-      if (xmcpConfig.experimental?.adapter === "nextjs") {
-        // Bundle imports from the same folder
-        if (request.startsWith("./")) {
-          return callback();
-        }
+             /**
+        * When using Next.js or NestJS, we want them to bundle the code for the tool file,
+        * so just keep the reference for the import as external
+        */
+       if (xmcpConfig.experimental?.adapter === "nextjs" || xmcpConfig.experimental?.adapter === "nestjs") {
+         // Bundle imports from the same folder
+         if (request.startsWith("./")) {
+           return callback();
+         }
 
-        let pathRequest = request;
-        /**
-         * Paths are relative to the .xmcp/nextjs-adapter folder,
-         * but we are building in .xmcp/adapter/index.js, so we need to go up 2 levels
-         */
-        if (request.startsWith("../")) {
-          // Only replace the import if it hasn't been replaced yet
-          if (!replacedImports.has(request)) {
-            pathRequest = pathRequest.replace("../", "../../");
-            replacedImports.add(pathRequest);
-          }
-        }
+         let pathRequest = request;
+         /**
+          * Paths are relative to the .xmcp/nextjs-adapter or .xmcp/nestjs-adapter folder,
+          * but we are building in .xmcp/adapter/index.js, so we need to go up 2 levels
+          */
+         if (request.startsWith("../")) {
+           // Only replace the import if it hasn't been replaced yet
+           if (!replacedImports.has(request)) {
+             pathRequest = pathRequest.replace("../", "../../");
+             replacedImports.add(pathRequest);
+           }
+         }
 
-        return callback(null, `commonjs ${pathRequest}`);
-      }
+         return callback(null, `commonjs ${pathRequest}`);
+       }
 
       // Bundle relative imports and absolute paths
       callback();

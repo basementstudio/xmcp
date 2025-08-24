@@ -51,6 +51,26 @@ const expressTypeDefinition = `
 export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
+const nestjsTypeDefinition = `
+export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
+export class XmcpController {
+  static handleMcpRequest(req: Request, res: Response): Promise<void>;
+}
+export function XmcpEndpoint(): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;
+export function withAuth(handler: (req: Request, res: Response) => Promise<void>, config: AuthConfig): (req: Request, res: Response) => Promise<void>;
+export interface AuthConfig {
+  verifyToken: (req: Request, bearerToken?: string) => Promise<any>;
+  required?: boolean;
+  requiredScopes?: string[];
+}
+export function createXmcpMiddleware(): (req: Request, res: Response, next: any) => void;
+export class XmcpException extends Error {
+  constructor(message: string, code?: number, statusCode?: number);
+  code: number;
+  statusCode: number;
+}
+`;
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -71,6 +91,8 @@ export class CreateTypeDefinitionPlugin {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "express") {
             typeDefinitionContent = expressTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter == "nestjs") {
+            typeDefinitionContent = nestjsTypeDefinition;
           }
           fs.writeFileSync(
             path.join(adapterOutputPath, "index.d.ts"),

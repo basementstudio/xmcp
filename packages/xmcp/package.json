@@ -88,6 +88,8 @@
   },
   "peerDependencies": {
     "swc-loader": "^0.2.6",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0"
   }
 }
