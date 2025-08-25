@@ -11,7 +11,7 @@ import {
 } from "../config/injection";
 
 /**
- * The XMCP runtime uses variables that are not defined by default.
+ * The xmcp runtime uses variables that are not defined by default.
  *
  * This utility will define those variables based on the user's config.
  */
