@@ -39,6 +39,7 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--skip-git", "Skip initializing git repository", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -81,6 +82,7 @@ const program = new Command()
     let packageManager = "npm";
     let skipInstall = options.skipInstall;
     let transports = ["http"];
+    let initializeGit = !options.skipGit;
 
     // Handle transport selection from CLI options
     if (options.http || options.stdio) {
@@ -174,6 +176,7 @@ const program = new Command()
         transports: transports,
         packageVersion: packageJson.version,
         skipInstall,
+        initializeGit,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));

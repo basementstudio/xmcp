@@ -6,6 +6,7 @@ import { renameFiles } from "./rename.js";
 import { updatePackageJson } from "./update-package.js";
 import { install } from "./install.js";
 import { generateConfig } from "./generate-config.js";
+import { initGit } from "./git.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,7 @@ interface ProjectOptions {
   transports: string[];
   packageVersion: string;
   skipInstall?: boolean;
+  initializeGit?: boolean;
 }
 
 /**
@@ -39,6 +41,7 @@ export function createProject(options: ProjectOptions): void {
     transports,
     packageVersion,
     skipInstall,
+    initializeGit,
   } = options;
 
   // Ensure the project directory exists
@@ -65,5 +68,9 @@ export function createProject(options: ProjectOptions): void {
   // Install project dependencies
   if (!skipInstall) {
     install(projectPath, packageManager, packageVersion);
+  }
+
+  if (initializeGit) {
+    initGit(projectPath);
   }
 }
