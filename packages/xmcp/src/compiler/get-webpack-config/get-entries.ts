@@ -23,6 +23,9 @@ export function getEntries(
     if (xmcpConfig.experimental?.adapter === "nextjs") {
       entries["adapter"] = path.join(runtimeFolderPath, "adapter-nextjs.js");
     }
+    if (xmcpConfig.experimental?.adapter === "nestjs") {
+      entries["adapter"] = path.join(runtimeFolderPath, "adapter-nestjs.js");
+    }
   }
   return entries;
 }
