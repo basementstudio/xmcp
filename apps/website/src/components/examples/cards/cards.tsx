@@ -19,11 +19,12 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
         example.tags.forEach((tag) => tagSet.add(tag));
       }
     });
-    return Array.from(tagSet).sort();
+    return ["All", ...Array.from(tagSet).sort()];
   }, [examples]);
 
   const filteredExamples = useMemo(() => {
-    if (selectedTags.length === 0) return examples;
+    if (selectedTags.length === 0 || selectedTags.includes("All"))
+      return examples;
 
     return examples.filter((example) => {
       if (!example.tags) return false;
@@ -34,9 +35,31 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
   }, [examples, selectedTags]);
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
+    setSelectedTags((prev) => {
+      if (tag === "All") {
+        return [];
+      }
+
+      let newTags;
+      if (prev.length === 0) {
+        newTags = [tag];
+      } else {
+        newTags = prev.includes(tag)
+          ? prev.filter((t) => t !== tag)
+          : [...prev, tag];
+      }
+
+      const nonAllTags = allTags.filter((t) => t !== "All");
+      const allNonAllTagsSelected = nonAllTags.every((t) =>
+        newTags.includes(t)
+      );
+
+      if (allNonAllTagsSelected && nonAllTags.length > 0) {
+        return [];
+      }
+
+      return newTags;
+    });
   };
 
   const clearFilters = () => {
@@ -67,7 +90,11 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
               onClick={() => toggleTag(tag)}
               className={cn(
                 "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide cursor-pointer",
-                selectedTags.includes(tag)
+                (
+                  tag === "All"
+                    ? selectedTags.length === 0
+                    : selectedTags.includes(tag)
+                )
                   ? "border-white bg-white text-black"
                   : "border-white/20 text-white/80 hover:border-white/40 hover:text-white"
               )}
@@ -76,12 +103,6 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
             </button>
           ))}
         </div>
-
-        {selectedTags.length > 0 && (
-          <div className="text-sm text-[#BABABA]">
-            Showing {filteredExamples.length} of {examples.length} examples
-          </div>
-        )}
       </div>
 
       <div className="min-h-[60vh]">
