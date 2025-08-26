@@ -5,7 +5,7 @@ import { LogoButton } from "./logo-button";
 
 export const Header = () => {
   return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-50 flex justify-center items-center">
+    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-100 flex justify-center items-center">
       <div
         className={`
           pointer-events-none
