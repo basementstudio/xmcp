@@ -1,16 +1,11 @@
-"use client";
-
 import { AnimatedLink } from "@/components/terminal/animated-link";
 import styles from "./progressive-blur.module.css";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { LogoButton } from "./logo-button";
 
 export const Header = () => {
-  const pathname = usePathname();
-  const isDocsPage = pathname === "/docs";
   return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-50 flex justify-center items-center">
+    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-100 flex justify-center items-center">
       <div
         className={`
           pointer-events-none
@@ -25,11 +20,11 @@ export const Header = () => {
         <div></div>
       </div>
       <div className="z-[6] relative max-w-[800px] w-full flex justify-center items-center px-4 py-8 text-center text-md text-white font-mono gap-8">
-        <AnimatedLink href="/">Home</AnimatedLink>
         <AnimatedLink href="/docs">Docs</AnimatedLink>
+        <AnimatedLink href="/examples">Examples</AnimatedLink>
         <AnimatedLink href="/showcase">Showcase</AnimatedLink>
       </div>
-      {!isDocsPage && <LogoButton />}
+      <LogoButton />
       <GithubButton />
     </header>
   );

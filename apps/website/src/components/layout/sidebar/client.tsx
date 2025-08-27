@@ -3,18 +3,11 @@
 import { cn } from "@/utils/cn";
 import { useRouter } from "next/navigation";
 import { useEffect, useCallback, useState } from "react";
-import { XmcpLogo } from "@/components/terminal/logo/client";
 import Link from "next/link";
 import { SidebarItem } from "@/utils/markdown";
 import { slugify } from "@/components/markdown/renderer";
 
-export function SidebarClient({
-  sidebar,
-  matcap,
-}: {
-  sidebar: SidebarItem[];
-  matcap: string;
-}) {
+export function SidebarClient({ sidebar }: { sidebar: SidebarItem[] }) {
   const router = useRouter();
   const [activeItem, setActiveItem] = useState<string>("");
 
@@ -109,14 +102,8 @@ export function SidebarClient({
 
   return (
     <div className="absolute left-0 top-0 hidden h-full min-[1200px]:block w-[340px] z-60">
-      <nav className="sticky left-8 top-0 z-10 flex h-auto min-h-[600px] flex-col px-8 lg:h-[calc(100dvh-64px)]">
-        <div className="flex justify-start -ml-5.5 pt-4">
-          <div className="relative w-[150px] h-[150px] flex items-center justify-center">
-            <XmcpLogo matcap={matcap} />
-          </div>
-        </div>
-
-        <div className="relative pb-10 pt-6 flex flex-col gap-2.5 overflow-y-auto">
+      <nav className="sticky left-8 top-30 z-10 flex h-auto min-h-[600px] flex-col px-8 pl-4 lg:h-[calc(100dvh-64px)]">
+        <div className="relative pb-10 pt-10 flex flex-col gap-2.5 overflow-y-auto">
           <div className="flex flex-col gap-4">
             {sidebar.map((item) => {
               const isActive = activeParentItem === item.slug;
