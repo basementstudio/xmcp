@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs-extra";
 import chalk from "chalk";
+import { readTsConfigFile } from "../utils/read-config-file.js";
 
 /**
  * updates the tsconfig.json file to include the @xmcp/* alias for accessing the handler
@@ -9,7 +10,16 @@ import chalk from "chalk";
  */
 export function updateTsConfig(projectRoot: string) {
   const tsconfigPath = path.join(projectRoot, "tsconfig.json");
-  const tsconfig = fs.readJsonSync(tsconfigPath);
+  
+  let tsconfig: any;
+  try {
+    tsconfig = readTsConfigFile(tsconfigPath);
+  } catch (error) {
+    console.log(
+      chalk.yellow(`Failed to parse tsconfig.json: ${error instanceof Error ? error.message : "Unknown error"}`)
+    );
+    return;
+  }
 
   if (!tsconfig) {
     console.log(

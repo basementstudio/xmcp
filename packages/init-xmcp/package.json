@@ -48,6 +48,9 @@
     "inquirer": "^9.2.12",
     "ora": "^7.0.1"
   },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
