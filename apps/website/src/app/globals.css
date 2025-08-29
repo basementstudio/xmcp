@@ -21,6 +21,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
+  --font-sans: var(--font-geist);
   --font-mono: var(--font-geist-mono);
   --font-size-sm: 0.9rem;
 }
@@ -29,7 +30,7 @@
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
 
     p,
     li {
@@ -57,10 +58,6 @@
 
     .anchor:hover {
       @apply visible;
-    }
-
-    .prose {
-      @apply font-mono;
     }
 
     .prose a {
@@ -92,7 +89,6 @@
     .prose code {
       @apply px-2 py-0.5;
       color: #ffffff;
-      font-style: italic;
     }
 
     .prose code:has(pre) {
@@ -122,9 +118,7 @@
     }
 
     .prose p {
-      @apply font-mono;
       color: #bababa;
-      letter-spacing: -0.5px;
       line-height: 180%;
       margin-top: 1rem;
       margin-bottom: 0.5rem;
@@ -163,12 +157,6 @@
       @apply font-medium;
       color: #fff;
       font-style: italic;
-    }
-
-    .prose ul {
-      @apply font-mono text-sm mt-4;
-      list-style: none;
-      padding-left: 0;
     }
 
     .prose ol {
@@ -293,5 +281,88 @@
   html {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  /* Typography Kit */
+  .type-d-sans {
+    color: var(--White, #f7f7f7);
+    font-family: var(--font-sans);
+    font-size: 2.5rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 2.5rem; /* 100% */
+  }
+
+  .type-d-serif {
+    color: var(--White, #f7f7f7);
+    font-family: var(--font-sans);
+    font-size: 2.5rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 2.5rem; /* 100% */
+  }
+
+  .type-h1-light {
+    color: var(--White, #f7f7f7);
+    font-feature-settings:
+      "ss01" on,
+      "ss03" on;
+    font-family: var(--font-sans);
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 2rem; /* 100% */
+  }
+
+  .type-h2-light {
+    color: var(--White, #f7f7f7);
+    font-feature-settings:
+      "ss01" on,
+      "ss03" on;
+    font-family: var(--font-sans);
+    font-size: 1.75rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: 2rem; /* 114.286% */
+  }
+
+  .type-p-cta-medium {
+    color: var(--White, #f7f7f7);
+    font-feature-settings:
+      "ss01" on,
+      "ss03" on;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1.5rem; /* 150% */
+    letter-spacing: 0.04rem;
+    text-transform: uppercase;
+  }
+
+  .type-p-regular {
+    color: var(--White, #f7f7f7);
+    font-feature-settings:
+      "ss01" on,
+      "ss03" on;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5rem; /* 150% */
+    letter-spacing: 0.02rem;
+  }
+
+  .type-c-medium {
+    color: var(--White, #f7f7f7);
+    font-feature-settings:
+      "ss01" on,
+      "ss03" on;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 1rem; /* 133.333% */
+    letter-spacing: 0.015rem;
   }
 }

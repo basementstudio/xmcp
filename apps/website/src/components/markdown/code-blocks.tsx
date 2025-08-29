@@ -98,10 +98,9 @@ export function Pre({
     <pre
       ref={preRef}
       className={cn(
-        "my-8 border relative w-auto overflow-x-auto bg-black p-4 [&_span]:!font-mono",
+        "my-8 border relative w-auto overflow-auto bg-black p-4 [&_span]:!not-italic [&_span]:!font-normal max-h-[600px] font-mono border-[#333]",
         className
       )}
-      style={{ borderColor: "#333" }}
     >
       <preContext.Provider value={{ editor: true }}>
         {children}

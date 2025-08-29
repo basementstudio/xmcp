@@ -4,7 +4,14 @@ import { Toolbar } from "basehub/next-toolbar";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import localFont from "next/font/local";
+import { Geist } from "next/font/google";
 import { Metadata } from "next";
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  weight: ["400", "500", "600", "700"],
+});
 
 const geistMono = localFont({
   variable: "--font-geist-mono",
@@ -163,7 +170,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body
-        className={`${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] font-mono mx-auto`}
+        className={`${geist.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] mx-auto`}
       >
         <div className="grow relative">
           <Header />
