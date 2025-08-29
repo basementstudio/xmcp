@@ -95,19 +95,21 @@ export function Pre({
   }, [children]);
 
   return (
-    <pre
-      ref={preRef}
-      className={cn(
-        "my-8 border relative w-auto overflow-auto bg-black p-4 [&_span]:!not-italic [&_span]:!font-normal max-h-[600px] font-mono border-[#333]",
-        className
-      )}
-    >
-      <preContext.Provider value={{ editor: true }}>
-        {children}
-      </preContext.Provider>
+    <div className="relative my-8">
+      <pre
+        ref={preRef}
+        className={cn(
+          "border w-auto overflow-auto bg-black p-4 [&_span]:!not-italic [&_span]:!font-normal max-h-[600px] font-mono border-[#333]",
+          className
+        )}
+      >
+        <preContext.Provider value={{ editor: true }}>
+          {children}
+        </preContext.Provider>
+      </pre>
       {hasLanguage && (
         <CopyButton text={codeText} className="absolute top-3.5 right-6" />
       )}
-    </pre>
+    </div>
   );
 }
