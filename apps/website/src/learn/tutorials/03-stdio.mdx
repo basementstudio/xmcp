@@ -1,18 +1,18 @@
 ---
-title: "Filesystem Tutorial"
-description: "Learn to build filesystem tools with xmcp and publish them to npm."
+title: "STDIO Server Tutorial"
+description: "Learn to build an MCP server that runs on the STDIO transport and interacts with the local filesystem to perform image processing."
 order: 3
 ---
 
 # STDIO Server Tutorial
 
-Throughout this tutorial we'll build an MCP server that runs on the STDIO transport, that interacts with the local filesystem to perform image processing.
+Throughout this tutorial, we'll build an MCP server that runs on the STDIO transport and interacts with the local filesystem to perform image processing.
 
-The server will consist of three main tools that will allow you to read images from the filesystem and:
+We'll build three image processing tools:
 
-- Compress them
-- Convert them to a different format
-- Resize them
+- **Compress** images to reduce file size
+- **Convert** between different formats (PNG, JPEG, WebP)
+- **Resize** images with various fitting options
 
 You can find the final code for this tutorial [here](https://github.com/basementstudio/xmcp-tutorials/tree/main/stdio).
 
@@ -46,7 +46,7 @@ When prompted, configure your project with these settings:
 ❯ STDIO (runs on the user's machine)
 ```
 
-Our final configuration should look like this:
+Your final configuration should look like this:
 
 ```
 ? What is your project named? image-processor
@@ -86,20 +86,19 @@ To connect and access the server, we'll need to modify our mcp client JSON confi
 }
 ```
 
-> If we have the dev server running, the dist will be automatically generated based on our changes. If not, we can run `pnpm build` to generate it. These are two different processes from the one we run on our terminal. Running the dev server does not ensure that the client will run the server unless we prefix the command with `node`.
+> With the dev server running, the `dist` folder updates automatically as you make changes. Without it, run `pnpm build` to generate the distribution files. Note that the dev server only watches for changes—your MCP client still needs to run the compiled server with `node`.
 
-To test our connection, let's head to Cursor's Tools & Integrations panel under Settings and toggle it on. We should see it's only detecting one tool, our template `greet.ts` tool.
+To test the connection, go to Cursor's Tools & Integrations panel in Settings and enable it. You should see it detecting one tool—the template `greet.ts` file.
 
-// screenshot of how it looks like in cursor
-// or maybe add a terminal with tabs where you can see the name of the file like mcp.json in cursor, or claude-desktop json
+> **Note**: The exact interface depends on your MCP client. In Cursor, this appears in the Tools & Integrations panel.
 
-Before we get into creating our tools, we'll need to set up a few things in our project.
+Before creating our tools, let's configure a few project settings.
 
 ## 3. Project configuration
 
-Since we'll be using the `sharp` library, we need to configure the project to include it as an external dependency.
+Since we'll be using the `sharp` library for image processing, we need to configure it as an external dependency.
 
-Let's open the `xmcp.config.ts` file and add the following code. If we set up the project correctly, we should see the stdio flag in the config set to `true`.
+Open `xmcp.config.ts` and add the following. If you set up the project correctly, you should see `stdio: true` in the config.
 
 ```typescript
 import { type XmcpConfig } from "xmcp";
@@ -111,7 +110,7 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-We're gonna extend the webpack config to include the `sharp` library as an external dependency.
+Next, we'll extend the webpack config to include the `sharp` library as an external dependency.
 
 ```typescript
 import { type XmcpConfig } from "xmcp";
@@ -127,7 +126,7 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-And lastly we'll need to add the `sharp` library to the project dependencies, as an optional dependency.
+Finally, add `sharp` as an optional dependency in your `package.json`:
 
 ```json
 {
@@ -138,13 +137,13 @@ And lastly we'll need to add the `sharp` library to the project dependencies, as
 }
 ```
 
-This tells webpack: "Don't try to bundle Sharp - treat it as an external runtime dependency"
+This tells webpack: "Don't bundle Sharp—treat it as an external runtime dependency."
 
-We're all set up and can continue crafting the utilities our tools will use.
+Perfect! Now we can start building the utilities our tools will need.
 
 ## 4. Setting up the utilities
 
-Before building our tools, we need several utility functions that will handle common image processing tasks. Let's create a new file called `utils/image-utils.ts` and break down each utility:
+Before building our tools, we need utility functions for common image processing tasks. Create `src/utils/image-utils.ts` and let's build each utility:
 
 ### 4.1 Path Normalization
 
@@ -166,7 +165,7 @@ export const normalizePath = (filePath: string): string => {
 };
 ```
 
-This function decodes URL-encoded characters (like `%20` for spaces) and converts relative paths to absolute paths.
+This handles URL-encoded characters (like `%20` for spaces) and converts relative paths to absolute paths.
 
 ### 4.2 Format Validation
 
@@ -205,7 +204,7 @@ export const getImageFormat = (imagePath: string): SupportedSharpFormats => {
 };
 ```
 
-These functions ensure we only process supported image formats and convert "jpg" to "jpeg" since Sharp uses "jpeg" internally.
+This ensures we only process supported formats and normalizes "jpg" to "jpeg" (Sharp's internal format).
 
 ### 4.3 File Size Formatting
 
@@ -229,7 +228,7 @@ export const formatFileSize = (bytes: number): string => {
 };
 ```
 
-This converts raw byte counts into readable formats like "2.5 MB" or "150 KB", handling both positive and negative values for compression comparisons.
+This converts byte counts to readable formats like "2.5 MB" or "150 KB", handling both positive and negative values for compression comparisons.
 
 ### 4.4 Image Processing Setup
 
@@ -263,34 +262,15 @@ export const prepareImageProcessing = async (
 };
 ```
 
-This function combines all our utilities to prepare everything needed for image processing: normalized paths, format validation, file statistics, image metadata, and a Sharp instance ready for manipulation.
+This combines all our utilities into one function that prepares everything needed: normalized paths, format validation, file stats, image metadata, and a Sharp instance ready for processing.
 
 ## 5. Crafting the tools
 
-Now let's build our first tool: the image compression tool. We'll break down the xmcp tool structure and syntax step by step.
+Time to build our first tool! Let's create an image compression tool and walk through the xmcp structure.
 
-### 5.1 Tool File Structure
+### 5.1 Schema Definition
 
-First, let's set up the basic structure for our compression tool. Create `src/tools/compress-image.ts`:
-
-```typescript
-// src/tools/compress-image.ts
-import { z } from "zod";
-import { type ToolMetadata, type InferSchema } from "xmcp";
-import { prepareImageProcessing, formatFileSize } from "../utils/image-utils";
-import { stat } from "fs/promises";
-```
-
-Every xmcp tool needs these core imports:
-
-- **`z`**: Zod for schema validation
-- **`ToolMetadata`**: Type for tool metadata configuration
-- **`InferSchema`**: Type utility to infer types from our schema
-- Our custom utilities and Node.js modules
-
-### 5.2 Schema Definition
-
-The schema defines what parameters our tool accepts and validates them:
+The schema defines and validates the parameters our tool accepts:
 
 ```typescript
 // Define the schema for tool parameters
@@ -320,9 +300,9 @@ export const schema = {
 };
 ```
 
-to learn more about the schema configuration, you can check out the [Zod documentation](https://zod.dev/).
+To learn more about schema configuration, check out the [Zod documentation](https://zod.dev/).
 
-### 5.3 Tool Metadata
+### 5.2 Tool Metadata
 
 Metadata tells the MCP client how to present and handle our tool:
 
@@ -341,26 +321,29 @@ export const metadata: ToolMetadata = {
 };
 ```
 
-// this is an optional export but is a good practice to have it so LLMs dont have trouble discovering your tools.
+The metadata export is optional but recommended—it helps LLMs discover and understand your tools better.
 
-learn more about the metadata here (link to concepts/metadata)
+The `annotations` object provides hints about tool behavior:
 
-/** Human-readable title for the tool \*/
-title?: string;
-/** If true, the tool does not modify its environment _/
-readOnlyHint?: boolean;
-/\*\* If true, the tool may perform destructive updates _/
-destructiveHint?: boolean;
-/** If true, repeated calls with same args have no additional effect \*/
-idempotentHint?: boolean;
-/** If true, tool interacts with external entities \*/
-openWorldHint?: boolean;
+- `title`: Human-readable name for the tool
+- `readOnlyHint`: Tool doesn't modify its environment
+- `destructiveHint`: Tool may perform destructive operations
+- `idempotentHint`: Repeated calls with same args have no additional effect
+- `openWorldHint`: Tool interacts with external entities
 
-### 5.4 Tool Implementation
+### 5.3 Tool Implementation
 
-Now let's implement the complete compression function. The main function uses `InferSchema` to get proper TypeScript types from our schema:
+Now for the implementation. Create `src/tools/compress-image.ts` with all the necessary imports and logic:
 
 ```typescript
+// src/tools/compress-image.ts
+import { z } from "zod";
+import { type ToolMetadata, type InferSchema } from "xmcp";
+import { prepareImageProcessing, formatFileSize } from "../utils/image-utils";
+import { stat } from "fs/promises";
+
+// ... (schema and metadata from previous sections)
+
 // Tool implementation
 export default async function compressImage({
   imagePath,
@@ -425,9 +408,9 @@ Format: ${sharpFormat.toUpperCase()}`;
 }
 ```
 
-### 5.5 Format Conversion Tool
+### 5.4 Format Conversion Tool
 
-Now let's add our second tool for converting between image formats. Create `src/tools/convert-image.ts`:
+Next up: a tool for converting between image formats. Create `src/tools/convert-image.ts`:
 
 ```typescript
 import { z } from "zod";
@@ -541,11 +524,11 @@ Size change: ${sizeChangeText}${quality ? `\nQuality: ${quality}%` : ""}`;
 }
 ```
 
-This tool specializes in converting between image formats while applying format-specific optimizations. It uses `mozjpeg` for superior JPEG compression and configurable effort levels for WebP encoding. The tool intelligently applies optimal quality defaults (85% for JPEG, 80% for WebP) and treats lossless PNG format differently from lossy JPEG and WebP formats. The output provides detailed before/after format comparison, showing how the conversion affects both file size and format characteristics.
+This tool converts between formats while applying smart optimizations. It uses `mozjpeg` for better JPEG compression and configurable effort levels for WebP. The tool applies sensible quality defaults (85% for JPEG, 80% for WebP) and treats PNG differently from lossy formats. The output shows a detailed before/after comparison.
 
-### 5.6 Image Resize Tool
+### 5.5 Image Resize Tool
 
-Finally, let's create our resize tool at `src/tools/resize-image.ts`:
+Finally, let's build our resize tool. Create `src/tools/resize-image.ts`:
 
 ```typescript
 import { z } from "zod";
@@ -688,18 +671,25 @@ Format: ${sharpFormat.toUpperCase()}`;
 }
 ```
 
-This tool provides flexible image resizing with sophisticated dimension handling. You can specify width, height, or both dimensions, and the tool will calculate missing dimensions to maintain aspect ratios when needed. The fit modes control how images are resized: `contain` scales to fit within bounds while maintaining proportions, `cover` scales to fill bounds potentially cropping content, `fill` stretches to exact dimensions ignoring aspect ratios, `inside` acts like contain but prevents enlargement, and `outside` acts like cover but prevents reduction. The tool includes input validation to ensure at least one dimension is specified and provides detailed output showing percentage scale changes in both dimensions.
+This tool offers flexible resizing with smart dimension handling. Specify width, height, or both—missing dimensions are calculated to maintain aspect ratios. The fit modes work as follows:
 
-So far we reached an important milestone! But everything we've done is only accessible locally.
-What if we wanted to make this publicly accessible?
+- `contain`: Scales to fit within bounds while maintaining proportions
+- `cover`: Scales to fill bounds, potentially cropping content
+- `fill`: Stretches to exact dimensions, ignoring aspect ratios
+- `inside`: Like contain but prevents enlargement
+- `outside`: Like cover but prevents reduction
+
+The tool validates that at least one dimension is specified and provides detailed scale percentage output.
+
+So far we've reached an important milestone! But everything we've built only works locally. What if you want to make this publicly accessible?
 
 ## 6. Publishing the server
 
-To publish the server, we can simply publish it to npm.
+Publishing your server is straightforward—just publish it to npm like any other package.
 
-you can read more about publishing to npm [here](https://docs.npmjs.com/cli/v10/commands/npm-publish)
+You can read more about [publishing to npm here](https://docs.npmjs.com/cli/v10/commands/npm-publish).
 
-once it's up you can now change the connection string in your mcp.json to:
+Once published, update your MCP client configuration:
 
 ```json
 {
@@ -712,14 +702,8 @@ once it's up you can now change the connection string in your mcp.json to:
 }
 ```
 
-and you're all set!
+That's it! Your image processing server is now publicly available and installable via npm.
 
-What's next?
+## What's next?
 
 - Learn how to build an MCP server over HTTP
-
-<Callout>This is a normal callout</Callout>
-
-<Callout type="warning">This is a warning callout</Callout>
-
-<Callout type="info">This is an info callout with helpful details</Callout>
