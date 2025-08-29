@@ -10,7 +10,7 @@ export function IntroSection() {
           <XmcpLogo />
         </div>
         <h1 className="max-w-[30rem] mx-auto text-2xl">
-          The framework for building & shipping MCP applications
+          The framework for building & shipping MCP servers
         </h1>
         <p className="text-balance text-[#BABABA] text-[1rem]">
           Designed with DX in mind, it streamlines development and lowers the

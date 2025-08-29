@@ -9,12 +9,12 @@ import { Metadata } from "next";
 
 const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-geist",
+  variable: "--font-sans",
   weight: ["400", "500", "600", "700"],
 });
 
 const geistMono = localFont({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   src: [
     {
       path: "./fonts/GeistMono-Thin.woff2",
@@ -109,6 +109,15 @@ const geistMono = localFont({
   ],
 });
 
+const slack = localFont({
+  variable: "--font-slack",
+  src: [
+    {
+      path: "./fonts/Slack-Light.otf",
+    },
+  ],
+});
+
 export const metadata: Metadata = {
   title: "xmcp — The TypeScript MCP framework",
   description: "The framework for building & shipping MCP applications.",
@@ -170,7 +179,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body
-        className={`${geist.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] mx-auto`}
+        className={`${geist.variable} ${geistMono.variable} ${slack.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] mx-auto`}
       >
         <div className="grow relative">
           <Header />

@@ -21,8 +21,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --font-size-sm: 0.9rem;
 }
 
@@ -30,7 +30,7 @@
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
 
     p,
     li {
@@ -286,7 +286,7 @@
   /* Typography Kit */
   .type-d-sans {
     color: var(--White, #f7f7f7);
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 2.5rem;
     font-style: normal;
     font-weight: 300;
@@ -295,7 +295,7 @@
 
   .type-d-serif {
     color: var(--White, #f7f7f7);
-    font-family: var(--font-sans);
+    font-family: var(--font-slack);
     font-size: 2.5rem;
     font-style: normal;
     font-weight: 300;
@@ -307,7 +307,7 @@
     font-feature-settings:
       "ss01" on,
       "ss03" on;
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 2rem;
     font-style: normal;
     font-weight: 300;
@@ -319,7 +319,7 @@
     font-feature-settings:
       "ss01" on,
       "ss03" on;
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 1.75rem;
     font-style: normal;
     font-weight: 300;
@@ -331,7 +331,7 @@
     font-feature-settings:
       "ss01" on,
       "ss03" on;
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 1rem;
     font-style: normal;
     font-weight: 500;
@@ -345,7 +345,7 @@
     font-feature-settings:
       "ss01" on,
       "ss03" on;
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-size: 1rem;
     font-style: normal;
     font-weight: 400;
