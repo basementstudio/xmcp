@@ -123,8 +123,8 @@ function Callout({
   };
 
   return (
-    <div className="flex items-center gap-4 px-4 py-2 my-4 rounded-[2px] border border-[#424242] font-mono text-[16px] leading-[24px] tracking-[0.32px] text-[#a8a8a8] [&_p]:m-0 [&_p]:p-0">
-      {getIcon()}
+    <div className="flex items-start gap-4 py-2 my-4 px-4 rounded-[2px] border border-[#424242] font-mono text-[16px] leading-[24px] tracking-[0.32px] text-[#a8a8a8] [&_p]:m-0 [&_p]:p-0">
+      {type !== "normal" && <div className="mt-1">{getIcon()}</div>}
       <div className="flex-1">{children}</div>
     </div>
   );

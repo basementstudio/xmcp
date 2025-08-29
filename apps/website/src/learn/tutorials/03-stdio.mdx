@@ -86,11 +86,19 @@ To connect and access the server, we'll need to modify our mcp client JSON confi
 }
 ```
 
-> With the dev server running, the `dist` folder updates automatically as you make changes. Without it, run `pnpm build` to generate the distribution files. Note that the dev server only watches for changes—your MCP client still needs to run the compiled server with `node`.
+<Callout>
+  With the dev server running, the `dist` folder updates automatically as you
+  make changes. Without it, run `pnpm build` to generate the distribution files.
+  Note that the dev server only watches for changes—your MCP client still needs
+  to run the compiled server with `node`.
+</Callout>
 
 To test the connection, go to Cursor's Tools & Integrations panel in Settings and enable it. You should see it detecting one tool—the template `greet.ts` file.
 
-> **Note**: The exact interface depends on your MCP client. In Cursor, this appears in the Tools & Integrations panel.
+<Callout type="info">
+  The exact interface depends on your MCP client. In Cursor, this appears in the
+  Tools & Integrations panel.
+</Callout>
 
 Before creating our tools, let's configure a few project settings.
 
