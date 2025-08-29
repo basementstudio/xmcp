@@ -1,0 +1,725 @@
+---
+title: "Filesystem Tutorial"
+description: "Learn to build filesystem tools with xmcp and publish them to npm."
+order: 3
+---
+
+# STDIO Server Tutorial
+
+Throughout this tutorial we'll build an MCP server that runs on the STDIO transport, that interacts with the local filesystem to perform image processing.
+
+The server will consist of three main tools that will allow you to read images from the filesystem and:
+
+- Compress them
+- Convert them to a different format
+- Resize them
+
+You can find the final code for this tutorial [here](https://github.com/basementstudio/xmcp-tutorials/tree/main/stdio).
+
+## Prerequisites
+
+- Node.js 20+ installed
+- TypeScript knowledge
+- npm account for publishing (optional)
+
+We'll be using Cursor as the MCP client, but you can use any other client you prefer.
+
+## 1. Setting up the project
+
+Let's start by creating a new xmcp project:
+
+```bash
+npx create-xmcp-app@latest
+```
+
+When prompted, configure your project with these settings:
+
+```
+? What is your project named? (my-xmcp-app) image-processor
+? Select a package manager:
+  npm
+  yarn
+❯ pnpm
+  bun
+? Select the transport you want to use: (Use arrow keys)
+  HTTP (runs on a server)
+❯ STDIO (runs on the user's machine)
+```
+
+Our final configuration should look like this:
+
+```
+? What is your project named? image-processor
+? Select a package manager: pnpm (recommended)
+? Select the transport you want to use: STDIO (runs on the user's machine)
+```
+
+Navigate to your project and verify the setup:
+
+```bash
+cd image-processor
+pnpm dev
+```
+
+You should see the following output:
+
+```
+ XMCP  Starting development mode...
+✔ Built STDIO server
+✔ Compiled in 185ms
+```
+
+This means that the server is running! Let's keep it running in the background so it listens to our changes.
+
+## 2. Connecting to the server
+
+To connect and access the server, we'll need to modify our mcp client JSON config to include the server:
+
+```json
+{
+  "mcpServers": {
+    "stdio": {
+      "command": "node",
+      "args": ["/path/to/your/project/dist/stdio.js"]
+    }
+  }
+}
+```
+
+> If we have the dev server running, the dist will be automatically generated based on our changes. If not, we can run `pnpm build` to generate it. These are two different processes from the one we run on our terminal. Running the dev server does not ensure that the client will run the server unless we prefix the command with `node`.
+
+To test our connection, let's head to Cursor's Tools & Integrations panel under Settings and toggle it on. We should see it's only detecting one tool, our template `greet.ts` tool.
+
+// screenshot of how it looks like in cursor
+// or maybe add a terminal with tabs where you can see the name of the file like mcp.json in cursor, or claude-desktop json
+
+Before we get into creating our tools, we'll need to set up a few things in our project.
+
+## 3. Project configuration
+
+Since we'll be using the `sharp` library, we need to configure the project to include it as an external dependency.
+
+Let's open the `xmcp.config.ts` file and add the following code. If we set up the project correctly, we should see the stdio flag in the config set to `true`.
+
+```typescript
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  stdio: true,
+};
+
+export default config;
+```
+
+We're gonna extend the webpack config to include the `sharp` library as an external dependency.
+
+```typescript
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  stdio: true,
+  webpack(config) {
+    (config.externals as string[]).push("sharp");
+    return config;
+  },
+};
+
+export default config;
+```
+
+And lastly we'll need to add the `sharp` library to the project dependencies, as an optional dependency.
+
+```json
+{
+  // ... rest of the package.json config
+  "optionalDependencies": {
+    "sharp": "^0.34.3"
+  }
+}
+```
+
+This tells webpack: "Don't try to bundle Sharp - treat it as an external runtime dependency"
+
+We're all set up and can continue crafting the utilities our tools will use.
+
+## 4. Setting up the utilities
+
+Before building our tools, we need several utility functions that will handle common image processing tasks. Let's create a new file called `utils/image-utils.ts` and break down each utility:
+
+### 4.1 Path Normalization
+
+First, let's handle file paths properly. This utility ensures that file paths with spaces and special characters work correctly:
+
+```typescript
+import { resolve } from "path";
+
+/** Normalize file paths to handle spaces and special characters properly. */
+export const normalizePath = (filePath: string): string => {
+  // Decode any URL-encoded characters and normalize the path
+  try {
+    const decoded = decodeURIComponent(filePath);
+    return resolve(decoded);
+  } catch {
+    // If decoding fails, return the original path resolved
+    return resolve(filePath);
+  }
+};
+```
+
+This function decodes URL-encoded characters (like `%20` for spaces) and converts relative paths to absolute paths.
+
+### 4.2 Format Validation
+
+Next, we need to validate and normalize image formats for Sharp compatibility:
+
+```typescript
+const supportedImageFormats = ["png", "jpg", "webp", "jpeg"];
+type ImageFormats = (typeof supportedImageFormats)[number];
+type SupportedSharpFormats = Omit<ImageFormats, "jpg">;
+
+function isSupportedImageFormat(format: string): format is ImageFormats {
+  return supportedImageFormats.includes(format as ImageFormats);
+}
+
+/** Resolve the sharp format from the input format. */
+const resolveSharpFormat = (format: ImageFormats): SupportedSharpFormats => {
+  if (format === "jpg") return "jpeg";
+  return format;
+};
+
+/** Extract and validate the image format from the image path. */
+export const getImageFormat = (imagePath: string): SupportedSharpFormats => {
+  let originalFormat = imagePath.split(".").pop() as string | undefined;
+
+  if (!originalFormat) {
+    throw new Error("The image format is not supported.");
+  }
+
+  if (!isSupportedImageFormat(originalFormat)) {
+    throw new Error("The image format is not supported.");
+  }
+
+  const resolvedFormat = resolveSharpFormat(originalFormat);
+
+  return resolvedFormat;
+};
+```
+
+These functions ensure we only process supported image formats and convert "jpg" to "jpeg" since Sharp uses "jpeg" internally.
+
+### 4.3 File Size Formatting
+
+For user-friendly output, we need to format file sizes in human-readable units:
+
+```typescript
+/** Format file size in human readable format. */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 B";
+
+  const isNegative = bytes < 0;
+  const absoluteBytes = Math.abs(bytes);
+
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(absoluteBytes) / Math.log(k));
+  const formattedSize =
+    parseFloat((absoluteBytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+
+  return isNegative ? `-${formattedSize}` : formattedSize;
+};
+```
+
+This converts raw byte counts into readable formats like "2.5 MB" or "150 KB", handling both positive and negative values for compression comparisons.
+
+### 4.4 Image Processing Setup
+
+Finally, our main utility that orchestrates everything for image processing:
+
+```typescript
+import { stat } from "fs/promises";
+import sharp from "sharp";
+
+/** Complete image processing setup including file stats and sharp instance. */
+export const prepareImageProcessing = async (
+  imagePath: string,
+  outputPath: string
+) => {
+  const normalizedImagePath = normalizePath(imagePath);
+  const normalizedOutputPath = normalizePath(outputPath);
+  const sharpFormat = getImageFormat(normalizedImagePath);
+
+  const originalStats = await stat(normalizedImagePath);
+  const originalMetadata = await sharp(normalizedImagePath).metadata();
+  const sharpImage = sharp(normalizedImagePath);
+
+  return {
+    normalizedImagePath,
+    normalizedOutputPath,
+    sharpFormat,
+    originalStats,
+    originalMetadata,
+    sharpImage,
+  };
+};
+```
+
+This function combines all our utilities to prepare everything needed for image processing: normalized paths, format validation, file statistics, image metadata, and a Sharp instance ready for manipulation.
+
+## 5. Crafting the tools
+
+Now let's build our first tool: the image compression tool. We'll break down the xmcp tool structure and syntax step by step.
+
+### 5.1 Tool File Structure
+
+First, let's set up the basic structure for our compression tool. Create `src/tools/compress-image.ts`:
+
+```typescript
+// src/tools/compress-image.ts
+import { z } from "zod";
+import { type ToolMetadata, type InferSchema } from "xmcp";
+import { prepareImageProcessing, formatFileSize } from "../utils/image-utils";
+import { stat } from "fs/promises";
+```
+
+Every xmcp tool needs these core imports:
+
+- **`z`**: Zod for schema validation
+- **`ToolMetadata`**: Type for tool metadata configuration
+- **`InferSchema`**: Type utility to infer types from our schema
+- Our custom utilities and Node.js modules
+
+### 5.2 Schema Definition
+
+The schema defines what parameters our tool accepts and validates them:
+
+```typescript
+// Define the schema for tool parameters
+export const schema = {
+  imagePath: z
+    .string()
+    .describe(
+      "The absolute path to the image to compress. Must include filename and extension."
+    ),
+  outputPath: z
+    .string()
+    .describe(
+      "The absolute path for the compressed image. Must include filename and extension."
+    ),
+  quality: z
+    .number()
+    .min(1)
+    .max(100)
+    .describe(
+      "Compression quality (1-100). Lower values = smaller files but lower quality."
+    ),
+  progressive: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe("Enable progressive JPEG for web optimization (JPEG only)."),
+};
+```
+
+to learn more about the schema configuration, you can check out the [Zod documentation](https://zod.dev/).
+
+### 5.3 Tool Metadata
+
+Metadata tells the MCP client how to present and handle our tool:
+
+```typescript
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "compress_image",
+  description:
+    "Compress images to reduce file size while maintaining visual quality. Supports quality adjustment and progressive JPEG.",
+  annotations: {
+    title: "Compress Image",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+  },
+};
+```
+
+// this is an optional export but is a good practice to have it so LLMs dont have trouble discovering your tools.
+
+learn more about the metadata here (link to concepts/metadata)
+
+/** Human-readable title for the tool \*/
+title?: string;
+/** If true, the tool does not modify its environment _/
+readOnlyHint?: boolean;
+/\*\* If true, the tool may perform destructive updates _/
+destructiveHint?: boolean;
+/** If true, repeated calls with same args have no additional effect \*/
+idempotentHint?: boolean;
+/** If true, tool interacts with external entities \*/
+openWorldHint?: boolean;
+
+### 5.4 Tool Implementation
+
+Now let's implement the complete compression function. The main function uses `InferSchema` to get proper TypeScript types from our schema:
+
+```typescript
+// Tool implementation
+export default async function compressImage({
+  imagePath,
+  outputPath,
+  quality,
+  progressive = false,
+}: InferSchema<typeof schema>) {
+  try {
+    // Prepare image processing setup
+    const {
+      normalizedOutputPath,
+      sharpFormat,
+      originalStats,
+      originalMetadata,
+      sharpImage,
+    } = await prepareImageProcessing(imagePath, outputPath);
+
+    let processedImage = sharpImage;
+
+    // Apply compression settings based on format
+    if (sharpFormat === "jpeg") {
+      processedImage = processedImage.jpeg({
+        quality,
+        progressive,
+      });
+    } else if (sharpFormat === "webp") {
+      processedImage = processedImage.webp({ quality });
+    } else if (sharpFormat === "png") {
+      // PNG doesn't use lossy quality, but we can optimize compression
+      processedImage = processedImage.png({
+        compressionLevel: Math.floor((100 - quality) / 10), // Convert quality to compression level (0-9)
+        progressive: progressive,
+      });
+    }
+
+    await processedImage.toFile(normalizedOutputPath);
+
+    // Get compressed file info
+    const compressedStats = await stat(normalizedOutputPath);
+
+    // Calculate compression results
+    const sizeDiff = compressedStats.size - originalStats.size;
+    const compressionRatio = ((sizeDiff / originalStats.size) * 100).toFixed(1);
+
+    const resultText =
+      sizeDiff < 0
+        ? `Saved: ${formatFileSize(-sizeDiff)} (${Math.abs(parseFloat(compressionRatio))}% reduction)`
+        : `Increased: ${formatFileSize(sizeDiff)} (+${compressionRatio}% larger)`;
+
+    return `Image compressed successfully!
+
+Original: ${formatFileSize(originalStats.size)} (${originalMetadata.width}×${originalMetadata.height})
+Compressed: ${formatFileSize(compressedStats.size)}
+${resultText}
+Quality: ${quality}%${progressive ? " (Progressive)" : ""}
+Format: ${sharpFormat.toUpperCase()}`;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    return `Error: ${errorMessage}`;
+  }
+}
+```
+
+### 5.5 Format Conversion Tool
+
+Now let's add our second tool for converting between image formats. Create `src/tools/convert-image.ts`:
+
+```typescript
+import { z } from "zod";
+import { type ToolMetadata, type InferSchema } from "xmcp";
+import sharp from "sharp";
+import { prepareImageProcessing, formatFileSize } from "../utils/image-utils";
+import { stat } from "fs/promises";
+
+// Define the schema for tool parameters
+export const schema = {
+  imagePath: z
+    .string()
+    .describe(
+      "The absolute path to the image to convert. Must include filename and extension."
+    ),
+  outputPath: z
+    .string()
+    .describe(
+      "The absolute path for the converted image. Must include filename and extension."
+    ),
+  format: z
+    .enum(["png", "jpg", "jpeg", "webp"])
+    .describe("Target format to convert the image to."),
+  quality: z
+    .number()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe(
+      "Quality for lossy formats (JPEG/WebP). If not specified, uses format defaults."
+    ),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "convert_image",
+  description:
+    "Convert images between different formats (PNG, JPEG, WebP). Preserves dimensions and applies format-specific optimizations.",
+  annotations: {
+    title: "Convert Image Format",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+  },
+};
+
+// Tool implementation
+export default async function convertImage({
+  imagePath,
+  outputPath,
+  format,
+  quality,
+}: InferSchema<typeof schema>) {
+  try {
+    // Prepare image processing setup
+    const {
+      normalizedOutputPath,
+      sharpFormat,
+      originalStats,
+      originalMetadata,
+      sharpImage,
+    } = await prepareImageProcessing(imagePath, outputPath);
+
+    let processedImage = sharpImage;
+
+    // Apply format-specific settings
+    if (format === "jpeg" || format === "jpg") {
+      processedImage = sharpImage.jpeg({
+        quality: quality || 85,
+        mozjpeg: true, // Use mozjpeg for better compression
+      });
+    } else if (format === "webp") {
+      processedImage = sharpImage.webp({
+        quality: quality || 80,
+        effort: 4, // Balanced effort for good compression
+      });
+    } else if (format === "png") {
+      processedImage = sharpImage.png({
+        compressionLevel: 6, // Good balance of speed and compression
+        adaptiveFiltering: true,
+      });
+    }
+
+    await processedImage.toFile(normalizedOutputPath);
+
+    // Get converted file info
+    const convertedStats = await stat(normalizedOutputPath);
+    const convertedMetadata = await sharp(normalizedOutputPath).metadata();
+
+    // Calculate size difference
+    const sizeDiff = convertedStats.size - originalStats.size;
+    const sizeChangePercent = ((sizeDiff / originalStats.size) * 100).toFixed(
+      1
+    );
+
+    const sizeChangeText =
+      sizeDiff > 0
+        ? `+${formatFileSize(sizeDiff)} (+${sizeChangePercent}% larger)`
+        : `${formatFileSize(sizeDiff)} (${Math.abs(parseFloat(sizeChangePercent))}% smaller)`;
+
+    return `Image converted successfully!
+
+Original: ${sharpFormat.toUpperCase()} - ${formatFileSize(originalStats.size)} (${originalMetadata.width}×${originalMetadata.height})
+Converted: ${format.toUpperCase()} - ${formatFileSize(convertedStats.size)} (${convertedMetadata.width}×${convertedMetadata.height})
+Size change: ${sizeChangeText}${quality ? `\nQuality: ${quality}%` : ""}`;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    return `Error: ${errorMessage}`;
+  }
+}
+```
+
+This tool specializes in converting between image formats while applying format-specific optimizations. It uses `mozjpeg` for superior JPEG compression and configurable effort levels for WebP encoding. The tool intelligently applies optimal quality defaults (85% for JPEG, 80% for WebP) and treats lossless PNG format differently from lossy JPEG and WebP formats. The output provides detailed before/after format comparison, showing how the conversion affects both file size and format characteristics.
+
+### 5.6 Image Resize Tool
+
+Finally, let's create our resize tool at `src/tools/resize-image.ts`:
+
+```typescript
+import { z } from "zod";
+import { type ToolMetadata, type InferSchema } from "xmcp";
+import sharp, { ResizeOptions } from "sharp";
+import { prepareImageProcessing, formatFileSize } from "../utils/image-utils";
+import { stat } from "fs/promises";
+
+// Define the schema for tool parameters
+export const schema = {
+  imagePath: z
+    .string()
+    .describe(
+      "The absolute path to the image to resize. Must include filename and extension."
+    ),
+  outputPath: z
+    .string()
+    .describe(
+      "The absolute path for the resized image. Must include filename and extension."
+    ),
+  width: z
+    .number()
+    .optional()
+    .describe(
+      "Target width in pixels. If not specified, width will be calculated to maintain aspect ratio."
+    ),
+  height: z
+    .number()
+    .optional()
+    .describe(
+      "Target height in pixels. If not specified, height will be calculated to maintain aspect ratio."
+    ),
+  fit: z
+    .enum(["contain", "cover", "fill", "inside", "outside"])
+    .optional()
+    .default("contain")
+    .describe("How the image should be resized to fit the target dimensions."),
+  maintainAspectRatio: z
+    .boolean()
+    .optional()
+    .default(true)
+    .describe("Whether to maintain the original aspect ratio when resizing."),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "resize_image",
+  description:
+    "Resize images to specific dimensions with various fitting options. Can maintain aspect ratio or stretch to exact dimensions.",
+  annotations: {
+    title: "Resize Image",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+  },
+};
+
+// Tool implementation
+export default async function resizeImage({
+  imagePath,
+  outputPath,
+  width,
+  height,
+  fit,
+  maintainAspectRatio = true,
+}: InferSchema<typeof schema>) {
+  try {
+    // Validate that at least width or height is provided
+    if (!width && !height) {
+      throw new Error("At least width or height must be specified");
+    }
+
+    // Prepare image processing setup
+    const {
+      normalizedOutputPath,
+      sharpFormat,
+      originalStats,
+      originalMetadata,
+      sharpImage,
+    } = await prepareImageProcessing(imagePath, outputPath);
+
+    // Configure resize options
+    const resizeOptions: ResizeOptions = {
+      width,
+      height,
+      fit: maintainAspectRatio ? fit : "fill",
+      withoutEnlargement: false, // Allow enlargement
+    };
+
+    let processedImage = sharpImage.resize(resizeOptions);
+
+    // Maintain original format and quality
+    if (sharpFormat === "jpeg") {
+      processedImage = processedImage.jpeg({ quality: 90 });
+    } else if (sharpFormat === "webp") {
+      processedImage = processedImage.webp({ quality: 90 });
+    } else if (sharpFormat === "png") {
+      processedImage = processedImage.png({ compressionLevel: 6 });
+    }
+
+    await processedImage.toFile(normalizedOutputPath);
+
+    // Get resized file info
+    const resizedStats = await stat(normalizedOutputPath);
+    const resizedMetadata = await sharp(normalizedOutputPath).metadata();
+
+    // Calculate size difference
+    const sizeDiff = resizedStats.size - originalStats.size;
+    const sizeChangePercent = ((sizeDiff / originalStats.size) * 100).toFixed(
+      1
+    );
+    const sizeChangeText =
+      sizeDiff > 0
+        ? `+${formatFileSize(sizeDiff)} (+${sizeChangePercent}% larger)`
+        : `${formatFileSize(sizeDiff)} (${Math.abs(parseFloat(sizeChangePercent))}% smaller)`;
+
+    // Calculate scale factors
+    const widthScale =
+      resizedMetadata.width && originalMetadata.width
+        ? ((resizedMetadata.width / originalMetadata.width) * 100).toFixed(1)
+        : "N/A";
+    const heightScale =
+      resizedMetadata.height && originalMetadata.height
+        ? ((resizedMetadata.height / originalMetadata.height) * 100).toFixed(1)
+        : "N/A";
+
+    return `Image resized successfully!
+
+Original: ${originalMetadata.width}×${originalMetadata.height} - ${formatFileSize(originalStats.size)}
+Resized: ${resizedMetadata.width}×${resizedMetadata.height} - ${formatFileSize(resizedStats.size)}
+Scale: ${widthScale}% × ${heightScale}%
+File size change: ${sizeChangeText}
+Fit mode: ${fit}${maintainAspectRatio ? " (aspect ratio maintained)" : " (stretched to fit)"}
+Format: ${sharpFormat.toUpperCase()}`;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    return `Error: ${errorMessage}`;
+  }
+}
+```
+
+This tool provides flexible image resizing with sophisticated dimension handling. You can specify width, height, or both dimensions, and the tool will calculate missing dimensions to maintain aspect ratios when needed. The fit modes control how images are resized: `contain` scales to fit within bounds while maintaining proportions, `cover` scales to fill bounds potentially cropping content, `fill` stretches to exact dimensions ignoring aspect ratios, `inside` acts like contain but prevents enlargement, and `outside` acts like cover but prevents reduction. The tool includes input validation to ensure at least one dimension is specified and provides detailed output showing percentage scale changes in both dimensions.
+
+So far we reached an important milestone! But everything we've done is only accessible locally.
+What if we wanted to make this publicly accessible?
+
+## 6. Publishing the server
+
+To publish the server, we can simply publish it to npm.
+
+you can read more about publishing to npm [here](https://docs.npmjs.com/cli/v10/commands/npm-publish)
+
+once it's up you can now change the connection string in your mcp.json to:
+
+```json
+{
+  "mcpServers": {
+    "mcp-image-processing": {
+      "command": "npx",
+      "args": ["mcp-image-processing"]
+    }
+  }
+}
+```
+
+and you're all set!
+
+What's next?
+
+- Learn how to build an MCP server over HTTP
+
+<Callout>This is a normal callout</Callout>
+
+<Callout type="warning">This is a warning callout</Callout>
+
+<Callout type="info">This is an info callout with helpful details</Callout>
