@@ -17,3 +17,5 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+
+export { completable } from "@modelcontextprotocol/sdk/server/completable";
