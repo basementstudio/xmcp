@@ -5,7 +5,7 @@ import path from "path";
 
 // for further addition of resources, prompts, etc, we can add more path types
 // used for the message error to the user
-type PathType = "tools";
+type PathType = "tools" | "prompts";
 
 export function isValidPath(
   pathStr: string | undefined,
