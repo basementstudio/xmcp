@@ -81,6 +81,10 @@ export function getWebpackConfig(
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "tools",
     ],
+    INJECTED_PROMPTS: [
+      path.resolve(processFolder, ".xmcp/import-map.js"),
+      "prompts",
+    ],
     INJECTED_MIDDLEWARE: [
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "middleware",

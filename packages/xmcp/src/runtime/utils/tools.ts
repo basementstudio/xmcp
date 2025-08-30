@@ -9,7 +9,7 @@ export type ZodRawShape = {
 };
 
 /** Validates if a value is a valid Zod schema object */
-function isZodRawShape(value: unknown): value is ZodRawShape {
+export function isZodRawShape(value: unknown): value is ZodRawShape {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -23,7 +23,7 @@ function isZodRawShape(value: unknown): value is ZodRawShape {
   });
 }
 
-function pathToName(path: string): string {
+export function pathToName(path: string): string {
   const fileName = path.split("/").pop() || path;
   return fileName.replace(/\.[^/.]+$/, "");
 }

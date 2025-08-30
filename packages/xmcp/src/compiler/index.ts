@@ -27,7 +27,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths } = compilerContext.getContext();
+  const { mode, toolPaths, promptPaths } = compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
 
@@ -48,6 +48,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     ignoreInitial: false,
   });
 
+  // handle tools
   let toolsPath = isValidPath(
     getResolvedPathsConfig(xmcpConfig).tools,
     "tools"
@@ -63,6 +64,28 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     },
     onUnlink: (path) => {
       toolPaths.delete(path);
+      if (compilerStarted) {
+        generateCode();
+      }
+    },
+  });
+
+  // handle prompts
+  let promptsPath = isValidPath(
+    getResolvedPathsConfig(xmcpConfig).prompts,
+    "prompts"
+  );
+
+  // handle prompts
+  watcher.watch(`${promptsPath}/**/*.ts`, {
+    onAdd: (path) => {
+      promptPaths.add(path);
+      if (compilerStarted) {
+        generateCode();
+      }
+    },
+    onUnlink: (path) => {
+      promptPaths.delete(path);
       if (compilerStarted) {
         generateCode();
       }
