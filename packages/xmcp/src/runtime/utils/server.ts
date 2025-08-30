@@ -1,7 +1,6 @@
 import {
   McpServer,
   PromptCallback,
-  RegisteredPrompt,
   ToolCallback,
 } from "@modelcontextprotocol/sdk/server/mcp";
 import { Implementation } from "@modelcontextprotocol/sdk/types";
