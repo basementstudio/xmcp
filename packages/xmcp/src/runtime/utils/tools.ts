@@ -93,7 +93,5 @@ export function addToolsToServer(
     );
   });
 
-  console.log(`Added ${toolModules.size} tools to MCP server`);
-
   return server;
 }
