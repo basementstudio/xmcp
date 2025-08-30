@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { type InferSchema, type PromptMetadata } from "xmcp";
 
-// Define the schema for tool parameters
+// Define the schema for prompt parameters
 export const schema = {
   code: z.string().describe("The code to review"),
 };
 
-// Define tool metadata
+// Define prompt metadata
 export const metadata: PromptMetadata = {
   name: "review-code",
   title: "Review Code",
