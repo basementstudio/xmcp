@@ -41,7 +41,12 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    const response = await handler(args, extra);
+    let response = handler(args, extra);
+
+    // only await if it's actually a promise
+    if (response instanceof Promise) {
+      response = await response;
+    }
 
     // Transform string/number responses into CallToolResult format
     if (typeof response === "string" || typeof response === "number") {

@@ -58,7 +58,12 @@ export function transformPromptHandler(
     args: PromptArgsRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<GetPromptResult> => {
-    const response = await handler(args, extra);
+    let response = handler(args, extra);
+
+    // only await if it's actually a promise
+    if (response instanceof Promise) {
+      response = await response;
+    }
 
     // Transform string/number responses into GetPromptResult format
     if (typeof response === "string" || typeof response === "number") {
