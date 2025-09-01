@@ -1,22 +1,23 @@
-import {
-  McpServer,
-  PromptCallback,
-  ToolCallback,
-} from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { Implementation } from "@modelcontextprotocol/sdk/types";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
+import { ToolMetadata } from "@/types/tool";
+import { PromptMetadata } from "@/types/prompt";
+import { UserToolHandler } from "./transformers/tool";
+import { UserPromptHandler } from "./transformers/prompt";
+import { ZodRawShape } from "zod";
 
 export type ToolFile = {
-  metadata: unknown;
-  schema: unknown;
-  default: ToolCallback;
+  metadata: ToolMetadata;
+  schema: ZodRawShape;
+  default: UserToolHandler;
 };
 
 export type PromptFile = {
-  metadata: unknown;
+  metadata: PromptMetadata;
   schema: PromptArgsRawShape;
-  default: PromptCallback;
+  default: UserPromptHandler;
 };
 
 // @ts-expect-error: injected by compiler

@@ -1,12 +1,8 @@
-import { McpServer, ToolCallback } from "@modelcontextprotocol/sdk/server/mcp";
-import { ZodTypeAny } from "zod";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { ZodRawShape, ZodTypeAny } from "zod";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
-import { CallToolResult } from "@modelcontextprotocol/sdk/types";
-
-export type ZodRawShape = {
-  [k: string]: ZodTypeAny;
-};
+import { transformToolHandler } from "./transformers/tool";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -40,41 +36,26 @@ export function addToolsToServer(
       name: defaultName,
       description: "No description provided",
     };
-    let toolSchema: ZodRawShape = {};
 
     const { default: handler, metadata, schema } = toolModule;
-
-    const interceptedHandler: ToolCallback = async (...args) => {
-      const response = (await handler.apply(null, args)) as
-        | CallToolResult
-        | string
-        | number;
-
-      if (typeof response === "string" || typeof response === "number") {
-        return {
-          content: [
-            {
-              type: "text",
-              text: typeof response === "number" ? `${response}` : response,
-            },
-          ],
-        };
-      }
-      return response;
-    };
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
 
-    // Validate and ensure schema is properly typed
+    // Determine the actual schema to use
+    let toolSchema: ZodRawShape = {};
     if (isZodRawShape(schema)) {
-      Object.assign(toolSchema, schema);
+      toolSchema = schema;
     } else if (schema !== undefined && schema !== null) {
       console.warn(
         `Invalid schema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
       );
     }
+
+    // Transform the user's handler into an MCP-compatible handler
+    // Use explicit type annotation to prevent infinite type recursion
+    const transformedHandler = transformToolHandler(handler);
 
     // Make sure tools has annotations with a title
     if (toolConfig.annotations === undefined) {
@@ -84,12 +65,18 @@ export function addToolsToServer(
       toolConfig.annotations.title = toolConfig.name;
     }
 
-    server.tool(
+    const toolConfigFormatted = {
+      title: toolConfig.annotations?.title,
+      description: toolConfig.description,
+      inputSchema: toolSchema,
+      annotations: toolConfig.annotations,
+    };
+
+    // server as any prevents infinite type recursion
+    (server as any).registerTool(
       toolConfig.name,
-      toolConfig.description,
-      toolSchema as any,
-      toolConfig.annotations,
-      interceptedHandler
+      toolConfigFormatted,
+      transformedHandler
     );
   });
 
