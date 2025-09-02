@@ -1,11 +1,9 @@
-import {
-  McpServer,
-  PromptCallback,
-} from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { ZodOptional, ZodType, ZodTypeDef } from "zod";
 import { PromptFile } from "./server";
-import { isZodRawShape, pathToName, ZodRawShape } from "./tools";
-import { GetPromptResult } from "@modelcontextprotocol/sdk/types";
+import { isZodRawShape, pathToName } from "./tools";
+import { transformPromptHandler } from "./transformers/prompt";
+import { ZodRawShape } from "zod";
 
 interface PromptMetadata {
   name: string;
@@ -37,33 +35,15 @@ export function addPromptsToServer(
 
     const { default: handler, metadata, schema } = promptModule;
 
-    // intercept the handler to add the role to the messages
-    const interceptedHandler: PromptCallback = async (extra) => {
-      const response = (await handler.apply(null, [extra])) as
-        | GetPromptResult
-        | string
-        | number;
-
-      if (typeof response === "string" || typeof response === "number") {
-        return {
-          messages: [
-            {
-              role: (promptConfig.role as "user" | "assistant") || "assistant",
-              content: {
-                type: "text",
-                text: typeof response === "number" ? `${response}` : response,
-              },
-            },
-          ],
-        };
-      }
-
-      return response;
-    };
-
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(promptConfig, metadata);
     }
+
+    // Transform the user's handler into an MCP-compatible handler
+    const transformedHandler = transformPromptHandler(
+      handler,
+      (promptConfig.role as "user" | "assistant") || "assistant"
+    );
 
     // Validate and ensure schema is properly typed
     if (isZodRawShape(schema)) {
@@ -74,21 +54,15 @@ export function addPromptsToServer(
       );
     }
 
-    /*     server.registerPrompt(
+    // server as any prevents infinite type recursion
+    (server as any).registerPrompt(
       promptConfig.name,
       {
         title: promptConfig.title,
         description: promptConfig.description,
         argsSchema: schema,
       },
-      interceptedHandler
-    ); */
-
-    server.prompt(
-      promptConfig.name,
-      promptConfig.description,
-      promptSchema as any,
-      interceptedHandler
+      transformedHandler
     );
   });
 
