@@ -14,6 +14,8 @@ interface CompilerContext {
   };
   /** The paths to the tools. */
   toolPaths: Set<string>;
+  /** The paths to the prompts. */
+  promptPaths: Set<string>;
   /** Whether the middleware is enabled. */
   hasMiddleware: boolean;
   /** The parsed config. */
@@ -26,13 +28,17 @@ export const compilerContext = createContext<CompilerContext>({
 
 // Preset some defaults for the compiler context
 export const compilerContextProvider = (
-  initialValue: Omit<CompilerContext, "toolPaths" | "hasMiddleware">,
+  initialValue: Omit<
+    CompilerContext,
+    "toolPaths" | "promptPaths" | "hasMiddleware"
+  >,
   callback: () => void
 ) => {
   return compilerContext.provider(
     {
       ...initialValue,
       toolPaths: new Set(),
+      promptPaths: new Set(),
       hasMiddleware: false,
     },
     callback

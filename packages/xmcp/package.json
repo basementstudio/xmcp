@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/inspector": "0.14.3",
-    "@modelcontextprotocol/sdk": "^1.11.4",
+    "@modelcontextprotocol/sdk": "^1.17.4",
     "@swc/core": "^1.11.24",
     "@types/express": "^5.0.1",
     "@types/webpack-node-externals": "^3.0.4",

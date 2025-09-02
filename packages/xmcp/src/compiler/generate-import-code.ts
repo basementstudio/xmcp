@@ -1,9 +1,18 @@
 import { compilerContext } from "./compiler-context";
 
 export function generateImportCode(): string {
-  const { toolPaths, hasMiddleware } = compilerContext.getContext();
+  const { toolPaths, promptPaths, hasMiddleware } =
+    compilerContext.getContext();
 
   const importToolsCode = Array.from(toolPaths)
+    .map((p) => {
+      const path = p.replace(/\\/g, "/");
+      const relativePath = `../${path}`;
+      return `"${path}": () => import("${relativePath}"),`;
+    })
+    .join("\n");
+
+  const importPromptsCode = Array.from(promptPaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
       const relativePath = `../${path}`;
@@ -18,6 +27,10 @@ export function generateImportCode(): string {
   return `
 export const tools = {
 ${importToolsCode}
+};
+
+export const prompts = {
+${importPromptsCode}
 };
 
 ${importMiddlewareCode}

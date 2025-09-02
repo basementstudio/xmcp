@@ -5,10 +5,10 @@ import path from "path";
 
 // for further addition of resources, prompts, etc, we can add more path types
 // used for the message error to the user
-type PathType = "tools";
+type PathType = "tools" | "prompts";
 
 export function isValidPath(
-  pathStr: string | undefined,
+  pathStr: string | boolean | null | undefined,
   type: PathType
 ): string | undefined {
   function isNonEmptyString(str: unknown): str is string {
@@ -29,14 +29,15 @@ export function isValidPath(
     const absPath = path.resolve(rootFolder, normalized);
     if (!fs.existsSync(absPath)) {
       exitError(
-        `The path set in xmcp config for ${type} does not exist: ${absPath}`
+        `The path set in xmcp.config.ts for ${type} does not exist: ${absPath}.
+        If you're not using this folder, set the ${type} path to false`
       );
     }
 
     return normalized; // still return the normalized path cause we're formatting to glob later
   }
 
-  if (pathStr === undefined) {
+  if (pathStr === undefined || pathStr === null || pathStr === false) {
     return undefined;
   }
 

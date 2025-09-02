@@ -5,17 +5,20 @@ import {
 import {
   configureServer,
   INJECTED_CONFIG,
+  loadPrompts,
   loadTools,
 } from "@/runtime/utils/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 
 export async function xmcpHandler(request: Request): Promise<Response> {
   const [toolPromises, toolModules] = loadTools();
+  const [promptPromises, promptModules] = loadPrompts();
 
   await Promise.all(toolPromises);
+  await Promise.all(promptPromises);
 
   const requestHandler = createVercelMcpHandler((server: McpServer) => {
-    configureServer(server, toolModules);
+    configureServer(server, toolModules, promptModules);
   }, INJECTED_CONFIG);
 
   return requestHandler(request);
