@@ -55,20 +55,22 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   );
 
   // handle tools
-  watcher.watch(`${toolsPath}/**/*.ts`, {
-    onAdd: (path) => {
-      toolPaths.add(path);
-      if (compilerStarted) {
-        generateCode();
-      }
-    },
-    onUnlink: (path) => {
-      toolPaths.delete(path);
-      if (compilerStarted) {
-        generateCode();
-      }
-    },
-  });
+  if (toolsPath) {
+    watcher.watch(`${toolsPath}/**/*.ts`, {
+      onAdd: (path) => {
+        toolPaths.add(path);
+        if (compilerStarted) {
+          generateCode();
+        }
+      },
+      onUnlink: (path) => {
+        toolPaths.delete(path);
+        if (compilerStarted) {
+          generateCode();
+        }
+      },
+    });
+  }
 
   // handle prompts
   let promptsPath = isValidPath(
@@ -77,20 +79,22 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   );
 
   // handle prompts
-  watcher.watch(`${promptsPath}/**/*.ts`, {
-    onAdd: (path) => {
-      promptPaths.add(path);
-      if (compilerStarted) {
-        generateCode();
-      }
-    },
-    onUnlink: (path) => {
-      promptPaths.delete(path);
-      if (compilerStarted) {
-        generateCode();
-      }
-    },
-  });
+  if (promptsPath) {
+    watcher.watch(`${promptsPath}/**/*.ts`, {
+      onAdd: (path) => {
+        promptPaths.add(path);
+        if (compilerStarted) {
+          generateCode();
+        }
+      },
+      onUnlink: (path) => {
+        promptPaths.delete(path);
+        if (compilerStarted) {
+          generateCode();
+        }
+      },
+    });
+  }
 
   // if adapter is not enabled, handle middleware
   if (!xmcpConfig.experimental?.adapter) {
