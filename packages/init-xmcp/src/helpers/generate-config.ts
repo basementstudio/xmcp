@@ -10,7 +10,8 @@ import fs from "fs-extra";
 export function generateConfig(
   projectPath: string,
   frameworkAdapter: string,
-  toolsPath?: string
+  toolsPath?: string,
+  promptsPath?: string
 ): void {
   let configContent = `import { type XmcpConfig } from "xmcp";
 
@@ -24,6 +25,20 @@ const config: XmcpConfig = {
     configContent += `
   paths: {
     tools: "${toolsPath}",
+  },`;
+  }
+  if (promptsPath) {
+    configContent += `
+  paths: {
+    prompts: "${promptsPath}",
+  },`;
+  }
+
+  if (toolsPath && promptsPath) {
+    configContent += `
+  paths: {
+    tools: "${toolsPath}",
+    prompts: "${promptsPath}",
   },`;
   }
 

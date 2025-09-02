@@ -39,6 +39,7 @@ const program = new Command()
     ""
   )
   .option("--tools-path <path>", "Specify custom tools path", "")
+  .option("--prompts-path <path>", "Specify custom prompts path", "")
   .option("--route-path <path>", "Specify custom route path", "")
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-route", "Skip route creation", false)
@@ -89,6 +90,19 @@ const program = new Command()
       }
     }
 
+    // determine prompts path
+
+    let promptsPath: string | undefined;
+    if (!options.skipPrompts) {
+      if (options.promptsPath) {
+        promptsPath = options.promptsPath;
+      } else {
+        // check if src folder exists and default to src/prompts if it does, otherwise prompts
+        const hasSrcFolder = fs.existsSync(path.join(projectRoot, "src"));
+        promptsPath = hasSrcFolder ? "src/prompts" : "prompts";
+      }
+    }
+
     // determine route path
     let routePath: string | undefined;
     if (detectedFramework === "nextjs" && !options.skipRoute) {
@@ -129,6 +143,15 @@ const program = new Command()
           name: "toolsPath",
           message: "Tools directory path:",
           default: toolsPath,
+        });
+      }
+
+      if (!options.skipPrompts) {
+        prompts.push({
+          type: "input",
+          name: "promptsPath",
+          message: "Prompts directory path:",
+          default: promptsPath,
         });
       }
 
@@ -175,6 +198,9 @@ const program = new Command()
 
       if (!options.skipTools) {
         toolsPath = answers.toolsPath;
+      }
+      if (!options.skipPrompts) {
+        promptsPath = answers.promptsPath;
       }
       if (
         detectedFramework === "nextjs" &&
@@ -260,6 +286,7 @@ const program = new Command()
         projectRoot,
         framework: detectedFramework,
         toolsPath,
+        promptsPath,
         routePath,
         packageManager,
       });
@@ -270,6 +297,10 @@ const program = new Command()
 
       if (toolsPath) {
         console.log(`   • ${toolsPath}/greet.ts`);
+      }
+
+      if (promptsPath) {
+        console.log(`   • ${promptsPath}/greet.ts`);
       }
 
       if (routePath) {
