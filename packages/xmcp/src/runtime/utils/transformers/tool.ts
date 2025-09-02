@@ -5,6 +5,7 @@ import {
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod";
+import { validateContent } from "../validators";
 
 /**
  * Type for the original tool handler that users write
@@ -25,48 +26,6 @@ export type McpToolHandler = (
   args: ZodRawShape,
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) => CallToolResult | Promise<CallToolResult>;
-
-/**
- * Validates if a response is a valid CallToolResult
- */
-function isValidCallToolResult(response: unknown): response is CallToolResult {
-  if (!response || typeof response !== "object") {
-    return false;
-  }
-
-  const result = response as any;
-
-  // Must have a content property that is an array
-  if (!Array.isArray(result.content)) {
-    return false;
-  }
-
-  // Each content item must be a valid content object
-  for (const item of result.content) {
-    if (!item || typeof item !== "object") {
-      return false;
-    }
-
-    // Must have a type property
-    if (typeof item.type !== "string") {
-      return false;
-    }
-
-    // Validate based on content type
-    if (item.type === "text") {
-      if (typeof item.text !== "string") {
-        return false;
-      }
-    } else if (item.type === "image") {
-      if (typeof item.data !== "string" || typeof item.mimeType !== "string") {
-        return false;
-      }
-    }
-    // Allow other content types to pass through (future extensibility)
-  }
-
-  return true;
-}
 
 /**
  * Transforms a user's tool handler into an MCP-compatible handler.
@@ -103,7 +62,12 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
       };
     }
 
-    if (!isValidCallToolResult(response)) {
+    // validate response
+    if (
+      !response ||
+      typeof response !== "object" ||
+      !Array.isArray(response.content)
+    ) {
       const responseType = response === null ? "null" : typeof response;
       const responseValue =
         response === undefined
@@ -121,10 +85,31 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
           `{\n` +
           `  content: [\n` +
           `    { type: "text", text: "your text here" },\n` +
-          `    // or { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
+          `    { type: "image", data: "base64data", mimeType: "image/jpeg" },\n` +
+          `    { type: "audio", data: "base64data", mimeType: "audio/mpeg" },\n` +
+          `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
+          `    // All content types support an optional "_meta" object property\n` +
           `  ]\n` +
           `}`
       );
+    }
+
+    // validate each content item
+    for (let i = 0; i < response.content.length; i++) {
+      const contentItem = response.content[i];
+      const validationResult = validateContent(contentItem);
+      if (!validationResult.valid) {
+        throw new Error(
+          `Invalid content item at index ${i}: ${validationResult.error}\n\n` +
+            `Content item: ${JSON.stringify(contentItem, null, 2)}\n\n` +
+            `Expected content formats:\n` +
+            `- Text: { type: "text", text: "your text here" }\n` +
+            `- Image: { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
+            `- Audio: { type: "audio", data: "base64data", mimeType: "audio/mpeg" }\n` +
+            `- Resource: { type: "resource_link", name: "name", uri: "uri" }\n` +
+            `All content types support an optional "_meta" object property`
+        );
+      }
     }
 
     return response;
