@@ -7,20 +7,28 @@ import { createTool } from "./create-tool.js";
 import { Framework } from "./detect-framework.js";
 import { createRoute } from "./create-handler.js";
 import chalk from "chalk";
+import { createPrompt } from "./create-prompt.js";
 
 interface InitOptions {
   projectRoot: string;
   framework: Framework;
   toolsPath: string | undefined;
+  promptsPath: string | undefined;
   routePath: string | undefined;
   packageManager: "npm" | "yarn" | "pnpm" | "bun";
 }
 
 export async function init(options: InitOptions) {
-  const { projectRoot, framework, toolsPath, routePath, packageManager } =
-    options;
+  const {
+    projectRoot,
+    framework,
+    toolsPath,
+    promptsPath,
+    routePath,
+    packageManager,
+  } = options;
 
-  generateConfig(projectRoot, framework, toolsPath);
+  generateConfig(projectRoot, framework, toolsPath, promptsPath);
 
   await install(projectRoot, packageManager);
 
@@ -32,6 +40,10 @@ export async function init(options: InitOptions) {
 
   if (toolsPath) {
     createTool(projectRoot, toolsPath);
+  }
+
+  if (promptsPath) {
+    createPrompt(projectRoot, promptsPath);
   }
 
   if (framework === "nextjs" && routePath) {
