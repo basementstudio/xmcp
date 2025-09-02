@@ -16,14 +16,17 @@ export const metadata: PromptMetadata = {
 
 // Prompt implementation
 export default function reviewCode({ code }: InferSchema<typeof schema>) {
-  return `Please review this code for:
-- Code quality and best practices
-- Potential bugs or security issues
-- Performance optimizations
-- Readability and maintainability
+  return {
+    type: "text",
+    text: `Please review this code for:
+      - Code quality and best practices
+      - Potential bugs or security issues
+      - Performance optimizations
+      - Readability and maintainability
 
-Code to review:
-\`\`\`
-${code}
-\`\`\``;
+      Code to review:
+      \`\`\`
+      ${code}
+      \`\`\``,
+  };
 }
