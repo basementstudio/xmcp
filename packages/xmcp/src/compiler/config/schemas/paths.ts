@@ -5,8 +5,8 @@ import { DEFAULT_PATHS_CONFIG } from "../constants";
 // Paths config schema
 // ------------------------------------------------------------
 export const pathsConfigSchema = z.object({
-  tools: z.string().default(DEFAULT_PATHS_CONFIG.tools),
-  prompts: z.string().default(DEFAULT_PATHS_CONFIG.prompts),
+  tools: z.union([z.boolean(), z.string()]).default(true),
+  prompts: z.union([z.boolean(), z.string()]).default(true),
   // TO DO add resources prompts etc
 });
 

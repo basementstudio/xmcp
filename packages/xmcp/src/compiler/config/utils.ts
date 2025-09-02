@@ -34,12 +34,40 @@ export function getResolvedCorsConfig(
   return DEFAULT_HTTP_CONFIG.cors;
 }
 
-export function getResolvedPathsConfig(userConfig: any): PathsConfig {
+export function getResolvedPathsConfig(userConfig: any): {
+  tools: string | null;
+  prompts: string | null;
+} {
   const userPaths = userConfig?.paths;
   if (!userPaths) {
-    return DEFAULT_PATHS_CONFIG;
+    return {
+      tools: DEFAULT_PATHS_CONFIG.tools,
+      prompts: DEFAULT_PATHS_CONFIG.prompts,
+    };
   }
-  return { ...DEFAULT_PATHS_CONFIG, ...userPaths };
+
+  const resolvedPaths: { tools: string | null; prompts: string | null } = {
+    tools: DEFAULT_PATHS_CONFIG.tools,
+    prompts: DEFAULT_PATHS_CONFIG.prompts,
+  };
+
+  // Handle tools path
+  if (typeof userPaths.tools === "boolean") {
+    resolvedPaths.tools = userPaths.tools ? DEFAULT_PATHS_CONFIG.tools : null;
+  } else if (typeof userPaths.tools === "string") {
+    resolvedPaths.tools = userPaths.tools;
+  }
+
+  // Handle prompts path
+  if (typeof userPaths.prompts === "boolean") {
+    resolvedPaths.prompts = userPaths.prompts
+      ? DEFAULT_PATHS_CONFIG.prompts
+      : null;
+  } else if (typeof userPaths.prompts === "string") {
+    resolvedPaths.prompts = userPaths.prompts;
+  }
+
+  return resolvedPaths;
 }
 
 export function getResolvedOAuthConfig(userConfig: any): OAuthConfig | null {
