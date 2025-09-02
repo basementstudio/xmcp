@@ -65,7 +65,6 @@ export function transformPromptHandler(
       response = await response;
     }
 
-    // Transform string/number responses into GetPromptResult format
     if (typeof response === "string" || typeof response === "number") {
       return {
         messages: [
@@ -80,7 +79,6 @@ export function transformPromptHandler(
       };
     }
 
-    // Handle partial response with messages array (add role if missing)
     if ("messages" in response && !("role" in response.messages[0])) {
       return {
         messages: response.messages.map((message) => ({
@@ -90,7 +88,8 @@ export function transformPromptHandler(
       };
     }
 
-    // Already a complete GetPromptResult
+    // add error handling
+
     return response as GetPromptResult;
   };
 }

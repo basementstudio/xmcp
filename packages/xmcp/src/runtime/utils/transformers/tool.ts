@@ -60,6 +60,8 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
       };
     }
 
+    // add error handling
+
     return response;
   };
 }
