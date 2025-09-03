@@ -5,6 +5,10 @@ const config: XmcpConfig = {
   experimental: {
     adapter: "nextjs",
   },
+  paths: {
+    tools: "src/tools",
+    prompts: false,
+  },
 };
 
 export default config;

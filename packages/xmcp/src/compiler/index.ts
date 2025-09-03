@@ -2,7 +2,10 @@ import { webpack } from "webpack";
 import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
-import { generateImportCode } from "./generate-import-code";
+import {
+  generateImportCode,
+  generateToolsExportCode,
+} from "./generate-import-code";
 import fs from "fs";
 import { rootFolder, runtimeFolderPath } from "@/utils/constants";
 import { createFolder } from "@/utils/fs-utils";
@@ -191,6 +194,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 function generateCode() {
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+
+  // Generate tools export file for runtime access from any context
+  const toolsExportCode = generateToolsExportCode();
+  fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsExportCode);
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
