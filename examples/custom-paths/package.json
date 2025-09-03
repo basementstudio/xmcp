@@ -1,6 +1,6 @@
 {
-  "name": "Custom Tools Path",
-  "description": "Configure custom file paths for xmcp tools directory",
+  "name": "Custom Paths",
+  "description": "Configure custom file paths for xmcp tools and prompts directories",
   "keywords": [
     "config"
   ],
