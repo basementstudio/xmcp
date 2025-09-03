@@ -310,7 +310,7 @@ importers:
         specifier: ^5
         version: 5.8.3
 
-  examples/custom-tools-path:
+  examples/custom-paths:
     dependencies:
       xmcp:
         specifier: workspace:*
