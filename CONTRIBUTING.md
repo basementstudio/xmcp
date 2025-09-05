@@ -40,4 +40,4 @@ If you're adding a new feature, please consider adding an example to the `exampl
 
 ## Questions
 
-For help, use [Discord](https://discord.gg/DzsXJcUmQN). For security issues, email [security@basement.studio](mailto:security@basement.studio).
+For help, use [Discord](https://discord.gg/d9a7JBBxV9). For security issues, email [security@xmcp.dev](mailto:security@xmcp.dev).

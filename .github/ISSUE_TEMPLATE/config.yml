@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security Vulnerability
-    url: mailto:security@basement.studio
+    url: mailto:security@xmcp.dev
     about: Report security vulnerabilities
