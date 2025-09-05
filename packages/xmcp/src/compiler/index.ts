@@ -2,10 +2,11 @@ import { webpack } from "webpack";
 import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
+import { generateImportCode } from "./generate-import-code";
 import {
-  generateImportCode,
   generateToolsExportCode,
-} from "./generate-import-code";
+  generateToolsTypesCode,
+} from "./generate-tools-code";
 import fs from "fs";
 import { rootFolder, runtimeFolderPath } from "@/utils/constants";
 import { createFolder } from "@/utils/fs-utils";
@@ -195,10 +196,6 @@ function generateCode() {
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
-  // Generate tools export file for runtime access from any context
-  const toolsExportCode = generateToolsExportCode();
-  fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsExportCode);
-
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
   const envFilePath = path.join(rootFolder, "xmcp-env.d.ts");
@@ -209,4 +206,13 @@ function generateCode() {
   }
 
   fs.writeFileSync(envFilePath, runtimeExportsCode);
+
+  // only generating tools files for nextjs adapter mode
+  const { xmcpConfig } = compilerContext.getContext();
+  if (xmcpConfig?.experimental?.adapter === "nextjs") {
+    const toolsCode = generateToolsExportCode();
+    fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsCode);
+    const typesCode = generateToolsTypesCode();
+    fs.writeFileSync(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
+  }
 }
