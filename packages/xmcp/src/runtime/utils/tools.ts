@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { ZodRawShape, ZodTypeAny } from "zod";
+import { ZodRawShape } from "zod";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
