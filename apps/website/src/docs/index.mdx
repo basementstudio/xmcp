@@ -2,12 +2,12 @@
 title: "xmcp - Documentation"
 metadataTitle: "xmcp - Getting Started | Documentation"
 publishedAt: "2025-07-06"
-summary: "The framework for building & shipping MCP applications."
+summary: "The framework for building & shipping MCP servers."
 ---
 
 # Documentation
 
-`xmcp` is a framework for building and shipping MCP applications with TypeScript. Designed with DX in mind, it simplifies setup and removes friction in just one command — making it easy to build & deploy AI tools on top of the Model Context Protocol ecosystem.
+`xmcp` is a framework for building and shipping MCP servers with TypeScript. Designed with DX in mind, it simplifies setup and removes friction in just one command — making it easy to build & deploy AI tools on top of the Model Context Protocol ecosystem.
 
 ## Getting started
 
@@ -36,7 +36,7 @@ You will be asked for the project name and then guided through a series of promp
 
 The HTTP transport is your go-to choice when you want to deploy your MCP on a server. It can be used to create tools that fetch data from your database or perform other fetch operations.
 
-`xmcp` uses stateless mode. This means that every time you call a tool, a new transport will be instantiated. There is no tracking of sessions or state.
+`xmcp` uses stateless mode. This means that every time you call a tool or prompt, a new transport will be instantiated. There is no tracking of sessions or state.
 
 #### Building with STDIO
 
@@ -54,6 +54,9 @@ my-project/
 │   └── tools/          # Tool files are auto-discovered here
 │       ├── greet.ts
 │       ├── search.ts
+│   └── prompts/          # Prompt files are auto-discovered here
+│       ├── review-code.ts
+│       ├── team-greeting.ts
 ├── dist/               # Built output (generated)
 ├── package.json
 ├── tsconfig.json
@@ -103,6 +106,16 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 }
 ```
 
+If you're returning a string or number only, you can shortcut the return value to be the string or number directly.
+
+```typescript
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+We encourage to use this shortcut for readability, and restrict the usage of the content array type only for complex responses, like images, audio or videos.
+
 ### File exports
 
 #### 1. Schema
@@ -129,6 +142,102 @@ The default export function that performs the actual work.
 - **Returns**: MCP-compatible response with content array.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
+### Creating prompts
+
+`xmcp` detects files under the `/src/prompts/` directory and registers them as prompts. This path can be configured in the `xmcp.config.ts` file.
+
+The prompt file should export three elements:
+
+- **Schema**: The input parameters using Zod schemas.
+- **Metadata**: The prompt's identity and behavior hints.
+- **Default**: The prompt handler function.
+
+```typescript
+// src/prompts/review-code.ts
+
+import { z } from "zod";
+import { type InferSchema, type PromptMetadata } from "xmcp";
+
+// Define the schema for prompt parameters
+export const schema = {
+  code: z.string().describe("The code to review"),
+};
+
+// Define prompt metadata
+export const metadata: PromptMetadata = {
+  name: "review-code",
+  title: "Review Code",
+  description: "Review code for best practices and potential issues",
+  role: "user",
+};
+
+// Prompt implementation
+export default function reviewCode({ code }: InferSchema<typeof schema>) {
+  return {
+    type: "text",
+    text: `Please review this code for:
+      - Code quality and best practices
+      - Potential bugs or security issues
+      - Performance optimizations
+      - Readability and maintainability
+
+      Code to review:
+      \`\`\`
+      ${code}
+      \`\`\``,
+  };
+}
+```
+
+If you're returning a string or number only, you can shortcut the return value to be the string or number directly.
+
+```typescript
+export default function reviewCode({ code }: InferSchema<typeof schema>) {
+  return `Please review this code for:
+    - Code quality and best practices
+    - Potential bugs or security issues
+    - Performance optimizations
+    - Readability and maintainability
+
+    Code to review:
+    \`\`\`
+    ${code}
+    \`\`\``;
+  `;
+}
+```
+
+We encourage to use this shortcut for readability, and restrict the usage of the content object type only for complex responses, like images, audio or videos.
+
+### File exports
+
+#### 1. Schema
+
+The schema object defines the prompt's parameters with:
+
+- **Key**: Parameter name.
+- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Purpose**: Type validation and automatic parameter documentation.
+
+> This is the exact same as the schema object for tools.
+
+#### 2. Metadata
+
+The metadata object provides:
+
+- **Name**: Unique identifier for the prompt
+- **Title**: Human-readable title for the prompt
+- **Description**: Brief explanation of what the prompt does
+- **Role**: The role of the prompt in the conversation. Can be either `user` or `assistant`.
+
+#### 3. Implementation
+
+The default export function that performs the actual work.
+
+- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
+- **Returns**: MCP-compatible response with content type.
+- **Async**: Supports async operations for API calls, file I/O, etc.
+
 ## Development Commands
 
 ```bash
@@ -145,9 +254,9 @@ node dist/stdio.js
 node dist/http.js
 ```
 
-## Using tools
+## Connecting to your server
 
-At this point, you can configure your MCP server on clients like `Cursor`.
+At this point, you can configure your MCP server on clients like `Cursor` or `Claude Desktop`.
 
 If you're using the HTTP transport, your configuration should look like this:
 
@@ -155,7 +264,7 @@ If you're using the HTTP transport, your configuration should look like this:
 {
   "mcpServers": {
     "my-project": {
-      "url": "http://localhost:3002/mcp"
+      "url": "http://localhost:3001/mcp"
     }
   }
 }
@@ -350,19 +459,40 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-### Custom tools directory
+### Custom directories
 
-You can customize the directory where `xmcp` will look for tools by adding the following to your `xmcp.config.ts` file:
+You can customize the directory where `xmcp` will look for tools and prompts by adding the following to your `xmcp.config.ts` file:
 
 ```typescript
 const config: XmcpConfig = {
-  tools: {
-    directory: "path/to/tools",
+  paths: {
+    tools: "path/to/tools",
+    prompts: "path/to/prompts",
   },
 };
 
 export default config;
 ```
+
+By default, `xmcp` supports both directories and if `paths` is not set, it will look for tools and prompts in the `/src/tools/` and `/src/prompts/` directories respectively.
+If you want to disable one of the directories, you must set it to `false` manually.
+
+This example disables the prompts directory:
+
+```typescript
+const config: XmcpConfig = {
+  paths: {
+    tools: "path/to/tools",
+    prompts: false,
+  },
+};
+
+export default config;
+```
+
+The same applies for the `tools` directory.
+
+Troubleshooting: If you delete a directory without updating the config, `xmcp` will throw an error and prompt you to update it.
 
 ### Customize the HTTP transport
 
@@ -459,9 +589,9 @@ After setting up the project, your build and dev commands should look like this:
 }
 ```
 
-The CLI will ask where to place the `tools` directory and what is the `url` for the MCP server.
+The CLI will ask where to place the `tools` and `prompts` directories and what is the `url` for the MCP server.
 
-It will create the tools folder and add an endpoint to your Next.js app.
+It will create the tools and prompts folders and add an endpoint to your Next.js app.
 
 ```typescript
 // src/app/mcp/route.ts
