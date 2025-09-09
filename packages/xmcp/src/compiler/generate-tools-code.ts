@@ -36,6 +36,7 @@ ${importStatements}
 /** 
  * Runtime-accessible tools function that works from any context.
  * Generated at build time - always up to date with discovered tools.
+ * @returns {Promise<ToolRegistry>}
  */
 export async function getTools() {
   const toolsData = [
@@ -94,8 +95,7 @@ export async function getTools() {
   return registry;
 }
 
-export const tools = await getTools();
-`;
+export const tools = await getTools();`;
 }
 
 export function generateToolsTypesCode(): string {
@@ -138,9 +138,11 @@ export interface ToolRegistryItem {
   execute: (args: any) => Promise<any>;
 }
 
-export type ToolRegistry = Record<string, ToolRegistryItem>;
-
 export type ToolNames = ${toolNamesUnion};
+
+export type ToolRegistry = {
+  [k in ToolNames]: ToolRegistryItem;
+};
 
 declare global {
   namespace XMCP {
