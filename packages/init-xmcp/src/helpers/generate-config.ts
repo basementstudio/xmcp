@@ -21,31 +21,24 @@ const config: XmcpConfig = {
     adapter: "${frameworkAdapter}",
   },`;
 
-  if (toolsPath) {
+  if (toolsPath || promptsPath) {
     configContent += `
-  paths: {
-    tools: "${toolsPath}",
-  },`;
-  }
-  if (promptsPath) {
-    configContent += `
-  paths: {
-    prompts: "${promptsPath}",
-  },`;
-  }
+  paths: {`;
 
-  if (toolsPath && promptsPath) {
-    configContent += `
-  paths: {
-    tools: "${toolsPath}",
-    prompts: "${promptsPath}",
-  },`;
-  }
+    if (toolsPath) {
+      configContent += `
+    tools: "${toolsPath}",`;
+    }
 
-  configContent += `
-};
+    if (promptsPath) {
+      configContent += `
+    prompts: "${promptsPath}",`;
+    }
+    configContent += `
+},;
 
 export default config;`;
+  }
 
   const configPath = path.join(projectPath, "xmcp.config.ts");
   fs.writeFileSync(configPath, configContent);
