@@ -91,6 +91,7 @@ export async function tools() {
 /**
  * Tool registry for AI SDK integration
  * Provides a typed registry of all tools for use with AI frameworks
+ * @returns {Promise<ToolRegistry>}
  */
 export async function toolRegistry() {
   const toolsList = await tools();
@@ -152,9 +153,11 @@ export interface ToolRegistryItem {
   execute: (args: any) => Promise<any>;
 }
 
-export type ToolRegistry = Record<string, ToolRegistryItem>;
-
 export type ToolNames = ${toolNamesUnion};
+
+export type ToolRegistry = {
+  [k in ToolNames]: ToolRegistryItem;
+};
 
 declare global {
   namespace XMCP {
