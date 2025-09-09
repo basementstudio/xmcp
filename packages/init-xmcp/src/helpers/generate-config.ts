@@ -21,19 +21,6 @@ const config: XmcpConfig = {
     adapter: "${frameworkAdapter}",
   },`;
 
-  if (toolsPath) {
-    configContent += `
-  paths: {
-    tools: "${toolsPath}",
-  },`;
-  }
-  if (promptsPath) {
-    configContent += `
-  paths: {
-    prompts: "${promptsPath}",
-  },`;
-  }
-
   if (toolsPath && promptsPath) {
     configContent += `
   paths: {

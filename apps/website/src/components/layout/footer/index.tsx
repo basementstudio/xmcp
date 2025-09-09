@@ -38,7 +38,7 @@ export const Footer = () => {
           X
         </AnimatedLink>
         <AnimatedLink
-          href="https://discord.gg/FPRuDAhPX9"
+          href="https://discord.gg/d9a7JBBxV9"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -25,7 +25,7 @@ The framework for building & shipping MCP applications. Build MCP servers in Typ
 - [BASEMENT.STUDIO](https://basement.studio/): Incubated by Basement Studio.
 - [NPM](https://npmjs.com/package/xmcp): Access to the npm package for xmcp, facilitating easy installation and management of dependencies.
 - [X](https://x.com/xmcp_dev): Additional resources or content related to the xmcp framework you can find on X/Twitter.
-- [Discord](https://discord.gg/FPRuDAhPX9): Join the xmcp community on Discord for support, discussions, and networking with other developers.`;
+- [Discord](https://discord.gg/d9a7JBBxV9): Join the xmcp community on Discord for support, discussions, and networking with other developers.`;
 
   return new NextResponse(llmsContent, {
     status: 200,

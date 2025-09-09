@@ -163,4 +163,4 @@ See the main [xmcp repository](https://github.com/basementstudio/xmcp) for contr
 
 ## Questions
 
-For help, use [Discord](https://discord.gg/DzsXJcUmQN). For security issues, email [security@basement.studio](mailto:security@basement.studio).
+For help, use [Discord](https://discord.gg/d9a7JBBxV9). For security issues, email [security@xmcp.dev](mailto:security@xmcp.dev).

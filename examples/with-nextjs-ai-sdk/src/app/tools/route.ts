@@ -1,9 +1,7 @@
-import { toolRegistry } from "@xmcp/tools";
+import { tools } from "@xmcp/tools";
 
 export async function GET() {
-  const response = await toolRegistry();
+  console.log(tools);
 
-  console.log(response);
-
-  return Response.json(response);
+  return Response.json(tools);
 }

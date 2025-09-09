@@ -1,5 +1,9 @@
 import { compilerContext } from "./compiler-context";
 
+// this is an experimental feature
+// currently it's only used for the nextjs adapter & is manually generated to resolve the async imports
+// this prevents the tools from being an async function that needs to resolve first, instead it just returns the array
+
 export function generateToolsExportCode(): string {
   const { toolPaths } = compilerContext.getContext();
 
@@ -33,12 +37,12 @@ ${importStatements}
  * Runtime-accessible tools function that works from any context.
  * Generated at build time - always up to date with discovered tools.
  */
-export async function tools() {
+export async function getTools() {
   const toolsData = [
     ${toolsArray}
   ];
 
-  const processedTools = [];
+  const registry = {};
 
   for (const toolData of toolsData) {
     const { path, name: defaultName, module } = toolData;
@@ -76,16 +80,18 @@ export async function tools() {
       toolConfig.annotations.title = toolConfig.name;
     }
 
-    processedTools.push({
-      path,
-      name: toolConfig.name,
-      metadata: toolConfig,
-      schema: toolSchema,
-      handler: handler
-    });
+    // Add to registry in the formatted structure
+    registry[toolConfig.name] = {
+      description: toolConfig.description,
+      inputSchema: z.object(toolSchema || {}),
+      execute: async (args, extra) => {
+        const result = await handler(args, extra);
+        return result;
+      },
+    };
   }
 
-  return processedTools;
+  return registry;
 }
 
 /**
@@ -110,7 +116,9 @@ export async function toolRegistry() {
   );
 
   return registry;
-}`;
+}
+export const tools = await getTools();
+`;
 }
 
 export function generateToolsTypesCode(): string {
@@ -165,7 +173,7 @@ declare global {
   }
 }
 
-export declare function tools(): Promise<ToolItem[]>;
-export declare function toolRegistry(): Promise<ToolRegistry>;
+export declare function getTools(): Promise<ToolRegistry>;
+export declare const tools: ToolRegistry;
 `;
 }
