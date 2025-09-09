@@ -1,0 +1,166 @@
+---
+title: "Getting Started with xmcp"
+description: "Learn how to build your first MCP server with xmcp in minutes"
+category: "guides"
+date: "2025-01-16"
+order: 1
+previewImage: "/blog/getting-started-hero.jpg"
+---
+
+# Getting Started with xmcp
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
+
+## Prerequisites
+
+Lorem ipsum dolor sit amet consectetur:
+
+- Adipiscing elit sed do eiusmod tempor
+- Incididunt ut labore et dolore magna
+- Aliqua ut enim ad minim veniam
+
+## Create Your First Project
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+```bash
+lorem ipsum dolor sit amet
+consectetur adipiscing elit
+```
+
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+## Project Structure
+
+Lorem ipsum dolor sit amet:
+
+```
+lorem-ipsum/
+├── src/
+│   ├── dolor/
+│   │   └── sit.ts
+│   └── amet.ts
+├── consectetur.json
+├── adipiscing.json
+└── elit.config.ts
+```
+
+## Understanding Tools
+
+Lorem ipsum dolor sit amet, **consectetur** adipiscing elit sed do eiusmod tempor. Incididunt ut labore:
+
+```typescript
+// src/dolor/sit.ts
+import { lorem } from "ipsum";
+
+export const dolorTool = lorem({
+  name: "sit_amet",
+  description: "Consectetur adipiscing elit",
+  schema: {
+    type: "object",
+    properties: {
+      name: { type: "string", description: "Lorem ipsum dolor sit" },
+    },
+    required: ["name"],
+  },
+  handler: async ({ name }) => {
+    return `Lorem ${name}! Ipsum dolor sit!`;
+  },
+});
+```
+
+## Running Your Server
+
+Lorem ipsum dolor sit amet:
+
+```bash
+lorem run dev
+```
+
+Consectetur adipiscing elit sed do eiusmod tempor incididunt!
+
+## Testing Your Server
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+```bash
+lorem ipsum test
+```
+
+Sed do eiusmod tempor incididunt ut labore et dolore.
+
+## Adding More Tools
+
+Lorem ipsum dolor sit amet consectetur:
+
+```typescript
+// src/dolor/calculator.ts
+import { lorem } from "ipsum";
+
+export const calculatorTool = lorem({
+  name: "calculate",
+  description: "Lorem ipsum dolor sit amet",
+  schema: {
+    type: "object",
+    properties: {
+      operation: {
+        type: "string",
+        enum: ["lorem", "ipsum", "dolor", "sit"],
+        description: "Consectetur adipiscing elit",
+      },
+      a: { type: "number", description: "Lorem ipsum" },
+      b: { type: "number", description: "Dolor sit" },
+    },
+    required: ["operation", "a", "b"],
+  },
+  handler: async ({ operation, a, b }) => {
+    switch (operation) {
+      case "lorem":
+        return `${a} + ${b} = ${a + b}`;
+      case "ipsum":
+        return `${a} - ${b} = ${a - b}`;
+      case "dolor":
+        return `${a} × ${b} = ${a * b}`;
+      case "sit":
+        if (b === 0) throw new Error("Lorem ipsum error");
+        return `${a} ÷ ${b} = ${a / b}`;
+      default:
+        throw new Error(`Lorem operation: ${operation}`);
+    }
+  },
+});
+```
+
+Lorem ipsum dolor sit amet consectetur:
+
+```typescript
+// src/amet.ts
+import { lorem } from "ipsum";
+import { dolorTool } from "./dolor/sit";
+import { calculatorTool } from "./dolor/calculator";
+
+const server = lorem({
+  name: "Lorem Ipsum Server",
+  version: "1.0.0",
+  tools: [dolorTool, calculatorTool],
+});
+
+export default server;
+```
+
+## Next Steps
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+1. **Lorem Ipsum**: Dolor sit amet consectetur adipiscing elit
+2. **Sed Do**: Eiusmod tempor incididunt ut labore et dolore
+3. **Magna Aliqua**: Ut enim ad minim veniam quis nostrud
+4. **Exercitation**: Ullamco laboris nisi ut aliquip ex ea
+
+## Need Help?
+
+- Lorem [examples](/examples) ipsum dolor sit
+- Amet [documentation](/docs) consectetur
+- Adipiscing [GitHub](https://github.com/basementstudio/xmcp) elit
+
+Lorem ipsum!

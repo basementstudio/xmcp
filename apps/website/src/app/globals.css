@@ -64,7 +64,7 @@
     }
 
     .prose a {
-      @apply underline transition-all decoration-neutral-400 underline-offset-2 decoration-[0.1em] hover:text-white;
+      @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white;
     }
 
     .prose h1 a,
@@ -77,7 +77,7 @@
     }
 
     .prose .anchor:after {
-      @apply text-neutral-300 dark:text-neutral-700;
+      @apply text-white/40;
       content: "#";
     }
 
@@ -86,13 +86,12 @@
     }
 
     .prose pre {
-      @apply bg-neutral-50 dark:bg-neutral-900 overflow-x-auto py-2 px-2 text-sm;
+      @apply bg-black/20 overflow-x-auto py-2 px-2 text-sm;
     }
 
     .prose code {
       @apply px-2 py-0.5;
       color: #ffffff;
-      font-style: italic;
     }
 
     .prose code:has(pre) {
@@ -113,7 +112,7 @@
     }
 
     .prose code .token.comment {
-      font-style: italic;
+      /* Removed italic */
     }
 
     .prose img {
@@ -133,36 +132,40 @@
 
     .prose p code,
     .prose li code {
-      @apply border border-neutral-300/30 text-[0.9rem] px-[4px] py-[1px];
+      @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
     }
 
     .prose li code {
       @apply text-[0.75rem] px-[1px] py-[2px];
     }
 
-    .prose h1 {
+    .prose h1,
+    h1 {
       @apply text-[2rem] font-medium tracking-tight mt-6 mb-2;
     }
 
-    .prose h2 {
+    .prose h2,
+    h2 {
       @apply text-[1.5rem] font-medium tracking-tight mb-2;
       margin-top: 3rem;
     }
 
-    .prose h3 {
+    .prose h3,
+    h3 {
       @apply text-[1.25rem] font-medium tracking-tight mb-2;
       margin-top: 3rem;
     }
 
-    .prose h4 {
+    .prose h4,
+    h4 {
       @apply text-[1rem] font-medium tracking-tight mb-2;
       margin-top: 3rem;
     }
 
-    .prose strong {
+    .prose strong,
+    strong {
       @apply font-medium;
       color: #fff;
-      font-style: italic;
     }
 
     .prose ul {
@@ -190,7 +193,7 @@
     }
 
     .prose hr {
-      color: #333;
+      @apply border-white/20;
     }
 
     .prose > :first-child {

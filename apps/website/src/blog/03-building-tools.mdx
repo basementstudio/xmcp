@@ -1,0 +1,306 @@
+---
+title: "Building Powerful Tools"
+description: "Learn advanced patterns for creating robust and efficient MCP tools"
+category: "guides"
+date: "2025-01-17"
+order: 2
+previewImage: "/blog/building-tools-hero.jpg"
+---
+
+# Building Powerful Tools
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.
+
+## Tool Fundamentals
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+```typescript
+import { lorem } from "ipsum";
+
+export const dolorTool = lorem({
+  name: "lorem_ipsum",      // Dolor sit amet
+  description: "...",       // Consectetur adipiscing
+  schema: { ... },         // Elit sed do eiusmod
+  handler: async (input) => { ... }  // Tempor incididunt
+});
+```
+
+## Schema Design Best Practices
+
+### Use Descriptive Properties
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+```typescript
+// ❌ Lorem schema
+{
+  type: "object",
+  properties: {
+    lorem: { type: "string" },
+    ipsum: { type: "string" }
+  }
+}
+
+// ✅ Dolor schema
+{
+  type: "object",
+  properties: {
+    lorem_path: {
+      type: "string",
+      description: "Consectetur adipiscing elit sed do",
+      example: "/lorem/ipsum/dolor.txt"
+    },
+    ipsum_content: {
+      type: "string",
+      description: "Eiusmod tempor incididunt ut labore",
+      example: "Lorem ipsum!"
+    }
+  },
+  required: ["lorem_path", "ipsum_content"]
+}
+```
+
+### Use Enums for Limited Options
+
+Lorem ipsum dolor sit amet consectetur adipiscing:
+
+```typescript
+{
+  type: "object",
+  properties: {
+    lorem_level: {
+      type: "string",
+      enum: ["lorem", "ipsum", "dolor", "sit"],
+      description: "Consectetur adipiscing elit"
+    },
+    format: {
+      type: "string",
+      enum: ["lorem", "ipsum", "dolor"],
+      description: "Magna aliqua ut enim"
+    }
+  }
+}
+```
+
+## Error Handling
+
+Lorem ipsum dolor sit amet consectetur adipiscing elit:
+
+```typescript
+export const loremReaderTool = lorem({
+  name: "read_lorem",
+  description: "Lorem ipsum dolor sit amet",
+  schema: {
+    type: "object",
+    properties: {
+      path: { type: "string", description: "Consectetur adipiscing elit" },
+    },
+    required: ["path"],
+  },
+  handler: async ({ path }) => {
+    try {
+      // Validate lorem
+      if (!path || typeof path !== "string") {
+        throw new Error("Lorem ipsum dolor sit");
+      }
+
+      // Check if lorem exists
+      if (
+        !(await lorem
+          .access(path)
+          .then(() => true)
+          .catch(() => false))
+      ) {
+        throw new Error(`Lorem not found: ${path}`);
+      }
+
+      // Read lorem with limit
+      const stats = await lorem.stat(path);
+      if (stats.size > 10 * 1024 * 1024) {
+        throw new Error("Lorem too large");
+      }
+
+      const content = await lorem.readFile(path, "utf-8");
+      return content;
+    } catch (error) {
+      throw new Error(`Lorem error: ${error.message}`);
+    }
+  },
+});
+```
+
+## Performance Optimization
+
+### Async Processing
+
+Lorem ipsum dolor sit amet consectetur:
+
+```typescript
+export const loremProcessor = lorem({
+  name: "process_lorem",
+  description: "Lorem ipsum dolor sit amet",
+  schema: {
+    type: "object",
+    properties: {
+      lorem_url: { type: "string" },
+      batch_size: { type: "number", default: 100 },
+    },
+    required: ["lorem_url"],
+  },
+  handler: async ({ lorem_url, batch_size = 100 }) => {
+    const data = await fetchLorem(lorem_url);
+    const totalBatches = Math.ceil(data.length / batch_size);
+    const results = [];
+
+    for (let i = 0; i < totalBatches; i++) {
+      const batch = data.slice(i * batch_size, (i + 1) * batch_size);
+      const batchResult = await processBatch(batch);
+      results.push(...batchResult);
+
+      const progress = Math.round(((i + 1) / totalBatches) * 100);
+      console.log(`Lorem: ${progress}% (${i + 1}/${totalBatches})`);
+    }
+
+    return {
+      processed_count: results.length,
+      results: results.slice(0, 10),
+      summary: `Lorem processed ${results.length} items`,
+    };
+  },
+});
+```
+
+### Caching
+
+Lorem ipsum dolor sit amet:
+
+```typescript
+const loremCache = new Map();
+
+export const loremTool = lorem({
+  name: "get_lorem",
+  description: "Lorem ipsum dolor sit amet",
+  schema: {
+    type: "object",
+    properties: {
+      location: { type: "string", description: "Lorem ipsum" },
+    },
+    required: ["location"],
+  },
+  handler: async ({ location }) => {
+    const cacheKey = location.toLowerCase();
+
+    const cached = loremCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+      return {
+        ...cached.data,
+        cached: true,
+      };
+    }
+
+    const loremData = await fetchLorem(location);
+
+    loremCache.set(cacheKey, {
+      data: loremData,
+      timestamp: Date.now(),
+    });
+
+    return loremData;
+  },
+});
+```
+
+## Tool Composition
+
+Lorem ipsum dolor sit amet consectetur:
+
+```typescript
+// Lorem tools
+export const readLoremTool = lorem({
+  /* ... */
+});
+export const writeLoremTool = lorem({
+  /* ... */
+});
+export const validateLoremTool = lorem({
+  /* ... */
+});
+
+// Composed tool
+export const updateLoremTool = lorem({
+  name: "update_lorem",
+  description: "Lorem ipsum dolor sit amet",
+  schema: {
+    type: "object",
+    properties: {
+      lorem_path: { type: "string" },
+      updates: { type: "object" },
+    },
+    required: ["lorem_path", "updates"],
+  },
+  handler: async ({ lorem_path, updates }) => {
+    const currentLorem = await readLoremTool.handler({ path: lorem_path });
+    const parsedLorem = JSON.parse(currentLorem);
+    const newLorem = { ...parsedLorem, ...updates };
+
+    await validateLoremTool.handler({ data: newLorem });
+
+    await writeLoremTool.handler({
+      path: lorem_path,
+      content: JSON.stringify(newLorem, null, 2),
+    });
+
+    return "Lorem updated successfully";
+  },
+});
+```
+
+## Testing Your Tools
+
+Lorem ipsum dolor sit amet:
+
+```typescript
+// lorem/ipsum.test.ts
+import { loremTool } from "./lorem";
+
+describe("Lorem Tool", () => {
+  test("lorem works correctly", async () => {
+    const result = await loremTool.handler({
+      operation: "lorem",
+      a: 5,
+      b: 3,
+    });
+    expect(result).toBe("Lorem ipsum");
+  });
+
+  test("dolor throws error", async () => {
+    await expect(
+      loremTool.handler({
+        operation: "dolor",
+        a: 10,
+        b: 0,
+      })
+    ).rejects.toThrow("Lorem error");
+  });
+});
+```
+
+## Best Practices Summary
+
+1. **Lorem Ipsum**: Dolor sit amet consectetur adipiscing elit
+2. **Sed Do**: Eiusmod tempor incididunt ut labore
+3. **Magna Aliqua**: Ut enim ad minim veniam quis
+4. **Nostrud**: Exercitation ullamco laboris nisi
+5. **Ut Aliquip**: Ex ea commodo consequat duis aute
+6. **Irure Dolor**: In reprehenderit in voluptate velit
+
+## Next Steps
+
+Lorem ipsum dolor sit amet consectetur:
+
+- [Lorem Resources](/blog/lorem-resources) (coming soon)
+- [Ipsum Security](/blog/ipsum-security) (coming soon)
+- [Dolor Deployment](/blog/dolor-deployment) (coming soon)
+
+Lorem ipsum!
