@@ -36,6 +36,7 @@ ${importStatements}
 /** 
  * Runtime-accessible tools function that works from any context.
  * Generated at build time - always up to date with discovered tools.
+ * @returns {Promise<ToolRegistry>}
  */
 export async function getTools() {
   const toolsData = [
