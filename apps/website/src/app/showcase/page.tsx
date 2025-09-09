@@ -18,7 +18,7 @@ export default function ShowcasePage() {
     <div className="font-mono min-h-[calc(100vh-12rem)] flex justify-center">
       <div className="max-w-[1100px] w-full mx-auto flex flex-col px-8 py-16 gap-16">
         <div className="text-center max-w-[40rem] mx-auto">
-          <h1 className="text-2xl font-medium tracking-tight text-white mb-4">
+          <h1 className="text-2xl font-medium tracking-tight text-white mb-4 uppercase">
             Discover MCP servers from the community
           </h1>
           <p className="text-[#BABABA] text-[1rem]">
@@ -34,7 +34,9 @@ export default function ShowcasePage() {
             <span className="font-bold">⊹</span>Submissions are open
             <span className="font-bold">⊹</span>
           </div>
-          <h2 className="mx-auto text-2xl">Showcase your MCP server</h2>
+          <h2 className="mx-auto text-2xl uppercase">
+            Showcase your MCP server
+          </h2>
           <p className="text-[#BABABA] text-[1rem] text-balance">
             Built something amazing with xmcp? Share it with the community and
             get featured in our showcase.
