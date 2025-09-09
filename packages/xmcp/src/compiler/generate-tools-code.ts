@@ -95,31 +95,7 @@ export async function getTools() {
   return registry;
 }
 
-/**
- * Tool registry for AI SDK integration
- * Provides a typed registry of all tools for use with AI frameworks
- * @returns {Promise<ToolRegistry>}
- */
-export async function toolRegistry() {
-  const toolsList = await tools();
-  const registry = Object.fromEntries(
-    toolsList.map((toolItem) => [
-      toolItem.metadata.name,
-      {
-        description: toolItem.metadata.description,
-        inputSchema: z.object(toolItem.schema || {}),
-        execute: async (args) => {
-          const result = await toolItem.handler(args);
-          return result;
-        },
-      },
-    ])
-  );
-
-  return registry;
-}
-export const tools = await getTools();
-`;
+export const tools = await getTools();`;
 }
 
 export function generateToolsTypesCode(): string {
