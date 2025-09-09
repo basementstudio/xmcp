@@ -832,9 +832,6 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
-      execa:
-        specifier: ^9.6.0
-        version: 9.6.0
       express:
         specifier: ^4.19.1
         version: 4.21.2
@@ -847,9 +844,6 @@ importers:
       glob:
         specifier: ^11.0.2
         version: 11.0.3
-      handlebars:
-        specifier: ^4.7.7
-        version: 4.7.8
       json5:
         specifier: ^2.2.3
         version: 2.2.3
