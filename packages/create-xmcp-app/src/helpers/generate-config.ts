@@ -2,13 +2,15 @@ import path from "path";
 import fs from "fs-extra";
 
 /**
- * Generate xmcp.config.ts based on selected transports
+ * Generate xmcp.config.ts based on selected transports and paths
  * @param projectPath - Project directory path
  * @param transports - Array of selected transport types
+ * @param pathsConfig - Configuration for tools and prompts paths
  */
 export function generateConfig(
   projectPath: string,
-  transports: string[]
+  transports: string[],
+  pathsConfig?: { tools?: string; prompts?: string }
 ): void {
   const hasHttp = transports.includes("http");
   const hasStdio = transports.includes("stdio");
@@ -25,6 +27,25 @@ const config: XmcpConfig = {`;
   if (hasStdio) {
     configContent += `
   stdio: true,`;
+  }
+
+  // Add paths configuration if any paths are defined
+  if (pathsConfig && (pathsConfig.tools || pathsConfig.prompts)) {
+    configContent += `
+  paths: {`;
+
+    if (pathsConfig.tools) {
+      configContent += `
+    tools: "${pathsConfig.tools}",`;
+    }
+
+    if (pathsConfig.prompts) {
+      configContent += `
+    prompts: "${pathsConfig.prompts}",`;
+    }
+
+    configContent += `
+  },`;
   }
 
   configContent += `

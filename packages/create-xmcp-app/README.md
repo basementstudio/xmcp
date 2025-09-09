@@ -23,7 +23,12 @@ The easiest way to get started with `xmcp` is by using `create-xmcp-app`. This C
 npx create-xmcp-app@latest
 ```
 
-You will be asked for the project name and then guided through a series of prompts to configure your project.
+You will be asked for the project name and then guided through a series of prompts to configure your project, including which components you want to initialize:
+
+- **Tools**: Code execution tools for your xmcp app
+- **Prompts**: Pre-defined prompts for your xmcp app
+
+By default, both tools and prompts will be initialized, but you can customize this during the setup process.
 
 ## Options
 

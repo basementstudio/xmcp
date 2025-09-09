@@ -17,6 +17,8 @@ interface ProjectOptions {
   transports: string[];
   packageVersion: string;
   skipInstall?: boolean;
+  initTools?: boolean;
+  initPrompts?: boolean;
 }
 
 /**
@@ -39,6 +41,8 @@ export function createProject(options: ProjectOptions): void {
     transports,
     packageVersion,
     skipInstall,
+    initTools = true,
+    initPrompts = true,
   } = options;
 
   // Ensure the project directory exists
@@ -47,14 +51,23 @@ export function createProject(options: ProjectOptions): void {
   // Get the template directory path
   const templateDir = path.join(__dirname, "../../templates", "typescript");
 
-  // Copy template files to project directory
-  copyTemplate(templateDir, projectPath);
+  // Copy template files to project directory, respecting component selection
+  copyTemplate(templateDir, projectPath, {
+    tools: initTools,
+    prompts: initPrompts,
+  });
 
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
 
-  // Generate xmcp.config.ts based on selected transports
-  generateConfig(projectPath, transports);
+  // Get paths config based on user selections
+  const pathsConfig = {
+    tools: initTools ? "src/tools" : undefined,
+    prompts: initPrompts ? "src/prompts" : undefined,
+  };
+
+  // Generate xmcp.config.ts based on selected transports and paths
+  generateConfig(projectPath, transports, pathsConfig);
 
   // Update package.json with project configuration
   updatePackageJson(projectPath, projectName, transports);

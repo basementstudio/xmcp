@@ -165,6 +165,27 @@ const program = new Command()
       if (options.useBun) packageManager = "bun";
     }
 
+    // Prompt for component initialization options
+    let initTools = true;
+    let initPrompts = true;
+
+    if (!options.yes) {
+      const componentsSelections = await inquirer.prompt([
+        {
+          type: "checkbox",
+          name: "components",
+          message: "Select components to initialize:",
+          choices: [
+            { name: "Tools", value: "tools", checked: true },
+            { name: "Prompts", value: "prompts", checked: true },
+          ],
+        },
+      ]);
+
+      initTools = componentsSelections.components.includes("tools");
+      initPrompts = componentsSelections.components.includes("prompts");
+    }
+
     const spinner = ora("Creating your xmcp app...").start();
     try {
       createProject({
@@ -174,6 +195,8 @@ const program = new Command()
         transports: transports,
         packageVersion: packageJson.version,
         skipInstall,
+        initTools,
+        initPrompts,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
