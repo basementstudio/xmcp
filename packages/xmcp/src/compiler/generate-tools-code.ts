@@ -1,5 +1,9 @@
 import { compilerContext } from "./compiler-context";
 
+// this is an experimental feature
+// currently it's only used for the nextjs adapter & is manually generated to resolve the async imports
+// this prevents the tools from being an async function that needs to resolve first, instead it just returns the array
+
 export function generateToolsExportCode(): string {
   const { toolPaths } = compilerContext.getContext();
 
