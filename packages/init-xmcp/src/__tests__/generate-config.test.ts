@@ -3,7 +3,7 @@ import assert from "node:assert";
 import path from "path";
 import fs from "fs-extra";
 import os from "os";
-import { generateConfig } from "./generate-config.js";
+import { generateConfig } from "../helpers/generate-config.js";
 
 describe("generateConfig", () => {
   let tempDir: string;
