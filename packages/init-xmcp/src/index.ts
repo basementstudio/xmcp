@@ -300,7 +300,7 @@ const program = new Command()
       }
 
       if (promptsPath) {
-        console.log(`   • ${promptsPath}/greet.ts`);
+        console.log(`   • ${promptsPath}/review-code.ts`);
       }
 
       if (routePath) {
