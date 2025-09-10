@@ -35,10 +35,13 @@ const config: XmcpConfig = {
     prompts: "${promptsPath}",`;
     }
     configContent += `
-},;
+  },`;
+  }
+
+  configContent += `
+};
 
 export default config;`;
-  }
 
   const configPath = path.join(projectPath, "xmcp.config.ts");
   fs.writeFileSync(configPath, configContent);
