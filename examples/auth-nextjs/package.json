@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@vercel/mcp-adapter": "^0.11.1",
-    "next": "15.3.5",
+    "next": "15.5.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xmcp": "workspace:*",
