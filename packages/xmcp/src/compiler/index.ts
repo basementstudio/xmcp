@@ -3,6 +3,10 @@ import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
 import { generateImportCode } from "./generate-import-code";
+import {
+  generateToolsExportCode,
+  generateToolsTypesCode,
+} from "./generate-tools-code";
 import fs from "fs";
 import { rootFolder, runtimeFolderPath } from "@/utils/constants";
 import { createFolder } from "@/utils/fs-utils";
@@ -202,4 +206,13 @@ function generateCode() {
   }
 
   fs.writeFileSync(envFilePath, runtimeExportsCode);
+
+  // only generating tools files for nextjs adapter mode
+  const { xmcpConfig } = compilerContext.getContext();
+  if (xmcpConfig?.experimental?.adapter === "nextjs") {
+    const toolsCode = generateToolsExportCode();
+    fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsCode);
+    const typesCode = generateToolsTypesCode();
+    fs.writeFileSync(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
+  }
 }
