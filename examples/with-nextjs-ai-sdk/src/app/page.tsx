@@ -1,52 +1,36 @@
 "use client";
 
-import { useActionState } from "react";
-import { handleSubmit } from "./actions";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { ChatInput, ChatMessages } from "@/components/chat";
+import { Header } from "@/components/layout";
+import { useTools } from "@/hooks";
+import { ChatMessage, ChatStatus } from "@/types/chat";
 
-const initialState = {
-  input: "",
-  response: null,
-};
-
+/**
+ * Main chat application page
+ * Based on the Chatbot example from AI SDK:
+ * https://ai-sdk.dev/docs/ai-sdk-ui/chatbot
+ */
 export default function Home() {
-  const [state, formAction, pending] = useActionState(
-    handleSubmit,
-    initialState
-  );
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
+  });
+
+  // Type assertion for messages - AI SDK doesn't export proper types
+  const typedMessages = messages as ChatMessage[];
+  const typedStatus = status as ChatStatus;
+
+  // Extract tools from messages using custom hook
+  const tools = useTools(typedMessages);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <form action={formAction} className="flex flex-col items-center gap-4">
-        <input
-          name="input"
-          type="text"
-          placeholder="Enter your prompt..."
-          defaultValue={state.input}
-          className="border border-black px-4 py-2 w-80"
-          required
-          disabled={pending}
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="bg-black text-white px-6 py-2 disabled:bg-gray-500"
-        >
-          {pending ? "Generating..." : "Generate"}
-        </button>
-      </form>
-
-      <div className="mt-8 w-full max-w-2xl">
-        <div className="mb-2 text-center">
-          <strong>
-            Tool: {state.response?.toolName || "No tool used yet"}
-          </strong>
-        </div>
-        <div className="border border-black h-64 overflow-y-auto p-4">
-          <div className="whitespace-pre-wrap text-left">
-            {state.response?.output || "No response yet..."}
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col h-screen max-w-4xl mx-auto">
+      <Header tools={tools} />
+      <ChatMessages messages={typedMessages} status={typedStatus} />
+      <ChatInput sendMessage={sendMessage} status={typedStatus} />
     </div>
   );
 }
