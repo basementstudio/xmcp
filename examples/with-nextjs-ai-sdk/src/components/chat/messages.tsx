@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import ChatMessage from "./ChatMessage";
+import ChatMessage from "./message";
 import { ChatMessage as ChatMessageType, ChatStatus } from "@/types/chat";
 
 interface ChatMessagesProps {
