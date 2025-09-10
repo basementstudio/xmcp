@@ -1,6 +1,6 @@
 {
-  "name": "Next.js with Adapter",
-  "description": "Integrate xmcp into a Next.js application using the adapter",
+  "name": "Next.js with Adapter & AI SDK tool registry injection",
+  "description": "Integrate xmcp into a Next.js application using the adapter and inject the tool registry into the AI SDK",
   "keywords": [
     "nextjs",
     "adapter"

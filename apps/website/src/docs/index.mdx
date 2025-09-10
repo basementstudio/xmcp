@@ -258,7 +258,7 @@ node dist/http.js
 
 At this point, you can configure your MCP server on clients like `Cursor` or `Claude Desktop`.
 
-If you're using the HTTP transport, your configuration should look like this:
+If you're using the HTTP transport with Cursor, your configuration should look like this:
 
 ```json
 {
@@ -270,6 +270,18 @@ If you're using the HTTP transport, your configuration should look like this:
 }
 ```
 
+If you're using the HTTP transport with Claude Desktop, your configuration should look like this:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+        "command": "npx",
+        "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
 If you're using the STDIO transport, your configuration for local development should look like this:
 
 ```json
