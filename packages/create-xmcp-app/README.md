@@ -31,8 +31,8 @@ You will be asked for the project name and then guided through a series of promp
 - `--use-npm`: Use npm as package manager (default)
 - `--use-yarn`: Use yarn as package manager
 - `--use-pnpm`: Use pnpm as package manager
+- `--use-bun`: Use bun as package manager
 - `--skip-install`: Skip installing dependencies
-- `--vercel`: Add Vercel support for deployment
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
 
