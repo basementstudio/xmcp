@@ -12,7 +12,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^2.0.10",
     "@ai-sdk/openai": "^2.0.23",
     "@ai-sdk/react": "^2.0.39",
     "ai": "^5.0.30",
