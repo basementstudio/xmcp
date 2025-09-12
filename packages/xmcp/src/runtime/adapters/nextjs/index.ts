@@ -1,6 +1,6 @@
 import {
-  createMcpHandler as createVercelMcpHandler,
   experimental_withMcpAuth as withMcpAuth,
+  createMcpHandler as createVercelMcpHandler,
 } from "@vercel/mcp-adapter";
 import {
   configureServer,
@@ -17,9 +17,20 @@ export async function xmcpHandler(request: Request): Promise<Response> {
   await Promise.all(toolPromises);
   await Promise.all(promptPromises);
 
-  const requestHandler = createVercelMcpHandler((server: McpServer) => {
-    configureServer(server, toolModules, promptModules);
-  }, INJECTED_CONFIG);
+  // workaround so it works on any path
+  const url = new URL(request.url);
+  const currentPath = url.pathname;
+
+  const requestHandler = createVercelMcpHandler(
+    (server: McpServer) => {
+      configureServer(server, toolModules, promptModules);
+    },
+    INJECTED_CONFIG,
+    {
+      streamableHttpEndpoint: currentPath,
+      disableSse: true, // we don't need this
+    }
+  );
 
   return requestHandler(request);
 }
