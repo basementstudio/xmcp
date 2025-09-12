@@ -50,8 +50,9 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/inquirer": "^9.0.7",
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^20.17.47",
+    "@types/ora": "^3.1.0",
     "typescript": "^5.3.3"
   }
 }
