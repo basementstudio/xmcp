@@ -1,8 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import {
-  Implementation,
-  ServerCapabilities,
-} from "@modelcontextprotocol/sdk/types";
+import { Implementation } from "@modelcontextprotocol/sdk/types";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
 import { ToolMetadata } from "@/types/tool";
