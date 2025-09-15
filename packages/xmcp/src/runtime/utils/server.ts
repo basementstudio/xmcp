@@ -1,12 +1,18 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { Implementation } from "@modelcontextprotocol/sdk/types";
+import {
+  Implementation,
+  ServerCapabilities,
+} from "@modelcontextprotocol/sdk/types";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
 import { ToolMetadata } from "@/types/tool";
 import { PromptMetadata } from "@/types/prompt";
 import { UserToolHandler } from "./transformers/tool";
 import { UserPromptHandler } from "./transformers/prompt";
+import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod";
+import { addResourcesToServer } from "./resources";
+import { ResourceMetadata } from "@/types/resource";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -18,6 +24,12 @@ export type PromptFile = {
   metadata: PromptMetadata;
   schema: PromptArgsRawShape;
   default: UserPromptHandler;
+};
+
+export type ResourceFile = {
+  metadata: ResourceMetadata;
+  schema: ZodRawShape;
+  default: UserResourceHandler;
 };
 
 // @ts-expect-error: injected by compiler
@@ -32,6 +44,12 @@ export const injectedPrompts = INJECTED_PROMPTS as Record<
   () => Promise<PromptFile>
 >;
 
+// @ts-expect-error: injected by compiler
+export const injectedResources = INJECTED_RESOURCES as Record<
+  string,
+  () => Promise<ResourceFile>
+>;
+
 export const INJECTED_CONFIG = {
   // TODO get from project config
   name: "MCP Server",
@@ -43,18 +61,24 @@ export const INJECTED_CONFIG = {
     prompts: {
       listChanged: true,
     },
+    resources: {
+      listChanged: true,
+      subscribe: true,
+    },
   },
 } as const satisfies Implementation;
 
-/** Loads tools and injects them into the server */
+/* Loads all modules and injects them into the server */
+// would be better as a class and use dependency injection perhaps
 export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
-  promptModules: Map<string, PromptFile>
+  promptModules: Map<string, PromptFile>,
+  resourceModules: Map<string, ResourceFile>
 ): Promise<McpServer> {
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
-  // TODO: implement addResourcesToServer
+  addResourcesToServer(server, resourceModules);
   return server;
 }
 
@@ -82,11 +106,25 @@ export function loadPrompts() {
   return [promptPromises, promptModules] as const;
 }
 
+export function loadResources() {
+  const resourceModules = new Map<string, ResourceFile>();
+
+  const resourcePromises = Object.keys(injectedResources).map((path) =>
+    injectedResources[path]().then((resourceModule) => {
+      resourceModules.set(path, resourceModule);
+    })
+  );
+
+  return [resourcePromises, resourceModules] as const;
+}
+
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
   const [toolPromises, toolModules] = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
+  const [resourcePromises, resourceModules] = loadResources();
   await Promise.all(toolPromises);
   await Promise.all(promptPromises);
-  return configureServer(server, toolModules, promptModules);
+  await Promise.all(resourcePromises);
+  return configureServer(server, toolModules, promptModules, resourceModules);
 }
