@@ -9,6 +9,7 @@ export type {
   InferSchema,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
+export type { ResourceMetadata } from "./types/resource";
 
 export type { XmcpConfigOuputSchema as XmcpConfig } from "./compiler/config";
 export type { OAuthConfigOptions } from "./auth/oauth";
