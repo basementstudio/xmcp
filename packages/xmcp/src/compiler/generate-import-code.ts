@@ -1,7 +1,7 @@
 import { compilerContext } from "./compiler-context";
 
 export function generateImportCode(): string {
-  const { toolPaths, promptPaths, hasMiddleware } =
+  const { toolPaths, promptPaths, resourcePaths, hasMiddleware } =
     compilerContext.getContext();
 
   const importToolsCode = Array.from(toolPaths)
@@ -20,6 +20,14 @@ export function generateImportCode(): string {
     })
     .join("\n");
 
+  const importResourcesCode = Array.from(resourcePaths)
+    .map((p) => {
+      const path = p.replace(/\\/g, "/");
+      const relativePath = `../${path}`;
+      return `"${path}": () => import("${relativePath}"),`;
+    })
+    .join("\n");
+
   const importMiddlewareCode = hasMiddleware
     ? `export const middleware = () => import("../src/middleware");`
     : "";
@@ -31,6 +39,10 @@ ${importToolsCode}
 
 export const prompts = {
 ${importPromptsCode}
+};
+
+export const resources = {
+${importResourcesCode}
 };
 
 ${importMiddlewareCode}

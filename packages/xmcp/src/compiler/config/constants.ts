@@ -44,6 +44,7 @@ export const DEFAULT_STDIO_CONFIG = {
 export const DEFAULT_PATHS_CONFIG = {
   tools: "src/tools",
   prompts: "src/prompts",
+  resources: "src/resources",
 };
 
 /**

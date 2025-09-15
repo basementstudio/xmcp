@@ -6,6 +6,7 @@ import {
   configureServer,
   INJECTED_CONFIG,
   loadPrompts,
+  loadResources,
   loadTools,
 } from "@/runtime/utils/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
@@ -13,9 +14,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 export async function xmcpHandler(request: Request): Promise<Response> {
   const [toolPromises, toolModules] = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
+  const [resourcePromises, resourceModules] = loadResources();
 
   await Promise.all(toolPromises);
   await Promise.all(promptPromises);
+  await Promise.all(resourcePromises);
 
   // workaround so it works on any path
   const url = new URL(request.url);
@@ -23,7 +26,7 @@ export async function xmcpHandler(request: Request): Promise<Response> {
 
   const requestHandler = createVercelMcpHandler(
     (server: McpServer) => {
-      configureServer(server, toolModules, promptModules);
+      configureServer(server, toolModules, promptModules, resourceModules);
     },
     INJECTED_CONFIG,
     {
