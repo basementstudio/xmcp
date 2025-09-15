@@ -37,18 +37,25 @@ export function getResolvedCorsConfig(
 export function getResolvedPathsConfig(userConfig: any): {
   tools: string | null;
   prompts: string | null;
+  resources: string | null;
 } {
   const userPaths = userConfig?.paths;
   if (!userPaths) {
     return {
       tools: DEFAULT_PATHS_CONFIG.tools,
       prompts: DEFAULT_PATHS_CONFIG.prompts,
+      resources: DEFAULT_PATHS_CONFIG.resources,
     };
   }
 
-  const resolvedPaths: { tools: string | null; prompts: string | null } = {
+  const resolvedPaths: {
+    tools: string | null;
+    prompts: string | null;
+    resources: string | null;
+  } = {
     tools: DEFAULT_PATHS_CONFIG.tools,
     prompts: DEFAULT_PATHS_CONFIG.prompts,
+    resources: DEFAULT_PATHS_CONFIG.resources,
   };
 
   // Handle tools path
@@ -65,6 +72,15 @@ export function getResolvedPathsConfig(userConfig: any): {
       : null;
   } else if (typeof userPaths.prompts === "string") {
     resolvedPaths.prompts = userPaths.prompts;
+  }
+
+  // Handle resources path
+  if (typeof userPaths.resources === "boolean") {
+    resolvedPaths.resources = userPaths.resources
+      ? DEFAULT_PATHS_CONFIG.resources
+      : null;
+  } else if (typeof userPaths.resources === "string") {
+    resolvedPaths.resources = userPaths.resources;
   }
 
   return resolvedPaths;
