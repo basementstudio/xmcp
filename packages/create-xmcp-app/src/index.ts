@@ -161,7 +161,7 @@ const program = new Command()
             {
               name: "Resources",
               value: "resources",
-              checked: false,
+              checked: true,
             },
           ],
         },
