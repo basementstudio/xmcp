@@ -4,8 +4,9 @@ const config: XmcpConfig = {
   http: true,
   paths: {
     tools: true,
-    prompts: false
-  }
+    prompts: false,
+    resources: false,
+  },
 };
 
 export default config;
