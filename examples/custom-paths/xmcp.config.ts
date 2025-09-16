@@ -8,6 +8,7 @@ const config: XmcpConfig = {
   paths: {
     tools: "src/my-tools/",
     prompts: false, // prompts are set to false cause we don't have that directory
+    resources: false, // resources are set to false cause we don't have that directory
   },
 };
 
