@@ -19,15 +19,18 @@ export function createResources(
     // create resources directory and all parent directories
     fs.ensureDirSync(resourcesDirPath);
 
-    const staticResourceFilePath = path.join(
-      resourcesDirPath,
-      "(config)/app.ts"
-    );
+    // create (config) subdirectory
+    const configDirPath = path.join(resourcesDirPath, "(config)");
+    fs.ensureDirSync(configDirPath);
+
+    const staticResourceFilePath = path.join(configDirPath, "app.ts");
     fs.writeFileSync(staticResourceFilePath, staticResourceTemplate);
-    const dynamicResourceFilePath = path.join(
-      resourcesDirPath,
-      "(users)/[userId]/profile.ts"
-    );
+
+    // create (users)/[userId] subdirectory structure
+    const usersDirPath = path.join(resourcesDirPath, "(users)", "[userId]");
+    fs.ensureDirSync(usersDirPath);
+
+    const dynamicResourceFilePath = path.join(usersDirPath, "profile.ts");
     fs.writeFileSync(dynamicResourceFilePath, dynamicResourceTemplate);
 
     console.log(
