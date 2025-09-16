@@ -10,7 +10,7 @@ import fs from "fs-extra";
 export function generateConfig(
   projectPath: string,
   transports: string[],
-  paths: string[] = ["tools", "prompts"]
+  paths: string[] = ["tools", "prompts", "resources"]
 ): void {
   const hasHttp = transports.includes("http");
   const hasStdio = transports.includes("stdio");
@@ -45,13 +45,21 @@ const config: XmcpConfig = {`;
     prompts: "./src/prompts",`;
   }
 
+  // Add resources path if selected
+  if (paths.includes("resources")) {
+    configContent += `
+    resources: "./src/resources",`;
+  }
+
   // Close the paths object
   configContent += `
   },`;
 
   // Remove trailing comma if present
-  configContent = configContent.endsWith(',') ? configContent.slice(0, -1) : configContent;
-  
+  configContent = configContent.endsWith(",")
+    ? configContent.slice(0, -1)
+    : configContent;
+
   configContent += `
 };
 
