@@ -81,7 +81,7 @@ const program = new Command()
     let packageManager = "npm";
     let skipInstall = options.skipInstall;
     let transports = ["http"];
-    let selectedPaths = ["tools", "prompts"];
+    let selectedPaths = ["tools", "prompts", "resources"];
 
     // Handle transport selection from CLI options
     if (options.http || options.stdio) {
@@ -157,9 +157,14 @@ const program = new Command()
               name: "Prompts",
               value: "prompts",
               checked: true,
-            }
-          ]
-        }
+            },
+            {
+              name: "Resources",
+              value: "resources",
+              checked: false,
+            },
+          ],
+        },
       ]);
       selectedPaths = pathAnswers.paths;
 
@@ -186,9 +191,9 @@ const program = new Command()
       if (options.useYarn) packageManager = "yarn";
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
-      
+
       // Use all paths by default in non-interactive mode
-      selectedPaths = ["tools", "prompts"];
+      selectedPaths = ["tools", "prompts", "resources"];
     }
 
     const spinner = ora("Creating your xmcp app...").start();
@@ -200,7 +205,7 @@ const program = new Command()
         transports: transports,
         packageVersion: packageJson.version,
         skipInstall,
-        paths: selectedPaths
+        paths: selectedPaths,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
