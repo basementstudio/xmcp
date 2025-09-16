@@ -57,13 +57,16 @@ my-project/
 │   └── prompts/          # Prompt files are auto-discovered here
 │       ├── review-code.ts
 │       ├── team-greeting.ts
+│   └── resources/      # Resource files are auto-discovered here
+│       ├── (config)/app.ts
+│       ├── (users)/[userId]/profile.ts
 ├── dist/               # Built output (generated)
 ├── package.json
 ├── tsconfig.json
 └── xmcp.config.ts       # Configuration file for xmcp
 ```
 
-### Creating tools
+## Tools
 
 `xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
 
@@ -142,7 +145,7 @@ The default export function that performs the actual work.
 - **Returns**: MCP-compatible response with content array.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
-### Creating prompts
+## Prompts
 
 `xmcp` detects files under the `/src/prompts/` directory and registers them as prompts. This path can be configured in the `xmcp.config.ts` file.
 
@@ -238,6 +241,108 @@ The default export function that performs the actual work.
 - **Returns**: MCP-compatible response with content type.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
+## Resources
+
+`xmcp` automatically detects and registers files under the `/src/resources/` directory as resources. This path can be configured in your `xmcp.config.ts` file.
+
+Each resource file should export three elements:
+
+- **Schema**: Input parameters defined using Zod schemas
+- **Metadata**: The resource's identity and behavior configuration
+- **Default**: The resource handler function
+
+There are two types of resources: static and dynamic. When creating resources, it's important to understand how the folder structure determines the resource URI.
+
+#### URI composition rules
+
+Each resource is uniquely identified by a URI composed from its file path using these rules:
+
+- The URI scheme is detected from folders with parentheses. For example, a parent folder named `(users)` creates the URI scheme `users`.
+- Static folders become literal path segments.
+- Brackets `[]` indicate dynamic parameters.
+
+For example, the following file path:
+
+```
+src/resources/(users)/[userId]/profile.ts
+```
+
+Will result in the URI `users://{userId}/profile`.
+
+#### 1. Static resource
+
+Static resources are files that don't require any parameters. Following the composition rules above, the resource below will have the URI `config://app`:
+
+```typescript
+// src/resources/(config)/app.ts
+
+import { type ResourceMetadata } from "xmcp";
+
+export const metadata: ResourceMetadata = {
+  name: "app-config",
+  title: "Application Config",
+  description: "Application configuration data",
+};
+
+export default function handler() {
+  return "App configuration here";
+}
+```
+
+#### 2. Dynamic resource
+
+Dynamic resources accept parameters. The example below creates a resource with the URI `users://{userId}/profile`:
+
+```typescript
+// src/resources/(users)/[userId]/profile.ts
+
+import { z } from "zod";
+import { type ResourceMetadata, type InferSchema } from "xmcp";
+
+export const schema = {
+  userId: z.string().describe("The ID of the user"),
+};
+
+export const metadata: ResourceMetadata = {
+  name: "user-profile",
+  title: "User Profile",
+  description: "User profile information",
+};
+
+export default function handler({ userId }: InferSchema<typeof schema>) {
+  return `Profile data for user ${userId}`;
+}
+```
+
+### File exports
+
+#### 1. Schema
+
+The schema object defines the resource's parameters with:
+
+- **Key**: Parameter name.
+- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Purpose**: Type validation and automatic parameter documentation.
+
+> This is the exact same as the schema object for tools and prompts.
+
+#### 2. Metadata
+
+The metadata object provides:
+
+- **Name**: Unique identifier for the resource
+- **Title**: Human-readable title for the resource
+- **Description**: Brief explanation of what the resource does
+- **MimeType**: The MIME type of the resource
+- **Size**: The size of the resource
+
+#### 3. Implementation
+
+The default export function that performs the actual work.
+
+- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
+- **Returns**: MCP-compatible response with content type.
+
 ## Development Commands
 
 ```bash
@@ -276,12 +381,13 @@ If you're using the HTTP transport with Claude Desktop, your configuration shoul
 {
   "mcpServers": {
     "my-project": {
-        "command": "npx",
-        "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
     }
   }
 }
 ```
+
 If you're using the STDIO transport, your configuration for local development should look like this:
 
 ```json
