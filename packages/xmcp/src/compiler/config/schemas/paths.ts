@@ -7,7 +7,7 @@ import { DEFAULT_PATHS_CONFIG } from "../constants";
 export const pathsConfigSchema = z.object({
   tools: z.union([z.boolean(), z.string()]).default(true),
   prompts: z.union([z.boolean(), z.string()]).default(true),
-  // TO DO add resources prompts etc
+  resources: z.union([z.boolean(), z.string()]).default(true),
 });
 
 export type PathsConfig = z.infer<typeof pathsConfigSchema>;

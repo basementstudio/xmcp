@@ -81,6 +81,7 @@ const program = new Command()
     let packageManager = "npm";
     let skipInstall = options.skipInstall;
     let transports = ["http"];
+    let selectedPaths = ["tools", "prompts", "resources"];
 
     // Handle transport selection from CLI options
     if (options.http || options.stdio) {
@@ -140,6 +141,33 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
+      // Path selection checklist
+      const pathAnswers = await inquirer.prompt([
+        {
+          type: "checkbox",
+          name: "paths",
+          message: "Select components to initialize:",
+          choices: [
+            {
+              name: "Tools",
+              value: "tools",
+              checked: true,
+            },
+            {
+              name: "Prompts",
+              value: "prompts",
+              checked: true,
+            },
+            {
+              name: "Resources",
+              value: "resources",
+              checked: true,
+            },
+          ],
+        },
+      ]);
+      selectedPaths = pathAnswers.paths;
+
       console.log();
       console.log(
         `Creating a new xmcp app in ${chalk.green(resolvedProjectPath)}.\n`
@@ -163,6 +191,9 @@ const program = new Command()
       if (options.useYarn) packageManager = "yarn";
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
+
+      // Use all paths by default in non-interactive mode
+      selectedPaths = ["tools", "prompts", "resources"];
     }
 
     const spinner = ora("Creating your xmcp app...").start();
@@ -174,6 +205,7 @@ const program = new Command()
         transports: transports,
         packageVersion: packageJson.version,
         skipInstall,
+        paths: selectedPaths,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
