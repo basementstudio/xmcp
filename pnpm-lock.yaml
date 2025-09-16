@@ -310,31 +310,6 @@ importers:
         specifier: ^5
         version: 5.8.3
 
-  examples/better-auth-polar:
-    dependencies:
-      '@xmcp-dev/better-auth':
-        specifier: workspace:*
-        version: link:../../packages/plugins/better-auth
-      '@xmcp-dev/polar':
-        specifier: workspace:*
-        version: link:../../packages/plugins/polar
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
-      xmcp:
-        specifier: workspace:*
-        version: link:../../packages/xmcp
-      zod:
-        specifier: 3.24.4
-        version: 3.24.4
-    devDependencies:
-      '@types/pg':
-        specifier: ^8.15.4
-        version: 8.15.4
-      swc-loader:
-        specifier: ^0.2.6
-        version: 0.2.6(@swc/core@1.12.7)(webpack@5.99.9(@swc/core@1.12.7))
-
   examples/custom-paths:
     dependencies:
       xmcp:
@@ -744,9 +719,6 @@ importers:
 
   packages/plugins/better-auth:
     dependencies:
-      '@polar-sh/better-auth':
-        specifier: ^1.1.3
-        version: 1.1.4(@polar-sh/sdk@0.34.17)(better-auth@1.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       better-auth:
         specifier: 1.3.4
         version: 1.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -818,55 +790,6 @@ importers:
       vite:
         specifier: ^5.1.0
         version: 5.4.19(@types/node@22.15.34)(lightningcss@1.30.1)(terser@5.43.1)
-      xmcp:
-        specifier: workspace:*
-        version: link:../../xmcp
-
-  packages/plugins/polar:
-    dependencies:
-      '@polar-sh/better-auth':
-        specifier: ^1.1.3
-        version: 1.1.4(@polar-sh/sdk@0.34.17)(better-auth@1.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
-      '@polar-sh/sdk':
-        specifier: ^0.34.16
-        version: 0.34.17
-      express:
-        specifier: ^4.19.1
-        version: 4.21.2
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-    devDependencies:
-      '@types/express':
-        specifier: ^5.0.1
-        version: 5.0.3
-      '@types/node':
-        specifier: ^22
-        version: 22.15.34
-      '@types/react':
-        specifier: ^18.3.12
-        version: 18.3.23
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.23)
-      chalk:
-        specifier: ^5.2.0
-        version: 5.4.1
-      cross-env:
-        specifier: ^7.0.3
-        version: 7.0.3
-      fs-extra:
-        specifier: ^11.3.0
-        version: 11.3.0
-      tsx:
-        specifier: ^4.19.4
-        version: 4.20.3
-      typescript:
-        specifier: ^5.0.4
-        version: 5.8.3
       xmcp:
         specifier: workspace:*
         version: link:../../xmcp
@@ -1890,22 +1813,6 @@ packages:
     resolution: {integrity: sha512-YLT9Zo3oNPJoBjBc4q8G2mjU4tqIbf5CEOORbUUr48dCD9q3umJ3IPlVqOqDakPfd2HuwccBaqlGhN4Gmr5OWg==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@polar-sh/better-auth@1.1.4':
-    resolution: {integrity: sha512-8SfzZdeqig4NltgIQZe9ezIY05hCRTKwrvup4TvYKUfr5dGSD+dN53OgmyPrx10tNNPXW9xiDrDYDvmRrhs1eg==}
-    engines: {node: '>=16'}
-    peerDependencies:
-      '@polar-sh/sdk': ^0.34.16
-      better-auth: ^1.3.9
-
-  '@polar-sh/sdk@0.34.17':
-    resolution: {integrity: sha512-+eJAAyyP4CAtMy9Hd6gaNXErjaH3KuTXJFv72kqlCCvv7SweBlM4U2+zpeYAZvd/YMRZq/c447f0a0DD2e7UEA==}
-    hasBin: true
-    peerDependencies:
-      '@modelcontextprotocol/sdk': '>=1.5.0 <1.10.0'
-    peerDependenciesMeta:
-      '@modelcontextprotocol/sdk':
-        optional: true
-
   '@radix-ui/colors@3.0.0':
     resolution: {integrity: sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg==}
 
@@ -2847,9 +2754,6 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
-
-  '@stablelib/base64@1.0.1':
-    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
 
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
@@ -4580,9 +4484,6 @@ packages:
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
-
-  fast-sha256@1.3.0:
-    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
 
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
@@ -6701,9 +6602,6 @@ packages:
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
 
-  standardwebhooks@1.0.0:
-    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
-
   stats-gl@2.4.2:
     resolution: {integrity: sha512-g5O9B0hm9CvnM36+v7SFl39T7hmAlv541tU81ME8YeSb3i1CIP5/QdDeSB3A0la0bKNHpxpwxOVRo2wFTYEosQ==}
     peerDependencies:
@@ -7444,9 +7342,6 @@ packages:
 
   zod@3.25.67:
     resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
-
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.0.10:
     resolution: {integrity: sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA==}
@@ -8370,17 +8265,6 @@ snapshots:
     optional: true
 
   '@pkgr/core@0.2.7': {}
-
-  '@polar-sh/better-auth@1.1.4(@polar-sh/sdk@0.34.17)(better-auth@1.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1))':
-    dependencies:
-      '@polar-sh/sdk': 0.34.17
-      better-auth: 1.3.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      zod: 3.24.4
-
-  '@polar-sh/sdk@0.34.17':
-    dependencies:
-      standardwebhooks: 1.0.0
-      zod: 3.25.76
 
   '@radix-ui/colors@3.0.0': {}
 
@@ -9740,8 +9624,6 @@ snapshots:
   '@sindresorhus/merge-streams@2.3.0': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
-
-  '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.0.0': {}
 
@@ -11892,8 +11774,6 @@ snapshots:
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
-
-  fast-sha256@1.3.0: {}
 
   fast-uri@3.0.6: {}
 
@@ -14456,11 +14336,6 @@ snapshots:
 
   stable-hash@0.0.5: {}
 
-  standardwebhooks@1.0.0:
-    dependencies:
-      '@stablelib/base64': 1.0.1
-      fast-sha256: 1.3.0
-
   stats-gl@2.4.2(@types/three@0.178.0)(three@0.178.0):
     dependencies:
       '@types/three': 0.178.0
@@ -15360,8 +15235,6 @@ snapshots:
   zod@3.24.4: {}
 
   zod@3.25.67: {}
-
-  zod@3.25.76: {}
 
   zod@4.0.10: {}
 
