@@ -66,7 +66,7 @@ my-project/
 └── xmcp.config.ts       # Configuration file for xmcp
 ```
 
-### Creating tools
+## Tools
 
 `xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
 
@@ -145,7 +145,7 @@ The default export function that performs the actual work.
 - **Returns**: MCP-compatible response with content array.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
-### Creating prompts
+## Prompts
 
 `xmcp` detects files under the `/src/prompts/` directory and registers them as prompts. This path can be configured in the `xmcp.config.ts` file.
 
@@ -241,7 +241,7 @@ The default export function that performs the actual work.
 - **Returns**: MCP-compatible response with content type.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
-### Creating resources
+## Resources
 
 `xmcp` automatically detects and registers files under the `/src/resources/` directory as resources. This path can be configured in your `xmcp.config.ts` file.
 
