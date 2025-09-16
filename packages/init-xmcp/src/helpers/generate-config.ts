@@ -11,7 +11,8 @@ export function generateConfig(
   projectPath: string,
   frameworkAdapter: string,
   toolsPath?: string,
-  promptsPath?: string
+  promptsPath?: string,
+  resourcesPath?: string
 ): void {
   let configContent = `import { type XmcpConfig } from "xmcp";
 
@@ -21,7 +22,7 @@ const config: XmcpConfig = {
     adapter: "${frameworkAdapter}",
   },`;
 
-  if (toolsPath || promptsPath) {
+  if (toolsPath || promptsPath || resourcesPath) {
     configContent += `
   paths: {`;
 
@@ -33,6 +34,11 @@ const config: XmcpConfig = {
     if (promptsPath) {
       configContent += `
     prompts: "${promptsPath}",`;
+    }
+
+    if (resourcesPath) {
+      configContent += `
+    resources: "${resourcesPath}",`;
     }
     configContent += `
   },`;

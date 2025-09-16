@@ -40,8 +40,11 @@ const program = new Command()
   )
   .option("--tools-path <path>", "Specify custom tools path", "")
   .option("--prompts-path <path>", "Specify custom prompts path", "")
+  .option("--resources-path <path>", "Specify custom resources path", "")
   .option("--route-path <path>", "Specify custom route path", "")
   .option("--skip-tools", "Skip tool creation", false)
+  .option("--skip-prompts", "Skip prompt creation", false)
+  .option("--skip-resources", "Skip resource creation", false)
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
@@ -91,7 +94,6 @@ const program = new Command()
     }
 
     // determine prompts path
-
     let promptsPath: string | undefined;
     if (!options.skipPrompts) {
       if (options.promptsPath) {
@@ -100,6 +102,18 @@ const program = new Command()
         // check if src folder exists and default to src/prompts if it does, otherwise prompts
         const hasSrcFolder = fs.existsSync(path.join(projectRoot, "src"));
         promptsPath = hasSrcFolder ? "src/prompts" : "prompts";
+      }
+    }
+
+    // determine resources path
+    let resourcesPath: string | undefined;
+    if (!options.skipResources) {
+      if (options.resourcesPath) {
+        resourcesPath = options.resourcesPath;
+      } else {
+        // check if src folder exists and default to src/resources if it does, otherwise resources
+        const hasSrcFolder = fs.existsSync(path.join(projectRoot, "src"));
+        resourcesPath = hasSrcFolder ? "src/resources" : "resources";
       }
     }
 
@@ -155,6 +169,15 @@ const program = new Command()
         });
       }
 
+      if (!options.skipResources) {
+        prompts.push({
+          type: "input",
+          name: "resourcesPath",
+          message: "Resources directory path:",
+          default: resourcesPath,
+        });
+      }
+
       if (detectedFramework === "nextjs" && !options.skipRoute) {
         prompts.push({
           type: "input",
@@ -201,6 +224,9 @@ const program = new Command()
       }
       if (!options.skipPrompts) {
         promptsPath = answers.promptsPath;
+      }
+      if (!options.skipResources) {
+        resourcesPath = answers.resourcesPath;
       }
       if (
         detectedFramework === "nextjs" &&
@@ -287,6 +313,7 @@ const program = new Command()
         framework: detectedFramework,
         toolsPath,
         promptsPath,
+        resourcesPath,
         routePath,
         packageManager,
       });
@@ -301,6 +328,11 @@ const program = new Command()
 
       if (promptsPath) {
         console.log(`   • ${promptsPath}/review-code.ts`);
+      }
+
+      if (resourcesPath) {
+        console.log(`   • ${resourcesPath}/(config)/app.ts`);
+        console.log(`   • ${resourcesPath}/(user)/[userId]/profile.ts`);
       }
 
       if (routePath) {
