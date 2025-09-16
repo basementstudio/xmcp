@@ -332,7 +332,7 @@ const program = new Command()
 
       if (resourcesPath) {
         console.log(`   • ${resourcesPath}/(config)/app.ts`);
-        console.log(`   • ${resourcesPath}/(user)/[userId]/profile.ts`);
+        console.log(`   • ${resourcesPath}/(users)/[userId]/profile.ts`);
       }
 
       if (routePath) {
