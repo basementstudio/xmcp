@@ -3,6 +3,9 @@ import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
 import { Code, Pre } from "./code-blocks";
+import { TutorialCard } from "@/components/ui/tutorial-card";
+import { Step } from "@/components/ui/step";
+import { ContinueLink } from "@/components/ui/continue-link";
 
 function Quote({ children }: { children: React.ReactNode }) {
   return (
@@ -190,6 +193,9 @@ const components = {
   Quote,
   Source,
   Callout,
+  TutorialCard,
+  Step,
+  ContinueLink,
 };
 
 export function CustomMDX(props: {
