@@ -10,32 +10,47 @@ Learn the foundations of xmcp and build a complete MCP server, step by step.
 
 At the end, you'll have a fully functional MCP server ready to ship and the knowledge to build your own.
 
-This course will guide you through the basics of xmcp. If you wish to learn more in-depth about the Model Context Protocol and xmcp foundations, check out the concepts section.
+This course will guide you through the basics of xmcp. The following assumes familiarity with MCP and its capabilities. It also assumes you have programming experience, specifically with TypeScript and functional programming.
 
-The following assumes familiarity with MCP and its capabilities. It also assumes you have programming experience, specifically with TypeScript and functional programming.
+## Get started
 
-## MCP concepts & xmcp fundamentals
+We'll build a complete MCP server step by step, covering both transport layers and all the essential features.
 
-### Get started
+<div className="mt-8">
+  <Step number={1} title="Getting started">
+    Learn how to create a new xmcp application and set up your development environment.
+    
+    [Start with the basics →](/learn/getting-started)
+  </Step>
 
-We'll cover two main use cases to tackle the steps of building an MCP server: filesystem manipulation and API calls.
+<Step number={2} title="Configuring the server">
+  Configure the transport layer for both stdio and HTTP connections to handle
+  different use cases. [Configure your server →](/learn/configuring-server)
+</Step>
 
-The main difference lies in the transport layer.
+<Step number={3} title="Creating a tool">
+  Build your first tool that allows the MCP client to execute functions and
+  interact with your server. [Create your first tool →](/learn/creating-tool)
+</Step>
 
-The filesystem use case is a good starting point to understand how you can rethink the interaction with your computer.
-Through this series, you'll build a server that reads images, compresses them, and saves them to a folder.
-You'll be able to modify the aspect ratio to your needs, choose the export format, and set the compression level.
-The resulting images will be saved to a directory that will be created automatically. You can also modify the filename as needed.
-This demonstrates how you can give an LLM access to your computer and have it perform tasks for you. With this capability comes a huge responsibility to ensure system safety.
-Be aware of the risks and always have a backup plan.
+<Step number={4} title="Creating a prompt">
+  Design prompts that help users understand how to interact with your MCP server
+  effectively. [Design effective prompts →](/learn/creating-prompt)
+</Step>
 
-**Build a stdio server**
+<Step number={5} title="Creating a resource">
+  Set up resources to expose data and content that the MCP client can access and
+  manipulate. [Expose data resources →](/learn/creating-resource)
+</Step>
 
-The API calls use case shows how you can use MCP to interact with external services.
-Through this series, you'll build a server that fetches data from APIs and databases to generate reports.
-You'll be able to customize queries to your needs, choose databases for data analysis, generate reports, and save them to platforms like Notion.
-This approach enables seamless integration with external services, allowing the LLM to work with real-world data and systems.
+<Step number={6} title="Adding middlewares">
+  Implement middleware for authentication, logging, and other cross-cutting
+  concerns. [Add middleware →](/learn/adding-middlewares)
+</Step>
 
-**Build an HTTP server**
-
-> More tutorials covering Next.js and Express integration coming soon.
+  <Step number={7} title="Deploying to production">
+    Deploy your MCP server to production with proper configuration and monitoring.
+    
+    [Deploy to production →](/learn/deploying-production)
+  </Step>
+</div>

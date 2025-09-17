@@ -1,0 +1,73 @@
+---
+title: "Getting started"
+description: "Learn how to create a new xmcp application and set up your development environment."
+order: 2
+---
+
+# Getting started
+
+Learn how to create a new xmcp application and set up your development environment.
+
+## Prerequisites
+
+Before we start, make sure you have the following installed:
+
+- Node.js (v20 or later)
+- npm or yarn or pnpm
+- A code editor (Cursor recommended)
+
+## Creating a new project
+
+The fastest way to get started is to use the `create-xmcp-app` CLI tool:
+
+```bash
+npx create-xmcp-app my-mcp-server
+cd my-mcp-server
+```
+
+You will be prompted through a series of configuration options, like the package manager, transport type and components to initialize.
+This command sets up a new directory containing a starter xmcp application that runs on HTTP. For managing dependencies, we suggest using pnpm, which offers better speed and efficiency compared to npm or yarn. If pnpm isn't installed yet, you can add it globally with the following command:
+
+```bash
+npm install -g pnpm
+```
+
+## Installing dependencies and running the server
+
+Install the project dependencies:
+
+```bash
+pnpm install
+```
+
+Then start the development server:
+
+```bash
+pnpm run dev
+```
+
+The development server will listen to changes in your code and automatically restart when you make modifications. Your MCP server is now running and ready for development!
+
+## Project structure
+
+Your new xmcp application will have the following structure, ready to start building your MCP server.
+You'll notice that much of the structure is already set up for you. Under the hood, xmcp automatically discovers tools, prompts, and resources in the `src/` directory, and injects them into the MCP server.
+
+```
+my-mcp-server/
+├── src/
+│   └── tools/        # Tool definitions
+│   └── prompts/      # Prompt definitions
+│   └── resources/    # Resource definitions
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts    # xmcp configuration
+```
+
+## Next steps
+
+Now that you have a basic xmcp application running, let's configure the server to handle different transport layers and connect it to MCP clients.
+
+<ContinueLink href="/learn/configuring-server">
+  Continue to: Configuring the server →
+</ContinueLink>

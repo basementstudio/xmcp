@@ -1,0 +1,125 @@
+---
+title: "Configuring the server"
+description: "Configure the transport layer for both stdio and HTTP connections to handle different use cases."
+order: 3
+---
+
+# Configuring the server
+
+Configure the transport layer for both stdio and HTTP connections to handle different use cases.
+
+## Choosing the transport layer
+
+During project initialization, you selected a transport type that determines how your MCP server communicates with clients. xmcp supports two main transport layers:
+
+- **HTTP**: For web-based applications, remote access, and when you need URL-based connections
+- **STDIO**: For local development, direct integrations, and when clients support command-line execution
+
+### HTTP transport configuration
+
+If you chose HTTP during initialization, your `xmcp.config.ts` file looks like this:
+
+```typescript
+import { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+Your connection endpoint will be `http://localhost:3001/mcp` when running locally.
+
+### STDIO transport configuration
+
+If you chose STDIO, your `xmcp.config.ts` file looks like this:
+
+```typescript
+import { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  stdio: true,
+};
+
+export default config;
+```
+
+Your connection endpoint will be the built entry point for the server, which you'll find in the `dist` directory:
+
+```bash
+node dist/stdio.js
+```
+
+## Connecting to MCP clients
+
+Once your server is configured and running, you'll need to set up your MCP client to connect to it. The configuration varies depending on your chosen transport layer and client.
+
+### Cursor configuration
+
+**HTTP transport:**
+Add this configuration to your Cursor MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "my-mcp-server": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
+**STDIO transport:**
+For STDIO servers, use the path to your built JavaScript file:
+
+```json
+{
+  "mcpServers": {
+    "my-mcp-server": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/my-mcp-server/dist/stdio.js"]
+    }
+  }
+}
+```
+
+### Claude Desktop configuration
+
+Claude Desktop doesn't support direct HTTP connections, so it requires a different approach.
+
+**HTTP transport:**
+For HTTP servers, use the `mcp-remote` proxy in your `mcp.json` config file:
+
+```json
+{
+  "mcpServers": {
+    "my-mcp-server": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
+
+**STDIO transport:**
+For STDIO servers, the configuration is the same as Cursor:
+
+```json
+{
+  "mcpServers": {
+    "my-mcp-server": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/my-mcp-server/dist/stdio.js"]
+    }
+  }
+}
+```
+
+## Next steps
+
+Now that your server is properly configured, let's create your first tool to add functionality to your MCP server.
+
+<ContinueLink href="/learn/creating-tool">
+  Continue to: Creating a tool →
+</ContinueLink>
