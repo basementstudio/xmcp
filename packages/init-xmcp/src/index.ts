@@ -196,6 +196,7 @@ const program = new Command()
             { name: "npm", value: "npm" },
             { name: "yarn", value: "yarn" },
             { name: "pnpm", value: "pnpm" },
+            { name: "bun", value: "bun" },
           ],
           default: packageManager,
         });
