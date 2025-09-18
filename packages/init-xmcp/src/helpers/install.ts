@@ -13,7 +13,10 @@ import { execSync } from "child_process";
 export function detectPackageManager(
   projectPath: string
 ): "npm" | "yarn" | "pnpm" | "bun" | null {
-  if (fs.existsSync(path.join(projectPath, "bun.lockb"))) {
+  if (
+    fs.existsSync(path.join(projectPath, "bun.lockb")) ||
+    fs.existsSync(path.join(projectPath, "bun.lock"))
+  ) {
     return "bun";
   }
   if (fs.existsSync(path.join(projectPath, "yarn.lock"))) {
