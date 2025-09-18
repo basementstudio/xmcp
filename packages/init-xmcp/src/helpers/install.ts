@@ -39,7 +39,7 @@ export async function install(
   projectPath: string,
   packageManager: "npm" | "pnpm" | "yarn" | "bun"
 ) {
-  const dependencies = ["xmcp", "zod"];
+  const dependencies = ["xmcp", "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
   const devDependencies = ["swc-loader"];
 
   const commands = {
