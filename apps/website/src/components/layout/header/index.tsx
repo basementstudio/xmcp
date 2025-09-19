@@ -21,9 +21,9 @@ export const Header = () => {
       </div>
       <div className="z-[6] relative max-w-[800px] w-full flex justify-center items-center px-4 py-8 text-center text-md text-white font-mono gap-8">
         <AnimatedLink href="/docs">Docs</AnimatedLink>
-        <AnimatedLink href="/blog">Blog</AnimatedLink>
         <AnimatedLink href="/examples">Examples</AnimatedLink>
         <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+        <AnimatedLink href="/blog">Blog</AnimatedLink>
       </div>
       <LogoButton />
       <GithubButton />
