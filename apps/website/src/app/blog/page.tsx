@@ -61,7 +61,7 @@ export default function BlogPage() {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
                     {post.category}
                   </span>
@@ -79,7 +79,7 @@ export default function BlogPage() {
                   )}
                 </div>
 
-                <h3 className="text-base text-white font-medium mb-3 leading-tight uppercase">
+                <h3 className="text-base text-white font-medium mb-3 leading-tight uppercase mt-3">
                   {post.title}
                 </h3>
 
