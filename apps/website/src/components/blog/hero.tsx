@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { type BlogPost } from "@/utils/blog";
-import { cn } from "@/utils/cn";
 
 interface BlogHeroProps {
   featuredPost: BlogPost;
