@@ -2,6 +2,7 @@ import { AnimatedLink } from "@/components/terminal/animated-link";
 import styles from "./progressive-blur.module.css";
 import Link from "next/link";
 import { LogoButton } from "./logo-button";
+import { MobileMenu } from "./mobile";
 
 export const Header = () => {
   return (
@@ -20,13 +21,18 @@ export const Header = () => {
         <div></div>
       </div>
       <div className="z-[6] relative max-w-[800px] w-full flex justify-center items-center px-4 py-8 text-center text-md text-white font-mono gap-8">
-        <AnimatedLink href="/docs">Docs</AnimatedLink>
-        <AnimatedLink href="/examples">Examples</AnimatedLink>
-        <AnimatedLink href="/showcase">Showcase</AnimatedLink>
-        <AnimatedLink href="/blog">Blog</AnimatedLink>
+        <div className="hidden sm:flex gap-8">
+          <AnimatedLink href="/docs">Docs</AnimatedLink>
+          <AnimatedLink href="/examples">Examples</AnimatedLink>
+          <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+          <AnimatedLink href="/blog">Blog</AnimatedLink>
+        </div>
       </div>
       <LogoButton />
-      <GithubButton />
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 z-100 flex items-center gap-3">
+        <GithubButton />
+        <MobileMenu />
+      </div>
     </header>
   );
 };
@@ -35,7 +41,7 @@ const GithubButton = () => {
   return (
     <Link
       href="https://github.com/basementstudio/xmcp"
-      className="text-white hover:text-white/80 transition-colors absolute right-4 top-1/2 -translate-y-1/2 z-100"
+      className="text-white hover:text-white/80 transition-colors"
       target="_blank"
       aria-label="GitHub"
     >
