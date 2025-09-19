@@ -4,6 +4,7 @@ import {
   type BlogPost,
 } from "@/utils/blog";
 import Link from "next/link";
+import Image from "next/image";
 import { BlogHero } from "@/components/blog/hero";
 
 export const metadata = {
@@ -43,7 +44,22 @@ export default function BlogPage() {
             >
               <div className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible border-[#333]" />
               <div className="relative border p-4 group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-[#333]">
-                <div className="w-full aspect-video border border-white/20 bg-black/20 mb-4" />
+                <div className="w-full aspect-video border border-white/20 bg-black/20 mb-4 overflow-hidden relative">
+                  {post.previewImage ? (
+                    <Image
+                      src={post.previewImage}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                      <span className="text-gray-500 text-sm uppercase tracking-wide">
+                        {post.category}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
