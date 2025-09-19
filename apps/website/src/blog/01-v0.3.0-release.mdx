@@ -1,0 +1,156 @@
+---
+title: "xmcp v0.3.0"
+description: "xmcp v0.3.0 covers all MCP server features - tools, prompts, and resources. Available now."
+category: "changelog"
+date: "2025-09-19"
+order: 1
+featured: true
+previewImage: "/blog/release-0.3.0.webp"
+---
+
+We're excited to introduce xmcp v0.3.0! This release covers all MCP server features - tools, prompts, and resources.
+When we first started xmcp, our main focus was on tools. As many clients adopted the MCP protocol, we felt it was time to extend the framework to be 100% compliant.
+
+In this effort, we have since added support for prompts and resources.
+
+We gathered feedback from the community on how the DX was straightforward and clear when it came to building tools. With that in mind, we made sure to keep this same train of thought for the rest of the concepts.
+
+## What's New
+
+Both prompts and resources follow the same familiar structure you know from tools, with clear schemas, metadata, and export patterns. Let's recap on tools and then explore each individually.
+
+### Tools
+
+Our initial approach needed both the schema and metadata to be defined. We made these optional, and added defaults for the metadata. For example, the name is derived from the filename.
+
+We also simplified the return type to be the string or number directly, without the need to return a content array if it's not a complex response. Most cases these are the default return values, so this change ensures readability.
+
+```typescript
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+};
+
+// Tool implementation
+export default function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+### Prompts
+
+Prompts are pre-defined message templates that help guide LLMs interactions. In comparison to tools (executable functions), they're user controlled and do not perform logic.
+You can usually trigger them in clients that support slash commands, like Cursor, or via UI interactions, like Claude Desktop does. Either way, if you defined arguments, you'll be prompted to input them.
+
+Here's how you build one:
+
+```typescript
+import { z } from "zod";
+import { type InferSchema, type PromptMetadata } from "xmcp";
+
+// Define the schema for prompt parameters
+export const schema = {
+  code: z.string().describe("The code to review"),
+};
+
+// Define prompt metadata
+export const metadata: PromptMetadata = {
+  name: "review-code",
+  title: "Review Code",
+  description: "Review code for best practices and potential issues",
+  role: "user",
+};
+
+// Prompt implementation
+export default function reviewCode({ code }: InferSchema<typeof schema>) {
+  return {
+    type: "text",
+    text: `Please review this code for:
+      - Code quality and best practices
+      - Potential bugs or security issues
+      - Performance optimizations
+      - Readability and maintainability
+
+      Code to review:
+      \`\`\`
+      ${code}
+      \`\`\``,
+  };
+}
+```
+
+As you can see, the structure remains similar to tools. The only difference here relies mostly on the metadata and return type.
+
+### Resources
+
+Resources are a way to share files, database schemas, and app-specific data with your LLMs.
+In comparison to the Model Context Protocol convention, URIs are auto-composed from folder structure.
+This was a DX decision made in order to make the resources easier to manage and understand, and more importantly, scale.
+
+URI composition is straightforward:
+
+- Scheme in parentheses: `(config)`
+- Resource segments: `app`
+- Parameters in brackets: `[file-name]`
+
+They can be static or dynamic.
+
+We call static resources to what MCP calls them "direct resources". These are resources with static segments, and don't support any parameters.
+
+A static resource at `/src/resources/(config)/app.ts` creates the URI `config://app`:
+
+```typescript
+import { type ResourceMetadata } from "xmcp";
+
+export const metadata: ResourceMetadata = {
+  name: "app-config",
+  title: "Application Config",
+  description: "Application configuration data",
+};
+
+export default function handler() {
+  return "App configuration here";
+}
+```
+
+For dynamic resources, you can pass parameters that have to be defined in the schema and it's folder will be in brackets, like `[file-name]`.
+
+Dynamic resources allow parameters. Here's `/src/resources/(users)/[userId]/profile.ts` generating `users://{userId}/profile`:
+
+```typescript
+import { z } from "zod";
+import { type ResourceMetadata, type InferSchema } from "xmcp";
+
+export const schema = {
+  userId: z.string().describe("The ID of the user"),
+};
+
+export const metadata: ResourceMetadata = {
+  name: "user-profile",
+  title: "User Profile",
+  description: "User profile information",
+};
+
+export default function handler({ userId }: InferSchema<typeof schema>) {
+  return `Profile data for user ${userId}`;
+}
+```
+
+## Dive deeper
+
+Check out our [prompts guide](/docs#prompts) and [resources documentation](/docs#resources) for complete implementation details.
+
+## Contributing
+
+Share your feedback and help shape the future of xmcp:
+
+[GitHub](https://github.com/basementstudio/xmcp)
