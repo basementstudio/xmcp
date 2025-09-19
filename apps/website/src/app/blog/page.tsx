@@ -26,14 +26,14 @@ export default function BlogPage() {
   return (
     <div className="flex gap-8 w-full flex-col">
       <div className="flex-1 pt-10 px-4 lg:px-0 box-content max-w-6xl mx-auto">
-        {featuredPost && <BlogHero featuredPost={featuredPost} />}
-
         <div className="prose mb-12">
           <h1 className="text-white uppercase font-medium">Blog</h1>
           <p className="text-[#BABABA]">
             Read the latest updates, guides, and insights about xmcp.
           </p>
         </div>
+
+        {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {regularPosts.map((post: BlogPost) => (
