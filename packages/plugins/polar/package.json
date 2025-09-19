@@ -1,0 +1,54 @@
+{
+  "name": "@xmcp-dev/polar",
+  "description": "Polar integration for xmcp",
+  "version": "0.0.1",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "contributors": [
+    {
+      "name": "Valentina Bearzotti",
+      "email": "valebearzotti1@gmail.com",
+      "url": "https://github.com/valebearzotti"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "polar",
+    "monetization",
+    "mcp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/polar"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@polar-sh/sdk": "^0.34.17",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "tsx": "^4.19.4",
+    "typescript": "^5.0.4",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "xmcp": "workspace:*"
+  }
+}
