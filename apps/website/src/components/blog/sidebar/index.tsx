@@ -18,7 +18,14 @@ export function BlogSidebar() {
       if (href) {
         const element = document.querySelector(href);
         if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
+          const elementPosition =
+            element.getBoundingClientRect().top + window.scrollY;
+          const offsetPosition = elementPosition - 150;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
         }
       }
     },
@@ -57,7 +64,7 @@ export function BlogSidebar() {
         const rect = heading.getBoundingClientRect();
         const top = rect.top + window.scrollY;
 
-        if (window.scrollY >= top - 50) {
+        if (window.scrollY >= top - 200) {
           const text = heading.textContent || "";
           const slug = slugify(text);
           currentActive = slug;
