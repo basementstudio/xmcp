@@ -1,0 +1,304 @@
+---
+title: "Integrating Better Auth with xmcp"
+description: "Learn how to add secure authentication to your xmcp app using Better Auth and PostgreSQL"
+category: "guides"
+date: "2025-08-13"
+order: 2
+previewImage: "/blog/better-auth.webp"
+---
+
+Learn how to add robust authentication to your MCP server using [Better Auth](https://www.better-auth.com/), the most comprehensive authentication framework for TypeScript.
+
+<Callout variant="info">
+  This guide shows how to add authentication using Better Auth and a PostgreSQL
+  database. PostgreSQL is currently the only supported database provider for
+  this plugin.
+</Callout>
+
+## What You'll Build
+
+By the end of this guide, you'll have:
+
+- A fully functional authentication system with email/password and OAuth
+- Session management integrated into your xmcp tools
+- A login/signup page
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- An existing xmcp project
+- Node.js 20+ installed
+- Access to a PostgreSQL database (we recommend [Neon](https://neon.tech/) for easy setup)
+
+---
+
+## Install Dependencies
+
+Start by installing the Better Auth plugin and PostgreSQL dependencies:
+
+```bash
+npm install @xmcp-dev/better-auth pg
+```
+
+You'll also need the PostgreSQL types as a development dependency:
+
+```bash
+npm install -D @types/pg
+```
+
+## Set Up Your Database
+
+Create a PostgreSQL database with the required schema. Better Auth requires specific tables for user management, sessions, and OAuth applications.
+
+<Callout variant="info" icon="info" title="Database Setup">
+  For a seamless experience, we recommend setting up your database on
+  [Neon](https://neon.tech/) using Vercel's storage integration.
+</Callout>
+
+Run the following SQL script to create the necessary tables:
+
+```sql
+-- User table for storing user information
+CREATE TABLE "user" (
+  "id" text NOT NULL PRIMARY KEY,
+  "name" text NOT NULL,
+  "email" text NOT NULL UNIQUE,
+  "emailVerified" boolean NOT NULL,
+  "image" text,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL
+);
+
+-- Session table for managing user sessions
+CREATE TABLE "session" (
+  "id" text NOT NULL PRIMARY KEY,
+  "expiresAt" timestamp NOT NULL,
+  "token" text NOT NULL UNIQUE,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL,
+  "ipAddress" text,
+  "userAgent" text,
+  "userId" text NOT NULL REFERENCES "user" ("id")
+);
+
+-- Account table for OAuth and local authentication
+CREATE TABLE "account" (
+  "id" text NOT NULL PRIMARY KEY,
+  "accountId" text NOT NULL,
+  "providerId" text NOT NULL,
+  "userId" text NOT NULL REFERENCES "user" ("id"),
+  "accessToken" text,
+  "refreshToken" text,
+  "idToken" text,
+  "accessTokenExpiresAt" timestamp,
+  "refreshTokenExpiresAt" timestamp,
+  "scope" text,
+  "password" text,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL
+);
+
+-- Verification table for email verification and password resets
+CREATE TABLE "verification" (
+  "id" text NOT NULL PRIMARY KEY,
+  "identifier" text NOT NULL,
+  "value" text NOT NULL,
+  "expiresAt" timestamp NOT NULL,
+  "createdAt" timestamp,
+  "updatedAt" timestamp
+);
+
+-- OAuth application table for OAuth provider functionality
+CREATE TABLE "oauthApplication" (
+  "id" text NOT NULL PRIMARY KEY,
+  "name" text NOT NULL,
+  "icon" text,
+  "metadata" text,
+  "clientId" text NOT NULL UNIQUE,
+  "clientSecret" text,
+  "redirectURLs" text NOT NULL,
+  "type" text NOT NULL,
+  "disabled" boolean,
+  "userId" text,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL
+);
+
+-- OAuth access token table
+CREATE TABLE "oauthAccessToken" (
+  "id" text NOT NULL PRIMARY KEY,
+  "accessToken" text NOT NULL UNIQUE,
+  "refreshToken" text NOT NULL UNIQUE,
+  "accessTokenExpiresAt" timestamp NOT NULL,
+  "refreshTokenExpiresAt" timestamp NOT NULL,
+  "clientId" text NOT NULL,
+  "userId" text,
+  "scopes" text NOT NULL,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL
+);
+
+-- OAuth consent table for managing user consent
+CREATE TABLE "oauthConsent" (
+  "id" text NOT NULL PRIMARY KEY,
+  "clientId" text NOT NULL,
+  "userId" text NOT NULL,
+  "scopes" text NOT NULL,
+  "createdAt" timestamp NOT NULL,
+  "updatedAt" timestamp NOT NULL,
+  "consentGiven" boolean NOT NULL
+);
+```
+
+<Callout variant="info" icon="info">
+  The schema generation through Better Auth's CLI is not supported yet, so
+  you'll need to run this SQL manually.
+</Callout>
+
+## Configure Environment Variables
+
+Create a `.env` file in your xmcp app root directory with the following variables:
+
+```bash
+# Database connection string
+DATABASE_URL=postgresql://<username>:<password>@<host>:<port>/<database>
+
+# Better Auth configuration
+BETTER_AUTH_SECRET=<your-secret-key>
+BETTER_AUTH_BASE_URL=<your-app-base-url>
+
+# Optional: OAuth provider credentials
+GOOGLE_CLIENT_ID=<your-google-client-id>
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+```
+
+<Callout variant="warning" icon="alertTriangle" title="Security Note">
+  Make sure to generate a strong, random secret for `BETTER_AUTH_SECRET`. This
+  is used to sign JWT tokens and should be kept secure.
+</Callout>
+
+## Add the Auth Middleware
+
+Create a `middleware.ts` file in your xmcp app root directory and configure the Better Auth provider:
+
+```typescript
+import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { Pool } from "pg";
+
+export default betterAuthProvider({
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
+  baseURL: process.env.BETTER_AUTH_BASE_URL || "http://127.0.0.1:3001",
+  secret: process.env.BETTER_AUTH_SECRET || "super-secret-key",
+  providers: {
+    emailAndPassword: {
+      enabled: true,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    },
+  },
+});
+```
+
+**Configuration Options:**
+
+- **`database`**: Must be a valid PostgreSQL Pool instance
+- **`baseURL`**: Your app's base URL for generating OAuth callback URLs
+- **`secret`**: Secret key for signing JWT tokens
+- **`providers`**: Configuration for authentication providers
+
+## Configure Auth Providers
+
+Better Auth supports multiple authentication methods. You can enable email/password authentication, OAuth providers, or both.
+
+### Email and Password Authentication
+
+To enable email and password authentication:
+
+```typescript
+export default betterAuthProvider({
+  // ... other config
+  providers: {
+    emailAndPassword: {
+      enabled: true,
+    },
+  },
+});
+```
+
+### Google OAuth
+
+To enable Google OAuth, you'll need to:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/apis/dashboard)
+2. Create a new project or select an existing one
+3. Enable the Google+ API
+4. Create OAuth 2.0 credentials
+5. Set the authorized redirect URI to: `http://localhost:3001/auth/callback/google` (for development)
+
+```typescript
+export default betterAuthProvider({
+  // ... other config
+  providers: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+});
+```
+
+<Callout variant="info">
+  For production, make sure to update the redirect URI to match your domain:
+  `https://yourdomain.com/auth/callback/google`
+</Callout>
+
+### Combined Providers
+
+You can enable both authentication methods:
+
+```typescript
+export default betterAuthProvider({
+  // ... other config
+  providers: {
+    emailAndPassword: {
+      enabled: true,
+    },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+});
+```
+
+## Access Sessions in Your Tools
+
+Use the `getBetterAuthSession` function to access the current user session in your xmcp tools:
+
+```typescript
+import { getBetterAuthSession } from "@xmcp-dev/better-auth";
+
+export default async function getUserProfile() {
+  const session = await getBetterAuthSession();
+
+  return `Hello, ${name}! Your user id is ${session.userId}`;
+}
+```
+
+<Callout variant="warning">
+  The `getBetterAuthSession` function will throw an error if called outside of a
+  `betterAuthProvider` middleware.
+</Callout>
+
+## Access the Login Page
+
+The login page will be available at `http://host:port/auth/sign-in` and is automatically generated by the config you passed to the provider function. It is also the same page for signing up.
+
+## Conclusion
+
+You've now added authentication to your MCP server! Next time you establish a connection to the MCP server, you'll be prompted to authenticate.

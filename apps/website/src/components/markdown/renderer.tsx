@@ -1,31 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
-// import { highlight } from "sugar-high";
 import React from "react";
 import { Code, Pre } from "./code-blocks";
-
-function Table({ data }: { data: { headers: string[]; rows: string[][] } }) {
-  const headers = data.headers.map((header, index) => (
-    <th key={index}>{header}</th>
-  ));
-  const rows = data.rows.map((row, index) => (
-    <tr key={index}>
-      {row.map((cell, cellIndex) => (
-        <td key={cellIndex}>{cell}</td>
-      ))}
-    </tr>
-  ));
-
-  return (
-    <table>
-      <thead>
-        <tr>{headers}</tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>
-  );
-}
+import { Callout } from "@/components/ui/callout";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const href = props.href;
@@ -109,7 +87,7 @@ const components = {
   a: CustomLink,
   code: Code,
   pre: Pre,
-  Table,
+  Callout,
 };
 
 export function CustomMDX(props: {

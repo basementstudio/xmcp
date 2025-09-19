@@ -9,6 +9,7 @@ import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import json from "@shikijs/langs/json";
 import tsx from "@shikijs/langs/tsx";
+import sql from "@shikijs/langs/sql";
 import ayuDark from "@shikijs/themes/ayu-dark";
 import { CopyButton } from "@/components/ui/copy-button";
 import {
@@ -22,7 +23,7 @@ import {
 import { cn } from "@/utils/cn";
 
 const highlighter = createHighlighterCoreSync({
-  langs: [js, ts, bash, json, tsx],
+  langs: [js, ts, bash, json, tsx, sql],
   themes: [ayuDark],
   engine: createJavaScriptRegexEngine(),
 });

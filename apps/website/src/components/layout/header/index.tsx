@@ -23,6 +23,7 @@ export const Header = () => {
         <AnimatedLink href="/docs">Docs</AnimatedLink>
         <AnimatedLink href="/examples">Examples</AnimatedLink>
         <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+        <AnimatedLink href="/blog">Blog</AnimatedLink>
       </div>
       <LogoButton />
       <GithubButton />
