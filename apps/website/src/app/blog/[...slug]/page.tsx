@@ -6,6 +6,7 @@ import {
 import { notFound } from "next/navigation";
 import { CustomMDX } from "@/components/markdown/renderer";
 import Link from "next/link";
+import { Icons } from "@/components/ui/icons";
 
 export async function generateMetadata({
   params,
@@ -65,8 +66,9 @@ export default async function BlogPostPage({
         <div className="mb-8">
           <Link
             href="/blog"
-            className="text-white font-medium hover:underline mb-4 inline-block"
+            className="text-white font-medium hover:underline mb-4 inline-flex items-center gap-2"
           >
+            <Icons.arrowLeft className="w-4 h-4" />
             BACK TO BLOG
           </Link>
 
