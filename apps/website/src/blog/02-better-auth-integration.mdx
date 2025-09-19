@@ -297,30 +297,6 @@ export default async function getUserProfile() {
   `betterAuthProvider` middleware.
 </Callout>
 
-### Example: Protected Tool
-
-Here's an example of a tool that requires authentication:
-
-```typescript
-import { getBetterAuthSession } from "@xmcp-dev/better-auth";
-
-export default async function createUserNote(content: string) {
-  // This will throw if user is not authenticated
-  const session = await getBetterAuthSession();
-
-  // Save note to database with user ID
-  const note = await saveNote({
-    content,
-    userId: session.userId,
-    createdAt: new Date(),
-  });
-
-  // ... error handling
-
-  return `Note created successfully`;
-}
-```
-
 ## Access the Login Page
 
 Once configured, Better Auth automatically generates a login page for your application. The page will be available at:
