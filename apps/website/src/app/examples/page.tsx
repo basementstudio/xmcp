@@ -22,8 +22,10 @@ export default function ExamplesPage() {
               Examples & Templates
             </h1>
             <p className="text-[#BABABA]">
-              Get started quickly with these examples and templates. Each
-              example demonstrates different features and use cases of xmcp.
+              Get started quickly with these examples and templates.
+              <br />
+              Each example demonstrates different features and use cases of
+              xmcp.
             </p>
           </div>
         </div>
