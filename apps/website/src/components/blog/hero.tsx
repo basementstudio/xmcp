@@ -11,8 +11,8 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
     <Link href={`/blog/${featuredPost.slug}`} className="block">
       <section className="relative group overflow-visible h-full mb-12">
         <div className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible border-[#333]" />
-        <div className="relative border border-[#333] p-8 md:p-12 group-hover:bg-black h-full w-full flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-1/2 aspect-video border border-white/20 bg-black/20 flex-shrink-0 relative overflow-hidden">
+        <div className="relative border border-[#333] p-4 md:p-12 group-hover:bg-black h-full w-full flex flex-col md:flex-row gap-4 md:gap-8">
+          <div className="w-full md:w-1/2 aspect-video border border-white/20 bg-black/20 flex-shrink-0 relative overflow-hidden mb-4 md:mb-0">
             {featuredPost.previewImage ? (
               <Image
                 src={featuredPost.previewImage}
@@ -29,7 +29,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
           </div>
 
           <div className="flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
                   FEATURED
@@ -52,12 +52,12 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
               )}
             </div>
 
-            <h1 className="text-xl md:text-2xl text-white font-medium mb-4 leading-tight uppercase">
+            <h1 className="text-base md:text-2xl text-white font-medium mb-3 md:mb-4 leading-tight uppercase">
               {featuredPost.title}
             </h1>
 
             {featuredPost.description && (
-              <p className="text-[#BABABA] leading-relaxed">
+              <p className="text-sm md:text-base text-[#BABABA] leading-relaxed">
                 {featuredPost.description}
               </p>
             )}
