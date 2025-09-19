@@ -61,7 +61,7 @@ export default async function BlogPostPage({
 
   return (
     <div className="flex gap-8 w-full flex-col">
-      <div className="flex-1 pt-10 px-4 lg:px-0 box-content max-w-4xl mx-auto">
+      <div className="flex-1 pt-16 px-4 lg:px-0 box-content max-w-4xl mx-auto">
         <div className="mb-8">
           <Link
             href="/blog"
