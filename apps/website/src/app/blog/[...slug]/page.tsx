@@ -72,7 +72,13 @@ export default async function BlogPostPage({
             BACK TO BLOG
           </Link>
 
-          <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl uppercase text-white mb-6 mt-8 ">
+            {post.title}
+          </h1>
+
+          <hr className="border-white/20 mb-6" />
+
+          <div className="flex items-center justify-between mb-8">
             <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
               {post.category}
             </span>
@@ -89,8 +95,6 @@ export default async function BlogPostPage({
               </time>
             )}
           </div>
-
-          <hr className="border-white/20 mt-6 mb-8" />
         </div>
 
         <article className="prose max-w-none mb-40">
