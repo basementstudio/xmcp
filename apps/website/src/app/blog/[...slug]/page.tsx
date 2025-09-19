@@ -91,7 +91,7 @@ export default async function BlogPostPage({
           <hr className="border-white/20 mt-6 mb-8" />
         </div>
 
-        <article className="prose max-w-none">
+        <article className="prose max-w-none mb-40">
           <CustomMDX source={post.content} />
         </article>
       </div>
