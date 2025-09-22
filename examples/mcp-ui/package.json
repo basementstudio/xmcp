@@ -1,7 +1,10 @@
 {
   "name": "mcp-ui",
   "version": "0.1.0",
-  "description": "An xmcp application with tool syntax",
+  "description": "Learn how to set up an xmcp server that serves UI resources with MCP-UI",
+  "keywords": [
+    "mcp-ui"
+  ],
   "engines": {
     "node": ">=20.0.0"
   },
