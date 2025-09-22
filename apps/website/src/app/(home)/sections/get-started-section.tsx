@@ -65,19 +65,12 @@ function GetStartedCard({
         target={external ? "_blank" : undefined}
         rel={external ? "noopener noreferrer" : undefined}
       >
-        <div
-          className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible"
-          style={{ borderColor: "#333" }}
-        ></div>
-        <div
-          className="relative border border-muted p-4 group-hover:bg-black h-full min-h-[10rem] w-full flex flex-col"
-          style={{ borderColor: "#333" }}
-        >
-          <h3 className="italic grow">
-            {title}{" "}
-            <span className="invisible group-hover:visible">{"->"}</span>
-          </h3>
-          <p>{description}</p>
+        <div className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible border-[#333]"></div>
+        <div className="relative border p-4 group-hover:bg-black h-full min-h-[10rem] w-full flex flex-col border-[#333]">
+          <h4 className="grow uppercase">
+            {title} <span className="invisible group-hover:visible">{"→"}</span>
+          </h4>
+          <p className="text-base">{description}</p>
         </div>
       </Link>
     </>

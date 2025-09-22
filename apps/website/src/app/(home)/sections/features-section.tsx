@@ -50,10 +50,10 @@ function Feature({
   description: string;
 }) {
   return (
-    <li className="relative">
+    <li className="relative text-base">
       <span className="text-white items-center gap-2">
         <span className="absolute -left-4 font-bold">⊹ </span>
-        <i>{title}</i>
+        {title}
       </span>{" "}
       - {description}
     </li>
