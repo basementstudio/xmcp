@@ -1,6 +1,5 @@
 "use client";
 
-import { MenuIcon } from "lucide-react";
 import { AnimatedLink } from "@/components/terminal/animated-link";
 import {
   Sheet,
@@ -10,17 +9,49 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
+import { cn } from "@/utils/cn";
+import { useState } from "react";
+
+const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
+  <div className="w-5 h-5 relative">
+    <div
+      className={cn(
+        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
+        isOpen
+          ? "top-1/2 -translate-y-1/2 rotate-45"
+          : "top-[22%] -translate-y-1/2"
+      )}
+    />
+
+    <div
+      className={cn(
+        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
+        isOpen ? "hidden" : "top-1/2 -translate-y-1/2"
+      )}
+    />
+    <div
+      className={cn(
+        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
+        isOpen
+          ? "top-1/2 -translate-y-1/2 -rotate-45"
+          : "top-[78%] -translate-y-1/2"
+      )}
+    />
+  </div>
+);
 
 export const MobileMenu = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <div className="sm:hidden size-5">
-      <Sheet>
+      <Sheet onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <button
             className="text-white hover:text-white/80 transition-colors"
             aria-label="Open menu"
           >
-            <MenuIcon className="size-5" />
+            <MenuIcon isOpen={isOpen} />
           </button>
         </SheetTrigger>
         <SheetContent
