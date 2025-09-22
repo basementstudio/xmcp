@@ -38,7 +38,7 @@
 
     p,
     li {
-      @apply text-sm text-pretty;
+      @apply text-sm text-pretty font-sans;
     }
 
     h1,
@@ -47,12 +47,11 @@
     h4,
     h5,
     h6 {
-      @apply text-white text-pretty;
+      @apply text-white text-pretty font-mono;
     }
 
     .prose .anchor {
       @apply absolute invisible no-underline;
-
       margin-left: -1em;
       padding-right: 0.5em;
       width: 80%;
@@ -65,11 +64,11 @@
     }
 
     .prose {
-      @apply font-mono;
+      @apply font-sans;
     }
 
     .prose a {
-      @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white;
+      @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white font-sans;
     }
 
     .prose h1 a,
@@ -126,9 +125,9 @@
     }
 
     .prose p {
-      @apply font-mono;
-      color: #bababa;
-      letter-spacing: -0.5px;
+      @apply font-sans;
+      color: #c6c6c6;
+      /* letter-spacing: -0.5px; */
       line-height: 180%;
       margin-top: 1rem;
       margin-bottom: 0.5rem;
@@ -151,20 +150,17 @@
 
     .prose h2,
     h2 {
-      @apply text-[1.5rem] font-medium tracking-tight mb-2;
-      margin-top: 3rem;
+      @apply text-[1.5rem] font-medium tracking-tight mb-2 mt-3;
     }
 
     .prose h3,
     h3 {
-      @apply text-[1.25rem] font-medium tracking-tight mb-2;
-      margin-top: 3rem;
+      @apply text-[1.25rem] font-medium tracking-tight mb-2 mt-3;
     }
 
     .prose h4,
     h4 {
-      @apply text-[1rem] font-medium tracking-tight mb-2;
-      margin-top: 3rem;
+      @apply text-[1rem] font-medium tracking-tight mb-2 mt-3;
     }
 
     .prose strong,
