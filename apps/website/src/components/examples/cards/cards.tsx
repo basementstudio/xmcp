@@ -145,7 +145,7 @@ export function ExampleCard({
       <div className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible border-[#333]" />
       <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-[#333]">
         <div className="mb-3">
-          <h3 className="italic text-white font-medium">
+          <h3 className="italic text-white font-medium mt-0">
             {name}{" "}
             <span className="invisible group-hover:visible text-sm">{"→"}</span>
           </h3>

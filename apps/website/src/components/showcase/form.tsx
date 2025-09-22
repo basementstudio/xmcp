@@ -351,8 +351,8 @@ export function ShowcaseForm() {
           <p className="text-xs text-[#747474] max-w-[40rem]">
             By submitting, you agree to feature in our showcase. Any questions,
             contact{" "}
-            <a href="mailto:xmcp@basement.studio" className="text-white">
-              xmcp@basement.studio
+            <a href="mailto:support@xmcp.dev" className="text-white">
+              support@xmcp.dev
             </a>
           </p>
         </div>
