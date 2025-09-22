@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
   --background: #000000;
   --foreground: #bababa;
   --muted: #757575;
   --spacing: 0.25rem;
-
+  --radius: 0.625rem;
   --sh-class: #2d5e9d;
   --sh-identifier: #354150;
   --sh-sign: #8996a3;
@@ -23,6 +24,10 @@
   --color-muted: var(--muted);
   --font-mono: var(--font-geist-mono);
   --font-size-sm: 0.9rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 @layer base {
