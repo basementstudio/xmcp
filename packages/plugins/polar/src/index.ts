@@ -1,4 +1,3 @@
-import { Polar } from "@polar-sh/sdk";
 import { Router } from "express";
 import { Middleware } from "xmcp";
 
@@ -33,17 +32,12 @@ interface CheckoutResponse {
 export class PolarProvider {
   private static instance: PolarProvider | null = null;
   private readonly endpointUrl: string;
-  private readonly client: Polar;
 
   private constructor(private readonly config: Configuration) {
     this.endpointUrl =
       this.config.type === "sandbox"
         ? "https://sandbox-api.polar.sh"
         : "https://api.polar.sh";
-
-    this.client = new Polar({
-      accessToken: this.config.token,
-    });
   }
 
   static getInstance(config: Configuration): PolarProvider {
