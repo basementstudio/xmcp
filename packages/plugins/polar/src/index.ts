@@ -1,10 +1,8 @@
-import { Router } from "express";
-import { Middleware } from "xmcp";
-
 interface Configuration {
   type: "production" | "sandbox";
   token: string;
   organization_id: string;
+  product_id: string;
   base_url: string;
 }
 
@@ -22,6 +20,7 @@ interface ValidateLicenseKeyResponse {
 interface ValidateLicenseKeyResult {
   valid: boolean;
   code: string;
+  message: string;
 }
 
 interface CheckoutResponse {
@@ -72,23 +71,32 @@ export class PolarProvider {
   private async validate(
     object: ValidateLicenseKeyResponse
   ): Promise<ValidateLicenseKeyResult> {
-    // Check if status is granted
+    let checkoutUrl = "";
+    try {
+      checkoutUrl = await this.getCheckoutUrl();
+    } catch (error) {
+      checkoutUrl = "";
+    }
+
+    // status is granted
     if (object.status !== "granted") {
       return {
         valid: false,
         code: "license_key_not_granted",
+        message: `License key access denied. Purchase a valid license at: ${checkoutUrl}`,
       };
     }
 
-    // Check usage limits
+    // usage limits
     if (object.limit_usage !== null && object.usage >= object.limit_usage) {
       return {
         valid: false,
         code: "license_key_usage_limit_reached",
+        message: `License key usage limit reached (${object.usage}/${object.limit_usage}). Purchase a new license at: ${checkoutUrl}`,
       };
     }
 
-    // Check expiration date
+    // expiration date
     if (object.expires_at !== null) {
       const expirationDate = new Date(object.expires_at);
       const currentDate = new Date();
@@ -96,14 +104,15 @@ export class PolarProvider {
         return {
           valid: false,
           code: "license_key_expired",
+          message: `License key expired on ${expirationDate.toLocaleDateString()}. Purchase a new license at: ${checkoutUrl}`,
         };
       }
     }
 
-    // All validations passed
     return {
       valid: true,
       code: "license_key_valid",
+      message: "License key is valid and active",
     };
   }
 
@@ -114,14 +123,22 @@ export class PolarProvider {
       const response = await this.evaluate(licenseKey);
       return await this.validate(response);
     } catch (error) {
+      let checkoutUrl: string | null;
+      try {
+        checkoutUrl = await this.getCheckoutUrl();
+      } catch (checkoutError) {
+        checkoutUrl = null;
+      }
+
       return {
         valid: false,
         code: "license_key_error",
+        message: `An error occurred while validating the license key. Purchase a valid license at: ${checkoutUrl}`,
       };
     }
   }
 
-  async getCheckoutUrl(product_id: string): Promise<string> {
+  async getCheckoutUrl(): Promise<string> {
     const endpoint = this.endpointUrl + "/v1/checkouts";
 
     const response = await fetch(endpoint, {
@@ -131,7 +148,7 @@ export class PolarProvider {
         Authorization: `Bearer ${this.config.token}`,
       },
       body: JSON.stringify({
-        products: [product_id],
+        products: [this.config.product_id],
       }),
     });
 
@@ -139,25 +156,4 @@ export class PolarProvider {
 
     return data.url;
   }
-}
-
-export function polarProvider(): Middleware {
-  // return a router that adds the success url to the checkout
-  return {
-    middleware: (req, res, next) => {
-      next();
-    },
-    router: polarRouter(),
-  };
-}
-
-function polarRouter(): Router {
-  const router = Router();
-
-  router.get("/success", (req, res) => {
-    // return a 200 status code and a message with the checkout id
-    res.status(200).json({ message: `Checkout ID: ${req.query.checkout_id}` });
-  });
-
-  return router;
 }
