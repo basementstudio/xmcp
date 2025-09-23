@@ -31,7 +31,7 @@ export default function ShowcasePage() {
 
         <div className="text-center sm:text-start space-y-4 mx-auto my-12 lg:mt-24">
           <div className="max-w-[40rem] prose">
-            <div className="inline-flex items-center px-3 py-1 gap-2 border border-white text-xs font-medium uppercase text-white">
+            <div className="inline-flex items-center px-3 py-1 gap-2 border border-white text-xs font-medium uppercase text-white font-mono">
               <span className="font-bold">⊹</span>Submissions are open
               <span className="font-bold">⊹</span>
             </div>
