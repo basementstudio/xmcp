@@ -37,14 +37,9 @@
     "dev": "tsc --watch",
     "build": "rm -rf dist && tsc"
   },
-  "dependencies": {
-    "@polar-sh/sdk": "^0.34.17",
-    "express": "^5.1.0",
-    "node-fetch": "^3.3.2"
-  },
   "devDependencies": {
+    "express": "^4.19.1",
     "@types/node": "^22",
-    "tsx": "^4.19.4",
     "typescript": "^5.0.4",
     "xmcp": "workspace:*"
   },

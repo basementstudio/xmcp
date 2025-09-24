@@ -1,9 +1,13 @@
+declare global {
+  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
+}
+
 interface Configuration {
-  type: "production" | "sandbox";
+  type?: "production" | "sandbox";
   token: string;
   organizationId: string;
   productId: string;
-  baseUrl: string;
+  eventName?: string;
 }
 
 interface ValidateLicenseKeyResponse {
@@ -15,6 +19,9 @@ interface ValidateLicenseKeyResponse {
   validations: number;
   key: string;
   display_key: string;
+  customer: {
+    external_id: string;
+  };
 }
 
 interface ValidateLicenseKeyResult {
@@ -31,8 +38,10 @@ interface CheckoutResponse {
 export class PolarProvider {
   private static instance: PolarProvider | null = null;
   private readonly endpointUrl: string;
+  private customerId: string | null = null;
 
   private constructor(private readonly config: Configuration) {
+    this.config.type = this.config.type ?? "production";
     this.endpointUrl =
       this.config.type === "sandbox"
         ? "https://sandbox-api.polar.sh"
@@ -64,6 +73,9 @@ export class PolarProvider {
     });
 
     const data = (await response.json()) as ValidateLicenseKeyResponse;
+
+    // save the customer Id for usage in ingestEvents
+    this.customerId = data.customer.external_id;
 
     return data;
   }
@@ -121,7 +133,11 @@ export class PolarProvider {
   ): Promise<ValidateLicenseKeyResult> {
     try {
       const response = await this.evaluate(licenseKey);
-      return await this.validate(response);
+      const validateResponse = await this.validate(response);
+      if (this.config.eventName) {
+        await this.ingestEvents();
+      }
+      return validateResponse;
     } catch (error) {
       let checkoutUrl: string | null;
       try {
@@ -155,5 +171,39 @@ export class PolarProvider {
     const data = (await response.json()) as CheckoutResponse;
 
     return data.url;
+  }
+
+  async ingestEvents(): Promise<any> {
+    const finalToolName = global.__XMCP_CURRENT_TOOL_NAME;
+
+    if (!finalToolName) {
+      return { error: "No tool name available" };
+    }
+
+    const endpoint = this.endpointUrl + "/v1/events/ingest";
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.config.token}`,
+      },
+      body: JSON.stringify({
+        events: [
+          {
+            name: this.config.eventName,
+            external_customer_id: this.customerId,
+            metadata: {
+              tool_name: finalToolName,
+              calls: 1,
+            },
+          },
+        ],
+      }),
+    });
+
+    const data = (await response.json()) as any;
+
+    return data;
   }
 }
