@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/polar",
   "description": "Polar integration for xmcp",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
