@@ -1,9 +1,9 @@
 interface Configuration {
   type: "production" | "sandbox";
   token: string;
-  organization_id: string;
-  product_id: string;
-  base_url: string;
+  organizationId: string;
+  productId: string;
+  baseUrl: string;
 }
 
 interface ValidateLicenseKeyResponse {
@@ -59,7 +59,7 @@ export class PolarProvider {
       },
       body: JSON.stringify({
         key: licenseKey,
-        organization_id: this.config.organization_id,
+        organization_id: this.config.organizationId,
       }),
     });
 
@@ -148,7 +148,7 @@ export class PolarProvider {
         Authorization: `Bearer ${this.config.token}`,
       },
       body: JSON.stringify({
-        products: [this.config.product_id],
+        products: [this.config.productId],
       }),
     });
 
