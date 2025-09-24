@@ -19,9 +19,7 @@ interface ValidateLicenseKeyResponse {
   validations: number;
   key: string;
   display_key: string;
-  customer: {
-    external_id: string;
-  };
+  customer: CustomerData;
 }
 
 interface ValidateLicenseKeyResult {
@@ -35,10 +33,15 @@ interface CheckoutResponse {
   url: string;
 }
 
+interface CustomerData {
+  id: string;
+  external_id: string;
+}
+
 export class PolarProvider {
   private static instance: PolarProvider | null = null;
   private readonly endpointUrl: string;
-  private customerId: string | null = null;
+  private customerData: CustomerData | null = null;
 
   private constructor(private readonly config: Configuration) {
     this.config.type = this.config.type ?? "production";
@@ -74,8 +77,11 @@ export class PolarProvider {
 
     const data = (await response.json()) as ValidateLicenseKeyResponse;
 
-    // save the customer Id for usage in ingestEvents
-    this.customerId = data.customer.external_id;
+    // save the customer Id for usage in ingestEvents in case of enabled
+    this.customerData = {
+      id: data.customer.id,
+      external_id: data.customer.external_id,
+    };
 
     return data;
   }
@@ -182,6 +188,10 @@ export class PolarProvider {
 
     const endpoint = this.endpointUrl + "/v1/events/ingest";
 
+    const customerType = this.customerData?.id
+      ? "customer_id"
+      : "external_customer_id";
+
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -192,7 +202,10 @@ export class PolarProvider {
         events: [
           {
             name: this.config.eventName,
-            external_customer_id: this.customerId,
+            [customerType]:
+              customerType === "customer_id"
+                ? this.customerData?.id
+                : this.customerData?.external_id,
             metadata: {
               tool_name: finalToolName,
               calls: 1,
@@ -201,6 +214,8 @@ export class PolarProvider {
         ],
       }),
     });
+
+    console.log("response", response);
 
     const data = (await response.json()) as any;
 
