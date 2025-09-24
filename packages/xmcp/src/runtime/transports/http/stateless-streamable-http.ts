@@ -19,6 +19,11 @@ import { CorsConfig } from "@/compiler/config/schemas";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
+// Global type declarations for tool name context
+declare global {
+  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
+}
+
 // no session management, POST only
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   debug: boolean;
@@ -291,14 +296,15 @@ export class StatelessStreamableHTTPTransport {
       this.oauthProxy = createOAuthProxy(oauthConfig);
     }
 
+    // Setup JSON parsing middleware FIRST
+    this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
+
     this.setupInitialRoutes();
     this.setupInitialMiddleware();
 
     this.setupProviders();
 
     this.setupEndpointRoute();
-
-    this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
   }
 
   private log(message: string, ...args: any[]): void {
@@ -377,8 +383,38 @@ export class StatelessStreamableHTTPTransport {
 
   private setupEndpointRoute(): void {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
+      this.log(`${req.method} ${req.path}`);
+
+      this.extractAndStoreToolName(req);
+
       await this.handleStatelessRequest(req, res);
     });
+  }
+
+  private extractAndStoreToolName(req: Request): void {
+    try {
+      if (!req.body) return;
+
+      const messages: JsonRpcMessage[] = Array.isArray(req.body)
+        ? req.body
+        : [req.body];
+
+      for (const message of messages) {
+        if (
+          message.method === "tools/call" &&
+          message.params &&
+          typeof message.params === "object" &&
+          "name" in message.params &&
+          typeof message.params.name === "string"
+        ) {
+          req.headers["x-mcp-tool-name"] = message.params.name;
+          global.__XMCP_CURRENT_TOOL_NAME = message.params.name;
+          break;
+        }
+      }
+    } catch (error) {
+      // no op
+    }
   }
 
   private async handleStatelessRequest(
@@ -397,10 +433,15 @@ export class StatelessStreamableHTTPTransport {
       res.on("close", () => {
         transport.close();
         server.close();
+        global.__XMCP_CURRENT_TOOL_NAME = undefined;
+      });
+
+      // clean up
+      res.on("finish", () => {
+        global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
 
       await server.connect(transport);
-
       await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
