@@ -1,0 +1,21 @@
+{
+  "name": "polar-http",
+  "version": "0.1.0",
+  "description": "An xmcp server with tool paywalled by Polar",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "@xmcp-dev/polar": "workspace:*",
+    "zod": "3.24.4"
+  },
+  "devDependencies": {
+    "swc-loader": "^0.2.6"
+  }
+}
