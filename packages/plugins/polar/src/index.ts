@@ -1,42 +1,22 @@
+import type {
+  Configuration,
+  CustomerData,
+  ValidateLicenseKeyResponse,
+  ValidateLicenseKeyResult,
+  CheckoutResponse,
+  UsageResult,
+  ProductResponse,
+  CustomerStateResponse,
+  EventPayload,
+  EventIngestResponse,
+  ActiveMeter,
+} from "./types.js";
+
 declare global {
   var __XMCP_CURRENT_TOOL_NAME: string | undefined;
 }
 
-interface Configuration {
-  type?: "production" | "sandbox";
-  token: string;
-  organizationId: string;
-  productId: string;
-  eventName?: string;
-}
-
-interface ValidateLicenseKeyResponse {
-  status: "granted" | "denied";
-  usage: number;
-  limit_usage: number | null;
-  limit_activations: number | null;
-  expires_at: string | null;
-  validations: number;
-  key: string;
-  display_key: string;
-  customer: CustomerData;
-}
-
-interface ValidateLicenseKeyResult {
-  valid: boolean;
-  code: string;
-  message: string;
-}
-
-interface CheckoutResponse {
-  id: string;
-  url: string;
-}
-
-interface CustomerData {
-  id: string;
-  external_id: string;
-}
+export { type Configuration, type ValidateLicenseKeyResult } from "./types.js";
 
 export class PolarProvider {
   private static instance: PolarProvider | null = null;
@@ -70,11 +50,11 @@ export class PolarProvider {
       },
     });
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as ProductResponse;
 
     // search in data.benefits (array) for type = meter credit and get the id from that object
     const meterCreditBenefit = data.benefits.find(
-      (benefit: any) => benefit.type === "meter_credit"
+      (benefit) => benefit.type === "meter_credit"
     );
 
     if (!meterCreditBenefit) {
@@ -88,10 +68,7 @@ export class PolarProvider {
     return meterId;
   }
 
-  private async hasUsageLeft(): Promise<{
-    hasUsage: boolean;
-    message?: string;
-  }> {
+  private async hasUsageLeft(): Promise<UsageResult> {
     if (!PolarProvider.meterId && this.config.eventName) {
       try {
         PolarProvider.meterId = await this.getMeterIdFromProduct();
@@ -119,12 +96,12 @@ export class PolarProvider {
         return { hasUsage: false, message: "Customer state API failed" };
       }
 
-      const data = (await response.json()) as any;
+      const data = (await response.json()) as CustomerStateResponse;
 
       // check if customer has any meter credit benefits
       const meterCreditBenefits =
         data.granted_benefits?.filter(
-          (benefit: any) => benefit.benefit_type === "meter_credit"
+          (benefit) => benefit.benefit_type === "meter_credit"
         ) || [];
 
       if (meterCreditBenefits.length === 0) {
@@ -133,11 +110,11 @@ export class PolarProvider {
       }
 
       // automatically find the meter that corresponds to this event
-      let targetMeter: any = null;
+      let targetMeter: ActiveMeter | null = null;
 
       // verify customer has the granted meter credit benefit for this product
       const grantedMeterBenefit = data.granted_benefits?.find(
-        (benefit: any) =>
+        (benefit) =>
           benefit.benefit_id === PolarProvider.meterId &&
           benefit.benefit_type === "meter_credit"
       );
@@ -155,7 +132,7 @@ export class PolarProvider {
 
       // use the first meter that has been credited (indicating it's active for this event)
       const creditedMeter = activeMeters.find(
-        (meter: any) => meter.credited_units > 0
+        (meter) => meter.credited_units > 0
       );
 
       if (creditedMeter) {
@@ -330,7 +307,7 @@ export class PolarProvider {
     return data.url;
   }
 
-  async ingestEvents(): Promise<any> {
+  async ingestEvents(): Promise<EventIngestResponse> {
     const finalToolName = global.__XMCP_CURRENT_TOOL_NAME;
 
     if (!finalToolName) {
@@ -348,10 +325,10 @@ export class PolarProvider {
         ? this.customerData?.id
         : this.customerData?.external_id;
 
-    const eventPayload = {
+    const eventPayload: EventPayload = {
       events: [
         {
-          name: this.config.eventName,
+          name: this.config.eventName!,
           [customerType]: customerId,
           metadata: {
             tool_name: finalToolName,
@@ -370,7 +347,7 @@ export class PolarProvider {
       body: JSON.stringify(eventPayload),
     });
 
-    const data = (await response.json()) as any;
+    const data = (await response.json()) as EventIngestResponse;
     return data;
   }
 }
