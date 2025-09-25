@@ -65,6 +65,13 @@
 
     .prose {
       @apply font-sans;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .prose * {
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .prose a {
@@ -121,7 +128,7 @@
 
     .prose img {
       /* Don't apply styles to next/image */
-      @apply m-0;
+      @apply m-0 max-w-full w-full h-auto;
     }
 
     .prose p {
@@ -223,7 +230,8 @@
 
     table {
       display: block;
-      max-width: fit-content;
+      width: 100%;
+      max-width: 100%;
       overflow-x: auto;
       white-space: nowrap;
     }

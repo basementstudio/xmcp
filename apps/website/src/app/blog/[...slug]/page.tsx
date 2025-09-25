@@ -62,7 +62,7 @@ export default async function BlogPostPage({
 
   return (
     <div className="flex gap-8 w-full flex-col">
-      <div className="flex-1 pt-16 px-4 lg:px-0 box-content max-w-4xl mx-auto">
+      <div className="flex-1 pt-16">
         <div className="mb-8">
           <Link
             href="/blog"
@@ -97,7 +97,7 @@ export default async function BlogPostPage({
           </div>
         </div>
 
-        <article className="prose max-w-none mb-40">
+        <article className="prose w-full max-w-full mb-40 overflow-hidden">
           <CustomMDX source={post.content} />
         </article>
       </div>
