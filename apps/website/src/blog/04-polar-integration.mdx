@@ -47,6 +47,7 @@ interface Configuration {
 
 - If `type` is not set, it will default to "production". This affects the token used to authenticate.
 - If `eventName` is not set, it will not track usage.
+- The license key should be provided in the `license-key` header. This is not customizable.
 
 On [polar.sh](https://polar.sh/), create a new product with your desired payment configuration and add the "license key" benefit to the product. You can also add a "meter credit" benefit to the product to track tool usage, and limit the usage of the key.
 

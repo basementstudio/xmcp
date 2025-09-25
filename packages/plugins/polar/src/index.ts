@@ -284,7 +284,7 @@ export class PolarProvider {
       return {
         valid: false,
         code: "license_key_error",
-        message: `An error occurred while validating the license key. Purchase a valid license at: ${checkoutUrl}`,
+        message: `An error occurred while validating the license key. Please provide a valid license key in the 'license-key' header. Purchase a valid license at: ${checkoutUrl}`,
       };
     }
   }
