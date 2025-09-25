@@ -56,7 +56,9 @@ export default function BlogLayout({
     <>
       <BlogSidebar />
       <div className="flex-1 flex justify-center">
-        <div className="w-full max-w-[700px]">{children}</div>
+        <div className="w-full max-w-[700px] px-4 sm:px-6 lg:px-0">
+          {children}
+        </div>
       </div>
     </>
   );
