@@ -13,7 +13,10 @@ import { execSync } from "child_process";
 export function detectPackageManager(
   projectPath: string
 ): "npm" | "yarn" | "pnpm" | "bun" | null {
-  if (fs.existsSync(path.join(projectPath, "bun.lockb"))) {
+  if (
+    fs.existsSync(path.join(projectPath, "bun.lockb")) ||
+    fs.existsSync(path.join(projectPath, "bun.lock"))
+  ) {
     return "bun";
   }
   if (fs.existsSync(path.join(projectPath, "yarn.lock"))) {
@@ -36,7 +39,7 @@ export async function install(
   projectPath: string,
   packageManager: "npm" | "pnpm" | "yarn" | "bun"
 ) {
-  const dependencies = ["xmcp", "zod"];
+  const dependencies = ["xmcp", "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
   const devDependencies = ["swc-loader"];
 
   const commands = {
