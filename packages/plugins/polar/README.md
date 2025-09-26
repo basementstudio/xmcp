@@ -18,7 +18,6 @@ export const polar = PolarProvider.getInstance({
   token: process.env.POLAR_TOKEN,
   organizationId: process.env.POLAR_ORGANIZATION_ID,
   productId: process.env.POLAR_PRODUCT_ID,
-  eventName: "tool_call", // optional: enables usage tracking
 });
 ```
 
@@ -30,7 +29,6 @@ interface Configuration {
   token: string;
   organizationId: string;
   productId: string;
-  eventName?: string;
 }
 ```
 
@@ -63,16 +61,18 @@ export default async function myTool() {
 
 ## Usage Tracking
 
-Automatically tracks tool usage when `eventName` is configured. Requires "meter credit" benefit on Polar product.
+You can also pass an event object to the `validateLicenseKey` method to track usage.
 
-**Metadata Structure:**
+```typescript
+const event = {
+  name: "tool_call_event",
+  metadata: { tool_name: "tool_name", calls: 1 },
+};
 
-```json
-{
-  "tool_name": "tool_name",
-  "calls": 1
-}
+const response = await polar.validateLicenseKey(licenseKey, event);
 ```
+
+The metadata can be any type of string or number.
 
 ## Environment Variables
 
