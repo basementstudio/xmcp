@@ -10,11 +10,8 @@ import type {
   EventPayload,
   EventIngestResponse,
   ActiveMeter,
+  Event,
 } from "./types.js";
-
-declare global {
-  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
-}
 
 export { type Configuration, type ValidateLicenseKeyResult } from "./types.js";
 
@@ -23,6 +20,7 @@ export class PolarProvider {
   private readonly endpointUrl: string;
   private customerData: CustomerData | null = null;
   private static meterId: string | null = null; // get once
+  private event: Event | null = null;
 
   private constructor(private readonly config: Configuration) {
     this.config.type = this.config.type ?? "production";
@@ -69,20 +67,35 @@ export class PolarProvider {
   }
 
   private async hasUsageLeft(): Promise<UsageResult> {
-    if (!PolarProvider.meterId && this.config.eventName) {
+    console.log("[PolarProvider] Checking usage left...");
+    console.log("[PolarProvider] Current meterId:", PolarProvider.meterId);
+    console.log("[PolarProvider] Current event:", this.event);
+    console.log("[PolarProvider] Current customerData:", this.customerData);
+
+    if (!PolarProvider.meterId && this.event?.name) {
+      console.log(
+        "[PolarProvider] No meter ID set, attempting to get from product..."
+      );
       try {
         PolarProvider.meterId = await this.getMeterIdFromProduct();
+        console.log(
+          "[PolarProvider] Retrieved meter ID:",
+          PolarProvider.meterId
+        );
       } catch (error) {
+        console.error("[PolarProvider] Failed to get meter ID:", error);
         return { hasUsage: false, message: "Failed to get meter ID" };
       }
     }
 
     if (!PolarProvider.meterId || !this.customerData?.id) {
+      console.log("[PolarProvider] Missing meter ID or customer ID");
       return { hasUsage: false, message: "No meter tracking configured" };
     }
 
     try {
       const endpoint = `${this.endpointUrl}/v1/customers/${this.customerData.id}/state`;
+      console.log("[PolarProvider] Fetching customer state from:", endpoint);
 
       const response = await fetch(endpoint, {
         method: "GET",
@@ -92,11 +105,26 @@ export class PolarProvider {
         },
       });
 
+      console.log(
+        "[PolarProvider] Customer state response status:",
+        response.status
+      );
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          "[PolarProvider] Customer state API failed:",
+          response.status,
+          errorText
+        );
         return { hasUsage: false, message: "Customer state API failed" };
       }
 
       const data = (await response.json()) as CustomerStateResponse;
+      console.log(
+        "[PolarProvider] Customer state data:",
+        JSON.stringify(data, null, 2)
+      );
 
       // check if customer has any meter credit benefits
       const meterCreditBenefits =
@@ -104,8 +132,16 @@ export class PolarProvider {
           (benefit) => benefit.benefit_type === "meter_credit"
         ) || [];
 
+      console.log(
+        "[PolarProvider] Found meter credit benefits:",
+        meterCreditBenefits.length
+      );
+
       if (meterCreditBenefits.length === 0) {
         // ONLY case for unlimited usage: no meter credit benefits set up at all
+        console.log(
+          "[PolarProvider] No meter credit benefits found - unlimited usage"
+        );
         return { hasUsage: true };
       }
 
@@ -119,14 +155,25 @@ export class PolarProvider {
           benefit.benefit_type === "meter_credit"
       );
 
+      console.log(
+        "[PolarProvider] Granted meter benefit for this meter:",
+        grantedMeterBenefit
+      );
+
       if (!grantedMeterBenefit) {
+        console.log(
+          "[PolarProvider] No granted meter benefit found for meter ID:",
+          PolarProvider.meterId
+        );
         return { hasUsage: false, message: "No granted meter benefit found" };
       }
 
       // since we're using a single event name, we expect a single meter to be associated with it
       const activeMeters = data.active_meters || [];
+      console.log("[PolarProvider] Active meters:", activeMeters);
 
       if (activeMeters.length === 0) {
+        console.log("[PolarProvider] No active meters found");
         return { hasUsage: false, message: "No active meters found" };
       }
 
@@ -135,10 +182,13 @@ export class PolarProvider {
         (meter) => meter.credited_units > 0
       );
 
+      console.log("[PolarProvider] Credited meter:", creditedMeter);
+
       if (creditedMeter) {
         targetMeter = creditedMeter;
       } else {
         // if no meters have been credited, meter credits exist but no credits allocated yet
+        console.log("[PolarProvider] No credited meters found");
         return {
           hasUsage: false,
           message: "No credited meters found - purchase credits to continue",
@@ -146,21 +196,37 @@ export class PolarProvider {
       }
 
       if (!targetMeter) {
+        console.log("[PolarProvider] No target meter identified");
         return { hasUsage: false, message: "No target meter found" };
       }
 
       const { consumed_units, credited_units, balance } = targetMeter;
+      console.log(
+        "[PolarProvider] Meter usage - consumed:",
+        consumed_units,
+        "credited:",
+        credited_units,
+        "balance:",
+        balance
+      );
+
       const hasUsage = balance > 0;
 
       if (!hasUsage) {
+        console.log("[PolarProvider] No usage credits remaining");
         return {
           hasUsage: false,
           message: `Usage meter credit exhausted. You have consumed ${consumed_units} credits out of ${credited_units}.`,
         };
       }
 
+      console.log("[PolarProvider] Usage credits available");
       return { hasUsage: true };
     } catch (error) {
+      console.error(
+        "[PolarProvider] Error checking customer meter usage:",
+        error
+      );
       return {
         hasUsage: false,
         message: "Error checking customer meter usage",
@@ -226,6 +292,7 @@ export class PolarProvider {
     if (object.expires_at !== null) {
       const expirationDate = new Date(object.expires_at);
       const currentDate = new Date();
+
       if (currentDate >= expirationDate) {
         return {
           valid: false,
@@ -234,7 +301,6 @@ export class PolarProvider {
         };
       }
     }
-
     return {
       valid: true,
       code: "license_key_valid",
@@ -243,17 +309,49 @@ export class PolarProvider {
   }
 
   async validateLicenseKey(
-    licenseKey: string
+    licenseKey: string,
+    event: Event
   ): Promise<ValidateLicenseKeyResult> {
+    console.log("[PolarProvider] validateLicenseKey called");
+    console.log("[PolarProvider] License key provided:", !!licenseKey);
+    console.log("[PolarProvider] Event provided:", event);
+
+    // Store event for use in event ingestion
+    this.event = event;
+    console.log("[PolarProvider] Event stored for tracking:", this.event);
+
+    if (!licenseKey || licenseKey.trim() === "") {
+      let checkoutUrl = "";
+      try {
+        checkoutUrl = await this.getCheckoutUrl();
+      } catch (error) {
+        checkoutUrl = "";
+      }
+
+      return {
+        valid: false,
+        code: "license_key_missing",
+        message: `No license key provided. Please provide a valid license key in the 'license-key' header. Purchase a valid license at: ${checkoutUrl}`,
+      };
+    }
+
     try {
       const response = await this.evaluate(licenseKey);
+
       const validateResponse = await this.validate(response);
 
       // only check usage if we have valid license and meter tracking is configured
-      if (validateResponse.valid && this.config.eventName) {
+      if (validateResponse.valid && this.event?.name) {
+        console.log(
+          "[PolarProvider] License is valid and event name provided, checking usage..."
+        );
+        console.log("[PolarProvider] Event to track:", this.event);
+
         const usageResult = await this.hasUsageLeft();
+        console.log("[PolarProvider] Usage check result:", usageResult);
 
         if (!usageResult.hasUsage) {
+          console.log("[PolarProvider] No usage left, returning error");
           let checkoutUrl = "";
           try {
             checkoutUrl = await this.getCheckoutUrl();
@@ -268,8 +366,18 @@ export class PolarProvider {
         }
 
         // if we reach here, usage is available
-        // ingest usage event after validation
-        await this.ingestEvents();
+        console.log(
+          "[PolarProvider] Usage available, proceeding with event ingestion..."
+        );
+        const ingestResult = await this.ingestEvents();
+        console.log("[PolarProvider] Event ingestion result:", ingestResult);
+      } else {
+        console.log(
+          "[PolarProvider] Skipping event ingestion - license valid:",
+          validateResponse.valid,
+          "event name:",
+          this.event?.name
+        );
       }
 
       return validateResponse;
@@ -308,46 +416,73 @@ export class PolarProvider {
   }
 
   async ingestEvents(): Promise<EventIngestResponse> {
-    const finalToolName = global.__XMCP_CURRENT_TOOL_NAME;
-
-    if (!finalToolName) {
-      return { error: "No tool name available" };
-    }
+    console.log("[PolarProvider] Starting event ingestion");
 
     const endpoint = this.endpointUrl + "/v1/events/ingest";
+    console.log("[PolarProvider] Ingestion endpoint:", endpoint);
 
-    const customerType = this.customerData?.id
-      ? "customer_id"
-      : "external_customer_id";
-
-    const customerId =
-      customerType === "customer_id"
-        ? this.customerData?.id
-        : this.customerData?.external_id;
+    // Log the current state
+    console.log("[PolarProvider] Current event:", this.event);
+    console.log("[PolarProvider] Current customer data:", this.customerData);
+    console.log("[PolarProvider] Meter ID:", PolarProvider.meterId);
 
     const eventPayload: EventPayload = {
       events: [
         {
-          name: this.config.eventName!,
-          [customerType]: customerId,
-          metadata: {
-            tool_name: finalToolName,
-            calls: 1,
-          },
+          name: this.event?.name!,
+          customer_id: this.customerData?.id,
+          metadata: this.event?.metadata!,
         },
       ],
     };
 
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.config.token}`,
-      },
-      body: JSON.stringify(eventPayload),
-    });
+    console.log(
+      "[PolarProvider] Event payload to be sent:",
+      JSON.stringify(eventPayload, null, 2)
+    );
 
-    const data = (await response.json()) as EventIngestResponse;
-    return data;
+    try {
+      console.log("[PolarProvider] Sending event ingestion request...");
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.config.token}`,
+        },
+        body: JSON.stringify(eventPayload),
+      });
+
+      console.log(
+        "[PolarProvider] Event ingestion response status:",
+        response.status
+      );
+      console.log(
+        "[PolarProvider] Event ingestion response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          "[PolarProvider] Event ingestion failed with status:",
+          response.status
+        );
+        console.error("[PolarProvider] Error response body:", errorText);
+        return {
+          error: `Event ingestion failed: ${response.status} - ${errorText}`,
+        };
+      }
+
+      const data = (await response.json()) as EventIngestResponse;
+      console.log(
+        "[PolarProvider] Event ingestion successful, response:",
+        JSON.stringify(data, null, 2)
+      );
+
+      return data;
+    } catch (error) {
+      console.error("[PolarProvider] Event ingestion error:", error);
+      return { error: `Failed to ingest event: ${error}` };
+    }
   }
 }

@@ -22,7 +22,10 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   const result = `Hello, ${name}!`;
 
   const licenseKey = headers()["license-key"];
-  const response = await polar.validateLicenseKey(licenseKey as string);
+  const response = await polar.validateLicenseKey(licenseKey as string, {
+    name: "test_tool_call",
+    metadata: { tool_name: "greet", calls: 1 },
+  });
 
   if (!response.valid) {
     return response.message;
