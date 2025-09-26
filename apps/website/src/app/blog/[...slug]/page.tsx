@@ -39,6 +39,16 @@ export async function generateMetadata({
     alternates: {
       canonical: canonicalUrl,
     },
+    openGraph: {
+      images: {
+        url: post.previewImage,
+      },
+    },
+    twitter: {
+      images: {
+        url: post.previewImage,
+      },
+    },
   };
 }
 
