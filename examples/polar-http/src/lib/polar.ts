@@ -5,5 +5,4 @@ export const polar = PolarProvider.getInstance({
   token: process.env.POLAR_TOKEN!,
   organizationId: process.env.POLAR_ORGANIZATION_ID!,
   productId: process.env.POLAR_PRODUCT_ID!,
-  eventName: process.env.POLAR_EVENT_NAME!,
 });
