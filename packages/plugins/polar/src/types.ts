@@ -3,7 +3,6 @@ export interface Configuration {
   token: string;
   organizationId: string;
   productId: string;
-  eventName?: string;
 }
 
 export interface CustomerData {
@@ -98,17 +97,17 @@ export interface CustomerStateResponse {
 }
 
 export interface EventPayload {
-  events: Array<{
-    name: string;
-    customer_id?: string;
-    external_customer_id?: string;
-    metadata: {
-      tool_name: string;
-      calls: number;
-    };
-  }>;
+  events: Array<
+    Event & {
+      customer_id?: string;
+    }
+  >;
 }
 
+export interface Event {
+  name: string;
+  metadata: Record<string, string | number>;
+}
 export interface EventIngestResponse {
   success?: boolean;
   error?: string;
