@@ -29,7 +29,6 @@ export const polar = PolarProvider.getInstance({
   token: process.env.POLAR_TOKEN,
   organizationId: process.env.POLAR_ORGANIZATION_ID,
   productId: process.env.POLAR_PRODUCT_ID,
-  eventName: "tool_call", // optional: for usage tracking
 });
 ```
 
@@ -41,12 +40,10 @@ interface Configuration {
   token: string;
   organizationId: string;
   productId: string;
-  eventName?: string;
 }
 ```
 
 - If `type` is not set, it will default to "production". This affects the token used to authenticate.
-- If `eventName` is not set, it will not track usage.
 - The license key should be provided in the `license-key` header. This is not customizable.
 
 On [polar.sh](https://polar.sh/), create a new product with your desired payment configuration and add the "license key" benefit to the product. You can also add a "meter credit" benefit to the product to track tool usage, and limit the usage of the key.
@@ -87,16 +84,18 @@ To track usage we recommend setting a "meter credit" benefit to the product with
 
 ![Alt text](./04-meter_details.webp)
 
-The ingest events method will be called automatically detecting the tool name and will increment the usage by 1 on each call. The updated metadata you will see in the dashboard will have this structure:
+Then you can pass an event object to the `validateLicenseKey` method to track usage.
 
-```json
-{
-  "tool_name": "tool_name",
-  "calls": 1
-}
+```typescript
+const event = {
+  name: "tool_call_event",
+  metadata: { tool_name: "tool_name", calls: 1 },
+};
+
+const response = await polar.validateLicenseKey(licenseKey, event);
 ```
 
-If you have already set up the paywall you don't have to change anything. Simply add the `eventName` to the configuration and you're good to go. The usage will be tracked automatically.
+The event object metadata can have any type of string or number as values.
 
 ## Conclusion
 
