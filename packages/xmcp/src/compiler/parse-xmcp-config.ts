@@ -97,7 +97,8 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
     resolveLoader: {
       modules: [
         "node_modules",
-        path.dirname(require.resolve("swc-loader/package.json")),
+        path.resolve(__dirname, "../node_modules"), // for monorepo/npm
+        path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
     module: {

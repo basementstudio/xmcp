@@ -56,7 +56,8 @@ export function getWebpackConfig(
     resolveLoader: {
       modules: [
         "node_modules",
-        path.dirname(require.resolve("swc-loader/package.json")),
+        path.resolve(__dirname, "../node_modules"), // for monorepo/npm
+        path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
     plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
