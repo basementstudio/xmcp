@@ -42,13 +42,12 @@ export async function install(
   version: string
 ) {
   const dependencies = [`xmcp@${version}`, "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
-  const devDependencies = ["swc-loader"];
 
   const commands = {
-    npm: `npm install ${dependencies.join(" ")} && npm install --save-dev ${devDependencies.join(" ")}`,
-    pnpm: `pnpm add ${dependencies.join(" ")} && pnpm add --save-dev ${devDependencies.join(" ")}`,
-    yarn: `yarn add ${dependencies.join(" ")} && yarn add --dev ${devDependencies.join(" ")}`,
-    bun: `bun add ${dependencies.join(" ")} && bun add --dev ${devDependencies.join(" ")}`,
+    npm: `npm install ${dependencies.join(" ")}`,
+    pnpm: `pnpm add ${dependencies.join(" ")}`,
+    yarn: `yarn add ${dependencies.join(" ")}`,
+    bun: `bun add ${dependencies.join(" ")}`,
   };
 
   try {
