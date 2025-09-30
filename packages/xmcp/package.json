@@ -84,7 +84,6 @@
     "zod": "^3.22.4"
   },
   "peerDependencies": {
-    "swc-loader": "^0.2.6",
     "zod": "^3.22.4"
   }
 }

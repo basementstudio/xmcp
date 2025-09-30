@@ -94,6 +94,9 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
     resolve: {
       extensions: [".ts", ".js"],
     },
+    resolveLoader: {
+      modules: ["node_modules", path.resolve(__dirname, "../node_modules")],
+    },
     module: {
       rules: [
         {
