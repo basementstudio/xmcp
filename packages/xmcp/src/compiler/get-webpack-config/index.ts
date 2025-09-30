@@ -54,7 +54,10 @@ export function getWebpackConfig(
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     },
     resolveLoader: {
-      modules: ["node_modules", path.resolve(__dirname, "../node_modules")],
+      modules: [
+        "node_modules",
+        path.dirname(require.resolve("swc-loader/package.json")),
+      ],
     },
     plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
     module: {

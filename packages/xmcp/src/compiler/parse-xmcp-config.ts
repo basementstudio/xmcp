@@ -95,7 +95,10 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
       extensions: [".ts", ".js"],
     },
     resolveLoader: {
-      modules: ["node_modules", path.resolve(__dirname, "../node_modules")],
+      modules: [
+        "node_modules",
+        path.dirname(require.resolve("swc-loader/package.json")),
+      ],
     },
     module: {
       rules: [
