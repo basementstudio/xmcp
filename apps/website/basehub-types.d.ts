@@ -679,6 +679,7 @@ export interface ArticleComponentGenqlSelection{
     body?: BodyGenqlSelection
     ogImage?: BlockOgImageGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "ArticleComponent"
 }
 
 export interface ArticleComponentFilterInput {AND?: (ArticleComponentFilterInput | null),OR?: (ArticleComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null)}
@@ -712,6 +713,7 @@ export interface ArticlesGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: ArticleComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Articles"
 }
 
 export interface AssetsGenqlSelection{
@@ -731,6 +733,7 @@ export interface AssetsGenqlSelection{
     _title?: boolean | number
     glLogoMatcap?: BlockImageGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Assets"
 }
 
 export interface BaseRichTextJsonGenqlSelection{
@@ -738,6 +741,7 @@ export interface BaseRichTextJsonGenqlSelection{
     content?: boolean | number
     toc?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BaseRichTextJson"
 }
 
 export interface BlockAudioGenqlSelection{
@@ -749,6 +753,7 @@ export interface BlockAudioGenqlSelection{
     mimeType?: boolean | number
     url?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockAudio"
 }
 
 export interface BlockCodeSnippetGenqlSelection{
@@ -760,6 +765,7 @@ export interface BlockCodeSnippetGenqlSelection{
     theme?: (Scalars['String'] | null)} } | boolean | number
     language?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockCodeSnippet"
 }
 
 export interface BlockColorGenqlSelection{
@@ -770,6 +776,7 @@ export interface BlockColorGenqlSelection{
     r?: boolean | number
     rgb?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockColor"
 }
 
 export interface BlockDocumentGenqlSelection{
@@ -802,6 +809,7 @@ export interface BlockDocumentGenqlSelection{
     on_mcpTemplateComponent_AsList?: mcpTemplateComponent_AsListGenqlSelection
     on_sidebarTreeComponent_AsList?: sidebarTreeComponent_AsListGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "BlockDocument"
 }
 
 export interface BlockDocumentSysGenqlSelection{
@@ -815,6 +823,7 @@ export interface BlockDocumentSysGenqlSelection{
     slugPath?: boolean | number
     title?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockDocumentSys"
 }
 
 export interface BlockFileGenqlSelection{
@@ -824,6 +833,7 @@ export interface BlockFileGenqlSelection{
     mimeType?: boolean | number
     url?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockFile"
 }
 
 export interface BlockImageGenqlSelection{
@@ -859,6 +869,7 @@ export interface BlockImageGenqlSelection{
     url?: { __args: {anim?: (Scalars['String'] | null), background?: (Scalars['String'] | null), blur?: (Scalars['Int'] | null), border?: (Scalars['String'] | null), brightness?: (Scalars['Int'] | null), compression?: (Scalars['String'] | null), contrast?: (Scalars['Int'] | null), dpr?: (Scalars['Int'] | null), fit?: (Scalars['String'] | null), format?: (Scalars['String'] | null), gamma?: (Scalars['String'] | null), gravity?: (Scalars['String'] | null), height?: (Scalars['Int'] | null), metadata?: (Scalars['String'] | null), quality?: (Scalars['Int'] | null), rotate?: (Scalars['String'] | null), sharpen?: (Scalars['String'] | null), trim?: (Scalars['String'] | null), width?: (Scalars['Int'] | null)} } | boolean | number
     width?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockImage"
 }
 
 export interface BlockListGenqlSelection{
@@ -887,6 +898,7 @@ export interface BlockListGenqlSelection{
     on_mcpTemplateComponent_AsList?: mcpTemplateComponent_AsListGenqlSelection
     on_sidebarTreeComponent_AsList?: sidebarTreeComponent_AsListGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "BlockList"
 }
 
 export interface BlockOgImageGenqlSelection{
@@ -894,6 +906,7 @@ export interface BlockOgImageGenqlSelection{
     url?: boolean | number
     width?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockOgImage"
 }
 
 
@@ -912,6 +925,7 @@ export interface BlockRichTextGenqlSelection{
     wpm?: (Scalars['Int'] | null)} } | boolean | number
     on_Body?: BodyGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "BlockRichText"
 }
 
 export interface BlockVideoGenqlSelection{
@@ -926,6 +940,7 @@ export interface BlockVideoGenqlSelection{
     url?: boolean | number
     width?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BlockVideo"
 }
 
 export interface BodyGenqlSelection{
@@ -941,12 +956,14 @@ export interface BodyGenqlSelection{
     /** Words per minute, defaults to average 183wpm */
     wpm?: (Scalars['Int'] | null)} } | boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "Body"
 }
 
 export interface BodyRichTextGenqlSelection{
     content?: boolean | number
     toc?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "BodyRichText"
 }
 
 export interface CollectionGenqlSelection{
@@ -972,6 +989,7 @@ export interface CollectionGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: SidebarTreeComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Collection"
 }
 
 export interface DateFilter {eq?: (Scalars['DateTime'] | null),isAfter?: (Scalars['DateTime'] | null),isBefore?: (Scalars['DateTime'] | null),isNull?: (Scalars['Boolean'] | null),neq?: (Scalars['DateTime'] | null),onOrAfter?: (Scalars['DateTime'] | null),onOrBefore?: (Scalars['DateTime'] | null)}
@@ -1014,12 +1032,14 @@ export interface DocumentationGenqlSelection{
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
+    __fragmentOn?: "Documentation"
 }
 
 export interface GetUploadSignedURLGenqlSelection{
     signedURL?: boolean | number
     uploadURL?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "GetUploadSignedURL"
 }
 
 export interface ListFilter {isEmpty?: (Scalars['Boolean'] | null),length?: (Scalars['Int'] | null)}
@@ -1030,6 +1050,7 @@ export interface ListMetaGenqlSelection{
     /** Total number of items in collection before any filtering/pagination */
     totalCount?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "ListMeta"
 }
 
 export interface McpTemplateComponentGenqlSelection{
@@ -1056,6 +1077,7 @@ export interface McpTemplateComponentGenqlSelection{
     tag?: boolean | number
     tagline?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "McpTemplateComponent"
 }
 
 export interface McpTemplateComponentFilterInput {AND?: (McpTemplateComponentFilterInput | null),OR?: (McpTemplateComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),connection?: (StringFilter | null),name?: (StringFilter | null),repositoryUrl?: (StringFilter | null),tag?: (StringFilter | null),tagline?: (StringFilter | null)}
@@ -1089,6 +1111,7 @@ export interface McpsGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: McpTemplateComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Mcps"
 }
 
 export interface MediaBlockGenqlSelection{
@@ -1102,6 +1125,7 @@ export interface MediaBlockGenqlSelection{
     on_BlockImage?: BlockImageGenqlSelection
     on_BlockVideo?: BlockVideoGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "MediaBlock"
 }
 
 export interface MediaBlockUnionGenqlSelection{
@@ -1110,7 +1134,8 @@ export interface MediaBlockUnionGenqlSelection{
     on_BlockImage?:BlockImageGenqlSelection,
     on_BlockVideo?:BlockVideoGenqlSelection,
     on_MediaBlock?: MediaBlockGenqlSelection,
-    __typename?: boolean | number
+    __typename?: boolean | number,
+    __fragmentOn?: "MediaBlockUnion"
 }
 
 export interface MutationGenqlSelection{
@@ -1168,6 +1193,7 @@ export interface MutationGenqlSelection{
     /** Transaction ID */
     id: Scalars['String']} })
     __typename?: boolean | number
+    __fragmentOn?: "Mutation"
 }
 
 export interface NumberFilter {eq?: (Scalars['Float'] | null),gt?: (Scalars['Float'] | null),gte?: (Scalars['Float'] | null),isNull?: (Scalars['Boolean'] | null),lt?: (Scalars['Float'] | null),lte?: (Scalars['Float'] | null),neq?: (Scalars['Float'] | null)}
@@ -1203,6 +1229,7 @@ export interface QueryGenqlSelection{
     documentation?: DocumentationGenqlSelection
     showcase?: ShowcaseGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Query"
 }
 
 export interface RepoSysGenqlSelection{
@@ -1213,6 +1240,7 @@ export interface RepoSysGenqlSelection{
     slug?: boolean | number
     title?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "RepoSys"
 }
 
 export interface RichTextJsonGenqlSelection{
@@ -1221,6 +1249,7 @@ export interface RichTextJsonGenqlSelection{
     on_BaseRichTextJson?: BaseRichTextJsonGenqlSelection
     on_BodyRichText?: BodyRichTextGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "RichTextJson"
 }
 
 export interface SearchHighlightGenqlSelection{
@@ -1229,6 +1258,7 @@ export interface SearchHighlightGenqlSelection{
     /** HTML snippet with <mark> tags around the matched terms */
     snippet?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "SearchHighlight"
 }
 
 export interface SelectFilter {excludes?: (Scalars['String'] | null),excludesAll?: (Scalars['String'][] | null),includes?: (Scalars['String'] | null),includesAll?: (Scalars['String'][] | null),includesAny?: (Scalars['String'][] | null),isEmpty?: (Scalars['Boolean'] | null)}
@@ -1261,6 +1291,7 @@ export interface ShowcaseGenqlSelection{
     skip?: (Scalars['Int'] | null)} })
     submissions?: SubmissionsGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "Showcase"
 }
 
 export interface SidebarTreeGenqlSelection{
@@ -1286,6 +1317,7 @@ export interface SidebarTreeGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: SidebarTreeComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "SidebarTree"
 }
 
 export interface SidebarTreeComponentGenqlSelection{
@@ -1318,6 +1350,7 @@ export interface SidebarTreeComponentGenqlSelection{
     skip?: (Scalars['Int'] | null)} })
     target?: ArticleComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "SidebarTreeComponent"
 }
 
 export interface SidebarTreeComponentFilterInput {AND?: (SidebarTreeComponentFilterInput | null),OR?: (SidebarTreeComponentFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),collection?: (ListFilter | null),target?: (SidebarTreeComponentFilterInput__target_0___article | null)}
@@ -1341,6 +1374,7 @@ export interface SubmissionsGenqlSelection{
     ingestKey?: boolean | number
     schema?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "Submissions"
 }
 
 export interface TargetBlock {focus?: (Scalars['Boolean'] | null),id: Scalars['String'],label: Scalars['String']}
@@ -1354,6 +1388,7 @@ export interface TransactionStatusGenqlSelection{
     startedAt?: boolean | number
     status?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "TransactionStatus"
 }
 
 export interface VariantGenqlSelection{
@@ -1363,6 +1398,7 @@ export interface VariantGenqlSelection{
     isDefault?: boolean | number
     label?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "Variant"
 }
 
 export interface _AgentStartGenqlSelection{
@@ -1398,6 +1434,7 @@ export interface _AgentStartGenqlSelection{
     slackInstallUrl?: boolean | number
     systemPrompt?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "_AgentStart"
 }
 
 export interface _BranchInfoGenqlSelection{
@@ -1422,12 +1459,14 @@ export interface _BranchInfoGenqlSelection{
     updatedAt?: boolean | number
     workingRootBlockId?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "_BranchInfo"
 }
 
 export interface _BranchesGenqlSelection{
     _meta?: ListMetaGenqlSelection
     items?: _BranchInfoGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "_Branches"
 }
 
 export interface _CommitInfoGenqlSelection{
@@ -1445,12 +1484,14 @@ export interface _CommitInfoGenqlSelection{
     repoId?: boolean | number
     rootBlockId?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "_CommitInfo"
 }
 
 export interface _GitInfoGenqlSelection{
     branch?: boolean | number
     deploymentUrl?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "_GitInfo"
 }
 
 export interface _PlaygroundInfoGenqlSelection{
@@ -1459,11 +1500,13 @@ export interface _PlaygroundInfoGenqlSelection{
     expiresAt?: boolean | number
     id?: boolean | number
     __typename?: boolean | number
+    __fragmentOn?: "_PlaygroundInfo"
 }
 
 export interface _agentsGenqlSelection{
     start?: _AgentStartGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "_agents"
 }
 
 export interface _componentsGenqlSelection{
@@ -1501,6 +1544,7 @@ export interface _componentsGenqlSelection{
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
+    __fragmentOn?: "_components"
 }
 
 export interface articleComponent_AsListGenqlSelection{
@@ -1526,6 +1570,7 @@ export interface articleComponent_AsListGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: ArticleComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "articleComponent_AsList"
 }
 
 export interface mcpTemplateComponent_AsListGenqlSelection{
@@ -1551,6 +1596,7 @@ export interface mcpTemplateComponent_AsListGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: McpTemplateComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "mcpTemplateComponent_AsList"
 }
 
 export interface sidebarTreeComponent_AsListGenqlSelection{
@@ -1576,6 +1622,7 @@ export interface sidebarTreeComponent_AsListGenqlSelection{
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items?: SidebarTreeComponentGenqlSelection
     __typename?: boolean | number
+    __fragmentOn?: "sidebarTreeComponent_AsList"
 }
 
 export interface FragmentsMap {

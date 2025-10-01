@@ -39,7 +39,7 @@
     ".next/types/**/*.ts",
     "basehub.d.ts",
     "basehub.config.ts"
-  ],
+  , "basehub-types.d.ts"],
   "exclude": [
     "node_modules"
   ]
