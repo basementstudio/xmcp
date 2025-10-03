@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.4",
-    "@vercel/mcp-adapter": "^0.11.1",
     "express": "^4.18.2",
     "zod": "3.24.4"
   },

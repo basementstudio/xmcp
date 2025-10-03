@@ -36,9 +36,6 @@ catalogs:
     '@types/webpack-node-externals':
       specifier: ^3.0.4
       version: 3.0.4
-    '@vercel/mcp-adapter':
-      specifier: ^0.11.1
-      version: 0.11.2
     chalk:
       specifier: ^5.3.0
       version: 5.6.2
@@ -87,6 +84,9 @@ catalogs:
     jsonwebtoken:
       specifier: ^9.0.2
       version: 9.0.2
+    mcp-handler:
+      specifier: ^1.0.2
+      version: 1.0.2
     memfs:
       specifier: ^4.17.2
       version: 4.47.0
@@ -303,9 +303,6 @@ importers:
 
   examples/auth-nextjs:
     dependencies:
-      '@vercel/mcp-adapter':
-        specifier: ^0.11.1
-        version: 0.11.2(@modelcontextprotocol/sdk@1.18.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
       next:
         specifier: 15.5.2
         version: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -619,9 +616,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.11.4
         version: 1.18.2
-      '@vercel/mcp-adapter':
-        specifier: ^0.11.1
-        version: 0.11.2(@modelcontextprotocol/sdk@1.18.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
       express:
         specifier: ^4.18.2
         version: 4.21.2
@@ -962,9 +956,6 @@ importers:
       '@types/webpack-node-externals':
         specifier: 'catalog:'
         version: 3.0.4(@swc/core@1.13.5)
-      '@vercel/mcp-adapter':
-        specifier: 'catalog:'
-        version: 0.11.2(@modelcontextprotocol/sdk@1.18.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
       chalk:
         specifier: 'catalog:'
         version: 5.6.2
@@ -1007,6 +998,9 @@ importers:
       jsonwebtoken:
         specifier: 'catalog:'
         version: 9.0.2
+      mcp-handler:
+        specifier: 'catalog:'
+        version: 1.0.2(@modelcontextprotocol/sdk@1.18.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))
       memfs:
         specifier: 'catalog:'
         version: 4.47.0
@@ -5633,6 +5627,16 @@ packages:
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
+
+  mcp-handler@1.0.2:
+    resolution: {integrity: sha512-dTZR0KZ0rqIORHFUmG4wFMJwp608gtc2x602hxaFQOmb0L2Ahc++Vcc6QoRWr92VTK7DQmEIqrHbhVCjomTplg==}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/sdk': ^1.12.0
+      next: '>=13.0.0'
+    peerDependenciesMeta:
+      next:
+        optional: true
 
   mdast-util-from-markdown@2.0.2:
     resolution: {integrity: sha512-uZhTV/8NBuw0WHkPTrCqDOl0zVe1BIng5ZtHoDk49ME1qqcjYmmLmOf0gELgcRMxN4w2iuIeVso5/6QymSrgmA==}
@@ -13026,6 +13030,15 @@ snapshots:
   markdown-extensions@2.0.0: {}
 
   math-intrinsics@1.1.0: {}
+
+  mcp-handler@1.0.2(@modelcontextprotocol/sdk@1.18.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.18.2
+      chalk: 5.6.2
+      commander: 11.1.0
+      redis: 4.7.1
+    optionalDependencies:
+      next: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
 
   mdast-util-from-markdown@2.0.2:
     dependencies:
