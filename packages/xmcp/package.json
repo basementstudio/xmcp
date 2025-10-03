@@ -49,7 +49,7 @@
     "@swc/core": "catalog:",
     "@types/express": "catalog:",
     "@types/webpack-node-externals": "catalog:",
-    "@vercel/mcp-adapter": "catalog:",
+    "mcp-handler": "catalog:",
     "chalk": "catalog:",
     "chokidar": "catalog:",
     "clean-webpack-plugin": "catalog:",
