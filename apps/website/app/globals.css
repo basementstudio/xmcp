@@ -1,0 +1,310 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./shiki.css";
+
+:root {
+  --background: #000000;
+  --foreground: #bababa;
+  --muted: #757575;
+  --spacing: 0.25rem;
+  --radius: 0.625rem;
+  --sh-class: #2d5e9d;
+  --sh-identifier: #354150;
+  --sh-sign: #8996a3;
+  --sh-property: #0550ae;
+  --sh-entity: #249a97;
+  --sh-jsxliterals: #6266d1;
+  --sh-string: #00a99a;
+  --sh-keyword: #f47067;
+  --sh-comment: #999;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --font-mono: var(--font-geist-mono);
+  --font-size-sm: 0.9rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-mono);
+
+    p,
+    li {
+      @apply text-sm text-pretty font-sans;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      @apply text-white text-pretty font-mono;
+    }
+
+    .prose .anchor {
+      @apply absolute invisible no-underline;
+      margin-left: -1em;
+      padding-right: 0.5em;
+      width: 80%;
+      max-width: 700px;
+      cursor: pointer;
+    }
+
+    .anchor:hover {
+      @apply visible;
+    }
+
+    .prose {
+      @apply font-sans;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .prose * {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .prose a {
+      @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white font-sans;
+    }
+
+    .prose h1 a,
+    .prose h2 a,
+    .prose h3 a,
+    .prose h4 a,
+    .prose h5 a,
+    .prose h6 a {
+      @apply no-underline;
+    }
+
+    .prose .anchor:after {
+      @apply text-white/40;
+      content: "#";
+    }
+
+    .prose *:hover > .anchor {
+      @apply visible;
+    }
+
+    .prose pre {
+      @apply bg-black/20 overflow-x-auto py-2 px-2 text-sm;
+    }
+
+    .prose code {
+      @apply px-2 py-0.5;
+      color: #ffffff;
+    }
+
+    .prose code:has(pre) {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .prose pre code {
+      @apply p-0;
+      border: initial;
+      line-height: 160%;
+      font-size: 0.7rem;
+    }
+
+    .prose code span {
+      @apply font-medium;
+      font-size: 1rem;
+    }
+
+    .prose code .token.comment {
+      /* Removed italic */
+    }
+
+    .prose img {
+      /* Don't apply styles to next/image */
+      @apply m-0 max-w-full w-full h-auto;
+    }
+
+    .prose p {
+      @apply font-sans;
+      color: #c6c6c6;
+      /* letter-spacing: -0.5px; */
+      line-height: 180%;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .prose p code,
+    .prose li code {
+      @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
+    }
+
+    .prose li code {
+      @apply text-[0.75rem] px-[1px] py-[2px];
+    }
+
+    .prose h1,
+    h1 {
+      @apply text-[2rem] font-medium tracking-tight mt-6 mb-2;
+    }
+
+    .prose h2,
+    h2 {
+      @apply text-[1.5rem] font-medium tracking-tight mb-2 mt-3;
+    }
+
+    .prose h3,
+    h3 {
+      @apply text-[1.25rem] font-medium tracking-tight mb-2 mt-3;
+    }
+
+    .prose h4,
+    h4 {
+      @apply text-[1rem] font-medium tracking-tight mb-2 mt-3;
+    }
+
+    .prose strong,
+    strong {
+      @apply font-medium;
+      color: #fff;
+    }
+
+    .prose ul {
+      @apply font-mono text-sm mt-4;
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .prose ol {
+      @apply list-decimal pl-6 mt-4;
+    }
+
+    .prose li {
+      @apply my-3 relative;
+      font-size: 1rem;
+      padding-left: 1rem;
+    }
+
+    .prose ul li::before {
+      content: "⊹ ";
+      position: absolute;
+      left: 0;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .prose hr {
+      @apply border-white/20;
+    }
+
+    .prose > :first-child {
+      /* Override removing top margin, causing layout shift */
+      /* margin-top: 1.25em !important; */
+      /* margin-bottom: 1.25em !important; */
+    }
+
+    pre::-webkit-scrollbar {
+      display: none;
+    }
+
+    pre {
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+      font-size: 0.8rem;
+    }
+
+    /* Remove Safari input shadow on mobile */
+    input[type="text"],
+    input[type="email"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+    table {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .title {
+      text-wrap: balance;
+    }
+
+    .terminal-container {
+      border: 0.516px solid #929292;
+      background:
+        radial-gradient(
+          88.13% 114.4% at 100% 44.44%,
+          rgba(255, 255, 255, 0) 43.51%,
+          rgba(255, 255, 255, 0.4) 70.35%
+        ),
+        linear-gradient(
+          214deg,
+          rgba(234, 234, 234, 0.7) 19.77%,
+          rgba(234, 234, 234, 0.95) 22.28%,
+          rgba(237, 237, 237, 0) 100%
+        );
+      box-shadow:
+        -2.582px -1.549px 11.878px 0px rgba(0, 0, 0, 0.04) inset,
+        -1.033px -0.516px 0px 0px #fff inset,
+        -1.033px -1.549px 1.446px 0px rgba(255, 255, 255, 0.55) inset,
+        -1.033px 0.516px 0px 0px #fff inset,
+        0px 1.033px 1.239px 0px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  /* Text selection styling */
+  ::selection {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  ::-moz-selection {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 1px solid white;
+    outline-offset: 2px;
+  }
+
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Firefox scrollbar */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+}

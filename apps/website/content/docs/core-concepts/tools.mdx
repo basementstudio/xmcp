@@ -1,0 +1,83 @@
+---
+title: "Tools"
+metadataTitle: "Tools | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to create and use tools in your xmcp application."
+---
+
+`xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
+
+The tool file should export three elements:
+
+- **Schema**: The input parameters using Zod schemas.
+- **Metadata**: The tool's identity and behavior hints.
+- **Default**: The tool handler function.
+
+```typescript
+// src/tools/greet.ts
+
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+  annotations: {
+    title: "Greet the user",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+// Tool implementation
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const result = `Hello, ${name}!`;
+
+  return {
+    content: [{ type: "text", text: result }],
+  };
+}
+```
+
+If you're returning a string or number only, you can shortcut the return value to be the string or number directly.
+
+```typescript
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+We encourage to use this shortcut for readability, and restrict the usage of the content array type only for complex responses, like images, audio or videos.
+
+## File exports
+
+### 1. Schema
+
+The schema object defines the tool's parameters with:
+
+- **Key**: Parameter name.
+- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Purpose**: Type validation and automatic parameter documentation.
+
+### 2. Metadata
+
+Define the tool's identity and behavior hints. The metadata object provides:
+
+- **Name**: Unique identifier for the tool
+- **Description**: Brief explanation of what the tool does
+- **Annotations**: Behavioral hints for AI models and UIs
+
+### 3. Implementation
+
+The default export function that performs the actual work.
+
+- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
+- **Returns**: MCP-compatible response with content array.
+- **Async**: Supports async operations for API calls, file I/O, etc.

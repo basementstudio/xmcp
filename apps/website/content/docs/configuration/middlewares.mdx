@@ -1,0 +1,47 @@
+---
+title: "Middlewares"
+metadataTitle: "Middlewares | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to use middlewares for request/response processing."
+---
+
+When building an `HTTP server`, you can use middlewares to intercept the request and response. This is useful for authentication, rate limiting, and other common tasks.
+
+To get started, create a `middleware.ts` file with the following content:
+
+```typescript
+// src/middleware.ts
+
+import { type Middleware } from "xmcp";
+
+const middleware: Middleware = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!customHeaderValidation(authHeader)) {
+    res.status(401).json({ error: "Invalid API key" });
+    return;
+  }
+
+  return next();
+};
+
+export default middleware;
+```
+
+Middlewares can also be defined as an array. Useful for when you need to chain multiple middlewares.
+
+```typescript
+// src/middleware.ts
+
+import { type Middleware } from "xmcp";
+
+const middleware: Middleware = [
+  (req, res, next) => {
+    // ...
+    return next();
+  },
+  // ... other middlewares
+];
+
+export default middleware;
+```

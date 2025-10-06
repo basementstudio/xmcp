@@ -1,0 +1,41 @@
+---
+title: "API Key"
+metadataTitle: "API Key Authentication | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to use API key authentication in your xmcp application."
+---
+
+To enable API key authentication, you can use the `apiKeyAuthMiddleware` middleware on your app.
+
+```typescript
+// src/middleware.ts
+
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = [
+  apiKeyAuthMiddleware({
+    headerName: "x-api-key",
+    apiKey: "12345",
+  }),
+  // ... other middlewares
+];
+
+export default middleware;
+```
+
+This middleware can also be used with a validation function. It should **return a boolean** value indicating if the API key is valid.
+
+```typescript
+// src/middleware.ts
+
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = apiKeyAuthMiddleware({
+  headerName: "x-api-key",
+  validateApiKey: async (apiKey) => {
+    return apiKey === "12345";
+  },
+});
+
+export default middleware;
+```

@@ -1,0 +1,100 @@
+---
+title: "Prompts"
+metadataTitle: "Prompts | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to create and use prompts in your xmcp application."
+---
+
+`xmcp` detects files under the `/src/prompts/` directory and registers them as prompts. This path can be configured in the `xmcp.config.ts` file.
+
+The prompt file should export three elements:
+
+- **Schema**: The input parameters using Zod schemas.
+- **Metadata**: The prompt's identity and behavior hints.
+- **Default**: The prompt handler function.
+
+```typescript
+// src/prompts/review-code.ts
+
+import { z } from "zod";
+import { type InferSchema, type PromptMetadata } from "xmcp";
+
+// Define the schema for prompt parameters
+export const schema = {
+  code: z.string().describe("The code to review"),
+};
+
+// Define prompt metadata
+export const metadata: PromptMetadata = {
+  name: "review-code",
+  title: "Review Code",
+  description: "Review code for best practices and potential issues",
+  role: "user",
+};
+
+// Prompt implementation
+export default function reviewCode({ code }: InferSchema<typeof schema>) {
+  return {
+    type: "text",
+    text: `Please review this code for:
+      - Code quality and best practices
+      - Potential bugs or security issues
+      - Performance optimizations
+      - Readability and maintainability
+
+      Code to review:
+      \`\`\`
+      ${code}
+      \`\`\``,
+  };
+}
+```
+
+If you're returning a string or number only, you can shortcut the return value to be the string or number directly.
+
+```typescript
+export default function reviewCode({ code }: InferSchema<typeof schema>) {
+  return `Please review this code for:
+    - Code quality and best practices
+    - Potential bugs or security issues
+    - Performance optimizations
+    - Readability and maintainability
+
+    Code to review:
+    \`\`\`
+    ${code}
+    \`\`\``;
+  `;
+}
+```
+
+We encourage to use this shortcut for readability, and restrict the usage of the content object type only for complex responses, like images, audio or videos.
+
+## File exports
+
+### 1. Schema
+
+The schema object defines the prompt's parameters with:
+
+- **Key**: Parameter name.
+- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Purpose**: Type validation and automatic parameter documentation.
+
+> This is the exact same as the schema object for tools.
+
+### 2. Metadata
+
+The metadata object provides:
+
+- **Name**: Unique identifier for the prompt
+- **Title**: Human-readable title for the prompt
+- **Description**: Brief explanation of what the prompt does
+- **Role**: The role of the prompt in the conversation. Can be either `user` or `assistant`.
+
+### 3. Implementation
+
+The default export function that performs the actual work.
+
+- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
+- **Returns**: MCP-compatible response with content type.
+- **Async**: Supports async operations for API calls, file I/O, etc.

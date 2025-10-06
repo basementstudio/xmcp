@@ -1,0 +1,27 @@
+---
+title: "Project structure"
+metadataTitle: "Project structure | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Understand the basic project layout and organization."
+---
+
+A basic project structure is as follows:
+
+```
+my-project/
+├── src/
+│   ├── middleware.ts   # Middleware for http request/response processing
+│   └── tools/          # Tool files are auto-discovered here
+│       ├── greet.ts
+│       ├── search.ts
+│   └── prompts/          # Prompt files are auto-discovered here
+│       ├── review-code.ts
+│       ├── team-greeting.ts
+│   └── resources/      # Resource files are auto-discovered here
+│       ├── (config)/app.ts
+│       ├── (users)/[userId]/profile.ts
+├── dist/               # Built output (generated)
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts       # Configuration file for xmcp
+```

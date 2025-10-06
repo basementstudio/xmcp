@@ -1,0 +1,39 @@
+---
+title: "Usage with Next.js"
+metadataTitle: "Usage with Next.js | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to integrate xmcp with your existing Next.js application."
+---
+
+> **Warning**: This is an experimental feature and may not work as expected.
+
+`xmcp` can work on top of your existing Next.js project. To get started, run the following command:
+
+```bash
+npx init-xmcp@latest
+```
+
+After setting up the project, your build and dev commands should look like this:
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp dev & next dev",
+    "build": "xmcp build && next build"
+  }
+}
+```
+
+The CLI will ask where to place the `tools` and `prompts` directories and what is the `url` for the MCP server.
+
+It will create the tools and prompts folders and add an endpoint to your Next.js app.
+
+```typescript
+// src/app/mcp/route.ts
+
+import { xmcpHandler } from "@xmcp/adapter";
+
+export { xmcpHandler as GET, xmcpHandler as POST };
+```
+
+**Note**: `middleware.ts` and `xmcp/headers` are not supported since Next.js already supports those features.

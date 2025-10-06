@@ -1,0 +1,39 @@
+---
+title: "Usage with Express"
+metadataTitle: "Usage with Express | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to integrate xmcp with your existing Express application."
+---
+
+> **Warning**: This is an experimental feature and may not work as expected.
+
+`xmcp` can work on top of your existing Express project. To get started, run the following command:
+
+```bash
+npx init-xmcp@latest
+```
+
+After setting up the project, your build and dev command should look like this:
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp dev & existing-build-command",
+    "build": "xmcp build && existing-build-command"
+  }
+}
+```
+
+When running `dev` or `build` command, `xmcp` will bundle your tools into `.xmcp/adapter`.
+
+You should add the `/mcp` endpoint in your existing server.
+
+```typescript
+import { xmcpHandler } from "path/to/.xmcp/adapter";
+
+app.get("/mcp", xmcpHandler);
+
+app.post("/mcp", xmcpHandler);
+```
+
+**Note**: `middleware.ts` is not supported in this mode.

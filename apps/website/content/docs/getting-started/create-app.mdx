@@ -1,0 +1,25 @@
+---
+title: "Create a new xmcp app"
+metadataTitle: "Create a new xmcp app | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to create a new xmcp application from scratch."
+---
+
+The easiest way to get started with `xmcp` is by using `create-xmcp-app`. This CLI tool allows you to scaffold a template project with all the necessary files and dependencies to get you up and running quickly.
+
+```bash
+npx create-xmcp-app@latest
+```
+
+You will be asked for the project name and then guided through a series of prompts to configure your project.
+
+## Building with HTTP
+
+The HTTP transport is your go-to choice when you want to deploy your MCP on a server. It can be used to create tools that fetch data from your database or perform other fetch operations.
+
+`xmcp` uses stateless mode. This means that every time you call a tool or prompt, a new transport will be instantiated. There is no tracking of sessions or state.
+
+## Building with STDIO
+
+The STDIO transport is useful when you want to run your MCP server locally, enabling your AI to perform operations on your machine. For example, you can create tools for searching and compressing images in a folder.
+You can also publish the server as a package on NPM.

@@ -1,0 +1,38 @@
+---
+title: "OAuth"
+metadataTitle: "OAuth Authentication | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to use OAuth authentication in your xmcp application."
+---
+
+> **Warning**: This is an experimental feature and may not work as expected.
+
+The OAuth provider implementation strictly implements Dynamic Client Registration.
+
+You can configure the OAuth provider by adding the following to your `xmcp.config.ts` file:
+
+```typescript
+// xmcp.config.ts
+
+import { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  experimental: {
+    oauth: {
+      baseUrl: "https://my-app.com",
+      endpoints: {
+        authorizationUrl: "https://auth-provider.com/oauth/authorize",
+        tokenUrl: "https://auth-provider.com/oauth/token",
+        registerUrl: "https://auth-provider.com/oauth/register", // mandatory
+      },
+      issuerUrl: "https://my-app.com",
+      defaultScopes: ["openid", "profile", "email"],
+      pathPrefix: "/oauth2",
+    },
+  },
+};
+
+export default config;
+```
+
+The usage of this configuration is only limited to the HTTP transport on apps scaffolded with `create-xmcp-app`, not with the adapter modes.

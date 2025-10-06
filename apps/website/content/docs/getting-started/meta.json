@@ -1,0 +1,7 @@
+{
+  "title": "Getting Started",
+  "icon": "RocketLaunchIcon",
+  "pages": ["create-app", "connecting", "commands", "project-structure"],
+  "defaultOpen": true,
+  "root": true
+}
