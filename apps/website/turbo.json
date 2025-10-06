@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**"],
-      "env": ["OPENROUTER_API_KEY"]
+      "env": ["OPENROUTER_API_KEY", "BASEHUB_TOKEN"]
     },
     "lint": {
       "outputs": [],
