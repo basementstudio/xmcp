@@ -13,5 +13,6 @@
     "dev": {
       "cache": false
     }
-  }
+  },
+  "extends": ["//"]
 }
