@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { cn } from "../lib/cn";
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
-import { buttonVariants } from "./ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,

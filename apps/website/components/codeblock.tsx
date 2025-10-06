@@ -7,19 +7,11 @@ import {
   type ReactNode,
   type RefObject,
   useContext,
-  useMemo,
   useRef,
 } from "react";
 import { cn } from "@/lib/cn";
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/tabs.unstyled";
-import { mergeRefs } from "@/lib/merge-refs";
+import { buttonVariants } from "./ui/button";
 
 export interface CodeBlockProps extends ComponentProps<"figure"> {
   /**
@@ -190,70 +182,4 @@ function CopyButton({
       {checked ? <Check /> : <Clipboard />}
     </button>
   );
-}
-
-export function CodeBlockTabs({ ref, ...props }: ComponentProps<typeof Tabs>) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const nested = useContext(TabsContext) !== null;
-
-  return (
-    <Tabs
-      ref={mergeRefs(containerRef, ref)}
-      {...props}
-      className={cn(
-        "bg-fd-card rounded-xl border",
-        !nested && "my-4",
-        props.className
-      )}
-    >
-      <TabsContext.Provider
-        value={useMemo(
-          () => ({
-            containerRef,
-            nested,
-          }),
-          [nested]
-        )}
-      >
-        {props.children}
-      </TabsContext.Provider>
-    </Tabs>
-  );
-}
-
-export function CodeBlockTabsList(props: ComponentProps<typeof TabsList>) {
-  return (
-    <TabsList
-      {...props}
-      className={cn(
-        "flex flex-row px-2 overflow-x-auto text-fd-muted-foreground",
-        props.className
-      )}
-    >
-      {props.children}
-    </TabsList>
-  );
-}
-
-export function CodeBlockTabsTrigger({
-  children,
-  ...props
-}: ComponentProps<typeof TabsTrigger>) {
-  return (
-    <TabsTrigger
-      {...props}
-      className={cn(
-        "relative group inline-flex text-sm font-medium text-nowrap items-center transition-colors gap-2 px-2 py-1.5 hover:text-fd-accent-foreground data-[state=active]:text-fd-primary [&_svg]:size-3.5",
-        props.className
-      )}
-    >
-      <div className="absolute inset-x-2 bottom-0 h-px group-data-[state=active]:bg-fd-primary" />
-      {children}
-    </TabsTrigger>
-  );
-}
-
-// TODO: currently Vite RSC plugin has problem with `asChild` due to children is automatically wrapped in <Fragment />, maybe revisit this in future
-export function CodeBlockTab(props: ComponentProps<typeof TabsContent>) {
-  return <TabsContent {...props} />;
 }

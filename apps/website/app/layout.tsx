@@ -3,105 +3,19 @@ import { Analytics } from "@vercel/analytics/next";
 import { Toolbar } from "basehub/next-toolbar";
 import { Footer } from "../components/layout/footer";
 import { Header } from "../components/layout/header";
-import localFont from "next/font/local";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
+import { Geist, Geist_Mono } from "next/font/google";
 
-const geistMono = localFont({
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  src: [
-    {
-      path: "./fonts/GeistMono-Thin.woff2",
-      weight: "100",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-ThinItalic.woff2",
-      weight: "100",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-ExtraLight.woff2",
-      weight: "200",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-ExtraLightItalic.woff2",
-      weight: "200",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-Light.woff2",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-LightItalic.woff2",
-      weight: "300",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-Italic.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-MediumItalic.woff2",
-      weight: "500",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-SemiBold.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-SemiBoldItalic.woff2",
-      weight: "600",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-Bold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-BoldItalic.woff2",
-      weight: "700",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-ExtraBold.woff2",
-      weight: "800",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-ExtraBoldItalic.woff2",
-      weight: "800",
-      style: "italic",
-    },
-    {
-      path: "./fonts/GeistMono-Black.woff2",
-      weight: "900",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GeistMono-BlackItalic.woff2",
-      weight: "900",
-      style: "italic",
-    },
-  ],
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -165,7 +79,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body
-        className={`${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] font-mono mx-auto`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] font-mono mx-auto`}
       >
         <RootProvider search={{ SearchDialog: DefaultSearchDialog }}>
           <Header />
