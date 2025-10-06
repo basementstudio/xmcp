@@ -1,5 +1,4 @@
 import { ProvideLinksToolSchema } from "../../../lib/inkeep-qa-schema";
-import { openai } from "@ai-sdk/openai";
 import { convertToModelMessages, streamText } from "ai";
 import { source } from "@/lib/source";
 import { getLLMText } from "@/lib/get-llm-text";

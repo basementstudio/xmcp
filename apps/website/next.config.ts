@@ -7,6 +7,7 @@ const withMDX = createMDX({
 });
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   webpack: (config) => {
     /** Add glslify loader to webpack */
     config.module.rules.push({

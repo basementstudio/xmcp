@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "basehub dev & next dev --turbopack",
-    "build": "basehub && next build",
+    "build": "basehub && next build --turbopack",
     "start": "next start",
     "lint": "next lint"
   },
