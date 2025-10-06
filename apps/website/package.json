@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "basehub dev & xmcp dev & next dev --turbopack",
-    "build": "basehub && xmcp build && next build",
+    "dev": "basehub dev & next dev --turbopack",
+    "build": "basehub && next build",
     "start": "next start",
     "lint": "next lint"
   },
