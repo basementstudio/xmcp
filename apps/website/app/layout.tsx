@@ -79,7 +79,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#000000" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col max-w-[1400px] font-mono mx-auto`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <RootProvider search={{ SearchDialog: DefaultSearchDialog }}>
           <Header />

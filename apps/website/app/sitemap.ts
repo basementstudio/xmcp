@@ -2,6 +2,7 @@ import { getAllBlogPosts } from "../utils/blog";
 
 export const baseUrl = "https://xmcp.dev";
 
+// TO DO update!
 export default async function sitemap() {
   const routes = ["", "/docs", "/blog", "/examples", "/x", "/showcase"].map(
     (route) => ({
