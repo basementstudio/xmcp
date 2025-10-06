@@ -2,7 +2,7 @@ import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import Image from "next/image";
 import { CopyButton } from "../../ui/copy-button";
-import { fetchMCPs } from "../../../basehub";
+import { fetchMCPs } from "@/basehub/";
 //import { getRepoStars } from "@/utils/github";
 
 export type ShowcaseItem = {

@@ -1,6 +1,6 @@
 "use server";
 
-import { fetchShowcaseForm } from "../../basehub";
+import { fetchShowcaseForm } from "@/basehub/";
 import { sendEvent } from "basehub/events";
 import { ShowcaseSchema, type ShowcaseFormData, type State } from "./schema";
 

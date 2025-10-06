@@ -1,4 +1,4 @@
-import { fetchAssets } from "../../../basehub";
+import { fetchAssets } from "@/basehub/";
 import { XmcpLogo as ThreeLogo } from "./client";
 
 export const XmcpLogo = async () => {

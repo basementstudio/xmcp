@@ -22,10 +22,10 @@ importers:
     dependencies:
       '@ai-sdk/openai':
         specifier: ^2.0.42
-        version: 2.0.42(zod@3.25.76)
+        version: 2.0.42(zod@4.1.12)
       '@ai-sdk/react':
         specifier: ^2.0.59
-        version: 2.0.60(react@19.1.0)(zod@3.25.76)
+        version: 2.0.60(react@19.1.0)(zod@4.1.12)
       '@mdx-js/loader':
         specifier: ^3.1.0
         version: 3.1.0(acorn@8.15.0)(webpack@5.99.9)
@@ -40,7 +40,7 @@ importers:
         version: 15.3.5(@mdx-js/loader@3.1.0(acorn@8.15.0)(webpack@5.99.9))(@mdx-js/react@3.1.0(@types/react@19.1.8)(react@19.1.0))
       '@openrouter/ai-sdk-provider':
         specifier: ^1.2.0
-        version: 1.2.0(ai@5.0.60(zod@3.25.76))(zod@3.25.76)
+        version: 1.2.0(ai@5.0.60(zod@4.1.12))(zod@4.1.12)
       '@orama/orama':
         specifier: ^3.1.14
         version: 3.1.14
@@ -97,10 +97,10 @@ importers:
         version: 0.11.1(@modelcontextprotocol/sdk@1.13.2)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       ai:
         specifier: ^5.0.56
-        version: 5.0.60(zod@3.25.76)
+        version: 5.0.60(zod@4.1.12)
       basehub:
         specifier: ^9.0.19
-        version: 9.0.19(@babel/runtime@7.27.6)(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)(zod@3.25.76)
+        version: 9.0.19(@babel/runtime@7.27.6)(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)(zod@4.1.12)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -183,8 +183,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       zod:
-        specifier: ^3.25.76
-        version: 3.25.76
+        specifier: ^4.1.11
+        version: 4.1.12
       zustand:
         specifier: ^5.0.6
         version: 5.0.6(@types/react@19.1.8)(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
@@ -7881,9 +7881,6 @@ packages:
   zod@3.25.67:
     resolution: {integrity: sha512-idA2YXwpCdqUSKRCACDE6ItZD9TZzy3OZMtpfLoh6oPR47lipysRrJfjzMqFxQ3uJuUPyUeWe1r9vLH33xO/Qw==}
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.0.10:
     resolution: {integrity: sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA==}
 
@@ -7940,12 +7937,12 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.8(zod@4.0.10)
       zod: 4.0.10
 
-  '@ai-sdk/gateway@1.0.33(zod@3.25.76)':
+  '@ai-sdk/gateway@1.0.33(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.10(zod@4.1.12)
       '@vercel/oidc': 3.0.1
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@ai-sdk/openai@2.0.27(zod@4.0.10)':
     dependencies:
@@ -7953,18 +7950,18 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.8(zod@4.0.10)
       zod: 4.0.10
 
-  '@ai-sdk/openai@2.0.42(zod@3.25.76)':
+  '@ai-sdk/openai@2.0.42(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
-      zod: 3.25.76
+      '@ai-sdk/provider-utils': 3.0.10(zod@4.1.12)
+      zod: 4.1.12
 
-  '@ai-sdk/provider-utils@3.0.10(zod@3.25.76)':
+  '@ai-sdk/provider-utils@3.0.10(zod@4.1.12)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@ai-sdk/provider-utils@3.0.8(zod@4.0.10)':
     dependencies:
@@ -7987,15 +7984,15 @@ snapshots:
     optionalDependencies:
       zod: 4.0.10
 
-  '@ai-sdk/react@2.0.60(react@19.1.0)(zod@3.25.76)':
+  '@ai-sdk/react@2.0.60(react@19.1.0)(zod@4.1.12)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
-      ai: 5.0.60(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.10(zod@4.1.12)
+      ai: 5.0.60(zod@4.1.12)
       react: 19.1.0
       swr: 2.3.6(react@19.1.0)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -8118,9 +8115,9 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@basehub/mutation-api-helpers@2.1.2(zod@3.25.76)':
+  '@basehub/mutation-api-helpers@2.1.2(zod@4.1.12)':
     dependencies:
-      zod: 3.25.76
+      zod: 4.1.12
 
   '@better-auth/utils@0.2.5':
     dependencies:
@@ -8732,8 +8729,8 @@ snapshots:
       express-rate-limit: 7.5.1(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod: 3.24.4
+      zod-to-json-schema: 3.24.6(zod@3.24.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -8749,8 +8746,8 @@ snapshots:
       express-rate-limit: 7.5.1(express@5.1.0)
       pkce-challenge: 5.0.0
       raw-body: 3.0.0
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod: 3.24.4
+      zod-to-json-schema: 3.24.6(zod@3.24.4)
     transitivePeerDependencies:
       - supports-color
 
@@ -8831,10 +8828,10 @@ snapshots:
 
   '@nolyfill/is-core-module@1.0.39': {}
 
-  '@openrouter/ai-sdk-provider@1.2.0(ai@5.0.60(zod@3.25.76))(zod@3.25.76)':
+  '@openrouter/ai-sdk-provider@1.2.0(ai@5.0.60(zod@4.1.12))(zod@4.1.12)':
     dependencies:
-      ai: 5.0.60(zod@3.25.76)
-      zod: 3.25.76
+      ai: 5.0.60(zod@4.1.12)
+      zod: 4.1.12
 
   '@opentelemetry/api@1.9.0': {}
 
@@ -10802,13 +10799,13 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 4.0.10
 
-  ai@5.0.60(zod@3.25.76):
+  ai@5.0.60(zod@4.1.12):
     dependencies:
-      '@ai-sdk/gateway': 1.0.33(zod@3.25.76)
+      '@ai-sdk/gateway': 1.0.33(zod@4.1.12)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.10(zod@3.25.76)
+      '@ai-sdk/provider-utils': 3.0.10(zod@4.1.12)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.76
+      zod: 4.1.12
 
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
@@ -11006,9 +11003,9 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  basehub@9.0.19(@babel/runtime@7.27.6)(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)(zod@3.25.76):
+  basehub@9.0.19(@babel/runtime@7.27.6)(@types/react@19.1.8)(react@19.1.0)(typescript@5.8.3)(zod@4.1.12):
     dependencies:
-      '@basehub/mutation-api-helpers': 2.1.2(zod@3.25.76)
+      '@basehub/mutation-api-helpers': 2.1.2(zod@4.1.12)
       '@radix-ui/react-slot': 1.2.3(@types/react@19.1.8)(react@19.1.0)
       '@shikijs/transformers': 1.17.7
       '@xmldom/xmldom': 0.9.8
@@ -11052,7 +11049,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.28.3
       nanostores: 0.11.4
-      zod: 4.0.10
+      zod: 4.1.12
     optionalDependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -11070,7 +11067,7 @@ snapshots:
       jose: 5.10.0
       kysely: 0.28.3
       nanostores: 0.11.4
-      zod: 4.0.10
+      zod: 4.1.12
     optionalDependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -15949,15 +15946,13 @@ snapshots:
 
   yoctocolors-cjs@2.1.2: {}
 
-  zod-to-json-schema@3.24.6(zod@3.25.76):
+  zod-to-json-schema@3.24.6(zod@3.24.4):
     dependencies:
-      zod: 3.25.76
+      zod: 3.24.4
 
   zod@3.24.4: {}
 
   zod@3.25.67: {}
-
-  zod@3.25.76: {}
 
   zod@4.0.10: {}
 
