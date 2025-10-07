@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import Link from "fumadocs-core/link";
 import { type UIMessage, useChat, type UseChatHelpers } from "@ai-sdk/react";
@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@radix-ui/react-dialog";
 import { Icons } from "../icons";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 const Context = createContext<{
   open: boolean;
@@ -75,7 +76,16 @@ function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
   );
 }
 
-function AskAIInput(props: ComponentProps<"div">) {
+function AskAIInput({
+  autoFocus = false,
+  onEscape,
+  showEscButton = true,
+  ...props
+}: ComponentProps<"div"> & {
+  autoFocus?: boolean;
+  onEscape?: () => void;
+  showEscButton?: boolean;
+}) {
   const { status, sendMessage } = useChatContext();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +96,12 @@ function AskAIInput(props: ComponentProps<"div">) {
       setInput("");
     }
   };
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
 
   return (
     <div {...props} className={cn("flex items-center gap-2", props.className)}>
@@ -107,6 +123,10 @@ function AskAIInput(props: ComponentProps<"div">) {
             e.preventDefault();
             onStart();
           }
+          if (e.key === "Escape" && onEscape) {
+            e.preventDefault();
+            onEscape();
+          }
         }}
       />
       {isLoading ? (
@@ -124,14 +144,16 @@ function AskAIInput(props: ComponentProps<"div">) {
           >
             <Icons.send className="size-5" />
           </button>
-          <button
-            key="bn2"
-            type="button"
-            className="transition-opacity duration-200 shrink-0 text-brand-white focus-visible:outline text-sm font-mono"
-            onClick={() => {}}
-          >
-            ESC
-          </button>
+          {onEscape && showEscButton && (
+            <button
+              key="bn2"
+              type="button"
+              className="hidden md:block transition-opacity duration-200 shrink-0 text-brand-white focus-visible:outline text-sm font-mono"
+              onClick={onEscape}
+            >
+              ESC
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -275,7 +297,6 @@ function Message({
 
 function MobileList(props: Omit<ComponentProps<"div">, "dir">) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -303,46 +324,20 @@ function MobileList(props: Omit<ComponentProps<"div">, "dir">) {
     };
   }, []);
 
-  useEffect(() => {
-    const element = wrapperRef.current;
-    if (!element) return;
-
-    const observer = new ResizeObserver(() => {
-      const viewport = element.firstElementChild!;
-
-      element.style.setProperty(
-        "--fd-animated-height",
-        `${viewport.clientHeight}px`
-      );
-    });
-
-    const viewport = element.firstElementChild;
-    if (viewport) observer.observe(viewport);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
   return (
     <div
-      ref={wrapperRef}
+      ref={containerRef}
       className={cn(
-        "overflow-hidden h-(--fd-animated-height) transition-[height]",
+        "sidebar-scrollbar overflow-y-auto min-w-0 flex flex-col flex-1 p-4",
         props.className
       )}
     >
-      <div
-        ref={containerRef}
-        className="sidebar-scrollbar overflow-y-auto min-w-0 flex flex-col max-h-[calc(100vh-200px)] p-4"
-      >
-        {props.children}
-      </div>
+      {props.children}
     </div>
   );
 }
 
-function MobileDialog({
+function MobilePanel({
   open,
   onOpenChange,
   chat,
@@ -352,19 +347,41 @@ function MobileDialog({
   chat: UseChatHelpers<UIMessage>;
 }) {
   const hasMessages = chat.messages.length > 0;
+  const [showInput, setShowInput] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      // Delay input animation slightly for better visual effect
+      const timer = setTimeout(() => setShowInput(true), 100);
+      return () => clearTimeout(timer);
+    } else {
+      setShowInput(false);
+    }
+  }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay className="fixed inset-0 z-50 bg-brand-black/50" />
-      <DialogContent
-        aria-describedby={undefined}
-        className="fixed bg-brand-black data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom bottom-0 left-0 right-0 z-50 grid w-full rounded-t-xs border-t border-x border-brand-neutral-200 duration-200 overflow-hidden"
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="h-full w-full p-0 bg-brand-black border-none flex flex-col [&>button]:hidden data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 z-[100]"
       >
-        <DialogTitle className="hidden">Ask AI</DialogTitle>
+        <SheetTitle className="sr-only">Ask AI</SheetTitle>
 
-        {/* Messages list - grows upward */}
-        {hasMessages && (
-          <MobileList data-empty={!hasMessages}>
+        {/* Top actions bar */}
+        <div className="flex items-center justify-between p-4 border-b border-brand-neutral-200 bg-brand-black">
+          <AskAIActions alwaysShow />
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="cursor-pointer text-brand-white hover:text-brand-neutral-50 transition-colors"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        {/* Messages list - takes remaining space */}
+        {hasMessages ? (
+          <MobileList>
             <div className="flex flex-col gap-4">
               {chat.messages
                 .filter((msg) => msg.role !== "system")
@@ -373,21 +390,27 @@ function MobileDialog({
                 ))}
             </div>
           </MobileList>
+        ) : (
+          <div className="flex-1" />
         )}
 
-        {/* Input - always at the bottom */}
+        {/* Input - slides up from bottom */}
         <div
-          className={cn(hasMessages ? "border-t border-brand-neutral-200" : "")}
+          className={cn(
+            "border-t border-brand-neutral-200 bg-brand-black transition-transform duration-300 ease-out p-4",
+            hasMessages ? "" : "mt-auto",
+            showInput ? "translate-y-0" : "translate-y-full"
+          )}
         >
-          <div className="flex flex-row items-center gap-2 p-4">
-            <AskAIInput className="flex-1" />
-          </div>
-          <div className="flex items-center justify-end gap-2 px-4 pb-4">
-            <AskAIActions alwaysShow />
-          </div>
+          <AskAIInput
+            className="flex-1"
+            autoFocus={false}
+            onEscape={() => onOpenChange(false)}
+            showEscButton={false}
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -429,7 +452,11 @@ function DesktopDialog({
           className={cn(hasMessages ? "border-t border-brand-neutral-200" : "")}
         >
           <div className="flex flex-row items-center gap-2 p-4">
-            <AskAIInput className="flex-1" />
+            <AskAIInput
+              className="flex-1"
+              autoFocus
+              onEscape={() => onOpenChange(false)}
+            />
           </div>
           {hasMessages && (
             <div className="flex items-center justify-end gap-2 px-4 pb-4">
@@ -491,7 +518,7 @@ export function AskAIDialog({ open, onOpenChange }: AskAIDialogProps) {
       )}
     >
       {isMobile ? (
-        <MobileDialog open={open} onOpenChange={onOpenChange} chat={chat} />
+        <MobilePanel open={open} onOpenChange={onOpenChange} chat={chat} />
       ) : (
         <DesktopDialog open={open} onOpenChange={onOpenChange} chat={chat} />
       )}
