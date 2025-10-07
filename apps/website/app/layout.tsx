@@ -81,7 +81,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
-        <RootProvider search={{ SearchDialog: DefaultSearchDialog }}>
+        <RootProvider
+          search={{
+            SearchDialog: DefaultSearchDialog,
+            options: {
+              links: [
+                ["Getting Started", "/docs/getting-started/introduction"],
+                ["Configuration", "/docs/configuration"],
+                ["Core Concepts", "/docs/core-concepts"],
+                ["Authentication", "/docs/authentication"],
+                ["Integrations", "/docs/integrations"],
+                ["Deployment", "/docs/deployment"],
+              ],
+            },
+          }}
+        >
           <Header />
           {children}
           <Footer />
