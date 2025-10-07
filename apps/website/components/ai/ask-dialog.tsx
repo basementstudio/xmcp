@@ -38,19 +38,51 @@ function useChatContext() {
 
 function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
   const { messages, status, setMessages, regenerate } = useChatContext();
+  const [copied, setCopied] = useState(false);
 
   if (messages.length === 0 && !alwaysShow) return null;
 
   const hasMessages = messages.length > 0;
 
+  const handleCopy = async () => {
+    if (!hasMessages) return;
+
+    const conversationText = messages
+      .filter((msg) => msg.role !== "system")
+      .map((msg) => {
+        const role = msg.role === "user" ? "You" : "AI";
+        const content = msg.parts?.find((p) => p.type === "text")?.text || "";
+        return `${role}: ${content}`;
+      })
+      .join("\n\n");
+
+    await navigator.clipboard.writeText(conversationText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="flex items-center gap-2">
       <button
         type="button"
+        onClick={handleCopy}
         className="cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
         disabled={!hasMessages}
       >
-        <Icons.clipboard className="size-4 text-brand-white" />
+        <span className="relative inline-flex items-center justify-center size-3.5">
+          <Icons.clipboard
+            className={cn(
+              "absolute inset-0 transition-opacity duration-200 text-brand-white size-3.5 mt-[1px]",
+              copied ? "opacity-0" : "opacity-100"
+            )}
+          />
+          <Icons.check
+            className={cn(
+              "absolute inset-0 transition-opacity duration-200 text-brand-white",
+              copied ? "opacity-100" : "opacity-0"
+            )}
+          />
+        </span>
       </button>
       <button
         type="button"
