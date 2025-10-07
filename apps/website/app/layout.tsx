@@ -87,11 +87,11 @@ export default function RootLayout({
             options: {
               links: [
                 ["Getting Started", "/docs/getting-started/introduction"],
-                ["Configuration", "/docs/configuration"],
-                ["Core Concepts", "/docs/core-concepts"],
-                ["Authentication", "/docs/authentication"],
-                ["Integrations", "/docs/integrations"],
-                ["Deployment", "/docs/deployment"],
+                ["Configuration", "/docs/configuration/custom-directories"],
+                ["Core Concepts", "/docs/core-concepts/tools"],
+                ["Authentication", "/docs/authentication/api-key"],
+                ["Integrations", "/docs/integrations/nextjs"],
+                ["Deployment", "/docs/deployment/vercel"],
               ],
             },
           }}
