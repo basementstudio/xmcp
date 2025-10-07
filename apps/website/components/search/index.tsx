@@ -31,6 +31,7 @@ import scrollIntoView from "scroll-into-view-if-needed";
 import { SharedProps } from "fumadocs-ui/contexts/search";
 import { I18nLabel, useI18n } from "fumadocs-ui/contexts/i18n";
 import { Icons } from "../icons";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 export type SearchItemType =
   | (BaseResultType & {
@@ -142,7 +143,7 @@ export function SearchDialogClose({
       type="button"
       onClick={() => onOpenChange(false)}
       className={cn(
-        "text-sm font-mono font-medium px-1 pt-0.5 pb-0.5",
+        "hidden md:block text-sm font-mono font-medium px-1 pt-0.5 pb-0.5",
         className
       )}
       {...props}
@@ -167,7 +168,10 @@ export function SearchDialogOverlay(
   return (
     <DialogOverlay
       {...props}
-      className={cn("fixed inset-0 z-50 bg-brand-black/50", props.className)}
+      className={cn(
+        "fixed inset-0 z-50 bg-brand-black/50 hidden md:block",
+        props.className
+      )}
     />
   );
 }
@@ -177,6 +181,35 @@ export function SearchDialogContent({
   ...props
 }: ComponentProps<typeof DialogContent>) {
   const { text } = useI18n();
+  const { open, onOpenChange } = useSearch();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="bottom"
+          style={{ height: "60vh", maxHeight: "60vh" }}
+          className="!top-16 !bottom-auto w-full md:max-w-[calc(100%-2rem)] mx-auto md:!left-4 md:!right-4 p-0 bg-brand-black border border-brand-neutral-200 flex flex-col [&>button]:hidden data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 rounded-xs z-[100]"
+        >
+          <SheetTitle className="sr-only">{text.search}</SheetTitle>
+          <div className="flex flex-col gap-4 p-4 py-3.5 h-full overflow-hidden">
+            {children}
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <DialogContent
