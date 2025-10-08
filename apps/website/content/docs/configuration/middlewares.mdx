@@ -5,9 +5,9 @@ publishedAt: "2025-07-06"
 summary: "Learn how to use middlewares for request/response processing."
 ---
 
-When building an `HTTP server`, you can use middlewares to intercept the request and response. This is useful for authentication, rate limiting, and other common tasks.
+Middlewares intercept HTTP requests and responses, enabling authentication, rate limiting, and other processing tasks.
 
-To get started, create a `middleware.ts` file with the following content:
+Create a `src/middleware.ts` file to define your middleware:
 
 ```typescript
 // src/middleware.ts
@@ -28,7 +28,15 @@ const middleware: Middleware = async (req, res, next) => {
 export default middleware;
 ```
 
-Middlewares can also be defined as an array. Useful for when you need to chain multiple middlewares.
+<Callout variant="info">
+  xmcp provides built-in middlewares for common tasks like [API key
+  authentication](../../authentication/api-key) and [JSON web token
+  authentication](../../authentication/jwt).
+</Callout>
+
+## Chaining middlewares
+
+Define multiple middlewares as an array to chain them in sequence:
 
 ```typescript
 // src/middleware.ts
@@ -36,12 +44,36 @@ Middlewares can also be defined as an array. Useful for when you need to chain m
 import { type Middleware } from "xmcp";
 
 const middleware: Middleware = [
-  (req, res, next) => {
-    // ...
+  async (req, res, next) => {
+    // First middleware
     return next();
   },
-  // ... other middlewares
+  async (req, res, next) => {
+    // Second middleware
+    return next();
+  },
 ];
 
 export default middleware;
+```
+
+## Accessing headers
+
+Use the `xmcp/headers` module to read request headers in your tools, prompts, or resources—useful for API keys, authentication tokens, and other custom headers.
+
+```typescript
+// src/tools/search.ts
+
+import { headers } from "xmcp/headers";
+
+export default async function search({ query }: InferSchema<typeof schema>) {
+  const requestHeaders = headers();
+  const apiKey = requestHeaders["x-api-key"];
+
+  const data = await fetchSomeData(apiKey);
+
+  return {
+    content: [{ type: "text", text: JSON.stringify(data) }],
+  };
+}
 ```

@@ -45,7 +45,7 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
             <IconComponent className="h-5 w-5" />
           </span>
         )}
-        <div className="[&_p]:leading-relaxed [&_p]:m-0 [&_p]:text-sm">
+        <div className="[&_p]:leading-relaxed [&_p]:!m-0 [&_p]:text-sm">
           {children}
         </div>
       </div>
