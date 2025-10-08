@@ -23,4 +23,19 @@ const middleware: Middleware = [
 export default middleware;
 ```
 
-You can customize the middleware using the configuration from the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library.
+You can customize the middleware using the configuration object containing the JWT secret and verify options.
+
+```typescript
+const middleware = jwtAuthMiddleware({
+  secret: process.env.JWT_SECRET!,
+  algorithms: ["HS256"],
+  issuer: "https://example.com",
+  audience: "https://example.com",
+  subject: "user-id",
+  expiresIn: "1h",
+  notBefore: "1h",
+  clockTolerance: 30,
+});
+```
+
+Check out the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library for more details on the configuration options.
