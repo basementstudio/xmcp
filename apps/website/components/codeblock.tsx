@@ -1,5 +1,4 @@
 "use client";
-import { Check, Clipboard } from "lucide-react";
 import {
   type ComponentProps,
   createContext,
@@ -8,10 +7,11 @@ import {
   type RefObject,
   useContext,
   useRef,
+  useEffect,
+  useState,
 } from "react";
 import { cn } from "@/lib/cn";
-import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
-import { buttonVariants } from "./ui/button";
+import { CopyButton as CustomCopyButton } from "./ui/copy-button";
 
 export interface CodeBlockProps extends ComponentProps<"figure"> {
   /**
@@ -147,11 +147,13 @@ export function CodeBlock({
 function CopyButton({
   className,
   containerRef,
-  ...props
-}: ComponentProps<"button"> & {
+}: {
   containerRef: RefObject<HTMLElement | null>;
+  className?: string;
 }) {
-  const [checked, onClick] = useCopyButton(() => {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
     const pre = containerRef.current?.getElementsByTagName("pre").item(0);
     if (!pre) return;
 
@@ -160,26 +162,13 @@ function CopyButton({
       node.replaceWith("\n");
     });
 
-    void navigator.clipboard.writeText(clone.textContent ?? "");
-  });
+    setText(clone.textContent ?? "");
+  }, [containerRef]);
 
   return (
-    <button
-      type="button"
-      data-checked={checked || undefined}
-      className={cn(
-        buttonVariants({
-          className:
-            "hover:bg-brand-neutral-500 data-[checked]:text-fd-accent-foreground",
-          size: "icon-xs",
-        }),
-        className
-      )}
-      aria-label={checked ? "Copied Text" : "Copy Text"}
-      onClick={onClick}
-      {...props}
-    >
-      {checked ? <Check /> : <Clipboard />}
-    </button>
+    <CustomCopyButton
+      text={text}
+      className={cn("size-6 top-2 right-0.5", className)}
+    />
   );
 }
