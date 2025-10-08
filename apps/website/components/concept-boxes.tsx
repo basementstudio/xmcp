@@ -38,7 +38,7 @@ export function ConceptBoxes({ children, columns = 2 }: ConceptBoxesProps) {
   };
 
   return (
-    <div className={cn("grid gap-4 not-prose", gridCols[columns])}>
+    <div className={cn("grid gap-4 not-prose py-8", gridCols[columns])}>
       {children}
     </div>
   );
