@@ -56,7 +56,10 @@ export function DocsDescription(props: ComponentProps<"p">) {
   if (props.children === undefined) return null;
 
   return (
-    <p {...props} className={cn("text-lg text-[#c6c6c6]", props.className)}>
+    <p
+      {...props}
+      className={cn("text-lg text-brand-neutral-50", props.className)}
+    >
       {props.children}
     </p>
   );

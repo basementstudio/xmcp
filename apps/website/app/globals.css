@@ -145,8 +145,7 @@ body {
 }
 
 .prose p {
-  @apply font-sans;
-  color: #c6c6c6;
+  @apply font-sans text-brand-neutral-50;
   /* letter-spacing: -0.5px; */
   line-height: 180%;
   margin-top: 1rem;
