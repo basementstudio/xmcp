@@ -72,8 +72,6 @@ export default async function search({ query }: InferSchema<typeof schema>) {
 
   const data = await fetchSomeData(apiKey);
 
-  return {
-    content: [{ type: "text", text: JSON.stringify(data) }],
-  };
+  return JSON.stringify(data);
 }
 ```
