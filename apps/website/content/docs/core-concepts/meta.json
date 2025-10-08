@@ -1,0 +1,6 @@
+{
+  "title": "Core Concepts",
+  "pages": ["tools", "prompts", "resources", "middlewares"],
+  "defaultOpen": true,
+  "root": true
+}

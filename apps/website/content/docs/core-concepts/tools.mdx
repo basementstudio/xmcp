@@ -7,11 +7,11 @@ summary: "Learn how to create and use tools in your xmcp application."
 
 `xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
 
-The tool file should export three elements:
+A tool file consists of three main exports:
 
-- **Schema**: The input parameters using Zod schemas.
-- **Metadata**: The tool's identity and behavior hints.
 - **Default**: The tool handler function.
+- **Schema** (optional): The input parameters using Zod schemas.
+- **Metadata** (optional): The tool's identity and behavior hints. If omitted, the name is inferred from the file name and the description defaults to a placeholder.
 
 ```typescript
 // src/tools/greet.ts
@@ -54,30 +54,40 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 }
 ```
 
-We encourage to use this shortcut for readability, and restrict the usage of the content array type only for complex responses, like images, audio or videos.
+<Callout variant="info">
+  We encourage to use this shortcut for readability, and restrict the usage of
+  the content array type only for complex responses, like images, audio or
+  videos.
+</Callout>
 
-## File exports
+## References
 
-### 1. Schema
+### Schema (optional)
 
-The schema object defines the tool's parameters with:
+Defines the tool's input parameters with type validation:
 
 - **Key**: Parameter name.
-- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Value**: Zod schema with `.describe()` for documentation and tool inspection.
 - **Purpose**: Type validation and automatic parameter documentation.
 
-### 2. Metadata
+### Metadata (optional)
 
-Define the tool's identity and behavior hints. The metadata object provides:
+Defines the tool's identity and behavior hints:
 
-- **Name**: Unique identifier for the tool
-- **Description**: Brief explanation of what the tool does
+- **Name**: Unique identifier for the tool (defaults to file name if omitted)
+- **Description**: Brief explanation of what the tool does (defaults to placeholder if omitted)
 - **Annotations**: Behavioral hints for AI models and UIs
 
-### 3. Implementation
+<Callout variant="info">
+  While metadata is optional, we strongly recommend providing a clear
+  description. This helps LLMs discover and use your tools more efficiently,
+  reducing token costs and improving accuracy.
+</Callout>
 
-The default export function that performs the actual work.
+### Implementation (required)
+
+The default export function that performs the actual work:
 
 - **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
-- **Returns**: MCP-compatible response with content array.
+- **Returns**: MCP-compatible response with content array, or a string/number shortcut.
 - **Async**: Supports async operations for API calls, file I/O, etc.
