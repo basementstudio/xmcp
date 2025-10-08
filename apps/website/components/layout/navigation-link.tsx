@@ -17,18 +17,18 @@ export function NavigationLink({
     <Link
       href={item.url}
       className={cn(
-        "flex flex-col gap-2 p-4 border border-brand-neutral-200 hover:border-brand-neutral-100 transition-colors group flex-1 uppercase font-mono rounded-xs",
+        "flex flex-col gap-2 p-4 border border-brand-neutral-400 hover:border-brand-neutral-200 transition-colors group flex-1 uppercase font-mono rounded-xs",
         !isPrevious && "items-end text-right"
       )}
     >
-      <span className="text-xs text-white/60 flex items-center gap-2">
+      <span className="text-xs text-brand-neutral-100 flex items-center gap-2">
         {isPrevious && <Icons.arrowDownThinner className="size-3 rotate-90" />}
         {label}
         {!isPrevious && (
           <Icons.arrowDownThinner className="size-3 rotate-270" />
         )}
       </span>
-      <span className="text-white font-medium group-hover:text-fd-primary transition-colors">
+      <span className="text-brand-white font-medium group-hover:text-fd-primary transition-colors">
         {item.name}
       </span>
     </Link>
