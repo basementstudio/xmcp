@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn";
 import { Icons } from "./icons";
 
 const calloutVariants = cva(
-  "relative rounded-sm border border-[#424242] p-4 flex items-start gap-3 my-4",
+  "relative rounded-xs border border-brand-neutral-400 p-4 py-3 flex items-start gap-3 my-4",
   {
     variants: {
       variant: {

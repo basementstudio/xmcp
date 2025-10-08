@@ -91,7 +91,7 @@ export function CodeBlock({
         inTab ? "bg-fd-secondary -mx-px -mb-px" : "my-2 bg-fd-card",
         keepBackground && "bg-(--shiki-light-bg) dark:bg-(--shiki-dark-bg)",
 
-        "shiki relative border border-white/20 outline-none not-prose overflow-hidden text-sm",
+        "shiki relative border border-brand-neutral-400 outline-none not-prose overflow-hidden text-sm rounded-xs",
         props.className
       )}
     >
