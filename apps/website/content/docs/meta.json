@@ -11,10 +11,12 @@
     "...core-concepts",
     "---Authentication---",
     "...authentication",
-    "---Integrations---",
-    "...integrations",
+    "---Adapters---",
+    "...adapters",
     "---Deployment---",
-    "...deployment"
+    "...deployment",
+    "---Integrations---",
+    "...integrations"
   ],
   "defaultOpen": true
 }
