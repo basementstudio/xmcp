@@ -21,31 +21,27 @@ export const Header = () => {
         <div></div>
         <div></div>
       </div>
-      <div className="w-full flex justify-between items-center z-100 px-4 py-4 md:py-8 gap-8 relative">
-        <div className="flex gap-8 items-center">
-          <Link
-            href="/"
-            className="hover:opacity-80 transition-opacity"
-            aria-label="Home"
-          >
-            <div className="w-full h-full">
-              <Logo />
-            </div>
-          </Link>
-          <div className="z-[6] relative flex justify-start items-center text-center text-md text-white font-mono gap-8">
-            <div className="hidden md:flex gap-8">
-              <AnimatedLink href="/docs">Docs</AnimatedLink>
-              <AnimatedLink href="/examples">Examples</AnimatedLink>
-              <AnimatedLink href="/showcase">Showcase</AnimatedLink>
-              <AnimatedLink href="/blog">Blog</AnimatedLink>
-            </div>
+      <div className="w-full flex justify-center items-center z-100 px-4 py-4 md:py-8 gap-8">
+        <Link
+          href="/"
+          className="size-6 md:size-8 hover:opacity-80 transition-opacity"
+          aria-label="Home"
+        >
+          <div className="w-full h-full">
+            <Logo />
+          </div>
+        </Link>
+        <div className="z-[6] relative flex justify-start items-center text-center text-md text-white font-mono gap-8">
+          <div className="hidden md:flex gap-8">
+            <AnimatedLink href="/docs">Docs</AnimatedLink>
+            <AnimatedLink href="/examples">Examples</AnimatedLink>
+            <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+            <AnimatedLink href="/blog">Blog</AnimatedLink>
           </div>
         </div>
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4 items-center z-[7]">
+        <div className="flex gap-4 ml-auto items-center">
           <SearchToggle />
           <AskAIButton />
-        </div>
-        <div className="flex gap-4 items-center">
           <GithubButton />
           <MobileMenu />
         </div>
@@ -57,33 +53,16 @@ export const Header = () => {
 const Logo = () => {
   return (
     <svg
-      width="87"
+      width="27"
       height="32"
-      viewBox="0 0 87 32"
+      viewBox="0 0 27 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="size-full"
     >
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M70.002 24.1749V25.274H78.0174V24.1749H75.7272V19.0306H76.8722V20.1776H79.1623V21.3244H80.3073V20.1776H82.5978V19.0306H83.7427V9.85562H82.5978V7.5618H81.4522V6.41489H79.1623V5.26807H76.8722V6.41489H74.5823V7.5618H73.4371V8.70871H70.002V9.85562H71.1469V24.1749H70.002ZM76.8722 19.0306V17.8837H75.7272V7.5618H76.8722V8.70871H78.0174V9.85562H79.1623V19.0306H76.8722Z"
-        fill="#F7F7F7"
-      />
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M61.823 22.6624H63.1611V21.3244H64.4993V19.9863H67.1752V21.3244H65.8374V22.6624H64.4993V24.0004H63.1611V25.3385H59.1471V24.0004H56.4708V22.6624H55.133V13.2963H53.7949V11.9582H55.133V10.6202H56.4708V9.28216H57.809V7.94413H60.4852V6.6061H63.1611V5.26807H64.4993V6.6061H65.8374V7.94413H67.1752V9.28216H68.5133V10.6202H67.1752V14.6343H65.8374V13.2963H64.4993V11.9582H63.1611V10.6202H61.823V9.28216H60.4852V21.3244H61.823V22.6624ZM67.1752 19.9863V18.6483H68.5133V19.9863H67.1752Z"
-        fill="#F7F7F7"
-      />
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M48.0785 5.26822V6.60625H46.7404V7.94428H45.4026V9.28232H42.7263V7.94428H41.3885V6.60625H40.0504V5.26822H38.7123V6.60625H37.3742V7.94428H36.0364V9.28232H33.3601V7.94428H32.022V6.60625H30.6842V5.26822H29.3461V6.60625H28.0079V7.94428H25.332V9.28232H28.0079V22.6626H26.6698V24.0006H29.3461V25.3386H32.022V24.0006H34.6982V22.6626H33.3601V10.6204H36.0364V9.28232H37.3742V22.6626H36.0364V24.0006H38.7123V25.3386H41.3885V24.0006H44.0644V22.6626H42.7263V10.6204H45.4026V9.28232H46.7404V22.6626H45.4026V24.0006H48.0785V25.3386H50.7547V24.0006H53.4307V22.6626H52.0925V10.6204H53.4307V9.28232H52.0925V7.94428H50.7547V6.60625H49.4166V5.26822H48.0785Z"
-        fill="#F7F7F7"
-      />
-      <path
-        d="M0 6.66667H1.33618V8H0V6.66667ZM1.33618 29.3333V25.3333H2.67236V24H4.00854V22.6667H6.68089V21.3333H8.01707V20H9.35325V22.6667H12.0256V24H13.3618V25.3333H14.698V26.6667H13.3618V28H12.0256V29.3333H10.6894V28H9.35325V26.6667H6.68089V28H5.34472V30.6667H6.68089V32H4.00854V30.6667H2.67236V29.3333H1.33618ZM1.33618 6.66667V4H2.67236V2.66667H4.00854V1.33333H9.35325V2.66667H12.0256V4H13.3618V6.66667H14.698V8H16.0341V9.33333H17.3703V10.6667H16.0341V12H22.715V13.3333H21.3789V14.6667H18.7065V17.3333H20.0427V18.6667H21.3789V20H22.715V22.6667H24.0512V24H25.3874V25.3333H22.715V26.6667H21.3789V28H20.0427V26.6667H18.7065V24H17.3703V21.3333H16.0341V20H14.698V17.3333H12.0256V16H2.67236V14.6667H4.00854V13.3333H5.34472V12H10.6894V10.6667H9.35325V8H8.01707V5.33333H6.68089V4H5.34472V5.33333H2.67236V6.66667H1.33618ZM9.35325 20V18.6667H10.6894V20H9.35325ZM10.6894 18.6667V17.3333H12.0256V18.6667H10.6894ZM14.698 25.3333V24H16.0341V25.3333H14.698ZM14.698 6.66667V5.33333H16.0341V6.66667H14.698ZM16.0341 5.33333V4H17.3703V1.33333H20.0427V2.66667H22.715V1.33333H25.3874V5.33333H24.0512V6.66667H21.3789V8H20.0427V6.66667H18.7065V9.33333H17.3703V5.33333H16.0341ZM25.3874 24V22.6667H26.7236V24H25.3874ZM25.3874 1.33333V0H26.7236V1.33333H25.3874Z"
-        fill="#F7F7F7"
+        d="M0 6.66667H1.35V8H0V6.66667ZM1.35 29.3333V25.3333H2.7V24H4.05V22.6667H6.75V21.3333H8.1V20H9.45V22.6667H12.15V24H13.5V25.3333H14.85V26.6667H13.5V28H12.15V29.3333H10.8V28H9.45V26.6667H6.75V28H5.4V30.6667H6.75V32H4.05V30.6667H2.7V29.3333H1.35ZM1.35 6.66667V4H2.7V2.66667H4.05V1.33333H9.45V2.66667H12.15V4H13.5V6.66667H14.85V8H16.2V9.33333H17.55V10.6667H16.2V12H22.95V13.3333H21.6V14.6667H18.9V17.3333H20.25V18.6667H21.6V20H22.95V22.6667H24.3V24H25.65V25.3333H22.95V26.6667H21.6V28H20.25V26.6667H18.9V24H17.55V21.3333H16.2V20H14.85V17.3333H12.15V16H2.7V14.6667H4.05V13.3333H5.4V12H10.8V10.6667H9.45V8H8.1V5.33333H6.75V4H5.4V5.33333H2.7V6.66667H1.35ZM9.45 20V18.6667H10.8V20H9.45ZM10.8 18.6667V17.3333H12.15V18.6667H10.8ZM14.85 25.3333V24H16.2V25.3333H14.85ZM14.85 6.66667V5.33333H16.2V6.66667H14.85ZM16.2 5.33333V4H17.55V1.33333H20.25V2.66667H22.95V1.33333H25.65V5.33333H24.3V6.66667H21.6V8H20.25V6.66667H18.9V9.33333H17.55V5.33333H16.2ZM25.65 24V22.6667H27V24H25.65ZM25.65 1.33333V0H27V1.33333H25.65Z"
+        fill="white"
       />
     </svg>
   );
@@ -93,11 +72,10 @@ const GithubButton = () => {
   return (
     <Link
       href="https://github.com/basementstudio/xmcp"
-      className="text-white hover:text-white/80 transition-colors hidden md:flex items-center gap-2"
+      className="text-white hover:text-white/80 transition-colors hidden md:block"
       target="_blank"
       aria-label="GitHub"
     >
-      900
       <svg
         width="15"
         height="15"
