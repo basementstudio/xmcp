@@ -38,18 +38,9 @@ There are the three top-level files that are required for your project:
 
 ## Source directory
 
-This is the main directory for your project. It contains your project's source code. At the root, you will find the following directories and files:
+The `src/` directory houses your project's implementation. xmcp follows a declarative, file-system based approach—simply create a file in the appropriate directory, and it will be automatically discovered and registered.
 
-- `middleware.ts`: Contains your project's middleware. This is a single, optional file that is used to process the request and response.
-- `tools/`: Contains your project's tools.
-- `prompts/`: Contains your project's prompts.
-- `resources/`: Contains your project's resources.
-
-These directories are customizable, and can be configured in your `xmcp.config.ts` file. For more information, see the [custom directories](../../configuration/custom-directories) documentation.
-
-xmcp follows a declarative, file-system based approach. This means that you can add new tools, prompts, and resources by simply creating a new file in the appropriate directory.
-
-xmcp will automatically discover these files and register them as tools, prompts, and resources.
+The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, and `resources/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
 
 <ConceptBoxes>
   <ConceptBox
