@@ -226,7 +226,6 @@ body {
 .prose a {
   text-decoration: underline;
   text-underline-offset: 2px;
-  transition: opacity 0.2s;
 }
 
 .prose a:hover {
