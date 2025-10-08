@@ -251,4 +251,74 @@ export const Icons = {
       />
     </svg>
   ),
+  tool: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M21 3H20V4H19V5H18V6H17V7H16V8H15V9H14V10H13V11H12V12H11V13H10V14H9V15H8V16H7V17H6V18H5V19H4V18H3V17H4V16H5V15H6V14H7V13H8V12H9V11H10V10H11V9H12V8H13V7H14V6H15V5H16V4H17V3H18V2H19V3H20V4H21V5H22V6H21V5H20V4H19V3H21Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  prompt: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M4 5H5V6H4V5ZM6 5H7V6H6V5ZM8 5H9V6H8V5Z" fill="currentColor" />
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M3 3H21V4H22V20H21V21H3V20H2V4H3V3ZM20 5H4V19H20V5Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  resource: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6 2H7V3H17V2H18V3H19V4H20V5H21V19H20V20H19V21H18V22H6V21H5V20H4V19H3V5H4V4H5V3H6V2ZM6 5V4H7V5H6ZM17 5V4H18V5H17ZM19 6H18V7H6V6H5V19H6V20H18V19H19V6Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  middleware: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M3 5H4V6H5V7H6V8H7V9H8V10H9V11H10V12H9V13H8V14H7V15H6V16H5V17H4V18H3V17H2V7H3V5Z"
+        fill="currentColor"
+      />
+      <path
+        d="M21 5H20V6H19V7H18V8H17V9H16V10H15V11H14V12H15V13H16V14H17V15H18V16H19V17H20V18H21V17H22V7H21V5Z"
+        fill="currentColor"
+      />
+      <path d="M11 11H13V13H11V11Z" fill="currentColor" />
+    </svg>
+  ),
 };

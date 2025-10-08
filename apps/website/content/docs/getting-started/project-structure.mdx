@@ -5,6 +5,8 @@ publishedAt: "2025-07-06"
 summary: "Understand the basic project layout and organization."
 ---
 
+## Overview
+
 A basic project structure is as follows:
 
 ```
@@ -25,3 +27,49 @@ my-project/
 ├── tsconfig.json
 └── xmcp.config.ts       # Configuration file for xmcp
 ```
+
+## Top-level files
+
+There are the three top-level files that are required for your project:
+
+- `package.json`: Contains your project's dependencies and scripts.
+- `tsconfig.json`: Contains your project's TypeScript configuration.
+- `xmcp.config.ts`: Contains your project's xmcp configuration.
+
+## Source directory
+
+This is the main directory for your project. It contains your project's source code. At the root, you will find the following directories and files:
+
+- `middleware.ts`: Contains your project's middleware. This is a single, optional file that is used to process the request and response.
+- `tools/`: Contains your project's tools.
+- `prompts/`: Contains your project's prompts.
+- `resources/`: Contains your project's resources.
+
+These directories are customizable, and can be configured in your `xmcp.config.ts` file. For more information, see the [custom directories](../../configuration/custom-directories) documentation.
+
+xmcp follows a declarative, file-system based approach. This means that you can add new tools, prompts, and resources by simply creating a new file in the appropriate directory.
+
+xmcp will automatically discover these files and register them as tools, prompts, and resources.
+
+<ConceptBoxes>
+  <ConceptBox
+    title="Tools"
+    description="Learn how to create and use tools in your xmcp project."
+    href="/docs/core-concepts/tools"
+  />
+  <ConceptBox
+    title="Prompts"
+    description="Discover how to define prompts for your AI interactions."
+    href="/docs/core-concepts/prompts"
+  />
+  <ConceptBox
+    title="Resources"
+    description="Understand how to expose data through resources."
+    href="/docs/core-concepts/resources"
+  />
+  <ConceptBox
+    title="Middleware"
+    description="Add custom logic to process requests and responses."
+    href="/docs/configuration/middlewares"
+  />
+</ConceptBoxes>
