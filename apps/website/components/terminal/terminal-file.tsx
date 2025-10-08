@@ -104,11 +104,11 @@ export function TerminalFile({
   }, [content, lang]);
 
   return (
-    <div className={cn("relative group", className)}>
+    <div className={cn("relative", className)}>
       {/* Header with filename and icon */}
       <div className="flex items-center gap-2 px-4 py-2 bg-black/50 border border-white/20 border-b-0">
         <div className="flex-shrink-0">
-          <Icons.paper />
+          <Icons.paper className="text-gray-300" />
         </div>
         <span className="text-sm font-mono text-gray-300">{filename}</span>
       </div>
