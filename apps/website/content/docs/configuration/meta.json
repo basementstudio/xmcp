@@ -2,9 +2,9 @@
   "title": "Configuration",
   "icon": "RocketLaunchIcon",
   "pages": [
+    "transports",
     "custom-directories",
     "headers",
-    "http-transport",
     "middlewares",
     "webpack",
     "experimental"
