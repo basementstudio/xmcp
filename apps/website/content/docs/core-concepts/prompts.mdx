@@ -68,21 +68,25 @@ export default function reviewCode({ code }: InferSchema<typeof schema>) {
 }
 ```
 
-We encourage to use this shortcut for readability, and restrict the usage of the content object type only for complex responses, like images, audio or videos.
+<Callout variant="info">
+  We encourage to use this shortcut for readability, and restrict the usage of
+  the content object type only for complex responses, like images, audio or
+  videos.
+</Callout>
 
-## File exports
+## References
 
-### 1. Schema
+### Schema (optional)
 
 The schema object defines the prompt's parameters with:
 
 - **Key**: Parameter name.
-- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Value**: Zod schema with `.describe()` for documentation and prompt inspection. This will be visible through the inspector.
 - **Purpose**: Type validation and automatic parameter documentation.
 
 > This is the exact same as the schema object for tools.
 
-### 2. Metadata
+### Metadata (optional)
 
 The metadata object provides:
 
@@ -91,7 +95,7 @@ The metadata object provides:
 - **Description**: Brief explanation of what the prompt does
 - **Role**: The role of the prompt in the conversation. Can be either `user` or `assistant`.
 
-### 3. Implementation
+### Implementation (required)
 
 The default export function that performs the actual work.
 

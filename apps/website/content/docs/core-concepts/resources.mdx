@@ -13,7 +13,7 @@ Each resource file should export three elements:
 - **Metadata**: The resource's identity and behavior configuration
 - **Default**: The resource handler function
 
-There are two types of resources: static and dynamic. When creating resources, it's important to understand how the folder structure determines the resource URI.
+There are two types of resources: **static** and **dynamic**. When creating resources, it's important to understand how the folder structure determines the resource URI.
 
 ## URI composition rules
 
@@ -76,19 +76,19 @@ export default function handler({ userId }: InferSchema<typeof schema>) {
 }
 ```
 
-## File exports
+## References
 
-### 1. Schema
+### Schema (optional)
 
 The schema object defines the resource's parameters with:
 
 - **Key**: Parameter name.
-- **Value**: Zod schema with `.describe()` for documentation. This will be visible through the inspector.
+- **Value**: Zod schema with `.describe()` for documentation and resource inspection. This will be visible through the inspector.
 - **Purpose**: Type validation and automatic parameter documentation.
 
-> This is the exact same as the schema object for tools and prompts.
+This is the exact same as the schema object for tools and prompts.
 
-### 2. Metadata
+### Metadata (optional)
 
 The metadata object provides:
 
@@ -98,7 +98,7 @@ The metadata object provides:
 - **MimeType**: The MIME type of the resource
 - **Size**: The size of the resource
 
-### 3. Implementation
+### Implementation (required)
 
 The default export function that performs the actual work.
 
