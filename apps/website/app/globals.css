@@ -160,7 +160,7 @@ body {
 }
 
 .prose li code {
-  @apply text-[0.75rem] px-[1px] py-[2px];
+  @apply text-[0.9rem] px-[1px] py-[2px];
 }
 
 .prose blockquote {
