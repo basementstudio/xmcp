@@ -1,0 +1,6 @@
+{
+  "title": "Adapters",
+  "pages": ["nextjs", "express"],
+  "defaultOpen": true,
+  "root": true
+}

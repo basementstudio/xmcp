@@ -1,17 +1,28 @@
 ---
-title: "Usage with Next.js"
+title: "Next.js"
 metadataTitle: "Usage with Next.js | xmcp Documentation"
 publishedAt: "2025-07-06"
 summary: "Learn how to integrate xmcp with your existing Next.js application."
+description: "Plug xmcp into your existing Next.js application."
 ---
 
-> **Warning**: This is an experimental feature and may not work as expected.
+## Installation
 
-`xmcp` can work on top of your existing Next.js project. To get started, run the following command:
+`xmcp` can work on top of your existing Next.js project. To get started, run the following command in your project directory:
 
 ```bash
 npx init-xmcp@latest
 ```
+
+On initialization, you'll see the following prompts:
+
+<TerminalPrompt>
+  {
+    "? Tools directory path: (tools)\n? Prompts directory path: (prompts)\n? Resources directory path: (resources)\n? Route directory path: (app/mcp)"
+  }
+</TerminalPrompt>
+
+The package manager and framework will be detected automatically.
 
 After setting up the project, your build and dev commands should look like this:
 
@@ -24,16 +35,60 @@ After setting up the project, your build and dev commands should look like this:
 }
 ```
 
-The CLI will ask where to place the `tools` and `prompts` directories and what is the `url` for the MCP server.
+Based on your configuration, it will create the tools, prompts, resources and route folders and add an endpoint to your Next.js app.
 
-It will create the tools and prompts folders and add an endpoint to your Next.js app.
-
-```typescript
-// src/app/mcp/route.ts
-
+```typescript title="app/mcp/route.ts"
 import { xmcpHandler } from "@xmcp/adapter";
 
 export { xmcpHandler as GET, xmcpHandler as POST };
 ```
 
-**Note**: `middleware.ts` and `xmcp/headers` are not supported since Next.js already supports those features.
+<Callout variant="info">
+  `middleware.ts` and `xmcp/headers` are not supported since Next.js already
+  supports those features.
+</Callout>
+
+## Authentication
+
+You can use the `withAuth` function to add authentication to your MCP server.
+
+```typescript title="app/mcp/route.ts"
+import { xmcpHandler, withAuth, VerifyToken } from "@xmcp/adapter";
+
+/**
+ * Verify the bearer token and return auth information
+ * In a real implementation, this would validate against your auth service
+ */
+const verifyToken: VerifyToken = async (req: Request, bearerToken?: string) => {
+  if (!bearerToken) return undefined;
+
+  // TODO: Replace with actual token verification logic
+  // This is just an example implementation
+  const isValid = bearerToken.startsWith("__TEST_VALUE__");
+
+  if (!isValid) return undefined;
+
+  return {
+    token: bearerToken,
+    scopes: ["read:messages", "write:messages"],
+    clientId: "example-client",
+    extra: {
+      userId: "user-123",
+      // Add any additional user/client information here
+      permissions: ["user"],
+      timestamp: new Date().toISOString(),
+    },
+  };
+};
+
+const options = {
+  verifyToken,
+  required: true,
+  requiredScopes: ["read:messages"],
+  resourceMetadataPath: "/.well-known/oauth-protected-resource",
+};
+
+const handler = withAuth(xmcpHandler, options);
+
+export { handler as GET, handler as POST };
+```
