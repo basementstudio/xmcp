@@ -83,7 +83,7 @@ function Sidebar() {
   return (
     <aside
       className={cn(
-        "sidebar-scrollbar fixed flex flex-col shrink-0 p-4 pt-0 top-34 z-20 text-sm overflow-auto md:sticky md:h-[calc(100dvh-96px)] md:w-[300px]",
+        "sidebar-scrollbar fixed flex flex-col shrink-0 p-4 pt-0 top-34 z-20 text-sm overflow-auto md:sticky md:h-[calc(100dvh-156px)] md:w-[300px]",
         "max-md:inset-x-0 max-md:bottom-0 max-md:bg-fd-background",
         !open && "max-md:invisible"
       )}

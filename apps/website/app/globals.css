@@ -183,7 +183,7 @@ body {
 }
 
 .prose li {
-  @apply my-3 relative;
+  @apply my-3 relative text-brand-neutral-50;
   padding-left: 1rem;
 }
 
