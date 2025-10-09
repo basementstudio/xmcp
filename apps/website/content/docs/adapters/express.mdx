@@ -1,13 +1,14 @@
 ---
-title: "Usage with Express"
+title: "Express"
 metadataTitle: "Usage with Express | xmcp Documentation"
 publishedAt: "2025-07-06"
 summary: "Learn how to integrate xmcp with your existing Express application."
+description: "Plug xmcp into your existing Express application."
 ---
 
-> **Warning**: This is an experimental feature and may not work as expected.
+## Installation
 
-`xmcp` can work on top of your existing Express project. To get started, run the following command:
+`xmcp` can work on top of your existing Express project. To get started, run the following command in your project directory:
 
 ```bash
 npx init-xmcp@latest
@@ -36,4 +37,4 @@ app.get("/mcp", xmcpHandler);
 app.post("/mcp", xmcpHandler);
 ```
 
-**Note**: `middleware.ts` is not supported in this mode.
+<Callout variant="info">`middleware.ts` is not supported in this mode.</Callout>
