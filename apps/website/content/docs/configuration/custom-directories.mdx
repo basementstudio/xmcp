@@ -7,7 +7,7 @@ summary: "Learn how to customize the directories for tools, prompts, and resourc
 
 Customize where `xmcp` looks for tools, prompts, and resources by configuring the `paths` option. If not specified, these are the defaults:
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   paths: {
     tools: "src/tools",
@@ -23,7 +23,7 @@ export default config;
 
 To disable a specific directory, set it to `false`:
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   paths: {
     tools: "src/tools",

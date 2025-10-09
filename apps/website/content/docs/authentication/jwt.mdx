@@ -7,9 +7,7 @@ summary: "Learn how to use JWT authentication in your xmcp application."
 
 To enable JWT authentication, you can use the `jwtAuthMiddleware` middleware on your app.
 
-```typescript
-// src/middleware.ts
-
+```typescript title="src/middleware.ts"
 import { jwtAuthMiddleware, type Middleware } from "xmcp";
 
 const middleware: Middleware = [

@@ -7,9 +7,7 @@ summary: "Learn how to use API key authentication in your xmcp application."
 
 To enable API key authentication, you can use the `apiKeyAuthMiddleware` middleware on your app.
 
-```typescript
-// src/middleware.ts
-
+```typescript title="src/middleware.ts"
 import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
 
 const middleware: Middleware = [
@@ -27,9 +25,7 @@ If no `headerName` is provided, the middleware will default to `x-api-key`.
 
 This middleware can also be used with a validation function. It should **return a boolean** value indicating if the API key is valid.
 
-```typescript
-// src/middleware.ts
-
+```typescript title="src/middleware.ts"
 import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
 
 const middleware: Middleware = apiKeyAuthMiddleware({

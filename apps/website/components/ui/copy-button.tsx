@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../../utils/cn";
-import { Icons } from "./icons";
+import { Icons } from "../icons";
 
 export const CopyButton = ({
   text,
@@ -63,9 +63,9 @@ export const CopyButton = ({
         aria-label="Copy to clipboard"
       >
         <div className="relative size-full grid place-items-center">
-          <Icons.lightCheck
+          <Icons.check
             className={cn(
-              "absolute size-5 w-auto transition-all duration-300 will-change-transform [&_path]:fill-white",
+              "absolute size-4 w-auto transition-all duration-300 will-change-transform [&_path]:fill-white",
               copied
                 ? "opacity-100 scale-100 animate-in fade-in"
                 : "opacity-0 scale-30 animate-out fade-out"

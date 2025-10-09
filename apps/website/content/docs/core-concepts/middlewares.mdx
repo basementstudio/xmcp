@@ -9,9 +9,7 @@ Middlewares intercept HTTP requests and responses, enabling authentication, rate
 
 Create a `src/middleware.ts` file to define your middleware:
 
-```typescript
-// src/middleware.ts
-
+```typescript title="src/middleware.ts"
 import { type Middleware } from "xmcp";
 
 const middleware: Middleware = async (req, res, next) => {
@@ -38,9 +36,7 @@ export default middleware;
 
 Define multiple middlewares as an array to chain them in sequence:
 
-```typescript
-// src/middleware.ts
-
+```typescript title="src/middleware.ts"
 import { type Middleware } from "xmcp";
 
 const middleware: Middleware = [
@@ -61,9 +57,7 @@ export default middleware;
 
 Use the `xmcp/headers` module to read request headers in your tools, prompts, or resources—useful for API keys, authentication tokens, and other custom headers.
 
-```typescript
-// src/tools/search.ts
-
+```typescript title="src/tools/search.ts"
 import { headers } from "xmcp/headers";
 
 export default async function search({ query }: InferSchema<typeof schema>) {

@@ -14,9 +14,7 @@ The prompt file should export three elements:
 - **Metadata**: The prompt's identity and behavior hints.
 - **Default**: The prompt handler function.
 
-```typescript
-// src/prompts/review-code.ts
-
+```typescript title="src/prompts/review-code.ts"
 import { z } from "zod";
 import { type InferSchema, type PromptMetadata } from "xmcp";
 
@@ -85,7 +83,7 @@ The schema object defines the prompt's parameters with:
 - **Value**: Zod schema with `.describe()` for documentation and prompt inspection. This will be visible through the inspector.
 - **Purpose**: Type validation and automatic parameter documentation.
 
-> This is the exact same as the schema object for tools.
+This is the exact same as the schema object for tools.
 
 ### Metadata (optional)
 

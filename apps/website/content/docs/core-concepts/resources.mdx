@@ -36,9 +36,7 @@ Will result in the URI `users://{userId}/profile`.
 
 Static resources are files that don't require any parameters. Following the composition rules above, the resource below will have the URI `config://app`:
 
-```typescript
-// src/resources/(config)/app.ts
-
+```typescript title="src/resources/(config)/app.ts"
 import { type ResourceMetadata } from "xmcp";
 
 export const metadata: ResourceMetadata = {
@@ -56,9 +54,7 @@ export default function handler() {
 
 Dynamic resources accept parameters. The example below creates a resource with the URI `users://{userId}/profile`:
 
-```typescript
-// src/resources/(users)/[userId]/profile.ts
-
+```typescript title="src/resources/(users)/[userId]/profile.ts"
 import { z } from "zod";
 import { type ResourceMetadata, type InferSchema } from "xmcp";
 

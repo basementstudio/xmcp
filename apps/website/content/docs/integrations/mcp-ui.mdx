@@ -197,13 +197,13 @@ UI resources are served through tools in your MCP server. This works with both s
 
 In xmcp, simply return the UI resource in your tool's `content` array:
 
-```typescript
+```typescript title="src/tools/get-ui.ts"
 import { type ToolMetadata } from "xmcp";
 import { uiResource } from "@/lib/ui";
 
 // ...schema and metadata
 
-export default function handler() {
+export default function getUI() {
   return {
     content: [uiResource],
   };

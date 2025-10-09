@@ -7,9 +7,7 @@ summary: "Learn how to customize the webpack configuration."
 
 `xmcp` uses webpack and swc to bundle your tools. You can customize the configuration by adding the following to your `xmcp.config.ts` file:
 
-```typescript
-// xmcp.config.ts
-
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   webpack: (config) => {
     // Add raw loader for images to get them as base64

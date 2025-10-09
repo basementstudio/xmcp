@@ -91,7 +91,7 @@ If you encounter issues when running the built server, make sure the transport i
 
 If you're working with HTTP, your configuration should look like this:
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   http: true,
 };
@@ -99,7 +99,7 @@ const config: XmcpConfig = {
 
 If you're working with STDIO, your configuration should look like this:
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   stdio: true,
 };
@@ -107,7 +107,7 @@ const config: XmcpConfig = {
 
 You can have both transports configured, but you'll need to update the scripts to match them. For example, this is a valid script configuration you could use:
 
-```json
+```json title="package.json"
 {
   "scripts": {
     "start:http": "node dist/http.js",

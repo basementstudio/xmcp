@@ -30,7 +30,7 @@ Before integrating the plugin, set up your product on [Polar](https://polar.sh/)
 
 Initialize the Polar provider to access validation methods:
 
-```typescript
+```typescript title="src/lib/polar.ts"
 import { PolarProvider } from "@xmcp-dev/polar";
 
 export const polar = PolarProvider.getInstance({
@@ -124,7 +124,7 @@ The `metadata` field accepts any string or number values for flexible usage trac
 
 Here's a complete example integrating license validation and usage tracking:
 
-```typescript
+```typescript title="src/tools/protected-tool.ts"
 import { PolarProvider } from "@xmcp-dev/polar";
 import { headers } from "xmcp/headers";
 

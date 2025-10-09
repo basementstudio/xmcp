@@ -158,7 +158,7 @@ GOOGLE_CLIENT_SECRET=<your-google-client-secret>
 
 Create a `middleware.ts` file in your xmcp app root directory:
 
-```typescript
+```typescript title="src/middleware.ts"
 import { betterAuthProvider } from "@xmcp-dev/better-auth";
 import { Pool } from "pg";
 
@@ -251,7 +251,7 @@ export default betterAuthProvider({
 
 Access the authenticated user session in your xmcp tools using `getBetterAuthSession`:
 
-```typescript
+```typescript title="src/tools/get-user-profile.ts"
 import { getBetterAuthSession } from "@xmcp-dev/better-auth";
 
 export default async function getUserProfile() {

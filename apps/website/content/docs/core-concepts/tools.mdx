@@ -14,9 +14,7 @@ A tool file consists of three main exports:
 - **Schema** (optional): The input parameters using Zod schemas.
 - **Metadata** (optional): The tool's identity and behavior hints. If omitted, the name is inferred from the file name and the description defaults to a placeholder.
 
-```typescript
-// src/tools/greet.ts
-
+```typescript title="src/tools/greet.ts"
 import { z } from "zod";
 import { type InferSchema } from "xmcp";
 

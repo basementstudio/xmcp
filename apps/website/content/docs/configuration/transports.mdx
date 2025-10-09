@@ -9,7 +9,7 @@ summary: "Learn how to customize the transports configuration."
 
 The `http` configuration customizes the HTTP server. Set it to `true` to use defaults, or provide an object to override specific options:
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   http: {
     port: 3001,
@@ -44,7 +44,7 @@ The `stdio` configuration customizes the STDIO transport. Set it to `true` to us
 
 By default you enable STDIO transport by setting it to `true`.
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   stdio: true,
 };
@@ -52,7 +52,7 @@ const config: XmcpConfig = {
 
 You can also customize the debug mode and this would enable it as well.
 
-```typescript
+```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
   stdio: {
     debug: false, // adds extra logging to the console
