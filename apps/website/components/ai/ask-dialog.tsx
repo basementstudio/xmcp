@@ -143,7 +143,7 @@ function AskAIInput({
         type="text"
         value={input}
         placeholder="Ask AI anything..."
-        className="w-0 flex-1 text-lg placeholder:text-brand-neutral-100 focus-visible:!outline-none focus:outline-none leading-none"
+        className="w-0 flex-1 text-lg placeholder:text-brand-neutral-200 focus-visible:!outline-none focus:outline-none leading-none"
         onChange={(e) => {
           setInput(e.target.value);
         }}

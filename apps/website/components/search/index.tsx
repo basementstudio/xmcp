@@ -126,7 +126,7 @@ export function SearchDialogInput(props: ComponentProps<"input">) {
       value={search}
       onChange={(e) => onSearchChange(e.target.value)}
       placeholder={text.search}
-      className="w-0 flex-1 bg-transparent text-lg placeholder:text-brand-neutral-100 focus-visible:!outline-none focus:outline-none leading-none"
+      className="w-0 flex-1 bg-transparent text-lg placeholder:text-brand-neutral-200 focus-visible:!outline-none focus:outline-none leading-none"
     />
   );
 }
@@ -143,7 +143,7 @@ export function SearchDialogClose({
       type="button"
       onClick={() => onOpenChange(false)}
       className={cn(
-        "hidden md:block text-sm font-mono font-medium px-1 pt-0.5 pb-0.5",
+        "hidden md:block text-sm font-medium px-1 pt-0.5 pb-0.5",
         className
       )}
       {...props}
@@ -169,7 +169,7 @@ export function SearchDialogOverlay(
     <DialogOverlay
       {...props}
       className={cn(
-        "fixed inset-0 z-50 bg-brand-black/50 hidden md:block",
+        "fixed inset-0 z-50 bg-brand-black/70 hidden md:block",
         props.className
       )}
     />
@@ -216,7 +216,7 @@ export function SearchDialogContent({
       aria-describedby={undefined}
       {...props}
       className={cn(
-        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xs border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-200",
+        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xs border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-500",
         props.className
       )}
     >
@@ -375,7 +375,7 @@ export function SearchDialogListItem({
         {item.type !== "page" && (
           <div
             role="none"
-            className="absolute start-3 inset-y-0 w-px bg-brand-neutral-400"
+            className="absolute start-3 inset-y-0 w-px bg-brand-neutral-500"
           />
         )}
         <p
@@ -388,7 +388,7 @@ export function SearchDialogListItem({
           )}
         >
           {item.type === "page" && (
-            <Icons.paper className="inline me-1 size-4 text-brand-neutral-50" />
+            <Icons.paper className="inline me-1.5 mb-0.5 size-4 text-brand-neutral-50" />
           )}
           {item.contentWithHighlights
             ? render(item.contentWithHighlights)
@@ -429,7 +429,7 @@ export function SearchDialogListItem({
 }
 
 export function SearchDialogIcon() {
-  return <Icons.search className="text-brand-neutral-100" />;
+  return <Icons.search className="text-brand-neutral-200 size-4" />;
 }
 
 export interface TagsListProps extends ComponentProps<"div"> {
