@@ -56,7 +56,7 @@ export function SearchToggle(props: ComponentProps<"button">) {
       onClick={() => setOpenSearch(true)}
     >
       <Icons.search className="size-4" />
-      <span className="lg:block hidden">Search documentation...</span>
+      <span className="lg:block hidden">Search docs...</span>
       <span className="hidden sm:block lg:hidden">Search...</span>
       <span className="text-brand-white ml-auto hidden md:block">
         {isMac ? "⌘K" : "Ctrl K"}
