@@ -45,7 +45,7 @@ export function TerminalTabs({
   return (
     <div className={cn("relative", className)}>
       {/* Tab buttons */}
-      <div className="flex gap-1 border border-white/20 border-b-0 bg-black/50">
+      <div className="flex gap-1 border border-brand-neutral-400 border-b-0 bg-black/50">
         {tabs.map((tab) => (
           <button
             key={tab.value}
@@ -54,8 +54,8 @@ export function TerminalTabs({
               "px-4 py-2 text-sm font-mono transition-colors relative",
               "hover:bg-white/5",
               activeTab === tab.value
-                ? "bg-black text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-brand-neutral-200"
-                : "text-gray-400"
+                ? "bg-black text-brand-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-brand-neutral-200"
+                : "text-brand-neutral-100"
             )}
           >
             {tab.label}
@@ -64,7 +64,7 @@ export function TerminalTabs({
       </div>
 
       {/* Terminal content */}
-      <div className="py-3 bg-black border border-white/20 relative">
+      <div className="py-3 bg-black border border-brand-neutral-400 relative">
         <div
           className="font-mono text-sm [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-sm"
           dangerouslySetInnerHTML={{ __html: highlightedContent }}

@@ -96,7 +96,7 @@ export function CodeBlock({
       )}
     >
       {title ? (
-        <div className="flex text-fd-muted-foreground items-center gap-2 h-9.5 border-b px-4">
+        <div className="flex items-center gap-2 h-9.5 border-b px-4 border-brand-neutral-400 text-brand-neutral-100">
           {typeof icon === "string" ? (
             <div
               className="[&_svg]:size-3.5"
@@ -110,7 +110,9 @@ export function CodeBlock({
           <figcaption className="flex-1 truncate">{title}</figcaption>
           {Actions({
             className: "-me-2",
-            children: allowCopy && <CopyButton containerRef={areaRef} />,
+            children: allowCopy && (
+              <CopyButton containerRef={areaRef} className="top-12 right-0.5" />
+            ),
           })}
         </div>
       ) : (
