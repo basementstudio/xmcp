@@ -2,16 +2,16 @@ import { AnimatedLink } from "@/components/animated-link";
 
 export const Footer = () => {
   return (
-    <footer className="text-center text-sm text-white flex flex-col-reverse sm:flex-row uppercase py-8 px-4 font-mono gap-4 justify-between w-full">
+    <footer className="text-center text-sm text-white flex flex-col-reverse sm:flex-row py-8 px-4 gap-4 justify-between w-full">
       <div className="flex-1 flex justify-center sm:justify-start">
         <span className="flex items-center gap-2 z-100">
           <span>© 2025</span>
           <AnimatedLink
-            href="https://basement.studio"
+            href="https://xmcp.dev"
             target="_blank"
             rel="noopener noreferrer"
           >
-            BASEMENT.STUDIO
+            xmcp
           </AnimatedLink>
         </span>
       </div>
