@@ -27,7 +27,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
-          githubUrl={`https://github.com/basementstudio/xmcp/blob/dev/apps/docs/content/docs/${page.path}`}
+          githubUrl={`https://github.com/basementstudio/xmcp/blob/dev/apps/website/content/docs/${page.path}`}
         />
       </div>
       <DocsBody>
@@ -57,8 +57,6 @@ export async function generateMetadata(
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
-
-  console.log(page);
 
   return {
     title: page.data.title + " | xmcp Documentation",
