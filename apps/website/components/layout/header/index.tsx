@@ -38,7 +38,7 @@ export const Header = () => {
         </div>
         <Link
           href="/"
-          className="hover:opacity-80 transition-opacity absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="hover:opacity-80 transition-opacity absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 left-4 top-1/2 -translate-y-1/2"
           aria-label="Home"
         >
           <Logo />
