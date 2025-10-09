@@ -170,7 +170,7 @@ function AskAIInput({
           <button
             key="bn"
             type="button"
-            className="transition-opacity duration-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed text-brand-white focus-visible:outline"
+            className="transition-opacity duration-200 shrink-0 disabled:text-brand-neutral-400 disabled:cursor-not-allowed text-brand-white focus-visible:outline"
             disabled={input.length === 0}
             onClick={onStart}
           >
