@@ -24,7 +24,7 @@ export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
         href={href}
         ref={ref}
         {...props}
-        className={cn("relative group uppercase font-mono", className)}
+        className={cn("relative group", className)}
       >
         {children}
         <div

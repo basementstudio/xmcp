@@ -49,13 +49,13 @@ export function SearchToggle(props: ComponentProps<"button">) {
     <button
       {...props}
       className={cn(
-        "p-2 border-transparent border sm:border-brand-neutral-200 text-start flex items-center gap-2 text-brand-neutral-100 text-sm hover:bg-white/10 rounded-xs",
+        "p-2 border-transparent border sm:border-brand-neutral-500 text-start flex items-center gap-2 text-brand-neutral-200 text-sm hover:bg-white/5 rounded-xs",
         "transition-colors duration-200 ease-in-out cursor-pointer",
         props.className
       )}
       onClick={() => setOpenSearch(true)}
     >
-      <Icons.search className="size-4 sm:size-3" />
+      <Icons.search className="size-4" />
       <span className="lg:block hidden">Search documentation...</span>
       <span className="hidden sm:block lg:hidden">Search...</span>
       <span className="text-brand-white ml-auto hidden md:block">
@@ -83,7 +83,7 @@ function Sidebar() {
   return (
     <aside
       className={cn(
-        "sidebar-scrollbar fixed flex flex-col shrink-0 p-4 pt-0 top-34 z-20 text-sm overflow-auto md:sticky md:h-[calc(100dvh-156px)] md:w-[300px]",
+        "sidebar-scrollbar fixed flex flex-col shrink-0 p-4 pt-0 top-28 z-20 text-sm overflow-auto md:sticky md:h-[calc(100dvh-156px)] md:w-[300px]",
         "max-md:inset-x-0 max-md:bottom-0 max-md:bg-fd-background",
         !open && "max-md:invisible"
       )}
