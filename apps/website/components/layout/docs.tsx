@@ -94,7 +94,7 @@ function Sidebar() {
 }
 
 const linkVariants = cva(
-  "flex items-center gap-2 w-full py-1 text-brand-neutral-100 [&_svg]:size-4 text-sm pl-1 font-mono uppercase font-medium",
+  "flex items-center gap-2 w-full py-1 text-brand-neutral-100 [&_svg]:size-4 text-sm pl-1 font-medium",
   {
     variants: {
       active: {
@@ -130,7 +130,7 @@ function SidebarItem({
 
   if (item.type === "separator") {
     return (
-      <p className="text-white mt-6 mb-1 first:mt-0 font-mono uppercase text-sm font-medium">
+      <p className="text-brand-white mt-6 mb-1 first:mt-0 text-sm font-medium">
         {item.icon}
         {item.name}
       </p>

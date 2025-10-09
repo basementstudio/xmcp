@@ -70,7 +70,7 @@ function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
         disabled={!hasMessages}
       >
         <span className="relative inline-flex items-center justify-center size-3.5">
-          <Icons.clipboard
+          <Icons.copy
             className={cn(
               "absolute inset-0 transition-opacity duration-200 text-brand-white size-3.5 mt-[1px]",
               copied ? "opacity-0" : "opacity-100"

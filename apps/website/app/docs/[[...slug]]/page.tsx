@@ -58,8 +58,10 @@ export async function generateMetadata(
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
+  console.log(page);
+
   return {
-    title: page.data.title,
+    title: page.data.title + " | xmcp Documentation",
     description: page.data.description,
     /*     openGraph: {
       images: getPageImage(page).url,

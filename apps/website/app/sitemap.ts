@@ -1,12 +1,17 @@
 import { getAllBlogPosts } from "../utils/blog";
+import type { MetadataRoute } from "next";
+import { source } from "@/lib/source";
 
 export const baseUrl = "https://xmcp.dev";
 
-// TO DO update!
+export const revalidate = false;
+
 export default async function sitemap() {
+  const url = (path: string): string => new URL(path, baseUrl).toString();
+
   const routes = ["", "/docs", "/blog", "/examples", "/x", "/showcase"].map(
     (route) => ({
-      url: `${baseUrl}${route}`,
+      url: url(route),
       lastModified: new Date().toISOString().split("T")[0],
     })
   );
@@ -14,11 +19,22 @@ export default async function sitemap() {
   // Add blog posts to sitemap
   const blogPosts = getAllBlogPosts();
   const blogRoutes = blogPosts.map((post) => ({
-    url: `${baseUrl}/blog/${post.slug}`,
+    url: url(`/blog/${post.slug}`),
     lastModified: post.date
       ? new Date(post.date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0],
   }));
 
-  return [...routes, ...blogRoutes];
+  const docRoutes = source.getPages().flatMap((page) => {
+    const { lastModified } = page.data;
+
+    return {
+      url: url(page.url),
+      lastModified: lastModified ? new Date(lastModified) : undefined,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    } as MetadataRoute.Sitemap[number];
+  });
+
+  return [...routes, ...blogRoutes, ...docRoutes];
 }
