@@ -1,0 +1,22 @@
+{
+  "title": "Display Name",
+  "icon": "MyIcon",
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "...getting-started",
+    "---Configuration---",
+    "...configuration",
+    "---Core Concepts---",
+    "...core-concepts",
+    "---Authentication---",
+    "...authentication",
+    "---Adapters---",
+    "...adapters",
+    "---Deployment---",
+    "...deployment",
+    "---Integrations---",
+    "...integrations"
+  ],
+  "defaultOpen": true
+}

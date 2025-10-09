@@ -1,0 +1,39 @@
+---
+title: "JSON Web Token"
+metadataTitle: "JWT Authentication | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to use JWT authentication in your xmcp application."
+---
+
+To enable JWT authentication, you can use the `jwtAuthMiddleware` middleware on your app.
+
+```typescript title="src/middleware.ts"
+import { jwtAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = [
+  jwtAuthMiddleware({
+    secret: process.env.JWT_SECRET!,
+    algorithms: ["HS256"],
+  }),
+  // ... other middlewares
+];
+
+export default middleware;
+```
+
+You can customize the middleware using the configuration object containing the JWT secret and verify options.
+
+```typescript
+const middleware = jwtAuthMiddleware({
+  secret: process.env.JWT_SECRET!,
+  algorithms: ["HS256"],
+  issuer: "https://example.com",
+  audience: "https://example.com",
+  subject: "user-id",
+  expiresIn: "1h",
+  notBefore: "1h",
+  clockTolerance: 30,
+});
+```
+
+Check out the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library for more details on the configuration options.

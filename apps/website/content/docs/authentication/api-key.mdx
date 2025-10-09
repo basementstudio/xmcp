@@ -1,0 +1,58 @@
+---
+title: "API Key"
+metadataTitle: "API Key Authentication | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to use API key authentication in your xmcp application."
+---
+
+To enable API key authentication, you can use the `apiKeyAuthMiddleware` middleware on your app.
+
+```typescript title="src/middleware.ts"
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = [
+  apiKeyAuthMiddleware({
+    headerName: "x-api-key",
+    apiKey: "12345",
+  }),
+  // ... other middlewares
+];
+
+export default middleware;
+```
+
+If no `headerName` is provided, the middleware will default to `x-api-key`.
+
+This middleware can also be used with a validation function. It should **return a boolean** value indicating if the API key is valid.
+
+```typescript title="src/middleware.ts"
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = apiKeyAuthMiddleware({
+  headerName: "x-api-key",
+  validateApiKey: async (apiKey) => {
+    return apiKey === "12345";
+  },
+});
+
+export default middleware;
+```
+
+Next time you connect to your MCP server, you'll need to provide the API key in the `x-api-key` header (or the name you specified in the middleware).
+
+Your connection object will look like this:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "url": "http://localhost:3001/mcp",
+      "headers": {
+        "x-api-key": "12345" // <- This is the API key you provided in the middleware
+      }
+    }
+  }
+}
+```
+
+Make sure to check the [connecting](/docs/getting-started/connecting) documentation for more details on the different clients.

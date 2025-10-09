@@ -1,0 +1,92 @@
+---
+title: "Tools"
+metadataTitle: "Tools | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to create and use tools in your xmcp application."
+description: "Tools are functions that your LLM can actively call and decides when to use based on user requests. They enable AI models to perform actions such as writing to databases, calling external APIs, modifying files, or triggering other logic."
+---
+
+`xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
+
+A tool file consists of three main exports:
+
+- **Default**: The tool handler function.
+- **Schema** (optional): The input parameters using Zod schemas.
+- **Metadata** (optional): The tool's identity and behavior hints. If omitted, the name is inferred from the file name and the description defaults to a placeholder.
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+  annotations: {
+    title: "Greet the user",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+// Tool implementation
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const result = `Hello, ${name}!`;
+
+  return {
+    content: [{ type: "text", text: result }],
+  };
+}
+```
+
+If you're returning a string or number only, you can shortcut the return value to be the string or number directly.
+
+```typescript
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+<Callout variant="info">
+  We encourage to use this shortcut for readability, and restrict the usage of
+  the content array type only for complex responses, like images, audio or
+  videos.
+</Callout>
+
+## References
+
+### Schema (optional)
+
+Defines the tool's input parameters with type validation:
+
+- **Key**: Parameter name.
+- **Value**: Zod schema with `.describe()` for documentation and tool inspection.
+- **Purpose**: Type validation and automatic parameter documentation.
+
+### Metadata (optional)
+
+Defines the tool's identity and behavior hints:
+
+- **Name**: Unique identifier for the tool (defaults to file name if omitted)
+- **Description**: Brief explanation of what the tool does (defaults to placeholder if omitted)
+- **Annotations**: Behavioral hints for AI models and UIs
+
+<Callout variant="info">
+  While metadata is optional, we strongly recommend providing a clear
+  description. This helps LLMs discover and use your tools more efficiently,
+  reducing token costs and improving accuracy.
+</Callout>
+
+### Implementation (required)
+
+The default export function that performs the actual work:
+
+- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
+- **Returns**: MCP-compatible response with content array, or a string/number shortcut.
+- **Async**: Supports async operations for API calls, file I/O, etc.

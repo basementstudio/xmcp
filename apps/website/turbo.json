@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": ["OPENROUTER_API_KEY", "BASEHUB_TOKEN"]
+    },
+    "lint": {
+      "outputs": [],
+      "cache": false
+    },
+    "dev": {
+      "cache": false
+    }
+  },
+  "extends": ["//"]
+}

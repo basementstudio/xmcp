@@ -1,0 +1,66 @@
+---
+title: "Project structure"
+metadataTitle: "Project structure | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Understand the basic project layout and organization."
+---
+
+## Overview
+
+A basic project structure is as follows:
+
+```
+my-project/
+├── src/
+│   ├── middleware.ts   # Middleware for http request/response processing
+│   └── tools/          # Tool files are auto-discovered here
+│       ├── greet.ts
+│       ├── search.ts
+│   └── prompts/          # Prompt files are auto-discovered here
+│       ├── review-code.ts
+│       ├── team-greeting.ts
+│   └── resources/      # Resource files are auto-discovered here
+│       ├── (config)/app.ts
+│       ├── (users)/[userId]/profile.ts
+├── dist/               # Built output (generated)
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts       # Configuration file for xmcp
+```
+
+## Top-level files
+
+There are the three top-level files that are required for your project:
+
+- `package.json`: Contains your project's dependencies and scripts.
+- `tsconfig.json`: Contains your project's TypeScript configuration.
+- `xmcp.config.ts`: Contains your project's xmcp configuration.
+
+## Source directory
+
+The `src/` directory houses your project's implementation. xmcp follows a declarative, file-system based approach—simply create a file in the appropriate directory, and it will be automatically discovered and registered.
+
+The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, and `resources/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
+
+<ConceptBoxes>
+  <ConceptBox
+    title="Tools"
+    description="Learn how to create and use tools in your xmcp project."
+    href="/docs/core-concepts/tools"
+  />
+  <ConceptBox
+    title="Prompts"
+    description="Discover how to define prompts for your AI interactions."
+    href="/docs/core-concepts/prompts"
+  />
+  <ConceptBox
+    title="Resources"
+    description="Understand how to expose data through resources."
+    href="/docs/core-concepts/resources"
+  />
+  <ConceptBox
+    title="Middleware"
+    description="Add custom logic to process requests and responses."
+    href="/docs/core-concepts/middlewares"
+  />
+</ConceptBoxes>
