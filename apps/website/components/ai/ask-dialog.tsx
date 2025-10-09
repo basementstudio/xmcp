@@ -311,7 +311,7 @@ function Message({
             <Link
               key={i}
               href={item.url}
-              className="group block text-xs rounded-xs border border-brand-neutral-200 bg-brand-black p-3 transition-all duration-200 hover:bg-white/5 hover:border-brand-neutral-100"
+              className="group block text-xs rounded-xs border border-brand-neutral-500 bg-brand-black p-2 transition-all duration-200 hover:bg-white/5 hover:border-brand-neutral-100"
             >
               <p className="font-semibold text-brand-neutral-50 group-hover:text-brand-white transition-colors">
                 {item.title}
@@ -400,7 +400,7 @@ function MobilePanel({
         <SheetTitle className="sr-only">Ask AI</SheetTitle>
 
         {/* Top actions bar */}
-        <div className="flex items-center justify-between p-4 border-b border-brand-neutral-200 bg-brand-black">
+        <div className="flex items-center justify-between p-4 border-b border-brand-neutral-500 bg-brand-black">
           <AskAIActions alwaysShow />
           <button
             type="button"
@@ -429,7 +429,7 @@ function MobilePanel({
         {/* Input - slides up from bottom */}
         <div
           className={cn(
-            "border-t border-brand-neutral-200 bg-brand-black transition-transform duration-300 ease-out p-4",
+            "border-t border-brand-neutral-500 bg-brand-black transition-transform duration-300 ease-out p-4",
             hasMessages ? "" : "mt-auto",
             showInput ? "translate-y-0" : "translate-y-full"
           )}
@@ -459,10 +459,10 @@ function DesktopDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay className="fixed inset-0 z-50 bg-brand-black/50" />
+      <DialogOverlay className="fixed inset-0 z-50 bg-brand-black/70" />
       <DialogContent
         aria-describedby={undefined}
-        className="fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-xs border border-brand-neutral-200 duration-200 overflow-hidden"
+        className="fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-xs border border-brand-neutral-500 duration-200 overflow-hidden"
       >
         <DialogTitle className="hidden">Ask AI</DialogTitle>
 
@@ -481,7 +481,7 @@ function DesktopDialog({
 
         {/* Input - always at the bottom */}
         <div
-          className={cn(hasMessages ? "border-t border-brand-neutral-200" : "")}
+          className={cn(hasMessages ? "border-t border-brand-neutral-500" : "")}
         >
           <div className="flex flex-row items-center gap-2 p-4">
             <AskAIInput
