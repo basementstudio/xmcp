@@ -77,7 +77,7 @@ export function LLMCopyButton({
 }
 
 const optionVariants = cva(
-  "text-xs p-2 inline-flex items-center gap-2 text-brand-neutral-100 hover:text-brand-white [&_svg]:size-4 transition-all duration-200"
+  "text-xs p-2 inline-flex items-center gap-2 text-brand-neutral-200 hover:text-brand-white [&_svg]:size-4 transition-all duration-200"
 );
 
 export function ViewOptions({
@@ -163,7 +163,7 @@ export function ViewOptions({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        className="flex flex-col overflow-auto border border-brand-neutral-200 bg-brand-black animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200 rounded-xs"
+        className="flex flex-col overflow-auto border border-brand-neutral-400 bg-brand-black animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200 rounded-xs"
       >
         {items.map((item) => (
           <Link

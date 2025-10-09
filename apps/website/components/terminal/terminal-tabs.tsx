@@ -52,7 +52,7 @@ export function TerminalTabs({
             onClick={() => setActiveTab(tab.value)}
             className={cn(
               "px-4 py-2 text-sm font-mono transition-colors relative",
-              "hover:bg-white/5",
+              "hover:bg-white/10",
               activeTab === tab.value
                 ? "bg-black text-brand-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-brand-neutral-200"
                 : "text-brand-neutral-100"

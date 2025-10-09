@@ -216,7 +216,7 @@ export function SearchDialogContent({
       aria-describedby={undefined}
       {...props}
       className={cn(
-        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xs border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-500",
+        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xs border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-400",
         props.className
       )}
     >
@@ -375,7 +375,7 @@ export function SearchDialogListItem({
         {item.type !== "page" && (
           <div
             role="none"
-            className="absolute start-3 inset-y-0 w-px bg-brand-neutral-500"
+            className="absolute start-3 inset-y-0 w-px bg-brand-neutral-400"
           />
         )}
         <p

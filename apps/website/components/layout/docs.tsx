@@ -49,7 +49,7 @@ export function SearchToggle(props: ComponentProps<"button">) {
     <button
       {...props}
       className={cn(
-        "p-2 border-transparent border sm:border-brand-neutral-500 text-start flex items-center gap-2 text-brand-neutral-200 text-sm hover:bg-white/5 rounded-xs",
+        "p-2 border-transparent border sm:border-brand-neutral-400 text-start flex items-center gap-2 text-brand-neutral-200 text-sm hover:bg-white/10 rounded-xs",
         "transition-colors duration-200 ease-in-out cursor-pointer",
         props.className
       )}

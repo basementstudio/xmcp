@@ -54,7 +54,7 @@ export async function ShowcaseCard({
         style={{ borderColor: "#333" }}
       >
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 border border-white/20 flex items-center justify-center bg-white/5 rounded overflow-hidden">
+          <div className="w-10 h-10 border border-white/20 flex items-center justify-center bg-white/10 rounded overflow-hidden">
             <Image
               src={logo.url}
               alt={`${name} logo`}

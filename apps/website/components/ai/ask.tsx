@@ -32,9 +32,9 @@ export function AskAIButton() {
       <button
         className={cn(
           "hidden sm:flex",
-          "p-2 border border-brand-neutral-500 flex-1",
+          "p-2 border border-brand-neutral-400 flex-1",
           "items-center gap-2 text-brand-neutral-200 text-sm",
-          "hover:bg-brand-white/5 rounded-xs bg-brand-black",
+          "hover:bg-white/10 rounded-xs bg-brand-black",
           "transition-colors duration-200 ease-in-out cursor-pointer"
         )}
         onClick={() => setOpen(true)}
@@ -47,9 +47,9 @@ export function AskAIButton() {
       <button
         className={cn(
           "sm:hidden fixed bottom-6 right-6 z-50",
-          "p-3 border border-brand-neutral-500",
+          "p-3 border border-brand-neutral-400",
           "flex items-center gap-2 text-brand-neutral-200 text-sm",
-          "hover:bg-brand-white/5 rounded-xs bg-brand-black",
+          "hover:bg-white/10 rounded-xs bg-brand-black",
           "transition-colors duration-200 ease-in-out cursor-pointer",
           "shadow-lg"
         )}
