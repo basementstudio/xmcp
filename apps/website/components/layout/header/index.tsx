@@ -21,7 +21,7 @@ export const Header = () => {
         <div></div>
         <div></div>
       </div>
-      <div className="w-full flex justify-center items-center z-100 px-4 py-2 md:py-4 gap-8">
+      <div className="w-full flex justify-center items-center z-100 px-4 py-2 md:py-4 gap-8 relative">
         <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">
           <div className="hidden md:flex gap-4">
             <AnimatedLink href="/docs">Docs</AnimatedLink>
@@ -38,12 +38,10 @@ export const Header = () => {
         </div>
         <Link
           href="/"
-          className="hover:opacity-80 transition-opacity absolute left-1/2 top-1/2 -translate-y-1/2"
+          className="hover:opacity-80 transition-opacity absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           aria-label="Home"
         >
-          <div className="w-full h-full">
-            <Logo />
-          </div>
+          <Logo />
         </Link>
       </div>
     </header>
