@@ -4,39 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@types/fs-extra':
-      specifier: ^11.0.4
-      version: 11.0.4
-    '@types/inquirer':
-      specifier: ^9.0.7
-      version: 9.0.9
-    '@types/node':
-      specifier: ^22
-      version: 22.18.8
-    '@types/ora':
-      specifier: ^3.1.0
-      version: 3.2.0
-    chalk:
-      specifier: ^5.3.0
-      version: 5.6.2
-    commander:
-      specifier: ^11.1.0
-      version: 11.1.0
-    fs-extra:
-      specifier: ^11.3.0
-      version: 11.3.2
-    inquirer:
-      specifier: ^9.2.12
-      version: 9.3.8
-    ora:
-      specifier: ^7.0.1
-      version: 7.0.1
-    typescript:
-      specifier: ^5.8.3
-      version: 5.9.3
-
 importers:
 
   .:
@@ -393,10 +360,6 @@ importers:
       zod:
         specifier: 3.24.4
         version: 3.24.4
-    devDependencies:
-      swc-loader:
-        specifier: ^0.2.6
-        version: 0.2.6(@swc/core@1.13.5)(webpack@5.102.0(@swc/core@1.13.5))
 
   examples/mcp-ui:
     dependencies:
@@ -493,10 +456,6 @@ importers:
       zod:
         specifier: 3.24.4
         version: 3.24.4
-    devDependencies:
-      swc-loader:
-        specifier: ^0.2.6
-        version: 0.2.6(@swc/core@1.13.5)(webpack@5.102.0(@swc/core@1.13.5))
 
   examples/polar-http:
     dependencies:
@@ -690,35 +649,35 @@ importers:
   packages/create-xmcp-app:
     dependencies:
       chalk:
-        specifier: 'catalog:'
+        specifier: ^5.3.0
         version: 5.6.2
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       fs-extra:
-        specifier: 'catalog:'
+        specifier: ^11.3.0
         version: 11.3.2
       inquirer:
-        specifier: 'catalog:'
+        specifier: ^9.2.12
         version: 9.3.8(@types/node@22.18.8)
       ora:
-        specifier: 'catalog:'
+        specifier: ^7.0.1
         version: 7.0.1
     devDependencies:
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/inquirer':
-        specifier: 'catalog:'
+        specifier: ^9.0.7
         version: 9.0.9
       '@types/node':
-        specifier: 'catalog:'
+        specifier: ^22
         version: 22.18.8
       '@types/ora':
-        specifier: 'catalog:'
+        specifier: ^3.1.0
         version: 3.2.0
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.8.3
         version: 5.9.3
 
   packages/eslint-config-custom:
@@ -751,32 +710,32 @@ importers:
   packages/init-xmcp:
     dependencies:
       chalk:
-        specifier: 'catalog:'
+        specifier: ^5.3.0
         version: 5.6.2
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       fs-extra:
-        specifier: 'catalog:'
+        specifier: ^11.3.0
         version: 11.3.2
       inquirer:
-        specifier: 'catalog:'
+        specifier: ^9.2.12
         version: 9.3.8(@types/node@22.18.8)
       ora:
-        specifier: 'catalog:'
+        specifier: ^7.0.1
         version: 7.0.1
     devDependencies:
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/inquirer':
-        specifier: 'catalog:'
+        specifier: ^9.0.7
         version: 9.0.9
       '@types/node':
-        specifier: 'catalog:'
+        specifier: ^22
         version: 22.18.8
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.8.3
         version: 5.9.3
 
   packages/plugins/better-auth:
@@ -10005,7 +9964,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 22.18.8
+      '@types/node': 20.19.19
 
   '@types/body-parser@1.19.6':
     dependencies:
@@ -10070,7 +10029,7 @@ snapshots:
   '@types/fs-extra@11.0.4':
     dependencies:
       '@types/jsonfile': 6.1.4
-      '@types/node': 22.18.8
+      '@types/node': 20.19.19
 
   '@types/glob@7.2.0':
     dependencies:
