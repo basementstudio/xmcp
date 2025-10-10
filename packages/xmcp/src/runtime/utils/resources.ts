@@ -59,12 +59,6 @@ export function addResourcesToServer(
       resourceSchema
     );
 
-    console.log({
-      name: resourceConfig.name,
-      uri,
-      config: resourceConfig,
-    });
-
     if (resourceInfo.type === "direct") {
       // register as a direct resource (static composed URI)
       server.registerResource(
