@@ -42,19 +42,19 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "chalk": "catalog:",
-    "commander": "catalog:",
-    "fs-extra": "catalog:",
-    "inquirer": "catalog:",
-    "ora": "catalog:"
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.3.0",
+    "inquirer": "^9.2.12",
+    "ora": "^7.0.1"
   },
   "devDependencies": {
-    "@types/fs-extra": "catalog:",
-    "@types/inquirer": "catalog:",
-    "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "typescript": "catalog:"
+    "typescript": "^5.8.3"
   }
 }
