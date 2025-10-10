@@ -90,11 +90,10 @@ const program = new Command()
       template = "openai";
       transports = ["http"];
       selectedPaths = ["tools", "resources"]; // OpenAI template doesn't use prompts
-      options.yes = true; // Skip confirmation when using --gpt
     }
 
-    // Handle transport selection from CLI options
-    if (options.http || options.stdio) {
+    // Handle transport selection from CLI options (only for non-gpt templates)
+    if (!options.gpt && (options.http || options.stdio)) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
@@ -128,8 +127,8 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options)
-      if (!options.http && !options.stdio) {
+      // Transport selection (skip if already specified via CLI options or using --gpt)
+      if (!options.gpt && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -151,32 +150,34 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      // Path selection checklist
-      const pathAnswers = await inquirer.prompt([
-        {
-          type: "checkbox",
-          name: "paths",
-          message: "Select components to initialize:",
-          choices: [
-            {
-              name: "Tools",
-              value: "tools",
-              checked: true,
-            },
-            {
-              name: "Prompts",
-              value: "prompts",
-              checked: true,
-            },
-            {
-              name: "Resources",
-              value: "resources",
-              checked: true,
-            },
-          ],
-        },
-      ]);
-      selectedPaths = pathAnswers.paths;
+      // Path selection checklist (skip for --gpt template)
+      if (!options.gpt) {
+        const pathAnswers = await inquirer.prompt([
+          {
+            type: "checkbox",
+            name: "paths",
+            message: "Select components to initialize:",
+            choices: [
+              {
+                name: "Tools",
+                value: "tools",
+                checked: true,
+              },
+              {
+                name: "Prompts",
+                value: "prompts",
+                checked: true,
+              },
+              {
+                name: "Resources",
+                value: "resources",
+                checked: true,
+              },
+            ],
+          },
+        ]);
+        selectedPaths = pathAnswers.paths;
+      }
 
       console.log();
       console.log(
