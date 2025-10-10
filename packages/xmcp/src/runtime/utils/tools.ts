@@ -65,11 +65,16 @@ export function addToolsToServer(
       toolConfig.annotations.title = toolConfig.name;
     }
 
+    if (toolConfig._meta === undefined) {
+      toolConfig._meta = {};
+    }
+
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
       inputSchema: toolSchema,
       annotations: toolConfig.annotations,
+      _meta: toolConfig._meta,
     };
 
     // server as any prevents infinite type recursion

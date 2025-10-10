@@ -33,7 +33,8 @@ export type McpToolHandler = (
  * This function:
  * 1. Passes through both args and extra parameters to the user's handler
  * 2. Transforms string/number responses into the required CallToolResult format
- * 3. Validates that the response is a proper CallToolResult and throws a descriptive error if not
+ * 3. Allows returning only `_meta` (without `content`) when it contains OpenAI-specific keys
+ * 4. Validates that the response is a proper CallToolResult and throws a descriptive error if not
  *
  * @param handler - The user's tool handler function
  * @returns A transformed handler compatible with McpServer.registerTool
@@ -60,6 +61,34 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
           },
         ],
       };
+    }
+
+    // Check if response has _meta but no content (special case for OpenAI metadata)
+    if (
+      response &&
+      typeof response === "object" &&
+      "_meta" in response &&
+      !("content" in response)
+    ) {
+      const meta = (response as any)._meta;
+
+      // Check if _meta contains OpenAI-specific keys (keys starting with "openai/")
+      if (
+        meta &&
+        typeof meta === "object" &&
+        Object.keys(meta).some((key) => key.startsWith("openai/"))
+      ) {
+        // Transform to include empty text content with the _meta
+        return {
+          content: [
+            {
+              type: "text",
+              text: "",
+            },
+          ],
+          _meta: meta,
+        };
+      }
     }
 
     // validate response
@@ -90,6 +119,12 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
           `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
           `    // All content types support an optional "_meta" object property\n` +
           `  ]\n` +
+          `}\n\n` +
+          `Or for OpenAI metadata only:\n` +
+          `{\n` +
+          `  _meta: {\n` +
+          `    "openai/...": ...\n` +
+          `  }\n` +
           `}`
       );
     }

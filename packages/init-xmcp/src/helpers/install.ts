@@ -34,19 +34,20 @@ export function detectPackageManager(
 /**
  * Install xmcp dependencies using the specified package manager
  * @param packageManager - Package manager to use (npm, yarn, pnpm, or bun)
+ * @param version - Version of init-xmcp to match xmcp version
  */
 export async function install(
   projectPath: string,
-  packageManager: "npm" | "pnpm" | "yarn" | "bun"
+  packageManager: "npm" | "pnpm" | "yarn" | "bun",
+  version: string
 ) {
-  const dependencies = ["xmcp", "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
-  const devDependencies = ["swc-loader"];
+  const dependencies = [`xmcp@${version}`, "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
 
   const commands = {
-    npm: `npm install ${dependencies.join(" ")} && npm install --save-dev ${devDependencies.join(" ")}`,
-    pnpm: `pnpm add ${dependencies.join(" ")} && pnpm add --save-dev ${devDependencies.join(" ")}`,
-    yarn: `yarn add ${dependencies.join(" ")} && yarn add --dev ${devDependencies.join(" ")}`,
-    bun: `bun add ${dependencies.join(" ")} && bun add --dev ${devDependencies.join(" ")}`,
+    npm: `npm install ${dependencies.join(" ")}`,
+    pnpm: `pnpm add ${dependencies.join(" ")}`,
+    yarn: `yarn add ${dependencies.join(" ")}`,
+    bun: `bun add ${dependencies.join(" ")}`,
   };
 
   try {

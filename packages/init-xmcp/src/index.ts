@@ -317,6 +317,7 @@ const program = new Command()
         resourcesPath,
         routePath,
         packageManager,
+        version: packageJson.version,
       });
 
       console.log(chalk.green("\n✔ xmcp initialized successfully!"));

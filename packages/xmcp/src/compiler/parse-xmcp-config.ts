@@ -94,6 +94,13 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
     resolve: {
       extensions: [".ts", ".js"],
     },
+    resolveLoader: {
+      modules: [
+        "node_modules",
+        path.resolve(__dirname, "../node_modules"), // for monorepo/npm
+        path.resolve(__dirname, "../.."), // for pnpm
+      ],
+    },
     module: {
       rules: [
         {

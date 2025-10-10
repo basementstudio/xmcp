@@ -51,11 +51,11 @@ export async function createShowcaseSubmission(
     const showcaseConfig = await fetchShowcaseForm();
 
     const submissionData = {
-      name: formData.name,
+      projectName: formData.name,
       tagline: formData.tagline,
-      logo: formData.logoFile,
+      logo: formData.logoFile ?? undefined,
       repositoryUrl: formData.repositoryUrl || "",
-      connectionMethod: formData.connectionMethod,
+      connection: formData.connectionMethod,
       contactEmail: formData.contactEmail,
     };
 

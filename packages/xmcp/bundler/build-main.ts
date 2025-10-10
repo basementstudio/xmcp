@@ -32,7 +32,7 @@ function getConfig() {
     "ts-loader",
     "fork-ts-checker-webpack-plugin",
     "zod",
-    "@vercel/mcp-adapter",
+    "mcp-handler",
   ];
 
   const __filename = fileURLToPath(import.meta.url);

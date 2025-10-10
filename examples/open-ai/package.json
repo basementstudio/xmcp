@@ -1,8 +1,8 @@
 {
-  "name": "HTTP Transport",
-  "description": "Learn how to set up an xmcp server using HTTP transport",
+  "name": "ChatGPT Widgets",
+  "description": "Learn how to set up an xmcp server using ChatGPT widgets",
   "keywords": [
-    "http"
+    "chatgpt"
   ],
   "scripts": {
     "build": "xmcp build",

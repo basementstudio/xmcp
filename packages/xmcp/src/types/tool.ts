@@ -22,6 +22,7 @@ export interface ToolMetadata {
   description: string;
   /** Optional hints about tool behavior */
   annotations?: ToolAnnotations;
+  _meta?: Record<string, unknown>;
 }
 
 export type ToolSchema = Record<

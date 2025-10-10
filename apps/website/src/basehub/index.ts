@@ -1,14 +1,5 @@
 import { basehub, fragmentOn } from "basehub";
 
-let basehubInstance: ReturnType<typeof basehub> | null = null;
-
-export function client(): ReturnType<typeof basehub> {
-  if (!basehubInstance) {
-    basehubInstance = basehub();
-  }
-  return basehubInstance;
-}
-
 const AssetsFragment = fragmentOn("Assets", {
   glLogoMatcap: {
     url: true,
@@ -16,7 +7,7 @@ const AssetsFragment = fragmentOn("Assets", {
 });
 
 export const fetchAssets = async () => {
-  const res = await client().query({
+  const res = await basehub().query({
     assets: {
       ...AssetsFragment,
     },
@@ -33,7 +24,7 @@ const ShowcaseFragment = fragmentOn("Showcase", {
 });
 
 export const fetchShowcaseForm = async () => {
-  const res = await client().query({
+  const res = await basehub().query({
     showcase: {
       ...ShowcaseFragment,
     },
@@ -54,7 +45,7 @@ const MCPTemplateFragment = fragmentOn("McpTemplateComponent", {
 });
 
 export const fetchMCPs = async () => {
-  const res = await client().query({
+  const res = await basehub().query({
     showcase: {
       mcps: {
         items: {

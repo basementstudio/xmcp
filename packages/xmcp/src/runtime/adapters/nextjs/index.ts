@@ -1,7 +1,4 @@
-import {
-  experimental_withMcpAuth as withMcpAuth,
-  createMcpHandler as createVercelMcpHandler,
-} from "@vercel/mcp-adapter";
+import { withMcpAuth, createMcpHandler } from "mcp-handler";
 import {
   configureServer,
   INJECTED_CONFIG,
@@ -24,7 +21,7 @@ export async function xmcpHandler(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const currentPath = url.pathname;
 
-  const requestHandler = createVercelMcpHandler(
+  const requestHandler = createMcpHandler(
     (server: McpServer) => {
       configureServer(server, toolModules, promptModules, resourceModules);
     },
@@ -54,3 +51,8 @@ export function withAuth(
 
   return withMcpAuth(handler, verifyToken, options);
 }
+
+export {
+  protectedResourceHandler,
+  metadataCorsOptionsRequestHandler,
+} from "mcp-handler";

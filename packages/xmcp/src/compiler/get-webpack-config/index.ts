@@ -53,12 +53,22 @@ export function getWebpackConfig(
       },
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     },
+    resolveLoader: {
+      modules: [
+        "node_modules",
+        path.resolve(__dirname, "../node_modules"), // for monorepo/npm
+        path.resolve(__dirname, "../.."), // for pnpm
+      ],
+    },
     plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
     module: {
       rules: [
         {
           test: /\.ts$/,
-          use: "swc-loader",
+          use: {
+            loader: "swc-loader",
+          },
+          exclude: /node_modules/,
         },
       ],
     },
