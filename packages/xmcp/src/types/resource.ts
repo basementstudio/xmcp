@@ -4,4 +4,5 @@ export interface ResourceMetadata {
   description?: string;
   mimeType?: string;
   size?: number;
+  [key: string]: any;
 }

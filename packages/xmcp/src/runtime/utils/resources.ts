@@ -1,6 +1,5 @@
 import {
   McpServer,
-  ResourceMetadata,
   ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp";
 import { ResourceFile } from "./server";
@@ -8,6 +7,7 @@ import { isZodRawShape, pathToName } from "./tools";
 import { ZodRawShape } from "zod";
 import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
+import { ResourceMetadata } from "@/types/resource";
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -37,7 +37,6 @@ export function addResourcesToServer(
       );
     }
 
-    // get resource info from the file path to determine URI and type
     const resourceInfo = composeUriFromPath(path);
 
     if (!resourceInfo) {
@@ -47,23 +46,36 @@ export function addResourcesToServer(
       return;
     }
 
+    // Construct URI based on mimeType
+    let uri = resourceInfo.uriTemplate;
+    if (resourceConfig.mimeType && resourceConfig.mimeType.includes("html")) {
+      // Add .html extension if mimeType contains "html"
+      uri = uri.endsWith(".html") ? uri : `${uri}.html`;
+    }
+
     const transformedHandler = transformResourceHandler(
       handler,
       path,
       resourceSchema
     );
 
+    console.log({
+      name: resourceConfig.name,
+      uri,
+      config: resourceConfig,
+    });
+
     if (resourceInfo.type === "direct") {
       // register as a direct resource (static composed URI)
       server.registerResource(
         resourceConfig.name as string,
-        resourceInfo.uriTemplate,
+        uri,
         resourceConfig,
         transformedHandler
       );
     } else {
       // register as a resource template (dynamic URI with parameters)
-      const resourceTemplate = new ResourceTemplate(resourceInfo.uriTemplate, {
+      const resourceTemplate = new ResourceTemplate(uri, {
         list: undefined,
       });
 
