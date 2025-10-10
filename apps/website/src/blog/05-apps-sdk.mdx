@@ -1,0 +1,98 @@
+---
+title: "OpenAI Apps SDK Support"
+description: "xmcp now supports building compatible UI resources and tools with the OpenAI Apps SDK, out of the box."
+category: "changelog"
+date: "2025-10-10"
+order: 1
+featured: true
+previewImage: "/blog/apps-sdk.png"
+---
+
+xmcp now supports building and serving UI resources compatible with OpenAI's Apps SDK. Get started by running:
+
+```bash
+npx create-xmcp-app --gpt
+```
+
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="/blog/gpt-apps-2.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+The `--gpt` flag scaffolds a project with the necessary files and dependencies to get you up and running quickly.
+
+Once your project is set up, you'll find two main folders. The prompts folder is excluded from this template by default, but you can easily enable it by modifying the `xmcp.config.ts` file.
+
+### Resources
+
+This folder contains your UI resources. The Apps SDK requires URI template paths to use the `.html` extension. By setting `mimeType: "text/html+skybridge"`, xmcp handles this automatically.
+
+```typescript
+export const metadata: ResourceMetadata = {
+  name: "your-ui-resource",
+  title: "Show your UI resource",
+  mimeType: "text/html+skybridge",
+};
+```
+
+Then, your handler can return the HTML content:
+
+```typescript
+export default function handler() {
+  return `
+    <div>Hello, world!</div>
+  `;
+}
+```
+
+This resource will be accessible at `ui://widget/your-ui-resource.html`, corresponding to the folder structure `(ui)/widget/your-ui-resource`.
+
+For more information on constructing resource URIs, check out the [resources documentation](/docs#resources).
+
+### Tools
+
+This folder contains your tools, which interact with and retrieve your UI resources.
+
+The `ToolMetadata` includes a `_meta` property for adding Apps SDK-specific metadata, enabling your resources to be displayed within widgets.
+
+Available metadata keys:
+
+- `openai/outputTemplate`: Points to your resource URI template (required for discoverability)
+- `openai/widgetAccessible`: Boolean indicating if the resource is accessible within a widget
+- `openai/resultCanProduceWidget`: Boolean indicating if the tool result can produce a widget
+- `openai/widgetDescription`: Description displayed to the model when a client renders the component
+- `openai/widgetPrefersBorder`: Enables border rendering for widgets better suited to a "Card" layout
+
+```typescript
+import { type ToolMetadata } from "xmcp";
+
+const widgetMeta = {
+  "openai/outputTemplate": "ui://widget/your-ui-resource.html",
+  "openai/widgetAccessible": true,
+  "openai/resultCanProduceWidget": true,
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-your-ui-resource",
+  description: "Show Your UI Resource",
+  _meta: {
+    ...widgetMeta,
+  },
+};
+
+export default async function handler() {
+  return {
+    _meta: widgetMeta, // Required: return metadata in the response
+  };
+}
+```
+
+If you're not returning content in the response, you can omit the `content` array property and simply return the widget metadata.
+
+## References
+
+For more details, see the [OpenAI Apps SDK documentation](https://developers.openai.com/apps-sdk). You can test your resources and tools using [MCPJam](https://mcpjam.com), an open source MCP inspector.
