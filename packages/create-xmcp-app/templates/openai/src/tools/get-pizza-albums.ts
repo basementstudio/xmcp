@@ -24,13 +24,6 @@ export const metadata: ToolMetadata = {
 
 export default async function handler() {
   return {
-    // returning content is optional, but you can return it if you want
-    /* content: [
-      {
-        type: "text",
-        text: "Rendered a pizza album!",
-      },
-    ], */
     _meta: widgetMeta, // mandatory: make sure to return metadata here as well
   };
 }
