@@ -14,6 +14,7 @@
   --brand-neutral-300: #595959;
   --brand-neutral-400: #424242;
   --brand-neutral-500: #262626;
+  --brand-neutral-600: #171717;
   --brand-black: #000000;
 }
 
@@ -31,6 +32,7 @@
   --color-brand-neutral-300: var(--brand-neutral-300);
   --color-brand-neutral-400: var(--brand-neutral-400);
   --color-brand-neutral-500: var(--brand-neutral-500);
+  --color-brand-neutral-600: var(--brand-neutral-600);
   --color-brand-black: var(--brand-black);
 }
 
@@ -276,4 +278,10 @@ input[type="email"] {
 *:focus-visible {
   outline: 1px solid white;
   outline-offset: 2px;
+}
+
+.display {
+  font-size: 2.5rem;
+  line-height: 3rem;
+  letter-spacing: -0.05rem;
 }
