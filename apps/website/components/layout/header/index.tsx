@@ -1,4 +1,3 @@
-import styles from "./progressive-blur.module.css";
 import Link from "next/link";
 import { MobileMenu } from "./mobile";
 import { AskAIButton } from "@/components/ai/ask";
@@ -8,20 +7,7 @@ import { AnimatedLink } from "@/components/animated-link";
 export const Header = () => {
   return (
     <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-100 flex justify-center items-center">
-      <div
-        className={`
-          pointer-events-none
-          absolute inset-0
-          w-full h-full
-          ${styles.progressiveBlur}
-        `}
-        aria-hidden="true"
-      >
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-      <div className="w-full flex justify-center items-center z-100 px-4 py-2 md:py-4 gap-8 relative">
+      <div className="w-full flex justify-center items-center z-100 px-4 py-2 gap-8 relative border-b border-brand-neutral-600">
         <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">
           <div className="hidden md:flex gap-4">
             <AnimatedLink href="/docs">Docs</AnimatedLink>
@@ -30,7 +16,7 @@ export const Header = () => {
             <AnimatedLink href="/blog">Blog</AnimatedLink>
           </div>
         </div>
-        <div className="flex gap-4 ml-auto items-center">
+        <div className="flex gap-2 ml-auto items-center">
           <SearchToggle />
           <AskAIButton />
           <GithubButton />
