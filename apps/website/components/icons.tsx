@@ -257,4 +257,21 @@ export const Icons = {
       <path d="M11 11H13V13H11V11Z" fill="currentColor" />
     </svg>
   ),
+  vercel: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M8 1L16 15H0L8 1Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
 };

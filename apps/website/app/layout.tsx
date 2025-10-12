@@ -100,7 +100,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </RootProvider>
-        <Toolbar />
+        {/* <Toolbar /> */}
         <Analytics />
       </body>
     </html>
