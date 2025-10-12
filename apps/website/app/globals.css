@@ -285,6 +285,10 @@ input[type="email"] {
   @apply text-[1.5rem] leading-6 sm:text-[2.5rem] sm:leading-[3rem];
 }
 
+.heading-2 {
+  @apply text-[1.5rem] leading-6 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
+}
+
 .text-gradient {
   background: var(
     --80-100-80,

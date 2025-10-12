@@ -1,8 +1,6 @@
-import { AllYouNeedIsToolsSection } from "./sections/all-you-need-is-tools";
-import { FeaturesSection } from "./sections/features-section";
-import { GetStartedSection } from "./sections/get-started-section";
 import { Metadata } from "next";
 import { HomeHero } from "@/components/home/hero";
+import { Features } from "@/components/home/features";
 
 export const dynamic = "force-static";
 
@@ -16,9 +14,10 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   return (
-    <div className="flex flex-col max-w-[1440px] w-full mx-auto px-4">
+    <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <HomeHero />
-      <div
+      <Features />
+      {/* <div
         className="flex flex-col"
         style={{
           gap: "calc(var(--spacing) * 30)",
@@ -27,7 +26,7 @@ export default async function Home() {
         <AllYouNeedIsToolsSection />
         <FeaturesSection />
         <GetStartedSection />
-      </div>
+      </div> */}
     </div>
   );
 }

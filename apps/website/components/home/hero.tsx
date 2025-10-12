@@ -8,7 +8,7 @@ import { Tag } from "../ui/tag";
 
 export const HomeHero = () => {
   return (
-    <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4">
+    <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
         className="flex items-center justify-center gap-2 z-10 text-xs"
         href="https://npmjs.com/package/xmcp"
