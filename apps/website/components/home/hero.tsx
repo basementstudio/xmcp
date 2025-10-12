@@ -20,7 +20,7 @@ export const HomeHero = () => {
       </h1>
       <Image
         src={HeroBg}
-        alt=""
+        alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
         className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
       />
       <div className="flex items-center justify-center gap-2">
