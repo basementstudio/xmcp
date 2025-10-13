@@ -209,7 +209,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   );
 };
 
-export const Steps = () => {
+export const HomeSteps = () => {
   const [selectedStep, setSelectedStep] = useState(1);
 
   const handleStepChange = (newStep: number) => {
@@ -222,7 +222,7 @@ export const Steps = () => {
 
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
         <div className="flex flex-col gap-4 md:px-4">
-          <h2 className="text-4xl">From zero to prod in seconds</h2>
+          <h2 className="heading-2">From zero to prod in seconds</h2>
           <p className="text-brand-neutral-100 text-base">
             Everything you need etc etc (this text could be opted out)
           </p>
@@ -231,7 +231,7 @@ export const Steps = () => {
         {steps.map((step) => (
           <div key={step.id} className="flex flex-col gap-4">
             <div className="md:px-4 flex items-start">
-              <h3 className="text-[1.5rem] text-brand-white text-balance">
+              <h3 className="text-[1.25rem] text-brand-white text-balance">
                 {step.title}
               </h3>
             </div>

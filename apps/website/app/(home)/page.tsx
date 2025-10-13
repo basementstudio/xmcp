@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { HomeHero } from "@/components/home/hero";
-import { Features } from "@/components/home/features";
-import { Steps } from "@/components/home/steps";
+import { HomeFeatures } from "@/components/home/features";
+import { HomeSteps } from "@/components/home/steps";
+import { HomeBlog } from "@/components/home/blog";
 
 export const dynamic = "force-static";
 
@@ -17,18 +18,9 @@ export default async function Home() {
   return (
     <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <HomeHero />
-      <Features />
-      <Steps />
-      {/* <div
-        className="flex flex-col"
-        style={{
-          gap: "calc(var(--spacing) * 30)",
-        }}
-      >
-        <AllYouNeedIsToolsSection />
-        <FeaturesSection />
-        <GetStartedSection />
-      </div> */}
+      <HomeFeatures />
+      <HomeSteps />
+      <HomeBlog />
     </div>
   );
 }

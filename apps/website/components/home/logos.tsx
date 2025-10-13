@@ -86,14 +86,14 @@ export const Logos = {
         fill="#F7F7F7"
       />
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M8.02138 4.40817V11.7355C8.02138 11.9232 7.8693 12.075 7.68128 12.075H0.340903C0.0380225 12.075 -0.11406 11.7093 0.100267 11.4953L7.44065 4.16792C7.65498 3.95404 8.02138 4.10582 8.02138 4.40817Z"
         fill="#F7F7F7"
       />
       <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M15.2402 26.9481V19.6208C15.2402 19.4331 15.3923 19.2812 15.5804 19.2812H22.9207C23.2236 19.2812 23.3757 19.6471 23.1614 19.861L15.821 27.1884C15.6067 27.4023 15.2402 27.2505 15.2402 26.9481Z"
         fill="#F7F7F7"
       />
