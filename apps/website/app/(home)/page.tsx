@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { HomeHero } from "@/components/home/hero";
 import { Features } from "@/components/home/features";
+import { Steps } from "@/components/home/steps";
 
 export const dynamic = "force-static";
 
@@ -17,6 +18,7 @@ export default async function Home() {
     <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <HomeHero />
       <Features />
+      <Steps />
       {/* <div
         className="flex flex-col"
         style={{
