@@ -62,9 +62,34 @@ export const Steps = () => {
 
   return (
     <div className="w-full py-16 col-span-12 relative">
-      <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
+      <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
 
-      <div className="flex gap-12 flex-1">
+      <div className="md:hidden flex flex-col gap-8">
+        <div className="flex flex-col gap-4 md:px-4">
+          <h2 className="text-4xl">From zero to prod in seconds</h2>
+          <p className="text-brand-neutral-100 text-base">
+            Everything you need etc etc (this text could be opted out)
+          </p>
+        </div>
+
+        {steps.map((step) => (
+          <div key={step.id} className="flex flex-col gap-4">
+            <div className="md:px-4 flex items-start gap-3">
+              <span className="text-[1.25rem] text-brand-white flex-shrink-0">
+                {step.id}.
+              </span>
+              <h3 className="text-[1.25rem] text-brand-white text-balance">
+                {step.title}
+              </h3>
+            </div>
+            <div className="w-full">
+              <StepContent stepId={step.id} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:flex gap-12 flex-1">
         <div className="flex-1 flex flex-col relative">
           <div className="flex flex-col gap-4 px-4 py-8 relative">
             <h2 className="text-4xl">From zero to prod in seconds</h2>
@@ -85,9 +110,9 @@ export const Steps = () => {
                 >
                   <div
                     className={cn(
-                      "absolute -left-4 mt-2 size-4 pr-4 flex items-center justify-center text-base flex-shrink-0 transition-all duration-200 ease-in-out border-r border-brand-neutral-300 text-brand-neutral-200 group-hover:text-brand-white group-hover:border-brand-white opacity-0",
+                      "absolute -left-4 mt-2 size-4 pr-4 flex items-center justify-center text-base flex-shrink-0 transition-all duration-200 ease-in-out border-r border-brand-neutral-300 text-brand-neutral-200 group-hover:text-brand-neutral-50 group-hover:border-brand-neutral-50 opacity-0 md:hidden xl:flex",
                       selectedStep === step.id &&
-                        "text-brand-white border-brand-white opacity-100"
+                        "text-brand-white border-brand-white xl:opacity-100"
                     )}
                   >
                     {step.id}
@@ -96,7 +121,7 @@ export const Steps = () => {
                   <div className="pt-1 pl-4">
                     <h3
                       className={cn(
-                        "text-base text-brand-neutral-200 transition-all group-hover:text-brand-white",
+                        "text-base text-brand-neutral-200 transition-all group-hover:text-brand-neutral-50",
                         selectedStep === step.id && "text-brand-white"
                       )}
                     >
