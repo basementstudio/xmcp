@@ -114,7 +114,7 @@ export function getFeaturedBlogPost(): BlogPost | null {
 
 import path from "path";
 
-export const BLOG_DIRECTORY = path.join(process.cwd(), "src/blog");
+export const BLOG_DIRECTORY = path.join(process.cwd(), "blog");
 
 // Extract numeric prefix from filename (e.g., "01-introduction.mdx" -> { order: 1, cleanName: "introduction" })
 export function extractOrderFromFilename(filename: string): {
