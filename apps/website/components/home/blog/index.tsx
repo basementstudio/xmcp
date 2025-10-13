@@ -36,8 +36,8 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
       href={`/blog/${post.slug}`}
       className="text-left group relative overflow-visible h-full block"
     >
-      <div className="relative border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500">
-        <div className="w-full aspect-video border-b border-brand-neutral-500 overflow-hidden relative">
+      <div className="relative border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+        <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {post.previewImage ? (
             <Image
               src={post.previewImage}
