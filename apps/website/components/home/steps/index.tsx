@@ -222,7 +222,9 @@ export const HomeSteps = () => {
 
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
         <div className="flex flex-col gap-4 md:px-4">
-          <h2 className="heading-2">From zero to prod in seconds</h2>
+          <h2 className="heading-2 text-gradient">
+            From zero to prod in seconds
+          </h2>
           <p className="text-brand-neutral-100 text-base">
             Everything you need etc etc (this text could be opted out)
           </p>

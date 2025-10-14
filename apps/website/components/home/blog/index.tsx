@@ -11,7 +11,7 @@ export const HomeBlog = () => {
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
         <Tag text="Blog" />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-4 md:gap-8 w-full">
-          <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto">
+          <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient">
             Guides & changelogs
           </h2>
           <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
