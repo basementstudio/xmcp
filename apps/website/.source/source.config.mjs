@@ -12,6 +12,14 @@ var docs = defineDocs({
     }
   }
 });
+var blog = defineDocs({
+  dir: "content/blog",
+  docs: {
+    postprocess: {
+      includeProcessedMarkdown: true
+    }
+  }
+});
 var source_config_default = defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
@@ -29,6 +37,7 @@ var source_config_default = defineConfig({
   }
 });
 export {
+  blog,
   source_config_default as default,
   docs
 };
