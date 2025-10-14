@@ -111,7 +111,7 @@ export function CodeBlock({
           {Actions({
             className: "-me-2",
             children: allowCopy && (
-              <CopyButton containerRef={areaRef} className="top-12 right-0.5" />
+              <CopyButton containerRef={areaRef} className="top-0 right-0.5" />
             ),
           })}
         </div>
