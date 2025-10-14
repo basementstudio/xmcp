@@ -43,6 +43,7 @@
     "fumadocs-mdx": "^12.0.1",
     "fumadocs-ui": "^15.8.2",
     "gray-matter": "^4.0.3",
+    "gsap": "^3.13.0",
     "hast": "^1.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html2canvas": "^1.4.1",

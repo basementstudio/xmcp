@@ -180,7 +180,7 @@ function AskAIInput({
             <button
               key="bn2"
               type="button"
-              className="hidden md:block transition-opacity duration-200 shrink-0 text-brand-white focus-visible:outline text-sm font-mono"
+              className="hidden md:block transition-opacity duration-200 shrink-0 text-brand-white focus-visible:outline text-sm font-medium"
               onClick={onEscape}
             >
               ESC
