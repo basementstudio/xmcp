@@ -128,7 +128,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
             {step.filename}
           </span>
         </div>
-        <div className="p-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
+        <div className="py-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
           <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
         </div>
       </div>
