@@ -1,5 +1,5 @@
 import { blogSource } from "../../../lib/source";
-import { DocsBody, DocsDescription, DocsTitle } from "@/components/layout/page";
+import { DocsBody, DocsTitle } from "@/components/layout/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
@@ -17,8 +17,8 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   return (
     <BlogPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
-      <DocsBody>
+      {/* <DocsDescription>{page.data.description}</DocsDescription> */}
+      <DocsBody className="w-full">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

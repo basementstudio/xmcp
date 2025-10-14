@@ -65,7 +65,7 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
         </div>
       )}
       <main className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
-        <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 mx-auto items-start h-full">
+        <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 mx-auto px-4 items-start h-full">
           {props.children}
         </article>
       </main>
