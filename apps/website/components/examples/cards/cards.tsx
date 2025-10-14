@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import { ExampleItem } from "../../../utils/github";
-
+import { Tag } from "@/components/ui/tag";
 interface ExampleCardsProps {
   examples: ExampleItem[];
 }
@@ -67,16 +67,16 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
+    <div className="col-span-12 flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-white uppercase tracking-wide">
+          <h3 className="text-sm font-medium text-brand-white uppercase tracking-wide">
             Filter by Category
           </h3>
           {selectedTags.length > 0 && (
             <button
               onClick={clearFilters}
-              className="text-xs text-[#BABABA] hover:text-white transition-colors"
+              className="text-xs text-brand-neutral-200 hover:text-white transition-colors"
             >
               Clear filters
             </button>
@@ -95,8 +95,8 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
                     ? selectedTags.length === 0
                     : selectedTags.includes(tag)
                 )
-                  ? "border-white bg-white text-black"
-                  : "border-white/20 text-white/80 hover:border-white/40 hover:text-white"
+                  ? "border-brand-white bg-brand-white text-brand-black"
+                  : "border-brand-neutral-400 text-brand-neutral-200 hover:border-brand-neutral-300 hover:text-brand-white"
               )}
             >
               {tag}
@@ -113,7 +113,7 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
             ))
           ) : (
             <div className="col-span-full text-center py-12">
-              <p className="text-[#BABABA] text-sm">
+              <p className="text-brand-neutral-200 text-sm">
                 No examples found for the selected filters.
               </p>
             </div>
@@ -142,18 +142,16 @@ export function ExampleCard({
         className
       )}
     >
-      <div className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible border-[#333]" />
-      <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-[#333]">
+      <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="mb-3">
-          <h4 className="text-white font-medium mt-0 uppercase">
-            {name}{" "}
-            <span className="invisible group-hover:visible text-sm">{"→"}</span>
+          <h4 className="text-brand-white font-medium mt-0 uppercase">
+            {name}
           </h4>
         </div>
 
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-3 flex flex-col justify-between h-full">
-            <p className="text-sm text-[#BABABA] leading-relaxed">
+            <p className="text-sm text-brand-neutral-200 leading-relaxed">
               {description}
             </p>
           </div>
@@ -161,9 +159,7 @@ export function ExampleCard({
           {tags && tags.length > 0 && (
             <div className="flex items-center justify-between mt-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
-                  {tags[0]}
-                </span>
+                <Tag text={tags[0]} />
               </div>
             </div>
           )}
