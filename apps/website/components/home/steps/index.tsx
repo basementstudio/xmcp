@@ -7,15 +7,21 @@ import gsap from "gsap";
 const steps = [
   {
     id: 1,
-    title: "Get started with creating a new xmcp app",
-    command: "npx create-xmcp-app@latest my-server",
-    output: `Creating a new xmcp app in /my-server...
+    title: "Create a new xmcp app",
+    type: "command" as const,
+    command: "npx create-xmcp-app@latest",
+    output: `? What is your project named? my-server
+? Select a package manager: npm
+? Select the transport you want to use: HTTP (runs on a server)
+? Select components to initialize:
+  ◉ Tools
+  ◉ Prompts
+  ◉ Resources
 
 ✓ Installing dependencies...
 ✓ Setting up project structure...
-✓ Generating configuration files...
 
-Success! Created my-server at /my-server
+Success! Created my-server
 
 Inside that directory, you can run:
   npm run dev    Start development server
@@ -24,65 +30,80 @@ Inside that directory, you can run:
   {
     id: 2,
     title: "Configure your environment",
-    command: "cat xmcp.config.ts",
-    output: `import { defineConfig } from "xmcp";
+    type: "file" as const,
+    filename: "xmcp.config.ts",
+    content: `import { defineConfig } from "xmcp";
 
 export default defineConfig({
-  transport: "stdio",
-  // Add your configuration here
+  name: "my-server",
+  version: "1.0.0",
+  transport: "http",
+  server: {
+    port: 3000,
+  },
+  // Configure your tools, resources, and prompts
 });`,
   },
   {
     id: 3,
-    title: "Add tools and resources",
-    command: "npm run dev",
-    output: `> my-server@1.0.0 dev
-> xmcp dev
+    title: "Add tools, resources, and prompts",
+    type: "file" as const,
+    filename: "src/tools/weather.ts",
+    content: `import { tool } from "xmcp";
+import { z } from "zod";
 
-🚀 Server started
-📦 Loaded 3 tools
-📚 Loaded 2 resources
-🔧 Ready to accept connections
-
-Available tools:
-  • get-weather
-  • send-email  
-  • search-database`,
+export const getWeather = tool({
+  name: "get-weather",
+  description: "Get current weather for a location",
+  parameters: z.object({
+    location: z.string().describe("City name"),
+  }),
+  execute: async ({ location }) => {
+    // Your implementation here
+    return \`Weather in \${location}: 72°F, Sunny\`;
+  },
+});`,
   },
   {
     id: 4,
     title: "Deploy your server",
-    command: "npm run build && npm run start",
-    output: `> my-server@1.0.0 build
-> xmcp build
+    type: "command" as const,
+    command: "vc deploy",
+    output: `Vercel CLI 37.0.0
+🔍 Inspect: https://vercel.com/...
+✅ Production: https://my-server.vercel.app
 
-✓ Compiled successfully
-✓ Output written to ./dist
+📝 Deployment Summary:
+  • Environment: Production
+  • Region: iad1
+  • Build Time: 12s
+  • Status: Ready
 
-> my-server@1.0.0 start  
-> node dist/index.js
-
-🎉 Production server running
-🌐 Listening on port 3000`,
+🎉 Your MCP server is live!`,
   },
 ];
 
 const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
-  return (
-    <div className="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-2xl w-full h-full">
-      <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center gap-2 relative">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+  if (step.type === "file") {
+    return (
+      <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[300px]">
+        <div className="flex items-center gap-2 h-9.5 border-b px-4 border-brand-neutral-400 text-brand-neutral-100">
+          <span className="flex-1 truncate text-sm font-mono">
+            {step.filename}
+          </span>
         </div>
-        <div className="flex-1 text-center text-xs text-zinc-500 font-mono absolute left-0 right-0">
-          terminal — step {step.id}
+        <div className="p-4 font-mono text-[13px] overflow-auto">
+          <pre className="text-zinc-300 whitespace-pre leading-relaxed">
+            {step.content}
+          </pre>
         </div>
       </div>
+    );
+  }
 
-      {/* Terminal Content */}
-      <div className="p-6 font-mono text-sm min-h-[400px] flex flex-col gap-4">
+  return (
+    <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[300px]">
+      <div className="p-4 font-mono text-[13px] flex flex-col gap-3 overflow-auto">
         <div className="flex items-center gap-2">
           <span className="text-green-400">$</span>
           <span className="text-zinc-100">{step.command}</span>
@@ -101,7 +122,6 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   const previousStepRef = useRef(stepId);
   const isAnimatingRef = useRef(false);
 
-  // Initialize terminal positions on mount
   useEffect(() => {
     steps.forEach((step) => {
       const terminal = terminalRefs.current[step.id];
@@ -117,7 +137,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           opacity: 1,
           zIndex: 10,
           display: "block",
-          transformOrigin: "center top",
+          transformOrigin: "center center",
         });
       } else {
         gsap.set(terminal, {
@@ -128,7 +148,6 @@ const StepContent = ({ stepId }: { stepId: number }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Animate step changes
   useEffect(() => {
     if (stepId === previousStepRef.current || isAnimatingRef.current) return;
 
@@ -168,30 +187,34 @@ const StepContent = ({ stepId }: { stepId: number }) => {
     tl.to(
       previousTerminal,
       {
-        scale: 0.95,
+        scale: 0.98,
         opacity: 0,
-        duration: 0.4,
-        ease: "power2.inOut",
+        duration: 0.5,
+        ease: "power2.out",
       },
       0
     ).fromTo(
       currentTerminal,
       {
-        y: typeof window !== "undefined" ? window.innerHeight / 2 : 400,
+        y: 60,
         scale: 1,
-        opacity: 1,
+        opacity: 0,
       },
       {
         y: 0,
-        duration: 0.4,
-        ease: "power2.inOut",
+        opacity: 1,
+        duration: 0.5,
+        ease: "power2.out",
       },
-      0
+      0.1
     );
   }, [stepId]);
 
   return (
-    <div ref={containerRef} className="relative w-full h-full min-h-[500px]">
+    <div
+      ref={containerRef}
+      className="relative w-full h-full flex items-center justify-center"
+    >
       {steps.map((step) => (
         <div
           key={step.id}
@@ -199,8 +222,8 @@ const StepContent = ({ stepId }: { stepId: number }) => {
             terminalRefs.current[step.id] = el;
           }}
           data-step={step.id}
-          className="absolute top-0 left-0 w-full"
-          style={{ transformOrigin: "center top" }}
+          className="absolute top-1/2 left-0 w-full flex items-center justify-center -translate-y-1/2"
+          style={{ transformOrigin: "center center" }}
         >
           <Terminal step={step} />
         </div>
@@ -211,10 +234,55 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 
 export const HomeSteps = () => {
   const [selectedStep, setSelectedStep] = useState(1);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleStepChange = (newStep: number) => {
     setSelectedStep(newStep);
+    setIsAutoPlaying(false);
+
+    if (autoPlayTimerRef.current) {
+      clearInterval(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+    }
+
+    resumeTimerRef.current = setTimeout(() => {
+      setIsAutoPlaying(true);
+    }, 5000);
   };
+
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+
+    autoPlayTimerRef.current = setInterval(() => {
+      setSelectedStep((current) => {
+        const nextStep = current >= steps.length ? 1 : current + 1;
+        return nextStep;
+      });
+    }, 5000);
+
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+        autoPlayTimerRef.current = null;
+      }
+    };
+  }, [isAutoPlaying]);
+
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+      }
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="w-full py-8 md:py-16 col-span-12 relative">
@@ -289,7 +357,7 @@ export const HomeSteps = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-visible">
+        <div className="flex-1 overflow-visible flex items-center justify-center">
           <StepContent stepId={selectedStep} />
         </div>
       </div>
