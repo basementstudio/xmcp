@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CopyButton } from "../../ui/copy-button";
 import { fetchMCPs } from "@/basehub/";
-//import { getRepoStars } from "@/utils/github";
+import { Tag } from "@/components/ui/tag";
 
 export type ShowcaseItem = {
   name: string;
@@ -20,12 +20,10 @@ export async function ShowcaseCards() {
   const mcps = await fetchMCPs();
 
   return (
-    <div className="space-y-8">
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mcps.map((mcp: ShowcaseItem, index: number) => (
-          <ShowcaseCard key={index} {...mcp} />
-        ))}
-      </section>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      {mcps.map((mcp: ShowcaseItem, index: number) => (
+        <ShowcaseCard key={index} {...mcp} />
+      ))}
     </div>
   );
 }
@@ -45,16 +43,9 @@ export async function ShowcaseCard({
         className
       )}
     >
-      <div
-        className="top-1 left-1 absolute w-full h-full group-hover:border group-hover:visible invisible"
-        style={{ borderColor: "#333" }}
-      />
-      <div
-        className="relative border border-muted p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col"
-        style={{ borderColor: "#333" }}
-      >
+      <div className="relative border border-muted p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 border border-white/20 flex items-center justify-center bg-white/10 rounded overflow-hidden">
+          <div className="w-10 h-10 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded overflow-hidden">
             <Image
               src={logo.url}
               alt={`${name} logo`}
@@ -65,21 +56,7 @@ export async function ShowcaseCard({
           </div>
           <div className="flex-1">
             <div className="flex items-start justify-between">
-              {repositoryUrl ? (
-                <Link
-                  href={repositoryUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white font-medium uppercase hover:underline"
-                >
-                  {name}{" "}
-                  <span className="invisible group-hover:visible text-sm">
-                    {"→"}
-                  </span>
-                </Link>
-              ) : (
-                <h4 className="text-white font-medium uppercase">{name}</h4>
-              )}
+              <h4 className="text-white font-medium uppercase">{name}</h4>
             </div>
           </div>
         </div>
@@ -103,9 +80,7 @@ export async function ShowcaseCard({
 
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center">
-              <span className="text-xs px-2 py-1 border border-white/20 text-white/80 uppercase tracking-wide">
-                {tag}
-              </span>
+              <Tag text={tag} />
             </div>
             <div className="flex items-center gap-2">
               {repositoryUrl && (

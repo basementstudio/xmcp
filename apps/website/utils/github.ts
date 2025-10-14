@@ -53,6 +53,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
         headers: {
           "User-Agent": "request",
         },
+        cache: "force-cache",
       }
     );
 
@@ -76,6 +77,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
               headers: {
                 "User-Agent": "request",
               },
+              cache: "force-cache",
             }
           );
 

@@ -14,22 +14,17 @@ export const metadata: Metadata = {
 
 export default function ExamplesPage() {
   return (
-    <div className="font-mono min-h-[calc(100vh-12rem)] flex justify-center">
-      <div className="flex-1 pt-10 px-4 lg:px-0 box-content max-w-6xl mx-auto">
-        <div className="text-start w-full">
-          <div className="max-w-[40rem] prose">
-            <h1 className="text-white uppercase font-medium">
-              Examples & Templates
-            </h1>
-            <p className="text-[#BABABA]">
-              Get started quickly with these examples and templates.
-              <br />
-              Each example demonstrates different features and use cases of
-              xmcp.
-            </p>
-          </div>
+    <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+      <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
+        <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
+          <h1 className="display text-center text-balance z-10 text-gradient">
+            Examples & templates
+          </h1>
+          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto text-center">
+            Quickstart guides and examples to get you started with xmcp with
+            real-world implementations and best practices.
+          </p>
         </div>
-
         <ExampleCardsList />
       </div>
     </div>
