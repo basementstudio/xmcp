@@ -86,7 +86,7 @@ export const getWeather = tool({
 const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   if (step.type === "file") {
     return (
-      <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[300px]">
+      <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[350px]">
         <div className="flex items-center gap-2 h-9.5 border-b px-4 border-brand-neutral-400 text-brand-neutral-100">
           <span className="flex-1 truncate text-sm font-mono">
             {step.filename}
@@ -102,7 +102,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   }
 
   return (
-    <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[300px]">
+    <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[350px]">
       <div className="p-4 font-mono text-[13px] flex flex-col gap-3 overflow-auto">
         <div className="flex items-center gap-2">
           <span className="text-green-400">$</span>
