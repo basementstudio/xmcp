@@ -1,8 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { cn } from "@/lib/cn";
 import gsap from "gsap";
+import { createHighlighterCoreSync } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import ts from "@shikijs/langs/typescript";
+import bash from "@shikijs/langs/bash";
+import ayuDark from "@shikijs/themes/ayu-dark";
+
+const highlighter = createHighlighterCoreSync({
+  langs: [ts, bash],
+  themes: [ayuDark],
+  engine: createJavaScriptRegexEngine(),
+});
 
 const steps = [
   {
@@ -84,6 +95,31 @@ export const getWeather = tool({
 ];
 
 const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
+  const highlightedContent = useMemo(() => {
+    if (step.type === "file") {
+      return highlighter.codeToHtml(step.content, {
+        theme: "ayu-dark",
+        lang: "typescript",
+        defaultColor: false,
+        transformers: [
+          {
+            name: "remove-background",
+            pre: (node) => {
+              if (node.properties.style) {
+                const style = node.properties.style as string;
+                node.properties.style = style.replace(
+                  /background-color:[^;]+;?/g,
+                  ""
+                );
+              }
+            },
+          },
+        ],
+      });
+    }
+    return null;
+  }, [step]);
+
   if (step.type === "file") {
     return (
       <div className="bg-black border border-brand-neutral-400 rounded-xs overflow-hidden w-full min-h-[350px]">
@@ -92,10 +128,8 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
             {step.filename}
           </span>
         </div>
-        <div className="p-4 font-mono text-[13px] overflow-auto">
-          <pre className="text-zinc-300 whitespace-pre leading-relaxed">
-            {step.content}
-          </pre>
+        <div className="p-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
+          <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
         </div>
       </div>
     );
