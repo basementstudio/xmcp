@@ -32,9 +32,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <div className="flex items-center gap-3">
                 <Tag text="FEATURED" />
-                <span className="text-xs px-2 py-1 border border-brand-neutral-400 text-brand-neutral-200 uppercase tracking-wide">
-                  {featuredPost.category}
-                </span>
+                <Tag text={featuredPost.category} />
               </div>
               {featuredPost.date && (
                 <time
