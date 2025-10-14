@@ -18,7 +18,7 @@ export const buttonVariants = cva(
       // fumadocs use `color` instead of `variant`
       color: variants,
       size: {
-        sm: "gap-1 px-2 py-1.5 text-xs",
+        sm: "gap-1 px-2 py-1.5 text-sm min-w-auto",
         icon: "p-1.5 [&_svg]:size-5",
         "icon-sm": "p-1.5 [&_svg]:size-4.5",
         "icon-xs": "p-1 [&_svg]:size-4",
