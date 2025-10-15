@@ -1,4 +1,3 @@
-import { ProvideLinksToolSchema } from "../../../lib/inkeep-qa-schema";
 import { convertToModelMessages, streamText } from "ai";
 import { source } from "@/lib/source";
 import { getLLMText } from "@/lib/get-llm-text";
@@ -36,13 +35,7 @@ Instructions:
 
   const result = streamText({
     model: openrouter("meta-llama/llama-3.3-8b-instruct:free"),
-    tools: {
-      provideLinks: {
-        description:
-          "Provide relevant documentation links as references after answering the user's question. Only use this after providing a helpful text response.",
-        inputSchema: ProvideLinksToolSchema,
-      },
-    },
+    maxRetries: 5,
     messages: [
       systemMessage,
       ...convertToModelMessages(reqJson.messages, {

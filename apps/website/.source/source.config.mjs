@@ -13,12 +13,7 @@ var docs = defineDocs({
   }
 });
 var blog = defineDocs({
-  dir: "content/blog",
-  docs: {
-    postprocess: {
-      includeProcessedMarkdown: true
-    }
-  }
+  dir: "content/blog"
 });
 var source_config_default = defineConfig({
   mdxOptions: {
