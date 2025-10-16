@@ -457,6 +457,15 @@ importers:
         specifier: 3.24.4
         version: 3.24.4
 
+  examples/open-ai-2:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: 3.24.4
+        version: 3.24.4
+
   examples/polar-http:
     dependencies:
       '@xmcp-dev/polar':

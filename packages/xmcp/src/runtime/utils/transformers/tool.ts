@@ -34,13 +34,18 @@ export type McpToolHandler = (
  * 1. Passes through both args and extra parameters to the user's handler
  * 2. Transforms string/number responses into the required CallToolResult format
  * 3. Allows returning only `_meta` (without `content`) when it contains OpenAI-specific keys
- * 4. Validates that the response is a proper CallToolResult and throws a descriptive error if not
+ * 4. Auto-wraps HTML strings with OpenAI metadata if provided
+ * 5. Validates that the response is a proper CallToolResult and throws a descriptive error if not
  *
  * @param handler - The user's tool handler function
+ * @param meta - Optional metadata to attach to responses (for OpenAI widgets)
  * @returns A transformed handler compatible with McpServer.registerTool
  * @throws Error if the handler returns an invalid response type
  */
-export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
+export function transformToolHandler(
+  handler: UserToolHandler,
+  meta?: Record<string, any>
+): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
@@ -53,6 +58,27 @@ export function transformToolHandler(handler: UserToolHandler): McpToolHandler {
     }
 
     if (typeof response === "string" || typeof response === "number") {
+      // Check if we have OpenAI metadata to attach
+      const hasOpenAIMeta =
+        meta &&
+        typeof meta === "object" &&
+        Object.keys(meta).some((key) => key.startsWith("openai/"));
+
+      if (hasOpenAIMeta) {
+        // For OpenAI widgets, return empty text content with metadata
+        // The actual HTML is served by the auto-generated resource
+        return {
+          content: [
+            {
+              type: "text",
+              text: "",
+            },
+          ],
+          _meta: meta,
+        };
+      }
+
+      // Regular string/number response
       return {
         content: [
           {
