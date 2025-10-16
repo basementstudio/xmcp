@@ -1,5 +1,5 @@
-import { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp";
 import { z } from "zod";
+import { OpenAIMetadata } from "./openai-meta";
 
 export interface ToolAnnotations {
   /** Human-readable title for the tool */
@@ -22,7 +22,11 @@ export interface ToolMetadata {
   description: string;
   /** Optional hints about tool behavior */
   annotations?: ToolAnnotations;
-  _meta?: Record<string, unknown>;
+  /** Metadata for the tool. Supports nested OpenAI metadata and other vendor extensions. */
+  _meta?: {
+    openai?: OpenAIMetadata;
+    [key: string]: unknown;
+  };
 }
 
 export type ToolSchema = Record<
