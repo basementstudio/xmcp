@@ -1,29 +1,33 @@
 import { type ToolMetadata } from "xmcp";
 
-// openAI widget metadata
-const widgetMeta = {
-  "openai/outputTemplate": "ui://widget/pizza-map.html", // this points to your resource
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true, // this is the text that will be displayed when the tool is invoked
-}; // this is the metadata for the widget
-
-// tool metadata
 export const metadata: ToolMetadata = {
   name: "get-pizza-map",
   description: "Show Pizza Map",
-  annotations: {
-    title: "Pizza Map",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
   _meta: {
-    ...widgetMeta,
+    openai: {
+      toolInvocation: {
+        invoking: "Hand-tossing a map",
+        invoked: "Served a fresh map",
+      },
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
   },
 };
 
+/**
+ * Tool handler returns HTML directly
+ *
+ * How it works:
+ * 1. Handler returns HTML string
+ * 2. Framework detects _meta.openai and wraps response with empty content + _meta
+ * 3. Framework auto-generates resource at "ui://widget/get-pizza-map.html"
+ * 4. Resource serves this HTML when accessed via tool callign
+ */
 export default async function handler() {
-  return {
-    _meta: widgetMeta, // mandatory: make sure to return metadata here as well
-  };
+  return `
+    <div id="pizzaz-root"></div>
+    <link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.css">
+    <script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-0038.js"></script>
+  `.trim();
 }
