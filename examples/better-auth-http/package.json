@@ -17,7 +17,6 @@
     "zod": "3.24.4"
   },
   "devDependencies": {
-    "@types/pg": "^8.15.4",
-    "swc-loader": "^0.2.6"
+    "@types/pg": "^8.15.4"
   }
 }

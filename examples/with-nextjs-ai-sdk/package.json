@@ -29,7 +29,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "swc-loader": "^0.2.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
