@@ -10,6 +10,7 @@ import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
+import { openAIResourceRegistry } from "./openai-resource-registry";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -73,6 +74,9 @@ export async function configureServer(
   promptModules: Map<string, PromptFile>,
   resourceModules: Map<string, ResourceFile>
 ): Promise<McpServer> {
+  // Clear the OpenAI resource registry before configuring to prevent stale entries
+  openAIResourceRegistry.clear();
+
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
