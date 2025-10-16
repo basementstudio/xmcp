@@ -1,29 +1,20 @@
 import { type ToolMetadata } from "xmcp";
 
-// openAI widget metadata
-const widgetMeta = {
-  "openai/outputTemplate": "ui://widget/pizza-albums.html", // this points to your resource
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true, // this is the text that will be displayed when the tool is invoked
-}; // this is the metadata for the widget
-
-// tool metadata
 export const metadata: ToolMetadata = {
   name: "get-pizza-albums",
   description: "Show Pizza Album",
-  annotations: {
-    title: "Pizza Album",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
   _meta: {
-    ...widgetMeta,
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
   },
 };
 
 export default async function handler() {
-  return {
-    _meta: widgetMeta, // mandatory: make sure to return metadata here as well
-  };
+  return `
+    <div id="pizzaz-albums-root"></div>
+    <link rel="stylesheet" href="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-albums-0038.css">
+    <script type="module" src="https://persistent.oaistatic.com/ecosystem-built-assets/pizzaz-albums-0038.js"></script>
+  `.trim();
 }
