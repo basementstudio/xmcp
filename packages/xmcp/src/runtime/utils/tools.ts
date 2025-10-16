@@ -4,6 +4,7 @@ import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
+import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -54,19 +55,6 @@ export function addToolsToServer(
       );
     }
 
-    // Check if this is an OpenAI widget tool (before transforming)
-    const hasOpenAIMeta =
-      toolConfig._meta &&
-      typeof toolConfig._meta === "object" &&
-      Object.keys(toolConfig._meta).some((key) => key.startsWith("openai/"));
-
-    // Transform the user's handler into an MCP-compatible handler
-    // Pass metadata for OpenAI tools so the transformer can auto-wrap HTML responses
-    const transformedHandler = transformToolHandler(
-      handler,
-      hasOpenAIMeta ? toolConfig._meta : undefined
-    );
-
     // Make sure tools has annotations with a title
     if (toolConfig.annotations === undefined) {
       toolConfig.annotations = {};
@@ -79,13 +67,28 @@ export function addToolsToServer(
       toolConfig._meta = {};
     }
 
+    // Check if this is an OpenAI widget tool (before flattening)
+    const isOpenAITool = hasOpenAIMeta(toolConfig._meta);
+
+    // Flatten nested metadata structure (e.g., openai.toolInvocation.invoking → openai/toolInvocation/invoking)
+    const flattenedMeta = flattenMeta(toolConfig._meta);
+    toolConfig._meta = flattenedMeta;
+
+    // Transform the user's handler into an MCP-compatible handler
+    // Pass flattened metadata for OpenAI tools so the transformer can auto-wrap HTML responses
+    const transformedHandler = transformToolHandler(
+      handler,
+      isOpenAITool ? flattenedMeta : undefined
+    );
+
     // Add to resources registry if this is an OpenAI widget tool
-    if (hasOpenAIMeta) {
+    if (isOpenAITool) {
       // Auto-generate the resource URI
       const resourceUri = `ui://widget/${toolConfig.name}.html`;
 
       // Auto-inject the outputTemplate if not already present
-      if (!toolConfig._meta["openai/outputTemplate"]) {
+      if (!flattenedMeta["openai/outputTemplate"]) {
+        flattenedMeta["openai/outputTemplate"] = resourceUri;
         toolConfig._meta["openai/outputTemplate"] = resourceUri;
       }
 
@@ -94,7 +97,7 @@ export function addToolsToServer(
         name: toolConfig.name,
         uri: resourceUri,
         handler: handler, // Store the original handler
-        toolMeta: toolConfig._meta,
+        toolMeta: flattenedMeta,
       });
     }
 
