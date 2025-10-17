@@ -171,17 +171,17 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           scale: 1,
           opacity: 1,
           zIndex: 10,
-          display: "block",
+          display: "flex",
           transformOrigin: "center center",
         });
       } else {
         gsap.set(terminal, {
           display: "none",
+          opacity: 0,
         });
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [stepId]);
 
   useEffect(() => {
     if (stepId === previousStepRef.current) return;
@@ -211,7 +211,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 
     if (!previousTerminal) {
       gsap.set(currentTerminal, {
-        display: "block",
+        display: "flex",
         y: 0,
         x: 0,
         scale: 1,
@@ -253,7 +253,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 
     // Set up the current terminal for animation
     gsap.set(currentTerminal, {
-      display: "block",
+      display: "flex",
       zIndex: 10,
     });
 
@@ -305,7 +305,11 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           }}
           data-step={step.id}
           className="absolute top-1/2 left-0 w-full flex items-center justify-center -translate-y-1/2"
-          style={{ transformOrigin: "center center" }}
+          style={{
+            transformOrigin: "center center",
+            display: step.id === stepId ? "flex" : "none",
+            opacity: step.id === stepId ? 1 : 0,
+          }}
         >
           <Terminal step={step} />
         </div>
