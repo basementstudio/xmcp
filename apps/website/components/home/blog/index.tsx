@@ -46,6 +46,8 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
               alt={post.title}
               fill
               className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
+              quality={100}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
