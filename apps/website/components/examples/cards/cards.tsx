@@ -138,7 +138,7 @@ export function ExampleCard({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "text-left group relative overflow-visible h-full min-w-[280px] block",
+        "text-left group relative overflow-visible h-full min-w-[280px] block cursor-alias",
         className
       )}
     >
