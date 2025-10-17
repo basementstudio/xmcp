@@ -8,6 +8,7 @@ import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Prefooter } from "@/components/layout/prefooter";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,6 +102,7 @@ export default function RootLayout({
           {children}
           <Prefooter />
           <Footer />
+          <Toaster />
         </RootProvider>
         <Toolbar />
         <Analytics />

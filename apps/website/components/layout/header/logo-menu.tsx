@@ -8,9 +8,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export function LogoContextMenu({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -21,6 +23,9 @@ export function LogoContextMenu({ children }: { children: React.ReactNode }) {
     try {
       await navigator.clipboard.writeText(XMCP_LOGO_SVG);
       setOpen(false);
+      toast({
+        description: "Logo copied to clipboard",
+      });
     } catch (error) {
       console.error("Failed to copy SVG:", error);
     }
@@ -48,14 +53,20 @@ export function LogoContextMenu({ children }: { children: React.ReactNode }) {
         <DropdownMenuContent className="bg-brand-neutral-600 text-[0.625rem] uppercase border border-brand-neutral-400 text-brand-neutral-100 fixed -top-3 left-2">
           <DropdownMenuItem
             className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
-            onClick={handleCopyLogo}
+            onClick={(e) => {
+              e.preventDefault();
+              handleCopyLogo();
+            }}
           >
             Copy Logo
           </DropdownMenuItem>
           <DropdownMenuSeparator className="border-brand-neutral-400 border-t border-dashed" />
           <DropdownMenuItem
             className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
-            onClick={handleDownloadLogo}
+            onClick={(e) => {
+              e.preventDefault();
+              handleDownloadLogo();
+            }}
           >
             Download Logo
           </DropdownMenuItem>
