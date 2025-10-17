@@ -300,7 +300,15 @@ input[type="email"] {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+
   /* to prevent some text from clipping, like "g"s - check */
-  padding-bottom: 0.12rem;
-  margin-bottom: -0.12rem;
+  &.heading-2 {
+    padding-bottom: 0.12rem;
+    margin-bottom: -0.12rem;
+  }
+
+  &.display {
+    padding-bottom: 0.22rem;
+    margin-bottom: -0.22rem;
+  }
 }
