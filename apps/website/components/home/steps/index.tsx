@@ -8,6 +8,7 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import ayuDark from "@shikijs/themes/ayu-dark";
+import { CopyButton } from "@/components/ui/copy-button";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
@@ -127,6 +128,7 @@ const Terminal = ({ step }: { step: typeof steps[0] }) => {
           <span className="flex-1 truncate text-sm font-mono">
             {step.filename}
           </span>
+          <CopyButton text={step.content} className="size-6 top-0 -right-2" />
         </div>
         <div className="py-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
           <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
