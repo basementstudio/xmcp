@@ -1,7 +1,7 @@
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
 import Feature1 from "./feature-1.png";
-import Feature2 from "./feature-2.png";
+import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.png";
 import Feature4 from "./feature-4.png";
 import Feature5 from "./feature-5.png";
@@ -59,36 +59,39 @@ const cards = [
   {
     asset: Feature1.src,
     title: "File System Routing",
-    description: "Tools are auto-registered from a `tools/` directory",
+    description:
+      "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
     asset: Feature2.src,
     title: "Integrations",
     description:
-      "Roll your auth with Better Auth's integration and monetize your server with Polar",
+      "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
     asset: Feature3.src,
     title: "Middlewares",
     description:
-      "Easily add built-in authentication solutions or your custom logic to intercept requests and responses.",
+      "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
     asset: Feature4.src,
     title: "Extensible Configuration",
-    description: "Customizable configuration for your MCP server",
+    description:
+      "Customize every aspect of your MCP server with flexible configuration options.",
   },
 
   {
     asset: Feature5.src,
     title: "Multiple Transport Support",
-    description: "Easily build HTTP and STDIO servers",
+    description:
+      "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
 
   {
     asset: Feature6.src,
     title: "Plug & play to your apps",
     description:
-      "Initialize an xmcp application in your current Next.js or Express project",
+      "Initialize xmcp directly in your existing Next.js or Express projects with one command.",
   },
 ];
