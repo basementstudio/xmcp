@@ -18,6 +18,7 @@ uniform float uMotionBlurStrength;
 uniform float uPlaneAspect;
 uniform float uImageAspect;
 uniform vec2 uCursorVelocity;
+uniform float uViewportWidth;
 
 attribute float aIntensity;
 attribute float aAngle;
@@ -28,12 +29,14 @@ void main()
 {
     vec2 adjustedUv = uv;
     
-    if (uPlaneAspect > uImageAspect) {
-        float scale = uPlaneAspect / uImageAspect;
-        adjustedUv.x = (uv.x - 0.5) * scale + 0.5;
-    } else {
-        float scale = uImageAspect / uPlaneAspect;
-        adjustedUv.y = (uv.y - 0.5) * scale + 0.5;
+    if (uViewportWidth <= 1024.0) {
+        if (uPlaneAspect > uImageAspect) {
+            float scale = uPlaneAspect / uImageAspect;
+            adjustedUv.x = (uv.x - 0.5) * scale + 0.5;
+        } else {
+            float scale = uImageAspect / uPlaneAspect;
+            adjustedUv.y = (uv.y - 0.5) * scale + 0.5;
+        }
     }
     
     float pictureIntensity = texture(uPictureTexture, adjustedUv).r;
@@ -159,6 +162,124 @@ export default function ParticlesCursorAnimation() {
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
 
+  // Check if debug mode is enabled via URL
+  const isDebugMode =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("debug");
+
+  const controls = isDebugMode
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useControls({
+        "Mouse Effect": folder({
+          mouseAreaSize: {
+            value: 0.26,
+            min: 0.05,
+            max: 1,
+            step: 0.01,
+          },
+          displacementForce: {
+            value: 2.0,
+            min: 0,
+            max: 10,
+            step: 0.1,
+          },
+        }),
+        "Particle Settings": folder({
+          particleQuantity: {
+            value: 384,
+            min: 32,
+            max: 512,
+            step: 32,
+          },
+          particleSize: {
+            value: 0.06,
+            min: 0.01,
+            max: 1,
+            step: 0.01,
+          },
+          motionBlurStrength: {
+            value: 1.2,
+            min: 0,
+            max: 3,
+            step: 0.1,
+          },
+        }),
+        Displacement: folder({
+          displacementStrength: {
+            value: 2.8,
+            min: 0,
+            max: 10,
+            step: 0.1,
+          },
+          smoothstepMin: {
+            value: 0.35,
+            min: 0,
+            max: 1,
+            step: 0.01,
+          },
+          smoothstepMax: {
+            value: 0.82,
+            min: 0,
+            max: 1,
+            step: 0.01,
+          },
+        }),
+        "Cursor Trail": folder({
+          fadeSpeed: {
+            value: 0.03,
+            min: 0.001,
+            max: 0.1,
+            step: 0.001,
+          },
+          glowSizeMultiplier: {
+            value: 0.22,
+            min: 0.1,
+            max: 1,
+            step: 0.01,
+          },
+          speedAlphaMultiplier: {
+            value: 0.18,
+            min: 0.01,
+            max: 0.3,
+            step: 0.01,
+          },
+          cursorSmoothing: {
+            value: 0.2,
+            min: 0.01,
+            max: 0.5,
+            step: 0.01,
+          },
+          cursorLerpStrength: {
+            value: 0.24,
+            min: 0.01,
+            max: 0.3,
+            step: 0.01,
+          },
+        }),
+        Advanced: folder({
+          canvasResolution: {
+            value: 256,
+            min: 64,
+            max: 512,
+            step: 64,
+          },
+        }),
+      })
+    : {
+        mouseAreaSize: 0.26,
+        displacementForce: 2.0,
+        particleQuantity: 384,
+        particleSize: 0.06,
+        motionBlurStrength: 1.2,
+        smoothstepMin: 0.35,
+        smoothstepMax: 0.82,
+        fadeSpeed: 0.03,
+        speedAlphaMultiplier: 0.18,
+        cursorSmoothing: 0.2,
+        cursorLerpStrength: 0.24,
+        canvasResolution: 256,
+      };
+
   const {
     particleQuantity,
     particleSize,
@@ -172,102 +293,7 @@ export default function ParticlesCursorAnimation() {
     cursorSmoothing,
     cursorLerpStrength,
     motionBlurStrength,
-  } = useControls({
-    "Mouse Effect": folder({
-      mouseAreaSize: {
-        value: 0.26,
-        min: 0.05,
-        max: 1,
-        step: 0.01,
-      },
-      displacementForce: {
-        value: 2.0,
-        min: 0,
-        max: 10,
-        step: 0.1,
-      },
-    }),
-    "Particle Settings": folder({
-      particleQuantity: {
-        value: 384,
-        min: 32,
-        max: 512,
-        step: 32,
-      },
-      particleSize: {
-        value: 0.06,
-        min: 0.01,
-        max: 1,
-        step: 0.01,
-      },
-      motionBlurStrength: {
-        value: 1.2,
-        min: 0,
-        max: 3,
-        step: 0.1,
-      },
-    }),
-    Displacement: folder({
-      displacementStrength: {
-        value: 2.8,
-        min: 0,
-        max: 10,
-        step: 0.1,
-      },
-      smoothstepMin: {
-        value: 0.35,
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-      smoothstepMax: {
-        value: 0.82,
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-    }),
-    "Cursor Trail": folder({
-      fadeSpeed: {
-        value: 0.03,
-        min: 0.001,
-        max: 0.1,
-        step: 0.001,
-      },
-      glowSizeMultiplier: {
-        value: 0.22,
-        min: 0.1,
-        max: 1,
-        step: 0.01,
-      },
-      speedAlphaMultiplier: {
-        value: 0.18,
-        min: 0.01,
-        max: 0.3,
-        step: 0.01,
-      },
-      cursorSmoothing: {
-        value: 0.2,
-        min: 0.01,
-        max: 0.5,
-        step: 0.01,
-      },
-      cursorLerpStrength: {
-        value: 0.24,
-        min: 0.01,
-        max: 0.3,
-        step: 0.01,
-      },
-    }),
-    Advanced: folder({
-      canvasResolution: {
-        value: 256,
-        min: 64,
-        max: 512,
-        step: 64,
-      },
-    }),
-  });
+  } = controls;
 
   const displacement = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -381,6 +407,7 @@ export default function ParticlesCursorAnimation() {
         uPlaneAspect: new THREE.Uniform(planeSize.aspect),
         uImageAspect: new THREE.Uniform(imageAspect),
         uCursorVelocity: new THREE.Uniform(new THREE.Vector2(0, 0)),
+        uViewportWidth: new THREE.Uniform(size.width),
       },
       blending: THREE.AdditiveBlending,
     });
@@ -399,14 +426,14 @@ export default function ParticlesCursorAnimation() {
 
   useEffect(() => {
     const canvas = gl.domElement;
-    
+
     const handlePointerMove = (event: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
-      
+
       // Calculate mouse position relative to the canvas
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      
+
       // Convert to normalized device coordinates (-1 to +1)
       displacement.screenCursor.x = (x / rect.width) * 2 - 1;
       displacement.screenCursor.y = -(y / rect.height) * 2 + 1;
@@ -427,6 +454,7 @@ export default function ParticlesCursorAnimation() {
     material.uniforms.uSmoothstepMin.value = smoothstepMin;
     material.uniforms.uSmoothstepMax.value = smoothstepMax;
     material.uniforms.uMotionBlurStrength.value = motionBlurStrength;
+    material.uniforms.uViewportWidth.value = size.width;
   }, [
     size,
     material,
