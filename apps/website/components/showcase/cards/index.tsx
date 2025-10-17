@@ -13,7 +13,7 @@ export type ShowcaseItem = {
     url: string;
   };
   connection: string;
-  tag: string | null;
+  tag?: string;
 };
 
 export async function ShowcaseCards() {
@@ -21,8 +21,8 @@ export async function ShowcaseCards() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
-      {mcps.map((mcp: ShowcaseItem, index: number) => (
-        <ShowcaseCard key={index} {...mcp} />
+      {mcps.map((mcp, index) => (
+        <ShowcaseCard key={index} {...(mcp as ShowcaseItem)} />
       ))}
     </div>
   );

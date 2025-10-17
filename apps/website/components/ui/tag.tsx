@@ -4,7 +4,7 @@ export const Tag = ({
   text,
   className,
 }: {
-  text: string;
+  text?: string;
   className?: string;
 }) => {
   return (
