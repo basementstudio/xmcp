@@ -15,9 +15,11 @@ interface AnimatedLinkProps
 export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
   ({ href, children, className = "", ...props }, ref) => {
     const pathname = usePathname();
-    // caveat for docs
+    // caveats
     const isActive =
-      pathname === href || (href === "/docs" && pathname.startsWith("/docs"));
+      pathname === href ||
+      (href === "/docs" && pathname.startsWith("/docs")) ||
+      (href === "/blog" && pathname.startsWith("/blog"));
 
     return (
       <Link

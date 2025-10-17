@@ -16,10 +16,11 @@ export const Header = () => {
       >
         <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">
           <div className="hidden md:flex gap-4">
+            <AnimatedLink href="/">Home</AnimatedLink>
             <AnimatedLink href="/docs">Docs</AnimatedLink>
             <AnimatedLink href="/examples">Examples</AnimatedLink>
-            <AnimatedLink href="/showcase">Showcase</AnimatedLink>
             <AnimatedLink href="/blog">Blog</AnimatedLink>
+            <AnimatedLink href="/showcase">Showcase</AnimatedLink>
           </div>
         </div>
         <div className="flex gap-2 ml-auto items-center">
