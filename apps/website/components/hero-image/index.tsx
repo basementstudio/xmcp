@@ -15,7 +15,7 @@ export function HeroImage() {
   return (
     <div
       className="w-full -mt-8 sm:-mt-10"
-      style={{ height: "clamp(300px, 40vw, 500px)" }}
+      style={{ height: "clamp(300px, 60vw, 500px)" }}
     >
       <Canvas
         camera={{ position: [0, 0, 3], fov: 75 }}
