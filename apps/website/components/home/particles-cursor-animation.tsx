@@ -3,7 +3,6 @@
 import { useRef, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { useControls, folder } from "leva";
 
 const vertexShader = `
 uniform vec2 uResolution;
@@ -127,101 +126,18 @@ export default function ParticlesCursorAnimation() {
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
 
-  const {
-    particleQuantity,
-    particleSize,
-    displacementStrength,
-    fadeSpeed,
-    glowSizeMultiplier,
-    speedAlphaMultiplier,
-    smoothstepMin,
-    smoothstepMax,
-    planeSize,
-    canvasResolution,
-    cursorSmoothing,
-    motionBlurStrength,
-  } = useControls({
-    "Particle Settings": folder({
-      particleQuantity: {
-        value: 480,
-        min: 32,
-        max: 512,
-        step: 32,
-      },
-      particleSize: {
-        value: 0.06,
-        min: 0.01,
-        max: 1,
-        step: 0.01,
-      },
-      motionBlurStrength: {
-        value: 1,
-        min: 0,
-        max: 3,
-        step: 0.1,
-      },
-    }),
-    Displacement: folder({
-      displacementStrength: {
-        value: 0.8,
-        min: 0,
-        max: 10,
-        step: 0.1,
-      },
-      smoothstepMin: {
-        value: 0.2,
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-      smoothstepMax: {
-        value: 0.6,
-        min: 0,
-        max: 1,
-        step: 0.01,
-      },
-    }),
-    "Cursor Trail": folder({
-      fadeSpeed: {
-        value: 0.082,
-        min: 0.001,
-        max: 0.1,
-        step: 0.001,
-      },
-      glowSizeMultiplier: {
-        value: 0.24,
-        min: 0.1,
-        max: 1,
-        step: 0.01,
-      },
-      speedAlphaMultiplier: {
-        value: 0.04,
-        min: 0.01,
-        max: 0.2,
-        step: 0.01,
-      },
-      cursorSmoothing: {
-        value: 0.5,
-        min: 0.01,
-        max: 0.5,
-        step: 0.01,
-      },
-    }),
-    Advanced: folder({
-      planeSize: {
-        value: 10,
-        min: 1,
-        max: 20,
-        step: 0.5,
-      },
-      canvasResolution: {
-        value: 256,
-        min: 64,
-        max: 512,
-        step: 64,
-      },
-    }),
-  });
+  const particleQuantity = 480;
+  const particleSize = 0.06;
+  const displacementStrength = 0.8;
+  const fadeSpeed = 0.082;
+  const glowSizeMultiplier = 0.24;
+  const speedAlphaMultiplier = 0.04;
+  const smoothstepMin = 0.2;
+  const smoothstepMax = 0.6;
+  const planeSize = 10;
+  const canvasResolution = 256;
+  const cursorSmoothing = 0.5;
+  const motionBlurStrength = 1;
 
   const displacement = useMemo(() => {
     const canvas = document.createElement("canvas");
