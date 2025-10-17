@@ -51,7 +51,6 @@ export function ProgressiveBlurBackground() {
 
     return () => {
       tl.kill();
-      tl.reverse();
     };
   }, []);
 
