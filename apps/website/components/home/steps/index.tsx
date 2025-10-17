@@ -82,20 +82,20 @@ export const getWeather = tool({
     type: "command" as const,
     command: "vc deploy",
     output: `Vercel CLI 37.0.0
-🔍 Inspect: https://vercel.com/...
-✅ Production: https://my-server.vercel.app
+Inspect: https://vercel.com/...
+Production: https://my-server.vercel.app
 
-📝 Deployment Summary:
+Deployment Summary:
   • Environment: Production
   • Region: iad1
   • Build Time: 12s
   • Status: Ready
 
-🎉 Your MCP server is live!`,
+Your MCP server is live!`,
   },
 ];
 
-const Terminal = ({ step }: { step: typeof steps[0] }) => {
+const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
