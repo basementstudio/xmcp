@@ -306,7 +306,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
             terminalRefs.current[step.id] = el;
           }}
           data-step={step.id}
-          className="absolute top-1/2 left-0 w-full flex items-center justify-center -translate-y-1/2"
+          className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
           style={{
             transformOrigin: "center center",
             display: step.id === stepId ? "flex" : "none",
