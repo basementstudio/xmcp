@@ -7,8 +7,8 @@ import { LogoContextMenu } from "./logo-menu";
 
 export const Header = () => {
   return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-100 flex justify-center items-center">
-      <div className="w-full flex justify-center items-center z-100 px-4 py-2 gap-8 relative border-b border-brand-neutral-600 bg-brand-black">
+    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-[100] flex justify-center items-center">
+      <div className="w-full flex justify-center items-center z-[100] px-4 py-2 gap-8 relative border-b border-brand-neutral-600 bg-brand-black">
         <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">
           <div className="hidden md:flex gap-4">
             <AnimatedLink href="/docs">Docs</AnimatedLink>
