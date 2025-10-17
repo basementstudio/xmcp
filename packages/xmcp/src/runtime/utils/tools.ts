@@ -3,6 +3,8 @@ import { ZodRawShape } from "zod";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
+import { openAIResourceRegistry } from "./openai-resource-registry";
+import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -53,10 +55,6 @@ export function addToolsToServer(
       );
     }
 
-    // Transform the user's handler into an MCP-compatible handler
-    // Use explicit type annotation to prevent infinite type recursion
-    const transformedHandler = transformToolHandler(handler);
-
     // Make sure tools has annotations with a title
     if (toolConfig.annotations === undefined) {
       toolConfig.annotations = {};
@@ -65,11 +63,50 @@ export function addToolsToServer(
       toolConfig.annotations.title = toolConfig.name;
     }
 
+    if (toolConfig._meta === undefined) {
+      toolConfig._meta = {};
+    }
+
+    // Check if this is an OpenAI widget tool (before flattening)
+    const isOpenAITool = hasOpenAIMeta(toolConfig._meta);
+
+    // Flatten nested metadata structure (e.g., openai.toolInvocation.invoking → openai/toolInvocation/invoking)
+    const flattenedMeta = flattenMeta(toolConfig._meta);
+    toolConfig._meta = flattenedMeta;
+
+    // Transform the user's handler into an MCP-compatible handler
+    // Pass flattened metadata for OpenAI tools so the transformer can auto-wrap HTML responses
+    const transformedHandler = transformToolHandler(
+      handler,
+      isOpenAITool ? flattenedMeta : undefined
+    );
+
+    // Add to resources registry if this is an OpenAI widget tool
+    if (isOpenAITool) {
+      // Auto-generate the resource URI
+      const resourceUri = `ui://widget/${toolConfig.name}.html`;
+
+      // Auto-inject the outputTemplate if not already present
+      if (!flattenedMeta["openai/outputTemplate"]) {
+        flattenedMeta["openai/outputTemplate"] = resourceUri;
+        toolConfig._meta["openai/outputTemplate"] = resourceUri;
+      }
+
+      // Add to the OpenAI resource registry for auto-generation
+      openAIResourceRegistry.add(toolConfig.name, {
+        name: toolConfig.name,
+        uri: resourceUri,
+        handler: handler, // Store the original handler
+        toolMeta: flattenedMeta,
+      });
+    }
+
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
       inputSchema: toolSchema,
       annotations: toolConfig.annotations,
+      _meta: toolConfig._meta,
     };
 
     // server as any prevents infinite type recursion

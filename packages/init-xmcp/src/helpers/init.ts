@@ -17,6 +17,7 @@ interface InitOptions {
   resourcesPath: string | undefined;
   routePath: string | undefined;
   packageManager: "npm" | "yarn" | "pnpm" | "bun";
+  version: string;
 }
 
 export async function init(options: InitOptions) {
@@ -28,11 +29,12 @@ export async function init(options: InitOptions) {
     resourcesPath,
     routePath,
     packageManager,
+    version,
   } = options;
 
   generateConfig(projectRoot, framework, toolsPath, promptsPath, resourcesPath);
 
-  await install(projectRoot, packageManager);
+  await install(projectRoot, packageManager, version);
 
   updatePackageJson(projectRoot);
 

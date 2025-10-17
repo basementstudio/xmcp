@@ -8,12 +8,12 @@ import { Tag } from "@/components/ui/tag";
 export type ShowcaseItem = {
   name: string;
   tagline: string;
-  repositoryUrl?: string;
+  repositoryUrl?: string | null;
   logo: {
     url: string;
   };
   connection: string;
-  tag: string;
+  tag: string | null;
 };
 
 export async function ShowcaseCards() {

@@ -39,6 +39,7 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--gpt", "Initialize with OpenAI/ChatGPT widgets template", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -82,9 +83,17 @@ const program = new Command()
     let skipInstall = options.skipInstall;
     let transports = ["http"];
     let selectedPaths = ["tools", "prompts", "resources"];
+    let template = "typescript";
 
-    // Handle transport selection from CLI options
-    if (options.http || options.stdio) {
+    // If --gpt flag is set, use openai template and force certain settings
+    if (options.gpt) {
+      template = "openai";
+      transports = ["http"];
+      selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
+    }
+
+    // Handle transport selection from CLI options (only for non-gpt templates)
+    if (!options.gpt && (options.http || options.stdio)) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
@@ -118,8 +127,8 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options)
-      if (!options.http && !options.stdio) {
+      // Transport selection (skip if already specified via CLI options or using --gpt)
+      if (!options.gpt && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -141,32 +150,34 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      // Path selection checklist
-      const pathAnswers = await inquirer.prompt([
-        {
-          type: "checkbox",
-          name: "paths",
-          message: "Select components to initialize:",
-          choices: [
-            {
-              name: "Tools",
-              value: "tools",
-              checked: true,
-            },
-            {
-              name: "Prompts",
-              value: "prompts",
-              checked: true,
-            },
-            {
-              name: "Resources",
-              value: "resources",
-              checked: true,
-            },
-          ],
-        },
-      ]);
-      selectedPaths = pathAnswers.paths;
+      // Path selection checklist (skip for --gpt template)
+      if (!options.gpt) {
+        const pathAnswers = await inquirer.prompt([
+          {
+            type: "checkbox",
+            name: "paths",
+            message: "Select components to initialize:",
+            choices: [
+              {
+                name: "Tools",
+                value: "tools",
+                checked: true,
+              },
+              {
+                name: "Prompts",
+                value: "prompts",
+                checked: true,
+              },
+              {
+                name: "Resources",
+                value: "resources",
+                checked: true,
+              },
+            ],
+          },
+        ]);
+        selectedPaths = pathAnswers.paths;
+      }
 
       console.log();
       console.log(
@@ -192,8 +203,10 @@ const program = new Command()
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
 
-      // Use all paths by default in non-interactive mode
-      selectedPaths = ["tools", "prompts", "resources"];
+      // Use all paths by default in non-interactive mode (unless --gpt is set)
+      if (!options.gpt) {
+        selectedPaths = ["tools", "prompts", "resources"];
+      }
     }
 
     const spinner = ora("Creating your xmcp app...").start();
@@ -206,6 +219,7 @@ const program = new Command()
         packageVersion: packageJson.version,
         skipInstall,
         paths: selectedPaths,
+        template,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));

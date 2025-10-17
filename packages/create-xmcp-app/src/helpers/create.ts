@@ -18,6 +18,7 @@ interface ProjectOptions {
   packageVersion: string;
   skipInstall?: boolean;
   paths?: string[];
+  template?: string;
 }
 
 /**
@@ -41,13 +42,14 @@ export function createProject(options: ProjectOptions): void {
     packageVersion,
     skipInstall,
     paths = ["tools", "prompts"],
+    template = "typescript",
   } = options;
 
   // Ensure the project directory exists
   fs.ensureDirSync(projectPath);
 
   // Get the template directory path
-  const templateDir = path.join(__dirname, "../../templates", "typescript");
+  const templateDir = path.join(__dirname, "../../templates", template);
 
   // Copy template files to project directory
   copyTemplate(templateDir, projectPath, paths);
@@ -55,11 +57,24 @@ export function createProject(options: ProjectOptions): void {
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
 
-  // Generate xmcp.config.ts based on selected transports and paths
-  generateConfig(projectPath, transports, paths);
+  // For openai template, skip config generation and package.json update
+  // as they're already provided in the template
+  if (template === "openai") {
+    // Update package.json name only
+    const packageJsonPath = path.join(projectPath, "package.json");
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    packageJson.name = projectName;
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify(packageJson, null, 2) + "\n"
+    );
+  } else {
+    // Generate xmcp.config.ts based on selected transports and paths
+    generateConfig(projectPath, transports, paths);
 
-  // Update package.json with project configuration
-  updatePackageJson(projectPath, projectName, transports);
+    // Update package.json with project configuration
+    updatePackageJson(projectPath, projectName, transports);
+  }
 
   // Create necessary project directories
   createProjectDirectories(projectPath);

@@ -14,8 +14,5 @@
     "xmcp": "workspace:*",
     "@xmcp-dev/polar": "workspace:*",
     "zod": "3.24.4"
-  },
-  "devDependencies": {
-    "swc-loader": "^0.2.6"
   }
 }
