@@ -1,0 +1,314 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@import "./shiki.css";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+
+  --brand-white: #f7f7f7;
+  --brand-neutral-50: #dbdbdb;
+  --brand-neutral-100: #a8a8a8;
+  --brand-neutral-200: #757575;
+  --brand-neutral-300: #595959;
+  --brand-neutral-400: #424242;
+  --brand-neutral-500: #262626;
+  --brand-neutral-600: #171717;
+  --brand-black: #000000;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Brand colors */
+  --color-brand-white: var(--brand-white);
+  --color-brand-neutral-50: var(--brand-neutral-50);
+  --color-brand-neutral-100: var(--brand-neutral-100);
+  --color-brand-neutral-200: var(--brand-neutral-200);
+  --color-brand-neutral-300: var(--brand-neutral-300);
+  --color-brand-neutral-400: var(--brand-neutral-400);
+  --color-brand-neutral-500: var(--brand-neutral-500);
+  --color-brand-neutral-600: var(--brand-neutral-600);
+  --color-brand-black: var(--brand-black);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  overscroll-behavior: none;
+}
+
+/* Sidebar scrollbar styling */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+/* Firefox scrollbar */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.8) transparent;
+}
+
+/* Markdown content styling */
+.prose {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.prose * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.prose a {
+  @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white font-sans;
+}
+
+.prose h1 {
+  @apply text-[2rem] font-medium mt-3 mb-1.5;
+}
+
+.prose h2 {
+  @apply text-[1.5rem] font-medium mb-2.5 mt-6;
+}
+
+.prose h3 {
+  @apply text-[1.25rem] font-medium mb-1 mt-6;
+}
+
+.prose h4 {
+  @apply text-[1.25rem] font-medium mb-1 mt-6;
+}
+
+.prose h5,
+.prose h6 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.5;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  @apply font-mono uppercase;
+}
+
+.prose h1 a,
+.prose h2 a,
+.prose h3 a,
+.prose h4 a,
+.prose h5 a,
+.prose h6 a {
+  @apply no-underline;
+}
+
+.prose pre {
+  @apply bg-black/20 overflow-x-auto py-2 px-2 text-sm;
+}
+
+.prose code {
+  @apply px-2 py-0.5;
+  color: #ffffff;
+}
+
+.prose code:has(pre) {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.prose pre code {
+  @apply p-0;
+  border: initial;
+  line-height: 160%;
+}
+
+.prose code .token.comment {
+  /* Removed italic */
+}
+
+.prose img {
+  /* Don't apply styles to next/image */
+  @apply m-0 max-w-full w-full h-auto;
+}
+
+.prose p {
+  @apply font-sans text-brand-neutral-50;
+  /* letter-spacing: -0.5px; */
+  line-height: 180%;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.prose p code,
+.prose li code {
+  @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
+}
+
+.prose li code {
+  @apply text-[0.9rem] px-[1px] py-[2px];
+}
+
+.prose blockquote {
+  border-left: 3px solid #333333;
+  padding-left: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+  color: #cccccc;
+}
+
+.prose ul {
+  @apply mt-4;
+  list-style: none;
+  padding-left: 0;
+  color: #c6c6c6;
+}
+
+.prose ol {
+  @apply list-decimal pl-6 mt-4;
+}
+
+.prose li {
+  @apply my-3 relative text-brand-neutral-50;
+  padding-left: 1rem;
+}
+
+.prose ul li::before {
+  content: "⊹ ";
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.prose hr {
+  @apply border-white/20;
+}
+
+.prose> :first-child {
+  /* Override removing top margin, causing layout shift */
+  /* margin-top: 1.25em !important; */
+  /* margin-bottom: 1.25em !important; */
+}
+
+.prose table {
+  width: 100%;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  border-collapse: collapse;
+}
+
+.prose th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #333333;
+}
+
+.prose td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #333333;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  opacity: 0.8;
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+pre::-webkit-scrollbar {
+  display: none;
+}
+
+pre {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  font-size: 0.8rem;
+}
+
+/* Remove Safari input shadow on mobile */
+input[type="text"],
+input[type="email"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Text selection styling */
+::selection {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+::-moz-selection {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 1px solid white;
+  outline-offset: 2px;
+}
+
+.display {
+  letter-spacing: -0.05rem;
+  @apply text-[1.5rem] leading-6 sm:text-[2.5rem] sm:leading-[3rem];
+}
+
+.heading-2 {
+  @apply text-[1.5rem] leading-8 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
+}
+
+.text-gradient {
+  background: var(--80-100-80,
+      linear-gradient(270deg,
+        rgba(247, 247, 247, 0.8) 0%,
+        #f7f7f7 50%,
+        rgba(247, 247, 247, 0.8) 100%));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* to prevent some text from clipping, like "g"s - check */
+  &.heading-2 {
+    padding-bottom: 0.12rem;
+    margin-bottom: -0.12rem;
+  }
+
+  &.display {
+    padding-bottom: 0.22rem;
+    margin-bottom: -0.22rem;
+  }
+}

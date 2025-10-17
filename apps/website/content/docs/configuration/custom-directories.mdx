@@ -1,0 +1,40 @@
+---
+title: "Custom Directories"
+metadataTitle: "Custom Directories | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to customize the directories for tools, prompts, and resources."
+---
+
+Customize where `xmcp` looks for tools, prompts, and resources by configuring the `paths` option. If not specified, these are the defaults:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  paths: {
+    tools: "src/tools",
+    prompts: "src/prompts",
+    resources: "src/resources",
+  },
+};
+
+export default config;
+```
+
+## Disabling directories
+
+To disable a specific directory, set it to `false`:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  paths: {
+    tools: "src/tools",
+    prompts: false, // Prompts directory disabled
+    resources: "src/resources",
+  },
+};
+
+export default config;
+```
+
+## Troubleshooting
+
+If you delete a directory without updating the config, `xmcp` will throw an error and prompt you to update it.

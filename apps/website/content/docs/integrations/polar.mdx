@@ -1,0 +1,153 @@
+---
+title: "Polar"
+metadataTitle: "Usage with Polar | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Add paywalls and track tool usage with license keys using Polar"
+description: "Add paywalls and track tool usage with license keys using Polar"
+---
+
+## Overview
+
+The Polar plugin enables you to add paywalls with license key validation and track tool usage for your xmcp server using [Polar](https://polar.sh/).
+
+## Installation
+
+Install the Polar plugin:
+
+```bash
+npm install @xmcp-dev/polar
+```
+
+## Polar Setup
+
+Before integrating the plugin, set up your product on [Polar](https://polar.sh/):
+
+1. Create a new product with your desired payment configuration
+2. Add the **License Key** benefit to the product
+3. (Optional) Add a **Meter Credit** benefit to track and limit tool usage
+
+## Configuration
+
+Initialize the Polar provider to access validation methods:
+
+```typescript title="src/lib/polar.ts"
+import { PolarProvider } from "@xmcp-dev/polar";
+
+export const polar = PolarProvider.getInstance({
+  type: "sandbox", // or "production"
+  token: process.env.POLAR_TOKEN,
+  organizationId: process.env.POLAR_ORGANIZATION_ID,
+  productId: process.env.POLAR_PRODUCT_ID,
+});
+```
+
+### Configuration Options
+
+```typescript
+interface Configuration {
+  type?: "production" | "sandbox";
+  token: string;
+  organizationId: string;
+  productId: string;
+}
+```
+
+- `type` - Environment type (defaults to `"production"` if not set)
+- `token` - Polar authentication token
+- `organizationId` - Your Polar organization ID
+- `productId` - Your Polar product ID
+
+<Callout variant="info">
+  License keys must be provided in the `license-key` header. This header name is
+  not customizable.
+</Callout>
+
+## License Key Validation
+
+Validate license keys in your tools using the `validateLicenseKey` method:
+
+```typescript
+import { headers } from "xmcp/headers";
+
+const licenseKey = headers()["license-key"];
+const response = await polar.validateLicenseKey(licenseKey);
+```
+
+### Response Object
+
+The validation response contains:
+
+```typescript
+{
+  valid: boolean;
+  code: string;
+  message: string;
+}
+```
+
+### Handling Invalid Keys
+
+Return appropriate messages when validation fails:
+
+```typescript
+if (!response.valid) {
+  return response.message;
+}
+```
+
+This automatically prompts users with the checkout URL when the license key is invalid.
+
+## Usage Tracking
+
+Track tool usage by adding a meter credit benefit to your product and passing event objects during validation.
+
+### Meter Credit Setup
+
+Configure a meter credit benefit in your Polar product with the appropriate limits and tracking settings.
+
+### Tracking Events
+
+Pass an event object to `validateLicenseKey` to record usage:
+
+```typescript
+const event = {
+  name: "tool_call_event",
+  metadata: { tool_name: "tool_name", calls: 1 },
+};
+
+const response = await polar.validateLicenseKey(licenseKey, event);
+```
+
+The `metadata` field accepts any string or number values for flexible usage tracking.
+
+## Example
+
+Here's a complete example integrating license validation and usage tracking:
+
+```typescript title="src/tools/protected-tool.ts"
+import { PolarProvider } from "@xmcp-dev/polar";
+import { headers } from "xmcp/headers";
+
+export const polar = PolarProvider.getInstance({
+  type: "production",
+  token: process.env.POLAR_TOKEN,
+  organizationId: process.env.POLAR_ORGANIZATION_ID,
+  productId: process.env.POLAR_PRODUCT_ID,
+});
+
+export default async function protectedTool() {
+  const licenseKey = headers()["license-key"];
+
+  const response = await polar.validateLicenseKey(licenseKey, {
+    name: "tool_call_event",
+    metadata: { tool_name: "protectedTool", calls: 1 },
+  });
+
+  if (!response.valid) {
+    return response.message;
+  }
+
+  // Your tool logic here
+  return "Tool executed successfully";
+}
+```

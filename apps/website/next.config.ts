@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
+import { createMDX } from "fumadocs-mdx/next";
+
+const withMDX = createMDX({
+  // customise the config file path
+  configPath: "source.config.ts",
+});
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   webpack: (config) => {
     /** Add glslify loader to webpack */
     config.module.rules.push({
@@ -29,4 +36,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withMDX(nextConfig);
