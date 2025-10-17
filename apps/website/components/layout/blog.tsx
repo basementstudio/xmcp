@@ -57,8 +57,8 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
   return (
     <AnchorProvider toc={toc}>
       {toc.length > 0 && (
-        <div className="sticky top-26 w-[286px] mt-22 shrink-0 h-full p-4 pt-0 overflow-auto max-xl:hidden">
-          <h2 className="text-xl text-brand-white mb-3">Table of contents</h2>
+        <div className="sticky top-24 w-[286px] mt-16 shrink-0 h-full p-4 pt-0 overflow-auto max-xl:hidden flex flex-col gap-4">
+          <span className="text-xl text-brand-white">Table of contents</span>
           <div className="flex flex-col">
             {toc.map((item) => (
               <TocItem key={item.url} item={item} />
@@ -69,9 +69,9 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
       <main className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
         <Link
           href="/blog"
-          className="px-4 mb-6 text-sm text-brand-neutral-100 hover:text-brand-white transition-colors"
+          className="px-4 mb-2 text-sm text-brand-neutral-100 hover:text-brand-neutral-50 transition-colors"
         >
-          &lt; Back to blog
+          ← Back to blog
         </Link>
         <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 mx-auto px-4 items-start h-full">
           {props.children}
