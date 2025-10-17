@@ -40,11 +40,11 @@ export const HomeHero = () => {
           </Link>
         </Button>
       </div>
-      <div className="flex flex-col items-center justify-center gap-4 py-8">
+      <div className="flex flex-col items-center justify-center gap-4.5 py-8">
         <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
         <div className="flex items-center justify-center gap-4 md:gap-10 flex-wrap">
-          <Logos.Vercel />
-          <Logos.Localstack />
+          <Logos.Vercel className="max-w-22 h-auto" />
+          <Logos.Localstack className="mt-0.5" />
           <Logos.Basehub />
         </div>
       </div>
