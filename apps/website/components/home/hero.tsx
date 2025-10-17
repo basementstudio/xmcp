@@ -1,10 +1,9 @@
 import Link from "next/link";
-import HeroBg from "@public/hero-bg.png";
-import Image from "next/image";
 import { Button } from "../ui/button";
 import { Icons } from "../icons";
 import { Logos } from "./logos";
 import { Tag } from "../ui/tag";
+import Shader from "./shader";
 
 export const HomeHero = () => {
   return (
@@ -23,11 +22,12 @@ export const HomeHero = () => {
       <h1 className="display text-center text-balance z-10 text-gradient">
         The TypeScript framework for building & shipping MCP servers
       </h1>
-      <Image
+      {/* <Image
         src={HeroBg}
         alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
         className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
-      />
+      /> */}
+      <Shader />
       <div className="flex items-center justify-center gap-2">
         <Button variant="primary" asChild>
           <Link href="/docs">Get started</Link>
