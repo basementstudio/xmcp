@@ -70,6 +70,7 @@ function SheetContent({
         )}
         {...props}
       >
+        <SheetTitle className="sr-only">Menu</SheetTitle>
         {children}
       </SheetPrimitive.Content>
     </SheetPortal>

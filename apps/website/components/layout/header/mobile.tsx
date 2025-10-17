@@ -53,7 +53,7 @@ export const MobileMenu = () => {
         </SheetTrigger>
         <SheetContent
           side="right"
-          className="w-full bg-black/95 border-white/10 data-[state=closed]:duration-500 z-0"
+          className="w-full bg-black/95 border-white/10 data-[state=closed]:duration-500 z-10"
         >
           <div className="flex flex-col items-center justify-center gap-8 mt-8 min-h-[60vh]">
             <nav className="flex flex-col items-center gap-6">
