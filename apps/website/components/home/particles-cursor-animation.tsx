@@ -154,7 +154,7 @@ export default function ParticlesCursorAnimation() {
         }),
         "Particle Settings": folder({
           particleQuantity: {
-            value: 384,
+            value: 420,
             min: 32,
             max: 512,
             step: 32,
