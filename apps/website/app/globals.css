@@ -200,7 +200,7 @@ body {
   @apply border-white/20;
 }
 
-.prose > :first-child {
+.prose> :first-child {
   /* Override removing top margin, causing layout shift */
   /* margin-top: 1.25em !important; */
   /* margin-bottom: 1.25em !important; */
@@ -247,8 +247,10 @@ pre::-webkit-scrollbar {
 }
 
 pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
   font-size: 0.8rem;
 }
 
@@ -286,19 +288,15 @@ input[type="email"] {
 }
 
 .heading-2 {
-  @apply text-[1.5rem] leading-6 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
+  @apply text-[1.5rem] leading-8 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
 }
 
 .text-gradient {
-  background: var(
-    --80-100-80,
-    linear-gradient(
-      270deg,
-      rgba(247, 247, 247, 0.8) 0%,
-      #f7f7f7 50%,
-      rgba(247, 247, 247, 0.8) 100%
-    )
-  );
+  background: var(--80-100-80,
+      linear-gradient(270deg,
+        rgba(247, 247, 247, 0.8) 0%,
+        #f7f7f7 50%,
+        rgba(247, 247, 247, 0.8) 100%));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

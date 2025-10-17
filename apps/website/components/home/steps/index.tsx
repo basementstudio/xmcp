@@ -377,7 +377,7 @@ export const HomeSteps = () => {
       <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
 
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
-        <div className="flex flex-col gap-4 md:px-4">
+        <div className="flex flex-col gap-2 md:px-4">
           <h2 className="heading-2 text-gradient">
             From zero to prod in seconds
           </h2>
