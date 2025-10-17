@@ -1,16 +1,15 @@
 import Link from "next/link";
-import HeroBg from "@public/hero-bg.png";
-import Image from "next/image";
 import { Button } from "../ui/button";
 import { Icons } from "../icons";
 import { Logos } from "./logos";
 import { Tag } from "../ui/tag";
+import { HeroImage } from "../hero-image";
 
 export const HomeHero = () => {
   return (
-    <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
+    <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 col-span-12">
       <Link
-        className="flex items-center justify-center gap-2 z-10 text-xs group"
+        className="flex items-center justify-center gap-2 z-10 text-xs group mb-4"
         href="https://npmjs.com/package/xmcp"
         target="_blank"
       >
@@ -23,11 +22,12 @@ export const HomeHero = () => {
       <h1 className="display text-center text-balance z-10 text-gradient">
         The TypeScript framework for building & shipping MCP servers
       </h1>
-      <Image
+      {/* <Image
         src={HeroBg}
         alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
         className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
-      />
+      /> */}
+      <HeroImage />
       <div className="flex items-center justify-center gap-2">
         <Button variant="primary" asChild>
           <Link href="/docs">Get started</Link>
