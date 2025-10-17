@@ -345,8 +345,8 @@ export default function ParticlesCursorAnimation() {
     const visibleWidth = visibleHeight * canvasAspect;
 
     return {
-      width: visibleWidth,
-      height: visibleHeight,
+      width: visibleWidth * 0.9,
+      height: visibleHeight * 0.9,
       aspect: canvasAspect,
     };
   }, [camera, size]);
