@@ -8,6 +8,7 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import ayuDark from "@shikijs/themes/ayu-dark";
+import { CopyButton } from "@/components/ui/copy-button";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
@@ -94,7 +95,7 @@ export const getWeather = tool({
   },
 ];
 
-const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
+const Terminal = ({ step }: { step: typeof steps[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
@@ -127,6 +128,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
           <span className="flex-1 truncate text-sm font-mono">
             {step.filename}
           </span>
+          <CopyButton text={step.content} className="size-6 top-0 -right-2" />
         </div>
         <div className="py-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
           <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
@@ -155,6 +157,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   const terminalRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const previousStepRef = useRef(stepId);
   const isAnimatingRef = useRef(false);
+  const currentAnimationRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     steps.forEach((step) => {
@@ -170,35 +173,69 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           scale: 1,
           opacity: 1,
           zIndex: 10,
-          display: "block",
+          display: "flex",
           transformOrigin: "center center",
         });
       } else {
         gsap.set(terminal, {
           display: "none",
+          opacity: 0,
         });
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [stepId]);
 
   useEffect(() => {
-    if (stepId === previousStepRef.current || isAnimatingRef.current) return;
-
-    isAnimatingRef.current = true;
+    if (stepId === previousStepRef.current) return;
 
     const currentTerminal = terminalRefs.current[stepId];
     const previousTerminal = terminalRefs.current[previousStepRef.current];
 
-    if (!currentTerminal || !previousTerminal) {
-      isAnimatingRef.current = false;
+    if (!currentTerminal) {
       return;
     }
+
+    // kill any existing animation
+    if (currentAnimationRef.current) {
+      currentAnimationRef.current.kill();
+      currentAnimationRef.current = null;
+
+      // ensure all terminals except the current one are hidden
+      if (previousTerminal) {
+        gsap.set(previousTerminal, {
+          opacity: 0,
+          display: "none",
+        });
+      }
+    }
+
+    previousStepRef.current = stepId;
+
+    if (!previousTerminal) {
+      gsap.set(currentTerminal, {
+        display: "flex",
+        y: 0,
+        x: 0,
+        scale: 1,
+        opacity: 1,
+        zIndex: 10,
+      });
+
+      steps.forEach((step) => {
+        const terminal = terminalRefs.current[step.id];
+        if (terminal && step.id !== stepId) {
+          gsap.set(terminal, { display: "none" });
+        }
+      });
+
+      return;
+    }
+
+    isAnimatingRef.current = true;
 
     const tl = gsap.timeline({
       onComplete: () => {
         isAnimatingRef.current = false;
-        previousStepRef.current = stepId;
 
         // Hide all non-active terminals after animation
         steps.forEach((step) => {
@@ -209,12 +246,16 @@ const StepContent = ({ stepId }: { stepId: number }) => {
             gsap.set(terminal, { display: "none" });
           }
         });
+
+        currentAnimationRef.current = null;
       },
     });
 
-    // Always animate the same way (forward style)
+    currentAnimationRef.current = tl;
+
+    // Set up the current terminal for animation
     gsap.set(currentTerminal, {
-      display: "block",
+      display: "flex",
       zIndex: 10,
     });
 
@@ -244,6 +285,15 @@ const StepContent = ({ stepId }: { stepId: number }) => {
     );
   }, [stepId]);
 
+  useEffect(() => {
+    return () => {
+      if (currentAnimationRef.current) {
+        currentAnimationRef.current.kill();
+        currentAnimationRef.current = null;
+      }
+    };
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -256,8 +306,12 @@ const StepContent = ({ stepId }: { stepId: number }) => {
             terminalRefs.current[step.id] = el;
           }}
           data-step={step.id}
-          className="absolute top-1/2 left-0 w-full flex items-center justify-center -translate-y-1/2"
-          style={{ transformOrigin: "center center" }}
+          className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
+          style={{
+            transformOrigin: "center center",
+            display: step.id === stepId ? "flex" : "none",
+            opacity: step.id === stepId ? 1 : 0,
+          }}
         >
           <Terminal step={step} />
         </div>
@@ -323,7 +377,7 @@ export const HomeSteps = () => {
       <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
 
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
-        <div className="flex flex-col gap-4 md:px-4">
+        <div className="flex flex-col gap-2 md:px-4">
           <h2 className="heading-2 text-gradient">
             From zero to prod in seconds
           </h2>
@@ -348,7 +402,7 @@ export const HomeSteps = () => {
 
       <div className="hidden md:flex gap-12 flex-1">
         <div className="flex-1 flex flex-col relative">
-          <div className="flex flex-col gap-4 px-4 py-8 relative">
+          <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
             <h2 className="text-4xl">From zero to prod in seconds</h2>
             <p className="text-brand-neutral-100 text-base">
               Everything you need etc etc (this text could be opted out)

@@ -10,11 +10,15 @@ export const HomeHero = () => {
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
-        className="flex items-center justify-center gap-2 z-10 text-xs"
+        className="flex items-center justify-center gap-2 z-10 text-xs group"
         href="https://npmjs.com/package/xmcp"
+        target="_blank"
       >
         v0.3.2
-        <Tag text="Latest Version" />
+        <Tag
+          text="Latest Version"
+          className="group-hover:border-brand-white group-hover:text-brand-white transition-colors duration-200"
+        />
       </Link>
       <h1 className="display text-center text-balance z-10 text-gradient">
         The TypeScript framework for building & shipping MCP servers
@@ -37,11 +41,11 @@ export const HomeHero = () => {
           </Link>
         </Button>
       </div>
-      <div className="flex flex-col items-center justify-center gap-4 py-8">
+      <div className="flex flex-col items-center justify-center gap-4.5 py-8">
         <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
         <div className="flex items-center justify-center gap-4 md:gap-10 flex-wrap">
-          <Logos.Vercel />
-          <Logos.Localstack />
+          <Logos.Vercel className="max-w-22 h-auto" />
+          <Logos.Localstack className="mt-0.5" />
           <Logos.Basehub />
         </div>
       </div>

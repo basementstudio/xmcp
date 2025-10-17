@@ -1,13 +1,7 @@
 "use client";
 
 import { AnimatedLink } from "@/components/animated-link";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/cn";
 import { useState } from "react";
 
@@ -52,21 +46,15 @@ export const MobileMenu = () => {
         <SheetTrigger asChild>
           <button
             className="text-white hover:text-white/80 transition-colors"
-            aria-label="Open menu"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
           >
             <MenuIcon isOpen={isOpen} />
           </button>
         </SheetTrigger>
         <SheetContent
           side="right"
-          className="w-full bg-black/95 border-white/10 data-[state=closed]:duration-500"
+          className="w-full bg-black/95 border-white/10 data-[state=closed]:duration-500 z-10"
         >
-          <SheetHeader>
-            <SheetTitle className="text-white font-mono text-left hidden">
-              Menu
-            </SheetTitle>
-          </SheetHeader>
-
           <div className="flex flex-col items-center justify-center gap-8 mt-8 min-h-[60vh]">
             <nav className="flex flex-col items-center gap-6">
               <div

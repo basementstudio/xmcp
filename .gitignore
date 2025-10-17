@@ -37,3 +37,4 @@ yarn-error.log*
 dist
 .xmcp
 xmcp-env.d.ts
+.env*.local
