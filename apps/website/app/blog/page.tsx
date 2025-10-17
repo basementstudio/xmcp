@@ -6,6 +6,8 @@ import {
 import { BlogHero } from "../../components/blog/hero";
 import { BlogCard } from "@/components/home/blog";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "Blog - xmcp",
   description: "Latest updates, guides, and insights about xmcp",
