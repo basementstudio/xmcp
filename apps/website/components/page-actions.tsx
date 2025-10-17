@@ -2,26 +2,12 @@
 import { useMemo, useState } from "react";
 import { cn } from "../lib/cn";
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
-import { buttonVariants } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "fumadocs-ui/components/ui/popover";
-import { cva } from "class-variance-authority";
 import { Icons } from "./icons";
 import Link from "next/link";
 
 const cache = new Map<string, string>();
 
-export function LLMCopyButton({
-  /**
-   * A URL to fetch the raw Markdown/MDX content of page
-   */
-  markdownUrl,
-}: {
-  markdownUrl: string;
-}) {
+export function PageActions({ markdownUrl }: { markdownUrl: string }) {
   const [isLoading, setLoading] = useState(false);
   const [checked, onClick] = useCopyButton(async () => {
     const cached = cache.get(markdownUrl);
@@ -45,54 +31,6 @@ export function LLMCopyButton({
     }
   });
 
-  return (
-    <button
-      disabled={isLoading}
-      className={cn(
-        buttonVariants({
-          color: "secondary",
-          size: "sm",
-          className: "gap-2 [&_svg]:size-3",
-        })
-      )}
-      onClick={onClick}
-    >
-      <span className="relative inline-flex items-center justify-center size-3">
-        <Icons.copy
-          className={cn(
-            "absolute inset-0 transition-opacity duration-200",
-            checked ? "opacity-0" : "opacity-100"
-          )}
-        />
-        <Icons.check
-          className={cn(
-            "absolute inset-0 transition-opacity duration-200",
-            checked ? "opacity-100" : "opacity-0"
-          )}
-        />
-      </span>
-      Copy Markdown
-    </button>
-  );
-}
-
-const optionVariants = cva(
-  "text-xs p-2 inline-flex items-center gap-2 text-brand-neutral-200 hover:text-brand-white [&_svg]:size-4 transition-all duration-200"
-);
-
-export function ViewOptions({
-  markdownUrl,
-}: {
-  /**
-   * A URL to the raw Markdown/MDX content of page
-   */
-  markdownUrl: string;
-
-  /**
-   * Source file URL on GitHub
-   */
-  githubUrl: string;
-}) {
   const items = useMemo(() => {
     const fullMarkdownUrl =
       typeof window !== "undefined"
@@ -101,13 +39,6 @@ export function ViewOptions({
     const q = `Read ${fullMarkdownUrl}, I want to ask questions about it.`;
 
     return [
-      {
-        title: "View as Markdown",
-        href: fullMarkdownUrl,
-        icon: (
-          <Icons.markdown fill="currentColor" role="img" viewBox="0 0 24 24" />
-        ),
-      },
       {
         title: "Open in ChatGPT",
         href: `https://chatgpt.com/?${new URLSearchParams({
@@ -147,37 +78,44 @@ export function ViewOptions({
   }, [markdownUrl]);
 
   return (
-    <Popover>
-      <PopoverTrigger
+    <div className="flex flex-col gap-2">
+      <button
+        disabled={isLoading}
         className={cn(
-          buttonVariants({
-            color: "secondary",
-            size: "sm",
-            className: "gap-2",
-          }),
-          "[&_svg]:transition-transform duration-300"
+          "text-sm py-1 px-0 inline-flex items-center gap-2 text-brand-neutral-100 hover:text-brand-white transition-colors duration-200 bg-transparent hover:bg-transparent [&_svg]:size-3 justify-start border-0"
         )}
+        onClick={onClick}
       >
-        Open
-        <Icons.arrowDown className="size-4" />
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="flex flex-col overflow-auto border border-brand-neutral-400 bg-brand-black animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 duration-200 rounded-xs"
-      >
-        {items.map((item) => (
-          <Link
-            key={item.href.toString()}
-            href={item.href}
-            rel="noreferrer noopener"
-            target="_blank"
-            className={cn(optionVariants())}
-          >
-            {item.icon}
-            {item.title}
-          </Link>
-        ))}
-      </PopoverContent>
-    </Popover>
+        <span className="relative inline-flex items-center justify-center size-3">
+          <Icons.markdown
+            className={cn(
+              "absolute inset-0 transition-opacity duration-200",
+              checked ? "opacity-0" : "opacity-100"
+            )}
+          />
+          <Icons.check
+            className={cn(
+              "absolute inset-0 transition-opacity duration-200",
+              checked ? "opacity-100" : "opacity-0"
+            )}
+          />
+        </span>
+        Copy Markdown
+      </button>
+      {items.map((item) => (
+        <Link
+          key={item.href.toString()}
+          href={item.href}
+          rel="noreferrer noopener"
+          target="_blank"
+          className={cn(
+            "text-sm py-1 px-0 inline-flex items-center gap-2 text-brand-neutral-100 hover:text-brand-white transition-colors duration-200 bg-transparent hover:bg-transparent [&_svg]:size-3 justify-start border-0"
+          )}
+        >
+          {item.icon}
+          {item.title}
+        </Link>
+      ))}
+    </div>
   );
 }

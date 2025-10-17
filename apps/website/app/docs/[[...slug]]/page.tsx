@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { LLMCopyButton, ViewOptions } from "@/components/page-actions";
+import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
@@ -20,17 +20,16 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const MDX = page.data.body;
 
   return (
-    <DocsPage toc={page.data.toc}>
+    <DocsPage
+      toc={page.data.toc}
+      pageActions={<PageActions markdownUrl={`${page.url}.mdx`} />}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      <div className="flex flex-row gap-2 items-center border-b pb-4 border-white/20">
-        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
-        <ViewOptions
-          markdownUrl={`${page.url}.mdx`}
-          githubUrl={`https://github.com/basementstudio/xmcp/blob/dev/apps/website/content/docs/${page.path}`}
-        />
+      <div className="xl:hidden mb-6">
+        <PageActions markdownUrl={`${page.url}.mdx`} />
       </div>
-      <DocsBody>
+      <DocsBody className="border-t border-white/20 pt-4">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

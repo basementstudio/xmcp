@@ -16,9 +16,10 @@ export interface DocsPageProps {
   toc?: TOCItemType[];
 
   children: ReactNode;
+  pageActions?: ReactNode;
 }
 
-export function DocsPage({ toc = [], ...props }: DocsPageProps) {
+export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
   return (
     <AnchorProvider toc={toc}>
       <main className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
@@ -27,16 +28,21 @@ export function DocsPage({ toc = [], ...props }: DocsPageProps) {
           <Footer />
         </article>
       </main>
-      {toc.length > 0 && (
+      {(toc.length > 0 || pageActions) && (
         <div className="sticky top-34 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 pt-0 overflow-auto max-xl:hidden">
-          <p className="text-sm text-brand-white mb-2 font-medium">
-            On this page
-          </p>
-          <div className="flex flex-col">
-            {toc.map((item) => (
-              <TocItem key={item.url} item={item} />
-            ))}
-          </div>
+          {toc.length > 0 && (
+            <>
+              <p className="text-sm text-brand-white mb-2 font-medium">
+                On this page
+              </p>
+              <div className="flex flex-col pb-4 border-b border-white/20">
+                {toc.map((item) => (
+                  <TocItem key={item.url} item={item} />
+                ))}
+              </div>
+            </>
+          )}
+          {pageActions && <div className="mt-4">{pageActions}</div>}
         </div>
       )}
     </AnchorProvider>
@@ -58,7 +64,7 @@ export function DocsDescription(props: ComponentProps<"p">) {
   return (
     <p
       {...props}
-      className={cn("text-lg text-brand-neutral-50", props.className)}
+      className={cn("text-lg text-brand-neutral-50 pb-4", props.className)}
     >
       {props.children}
     </p>
