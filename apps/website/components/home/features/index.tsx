@@ -1,11 +1,11 @@
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
-import Feature1 from "./feature-1.png";
+import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
-import Feature3 from "./feature-3.png";
-import Feature4 from "./feature-4.png";
-import Feature5 from "./feature-5.png";
-import Feature6 from "./feature-6.png";
+import Feature3 from "./feature-3.jpg";
+import Feature4 from "./feature-4.jpg";
+import Feature5 from "./feature-5.jpg";
+import Feature6 from "./feature-6.jpg";
 
 export const HomeFeatures = () => {
   return (
