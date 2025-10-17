@@ -9,7 +9,7 @@ export const HomeBlog = () => {
   return (
     <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 md:gap-8 w-full">
+        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
           <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
             <Tag text="Blog" className="w-fit" />
             <h2 className="heading-2 text-balance mt-auto text-gradient">

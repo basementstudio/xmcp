@@ -402,7 +402,7 @@ export const HomeSteps = () => {
 
       <div className="hidden md:flex gap-12 flex-1">
         <div className="flex-1 flex flex-col relative">
-          <div className="flex flex-col gap-4 px-4 py-8 relative">
+          <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
             <h2 className="text-4xl">From zero to prod in seconds</h2>
             <p className="text-brand-neutral-100 text-base">
               Everything you need etc etc (this text could be opted out)
