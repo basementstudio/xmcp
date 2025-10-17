@@ -12,6 +12,7 @@ export const HomeHero = () => {
       <Link
         className="flex items-center justify-center gap-2 z-10 text-xs group"
         href="https://npmjs.com/package/xmcp"
+        target="_blank"
       >
         v0.3.2
         <Tag
