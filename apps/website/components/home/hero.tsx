@@ -17,7 +17,7 @@ export const HomeHero = () => {
         v0.3.2
         <Tag
           text="Latest Version"
-          className="group-hover:border-brand-white group-hover:text-brand-white transition-colors duration-200"
+          className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
         />
       </Link>
       <h1 className="display text-center text-balance z-10 text-gradient">
