@@ -40,7 +40,9 @@ export function AskAIButton() {
         onClick={() => setOpen(true)}
       >
         Ask AI
-        <span className="text-brand-white ml-2">{isMac ? "⌘I" : "Ctrl I"}</span>
+        <span className="text-brand-white ml-2 w-[38px] inline-block text-right">
+          {isMac ? "⌘I" : "Ctrl I"}
+        </span>
       </button>
 
       {/* Fixed bottom-right button - visible only on mobile */}
