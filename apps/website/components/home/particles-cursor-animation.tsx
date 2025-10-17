@@ -109,7 +109,7 @@ void main()
     float distanceToCenter = length(uv - vec2(0.5));
     if(distanceToCenter > 0.5)
         discard;
-    float edgeFadeSize = 0.2;
+    float edgeFadeSize = 0.4;
     float edgeDistX = min(vUv.x, 1.0 - vUv.x);
     float edgeDistY = min(vUv.y, 1.0 - vUv.y);
     float edgeDist = min(edgeDistX, edgeDistY);
