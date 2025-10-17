@@ -18,69 +18,49 @@ uniform float uMotionBlurStrength;
 uniform float uPlaneAspect;
 uniform float uImageAspect;
 uniform vec2 uCursorVelocity;
-uniform float uViewportWidth;
-
 attribute float aIntensity;
 attribute float aAngle;
-
 varying vec3 vColor;
-
+varying vec2 vUv;
 void main()
 {
     vec2 adjustedUv = uv;
-    
-    if (uViewportWidth <= 1024.0) {
-        if (uPlaneAspect > uImageAspect) {
-            float scale = uPlaneAspect / uImageAspect;
-            adjustedUv.x = (uv.x - 0.5) * scale + 0.5;
-        } else {
-            float scale = uImageAspect / uPlaneAspect;
-            adjustedUv.y = (uv.y - 0.5) * scale + 0.5;
-        }
+    if (uPlaneAspect > uImageAspect) {
+        float scale = uPlaneAspect / uImageAspect;
+        adjustedUv.x = (uv.x - 0.5) * scale + 0.5;
+    } else {
+        float scale = uImageAspect / uPlaneAspect;
+        adjustedUv.y = (uv.y - 0.5) * scale + 0.5;
     }
-    
     float pictureIntensity = texture(uPictureTexture, adjustedUv).r;
-    
     vec3 newPosition = position;
     float displacementIntensity = texture(uDisplacementTexture, uv).r;
-    
     float rawIntensity = displacementIntensity;
     displacementIntensity = smoothstep(uSmoothstepMin, uSmoothstepMax, displacementIntensity);
-    
     displacementIntensity = mix(displacementIntensity, rawIntensity, 0.4);
-    
     displacementIntensity = pow(displacementIntensity, 0.8);
-    
     float bulgePeak = pow(rawIntensity, 3.5) * 0.3;
     displacementIntensity += bulgePeak;
-
     vec3 radialDisplacement = vec3(
         cos(aAngle) * 0.25,
         sin(aAngle) * 0.25,
         1.2
     );
-    
     vec3 flowDisplacement = vec3(
         uCursorVelocity.x * 2.0,
         uCursorVelocity.y * 2.0,
         0.3
     );
-    
     vec3 displacement = mix(radialDisplacement, flowDisplacement, displacementIntensity * 0.7);
     displacement = normalize(displacement);
-    
     float centerBulge = pow(displacementIntensity, 1.5);
     displacement.z += centerBulge * 0.3;
-    
     displacement *= displacementIntensity;
     displacement *= uDisplacementStrength;
     displacement *= aIntensity;
-    displacement *= pictureIntensity; 
-    
+    displacement *= pictureIntensity;
     newPosition += displacement;
-
     float driftSpeed = uTime * 0.3;
-    
     vec3 drift = vec3(
         sin(driftSpeed + aAngle * 3.0) * 0.03 + sin(driftSpeed * 0.5 + aAngle) * 0.015,
         cos(driftSpeed + aAngle * 2.0) * 0.03 + cos(driftSpeed * 0.7 + aAngle * 1.5) * 0.015,
@@ -88,69 +68,57 @@ void main()
     );
     drift *= aIntensity;
     drift *= uMotionBlurStrength;
-    
     float displacementFactor = 1.0 - displacementIntensity * 0.5;
     drift *= displacementFactor;
-    drift *= (1.0 - pictureIntensity * 0.5); 
-    
+    drift *= (1.0 - pictureIntensity * 0.5);
     float wave1 = sin(uTime * 0.5 + position.x * 0.5 + position.y * 0.3) * 0.02;
     float wave2 = cos(uTime * 0.3 + position.x * 0.3 + position.y * 0.5) * 0.015;
     drift.z += (wave1 + wave2) * uMotionBlurStrength * (1.0 - pictureIntensity * 0.3);
-    
     float circularMotion = uTime * 0.2;
     drift.x += cos(circularMotion + aAngle * 6.28) * 0.01 * uMotionBlurStrength * displacementFactor;
     drift.y += sin(circularMotion + aAngle * 6.28) * 0.01 * uMotionBlurStrength * displacementFactor;
-    
     newPosition += drift;
-
     vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
     gl_Position = projectedPosition;
-
     float twinkle1 = sin(uTime * 0.4 + aAngle * 10.0 + position.x * 2.0) * 0.5 + 0.5;
     float twinkle2 = sin(uTime * 0.25 + aAngle * 7.0 + position.y * 2.0) * 0.5 + 0.5;
     float twinkle3 = sin(uTime * 0.6 + aAngle * 13.0) * 0.5 + 0.5;
-    
     float basePulse = sin(uTime * 0.3) * 0.5 + 0.5;
-    
     float twinkleCombined = mix(twinkle1, twinkle2, 0.5);
     twinkleCombined = mix(twinkleCombined, twinkle3, 0.3);
     twinkleCombined = mix(twinkleCombined, basePulse, 0.2);
-    
     twinkleCombined = smoothstep(0.2, 0.8, twinkleCombined);
-    
     float twinkleStrength = (1.0 - displacementIntensity * 0.5) * uMotionBlurStrength;
     float brightnessVariation = 0.6 + twinkleCombined * 0.6 * twinkleStrength;
-    
     float sizePulse = 1.0 + sin(uTime * 0.5 + aAngle * 5.0) * 0.12 * uMotionBlurStrength * (1.0 - pictureIntensity * 0.8);
-    
     float sizeFromBrightness = mix(0.85, 1.15, brightnessVariation);
-    
     gl_PointSize = uPointSizeMultiplier * pictureIntensity * uResolution.y * sizePulse * sizeFromBrightness;
     gl_PointSize *= (1.0 / - viewPosition.z);
-
     vColor = vec3(pow(pictureIntensity, 1.2) * 1.8 * brightnessVariation);
+    vUv = uv;
 }
 `;
-
 const fragmentShader = `
 varying vec3 vColor;
-
+varying vec2 vUv;
 void main()
 {
     vec2 uv = gl_PointCoord;
     float distanceToCenter = length(uv - vec2(0.5));
-
     if(distanceToCenter > 0.5)
         discard;
-
+    float edgeFadeSize = 0.2;
+    float edgeDistX = min(vUv.x, 1.0 - vUv.x);
+    float edgeDistY = min(vUv.y, 1.0 - vUv.y);
+    float edgeDist = min(edgeDistX, edgeDistY);
+    float edgeFade = smoothstep(0.0, edgeFadeSize, edgeDist);
     float alpha = 1.0 - smoothstep(0.0, 0.5, distanceToCenter);
     alpha = pow(alpha, 0.8);
-    
     float glow = pow(alpha, 2.0) * 0.5;
     vec3 brighterColor = vColor * (1.0 + alpha * 0.4 + glow);
-    
+    brighterColor *= edgeFade;
     gl_FragColor = vec4(brighterColor, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
