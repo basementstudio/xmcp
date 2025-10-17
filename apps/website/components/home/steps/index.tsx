@@ -94,7 +94,7 @@ export const getWeather = tool({
   },
 ];
 
-const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
+const Terminal = ({ step }: { step: typeof steps[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
@@ -155,6 +155,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   const terminalRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const previousStepRef = useRef(stepId);
   const isAnimatingRef = useRef(false);
+  const currentAnimationRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     steps.forEach((step) => {
@@ -183,22 +184,56 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   }, []);
 
   useEffect(() => {
-    if (stepId === previousStepRef.current || isAnimatingRef.current) return;
-
-    isAnimatingRef.current = true;
+    if (stepId === previousStepRef.current) return;
 
     const currentTerminal = terminalRefs.current[stepId];
     const previousTerminal = terminalRefs.current[previousStepRef.current];
 
-    if (!currentTerminal || !previousTerminal) {
-      isAnimatingRef.current = false;
+    if (!currentTerminal) {
       return;
     }
+
+    // kill any existing animation
+    if (currentAnimationRef.current) {
+      currentAnimationRef.current.kill();
+      currentAnimationRef.current = null;
+
+      // ensure all terminals except the current one are hidden
+      if (previousTerminal) {
+        gsap.set(previousTerminal, {
+          opacity: 0,
+          display: "none",
+        });
+      }
+    }
+
+    previousStepRef.current = stepId;
+
+    if (!previousTerminal) {
+      gsap.set(currentTerminal, {
+        display: "block",
+        y: 0,
+        x: 0,
+        scale: 1,
+        opacity: 1,
+        zIndex: 10,
+      });
+
+      steps.forEach((step) => {
+        const terminal = terminalRefs.current[step.id];
+        if (terminal && step.id !== stepId) {
+          gsap.set(terminal, { display: "none" });
+        }
+      });
+
+      return;
+    }
+
+    isAnimatingRef.current = true;
 
     const tl = gsap.timeline({
       onComplete: () => {
         isAnimatingRef.current = false;
-        previousStepRef.current = stepId;
 
         // Hide all non-active terminals after animation
         steps.forEach((step) => {
@@ -209,10 +244,14 @@ const StepContent = ({ stepId }: { stepId: number }) => {
             gsap.set(terminal, { display: "none" });
           }
         });
+
+        currentAnimationRef.current = null;
       },
     });
 
-    // Always animate the same way (forward style)
+    currentAnimationRef.current = tl;
+
+    // Set up the current terminal for animation
     gsap.set(currentTerminal, {
       display: "block",
       zIndex: 10,
@@ -243,6 +282,15 @@ const StepContent = ({ stepId }: { stepId: number }) => {
       0.1
     );
   }, [stepId]);
+
+  useEffect(() => {
+    return () => {
+      if (currentAnimationRef.current) {
+        currentAnimationRef.current.kill();
+        currentAnimationRef.current = null;
+      }
+    };
+  }, []);
 
   return (
     <div
