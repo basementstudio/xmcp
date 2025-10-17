@@ -3,6 +3,7 @@
 import { useRef, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useControls, folder } from "leva";
 
 const vertexShader = `
 uniform vec2 uResolution;
@@ -14,6 +15,9 @@ uniform float uSmoothstepMin;
 uniform float uSmoothstepMax;
 uniform float uTime;
 uniform float uMotionBlurStrength;
+uniform float uPlaneAspect;
+uniform float uImageAspect;
+uniform vec2 uCursorVelocity;
 
 attribute float aIntensity;
 attribute float aAngle;
@@ -22,20 +26,49 @@ varying vec3 vColor;
 
 void main()
 {
-    // intensity of the picture
-    float pictureIntensity = texture(uPictureTexture, uv).r;
+    vec2 adjustedUv = uv;
+    
+    if (uPlaneAspect > uImageAspect) {
+        float scale = uPlaneAspect / uImageAspect;
+        adjustedUv.x = (uv.x - 0.5) * scale + 0.5;
+    } else {
+        float scale = uImageAspect / uPlaneAspect;
+        adjustedUv.y = (uv.y - 0.5) * scale + 0.5;
+    }
+    
+    float pictureIntensity = texture(uPictureTexture, adjustedUv).r;
     
     vec3 newPosition = position;
     float displacementIntensity = texture(uDisplacementTexture, uv).r;
+    
+    float rawIntensity = displacementIntensity;
     displacementIntensity = smoothstep(uSmoothstepMin, uSmoothstepMax, displacementIntensity);
+    
+    displacementIntensity = mix(displacementIntensity, rawIntensity, 0.4);
+    
+    displacementIntensity = pow(displacementIntensity, 0.8);
+    
+    float bulgePeak = pow(rawIntensity, 3.5) * 0.3;
+    displacementIntensity += bulgePeak;
 
-    // displacement of the particles by the cursor
-    vec3 displacement = vec3(
-        cos(aAngle) * 0.2,
-        sin(aAngle) * 0.2,
-        1.0
+    vec3 radialDisplacement = vec3(
+        cos(aAngle) * 0.25,
+        sin(aAngle) * 0.25,
+        1.2
     );
+    
+    vec3 flowDisplacement = vec3(
+        uCursorVelocity.x * 2.0,
+        uCursorVelocity.y * 2.0,
+        0.3
+    );
+    
+    vec3 displacement = mix(radialDisplacement, flowDisplacement, displacementIntensity * 0.7);
     displacement = normalize(displacement);
+    
+    float centerBulge = pow(displacementIntensity, 1.5);
+    displacement.z += centerBulge * 0.3;
+    
     displacement *= displacementIntensity;
     displacement *= uDisplacementStrength;
     displacement *= aIntensity;
@@ -43,10 +76,8 @@ void main()
     
     newPosition += displacement;
 
-    // motion blur 
     float driftSpeed = uTime * 0.3;
     
-    // multi-layered drift
     vec3 drift = vec3(
         sin(driftSpeed + aAngle * 3.0) * 0.03 + sin(driftSpeed * 0.5 + aAngle) * 0.015,
         cos(driftSpeed + aAngle * 2.0) * 0.03 + cos(driftSpeed * 0.7 + aAngle * 1.5) * 0.015,
@@ -55,49 +86,48 @@ void main()
     drift *= aIntensity;
     drift *= uMotionBlurStrength;
     
-    // more movement when not displaced, less when displaced
     float displacementFactor = 1.0 - displacementIntensity * 0.5;
     drift *= displacementFactor;
     drift *= (1.0 - pictureIntensity * 0.5); 
     
-    // add organic wave motion with multiple frequencies
     float wave1 = sin(uTime * 0.5 + position.x * 0.5 + position.y * 0.3) * 0.02;
     float wave2 = cos(uTime * 0.3 + position.x * 0.3 + position.y * 0.5) * 0.015;
     drift.z += (wave1 + wave2) * uMotionBlurStrength * (1.0 - pictureIntensity * 0.3);
     
-    // add subtle circular motion
     float circularMotion = uTime * 0.2;
     drift.x += cos(circularMotion + aAngle * 6.28) * 0.01 * uMotionBlurStrength * displacementFactor;
     drift.y += sin(circularMotion + aAngle * 6.28) * 0.01 * uMotionBlurStrength * displacementFactor;
     
     newPosition += drift;
 
-    // final position
     vec4 modelPosition = modelMatrix * vec4(newPosition, 1.0);
     vec4 viewPosition = viewMatrix * modelPosition;
     vec4 projectedPosition = projectionMatrix * viewPosition;
     gl_Position = projectedPosition;
 
-    // star-like twinkling - multiple frequencies for natural effect
-    float twinkle1 = sin(uTime * 1.5 + aAngle * 10.0 + position.x * 2.0) * 0.5 + 0.5;
-    float twinkle2 = sin(uTime * 0.8 + aAngle * 7.0 + position.y * 2.0) * 0.5 + 0.5;
-    float twinkle3 = sin(uTime * 2.3 + aAngle * 13.0) * 0.5 + 0.5;
+    float twinkle1 = sin(uTime * 0.4 + aAngle * 10.0 + position.x * 2.0) * 0.5 + 0.5;
+    float twinkle2 = sin(uTime * 0.25 + aAngle * 7.0 + position.y * 2.0) * 0.5 + 0.5;
+    float twinkle3 = sin(uTime * 0.6 + aAngle * 13.0) * 0.5 + 0.5;
     
-    // combine twinkle effects
+    float basePulse = sin(uTime * 0.3) * 0.5 + 0.5;
+    
     float twinkleCombined = mix(twinkle1, twinkle2, 0.5);
     twinkleCombined = mix(twinkleCombined, twinkle3, 0.3);
+    twinkleCombined = mix(twinkleCombined, basePulse, 0.2);
     
-    // more twinkling when not displaced
-    float twinkleStrength = (1.0 - displacementIntensity * 0.7) * uMotionBlurStrength;
-    float brightnessVariation = 0.85 + twinkleCombined * 0.3 * twinkleStrength;
+    twinkleCombined = smoothstep(0.2, 0.8, twinkleCombined);
     
-    // point size with pulsing and twinkling
-    float sizePulse = 1.0 + sin(uTime * 2.0 + aAngle * 5.0) * 0.08 * uMotionBlurStrength * (1.0 - pictureIntensity * 0.8);
-    gl_PointSize = uPointSizeMultiplier * pictureIntensity * uResolution.y * sizePulse * brightnessVariation;
+    float twinkleStrength = (1.0 - displacementIntensity * 0.5) * uMotionBlurStrength;
+    float brightnessVariation = 0.6 + twinkleCombined * 0.6 * twinkleStrength;
+    
+    float sizePulse = 1.0 + sin(uTime * 0.5 + aAngle * 5.0) * 0.12 * uMotionBlurStrength * (1.0 - pictureIntensity * 0.8);
+    
+    float sizeFromBrightness = mix(0.85, 1.15, brightnessVariation);
+    
+    gl_PointSize = uPointSizeMultiplier * pictureIntensity * uResolution.y * sizePulse * sizeFromBrightness;
     gl_PointSize *= (1.0 / - viewPosition.z);
 
-    // varyings - brighter particles with twinkling effect
-    vColor = vec3(pow(pictureIntensity, 1.3) * 1.5 * brightnessVariation);
+    vColor = vec3(pow(pictureIntensity, 1.2) * 1.8 * brightnessVariation);
 }
 `;
 
@@ -113,7 +143,10 @@ void main()
         discard;
 
     float alpha = 1.0 - smoothstep(0.0, 0.5, distanceToCenter);
-    vec3 brighterColor = vColor * (1.0 + alpha * 0.3);
+    alpha = pow(alpha, 0.8);
+    
+    float glow = pow(alpha, 2.0) * 0.5;
+    vec3 brighterColor = vColor * (1.0 + alpha * 0.4 + glow);
     
     gl_FragColor = vec4(brighterColor, 1.0);
     #include <tonemapping_fragment>
@@ -122,22 +155,119 @@ void main()
 `;
 
 export default function ParticlesCursorAnimation() {
-  const { size, camera, raycaster } = useThree();
+  const { size, camera, raycaster, gl } = useThree();
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
 
-  const particleQuantity = 480;
-  const particleSize = 0.06;
-  const displacementStrength = 0.8;
-  const fadeSpeed = 0.082;
-  const glowSizeMultiplier = 0.24;
-  const speedAlphaMultiplier = 0.04;
-  const smoothstepMin = 0.2;
-  const smoothstepMax = 0.6;
-  const planeSize = 10;
-  const canvasResolution = 256;
-  const cursorSmoothing = 0.5;
-  const motionBlurStrength = 1;
+  const {
+    particleQuantity,
+    particleSize,
+    displacementForce,
+    mouseAreaSize,
+    fadeSpeed,
+    speedAlphaMultiplier,
+    smoothstepMin,
+    smoothstepMax,
+    canvasResolution,
+    cursorSmoothing,
+    cursorLerpStrength,
+    motionBlurStrength,
+  } = useControls({
+    "Mouse Effect": folder({
+      mouseAreaSize: {
+        value: 0.26,
+        min: 0.05,
+        max: 1,
+        step: 0.01,
+      },
+      displacementForce: {
+        value: 2.0,
+        min: 0,
+        max: 10,
+        step: 0.1,
+      },
+    }),
+    "Particle Settings": folder({
+      particleQuantity: {
+        value: 384,
+        min: 32,
+        max: 512,
+        step: 32,
+      },
+      particleSize: {
+        value: 0.06,
+        min: 0.01,
+        max: 1,
+        step: 0.01,
+      },
+      motionBlurStrength: {
+        value: 1.2,
+        min: 0,
+        max: 3,
+        step: 0.1,
+      },
+    }),
+    Displacement: folder({
+      displacementStrength: {
+        value: 2.8,
+        min: 0,
+        max: 10,
+        step: 0.1,
+      },
+      smoothstepMin: {
+        value: 0.35,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+      smoothstepMax: {
+        value: 0.82,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+    }),
+    "Cursor Trail": folder({
+      fadeSpeed: {
+        value: 0.03,
+        min: 0.001,
+        max: 0.1,
+        step: 0.001,
+      },
+      glowSizeMultiplier: {
+        value: 0.22,
+        min: 0.1,
+        max: 1,
+        step: 0.01,
+      },
+      speedAlphaMultiplier: {
+        value: 0.18,
+        min: 0.01,
+        max: 0.3,
+        step: 0.01,
+      },
+      cursorSmoothing: {
+        value: 0.2,
+        min: 0.01,
+        max: 0.5,
+        step: 0.01,
+      },
+      cursorLerpStrength: {
+        value: 0.24,
+        min: 0.01,
+        max: 0.3,
+        step: 0.01,
+      },
+    }),
+    Advanced: folder({
+      canvasResolution: {
+        value: 256,
+        min: 64,
+        max: 512,
+        step: 64,
+      },
+    }),
+  });
 
   const displacement = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -160,6 +290,9 @@ export default function ParticlesCursorAnimation() {
       canvasCursor: new THREE.Vector2(9999, 9999),
       canvasCursorPrevious: new THREE.Vector2(9999, 9999),
       canvasCursorTarget: new THREE.Vector2(9999, 9999),
+      canvasCursorSmoothed: new THREE.Vector2(9999, 9999),
+      velocity: new THREE.Vector2(0, 0),
+      velocitySmoothed: new THREE.Vector2(0, 0),
     };
   }, [canvasResolution]);
 
@@ -174,10 +307,35 @@ export default function ParticlesCursorAnimation() {
     return loader.load("/xmcp.png");
   }, []);
 
+  const planeSize = useMemo(() => {
+    if (!(camera instanceof THREE.PerspectiveCamera))
+      return { width: 10, height: 10, aspect: 1 };
+
+    const cameraDistance = 18;
+    const vFov = (camera.fov * Math.PI) / 180;
+    const visibleHeight = 2 * Math.tan(vFov / 2) * cameraDistance;
+
+    const canvasAspect = size.width / size.height;
+    const visibleWidth = visibleHeight * canvasAspect;
+
+    return {
+      width: visibleWidth,
+      height: visibleHeight,
+      aspect: canvasAspect,
+    };
+  }, [camera, size]);
+
+  const imageAspect = useMemo(() => {
+    if (pictureTexture.image) {
+      return pictureTexture.image.width / pictureTexture.image.height;
+    }
+    return 1;
+  }, [pictureTexture]);
+
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(
-      planeSize,
-      planeSize,
+      planeSize.width,
+      planeSize.height,
       particleQuantity,
       particleQuantity
     );
@@ -214,12 +372,15 @@ export default function ParticlesCursorAnimation() {
         ),
         uPictureTexture: new THREE.Uniform(pictureTexture),
         uDisplacementTexture: new THREE.Uniform(displacement.texture),
-        uDisplacementStrength: new THREE.Uniform(displacementStrength),
+        uDisplacementStrength: new THREE.Uniform(displacementForce),
         uPointSizeMultiplier: new THREE.Uniform(particleSize),
         uSmoothstepMin: new THREE.Uniform(smoothstepMin),
         uSmoothstepMax: new THREE.Uniform(smoothstepMax),
         uTime: new THREE.Uniform(0),
         uMotionBlurStrength: new THREE.Uniform(motionBlurStrength),
+        uPlaneAspect: new THREE.Uniform(planeSize.aspect),
+        uImageAspect: new THREE.Uniform(imageAspect),
+        uCursorVelocity: new THREE.Uniform(new THREE.Vector2(0, 0)),
       },
       blending: THREE.AdditiveBlending,
     });
@@ -227,33 +388,33 @@ export default function ParticlesCursorAnimation() {
     size,
     pictureTexture,
     displacement.texture,
-    displacementStrength,
+    displacementForce,
     particleSize,
     smoothstepMin,
     smoothstepMax,
     motionBlurStrength,
+    planeSize.aspect,
+    imageAspect,
   ]);
 
   useEffect(() => {
+    const canvas = gl.domElement;
+    
     const handlePointerMove = (event: PointerEvent) => {
-      // Get the canvas element from the Three.js context
-      const canvas = document.querySelector("canvas");
-      if (!canvas) return;
-
       const rect = canvas.getBoundingClientRect();
-
-      // Calculate position relative to the canvas
+      
+      // Calculate mouse position relative to the canvas
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-
-      // Convert to normalized device coordinates (-1 to 1)
+      
+      // Convert to normalized device coordinates (-1 to +1)
       displacement.screenCursor.x = (x / rect.width) * 2 - 1;
       displacement.screenCursor.y = -(y / rect.height) * 2 + 1;
     };
 
     window.addEventListener("pointermove", handlePointerMove);
     return () => window.removeEventListener("pointermove", handlePointerMove);
-  }, [displacement]);
+  }, [displacement, gl]);
 
   useEffect(() => {
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
@@ -261,7 +422,7 @@ export default function ParticlesCursorAnimation() {
       size.width * pixelRatio,
       size.height * pixelRatio
     );
-    material.uniforms.uDisplacementStrength.value = displacementStrength;
+    material.uniforms.uDisplacementStrength.value = displacementForce;
     material.uniforms.uPointSizeMultiplier.value = particleSize;
     material.uniforms.uSmoothstepMin.value = smoothstepMin;
     material.uniforms.uSmoothstepMax.value = smoothstepMax;
@@ -269,21 +430,36 @@ export default function ParticlesCursorAnimation() {
   }, [
     size,
     material,
-    displacementStrength,
+    displacementForce,
     particleSize,
     smoothstepMin,
     smoothstepMax,
     motionBlurStrength,
   ]);
 
+  // Update interactive plane when planeSize changes
+  useEffect(() => {
+    if (interactivePlaneRef.current) {
+      const planeGeo = interactivePlaneRef.current
+        .geometry as THREE.PlaneGeometry;
+      planeGeo.dispose();
+      interactivePlaneRef.current.geometry = new THREE.PlaneGeometry(
+        planeSize.width,
+        planeSize.height
+      );
+    }
+  }, [planeSize]);
+
   useFrame((state) => {
     if (!interactivePlaneRef.current || !displacement.context) return;
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
 
+    // Update raycaster with current camera and mouse position
     raycaster.setFromCamera(displacement.screenCursor, camera);
     const intersections = raycaster.intersectObject(
-      interactivePlaneRef.current
+      interactivePlaneRef.current,
+      false
     );
 
     if (intersections.length > 0 && intersections[0].uv) {
@@ -293,12 +469,36 @@ export default function ParticlesCursorAnimation() {
         (1 - uv.y) * displacement.canvas.height;
     }
 
+    displacement.canvasCursorSmoothed.x +=
+      (displacement.canvasCursorTarget.x -
+        displacement.canvasCursorSmoothed.x) *
+      cursorSmoothing;
+    displacement.canvasCursorSmoothed.y +=
+      (displacement.canvasCursorTarget.y -
+        displacement.canvasCursorSmoothed.y) *
+      cursorSmoothing;
+
+    const oldX = displacement.canvasCursor.x;
+    const oldY = displacement.canvasCursor.y;
+
     displacement.canvasCursor.x +=
-      (displacement.canvasCursorTarget.x - displacement.canvasCursor.x) *
-      cursorSmoothing;
+      (displacement.canvasCursorSmoothed.x - displacement.canvasCursor.x) *
+      cursorLerpStrength;
     displacement.canvasCursor.y +=
-      (displacement.canvasCursorTarget.y - displacement.canvasCursor.y) *
-      cursorSmoothing;
+      (displacement.canvasCursorSmoothed.y - displacement.canvasCursor.y) *
+      cursorLerpStrength;
+
+    displacement.velocity.x =
+      (displacement.canvasCursor.x - oldX) / displacement.canvas.width;
+    displacement.velocity.y =
+      -(displacement.canvasCursor.y - oldY) / displacement.canvas.height;
+
+    displacement.velocitySmoothed.x +=
+      (displacement.velocity.x - displacement.velocitySmoothed.x) * 0.15;
+    displacement.velocitySmoothed.y +=
+      (displacement.velocity.y - displacement.velocitySmoothed.y) * 0.15;
+
+    material.uniforms.uCursorVelocity.value.copy(displacement.velocitySmoothed);
 
     displacement.context.globalCompositeOperation = "source-over";
     displacement.context.globalAlpha = fadeSpeed;
@@ -316,7 +516,7 @@ export default function ParticlesCursorAnimation() {
     displacement.canvasCursorPrevious.copy(displacement.canvasCursor);
     const alpha = Math.min(cursorDistance * speedAlphaMultiplier, 1);
 
-    const glowSize = displacement.canvas.width * glowSizeMultiplier;
+    const glowSize = displacement.canvas.width * mouseAreaSize;
     displacement.context.globalCompositeOperation = "lighten";
     displacement.context.globalAlpha = alpha;
 
@@ -335,12 +535,17 @@ export default function ParticlesCursorAnimation() {
 
   return (
     <>
-      <mesh ref={interactivePlaneRef} visible={false}>
-        <planeGeometry args={[planeSize, planeSize]} />
+      <mesh ref={interactivePlaneRef} visible={false} position={[0, 0, 0]}>
+        <planeGeometry args={[planeSize.width, planeSize.height]} />
         <meshBasicMaterial color="red" side={THREE.DoubleSide} />
       </mesh>
 
-      <points ref={meshRef} geometry={geometry} material={material} />
+      <points
+        ref={meshRef}
+        geometry={geometry}
+        material={material}
+        position={[0, 0, 0]}
+      />
     </>
   );
 }
