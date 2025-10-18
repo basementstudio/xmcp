@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MobileMenu } from "./mobile";
 import { AskAIButton } from "@/components/ai/ask";
-import { SearchToggle } from "../docs";
+import { SearchToggle } from "../search-toggle";
 import { AnimatedLink } from "@/components/animated-link";
 import { LogoContextMenu } from "./logo-menu";
 import { ProgressiveBlurBackground } from "./progressive-blur-bg";

@@ -29,7 +29,7 @@ export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
         </article>
       </main>
       {(toc.length > 0 || pageActions) && (
-        <div className="sticky top-34 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 pt-0 overflow-auto max-xl:hidden">
+        <div className="sticky top-34 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 pt-0 overflow-auto max-xl:hidden mt-8">
           {toc.length > 0 && (
             <>
               <p className="text-sm text-brand-white mb-2 font-medium">

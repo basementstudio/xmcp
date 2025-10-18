@@ -26,9 +26,6 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      <div className="xl:hidden mb-6">
-        <PageActions markdownUrl={`${page.url}.mdx`} />
-      </div>
       <DocsBody className="border-t border-white/20 pt-4">
         <MDX
           components={getMDXComponents({

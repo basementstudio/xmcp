@@ -1,20 +1,12 @@
 "use client";
 import type * as PageTree from "fumadocs-core/page-tree";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useMemo,
-  useState,
-  useEffect,
-} from "react";
+import { type ReactNode, useMemo } from "react";
 import { cn } from "../../lib/cn";
 import { TreeContextProvider, useTreeContext } from "fumadocs-ui/contexts/tree";
 import Link from "fumadocs-core/link";
-import { useSearchContext } from "fumadocs-ui/contexts/search";
 import { useSidebar } from "fumadocs-ui/contexts/sidebar";
 import { cva } from "class-variance-authority";
 import { usePathname } from "fumadocs-core/framework";
-import { Icons } from "../icons";
 
 export interface DocsLayoutProps {
   tree: PageTree.Root;
@@ -32,36 +24,6 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
         {children}
       </main>
     </TreeContextProvider>
-  );
-}
-
-export function SearchToggle(props: ComponentProps<"button">) {
-  const { enabled, setOpenSearch } = useSearchContext();
-  const [isMac, setIsMac] = useState(false);
-
-  useEffect(() => {
-    setIsMac(/(Mac|iPhone|iPod|iPad)/i.test(navigator.platform));
-  }, []);
-
-  if (!enabled) return;
-
-  return (
-    <button
-      {...props}
-      className={cn(
-        "p-2 border-transparent border sm:border-brand-neutral-400 text-start flex items-center gap-2 text-brand-neutral-200 text-sm hover:bg-white/10 rounded-xs",
-        "transition-colors duration-200 ease-in-out cursor-pointer",
-        props.className
-      )}
-      onClick={() => setOpenSearch(true)}
-    >
-      <Icons.search className="size-4" />
-      <span className="lg:block hidden">Search docs...</span>
-      <span className="hidden sm:block lg:hidden">Search...</span>
-      <span className="text-brand-white ml-auto hidden md:block w-[38px] text-right">
-        {isMac ? "⌘K" : "Ctrl K"}
-      </span>
-    </button>
   );
 }
 
