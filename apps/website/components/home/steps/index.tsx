@@ -381,9 +381,6 @@ export const HomeSteps = () => {
           <h2 className="heading-2 text-gradient">
             From zero to prod in seconds
           </h2>
-          <p className="text-brand-neutral-100 text-base">
-            Everything you need etc etc (this text could be opted out)
-          </p>
         </div>
 
         {steps.map((step) => (
@@ -404,9 +401,6 @@ export const HomeSteps = () => {
         <div className="flex-1 flex flex-col relative">
           <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
             <h2 className="text-4xl">From zero to prod in seconds</h2>
-            <p className="text-brand-neutral-100 text-base">
-              Everything you need etc etc (this text could be opted out)
-            </p>
 
             <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-[#333333] to-transparent" />
           </div>
