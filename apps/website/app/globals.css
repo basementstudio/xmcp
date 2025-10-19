@@ -36,6 +36,11 @@
   --color-brand-black: var(--brand-black);
 }
 
+html {
+  scroll-padding-top: 80px;
+  text-rendering: optimizeLegibility;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -200,7 +205,7 @@ body {
   @apply border-white/20;
 }
 
-.prose> :first-child {
+.prose > :first-child {
   /* Override removing top margin, causing layout shift */
   /* margin-top: 1.25em !important; */
   /* margin-bottom: 1.25em !important; */
@@ -292,11 +297,15 @@ input[type="email"] {
 }
 
 .text-gradient {
-  background: var(--80-100-80,
-      linear-gradient(270deg,
-        rgba(247, 247, 247, 0.8) 0%,
-        #f7f7f7 50%,
-        rgba(247, 247, 247, 0.8) 100%));
+  background: var(
+    --80-100-80,
+    linear-gradient(
+      270deg,
+      rgba(247, 247, 247, 0.8) 0%,
+      #f7f7f7 50%,
+      rgba(247, 247, 247, 0.8) 100%
+    )
+  );
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
