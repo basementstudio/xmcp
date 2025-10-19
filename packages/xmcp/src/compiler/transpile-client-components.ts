@@ -22,7 +22,9 @@ export async function transpileClientComponent(
 
   const sourceCode = fs.readFileSync(absolutePath, "utf-8");
 
-  const { transformSync } = require("@swc/core");
+  // Use eval to prevent webpack from analyzing this require
+  const dynamicRequire = eval("require");
+  const { transformSync } = dynamicRequire("@swc/core");
 
   const result = transformSync(sourceCode, {
     filename: componentPath,
