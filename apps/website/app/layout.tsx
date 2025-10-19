@@ -9,7 +9,6 @@ import DefaultSearchDialog from "@/components/search/search-default";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -107,7 +106,6 @@ export default function RootLayout({
         </RootProvider>
         <Toolbar />
         <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );
