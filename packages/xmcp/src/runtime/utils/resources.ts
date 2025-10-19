@@ -33,7 +33,6 @@ export function addResourcesToServer(
       uri: URL,
       extra: any
     ): Promise<ReadResourceResult> => {
-      // SSR PATH: Render React component server-side with hydration
       if (
         ssrEnabled &&
         autoResource.isReactComponent &&

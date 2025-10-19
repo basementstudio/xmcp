@@ -1,17 +1,9 @@
-/**
- * Build client-side bundles for React components
- * This runs at BUILD TIME to create hydration bundles
- */
-
 import fs from "fs";
 import path from "path";
 
 /**
  * Build a client-side bundle for a React component
  * Writes the bundle to disk at outputDir/${toolName}.bundle.js
- *
- * This uses the same transpilation approach as runtime but saves to disk
- * for faster loading at runtime.
  */
 export async function transpileClientComponent(
   componentPath: string,
@@ -22,7 +14,6 @@ export async function transpileClientComponent(
 
   const sourceCode = fs.readFileSync(absolutePath, "utf-8");
 
-  // Use eval to prevent webpack from analyzing this require
   const dynamicRequire = eval("require");
   const { transformSync } = dynamicRequire("@swc/core");
 
@@ -35,8 +26,8 @@ export async function transpileClientComponent(
       },
       transform: {
         react: {
-          runtime: "classic",
-          pragma: "React.createElement",
+          runtime: "automatic",
+          importSource: "react",
         },
       },
       target: "es2015",
@@ -46,19 +37,7 @@ export async function transpileClientComponent(
     },
   });
 
-  const bundleCode = `
-(function() {
-  const React = window.React;
-  const { useState, useEffect, useCallback, useMemo, useRef } = React;
-
-  ${result.code}
-
-  // Export default as window.Component
-  if (typeof exports !== 'undefined' && exports.default) {
-    window.Component = exports.default;
-  }
-})();
-  `.trim();
+  const bundleCode = result.code.trim();
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });

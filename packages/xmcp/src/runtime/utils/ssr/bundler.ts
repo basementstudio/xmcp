@@ -1,50 +1,35 @@
 /**
- * SSR HTML generation for React components
- */
-
-import { renderToString } from "react-dom/server";
-import { createElement } from "react";
-
-/**
- * Render a React component to an HTML string using SSR
- */
-export async function renderReactComponent(
-  Component: any,
-  props: any = {}
-): Promise<string> {
-  try {
-    const element = createElement(Component, props);
-    const html = renderToString(element);
-    return html;
-  } catch (error) {
-    throw new Error(
-      `Failed to render React component: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-}
-
-/**
  * Generate full HTML with server-rendered content and hydration
  */
 export function generateHTMLWithSSR(
   serverRenderedHTML: string,
   componentCode: string
 ): string {
-  const hydrationScript = `
-  <!-- React from CDN -->
-  <script crossorigin src="https://unpkg.com/react@19.0.0/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@19.0.0/umd/react-dom.production.min.js"></script>
+  // we need to replace bare imports with esm CDN imports
+  const esmComponentCode = componentCode
+    .replace(
+      /from\s+["']react\/jsx-runtime["']/g,
+      'from "https://esm.sh/react@19/jsx-runtime"'
+    )
+    .replace(
+      /from\s+["']react\/jsx-dev-runtime["']/g,
+      'from "https://esm.sh/react@19/jsx-dev-runtime"'
+    )
+    .replace(/from\s+["']react["']/g, 'from "https://esm.sh/react@19"')
+    .replace(/export\s+default\s+/g, "const Component = ");
 
-  <!-- Component and hydration code -->
+  const hydrationScript = `
+  <!-- Component and hydration code using ESM (official approach for React 19) -->
   <script type="module">
-    ${componentCode}
+    import { hydrateRoot } from "https://esm.sh/react-dom@19/client";
+    import { createElement } from "https://esm.sh/react@19";
+
+    ${esmComponentCode}
 
     // Hydrate the component
     const root = document.getElementById('root');
-    if (root && window.Component) {
-      const { hydrateRoot } = window.ReactDOM;
-      const { createElement } = window.React;
-      hydrateRoot(root, createElement(window.Component));
+    if (root) {
+      hydrateRoot(root, createElement(Component));
     }
   </script>`;
 
