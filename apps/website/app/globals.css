@@ -36,15 +36,24 @@
   --color-brand-black: var(--brand-black);
 }
 
-html {
-  scroll-padding-top: 80px;
-  text-rendering: optimizeLegibility;
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   overscroll-behavior: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+[id] {
+  scroll-margin-top: 80px;
+}
+
+html:has(#nd-blog-layout) {
+  scroll-behavior: smooth;
 }
 
 /* Sidebar scrollbar styling */
