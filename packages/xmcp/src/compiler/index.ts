@@ -22,6 +22,9 @@ import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
+import { pathToToolName } from "./utils/path-utils";
+import { transpileClientComponent } from "./transpile-client-components";
+import { isValidElement } from "react";
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -159,7 +162,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
     generateCode();
 
-    webpack(webpackConfig, (err, stats) => {
+    webpack(webpackConfig, async (err, stats) => {
       if (err) {
         console.error(err);
       }
@@ -172,6 +175,15 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           })
         );
         return;
+      }
+
+      if (xmcpConfig.experimental?.ssr) {
+        for (const path of toolPaths) {
+          if (path.endsWith(".tsx")) {
+            const toolName = pathToToolName(path);
+            await transpileClientComponent(path, toolName, "dist/client");
+          }
+        }
       }
 
       if (firstBuild) {
