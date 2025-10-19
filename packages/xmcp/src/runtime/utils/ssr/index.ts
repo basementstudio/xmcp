@@ -8,7 +8,7 @@ import { XmcpConfigOuputSchema } from "@/compiler/config";
  * Check if SSR is enabled in the config
  */
 export function isSSREnabled(config?: XmcpConfigOuputSchema): boolean {
-  return config?.experimental?.ssr?.enabled === true;
+  return config?.experimental?.ssr === true;
 }
 
 /**

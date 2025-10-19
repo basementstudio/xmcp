@@ -2,7 +2,10 @@ import { webpack } from "webpack";
 import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
-import { generateImportCode, generateClientBundlesCode } from "./generate-import-code";
+import {
+  generateImportCode,
+  generateClientBundlesCode,
+} from "./generate-import-code";
 import {
   generateToolsExportCode,
   generateToolsTypesCode,
@@ -176,7 +179,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         return;
       }
 
-      if (xmcpConfig.experimental?.ssr?.enabled) {
+      if (xmcpConfig.experimental?.ssr === true) {
         const clientBundles = new Map<string, string>();
 
         for (const path of toolPaths) {
@@ -189,7 +192,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           }
         }
 
-        // Store for use in generateCode()
         compilerContext.setContext({ clientBundles });
       }
 

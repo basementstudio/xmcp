@@ -17,15 +17,8 @@ export const metadata: ToolMetadata = {
 };
 
 /**
- * Tool handler is a React component (NOT async!)
+ * Tool handler is a React Client component
  *
- * How it works:
- * 1. Handler is a React component function
- * 2. Framework detects .tsx file and SSR enabled
- * 3. Framework server-renders the component to HTML
- * 4. HTML is served via auto-generated resource at "ui://widget/get-pizza-map.html"
- *
- * IMPORTANT: React components cannot be async functions!
  * If you need async data, use useEffect or server-side data fetching patterns.
  */
 export default function handler() {

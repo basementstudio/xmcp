@@ -23,7 +23,7 @@ const libsToExcludeFromCompilation = [
   "ts-loader",
   "fork-ts-checker-webpack-plugin",
   "xmcp/headers",
-  "@swc/core", // SSR dependency - has native bindings
+  "@swc/core",
 ];
 
 interface RuntimeRoot {

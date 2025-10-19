@@ -160,12 +160,9 @@ export function getWebpackConfig(
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
-  // inject SSR_ENABLED flag
   config.plugins!.push(
     new DefinePlugin({
-      SSR_ENABLED: JSON.stringify(
-        xmcpConfig.experimental?.ssr?.enabled === true
-      ),
+      SSR_ENABLED: JSON.stringify(xmcpConfig.experimental?.ssr === true),
     })
   );
 

@@ -8,9 +8,7 @@ const config: XmcpConfig = {
     resources: false,
   },
   experimental: {
-    ssr: {
-      enabled: true,
-    },
+    ssr: true,
   },
 };
 
