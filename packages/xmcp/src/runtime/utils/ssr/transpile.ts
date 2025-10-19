@@ -10,15 +10,11 @@ import path from "path";
  * Returns ES module code that exports the component
  */
 export function transpileComponentForClient(componentPath: string): string {
-  // Read the source file
   const absolutePath = path.resolve(process.cwd(), componentPath);
   const sourceCode = fs.readFileSync(absolutePath, "utf-8");
 
-  // Dynamic import of @swc/core to avoid bundling issues
-  // This is loaded at runtime, not build time
   const { transformSync } = require("@swc/core");
 
-  // Transpile with SWC
   const result = transformSync(sourceCode, {
     filename: componentPath,
     jsc: {
@@ -28,7 +24,7 @@ export function transpileComponentForClient(componentPath: string): string {
       },
       transform: {
         react: {
-          runtime: "classic", // Use React.createElement for browser
+          runtime: "classic",
           pragma: "React.createElement",
         },
       },
@@ -39,7 +35,6 @@ export function transpileComponentForClient(componentPath: string): string {
     },
   });
 
-  // Wrap in IIFE and expose Component to window
   return `
     (function() {
       const React = window.React;

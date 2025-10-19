@@ -8,8 +8,6 @@
 
 import { renderToString } from "react-dom/server";
 import { createElement } from "react";
-import { transformSync } from "@swc/core";
-import fs from "fs";
 
 /**
  * Render a React component to an HTML string using SSR
