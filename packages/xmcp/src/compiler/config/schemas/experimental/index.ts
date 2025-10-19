@@ -9,11 +9,21 @@ export const adapterConfigSchema = z.enum(["express", "nextjs"]);
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 
 // ------------------------------------------------------------
+// SSR config schema
+// ------------------------------------------------------------
+export const ssrConfigSchema = z.object({
+  enabled: z.boolean(),
+});
+
+export type SsrConfig = z.infer<typeof ssrConfigSchema>;
+
+// ------------------------------------------------------------
 // Experimental features schema
 // ------------------------------------------------------------
 export const experimentalConfigSchema = z.object({
   oauth: oauthConfigSchema.optional(),
   adapter: adapterConfigSchema.optional(),
+  ssr: ssrConfigSchema.optional(),
 });
 
 export type ExperimentalConfig = z.infer<typeof experimentalConfigSchema>;

@@ -5,6 +5,7 @@ import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
+import { isReactFile } from "./ssr";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -92,12 +93,17 @@ export function addToolsToServer(
         toolConfig._meta["openai/outputTemplate"] = resourceUri;
       }
 
+      // Check if this is a React component (.tsx file)
+      const isReact = isReactFile(path);
+
       // Add to the OpenAI resource registry for auto-generation
       openAIResourceRegistry.add(toolConfig.name, {
         name: toolConfig.name,
         uri: resourceUri,
         handler: handler, // Store the original handler
         toolMeta: flattenedMeta,
+        isReactComponent: isReact,
+        toolPath: isReact ? path : undefined,
       });
     }
 

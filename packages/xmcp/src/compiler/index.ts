@@ -61,7 +61,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
   // handle tools
   if (toolsPath) {
-    watcher.watch(`${toolsPath}/**/*.ts`, {
+    watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
       onAdd: (path) => {
         toolPaths.add(path);
         if (compilerStarted) {
@@ -85,7 +85,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
   // handle prompts
   if (promptsPath) {
-    watcher.watch(`${promptsPath}/**/*.ts`, {
+    watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
       onAdd: (path) => {
         promptPaths.add(path);
         if (compilerStarted) {
@@ -109,7 +109,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
   // handle resources
   if (resourcesPath) {
-    watcher.watch(`${resourcesPath}/**/*.ts`, {
+    watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
       onAdd: (path) => {
         resourcePaths.add(path);
         if (compilerStarted) {

@@ -3,6 +3,7 @@ import {
   DefinePlugin,
   ProvidePlugin,
   BannerPlugin,
+  IgnorePlugin,
 } from "webpack";
 import path from "path";
 import { distOutputPath, adapterOutputPath } from "@/utils/constants";
@@ -60,18 +61,62 @@ export function getWebpackConfig(
         path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
-    plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
+    plugins: [
+      new InjectRuntimePlugin(),
+      new CreateTypeDefinitionPlugin(),
+      // Ignore @swc/core native bindings and wasm fallbacks during build
+      // These are externalized and loaded at runtime when SSR is enabled
+      new IgnorePlugin({
+        resourceRegExp: /^@swc\/core/,
+        contextRegExp: /ssr/,
+      }),
+      new IgnorePlugin({
+        resourceRegExp: /@swc\/core-(darwin|linux|win32|freebsd|android)/,
+      }),
+      new IgnorePlugin({
+        resourceRegExp: /swc\.(darwin|linux|win32|freebsd|android).*\.node$/,
+      }),
+      new IgnorePlugin({
+        resourceRegExp: /@swc\/wasm/,
+      }),
+    ],
     module: {
       rules: [
         {
-          test: /\.ts$/,
+          test: /\.(ts|tsx)$/,
+          // Exclude SSR files from being parsed - they are externalized
+          exclude: [/node_modules/, /ssr\/transpile\.ts$/, /ssr\/bundler\.ts$/],
           use: {
             loader: "swc-loader",
+            options: {
+              jsc: {
+                parser: {
+                  syntax: "typescript",
+                  tsx: true,
+                },
+                transform: {
+                  react: {
+                    runtime: "automatic",
+                  },
+                },
+                target: "es2020",
+              },
+            },
           },
-          exclude: /node_modules/,
+        },
+        {
+          test: /\.node$/,
+          loader: "node-loader",
         },
       ],
     },
+    ignoreWarnings: [
+      // Ignore warnings from @swc/core's optional native bindings
+      /Can't resolve '\.\/swc\./,
+      /Can't resolve '@swc\/core-/,
+      /Can't resolve '@swc\/wasm'/,
+      /Critical dependency: the request of a dependency is an expression/,
+    ],
     optimization: {
       minimize: mode === "production",
       splitChunks: false,
@@ -114,6 +159,15 @@ export function getWebpackConfig(
   // add defined variables to config
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
+
+  // inject SSR_ENABLED flag
+  config.plugins!.push(
+    new DefinePlugin({
+      SSR_ENABLED: JSON.stringify(
+        xmcpConfig.experimental?.ssr?.enabled === true
+      ),
+    })
+  );
 
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {

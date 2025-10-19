@@ -7,6 +7,11 @@ const config: XmcpConfig = {
     prompts: false,
     resources: false,
   },
+  experimental: {
+    ssr: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;
