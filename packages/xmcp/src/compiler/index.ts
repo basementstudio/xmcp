@@ -164,9 +164,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
     generateCode();
 
-    webpack(webpackConfig, async (err, stats) => {
+    webpack(webpackConfig, (err, stats) => {
       if (err) {
         console.error(err);
+        return;
       }
 
       if (stats?.hasErrors()) {
@@ -179,60 +180,62 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         return;
       }
 
-      if (xmcpConfig.experimental?.ssr === true) {
-        const clientBundles = new Map<string, string>();
+      (async () => {
+        if (xmcpConfig.experimental?.ssr === true) {
+          const clientBundles = new Map<string, string>();
 
-        for (const path of toolPaths) {
-          if (path.endsWith(".tsx")) {
-            const toolName = pathToToolName(path);
-            const bundlePath = `dist/client/${toolName}.bundle.js`;
+          for (const path of toolPaths) {
+            if (path.endsWith(".tsx")) {
+              const toolName = pathToToolName(path);
+              const bundlePath = `dist/client/${toolName}.bundle.js`;
 
-            await transpileClientComponent(path, toolName, "dist/client");
-            clientBundles.set(toolName, bundlePath);
+              await transpileClientComponent(path, toolName, "dist/client");
+              clientBundles.set(toolName, bundlePath);
+            }
+          }
+
+          compilerContext.setContext({ clientBundles });
+        }
+
+        if (firstBuild) {
+          onFirstBuild(mode, xmcpConfig);
+          // user defined callback
+          onBuild?.();
+        } else {
+          // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
+          if (
+            mode === "development" &&
+            xmcpConfig["http"] &&
+            !xmcpConfig.experimental?.adapter
+          ) {
+            startHttpServer();
           }
         }
 
-        compilerContext.setContext({ clientBundles });
-      }
-
-      if (firstBuild) {
-        onFirstBuild(mode, xmcpConfig);
-        // user defined callback
-        onBuild?.();
-      } else {
-        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
-        if (
-          mode === "development" &&
-          xmcpConfig["http"] &&
-          !xmcpConfig.experimental?.adapter
-        ) {
-          startHttpServer();
+        // Track compilation time for all builds
+        let compilationTime: number;
+        if (stats?.endTime && stats?.startTime) {
+          compilationTime = stats.endTime - stats.startTime;
+        } else {
+          compilationTime = Date.now() - startTime;
         }
-      }
 
-      // Track compilation time for all builds
-      let compilationTime: number;
-      if (stats?.endTime && stats?.startTime) {
-        compilationTime = stats.endTime - stats.startTime;
-      } else {
-        compilationTime = Date.now() - startTime;
-      }
-
-      // Choose color based on compilation time
-      let timeColor = (str: string) => str;
-      if (mode === "development") {
-        if (compilationTime > 1000) {
-          timeColor = chalk.bold.red;
-        } else if (compilationTime > 500) {
-          timeColor = chalk.bold.yellow;
+        // Choose color based on compilation time
+        let timeColor = (str: string) => str;
+        if (mode === "development") {
+          if (compilationTime > 1000) {
+            timeColor = chalk.bold.red;
+          } else if (compilationTime > 500) {
+            timeColor = chalk.bold.yellow;
+          }
         }
-      }
 
-      console.log(
-        `${greenCheck} Compiled in ${timeColor(`${compilationTime}ms`)}`
-      );
+        console.log(
+          `${greenCheck} Compiled in ${timeColor(`${compilationTime}ms`)}`
+        );
 
-      firstBuild = false;
+        firstBuild = false;
+      })();
       // Compiler callback ends
     });
   });
