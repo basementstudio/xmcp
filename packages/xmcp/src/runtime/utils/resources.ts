@@ -10,6 +10,8 @@ import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
 import { ResourceMetadata } from "@/types/resource";
 import { openAIResourceRegistry } from "./openai-resource-registry";
+import fs from "fs";
+import path from "path";
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -26,42 +28,47 @@ export function addResourcesToServer(
       mimeType: "text/html+skybridge",
     };
 
-    // Check if SSR is enabled and this is a React component
-    const shouldUseSSR = ssrEnabled && autoResource.isReactComponent;
-
     // Transform the handler to serve HTML from the tool handler
     const transformedHandler = async (
       uri: URL,
       extra: any
     ): Promise<ReadResourceResult> => {
       // SSR PATH: Render React component server-side with hydration
-      if (shouldUseSSR && autoResource.toolPath) {
+      if (
+        ssrEnabled &&
+        autoResource.isReactComponent &&
+        autoResource.toolPath
+      ) {
         try {
           // Dynamically import SSR dependencies only when needed
-          // This prevents bundling @swc/core and react-dom/server unnecessarily
           // Use eval to prevent webpack from analyzing these requires
           const dynamicRequire = eval("require");
           const { renderToString } = dynamicRequire("react-dom/server");
           const { createElement } = dynamicRequire("react");
-
-          // Load SSR utilities from the xmcp package
-          // These are built as part of xmcp's runtime and available in node_modules/xmcp/dist/runtime/utils/ssr/
-          const { transpileComponentForClient } = dynamicRequire(
-            "xmcp/dist/runtime/utils/ssr/transpile"
-          );
           const { generateHTMLWithSSR } = dynamicRequire(
             "xmcp/dist/runtime/utils/ssr/bundler"
           );
 
-          // 1. Server-side render the component
           const serverHTML = renderToString(
             createElement(autoResource.handler as any)
           );
 
-          // 2. Transpile component for client-side hydration
-          const clientCode = transpileComponentForClient(autoResource.toolPath);
+          const bundlePath = path.join(
+            process.cwd(),
+            "dist/client",
+            `${autoResource.name}.bundle.js`
+          );
 
-          // 3. Generate full HTML with inline hydration script
+          if (!fs.existsSync(bundlePath)) {
+            throw new Error(
+              `SSR client bundle not found for "${autoResource.name}".\n` +
+                `Expected at: ${bundlePath}\n` +
+                `Make sure you ran "xmcp build" with SSR enabled before starting the server.`
+            );
+          }
+
+          const clientCode = fs.readFileSync(bundlePath, "utf-8");
+
           const fullHTML = generateHTMLWithSSR(serverHTML, clientCode);
 
           return {
@@ -74,7 +81,7 @@ export function addResourcesToServer(
           };
         } catch (error) {
           console.error(`SSR failed for ${autoResource.name}:`, error);
-          // Fallback to non-SSR rendering on error
+          throw error; // Don't fallback, fail clearly with helpful error
         }
       }
 

@@ -93,7 +93,6 @@ export function addToolsToServer(
         toolConfig._meta["openai/outputTemplate"] = resourceUri;
       }
 
-      // Check if this is a React component (.tsx file)
       const isReact = isReactFile(path);
 
       // Add to the OpenAI resource registry for auto-generation

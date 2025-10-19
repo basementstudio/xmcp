@@ -37,7 +37,6 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "http", path: "transports/http" },
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
-  { name: "utils/ssr/transpile", path: "utils/ssr/transpile" },
   { name: "utils/ssr/bundler", path: "utils/ssr/bundler" },
 ];
 const entry: EntryObject = {};

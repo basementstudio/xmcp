@@ -2,7 +2,7 @@ import { webpack } from "webpack";
 import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
-import { generateImportCode } from "./generate-import-code";
+import { generateImportCode, generateClientBundlesCode } from "./generate-import-code";
 import {
   generateToolsExportCode,
   generateToolsTypesCode,
@@ -24,7 +24,6 @@ import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./transpile-client-components";
-import { isValidElement } from "react";
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -177,13 +176,21 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         return;
       }
 
-      if (xmcpConfig.experimental?.ssr) {
+      if (xmcpConfig.experimental?.ssr?.enabled) {
+        const clientBundles = new Map<string, string>();
+
         for (const path of toolPaths) {
           if (path.endsWith(".tsx")) {
             const toolName = pathToToolName(path);
+            const bundlePath = `dist/client/${toolName}.bundle.js`;
+
             await transpileClientComponent(path, toolName, "dist/client");
+            clientBundles.set(toolName, bundlePath);
           }
         }
+
+        // Store for use in generateCode()
+        compilerContext.setContext({ clientBundles });
       }
 
       if (firstBuild) {
@@ -232,6 +239,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 function generateCode() {
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+
+  // Append client bundles mapping if SSR is enabled
+  const { clientBundles } = compilerContext.getContext();
+  if (clientBundles && clientBundles.size > 0) {
+    const bundlesCode = generateClientBundlesCode(clientBundles);
+    fs.appendFileSync(
+      path.join(runtimeFolderPath, "import-map.js"),
+      bundlesCode
+    );
+  }
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();

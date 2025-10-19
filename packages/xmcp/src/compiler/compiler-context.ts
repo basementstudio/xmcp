@@ -22,6 +22,8 @@ interface CompilerContext {
   hasMiddleware: boolean;
   /** The parsed config. */
   xmcpConfig?: XmcpConfigOuputSchema;
+  /** Client bundles mapping for SSR (toolName -> bundlePath). */
+  clientBundles?: Map<string, string>;
 }
 
 export const compilerContext = createContext<CompilerContext>({

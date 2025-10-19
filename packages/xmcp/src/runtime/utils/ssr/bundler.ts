@@ -1,9 +1,5 @@
 /**
- * SSR Bundler for React components
- *
- * This module handles:
- * 1. Server-side rendering of React components to HTML
- * 2. Generating HTML with pre-bundled client code
+ * SSR HTML generation for React components
  */
 
 import { renderToString } from "react-dom/server";
@@ -32,10 +28,9 @@ export async function renderReactComponent(
  */
 export function generateHTMLWithSSR(
   serverRenderedHTML: string,
-  componentCode?: string
+  componentCode: string
 ): string {
-  const hydrationScript = componentCode
-    ? `
+  const hydrationScript = `
   <!-- React from CDN -->
   <script crossorigin src="https://unpkg.com/react@19.0.0/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@19.0.0/umd/react-dom.production.min.js"></script>
@@ -51,8 +46,7 @@ export function generateHTMLWithSSR(
       const { createElement } = window.React;
       hydrateRoot(root, createElement(window.Component));
     }
-  </script>`
-    : "";
+  </script>`;
 
   return `<!DOCTYPE html>
 <html>
