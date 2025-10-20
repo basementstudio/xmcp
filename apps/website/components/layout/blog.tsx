@@ -2,11 +2,8 @@
 import { ReactNode } from "react";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { TreeContextProvider } from "fumadocs-ui/contexts/tree";
-import {
-  AnchorProvider,
-  TOCItemType,
-  useActiveAnchors,
-} from "fumadocs-core/toc";
+import { AnchorProvider, TOCItemType } from "fumadocs-core/toc";
+import { useImprovedActiveAnchors } from "@/hooks/use-improved-active-anchors";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -30,18 +27,23 @@ export function BlogLayout({ tree, children }: BlogLayoutProps) {
 
 export interface BlogPageProps {
   toc?: TOCItemType[];
-
   children: ReactNode;
 }
 
-function TocItem({ item }: { item: TOCItemType }) {
-  const isActive = useActiveAnchors().includes(item.url.slice(1));
+function TocItem({
+  item,
+  activeAnchors,
+}: {
+  item: TOCItemType;
+  activeAnchors: string[];
+}) {
+  const isActive = activeAnchors.includes(item.url.slice(1));
 
   return (
     <a
       href={item.url}
       className={cn(
-        "text-sm text-brand-neutral-100 py-1",
+        "text-sm text-brand-neutral-100 py-1 hover:text-brand-neutral-50 transition-colors w-fit",
         isActive && "text-brand-white font-medium"
       )}
       style={{
@@ -54,6 +56,8 @@ function TocItem({ item }: { item: TOCItemType }) {
 }
 
 export function BlogPage({ toc = [], ...props }: BlogPageProps) {
+  const activeAnchors = useImprovedActiveAnchors(toc);
+
   return (
     <AnchorProvider toc={toc}>
       {toc.length > 0 && (
@@ -61,7 +65,11 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
           <span className="text-xl text-brand-white">Table of contents</span>
           <div className="flex flex-col">
             {toc.map((item) => (
-              <TocItem key={item.url} item={item} />
+              <TocItem
+                key={item.url}
+                item={item}
+                activeAnchors={activeAnchors}
+              />
             ))}
           </div>
         </div>
