@@ -35,7 +35,7 @@ export function SearchToggleClient({ ...props }) {
           "transition-opacity duration-200 ease-in-out"
         )}
       >
-        {isMac ? "⌘K" : "Ctrl K"}
+        {!isMac ? "Ctrl K" : "⌘K"}
       </span>
     </button>
   );

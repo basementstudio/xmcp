@@ -47,7 +47,7 @@ export function AskAIButtonClient() {
             "transition-opacity duration-200 ease-in-out"
           )}
         >
-          {isMac ? "⌘I" : "Ctrl I"}
+          {!isMac ? "Ctrl I" : "⌘I"}
         </span>
       </button>
 
