@@ -3,15 +3,15 @@
 import { cn } from "../../lib/cn";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
 import { useEffect, useState } from "react";
-import { detectMacFromClient } from "@/utils/detect-os";
+import { detectWindowsFromClient } from "@/utils/detect-os";
 import { Icons } from "../icons";
 
 export function SearchToggleClient({ ...props }) {
   const { enabled, setOpenSearch } = useSearchContext();
-  const [isMac, setIsMac] = useState<boolean | null>(null);
+  const [isWindows, setIsWindows] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsMac(detectMacFromClient());
+    setIsWindows(detectWindowsFromClient());
   }, []);
 
   if (!enabled) return null;
@@ -35,7 +35,7 @@ export function SearchToggleClient({ ...props }) {
           "transition-opacity duration-200 ease-in-out"
         )}
       >
-        {!isMac ? "Ctrl K" : "⌘K"}
+        {isWindows ? "Ctrl K" : "⌘K"}
       </span>
     </button>
   );

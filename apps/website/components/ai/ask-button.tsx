@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { AskAIDialog } from "./ask-dialog";
 import { Icons } from "../icons";
-import { detectMacFromClient } from "@/utils/detect-os";
+import { detectWindowsFromClient } from "@/utils/detect-os";
 
 export function AskAIButtonClient() {
   const [open, setOpen] = useState(false);
-  const [isMac, setIsMac] = useState<boolean | null>(null);
+  const [isWindows, setIsWindows] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setIsMac(detectMacFromClient());
+    setIsWindows(detectWindowsFromClient());
   }, []);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function AskAIButtonClient() {
             "transition-opacity duration-200 ease-in-out"
           )}
         >
-          {!isMac ? "Ctrl I" : "⌘I"}
+          {isWindows ? "Ctrl I" : "⌘I"}
         </span>
       </button>
 
