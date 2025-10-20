@@ -457,7 +457,7 @@ importers:
         specifier: 3.24.4
         version: 3.24.4
 
-  examples/open-ai-tool:
+  examples/open-ai-react:
     dependencies:
       react:
         specifier: ^19.2.0
@@ -478,6 +478,15 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.2
         version: 19.2.2(@types/react@19.2.2)
+
+  examples/open-ai-tool:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: 3.24.4
+        version: 3.24.4
 
   examples/polar-http:
     dependencies:
