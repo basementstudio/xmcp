@@ -42,8 +42,20 @@ export function addResourcesToServer(
           // Dynamically import SSR dependencies only when needed
           // Use eval to prevent webpack from analyzing these requires
           const dynamicRequire = eval("require");
-          const { renderToString } = dynamicRequire("react-dom/server");
-          const { createElement } = dynamicRequire("react");
+
+          // Check if React is available
+          let renderToString, createElement;
+          try {
+            renderToString = dynamicRequire("react-dom/server").renderToString;
+            createElement = dynamicRequire("react").createElement;
+          } catch (error) {
+            throw new Error(
+              `SSR is enabled but React is not installed.\n` +
+              `Please install React to use SSR:\n` +
+              `  npm install react react-dom\n` +
+              `Or disable SSR in xmcp.config.ts`
+            );
+          }
           const { generateHTMLWithSSR } = dynamicRequire(
             "xmcp/dist/runtime/utils/ssr/bundler"
           );
