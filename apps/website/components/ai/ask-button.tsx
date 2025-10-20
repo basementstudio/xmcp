@@ -44,11 +44,10 @@ export function AskAIButtonClient() {
         <span
           className={cn(
             "text-brand-white ml-2 w-[48px] inline-block text-right",
-            "transition-opacity duration-200 ease-in-out",
-            isMac !== null ? "opacity-100" : "opacity-0"
+            "transition-opacity duration-200 ease-in-out"
           )}
         >
-          {isMac !== null ? (isMac ? "⌘I" : "Ctrl I") : ""}
+          {isMac ? "⌘I" : "Ctrl I"}
         </span>
       </button>
 

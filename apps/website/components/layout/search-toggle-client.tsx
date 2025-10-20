@@ -32,11 +32,10 @@ export function SearchToggleClient({ ...props }) {
       <span
         className={cn(
           "text-brand-white ml-auto hidden md:block w-[48px] text-right",
-          "transition-opacity duration-200 ease-in-out",
-          isMac !== null ? "opacity-100" : "opacity-0"
+          "transition-opacity duration-200 ease-in-out"
         )}
       >
-        {isMac !== null ? (isMac ? "⌘K" : "Ctrl K") : ""}
+        {isMac ? "⌘K" : "Ctrl K"}
       </span>
     </button>
   );
