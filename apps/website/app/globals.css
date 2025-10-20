@@ -310,12 +310,14 @@ input[type="email"] {
     --80-100-80,
     linear-gradient(
       270deg,
-      rgba(247, 247, 247, 0.8) 0%,
+      rgba(247, 247, 247, 0.6) 0%,
       #f7f7f7 50%,
-      rgba(247, 247, 247, 0.8) 100%
+      rgba(247, 247, 247, 0.6) 100%
     )
   );
   background-clip: text;
+  background-size: 200% 100%;
+  background-position: 50% 0%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 

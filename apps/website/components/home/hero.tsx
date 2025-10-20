@@ -4,6 +4,7 @@ import { Icons } from "../icons";
 import { Logos } from "./logos";
 import { Tag } from "../ui/tag";
 import Shader from "./shader";
+import { AnimatedHeading } from "../ui/animated-heading";
 
 export const HomeHero = () => {
   return (
@@ -19,9 +20,9 @@ export const HomeHero = () => {
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
         />
       </Link>
-      <h1 className="display text-center text-balance z-10 text-gradient">
+      <AnimatedHeading className="display text-center text-balance z-10">
         The TypeScript framework for building & shipping MCP servers
-      </h1>
+      </AnimatedHeading>
       {/* <Image
         src={HeroBg}
         alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
