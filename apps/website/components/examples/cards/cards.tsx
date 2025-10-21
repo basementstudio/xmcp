@@ -76,7 +76,7 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
           {selectedTags.length > 0 && (
             <button
               onClick={clearFilters}
-              className="text-xs text-brand-neutral-200 hover:text-white transition-colors"
+              className="text-xs text-brand-neutral-200 hover:text-white transition-colors cursor-pointer"
             >
               Clear filters
             </button>
