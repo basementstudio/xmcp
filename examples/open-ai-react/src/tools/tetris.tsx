@@ -1,5 +1,5 @@
 import { type ToolMetadata } from "xmcp";
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
@@ -274,7 +274,7 @@ export default function handler() {
     return TETROMINOS[randomPiece];
   }, []);
 
-  const rotate = useCallback((matrix) => {
+  const rotate = useCallback((matrix: number[][]) => {
     const N = matrix.length;
     const rotated = Array(N)
       .fill(null)
@@ -287,44 +287,58 @@ export default function handler() {
     return rotated;
   }, []);
 
-  const isValidMove = useCallback((piece, position, board) => {
-    if (!piece) return false;
+  const isValidMove = useCallback(
+    (
+      piece: Tetromino,
+      position: { x: number; y: number },
+      board: (string | null)[][]
+    ) => {
+      if (!piece) return false;
 
-    for (let y = 0; y < piece.shape.length; y++) {
-      for (let x = 0; x < piece.shape[y].length; x++) {
-        if (piece.shape[y][x]) {
-          const newX = position.x + x;
-          const newY = position.y + y;
+      for (let y = 0; y < piece.shape.length; y++) {
+        for (let x = 0; x < piece.shape[y].length; x++) {
+          if (piece.shape[y][x]) {
+            const newX = position.x + x;
+            const newY = position.y + y;
 
-          if (
-            newX < 0 ||
-            newX >= BOARD_WIDTH ||
-            newY >= BOARD_HEIGHT ||
-            (newY >= 0 && board[newY][newX])
-          ) {
-            return false;
+            if (
+              newX < 0 ||
+              newX >= BOARD_WIDTH ||
+              newY >= BOARD_HEIGHT ||
+              (newY >= 0 && board[newY][newX])
+            ) {
+              return false;
+            }
           }
         }
       }
-    }
-    return true;
-  }, []);
+      return true;
+    },
+    []
+  );
 
-  const mergePieceToBoard = useCallback((board, piece, position) => {
-    const newBoard = board.map((row) => [...row]);
+  const mergePieceToBoard = useCallback(
+    (
+      board: (string | null)[][],
+      piece: Tetromino,
+      position: { x: number; y: number }
+    ) => {
+      const newBoard = board.map((row) => [...row]);
 
-    piece.shape.forEach((row, y) => {
-      row.forEach((value, x) => {
-        if (value && position.y + y >= 0) {
-          newBoard[position.y + y][position.x + x] = piece.color;
-        }
+      piece.shape.forEach((row, y) => {
+        row.forEach((value, x) => {
+          if (value && position.y + y >= 0) {
+            newBoard[position.y + y][position.x + x] = piece.color;
+          }
+        });
       });
-    });
 
-    return newBoard;
-  }, []);
+      return newBoard;
+    },
+    []
+  );
 
-  const clearLines = useCallback((board) => {
+  const clearLines = useCallback((board: (string | null)[][]) => {
     let linesCleared = 0;
     const newBoard = board.filter((row) => {
       const isComplete = row.every((cell) => cell !== null);
@@ -340,7 +354,7 @@ export default function handler() {
   }, []);
 
   const movePiece = useCallback(
-    (dx, dy) => {
+    (dx: number, dy: number) => {
       if (!currentPiece || isPaused || gameOver) return false;
 
       const newPosition = {
@@ -588,8 +602,13 @@ export default function handler() {
               <button
                 onClick={startGame}
                 style={{ ...styles.button, ...styles.startButton }}
-                onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1)")}
+                onMouseEnter={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform =
+                    "scale(1.05)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform = "scale(1)")
+                }
               >
                 NEW GAME
               </button>
@@ -638,8 +657,13 @@ export default function handler() {
               <button
                 onClick={startGame}
                 style={{ ...styles.button, ...styles.startButton }}
-                onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1)")}
+                onMouseEnter={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform =
+                    "scale(1.05)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform = "scale(1)")
+                }
               >
                 START GAME
               </button>
@@ -650,8 +674,13 @@ export default function handler() {
                   ...styles.button,
                   ...(isPaused ? styles.resumeButton : styles.pauseButton),
                 }}
-                onMouseEnter={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => ((e.target as HTMLButtonElement).style.transform = "scale(1)")}
+                onMouseEnter={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform =
+                    "scale(1.05)")
+                }
+                onMouseLeave={(e) =>
+                  ((e.target as HTMLButtonElement).style.transform = "scale(1)")
+                }
               >
                 {isPaused ? "RESUME" : "PAUSE"}
               </button>
