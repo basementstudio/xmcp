@@ -1,26 +1,16 @@
 import Link from "next/link";
-import { Button } from "../ui/button";
-import { Icons } from "../icons";
-import { Logos } from "./logos";
-import { Tag } from "../ui/tag";
-import Shader from "./shader";
-import { AnimatedHeading } from "../ui/animated-heading";
+import { Button } from "../../ui/button";
+import { Icons } from "../../icons";
+import { Logos } from "../logos";
+import Shader from "../shader";
+import { AnimatedHeading } from "../../ui/animated-heading";
 import { VERSION } from "@/lib/get-version";
+import { ClientVersionTag } from "./client-tag";
 
 export const HomeHero = () => {
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
-      <Link
-        className="flex flex-col items-center justify-center gap-1 z-10 text-xs group"
-        href="https://npmjs.com/package/xmcp"
-        target="_blank"
-      >
-        <Tag
-          text={"Latest Version" + (VERSION ? ` (v${VERSION})` : "")}
-          className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
-          animate
-        />
-      </Link>
+      <ClientVersionTag version={VERSION} tag="Latest Version" />
       <AnimatedHeading className="display text-center text-balance z-10" masked>
         The TypeScript framework for building & shipping MCP servers
       </AnimatedHeading>
