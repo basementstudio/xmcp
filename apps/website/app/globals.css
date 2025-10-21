@@ -310,9 +310,9 @@ input[type="email"] {
     --80-100-80,
     linear-gradient(
       270deg,
-      rgba(247, 247, 247, 0.6) 0%,
+      rgba(247, 247, 247, 0.5) 0%,
       #f7f7f7 50%,
-      rgba(247, 247, 247, 0.6) 100%
+      rgba(247, 247, 247, 0.5) 100%
     )
   );
   background-clip: text;
