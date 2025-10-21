@@ -1,0 +1,32 @@
+"use client";
+
+import { AnimatedHeading } from "@/components/ui/animated-heading";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { useRef } from "react";
+
+export function BlogHeroHeading() {
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+
+  useFadeIn({
+    refs: [descriptionRef],
+    yOffset: 8,
+    delay: 0.2,
+  });
+
+  return (
+    <>
+      <AnimatedHeading
+        effectDuration={2}
+        className="display text-center text-balance z-10"
+      >
+        Blog
+      </AnimatedHeading>
+      <p
+        className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto text-center invisible"
+        ref={descriptionRef}
+      >
+        Read the latest updates, guides, and insights about xmcp.
+      </p>
+    </>
+  );
+}
