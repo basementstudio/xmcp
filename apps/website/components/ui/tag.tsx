@@ -35,8 +35,11 @@ export const Tag = ({
 
     const element = elementRef.current;
 
+    gsap.set(element, { autoAlpha: 0 });
+
     gsap.to(element, {
-      duration: 0.8,
+      duration: 0.6,
+      autoAlpha: 1,
       scrambleText: {
         text: text,
         chars: "XMCP",
@@ -56,6 +59,7 @@ export const Tag = ({
       ref={elementRef}
       className={cn(
         "py-1 px-2 bg-brand-neutral-600 text-[0.625rem] uppercase border border-dashed border-brand-neutral-400 text-brand-neutral-100 overflow-clip whitespace-nowrap font-mono",
+        animate && "invisible",
         className
       )}
     >

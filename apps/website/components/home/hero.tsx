@@ -5,20 +5,20 @@ import { Logos } from "./logos";
 import { Tag } from "../ui/tag";
 import Shader from "./shader";
 import { AnimatedHeading } from "../ui/animated-heading";
+import { VERSION } from "@/lib/get-version";
 
 export const HomeHero = () => {
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
-        className="flex items-center justify-center gap-2 z-10 text-xs group"
+        className="flex flex-col items-center justify-center gap-1 z-10 text-xs group"
         href="https://npmjs.com/package/xmcp"
         target="_blank"
       >
-        v0.3.2
         <Tag
-          text="Latest Version"
-          animate
+          text={"Latest Version" + (VERSION ? ` (v${VERSION})` : "")}
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
+          animate
         />
       </Link>
       <AnimatedHeading className="display text-center text-balance z-10" masked>
