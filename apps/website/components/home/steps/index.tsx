@@ -34,47 +34,52 @@ const steps = [
 ✓ Setting up project structure...
 
 Success! Created my-server
-
-Inside that directory, you can run:
-  npm run dev    Start development server
-  npm run build  Build for production`,
+`,
   },
   {
     id: 2,
     title: "Configure your environment",
     type: "file" as const,
     filename: "xmcp.config.ts",
-    content: `import { defineConfig } from "xmcp";
+    content: `import { XmcpConfig } from "xmcp";
 
-export default defineConfig({
-  name: "my-server",
-  version: "1.0.0",
-  transport: "http",
-  server: {
+const config: XmcpConfig = {
+  http: {
     port: 3000,
+    host: "0.0.0.0",
+    endpoint: "/mcp",
+    cors: {
+      origin: "*",
+      credentials: true,
+    },
   },
-  // Configure your tools, resources, and prompts
-});`,
+};
+
+export default config;`,
   },
   {
     id: 3,
     title: "Add tools, resources, and prompts",
     type: "file" as const,
-    filename: "src/tools/weather.ts",
-    content: `import { tool } from "xmcp";
-import { z } from "zod";
+    filename: "src/tools/get-weather.ts",
+    content: `import { z } from "zod";
+import { type InferSchema } from "xmcp";
 
-export const getWeather = tool({
+export const schema = {
+  location: z.string().describe("City name"),
+};
+
+export const metadata = {
   name: "get-weather",
   description: "Get current weather for a location",
-  parameters: z.object({
-    location: z.string().describe("City name"),
-  }),
-  execute: async ({ location }) => {
-    // Your implementation here
-    return \`Weather in \${location}: 72°F, Sunny\`;
-  },
-});`,
+};
+
+export default async function getWeather({ 
+  location 
+}: InferSchema<typeof schema>) {
+  // Your implementation here
+  return \`Weather in \${location}: 72°F, Sunny\`;
+}`,
   },
   {
     id: 4,
