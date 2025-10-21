@@ -1,3 +1,4 @@
+import React from "react";
 import { type ToolMetadata } from "xmcp";
 
 export const metadata: ToolMetadata = {
