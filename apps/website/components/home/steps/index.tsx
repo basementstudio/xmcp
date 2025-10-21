@@ -23,17 +23,19 @@ const steps = [
     type: "command" as const,
     command: "npx create-xmcp-app@latest",
     output: `? What is your project named? my-server
-? Select a package manager: npm
+? Select a package manager: pnpm
 ? Select the transport you want to use: HTTP (runs on a server)
 ? Select components to initialize:
   ◉ Tools
   ◉ Prompts
   ◉ Resources
 
-✓ Installing dependencies...
-✓ Setting up project structure...
+✔ Creating a new xmcp app in ...
+✔ Your xmcp app is ready
 
-Success! Created my-server
+Next steps:
+  cd my-server
+  pnpm dev
 `,
   },
   {
