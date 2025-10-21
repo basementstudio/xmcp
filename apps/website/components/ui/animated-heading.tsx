@@ -56,7 +56,6 @@ export function AnimatedHeading({
 
     if (masked) {
       initTl.set(element, {
-        filter: "blur(14px)",
         maskImage:
           "radial-gradient(circle at center, black 0%, transparent 0%)",
         maskRepeat: "no-repeat",
@@ -68,7 +67,6 @@ export function AnimatedHeading({
       // mask
       initTl.to(element, {
         autoAlpha: 1,
-        filter: "blur(0px)",
         duration: effectDuration / 3,
         ease: "power2.out",
       });
@@ -77,9 +75,9 @@ export function AnimatedHeading({
         element,
         {
           maskImage:
-            "radial-gradient(circle at center, black 60%, transparent 200%)",
+            "radial-gradient(circle at center, black 70%, transparent 350%)",
           WebkitMaskImage:
-            "radial-gradient(circle at center, black 60%, transparent 200%)",
+            "radial-gradient(circle at center, black 70%, transparent 350%)",
           duration: effectDuration,
           ease: "customBezier",
         },
@@ -96,16 +94,13 @@ export function AnimatedHeading({
         ">"
       );
     } else {
-      // No mask animation - just blur effect
       initTl.set(element, {
-        filter: "blur(14px)",
         y: fromY,
       });
 
       initTl.to(element, {
         autoAlpha: 1,
         y: 0,
-        filter: "blur(0px)",
         duration: effectDuration / 3,
         ease: "power2.out",
       });
