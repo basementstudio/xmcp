@@ -4,11 +4,11 @@ import { Tag } from "@/components/ui/tag";
 import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { BlogPost } from "@/utils/blog";
 import Link from "fumadocs-core/link";
+import { AnimatedHeading } from "@/components/ui/animated-heading";
 import Image from "next/image";
 import { useRef } from "react";
 
 export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
-  const headingRef = useRef<HTMLDivElement | null>(null);
   const descriptionRef = useRef<HTMLParagraphElement | null>(null);
   const cardRefs = useRef<React.RefObject<HTMLAnchorElement | null>[]>([]);
 
@@ -19,7 +19,7 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
   }
 
   useFadeIn({
-    refs: [headingRef, descriptionRef],
+    refs: [descriptionRef],
     stagger: 0.2,
     yOffset: 20,
   });
@@ -37,12 +37,13 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
           <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
             <Tag text="Blog" className="w-fit" animate />
-            <h2
+            <AnimatedHeading
+              effectDuration={2}
+              as="h2"
               className="heading-2 text-balance mt-auto text-gradient"
-              ref={headingRef}
             >
               Guides & changelogs
-            </h2>
+            </AnimatedHeading>
           </div>
           <p
             className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto"

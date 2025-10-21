@@ -16,6 +16,7 @@ interface AnimatedHeadingProps {
   duration?: number;
   effectDuration?: number;
   masked?: boolean;
+  fromY?: number;
 }
 
 export function AnimatedHeading({
@@ -25,6 +26,7 @@ export function AnimatedHeading({
   delay = 0,
   duration = 6,
   effectDuration = 3,
+  fromY = 20,
   masked = false,
 }: AnimatedHeadingProps) {
   const textRef = useRef<HTMLHeadingElement>(null);
@@ -39,7 +41,7 @@ export function AnimatedHeading({
         trigger: element,
         start: "top 80%",
         end: "top 60%",
-        toggleActions: "play none none reverse",
+        toggleActions: "play none none none",
       },
     });
 
@@ -94,7 +96,7 @@ export function AnimatedHeading({
       // No mask animation - just blur effect
       initTl.set(element, {
         filter: "blur(14px)",
-        y: 20,
+        y: fromY,
       });
 
       initTl.to(element, {

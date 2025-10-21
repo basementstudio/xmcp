@@ -10,9 +10,9 @@ import Feature4 from "./feature-4.jpg";
 import Feature5 from "./feature-5.jpg";
 import Feature6 from "./feature-6.jpg";
 import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { AnimatedHeading } from "@/components/ui/animated-heading";
 
 export const HomeFeatures = () => {
-  const titleRef = useRef<HTMLHeadingElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
 
   const cardRefs = useRef<React.RefObject<HTMLDivElement | null>[]>([]);
@@ -24,7 +24,7 @@ export const HomeFeatures = () => {
   }
 
   useFadeIn({
-    refs: [titleRef, descriptionRef],
+    refs: [descriptionRef],
     stagger: 0.2,
     yOffset: 20,
   });
@@ -41,12 +41,12 @@ export const HomeFeatures = () => {
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
         <Tag text="Features" animate />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <h2
-            ref={titleRef}
-            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient invisible"
+          <AnimatedHeading
+            effectDuration={2}
+            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto invisible"
           >
             The complete stack to ship an MCP server
-          </h2>
+          </AnimatedHeading>
           <p
             className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto invisible"
             ref={descriptionRef}

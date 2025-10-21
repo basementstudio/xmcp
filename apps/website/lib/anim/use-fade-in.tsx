@@ -28,7 +28,7 @@ export function useFadeIn({
   ease = "power2.out",
   trigger,
   start = "top 80%",
-  end = "top 60%",
+  end = "top 40%",
 }: UseFadeInOptions) {
   useGSAP(() => {
     const elements = refs
