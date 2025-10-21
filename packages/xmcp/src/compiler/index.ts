@@ -195,8 +195,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           }
 
           compilerContext.setContext({ clientBundles });
-
-          generateCode();
         }
 
         if (firstBuild) {
