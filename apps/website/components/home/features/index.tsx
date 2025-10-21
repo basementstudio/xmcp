@@ -1,22 +1,60 @@
+"use client";
+
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
+import React, { useRef, RefObject } from "react";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
 import Feature4 from "./feature-4.jpg";
 import Feature5 from "./feature-5.jpg";
 import Feature6 from "./feature-6.jpg";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
 
 export const HomeFeatures = () => {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+
+  const card1Ref = useRef<HTMLDivElement>(null);
+  const card2Ref = useRef<HTMLDivElement>(null);
+  const card3Ref = useRef<HTMLDivElement>(null);
+  const card4Ref = useRef<HTMLDivElement>(null);
+  const card5Ref = useRef<HTMLDivElement>(null);
+  const card6Ref = useRef<HTMLDivElement>(null);
+
+  const cardRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref];
+
+  useFadeIn({
+    refs: [
+      titleRef as RefObject<HTMLElement>,
+      descriptionRef as RefObject<HTMLElement>,
+    ],
+    stagger: 0.2,
+    yOffset: 20,
+  });
+
+  useFadeIn({
+    refs: cardRefs as RefObject<HTMLElement>[],
+    stagger: 0.1,
+    yOffset: 30,
+    delay: 0.2,
+  });
+
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
         <Tag text="Features" />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient">
+          <h2
+            ref={titleRef}
+            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient invisible"
+          >
             The complete stack to ship an MCP server
           </h2>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
+          <p
+            className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto invisible"
+            ref={descriptionRef}
+          >
             Everything you need to set up fast, customize with ease, and plug
             directly into your apps.
           </p>
@@ -24,7 +62,7 @@ export const HomeFeatures = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
         {cards.map((card, index) => (
-          <Card key={index} {...card} />
+          <Card key={index} {...card} ref={cardRefs[index]} />
         ))}
       </div>
     </div>
@@ -37,23 +75,30 @@ interface CardProps {
   description: string;
 }
 
-const Card = ({ asset, title, description }: CardProps) => {
-  return (
-    <div className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full">
-      <div className="flex items-center justify-center w-full gap-2 mb-4">
-        <Image
-          src={asset}
-          alt={title}
-          className="mx-auto mix-blend-lighten bg-brand-black"
-          width={245}
-          height={200}
-        />
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ asset, title, description }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full"
+      >
+        <div className="flex items-center justify-center w-full gap-2 mb-4">
+          <Image
+            src={asset}
+            alt={title}
+            className="mx-auto mix-blend-lighten bg-brand-black"
+            width={245}
+            height={200}
+          />
+        </div>
+        <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
+        <p className="text-brand-neutral-100 pt-1">{description}</p>
       </div>
-      <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
-      <p className="text-brand-neutral-100 pt-1">{description}</p>
-    </div>
-  );
-};
+    );
+  }
+);
+
+Card.displayName = "Card";
 
 const cards = [
   {

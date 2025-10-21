@@ -20,14 +20,9 @@ export const HomeHero = () => {
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
         />
       </Link>
-      <AnimatedHeading className="display text-center text-balance z-10">
+      <AnimatedHeading className="display text-center text-balance z-10" masked>
         The TypeScript framework for building & shipping MCP servers
       </AnimatedHeading>
-      {/* <Image
-        src={HeroBg}
-        alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
-        className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
-      /> */}
       <Shader />
       <div className="flex items-center justify-center gap-2">
         <Button variant="primary" asChild>
