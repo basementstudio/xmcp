@@ -1,0 +1,57 @@
+---
+title: "Connecting to your server"
+metadataTitle: "Connecting to your server | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Learn how to configure MCP clients to connect to your xmcp server."
+---
+
+At this point, you can configure to connect to your MCP server on clients like `Cursor` or `Claude Desktop`.
+Notice that, unless you start the development server, or have built your project for production, your server will not be shown available.
+
+## HTTP transport
+
+By default, xmcp will use the port `3001`. If you're using a different port, you can change it in your `xmcp.config.ts` file. Read more about configuring transports [here](../configuration/transports).
+
+### Cursor
+
+If you're using the HTTP transport with Cursor, your configuration should look like this:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
+### Claude Desktop
+
+If you're using the HTTP transport with Claude Desktop, your configuration should look like this:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
+
+## STDIO transport
+
+If you're using the STDIO transport, your configuration for local development should look like this:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/my-project/dist/stdio.js"]
+    }
+  }
+}
+```

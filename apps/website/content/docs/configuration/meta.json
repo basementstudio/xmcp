@@ -1,0 +1,7 @@
+{
+  "title": "Configuration",
+  "icon": "RocketLaunchIcon",
+  "pages": ["transports", "custom-directories", "middlewares", "webpack"],
+  "defaultOpen": true,
+  "root": true
+}

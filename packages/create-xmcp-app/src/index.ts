@@ -89,7 +89,7 @@ const program = new Command()
     if (options.gpt) {
       template = "openai";
       transports = ["http"];
-      selectedPaths = ["tools", "resources"]; // OpenAI template doesn't use prompts
+      selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
     }
 
     // Handle transport selection from CLI options (only for non-gpt templates)

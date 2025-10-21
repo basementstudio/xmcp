@@ -1,0 +1,6 @@
+{
+  "title": "Getting Started",
+  "pages": ["installation", "connecting", "project-structure"],
+  "defaultOpen": true,
+  "root": true
+}
