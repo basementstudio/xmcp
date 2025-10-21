@@ -95,7 +95,7 @@ Your MCP server is live!`,
   },
 ];
 
-const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
+const Terminal = ({ step }: { step: typeof steps[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
@@ -272,12 +272,14 @@ const StepContent = ({ stepId }: { stepId: number }) => {
       currentTerminal,
       {
         y: 60,
+        filter: "blur(8px)",
         scale: 1,
         opacity: 0,
       },
       {
         y: 0,
         opacity: 1,
+        filter: "blur(0px)",
         duration: 0.5,
         ease: "power2.out",
       },
