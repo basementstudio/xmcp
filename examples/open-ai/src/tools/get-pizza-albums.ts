@@ -1,15 +1,5 @@
 import { type ToolMetadata } from "xmcp";
 
-// openAI widget metadata
-const widgetMeta = {
-  "openai/outputTemplate": "ui://widget/pizza-albums.html", // this points to your resource
-  "openai/toolInvocation/invoking": "Hand-tossing an album", // this is the text that will be displayed when the tool is invoked
-  "openai/toolInvocation/invoked": "Served a fresh album", // this is the text that will be displayed when the tool is invoked
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true, // this is the text that will be displayed when the tool is invoked
-}; // this is the metadata for the widget
-
-// tool metadata
 export const metadata: ToolMetadata = {
   name: "get-pizza-albums",
   description: "Show Pizza Album",
@@ -20,19 +10,18 @@ export const metadata: ToolMetadata = {
     idempotentHint: true,
   },
   _meta: {
-    ...widgetMeta,
+    openai: {
+      toolInvocation: {
+        invoking: "Hand-tossing an album...",
+        invoked: "Served a fresh album!",
+      },
+      widgetAccessible: true,
+    },
   },
 };
 
 export default async function handler() {
   return {
-    // returning content is optional, but you can return it if you want
-    /* content: [
-      {
-        type: "text",
-        text: "Rendered a pizza album!",
-      },
-    ], */
-    _meta: widgetMeta, // mandatory: make sure to return metadata here as well
+    _meta: metadata._meta,
   };
 }
