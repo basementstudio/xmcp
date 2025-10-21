@@ -13,13 +13,15 @@ import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { AnimatedHeading } from "@/components/ui/animated-heading";
 
 export const HomeFeatures = () => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
 
   useFadeIn({
     refs: [descriptionRef],
     yOffset: 20,
-    delay: 0.1,
+    trigger: sectionRef.current ?? undefined,
+    start: "top 85%",
   });
 
   useFadeIn({
@@ -30,7 +32,10 @@ export const HomeFeatures = () => {
   });
 
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
+    <div
+      className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16"
+      ref={sectionRef}
+    >
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
         <Tag text="Features" animate />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">

@@ -14,16 +14,14 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
 
   useFadeIn({
     refs: [descriptionRef],
-    stagger: 0.2,
     yOffset: 20,
-    delay: 0.1,
   });
 
   useFadeIn({
     refs: [cardsRef],
     yOffset: 30,
     delay: 0.2,
-    start: "top 90%",
+    start: "top 80%",
   });
 
   return (
