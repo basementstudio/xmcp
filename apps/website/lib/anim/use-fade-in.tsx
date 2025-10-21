@@ -8,7 +8,7 @@ import { RefObject } from "react";
 gsap.registerPlugin(ScrollTrigger);
 
 interface UseFadeInOptions {
-  refs: RefObject<HTMLElement>[];
+  refs: RefObject<HTMLElement | null>[];
   stagger?: number;
   duration?: number;
   yOffset?: number;

@@ -9,6 +9,7 @@ import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import ayuDark from "@shikijs/themes/ayu-dark";
 import { CopyButton } from "@/components/ui/copy-button";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
@@ -374,6 +375,13 @@ export const HomeSteps = () => {
     };
   }, []);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const fadeInRefs = useMemo(() => [containerRef], []);
+
+  useFadeIn({
+    refs: fadeInRefs,
+  });
+
   return (
     <div className="w-full py-8 md:py-16 col-span-12 relative">
       <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
@@ -399,10 +407,12 @@ export const HomeSteps = () => {
         ))}
       </div>
 
-      <div className="hidden md:flex gap-12 flex-1">
+      <div className="hidden md:flex gap-12 flex-1" ref={containerRef}>
         <div className="flex-1 flex flex-col relative">
           <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
-            <h2 className="text-4xl">From zero to prod in seconds</h2>
+            <h2 className="text-4xl text-gradient">
+              From zero to prod in seconds
+            </h2>
 
             <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-[#333333] to-transparent" />
           </div>

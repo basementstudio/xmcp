@@ -4,7 +4,7 @@ import {
   type BlogPost,
 } from "../../utils/blog";
 import { BlogHero } from "../../components/blog/hero";
-import { BlogCard } from "@/components/home/blog";
+import { BlogCard } from "@/components/home/blog/client-index";
 
 export const dynamic = "force-static";
 

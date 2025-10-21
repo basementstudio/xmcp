@@ -2,7 +2,7 @@
 
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
-import React, { useRef, RefObject } from "react";
+import React, { useRef } from "react";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
@@ -15,26 +15,22 @@ export const HomeFeatures = () => {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
 
-  const card1Ref = useRef<HTMLDivElement>(null);
-  const card2Ref = useRef<HTMLDivElement>(null);
-  const card3Ref = useRef<HTMLDivElement>(null);
-  const card4Ref = useRef<HTMLDivElement>(null);
-  const card5Ref = useRef<HTMLDivElement>(null);
-  const card6Ref = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<React.RefObject<HTMLDivElement | null>[]>([]);
 
-  const cardRefs = [card1Ref, card2Ref, card3Ref, card4Ref, card5Ref, card6Ref];
+  if (cardRefs.current.length !== cards.length) {
+    cardRefs.current = cards.map(() => ({
+      current: null as HTMLDivElement | null,
+    }));
+  }
 
   useFadeIn({
-    refs: [
-      titleRef as RefObject<HTMLElement>,
-      descriptionRef as RefObject<HTMLElement>,
-    ],
+    refs: [titleRef, descriptionRef],
     stagger: 0.2,
     yOffset: 20,
   });
 
   useFadeIn({
-    refs: cardRefs as RefObject<HTMLElement>[],
+    refs: cardRefs.current,
     stagger: 0.1,
     yOffset: 30,
     delay: 0.2,
@@ -62,7 +58,15 @@ export const HomeFeatures = () => {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
         {cards.map((card, index) => (
-          <Card key={index} {...card} ref={cardRefs[index]} />
+          <Card
+            key={index}
+            {...card}
+            ref={(el: HTMLDivElement | null) => {
+              if (cardRefs.current[index]) {
+                cardRefs.current[index].current = el;
+              }
+            }}
+          />
         ))}
       </div>
     </div>
@@ -73,30 +77,29 @@ interface CardProps {
   asset: string;
   title: string;
   description: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ asset, title, description }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full"
-      >
-        <div className="flex items-center justify-center w-full gap-2 mb-4">
-          <Image
-            src={asset}
-            alt={title}
-            className="mx-auto mix-blend-lighten bg-brand-black"
-            width={245}
-            height={200}
-          />
-        </div>
-        <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
-        <p className="text-brand-neutral-100 pt-1">{description}</p>
+const Card = ({ asset, title, description, ref }: CardProps) => {
+  return (
+    <div
+      ref={ref}
+      className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full"
+    >
+      <div className="flex items-center justify-center w-full gap-2 mb-4">
+        <Image
+          src={asset}
+          alt={title}
+          className="mx-auto mix-blend-lighten bg-brand-black"
+          width={245}
+          height={200}
+        />
       </div>
-    );
-  }
-);
+      <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
+      <p className="text-brand-neutral-100 pt-1">{description}</p>
+    </div>
+  );
+};
 
 Card.displayName = "Card";
 
