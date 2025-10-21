@@ -5,6 +5,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { cn } from "@/utils/cn";
+import CustomEase from "gsap/dist/CustomEase";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,6 +19,8 @@ interface AnimatedHeadingProps {
   masked?: boolean;
   fromY?: number;
 }
+
+CustomEase.create("customBezier", "M0,0 C0.126,0.382 0.264,1 1,1 ");
 
 export function AnimatedHeading({
   children,
@@ -78,7 +81,7 @@ export function AnimatedHeading({
           WebkitMaskImage:
             "radial-gradient(circle at center, black 60%, transparent 200%)",
           duration: effectDuration,
-          ease: "power2.out",
+          ease: "customBezier",
         },
         "<"
       );
