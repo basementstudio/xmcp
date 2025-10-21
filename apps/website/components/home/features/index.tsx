@@ -14,14 +14,7 @@ import { AnimatedHeading } from "@/components/ui/animated-heading";
 
 export const HomeFeatures = () => {
   const descriptionRef = useRef<HTMLParagraphElement>(null);
-
-  const cardRefs = useRef<React.RefObject<HTMLDivElement | null>[]>([]);
-
-  if (cardRefs.current.length !== cards.length) {
-    cardRefs.current = cards.map(() => ({
-      current: null as HTMLDivElement | null,
-    }));
-  }
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   useFadeIn({
     refs: [descriptionRef],
@@ -30,10 +23,10 @@ export const HomeFeatures = () => {
   });
 
   useFadeIn({
-    refs: cardRefs.current,
-    stagger: 0.1,
+    refs: [cardsRef],
     yOffset: 30,
     delay: 0.2,
+    start: "top 90%",
   });
 
   return (
@@ -56,17 +49,12 @@ export const HomeFeatures = () => {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12"
+        ref={cardsRef}
+      >
         {cards.map((card, index) => (
-          <Card
-            key={index}
-            {...card}
-            ref={(el: HTMLDivElement | null) => {
-              if (cardRefs.current[index]) {
-                cardRefs.current[index].current = el;
-              }
-            }}
-          />
+          <Card key={index} {...card} />
         ))}
       </div>
     </div>

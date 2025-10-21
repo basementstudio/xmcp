@@ -10,13 +10,7 @@ import { useRef } from "react";
 
 export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
   const descriptionRef = useRef<HTMLParagraphElement | null>(null);
-  const cardRefs = useRef<React.RefObject<HTMLAnchorElement | null>[]>([]);
-
-  if (cardRefs.current.length !== posts.length) {
-    cardRefs.current = posts.map(() => ({
-      current: null as HTMLAnchorElement | null,
-    }));
-  }
+  const cardsRef = useRef<HTMLDivElement | null>(null);
 
   useFadeIn({
     refs: [descriptionRef],
@@ -26,10 +20,10 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
   });
 
   useFadeIn({
-    refs: cardRefs.current,
-    stagger: 0.1,
+    refs: [cardsRef],
     yOffset: 30,
     delay: 0.2,
+    start: "top 90%",
   });
 
   return (
@@ -55,17 +49,12 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
-        {posts.map((post, index) => (
-          <BlogCard
-            key={post.slug}
-            post={post}
-            ref={(el: HTMLAnchorElement | null) => {
-              if (cardRefs.current[index]) {
-                cardRefs.current[index].current = el;
-              }
-            }}
-          />
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12"
+        ref={cardsRef}
+      >
+        {posts.map((post) => (
+          <BlogCard key={post.slug} post={post} />
         ))}
       </div>
     </div>
