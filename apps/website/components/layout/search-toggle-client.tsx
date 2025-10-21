@@ -1,18 +1,18 @@
 "use client";
-import type { ComponentProps } from "react";
+
 import { cn } from "../../lib/cn";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
+import { useEffect, useState } from "react";
+import { detectWindowsFromClient } from "@/utils/detect-os";
 import { Icons } from "../icons";
 
-interface SearchToggleClientProps extends ComponentProps<"button"> {
-  isMac: boolean;
-}
-
-export function SearchToggleClient({
-  isMac,
-  ...props
-}: SearchToggleClientProps) {
+export function SearchToggleClient({ ...props }) {
   const { enabled, setOpenSearch } = useSearchContext();
+  const [isWindows, setIsWindows] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsWindows(detectWindowsFromClient());
+  }, []);
 
   if (!enabled) return null;
 
@@ -29,8 +29,13 @@ export function SearchToggleClient({
       <Icons.search className="size-4" />
       <span className="lg:block hidden">Search docs...</span>
       <span className="hidden sm:block lg:hidden">Search...</span>
-      <span className="text-brand-white ml-auto hidden md:block w-[48px] text-right">
-        {isMac ? "⌘K" : "Ctrl K"}
+      <span
+        className={cn(
+          "text-brand-white ml-auto hidden md:block w-[48px] text-right",
+          "transition-opacity duration-200 ease-in-out"
+        )}
+      >
+        {isWindows ? "Ctrl K" : "⌘K"}
       </span>
     </button>
   );
