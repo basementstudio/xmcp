@@ -10,8 +10,8 @@ export function ShowcaseSubmissionsHeading() {
 
   useFadeIn({
     refs: [descriptionRef],
-    yOffset: 8,
-    delay: 0.2,
+    yOffset: 20,
+    delay: 0.1,
   });
 
   return (

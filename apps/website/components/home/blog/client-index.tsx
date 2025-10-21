@@ -22,6 +22,7 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
     refs: [descriptionRef],
     stagger: 0.2,
     yOffset: 20,
+    delay: 0.1,
   });
 
   useFadeIn({

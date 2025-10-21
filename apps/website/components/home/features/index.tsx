@@ -25,8 +25,8 @@ export const HomeFeatures = () => {
 
   useFadeIn({
     refs: [descriptionRef],
-    stagger: 0.2,
     yOffset: 20,
+    delay: 0.1,
   });
 
   useFadeIn({
