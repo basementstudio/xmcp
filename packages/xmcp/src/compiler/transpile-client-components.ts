@@ -10,41 +10,47 @@ export async function transpileClientComponent(
   toolName: string,
   outputDir: string
 ): Promise<void> {
-  const absolutePath = path.resolve(process.cwd(), componentPath);
+  try {
+    const absolutePath = path.resolve(process.cwd(), componentPath);
 
-  const sourceCode = fs.readFileSync(absolutePath, "utf-8");
+    const sourceCode = fs.readFileSync(absolutePath, "utf-8");
 
-  const dynamicRequire = eval("require");
-  const { transformSync } = dynamicRequire("@swc/core");
+    const dynamicRequire = eval("require");
+    const { transformSync } = dynamicRequire("@swc/core");
 
-  const result = transformSync(sourceCode, {
-    filename: componentPath,
-    jsc: {
-      parser: {
-        syntax: "typescript",
-        tsx: true,
-      },
-      transform: {
-        react: {
-          runtime: "automatic",
-          importSource: "react",
+    const result = transformSync(sourceCode, {
+      filename: componentPath,
+      jsc: {
+        parser: {
+          syntax: "typescript",
+          tsx: true,
         },
+        transform: {
+          react: {
+            runtime: "automatic",
+            importSource: "react",
+          },
+        },
+        target: "es2015",
       },
-      target: "es2015",
-    },
-    module: {
-      type: "es6",
-    },
-  });
+      module: {
+        type: "es6",
+      },
+    });
 
-  const bundleCode = result.code.trim();
+    const bundleCode = result.code.trim();
 
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const outputPath = path.join(outputDir, `${toolName}.bundle.js`);
+    fs.writeFileSync(outputPath, bundleCode, "utf-8");
+
+    console.log(`✓ Built client bundle: ${outputPath}`);
+  } catch (error) {
+    throw new Error(
+      `Failed to transpile client component "${toolName}" at ${componentPath}: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
-
-  const outputPath = path.join(outputDir, `${toolName}.bundle.js`);
-  fs.writeFileSync(outputPath, bundleCode, "utf-8");
-
-  console.log(`✓ Built client bundle: ${outputPath}`);
 }
