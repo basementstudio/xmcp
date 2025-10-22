@@ -382,10 +382,10 @@ export const HomeSteps = () => {
   }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const fadeInRefs = useMemo(() => [containerRef], []);
+  const fadeInRef = useMemo(() => [containerRef], []);
 
   useFadeIn({
-    refs: fadeInRefs,
+    refs: fadeInRef,
     start: "top 75%",
   });
 

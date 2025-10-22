@@ -13,42 +13,29 @@ import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { AnimatedHeading } from "@/components/ui/animated-heading";
 
 export const HomeFeatures = () => {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
 
   useFadeIn({
-    refs: [descriptionRef],
-    yOffset: 20,
-    trigger: sectionRef.current ?? undefined,
-    start: "top 85%",
-  });
-
-  useFadeIn({
-    refs: [cardsRef],
-    yOffset: 30,
-    delay: 0.2,
-    start: "top 90%",
+    refs: [headingRef, cardsRef],
+    stagger: 0.2,
   });
 
   return (
-    <div
-      className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16"
-      ref={sectionRef}
-    >
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
+    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
+      <div
+        className="flex flex-col invisible items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3"
+        ref={headingRef}
+      >
         <Tag text="Features" animate />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
           <AnimatedHeading
             effectDuration={2}
-            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto invisible"
+            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto"
           >
             The complete stack to ship an MCP server
           </AnimatedHeading>
-          <p
-            className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto invisible"
-            ref={descriptionRef}
-          >
+          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
             Everything you need to set up fast, customize with ease, and plug
             directly into your apps.
           </p>

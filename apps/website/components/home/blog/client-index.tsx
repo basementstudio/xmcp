@@ -9,25 +9,21 @@ import Image from "next/image";
 import { useRef } from "react";
 
 export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
-  const descriptionRef = useRef<HTMLParagraphElement | null>(null);
-  const cardsRef = useRef<HTMLDivElement | null>(null);
+  const headingRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   useFadeIn({
-    refs: [descriptionRef],
-    yOffset: 20,
-  });
-
-  useFadeIn({
-    refs: [cardsRef],
-    yOffset: 30,
-    delay: 0.2,
-    start: "top 80%",
+    refs: [headingRef, cardsRef],
+    stagger: 0.2,
   });
 
   return (
     <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
+        <div
+          className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full invisible "
+          ref={headingRef}
+        >
           <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
             <Tag text="Blog" className="w-fit" animate />
             <AnimatedHeading
@@ -38,10 +34,7 @@ export const HomeBlogClient = ({ posts }: { posts: BlogPost[] }) => {
               Guides & changelogs
             </AnimatedHeading>
           </div>
-          <p
-            className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto"
-            ref={descriptionRef}
-          >
+          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
             Learn, build, and stay up to date with the latest guides,
             changelogs, and insights to make the most of your MCP server.
           </p>

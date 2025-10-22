@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { mergeRefs } from "@/lib/merge-refs";
 import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import { cn } from "@/utils/cn";
 import CustomEase from "gsap/dist/CustomEase";
@@ -18,6 +19,7 @@ interface AnimatedHeadingProps {
   effectDuration?: number;
   masked?: boolean;
   fromY?: number;
+  ref?: React.Ref<HTMLHeadingElement>;
 }
 
 CustomEase.create("customBezier", "M0,0 C0.126,0.382 0.264,1 1,1 ");
@@ -29,8 +31,8 @@ export function AnimatedHeading({
   delay = 0,
   duration = 6,
   effectDuration = 3,
-  fromY = 20,
   masked = false,
+  ref,
 }: AnimatedHeadingProps) {
   const textRef = useRef<HTMLHeadingElement>(null);
 
@@ -57,11 +59,11 @@ export function AnimatedHeading({
     if (masked) {
       initTl.set(element, {
         maskImage:
-          "radial-gradient(circle at center, black 0%, transparent 0%)",
+          "radial-gradient(circle at center, black 20%, transparent 60%)",
         maskRepeat: "no-repeat",
         maskPosition: "center center",
         WebkitMaskImage:
-          "radial-gradient(circle at center, black 0%, transparent 0%)",
+          "radial-gradient(circle at center, black 20%, transparent 60%)",
       });
 
       // mask
@@ -93,25 +95,6 @@ export function AnimatedHeading({
         },
         ">"
       );
-    } else {
-      initTl.set(element, {
-        y: fromY,
-      });
-
-      initTl.to(element, {
-        autoAlpha: 1,
-        y: 0,
-        duration: effectDuration / 3,
-        ease: "power2.out",
-      });
-
-      initTl.set(
-        element,
-        {
-          filter: "none",
-        },
-        ">"
-      );
     }
 
     // continued bg anim
@@ -128,8 +111,8 @@ export function AnimatedHeading({
 
   return (
     <Component
-      ref={textRef}
-      className={cn("relative text-gradient invisible", className)}
+      ref={mergeRefs(textRef, ref)}
+      className={cn("relative text-gradient", masked && "invisible", className)}
     >
       {children}
     </Component>
