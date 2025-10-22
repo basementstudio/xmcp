@@ -42,7 +42,7 @@ export const HomeFeatures = () => {
         </div>
       </div>
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12"
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12 invisible"
         ref={cardsRef}
       >
         {cards.map((card, index) => (

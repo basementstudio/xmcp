@@ -414,7 +414,10 @@ export const HomeSteps = () => {
         ))}
       </div>
 
-      <div className="hidden md:flex gap-12 flex-1" ref={containerRef}>
+      <div
+        className="hidden md:flex gap-12 flex-1 invisible"
+        ref={containerRef}
+      >
         <div className="hidden md:block absolute left-0 -bottom-10 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent h-[130%]" />
         <div className="flex-1 flex flex-col relative">
           <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
