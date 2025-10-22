@@ -17,40 +17,48 @@ export function ProgressiveBlurBackground() {
 
     if (!progressiveBlurEl || !solidBgEl) return;
 
-    gsap.set(progressiveBlurEl, { opacity: 0 });
-    gsap.set(solidBgEl, { opacity: 1 });
+    const mm = gsap.matchMedia();
 
-    const tl = gsap.timeline({
-      defaults: {
-        duration: 0.4,
-        ease: "power2.inOut",
-      },
-      scrollTrigger: {
-        trigger: "body",
-        start: "top top-=20px",
-        end: "+=0",
-        toggleActions: "play none none reverse",
-      },
+    mm.add("(min-width: 769px)", () => {
+      gsap.set(progressiveBlurEl, { opacity: 0 });
+      gsap.set(solidBgEl, { opacity: 1 });
+
+      const tl = gsap.timeline({
+        defaults: {
+          duration: 0.4,
+          ease: "power2.inOut",
+        },
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top-=20px",
+          end: "+=0",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      tl.to(
+        progressiveBlurEl,
+        {
+          opacity: 1,
+        },
+        0
+      );
+
+      tl.to(
+        solidBgEl,
+        {
+          opacity: 0,
+        },
+        ">-0.15"
+      );
+
+      return () => {
+        tl.kill();
+      };
     });
 
-    tl.to(
-      progressiveBlurEl,
-      {
-        opacity: 1,
-      },
-      0
-    );
-
-    tl.to(
-      solidBgEl,
-      {
-        opacity: 0,
-      },
-      ">-0.15"
-    );
-
     return () => {
-      tl.kill();
+      mm.kill();
     };
   }, []);
 

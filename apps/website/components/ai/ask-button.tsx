@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
 import { AskAIDialog } from "./ask-dialog";
 import { Icons } from "../icons";
+import { detectWindowsFromClient } from "@/utils/detect-os";
 
-interface AskAIButtonClientProps {
-  isMac: boolean;
-}
-
-export function AskAIButtonClient({ isMac }: AskAIButtonClientProps) {
+export function AskAIButtonClient() {
   const [open, setOpen] = useState(false);
+  const [isWindows, setIsWindows] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setIsWindows(detectWindowsFromClient());
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -39,8 +41,13 @@ export function AskAIButtonClient({ isMac }: AskAIButtonClientProps) {
         onClick={() => setOpen(true)}
       >
         Ask AI
-        <span className="text-brand-white ml-2 w-[48px] inline-block text-right">
-          {isMac ? "⌘I" : "Ctrl I"}
+        <span
+          className={cn(
+            "text-brand-white ml-2 w-[48px] inline-block text-right",
+            "transition-opacity duration-200 ease-in-out"
+          )}
+        >
+          {isWindows ? "Ctrl I" : "⌘I"}
         </span>
       </button>
 

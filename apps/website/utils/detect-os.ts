@@ -1,7 +1,14 @@
-import { headers } from "next/headers";
+export function detectWindowsFromClient(): boolean {
+  if (typeof window === "undefined") return false;
 
-export async function detectMacFromHeaders(): Promise<boolean> {
-  const headersList = await headers();
-  const userAgent = headersList.get("user-agent") || "";
-  return /(Mac|iPhone|iPod|iPad)/i.test(userAgent);
+  // @ts-expect-error - userAgentData is not yet widely supported
+  const platform = navigator.userAgentData?.platform?.toLowerCase() || "";
+  const userAgent = navigator.userAgent?.toLowerCase() || "";
+
+  if (/win/.test(platform)) return true;
+
+  // user agent fallback
+  if (/win/.test(userAgent)) return true;
+
+  return false;
 }
