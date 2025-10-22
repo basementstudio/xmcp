@@ -7,7 +7,6 @@ export const Prefooter = () => {
       <PrefooterShader />
       <AnimatedHeading
         masked
-        effectDuration={2}
         as="h3"
         className="text-2xl font-normal leading-10 tracking-[-0.03rem] -translate-y-4 text-gradient"
       >
