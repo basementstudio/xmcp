@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export default function Shader() {
   const [isUnmounting, setIsUnmounting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     const handleUnmount = () => setIsUnmounting(true);
     const handleVisibilityChange = () => {
