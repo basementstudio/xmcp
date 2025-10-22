@@ -80,6 +80,16 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="theme-color" content="#000000" />
+        <noscript>
+          <style>
+            {`
+          body * { 
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+        `}
+          </style>
+        </noscript>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
