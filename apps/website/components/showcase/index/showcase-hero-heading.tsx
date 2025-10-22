@@ -5,19 +5,20 @@ import { AnimatedHeading } from "@/components/ui/animated-heading";
 import { useRef } from "react";
 
 export function ShowcaseHeroHeading() {
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
 
   useFadeIn({
-    refs: [descriptionRef],
-    yOffset: 8,
-    delay: 0.2,
+    refs: [headingRef, descriptionRef],
+    yOffset: 12,
   });
 
   return (
     <>
       <AnimatedHeading
         effectDuration={2}
-        className="display text-center text-balance z-10"
+        className="display text-center text-balance z-10 invisible"
+        ref={headingRef}
       >
         Community MCP servers
       </AnimatedHeading>

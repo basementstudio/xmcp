@@ -37,11 +37,6 @@ export function useFadeIn({
 
     if (elements.length === 0) return;
 
-    gsap.set(elements, {
-      autoAlpha: 0,
-      y: yOffset,
-    });
-
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: trigger || elements[0],
@@ -52,9 +47,9 @@ export function useFadeIn({
     });
 
     // stagger
-    tl.to(elements, {
-      autoAlpha: 1,
-      y: 0,
+    tl.from(elements, {
+      autoAlpha: 0,
+      y: yOffset,
       duration,
       ease,
       stagger,

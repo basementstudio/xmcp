@@ -5,19 +5,20 @@ import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { useRef } from "react";
 
 export function BlogHeroHeading() {
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
 
   useFadeIn({
-    refs: [descriptionRef],
-    yOffset: 8,
-    delay: 0.2,
+    refs: [headingRef, descriptionRef],
+    yOffset: 12,
   });
 
   return (
     <>
       <AnimatedHeading
         effectDuration={2}
-        className="display text-center text-balance z-10"
+        ref={headingRef}
+        className="display text-center text-balance z-10 invisible"
       >
         Blog
       </AnimatedHeading>

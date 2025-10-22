@@ -5,19 +5,20 @@ import { AnimatedHeading } from "@/components/ui/animated-heading";
 import { useFadeIn } from "@/lib/anim/use-fade-in";
 
 export function ExamplesHeroHeading() {
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const descriptionRef = useRef<HTMLParagraphElement>(null);
 
   useFadeIn({
-    refs: [descriptionRef],
-    yOffset: 8,
-    delay: 0.2,
+    refs: [headingRef, descriptionRef],
+    yOffset: 12,
   });
 
   return (
     <>
       <AnimatedHeading
         effectDuration={2}
-        className="display text-center text-balance z-10"
+        className="display text-center text-balance z-10 invisible"
+        ref={headingRef}
       >
         Examples & templates
       </AnimatedHeading>
