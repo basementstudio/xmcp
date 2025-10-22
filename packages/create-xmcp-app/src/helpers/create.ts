@@ -57,9 +57,9 @@ export function createProject(options: ProjectOptions): void {
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
 
-  // For openai template, skip config generation and package.json update
+  // For openai and react templates, skip config generation and package.json update
   // as they're already provided in the template
-  if (template === "openai") {
+  if (template === "openai" || template === "react") {
     // Update package.json name only
     const packageJsonPath = path.join(projectPath, "package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
