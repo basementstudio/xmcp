@@ -10,7 +10,7 @@ export function ExamplesHeroHeading() {
 
   useFadeIn({
     refs: [headingRef, descriptionRef],
-    yOffset: 12,
+    yOffset: 15,
   });
 
   return (

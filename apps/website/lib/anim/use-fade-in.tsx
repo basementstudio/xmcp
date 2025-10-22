@@ -22,10 +22,10 @@ interface UseFadeInOptions {
 export function useFadeIn({
   refs,
   stagger = 0.1,
-  duration = 0.8,
+  duration = 0.6,
   yOffset = 30,
   delay = 0,
-  ease = "power2.out",
+  ease = "sine.out",
   trigger,
   start = "top 80%",
   end = "top 40%",
@@ -53,6 +53,7 @@ export function useFadeIn({
       duration,
       ease,
       stagger,
+      // Round values to prevent subpixel rendering
     });
   }, [refs, stagger, duration, yOffset, delay, ease, trigger, start, end]);
 }
