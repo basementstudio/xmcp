@@ -174,10 +174,6 @@ html:has(#nd-blog-layout) {
   @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
 }
 
-.prose li code {
-  @apply text-[0.9rem] px-[1px] py-[2px];
-}
-
 .prose blockquote {
   border-left: 3px solid #333333;
   padding-left: 1.5rem;
