@@ -14,6 +14,7 @@ export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 export const experimentalConfigSchema = z.object({
   oauth: oauthConfigSchema.optional(),
   adapter: adapterConfigSchema.optional(),
+  ssr: z.boolean().optional(),
 });
 
 export type ExperimentalConfig = z.infer<typeof experimentalConfigSchema>;

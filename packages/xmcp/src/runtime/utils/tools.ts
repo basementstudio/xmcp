@@ -5,6 +5,7 @@ import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
+import { isReactFile } from "./ssr";
 import { splitOpenAIMetaNested } from "./openai/split-meta";
 
 /** Validates if a value is a valid Zod schema object */
@@ -90,14 +91,18 @@ export function addToolsToServer(
       if (!toolSpecificMeta.openai.outputTemplate) {
         toolSpecificMeta.openai.outputTemplate = resourceUri;
       }
+      
+      const isReact = isReactFile(path);
 
-      //this is for auto-generation of resources
+      // Add to the OpenAI resource registry for auto-generation
       openAIResourceRegistry.add(toolConfig.name, {
         name: toolConfig.name,
         uri: resourceUri,
-        handler: handler,
+        handler: handler, // Store the original handler
         toolMeta: toolSpecificMeta,
         resourceMeta: resourceSpecificMeta,
+        isReactComponent: isReact,
+        toolPath: isReact ? path : undefined,
       });
     }
 

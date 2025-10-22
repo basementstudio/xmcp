@@ -48,3 +48,26 @@ ${importResourcesCode}
 ${importMiddlewareCode}
 `;
 }
+
+/**
+ * Generate client bundles mapping for SSR
+ */
+export function generateClientBundlesCode(
+  bundleMap: Map<string, string>
+): string {
+  if (bundleMap.size === 0) {
+    return `\nexport const clientBundles = {};\n`;
+  }
+
+  const bundleEntries = Array.from(bundleMap)
+    .map(([toolName, bundlePath]) => {
+      return `  "${toolName}": "${bundlePath}",`;
+    })
+    .join("\n");
+
+  return `
+export const clientBundles = {
+${bundleEntries}
+};
+`;
+}
