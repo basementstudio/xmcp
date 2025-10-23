@@ -302,8 +302,8 @@ export function ShowcaseForm() {
                     errors.logo
                       ? "border border-red-500"
                       : logoPreview
-                        ? "border border-[#333333]"
-                        : "border border-dashed border-[#333333]",
+                      ? "border border-[#333333]"
+                      : "border border-dashed border-[#333333]",
                     showSuccessMessage &&
                       "opacity-50 cursor-not-allowed hover:bg-transparent"
                   )}
@@ -359,7 +359,7 @@ export function ShowcaseForm() {
         <button
           type="submit"
           disabled={isSubmitting || !isFormValid() || showSuccessMessage}
-          className="bg-white text-black py-2 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase whitespace-nowrap w-full lg:w-auto"
+          className="bg-white text-black py-2 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase whitespace-nowrap w-full lg:w-auto cursor-pointer"
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">

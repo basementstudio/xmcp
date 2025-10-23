@@ -22,12 +22,12 @@ export interface DocsPageProps {
 export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
   return (
     <AnchorProvider toc={toc}>
-      <main className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
-        <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 px-4 py-8 pt-0 md:px-8 md:mx-auto">
+      <article className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
+        <div className="flex flex-1 flex-col w-full max-w-[860px] gap-6 px-4 py-8 pt-0 md:px-8 md:mx-auto">
           {props.children}
           <Footer />
-        </article>
-      </main>
+        </div>
+      </article>
       {(toc.length > 0 || pageActions) && (
         <div className="sticky top-34 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 pt-0 overflow-auto max-xl:hidden mt-8">
           {toc.length > 0 && (

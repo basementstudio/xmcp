@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   return (
-    <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <HomeHero />
       <HomeFeatures />
       <HomeSteps />
       <HomeBlog />
-    </div>
+    </main>
   );
 }

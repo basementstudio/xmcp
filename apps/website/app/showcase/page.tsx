@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function ShowcasePage() {
   return (
-    <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
         <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
           <h1 className="display text-center text-balance z-10 text-gradient">
@@ -49,6 +49,6 @@ export default function ShowcasePage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
