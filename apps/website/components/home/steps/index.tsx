@@ -169,20 +169,19 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   const currentAnimationRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
+    const initialStepId = stepId;
     steps.forEach((step) => {
       const terminal = terminalRefs.current[step.id];
       if (!terminal) return;
 
-      const isActive = step.id === stepId;
-
-      if (isActive) {
+      if (step.id === initialStepId) {
         gsap.set(terminal, {
-          y: 0,
-          x: 0,
-          scale: 1,
-          opacity: 1,
-          zIndex: 10,
           display: "flex",
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          zIndex: 10,
           transformOrigin: "center center",
         });
       } else {
@@ -192,7 +191,8 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         });
       }
     });
-  }, [stepId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (stepId === previousStepRef.current) return;
@@ -221,6 +221,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
     previousStepRef.current = stepId;
 
     if (!previousTerminal) {
+      // ensure current terminal is properly set without immediate visibility
       gsap.set(currentTerminal, {
         display: "flex",
         y: 0,
@@ -228,12 +229,17 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         scale: 1,
         opacity: 1,
         zIndex: 10,
+        transformOrigin: "center center",
       });
 
+      // hide all other terminals
       steps.forEach((step) => {
         const terminal = terminalRefs.current[step.id];
         if (terminal && step.id !== stepId) {
-          gsap.set(terminal, { display: "none" });
+          gsap.set(terminal, {
+            display: "none",
+            opacity: 0,
+          });
         }
       });
 
@@ -262,10 +268,15 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 
     currentAnimationRef.current = tl;
 
-    // Set up the current terminal for animation
+    // Set up the current terminal for animation - start hidden
     gsap.set(currentTerminal, {
       display: "flex",
       zIndex: 10,
+      opacity: 0,
+      y: 60,
+      filter: "blur(8px)",
+      scale: 1,
+      transformOrigin: "center center",
     });
 
     tl.to(
@@ -277,14 +288,8 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         ease: "power2.out",
       },
       0
-    ).fromTo(
+    ).to(
       currentTerminal,
-      {
-        y: 60,
-        filter: "blur(8px)",
-        scale: 1,
-        opacity: 0,
-      },
       {
         y: 0,
         opacity: 1,
@@ -320,8 +325,6 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
           style={{
             transformOrigin: "center center",
-            display: step.id === stepId ? "flex" : "none",
-            opacity: step.id === stepId ? 1 : 0,
           }}
         >
           <Terminal step={step} />
