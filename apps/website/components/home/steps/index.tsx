@@ -434,7 +434,7 @@ export const HomeSteps = () => {
     <div className="w-full py-8 md:py-16 col-span-12 relative">
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
         <div className="flex flex-col gap-2 md:px-4">
-          <h2 className="heading-2 text-gradient">
+          <h2 className="heading-2 text-gradient !-mb-4">
             From zero to prod in seconds
           </h2>
         </div>
