@@ -94,14 +94,14 @@ const program = new Command()
     }
 
     // If --ui flag is set, use react template and force certain settings
-    if (options.react) {
+    if (options.ui) {
       template = "react";
       transports = ["http"];
       selectedPaths = ["tools"]; // React template uses only tools
     }
 
-    // Handle transport selection from CLI options (only for non-gpt/react templates)
-    if (!options.gpt && !options.react && (options.http || options.stdio)) {
+    // Handle transport selection from CLI options (only for non-gpt/ui templates)
+    if (!options.gpt && !options.ui && (options.http || options.stdio)) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
@@ -136,7 +136,7 @@ const program = new Command()
       }
 
       // Transport selection (skip if already specified via CLI options or using --gpt/--ui)
-      if (!options.gpt && !options.react && !options.http && !options.stdio) {
+      if (!options.gpt && !options.ui && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -159,7 +159,7 @@ const program = new Command()
       }
 
       // Path selection checklist (skip for --gpt/--ui template)
-      if (!options.gpt && !options.react) {
+      if (!options.gpt && !options.ui) {
         const pathAnswers = await inquirer.prompt([
           {
             type: "checkbox",
@@ -212,7 +212,7 @@ const program = new Command()
       if (options.useBun) packageManager = "bun";
 
       // Use all paths by default in non-interactive mode (unless --gpt or --ui is set)
-      if (!options.gpt && !options.react) {
+      if (!options.gpt && !options.ui) {
         selectedPaths = ["tools", "prompts", "resources"];
       }
     }
