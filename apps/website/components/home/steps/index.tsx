@@ -337,6 +337,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 export const HomeSteps = () => {
   const [selectedStep, setSelectedStep] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isInView, setIsInView] = useState(false);
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -352,13 +353,16 @@ export const HomeSteps = () => {
       clearTimeout(resumeTimerRef.current);
     }
 
-    resumeTimerRef.current = setTimeout(() => {
-      setIsAutoPlaying(true);
-    }, 5000);
+    // Only resume auto play if component is in view
+    if (isInView) {
+      resumeTimerRef.current = setTimeout(() => {
+        setIsAutoPlaying(true);
+      }, 5000);
+    }
   };
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !isInView) return;
 
     autoPlayTimerRef.current = setInterval(() => {
       setSelectedStep((current) => {
@@ -373,7 +377,7 @@ export const HomeSteps = () => {
         autoPlayTimerRef.current = null;
       }
     };
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, isInView]);
 
   useEffect(() => {
     return () => {
@@ -386,8 +390,40 @@ export const HomeSteps = () => {
     };
   }, []);
 
+  // auto play when component comes back into view
+  useEffect(() => {
+    if (isInView && !isAutoPlaying) {
+      if (resumeTimerRef.current) {
+        setIsAutoPlaying(true);
+      }
+    }
+  }, [isInView, isAutoPlaying]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const fadeInRef = useMemo(() => [containerRef], []);
+
+  // pause auto advance when not visible
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      }
+    );
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useFadeIn({
     refs: fadeInRef,
