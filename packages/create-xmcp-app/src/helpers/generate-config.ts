@@ -33,22 +33,31 @@ const config: XmcpConfig = {`;
   configContent += `
   paths: {`;
 
-  // Add tools path if selected
+  // Add tools path (set to false if not selected)
   if (paths.includes("tools")) {
     configContent += `
     tools: "./src/tools",`;
+  } else {
+    configContent += `
+    tools: false,`;
   }
 
-  // Add prompts path if selected
+  // Add prompts path (set to false if not selected)
   if (paths.includes("prompts")) {
     configContent += `
     prompts: "./src/prompts",`;
+  } else {
+    configContent += `
+    prompts: false,`;
   }
 
-  // Add resources path if selected
+  // Add resources path (set to false if not selected)
   if (paths.includes("resources")) {
     configContent += `
     resources: "./src/resources",`;
+  } else {
+    configContent += `
+    resources: false,`;
   }
 
   // Close the paths object

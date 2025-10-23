@@ -40,6 +40,7 @@ const program = new Command()
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .option("--gpt", "Initialize with OpenAI/ChatGPT widgets template", false)
+  .option("--ui", "Initialize with React widgets template", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -92,8 +93,15 @@ const program = new Command()
       selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
     }
 
-    // Handle transport selection from CLI options (only for non-gpt templates)
-    if (!options.gpt && (options.http || options.stdio)) {
+    // If --ui flag is set, use react template and force certain settings
+    if (options.react) {
+      template = "react";
+      transports = ["http"];
+      selectedPaths = ["tools"]; // React template uses only tools
+    }
+
+    // Handle transport selection from CLI options (only for non-gpt/react templates)
+    if (!options.gpt && !options.react && (options.http || options.stdio)) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
@@ -127,8 +135,8 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options or using --gpt)
-      if (!options.gpt && !options.http && !options.stdio) {
+      // Transport selection (skip if already specified via CLI options or using --gpt/--ui)
+      if (!options.gpt && !options.react && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -150,8 +158,8 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      // Path selection checklist (skip for --gpt template)
-      if (!options.gpt) {
+      // Path selection checklist (skip for --gpt/--ui template)
+      if (!options.gpt && !options.react) {
         const pathAnswers = await inquirer.prompt([
           {
             type: "checkbox",
@@ -203,8 +211,8 @@ const program = new Command()
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
 
-      // Use all paths by default in non-interactive mode (unless --gpt is set)
-      if (!options.gpt) {
+      // Use all paths by default in non-interactive mode (unless --gpt or --ui is set)
+      if (!options.gpt && !options.react) {
         selectedPaths = ["tools", "prompts", "resources"];
       }
     }
