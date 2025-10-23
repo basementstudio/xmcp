@@ -41,7 +41,7 @@ export default function Shader() {
         }}
         className={cn(
           isLoaded && !isUnmounting
-            ? "opacity-100 transition-opacity duration-800 ease-in-out"
+            ? "opacity-100 transition-opacity duration-600 ease-in-out"
             : "opacity-0"
         )}
       >
