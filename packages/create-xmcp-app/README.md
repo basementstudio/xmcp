@@ -36,7 +36,7 @@ You will be asked for the project name and then guided through a series of promp
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
 - `--gpt`: Initialize with OpenAI/ChatGPT widgets template
-- `--react`: Initialize with React widgets template
+- `--ui`: Initialize with React widgets template
 
 ## Getting Started
 

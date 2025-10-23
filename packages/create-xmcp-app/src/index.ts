@@ -40,7 +40,7 @@ const program = new Command()
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .option("--gpt", "Initialize with OpenAI/ChatGPT widgets template", false)
-  .option("--react", "Initialize with React widgets template", false)
+  .option("--ui", "Initialize with React widgets template", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -93,7 +93,7 @@ const program = new Command()
       selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
     }
 
-    // If --react flag is set, use react template and force certain settings
+    // If --ui flag is set, use react template and force certain settings
     if (options.react) {
       template = "react";
       transports = ["http"];
@@ -135,7 +135,7 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options or using --gpt/--react)
+      // Transport selection (skip if already specified via CLI options or using --gpt/--ui)
       if (!options.gpt && !options.react && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
@@ -158,7 +158,7 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      // Path selection checklist (skip for --gpt/--react template)
+      // Path selection checklist (skip for --gpt/--ui template)
       if (!options.gpt && !options.react) {
         const pathAnswers = await inquirer.prompt([
           {
@@ -211,7 +211,7 @@ const program = new Command()
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
 
-      // Use all paths by default in non-interactive mode (unless --gpt or --react is set)
+      // Use all paths by default in non-interactive mode (unless --gpt or --ui is set)
       if (!options.gpt && !options.react) {
         selectedPaths = ["tools", "prompts", "resources"];
       }
