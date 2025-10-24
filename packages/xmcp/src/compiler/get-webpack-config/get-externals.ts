@@ -51,6 +51,10 @@ export function getExternals(): Configuration["externals"] {
         request === "react-dom/server" ||
         request === "react/jsx-runtime"
       ) {
+        if (xmcpConfig.experimental?.ssr) {
+          return callback();
+        }
+
         return callback(null, `commonjs ${request}`);
       }
 
