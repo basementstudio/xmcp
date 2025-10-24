@@ -1,0 +1,439 @@
+---
+title: "OpenAI"
+metadataTitle: "OpenAI Integration | xmcp Documentation"
+publishedAt: "2025-01-21"
+summary: "Build interactive widgets for ChatGPT using OpenAI-specific metadata"
+description: "Learn how to create tools with OpenAI widgets for ChatGPT integration"
+---
+
+## Overview
+
+xmcp provides first-class support for OpenAI's widget system, allowing you to create interactive tools that render rich UI components directly in ChatGPT.
+
+When you define OpenAI metadata in your tools, xmcp automatically splits metadata into tool-specific and resource-specific properties and generates widget resources for your tools.
+
+## Quick Start
+
+Scaffold a new OpenAI-ready project:
+
+#### React Template
+
+The `--ui` flag scaffolds a project with React support.
+
+```bash
+npx create-xmcp-app --ui
+```
+
+#### Standard Template
+
+The `--gpt` flag scaffolds a project with template support.
+
+```bash
+npx create-xmcp-app --gpt
+```
+
+## Approaches
+
+xmcp supports three approaches for creating OpenAI widgets:
+
+### 1. React Components (Recommended)
+
+Return React components directly for interactive, composable widgets:
+
+```typescript title="src/tools/counter.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "counter",
+  description: "Interactive counter widget",
+  _meta: {
+    openai: {
+      toolInvocation: {
+        invoking: "Loading counter...",
+        invoked: "Counter ready!",
+      },
+      widgetAccessible: true,
+    },
+  },
+};
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>Counter: {count}</h1>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <button onClick={() => setCount(count - 1)}>Decrement</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  );
+}
+```
+
+**How it works:**
+
+1. Install React: `npm install react react-dom`
+2. Tool handler returns React component
+3. Framework renders component to HTML
+4. Auto-generated resource serves the rendered output
+
+<Callout type="info">
+  When using React components, tool files must use the `.tsx` extension (not
+  `.ts`).
+</Callout>
+
+### 2. Direct HTML Return
+
+Return HTML directly from your tool handler for simple, static widgets:
+
+```typescript title="src/tools/get-map.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "get-map",
+  description: "Display an interactive map",
+  _meta: {
+    openai: {
+      toolInvocation: {
+        invoking: "Loading map...",
+        invoked: "Map loaded!",
+      },
+      widgetAccessible: true,
+    },
+  },
+};
+
+export default async function getMap() {
+  return `
+    <div id="map-root"></div>
+    <link rel="stylesheet" href="https://cdn.example.com/map.css">
+    <script src="https://cdn.example.com/map.js"></script>
+  `;
+}
+```
+
+**How it works:**
+
+1. Tool handler returns HTML string
+2. Framework detects `_meta.openai` in metadata
+3. Framework auto-generates a resource at `ui://widget/{toolName}.html`
+4. The resource serves your HTML when accessed by ChatGPT
+
+### 3. Manual Resource Creation (Backwards Compatible)
+
+Create separate tool and resource files for full control:
+
+```typescript title="src/tools/get-map.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "get-map",
+  description: "Display an interactive map",
+  _meta: {
+    openai: {
+      toolInvocation: {
+        invoking: "Loading map...",
+        invoked: "Map loaded!",
+      },
+      widgetAccessible: true,
+    },
+  },
+};
+
+export default async function getMap() {
+  return {
+    _meta: metadata._meta,
+  };
+}
+```
+
+```typescript title="src/resources/(ui)/widget/map.ts"
+import { type ResourceMetadata } from "xmcp";
+
+export const metadata: ResourceMetadata = {
+  name: "map",
+  title: "Interactive Map",
+  mimeType: "text/html+skybridge",
+};
+
+export default async function handler() {
+  return `
+    <div id="map-root"></div>
+    <link rel="stylesheet" href="https://cdn.example.com/map.css">
+    <script src="https://cdn.example.com/map.js"></script>
+  `;
+}
+```
+
+This approach is backwards compatible but requires manual resource creation. **We recommend using React components (approach #1) or direct HTML return (approach #2) instead.**
+
+## Widget Metadata Reference
+
+OpenAI metadata is defined under the `_meta.openai` key. The framework automatically splits this metadata into tool-specific and resource-specific properties.
+
+### Tool-Specific Metadata
+
+These properties are applied directly to the tool and control its behavior:
+
+**`toolInvocation`**
+
+Status messages displayed during tool execution:
+
+```typescript
+toolInvocation: {
+  invoking: "Loading map...",  // ≤64 characters
+  invoked: "Map loaded!"       // ≤64 characters
+}
+```
+
+- `invoking` - Message shown while the tool is executing
+- `invoked` - Message shown after the tool completes
+
+**`widgetAccessible`**
+
+Controls whether the widget can communicate back to the tool (default: `true`):
+
+```typescript
+widgetAccessible: true;
+```
+
+**`outputTemplate`**
+
+URI template for the widget resource. Auto-generated as `ui://widget/{toolName}.html` if not provided:
+
+```typescript
+outputTemplate: "ui://widget/my-custom-widget.html";
+```
+
+**`resultCanProduceWidget`**
+
+Indicates whether the tool result can produce a widget (default: `true`):
+
+```typescript
+resultCanProduceWidget: true;
+```
+
+### Resource-Specific Metadata
+
+These properties are applied to auto-generated widget resources and control how the widget is rendered:
+
+**`widgetDescription`**
+
+Human-readable summary of what the widget does:
+
+```typescript
+widgetDescription: "Interactive map with real-time location tracking";
+```
+
+**`widgetPrefersBorder`**
+
+UI rendering hint for whether the widget prefers a border:
+
+```typescript
+widgetPrefersBorder: true;
+```
+
+**`widgetCSP`**
+
+Content Security Policy configuration for external resources:
+
+```typescript
+widgetCSP: {
+  connect_domains: ["https://api.mapbox.com"],
+  resource_domains: ["https://cdn.mapbox.com", "https://fonts.googleapis.com"]
+}
+```
+
+- `connect_domains` - URLs allowed for fetch, WebSocket, and other connections (maps to `connect-src`)
+- `resource_domains` - URLs allowed for scripts, images, and fonts (maps to `script-src`, `img-src`, `font-src`)
+
+**`widgetDomain`**
+
+Optional dedicated subdomain for the widget:
+
+```typescript
+widgetDomain: "maps.example.com";
+```
+
+**`widgetState`**
+
+Initial state object passed to the widget:
+
+```typescript
+widgetState: {
+  theme: "dark",
+  zoom: 10,
+  center: { lat: 40.7128, lng: -74.0060 }
+}
+```
+
+## Complete Example
+
+Here's a complete example with all OpenAI metadata options:
+
+```typescript title="src/tools/analytics-dashboard.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "analytics-dashboard",
+  description: "Display analytics dashboard",
+  annotations: {
+    title: "Analytics Dashboard",
+    readOnlyHint: true,
+  },
+  _meta: {
+    openai: {
+      // Tool-specific metadata
+      toolInvocation: {
+        invoking: "Loading dashboard...",
+        invoked: "Dashboard ready!",
+      },
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+
+      // Resource-specific metadata
+      widgetDescription: "Real-time analytics dashboard",
+      widgetPrefersBorder: true,
+      widgetCSP: {
+        connect_domains: [
+          "https://api.analytics.com",
+          "https://data.analytics.com",
+        ],
+        resource_domains: [
+          "https://cdn.analytics.com",
+          "https://fonts.googleapis.com",
+        ],
+      },
+      widgetDomain: "analytics.example.com",
+      widgetState: {
+        theme: "dark",
+        refreshInterval: 30000,
+      },
+    },
+  },
+};
+
+export default async function analyticsDashboard() {
+  // Return HTML for the widget - framework auto-generates the resource
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Analytics Dashboard</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+      </head>
+      <body>
+        <div id="dashboard">
+          <h1>Analytics Dashboard</h1>
+          <!-- Your widget content -->
+        </div>
+        <script src="https://cdn.analytics.com/widget.js"></script>
+      </body>
+    </html>
+  `;
+}
+```
+
+## CSP Configuration
+
+### CSP Directive Mapping
+
+The `widgetCSP` configuration maps to standard Content Security Policy directives:
+
+- `resource_domains` → `script-src`, `img-src`, `font-src`
+- `connect_domains` → `connect-src`
+
+**Example configuration:**
+
+```typescript
+widgetCSP: {
+  connect_domains: ["https://api.mapbox.com"],
+  resource_domains: ["https://cdn.mapbox.com", "https://fonts.googleapis.com"]
+}
+```
+
+**Generated CSP headers:**
+
+```
+script-src 'self' https://cdn.mapbox.com https://fonts.googleapis.com
+img-src 'self' data: https://cdn.mapbox.com https://fonts.googleapis.com
+font-src 'self' https://cdn.mapbox.com https://fonts.googleapis.com
+connect-src 'self' https://api.mapbox.com
+```
+
+## Return Values
+
+Your tool handler can return different types of values depending on your approach:
+
+### React Component (Recommended)
+
+Return a React component - framework renders and serves it:
+
+```typescript
+export default function MyTool() {
+  return (
+    <div>
+      <h1>Hello Widget!</h1>
+      <button onClick={() => alert("Clicked!")}>Click Me</button>
+    </div>
+  );
+}
+```
+
+### HTML String
+
+Return HTML directly - framework auto-generates the resource:
+
+```typescript
+export default async function myTool() {
+  return `
+    <div>
+      <h1>Hello Widget!</h1>
+      <script src="https://cdn.example.com/widget.js"></script>
+    </div>
+  `;
+}
+```
+
+### Metadata Only (Backwards Compatible)
+
+Return just metadata - requires manual resource creation:
+
+```typescript
+export default async function myTool() {
+  return {
+    _meta: metadata._meta,
+  };
+}
+```
+
+### Content with Metadata
+
+Return structured content with metadata:
+
+```typescript
+export default async function myTool() {
+  return {
+    content: [
+      {
+        type: "text",
+        text: "Widget rendered successfully",
+      },
+    ],
+    _meta: metadata._meta,
+  };
+}
+```
+
+## Troubleshooting
+
+### Widget Not Displaying
+
+Ensure you have:
+
+- Set `widgetAccessible: true` in your metadata
+- Returned valid HTML, React component, or metadata from your tool handler
+- Defined `_meta.openai` configuration in your tool metadata
+- Defined CSP domains if loading external resources
