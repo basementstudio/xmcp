@@ -42,23 +42,6 @@ export function getExternals(): Configuration["externals"] {
       }
 
       /**
-       * Externalize React and ReactDOM to prevent multiple copies
-       * This is critical for SSR to work correctly with hooks
-       */
-      if (
-        request === "react" ||
-        request === "react-dom" ||
-        request === "react-dom/server" ||
-        request === "react/jsx-runtime"
-      ) {
-        if (xmcpConfig.experimental?.ssr) {
-          return callback();
-        }
-
-        return callback(null, `commonjs ${request}`);
-      }
-
-      /**
        * Externalize SSR utilities that depend on @swc/core
        * These are loaded at runtime only when SSR is enabled
        */
