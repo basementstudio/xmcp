@@ -70,7 +70,9 @@
     "tsx": "^4.19.4",
     "webpack": "^5.99.7",
     "webpack-node-externals": "^3.0.0",
-    "webpack-virtual-modules": "^0.5.0"
+    "webpack-virtual-modules": "^0.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/content-type": "^1.1.9",
@@ -85,16 +87,6 @@
     "zod": "^3.24.4"
   },
   "peerDependencies": {
-    "react": ">=19.0.0",
-    "react-dom": ">=19.0.0",
     "zod": "^3.24.4"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
   }
 }

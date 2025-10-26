@@ -5,7 +5,6 @@ export function generateHTMLWithSSR(
   serverRenderedHTML: string,
   componentCode: string
 ): string {
-  // we need to replace bare imports with esm CDN imports
   const esmComponentCode = componentCode
     .replace(
       /from\s+["']react\/jsx-runtime["']/g,

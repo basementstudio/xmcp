@@ -69,22 +69,22 @@ export function getExternals(): Configuration["externals"] {
       }
 
       /**
+       * Externalize React and ReactDOM
+       */
+      if (
+        request === "react" ||
+        request === "react-dom" ||
+        request === "react-dom/server" ||
+        request === "react/jsx-runtime"
+      ) {
+        return callback(null, `commonjs ${request}`);
+      }
+
+      /**
        * When using Next.js, we want them to bundle the code for the tool file,
        * so just keep the reference for the import as external
        */
       if (xmcpConfig.experimental?.adapter === "nextjs") {
-        /**
-         * Externalize React and ReactDOM to prevent multiple copies
-         * Next.js provides React at runtime, so we avoid bundling it
-         */
-        if (
-          request === "react" ||
-          request === "react-dom" ||
-          request === "react-dom/server" ||
-          request === "react/jsx-runtime"
-        ) {
-          return callback(null, `commonjs ${request}`);
-        }
         // Bundle imports from the same folder
         if (request.startsWith("./")) {
           return callback();

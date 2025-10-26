@@ -37,6 +37,8 @@ catalog:
   "webpack": "^5.99.7"
   "webpack-node-externals": "^3.0.0"
   "webpack-virtual-modules": "^0.5.0"
+  "react": "^19.0.0"
+  "react-dom": "^19.0.0"
 
   # Development dependencies
   "@types/content-type": "^1.1.9"
