@@ -84,8 +84,6 @@ export function getWebpackConfig(
       rules: [
         {
           test: /\.(ts|tsx)$/,
-          // Exclude SSR files from being parsed - they are externalized
-          exclude: [/node_modules/, /ssr\/transpile\.ts$/, /ssr\/bundler\.ts$/],
           use: {
             loader: "swc-loader",
             options: {
