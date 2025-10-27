@@ -15,15 +15,6 @@ export function getExternals(): Configuration["externals"] {
   const replacedImports = new Set<string>();
 
   return [
-    // Use webpack-node-externals to properly exclude all node_modules
-    // This prevents webpack from trying to bundle native modules like @swc/core
-    nodeExternals({
-      allowlist: [
-        // Bundle .xmcp folder files
-        /\.xmcp/,
-      ],
-    }),
-
     function (data, callback) {
       const { request } = data;
 
