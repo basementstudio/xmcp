@@ -13,6 +13,7 @@ import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta } from "./openai/flatten-meta";
 import fs from "fs";
 import path from "path";
+import { generateHTMLWithSSR } from "./ssr/bundler";
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -60,9 +61,6 @@ export function addResourcesToServer(
                 `Or disable SSR in xmcp.config.ts`
             );
           }
-          const { generateHTMLWithSSR } = dynamicRequire(
-            "xmcp/dist/runtime/utils/ssr/bundler"
-          );
 
           const serverHTML = renderToString(
             createElement(autoResource.handler as any)

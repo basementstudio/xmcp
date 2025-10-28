@@ -86,5 +86,13 @@
   },
   "peerDependencies": {
     "zod": "^3.24.4"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   }
 }

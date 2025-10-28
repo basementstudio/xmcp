@@ -91,7 +91,7 @@ export function addToolsToServer(
       if (!toolSpecificMeta.openai.outputTemplate) {
         toolSpecificMeta.openai.outputTemplate = resourceUri;
       }
-      
+
       const isReact = isReactFile(path);
 
       // Add to the OpenAI resource registry for auto-generation
@@ -108,12 +108,18 @@ export function addToolsToServer(
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
 
-    // Transform the user's handler into an MCP-compatible handler
-    // Pass flattened metadata for OpenAI tools so the transformer can auto-wrap HTML responses
-    const transformedHandler = transformToolHandler(
-      handler,
-      isOpenAITool ? flattenedToolMeta : undefined
-    );
+    let transformedHandler;
+    if (isReactFile(path) && isOpenAITool) {
+      transformedHandler = async () => ({
+        content: [{ type: "text", text: "" }],
+        _meta: flattenedToolMeta,
+      });
+    } else {
+      transformedHandler = transformToolHandler(
+        handler,
+        isOpenAITool ? flattenedToolMeta : undefined
+      );
+    }
 
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
