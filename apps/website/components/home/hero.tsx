@@ -29,10 +29,20 @@ export const HomeHero = () => {
       /> */}
       <Shader />
       <div className="flex items-center justify-center gap-2">
-        <Button variant="primary" asChild>
+        <Button
+          variant="primary"
+          asChild
+          trackIntent="get started"
+          trackLocation="home hero"
+        >
           <Link href="/docs">Get started</Link>
         </Button>
-        <Button variant="secondary" asChild>
+        <Button
+          variant="secondary"
+          asChild
+          trackIntent="deploy to vercel"
+          trackLocation="home hero"
+        >
           <Link
             href="https://vercel.com/new/clone?demo-description=The%20TypeScript%20MCP%20framework&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2FasHTCFA47swQRiCYbWJDl%2F85fc42d9ef2dae4312744a964251f223%2Fimage__7_.png&demo-title=xmcp%20boilerplate&demo-url=https%3A%2F%2Fxmcp-template.vercel.app%2F&from=templates&project-name=xmcp%20boilerplate&project-names=Comma%20separated%20list%20of%20project%20names%2Cto%20match%20the%20root-directories&repository-name=xmcp-boilerplate&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fframework-boilerplates%2Fxmcp&root-directories=List%20of%20directory%20paths%20for%20the%20directories%20to%20clone%20into%20projects&skippable-integrations=1"
             target="_blank"

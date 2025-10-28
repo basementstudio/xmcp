@@ -4,16 +4,22 @@ import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { usePathname } from "next/navigation";
 import { forwardRef } from "react";
+import { track } from "@vercel/analytics";
 
 interface AnimatedLinkProps
   extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   children: React.ReactNode;
   className?: string;
+  trackIntent?: string;
+  trackLocation?: string;
 }
 
 export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
-  ({ href, children, className = "", ...props }, ref) => {
+  (
+    { trackIntent, trackLocation, href, children, className = "", ...props },
+    ref
+  ) => {
     const pathname = usePathname();
     // caveats
     const isActive =
@@ -21,12 +27,23 @@ export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
       (href === "/docs" && pathname.startsWith("/docs")) ||
       (href === "/blog" && pathname.startsWith("/blog"));
 
+    const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+      track("link clicked", {
+        location: trackLocation || pathname || "unknown",
+        intent: trackIntent || "navigation",
+        href: href,
+      });
+
+      props.onClick?.(event);
+    };
+
     return (
       <Link
         href={href}
         ref={ref}
         {...props}
         className={cn("relative group", className)}
+        onClick={handleClick}
       >
         {children}
         <div

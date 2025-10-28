@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createShowcaseSubmission } from "./actions";
 import Image from "next/image";
+import { track } from "@vercel/analytics";
 import { cn } from "../../utils/cn";
 
 interface FormData {
@@ -117,6 +118,11 @@ export function ShowcaseForm() {
 
       if (result.success) {
         setShowSuccessMessage(true);
+
+        track("showcase_submission", {
+          name: formData.name,
+          repositoryUrl: formData.repositoryUrl,
+        });
       } else {
         if (result.errors) {
           setErrors(result.errors);
@@ -302,8 +308,8 @@ export function ShowcaseForm() {
                     errors.logo
                       ? "border border-red-500"
                       : logoPreview
-                        ? "border border-[#333333]"
-                        : "border border-dashed border-[#333333]",
+                      ? "border border-[#333333]"
+                      : "border border-dashed border-[#333333]",
                     showSuccessMessage &&
                       "opacity-50 cursor-not-allowed hover:bg-transparent"
                   )}
