@@ -4,12 +4,19 @@ import { cn } from "../lib/cn";
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
 import { Icons } from "./icons";
 import Link from "next/link";
+import { track } from "@vercel/analytics";
 
 const cache = new Map<string, string>();
 
 export function PageActions({ markdownUrl }: { markdownUrl: string }) {
   const [isLoading, setLoading] = useState(false);
   const [checked, onClick] = useCopyButton(async () => {
+    track("docs action clicked", {
+      action: "copy_markdown",
+      markdownUrl: markdownUrl,
+      location: "docs_page_actions",
+    });
+
     const cached = cache.get(markdownUrl);
     if (cached) return navigator.clipboard.writeText(cached);
 
@@ -111,6 +118,14 @@ export function PageActions({ markdownUrl }: { markdownUrl: string }) {
           className={cn(
             "text-sm py-1 px-0 inline-flex items-center gap-2 text-brand-neutral-100 hover:text-brand-white transition-colors duration-200 bg-transparent hover:bg-transparent [&_svg]:size-3 justify-start border-0"
           )}
+          onClick={() => {
+            track("docs action clicked", {
+              action: item.title.toLowerCase().replace(/\s+/g, "_"),
+              markdownUrl: markdownUrl,
+              location: "docs_page_actions",
+              destination: item.href.toString(),
+            });
+          }}
         >
           {item.icon}
           {item.title}
