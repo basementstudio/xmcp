@@ -2,6 +2,7 @@ import { Configuration } from "webpack";
 import { getXmcpConfig } from "../compiler-context";
 import { builtinModules } from "module";
 import { runtimeFiles } from "./plugins";
+import nodeExternals from "webpack-node-externals";
 
 /**
  * This function will decide is a file is bundled by xmcp compiler or not.
@@ -28,6 +29,17 @@ export function getExternals(): Configuration["externals"] {
         builtinModules.includes(request) ||
         builtinModules.includes(request.replace(/^node:/, ""));
       if (isBuiltinModule) {
+        return callback(null, `commonjs ${request}`);
+      }
+
+      /**
+       * Externalize SSR utilities that depend on @swc/core
+       * These are loaded at runtime only when SSR is enabled
+       */
+      if (
+        request.includes("ssr/transpile") ||
+        request.includes("ssr/bundler")
+      ) {
         return callback(null, `commonjs ${request}`);
       }
 
