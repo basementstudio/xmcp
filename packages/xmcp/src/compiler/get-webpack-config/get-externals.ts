@@ -43,15 +43,6 @@ export function getExternals(): Configuration["externals"] {
         return callback(null, `commonjs ${request}`);
       }
 
-      if (
-        request === "react" ||
-        request === "react-dom" ||
-        request === "react-dom/server" ||
-        request === "react/jsx-runtime"
-      ) {
-        return callback(null, `commonjs ${request}`);
-      }
-
       // Check if request is inside .xmcp folder - if so, bundle it
       if (request.includes(".xmcp")) {
         return callback();

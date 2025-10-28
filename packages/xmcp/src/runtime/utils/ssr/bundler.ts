@@ -18,18 +18,17 @@ export function generateHTMLWithSSR(
     .replace(/from\s+["']react["']/g, 'from "https://esm.sh/react@19"')
     .replace(/export\s+default\s+/g, "const Component = ");
 
-  const hydrationScript = `
-  <!-- Component and hydration code using ESM (official approach for React 19) -->
+  const renderScript = `
+  <!-- Component rendering using ESM (React 19) -->
   <script type="module">
-    import { hydrateRoot } from "https://esm.sh/react-dom@19/client";
+    import { createRoot } from "https://esm.sh/react-dom@19/client";
     import { createElement } from "https://esm.sh/react@19";
 
     ${esmComponentCode}
 
-    // Hydrate the component
     const root = document.getElementById('root');
     if (root) {
-      hydrateRoot(root, createElement(Component));
+      createRoot(root).render(createElement(Component));
     }
   </script>`;
 
@@ -40,7 +39,7 @@ export function generateHTMLWithSSR(
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div id="root">${serverRenderedHTML}</div>${hydrationScript}
+  <div id="root">${serverRenderedHTML}</div>${renderScript}
 </body>
 </html>`;
 }

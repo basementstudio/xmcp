@@ -121,10 +121,10 @@ export function getWebpackConfig(
     },
   };
 
-  // Do not watch the adapter output folder, avoid infinite loop
+  // Do not watch the adapter output folder and dist/client, avoid infinite loop
   if (mode === "development" && !xmcpConfig.experimental?.adapter) {
     config.watchOptions = {
-      ignored: [adapterOutputPath],
+      ignored: [adapterOutputPath, path.join(processFolder, "dist/client")],
     };
   }
 
@@ -163,6 +163,37 @@ export function getWebpackConfig(
       SSR_ENABLED: JSON.stringify(xmcpConfig.experimental?.ssr === true),
     })
   );
+
+  if (xmcpConfig.experimental?.ssr) {
+    const fs = require("fs");
+    const clientBundlesPath = path.join(processFolder, "dist/client");
+
+    config.plugins!.push(
+      new DefinePlugin({
+        INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
+          if (!fs.existsSync(clientBundlesPath)) {
+            return JSON.stringify({});
+          }
+
+          const bundles: Record<string, string> = {};
+          const files = fs.readdirSync(clientBundlesPath);
+
+          for (const file of files) {
+            if (file.endsWith(".bundle.js")) {
+              const toolName = file.replace(".bundle.js", "");
+              const bundleContent = fs.readFileSync(
+                path.join(clientBundlesPath, file),
+                "utf-8"
+              );
+              bundles[toolName] = bundleContent;
+            }
+          }
+
+          return JSON.stringify(bundles);
+        }),
+      })
+    );
+  }
 
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {

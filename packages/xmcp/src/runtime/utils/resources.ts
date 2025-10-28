@@ -15,6 +15,8 @@ import fs from "fs";
 import path from "path";
 import { generateHTMLWithSSR } from "./ssr/bundler";
 
+declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
+
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
   server: McpServer,
@@ -45,34 +47,21 @@ export function addResourcesToServer(
         autoResource.toolPath
       ) {
         try {
-          // Dynamically import SSR dependencies only when needed
-          // Use eval to prevent webpack from analyzing these requires
-          const dynamicRequire = eval("require");
-
-          let renderToString, createElement;
-          try {
-            renderToString = dynamicRequire("react-dom/server").renderToString;
-            createElement = dynamicRequire("react").createElement;
-          } catch (error) {
-            throw new Error(
-              `SSR is enabled but React is not installed.\n` +
-                `Please install React to use SSR:\n` +
-                `  npm install react react-dom\n` +
-                `Or disable SSR in xmcp.config.ts`
-            );
-          }
-
-          const serverHTML = renderToString(
-            createElement(autoResource.handler as any)
-          );
-
+          let clientCode: string | undefined;
           const bundlePath = path.join(
             process.cwd(),
             "dist/client",
             `${autoResource.name}.bundle.js`
           );
 
-          if (!fs.existsSync(bundlePath)) {
+          if (fs.existsSync(bundlePath)) {
+            clientCode = fs.readFileSync(bundlePath, "utf-8");
+          } else {
+            // Fallback: try to get from bundled client bundles (production/Lambda)
+            clientCode = INJECTED_CLIENT_BUNDLES?.[autoResource.name];
+          }
+
+          if (!clientCode) {
             throw new Error(
               `SSR client bundle not found for "${autoResource.name}".\n` +
                 `Expected at: ${bundlePath}\n` +
@@ -80,9 +69,8 @@ export function addResourcesToServer(
             );
           }
 
-          const clientCode = fs.readFileSync(bundlePath, "utf-8");
-
-          const fullHTML = generateHTMLWithSSR(serverHTML, clientCode);
+          // Render empty shell HTML - the client will hydrate with the actual component
+          const fullHTML = generateHTMLWithSSR("", clientCode);
 
           return {
             contents: [
@@ -94,7 +82,7 @@ export function addResourcesToServer(
           };
         } catch (error) {
           console.error(`SSR failed for ${autoResource.name}:`, error);
-          throw error; // Don't fallback, fail clearly with helpful error
+          throw error;
         }
       }
 
