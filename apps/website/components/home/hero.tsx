@@ -43,10 +43,11 @@ export const HomeHero = () => {
       </div>
       <div className="flex flex-col items-center justify-center gap-4.5 py-8">
         <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
-        <div className="flex items-center justify-center gap-4 md:gap-10 flex-wrap">
-          <Logos.Vercel className="max-w-22 h-auto" />
-          <Logos.Localstack className="mt-0.5" />
-          <Logos.Basehub />
+        <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap w-xl">
+          <Logos.Vercel className="max-h-5 w-auto" />
+          <Logos.Nextjs className="max-h-4 w-auto" />
+          <Logos.Localstack className="max-h-6 w-auto" />
+          <Logos.Basehub className="max-h-6 w-auto" />
         </div>
       </div>
     </div>
