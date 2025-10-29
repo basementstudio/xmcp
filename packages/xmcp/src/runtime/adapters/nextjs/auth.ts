@@ -257,11 +257,9 @@ export function resourceMetadataHandler(options: {
  *
  * @returns A handler function that can be exported as OPTIONS in Next.js route handlers
  */
-export function resourceMetadataOptions(): (req: Request) => Response {
-  return () => {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  };
+export function resourceMetadataOptions(req: Request): Response {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
 }
