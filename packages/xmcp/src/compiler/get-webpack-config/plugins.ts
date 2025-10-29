@@ -27,8 +27,8 @@ export class InjectRuntimePlugin {
 const nextJsTypeDefinition = `
 export const xmcpHandler: (req: Request) => Promise<Response>;
 export const withAuth: (handler: (req: Request) => Promise<Response>, authConfig: AuthConfig) => (req: Request) => Promise<Response>;
-export const protectedResourceHandler: ({authServerUrls}: {authServerUrls: string[]}) => (req: Request) => Response;
-export const metadataCorsOptionsRequestHandler: () => Response;
+export const protectedResourceHandler: ({authorizationServers}: {authorizationServers: string[]}) => (req: Request) => Response;
+export const metadataCorsOptionsRequestHandler: () => (req: Request) => Response;
 export const tools: () => Promise<Tool[]>;
 export const toolRegistry: () => Promise<Record<string, ToolRegistryEntry>>;
 export type VerifyToken = (req: Request, bearerToken?: string) => Promise<AuthInfo | undefined>;
@@ -37,9 +37,8 @@ export type Options = {
   requiredScopes?: string[];
   resourceMetadataPath?: string;
 };
-export type AuthConfig = {
+export type AuthConfig = Options & {
   verifyToken: VerifyToken;
-  options?: Options;
 };
 export type AuthInfo = {
   token: string;
@@ -48,6 +47,15 @@ export type AuthInfo = {
   expiresAt?: number;
   resource?: URL;
   extra?: Record<string, unknown>;
+};
+export type OAuthProtectedResourceMetadata = {
+  resource: string;
+  authorization_servers: string[];
+  bearer_methods_supported?: string[];
+  resource_documentation?: string;
+  introspection_endpoint?: string;
+  revocation_endpoint?: string;
+  [key: string]: unknown;
 };
 export type Tool = {
   path: string;
