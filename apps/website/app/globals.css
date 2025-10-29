@@ -169,13 +169,13 @@ html:has(#nd-blog-layout) {
   font-size: 1rem;
 }
 
+.prose > p:first-child {
+  margin-top: 0;
+}
+
 .prose p code,
 .prose li code {
   @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
-}
-
-.prose li code {
-  @apply text-[0.9rem] px-[1px] py-[2px];
 }
 
 .prose blockquote {
