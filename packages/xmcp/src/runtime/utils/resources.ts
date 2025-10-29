@@ -48,23 +48,29 @@ export function addResourcesToServer(
       ) {
         try {
           let clientCode: string | undefined;
-          const bundlePath = path.join(
-            process.cwd(),
-            "dist/client",
-            `${autoResource.name}.bundle.js`
-          );
 
-          if (fs.existsSync(bundlePath)) {
-            clientCode = fs.readFileSync(bundlePath, "utf-8");
-          } else {
-            // Fallback: try to get from bundled client bundles (production/Lambda)
-            clientCode = INJECTED_CLIENT_BUNDLES?.[autoResource.name];
+          // Priority 1: Use injected bundles (reliable in Lambda/serverless)
+          clientCode = INJECTED_CLIENT_BUNDLES?.[autoResource.name];
+
+          // Priority 2: Fallback to filesystem (for local development)
+          if (!clientCode) {
+            const bundlePath = path.join(
+              process.cwd(),
+              "dist/client",
+              `${autoResource.name}.bundle.js`
+            );
+
+            if (fs.existsSync(bundlePath)) {
+              clientCode = fs.readFileSync(bundlePath, "utf-8");
+            }
           }
 
           if (!clientCode) {
             throw new Error(
               `SSR client bundle not found for "${autoResource.name}".\n` +
-                `Expected at: ${bundlePath}\n` +
+                `Expected to find it either:\n` +
+                `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
+                `  2. On filesystem at: ${path.join(process.cwd(), "dist/client", `${autoResource.name}.bundle.js`)}\n` +
                 `Make sure you ran "xmcp build" with SSR enabled before starting the server.`
             );
           }

@@ -166,6 +166,9 @@ export function getWebpackConfig(
       new DefinePlugin({
         INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
           if (!fs.existsSync(clientBundlesPath)) {
+            console.warn(
+              `⚠️  Client bundles directory not found at: ${clientBundlesPath}`
+            );
             return JSON.stringify({});
           }
 
@@ -181,6 +184,13 @@ export function getWebpackConfig(
               );
               bundles[toolName] = bundleContent;
             }
+          }
+
+          const bundleCount = Object.keys(bundles).length;
+          if (bundleCount > 0) {
+            console.log(
+              `✓ Injected ${bundleCount} SSR client bundle(s): ${Object.keys(bundles).join(", ")}`
+            );
           }
 
           return JSON.stringify(bundles);
