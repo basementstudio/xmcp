@@ -1,6 +1,5 @@
 import type { OutgoingHttpHeaders, ServerResponse } from "node:http";
 import { EventEmitter } from "node:events";
-import { normalizeHeaders } from "./utils/headers";
 
 /**
  * Node.js ServerResponse to Web Response API.
@@ -73,7 +72,7 @@ export function nodeToWebAdapter(
         resolve(
           new Response(body, {
             status: statusCode,
-            headers: normalizeHeaders(headers),
+            headers: headers as Record<string, string>,
           })
         );
 
