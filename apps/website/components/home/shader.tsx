@@ -27,7 +27,7 @@ export default function Shader() {
   }, []);
 
   return (
-    <main
+    <div
       className={cn(
         "w-full aspect-square max-h-[250px] sm:max-h-[350px] md:max-h-[450px] lg:max-h-[500px] relative"
       )}
@@ -48,6 +48,6 @@ export default function Shader() {
         <color attach="background" args={["#000000"]} />
         <ParticlesCursorAnimation onLoaded={() => setIsLoaded(true)} />
       </Canvas>
-    </main>
+    </div>
   );
 }

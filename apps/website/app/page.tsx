@@ -19,11 +19,11 @@ export default async function Home() {
   const version = await getLatestVersion();
 
   return (
-    <div className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <HomeHero version={version} />
       <HomeFeatures />
       <HomeSteps />
       <HomeBlog />
-    </div>
+    </main>
   );
 }

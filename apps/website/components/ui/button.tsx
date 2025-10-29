@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
+import { track } from "@vercel/analytics";
 
 const variants = {
   primary:
@@ -31,13 +34,39 @@ interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  trackIntent?: string;
+  trackLocation?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, color, size, asChild = false, ...props }, ref) => {
+  (
+    {
+      trackIntent,
+      trackLocation,
+      className,
+      variant,
+      color,
+      size,
+      asChild = false,
+      onClick,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button";
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+      track("button clicked", {
+        location: trackLocation || window?.location?.pathname || "unknown",
+        intent: trackIntent || "unknown",
+      });
+
+      onClick?.(event);
+    };
+
     return (
       <Comp
+        onClick={handleClick}
         className={cn(buttonVariants({ variant, color, size, className }))}
         ref={ref}
         {...props}
