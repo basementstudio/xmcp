@@ -5,8 +5,7 @@ import { Logos } from "@/components/home/hero/logos";
 import { Tag } from "@/components/ui/tag";
 import Shader from "@/components/home/hero/shader";
 
-export const HomeHero = ({ version }: { version: string }) => {
- 
+export const HomeHero = ({ version }: { version?: string }) => {
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
