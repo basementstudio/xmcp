@@ -1,6 +1,11 @@
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 /**
+ * Standard OAuth Protected Resource Metadata path (RFC 9728)
+ */
+const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
+
+/**
  * OAuth error codes (MCP-specific)
  */
 const AUTH_ERROR_CODES = {
@@ -48,14 +53,10 @@ export type VerifyToken = (
   | undefined
 >;
 
-export type Options = {
+export type AuthConfig = {
+  verifyToken: VerifyToken;
   required?: boolean;
   requiredScopes?: string[];
-  resourceMetadataPath?: string;
-};
-
-export type AuthConfig = Options & {
-  verifyToken: VerifyToken;
 };
 
 // Extend Request interface to include auth property
@@ -82,11 +83,10 @@ function createAuthErrorResponse(
   errorCode: string,
   errorDescription: string,
   httpStatus: number,
-  rpcCode: number,
-  resourceMetadataPath: string
+  rpcCode: number
 ): Response {
   const origin = new URL(req.url).origin;
-  const resourceMetadataUrl = `${origin}${resourceMetadataPath}`;
+  const resourceMetadataUrl = `${origin}${RESOURCE_METADATA_PATH}`;
 
   return new Response(
     JSON.stringify({
@@ -136,12 +136,7 @@ export function withAuth(
   config: AuthConfig
 ): (request: Request) => Promise<Response> {
   return async (req: Request) => {
-    const {
-      verifyToken,
-      required = false,
-      requiredScopes,
-      resourceMetadataPath = "/.well-known/oauth-protected-resource",
-    } = config;
+    const { verifyToken, required = false, requiredScopes } = config;
 
     // Extract bearer token
     const bearerToken = extractBearerToken(req);
@@ -157,8 +152,7 @@ export function withAuth(
         "invalid_token",
         "Invalid token",
         401,
-        AUTH_ERROR_CODES.INVALID_TOKEN,
-        resourceMetadataPath
+        AUTH_ERROR_CODES.INVALID_TOKEN
       );
     }
 
@@ -169,8 +163,7 @@ export function withAuth(
         "invalid_token",
         "No authorization provided",
         401,
-        AUTH_ERROR_CODES.INVALID_TOKEN,
-        resourceMetadataPath
+        AUTH_ERROR_CODES.INVALID_TOKEN
       );
     }
 
@@ -186,8 +179,7 @@ export function withAuth(
         "invalid_token",
         "Token has expired",
         401,
-        AUTH_ERROR_CODES.INVALID_TOKEN,
-        resourceMetadataPath
+        AUTH_ERROR_CODES.INVALID_TOKEN
       );
     }
 
@@ -201,8 +193,7 @@ export function withAuth(
         "insufficient_scope",
         "Insufficient scope",
         403,
-        AUTH_ERROR_CODES.INSUFFICIENT_SCOPE,
-        resourceMetadataPath
+        AUTH_ERROR_CODES.INSUFFICIENT_SCOPE
       );
     }
 
@@ -240,7 +231,7 @@ function extractResourceUrl(req: Request): string {
  * @param options.authorizationServers - Array of issuer URLs of the OAuth 2.0 Authorization Servers
  * @returns A handler function that can be exported as GET in Next.js route handlers
  */
-export function protectedResourceHandler(options: {
+export function resourceMetadataHandler(options: {
   authorizationServers: string[];
 }): (req: Request) => Response {
   return (req: Request) => {
@@ -266,9 +257,7 @@ export function protectedResourceHandler(options: {
  *
  * @returns A handler function that can be exported as OPTIONS in Next.js route handlers
  */
-export function metadataCorsOptionsRequestHandler(): (
-  req: Request
-) => Response {
+export function resourceMetadataOptions(): (req: Request) => Response {
   return () => {
     return new Response(null, {
       status: 200,
