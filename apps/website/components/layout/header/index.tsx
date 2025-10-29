@@ -8,10 +8,10 @@ import { ProgressiveBlurBackground } from "./progressive-blur-bg";
 
 export const Header = () => {
   return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-[100] flex justify-center items-center">
+    <header className="sticky translate-0 top-0 right-0 left-0 w-full mx-auto bg-transparent z-[100] flex justify-center items-center">
       <div
         className={
-          "w-full flex justify-center items-center z-[100] px-4 py-2 gap-8 relative"
+          "w-full flex justify-center items-center z-[100] px-4 py-2 gap-8 relative animate-fade-in"
         }
       >
         <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">

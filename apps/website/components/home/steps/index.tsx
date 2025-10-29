@@ -8,7 +8,9 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import ayuDark from "@shikijs/themes/ayu-dark";
+import { AnimatedHeading } from "@/components/ui/animated-heading";
 import { CopyButton } from "@/components/ui/copy-button";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
@@ -102,7 +104,7 @@ Your MCP server is live!`,
   },
 ];
 
-const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
+const Terminal = ({ step }: { step: typeof steps[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
@@ -167,20 +169,19 @@ const StepContent = ({ stepId }: { stepId: number }) => {
   const currentAnimationRef = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
+    const initialStepId = stepId;
     steps.forEach((step) => {
       const terminal = terminalRefs.current[step.id];
       if (!terminal) return;
 
-      const isActive = step.id === stepId;
-
-      if (isActive) {
+      if (step.id === initialStepId) {
         gsap.set(terminal, {
-          y: 0,
-          x: 0,
-          scale: 1,
-          opacity: 1,
-          zIndex: 10,
           display: "flex",
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          zIndex: 10,
           transformOrigin: "center center",
         });
       } else {
@@ -190,7 +191,8 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         });
       }
     });
-  }, [stepId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (stepId === previousStepRef.current) return;
@@ -219,6 +221,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
     previousStepRef.current = stepId;
 
     if (!previousTerminal) {
+      // ensure current terminal is properly set without immediate visibility
       gsap.set(currentTerminal, {
         display: "flex",
         y: 0,
@@ -226,12 +229,17 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         scale: 1,
         opacity: 1,
         zIndex: 10,
+        transformOrigin: "center center",
       });
 
+      // hide all other terminals
       steps.forEach((step) => {
         const terminal = terminalRefs.current[step.id];
         if (terminal && step.id !== stepId) {
-          gsap.set(terminal, { display: "none" });
+          gsap.set(terminal, {
+            display: "none",
+            opacity: 0,
+          });
         }
       });
 
@@ -260,10 +268,15 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 
     currentAnimationRef.current = tl;
 
-    // Set up the current terminal for animation
+    // Set up the current terminal for animation - start hidden
     gsap.set(currentTerminal, {
       display: "flex",
       zIndex: 10,
+      opacity: 0,
+      y: 60,
+      filter: "blur(8px)",
+      scale: 1,
+      transformOrigin: "center center",
     });
 
     tl.to(
@@ -275,16 +288,12 @@ const StepContent = ({ stepId }: { stepId: number }) => {
         ease: "power2.out",
       },
       0
-    ).fromTo(
+    ).to(
       currentTerminal,
-      {
-        y: 60,
-        scale: 1,
-        opacity: 0,
-      },
       {
         y: 0,
         opacity: 1,
+        filter: "blur(0px)",
         duration: 0.5,
         ease: "power2.out",
       },
@@ -316,8 +325,6 @@ const StepContent = ({ stepId }: { stepId: number }) => {
           className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
           style={{
             transformOrigin: "center center",
-            display: step.id === stepId ? "flex" : "none",
-            opacity: step.id === stepId ? 1 : 0,
           }}
         >
           <Terminal step={step} />
@@ -330,6 +337,7 @@ const StepContent = ({ stepId }: { stepId: number }) => {
 export const HomeSteps = () => {
   const [selectedStep, setSelectedStep] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isInView, setIsInView] = useState(false);
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
   const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -345,13 +353,16 @@ export const HomeSteps = () => {
       clearTimeout(resumeTimerRef.current);
     }
 
-    resumeTimerRef.current = setTimeout(() => {
-      setIsAutoPlaying(true);
-    }, 5000);
+    // Only resume auto play if component is in view
+    if (isInView) {
+      resumeTimerRef.current = setTimeout(() => {
+        setIsAutoPlaying(true);
+      }, 5000);
+    }
   };
 
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !isInView) return;
 
     autoPlayTimerRef.current = setInterval(() => {
       setSelectedStep((current) => {
@@ -366,7 +377,7 @@ export const HomeSteps = () => {
         autoPlayTimerRef.current = null;
       }
     };
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, isInView]);
 
   useEffect(() => {
     return () => {
@@ -379,13 +390,51 @@ export const HomeSteps = () => {
     };
   }, []);
 
+  // auto play when component comes back into view
+  useEffect(() => {
+    if (isInView && !isAutoPlaying) {
+      if (resumeTimerRef.current) {
+        setIsAutoPlaying(true);
+      }
+    }
+  }, [isInView, isAutoPlaying]);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const fadeInRef = useMemo(() => [containerRef], []);
+
+  // pause auto advance when not visible
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        setIsInView(entry.isIntersecting);
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      }
+    );
+
+    observer.observe(container);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useFadeIn({
+    refs: fadeInRef,
+    start: "top 75%",
+  });
+
   return (
     <div className="w-full py-8 md:py-16 col-span-12 relative">
-      <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
-
       <div className="md:hidden flex flex-col gap-12 md:gap-8">
         <div className="flex flex-col gap-2 md:px-4">
-          <h2 className="heading-2 text-gradient">
+          <h2 className="heading-2 text-gradient !-mb-4">
             From zero to prod in seconds
           </h2>
         </div>
@@ -404,10 +453,20 @@ export const HomeSteps = () => {
         ))}
       </div>
 
-      <div className="hidden md:flex gap-12 flex-1">
+      <div
+        className="hidden md:flex gap-12 flex-1 invisible"
+        ref={containerRef}
+      >
+        <div className="hidden md:block absolute left-0 -bottom-10 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent h-[130%]" />
         <div className="flex-1 flex flex-col relative">
           <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
-            <h2 className="text-4xl">From zero to prod in seconds</h2>
+            <AnimatedHeading
+              effectDuration={2}
+              fromY={0}
+              className="text-4xl pb-1 -mb-1"
+            >
+              From zero to prod in seconds
+            </AnimatedHeading>
 
             <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-[#333333] to-transparent" />
           </div>

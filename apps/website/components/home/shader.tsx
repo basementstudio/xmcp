@@ -1,4 +1,5 @@
 "use client";
+
 import { Canvas } from "@react-three/fiber";
 import ParticlesCursorAnimation from "./particles-cursor-animation";
 import { useEffect, useState } from "react";
@@ -6,6 +7,8 @@ import { cn } from "@/lib/utils";
 
 export default function Shader() {
   const [isUnmounting, setIsUnmounting] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
     const handleUnmount = () => setIsUnmounting(true);
     const handleVisibilityChange = () => {
@@ -36,12 +39,14 @@ export default function Shader() {
           alpha: false,
           preserveDrawingBuffer: true,
         }}
-        style={{
-          opacity: isUnmounting ? 0 : 1,
-        }}
+        className={cn(
+          isLoaded && !isUnmounting
+            ? "opacity-100 transition-opacity duration-600 ease-in-out"
+            : "opacity-0"
+        )}
       >
         <color attach="background" args={["#000000"]} />
-        <ParticlesCursorAnimation />
+        <ParticlesCursorAnimation onLoaded={() => setIsLoaded(true)} />
       </Canvas>
     </div>
   );

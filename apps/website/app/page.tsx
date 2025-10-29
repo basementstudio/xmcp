@@ -3,6 +3,7 @@ import { HomeHero } from "@/components/home/hero";
 import { HomeFeatures } from "@/components/home/features";
 import { HomeSteps } from "@/components/home/steps";
 import { HomeBlog } from "@/components/home/blog";
+import { getLatestVersion } from "@/lib/get-version";
 
 export const dynamic = "force-static";
 
@@ -15,9 +16,11 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  const version = await getLatestVersion();
+
   return (
     <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
-      <HomeHero />
+      <HomeHero version={version} />
       <HomeFeatures />
       <HomeSteps />
       <HomeBlog />
