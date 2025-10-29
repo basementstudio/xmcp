@@ -58,10 +58,9 @@ export async function xmcpHandler(request: Request): Promise<Response> {
 // Re-export auth types and handlers
 export {
   withAuth,
-  protectedResourceHandler,
-  metadataCorsOptionsRequestHandler,
+  resourceMetadataHandler,
+  resourceMetadataOptions,
   type VerifyToken,
-  type Options,
   type AuthConfig,
   type OAuthProtectedResourceMetadata,
 } from "./auth";

@@ -27,18 +27,15 @@ export class InjectRuntimePlugin {
 const nextJsTypeDefinition = `
 export const xmcpHandler: (req: Request) => Promise<Response>;
 export const withAuth: (handler: (req: Request) => Promise<Response>, authConfig: AuthConfig) => (req: Request) => Promise<Response>;
-export const protectedResourceHandler: ({authorizationServers}: {authorizationServers: string[]}) => (req: Request) => Response;
-export const metadataCorsOptionsRequestHandler: () => (req: Request) => Response;
+export const resourceMetadataHandler: ({authorizationServers}: {authorizationServers: string[]}) => (req: Request) => Response;
+export const resourceMetadataOptions: () => (req: Request) => Response;
 export const tools: () => Promise<Tool[]>;
 export const toolRegistry: () => Promise<Record<string, ToolRegistryEntry>>;
 export type VerifyToken = (req: Request, bearerToken?: string) => Promise<AuthInfo | undefined>;
-export type Options = {
+export type AuthConfig = {
+  verifyToken: VerifyToken;
   required?: boolean;
   requiredScopes?: string[];
-  resourceMetadataPath?: string;
-};
-export type AuthConfig = Options & {
-  verifyToken: VerifyToken;
 };
 export type AuthInfo = {
   token: string;
