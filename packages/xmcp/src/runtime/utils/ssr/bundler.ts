@@ -1,10 +1,7 @@
 /**
  * Generate full HTML with server-rendered content and hydration
  */
-export function generateHTMLWithSSR(
-  serverRenderedHTML: string,
-  componentCode: string
-): string {
+export function generateHTML(componentCode: string): string {
   // we need to replace bare imports with esm CDN imports
   const esmComponentCode = componentCode
     .replace(
@@ -39,7 +36,8 @@ export function generateHTMLWithSSR(
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div id="root">${serverRenderedHTML}</div>${renderScript}
+  <div id="root"></div>
+  ${renderScript}
 </body>
 </html>`;
 }

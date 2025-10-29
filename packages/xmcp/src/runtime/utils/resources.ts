@@ -13,7 +13,7 @@ import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta } from "./openai/flatten-meta";
 import fs from "fs";
 import path from "path";
-import { generateHTMLWithSSR } from "./ssr/bundler";
+import { generateHTML } from "./ssr/bundler";
 
 declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
 
@@ -70,7 +70,7 @@ export function addResourcesToServer(
           }
 
           // Render empty shell HTML - the client will hydrate with the actual component
-          const fullHTML = generateHTMLWithSSR("", clientCode);
+          const fullHTML = generateHTML(clientCode);
 
           return {
             contents: [
