@@ -39,7 +39,7 @@ export async function xmcpHandler(request: Request): Promise<Response> {
         method: request.method,
         url: request.url,
         headers: Object.fromEntries(request.headers.entries()),
-        auth: (request as Request & { auth?: AuthInfo }).auth,
+        auth: request.auth,
       });
 
       // Handle request through transport
@@ -55,49 +55,13 @@ export async function xmcpHandler(request: Request): Promise<Response> {
   });
 }
 
-// Re-export types for backward compatibility
-// Note: Auth functionality removed - use middleware or wrap handler manually
-export type VerifyToken = (
-  req: Request,
-  bearerToken?: string
-) => Promise<
-  | {
-      token: string;
-      clientId: string;
-      scopes: string[];
-      expiresAt?: number;
-      resource?: URL;
-      extra?: Record<string, unknown>;
-    }
-  | undefined
->;
-
-export type Options = {
-  required?: boolean;
-  requiredScopes?: string[];
-  resourceMetadataPath?: string;
-};
-
-export type AuthConfig = Options & {
-  verifyToken: VerifyToken;
-};
-
-// Stub implementations - users should implement auth via middleware
-export function withAuth(
-  handler: (request: Request) => Promise<Response>,
-  _config: AuthConfig
-): (request: Request) => Promise<Response> {
-  // Auth should be handled via Next.js middleware
-  // Return handler as-is for now
-  return handler;
-}
-
-export function protectedResourceHandler(_options: {
-  authServerUrls: string[];
-}): (req: Request) => Response {
-  return () => new Response("Not implemented", { status: 501 });
-}
-
-export function metadataCorsOptionsRequestHandler(): Response {
-  return new Response("Not implemented", { status: 501 });
-}
+// Re-export auth types and handlers
+export {
+  withAuth,
+  protectedResourceHandler,
+  metadataCorsOptionsRequestHandler,
+  type VerifyToken,
+  type Options,
+  type AuthConfig,
+  type OAuthProtectedResourceMetadata,
+} from "./auth";
