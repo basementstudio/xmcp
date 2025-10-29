@@ -108,12 +108,10 @@ export function getResolvedTemplateConfig(
 }
 
 export function getResolvedExperimentalConfig(userConfig: any): {
-  ssr: boolean;
   adapter: string | undefined;
 } {
   const experimental = userConfig?.experimental;
   return {
-    ssr: experimental?.ssr ?? false,
     adapter: experimental?.adapter,
   };
 }

@@ -163,20 +163,24 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     createFolder(runtimeFolderPath);
 
     // Build client bundles BEFORE webpack runs (so they can be injected)
-    if (xmcpConfig.experimental?.ssr === true) {
+    const reactToolPaths = Array.from(toolPaths).filter((toolPath) =>
+      toolPath.endsWith(".tsx")
+    );
+
+    if (reactToolPaths.length > 0) {
       const clientBundles = new Map<string, string>();
 
-      for (const path of toolPaths) {
-        if (path.endsWith(".tsx")) {
-          const toolName = pathToToolName(path);
-          const bundlePath = `dist/client/${toolName}.bundle.js`;
+      for (const reactToolPath of reactToolPaths) {
+        const toolName = pathToToolName(reactToolPath);
+        const bundlePath = `dist/client/${toolName}.bundle.js`;
 
-          await transpileClientComponent(path, toolName, "dist/client");
-          clientBundles.set(toolName, bundlePath);
-        }
+        await transpileClientComponent(reactToolPath, toolName, "dist/client");
+        clientBundles.set(toolName, bundlePath);
       }
 
       compilerContext.setContext({ clientBundles });
+    } else {
+      compilerContext.setContext({ clientBundles: undefined });
     }
 
     generateCode();
