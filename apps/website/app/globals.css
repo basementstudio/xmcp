@@ -214,7 +214,7 @@ html:has(#nd-blog-layout) {
   @apply border-white/20;
 }
 
-.prose > :first-child {
+.prose> :first-child {
   /* Override removing top margin, causing layout shift */
   /* margin-top: 1.25em !important; */
   /* margin-bottom: 1.25em !important; */
@@ -306,15 +306,11 @@ input[type="email"] {
 }
 
 .text-gradient {
-  background: var(
-    --80-100-80,
-    linear-gradient(
-      270deg,
-      rgba(247, 247, 247, 0.5) 0%,
-      #f7f7f7 50%,
-      rgba(247, 247, 247, 0.5) 100%
-    )
-  );
+  background: var(--80-100-80,
+      linear-gradient(270deg,
+        rgba(247, 247, 247, 0.5) 0%,
+        #f7f7f7 50%,
+        rgba(247, 247, 247, 0.5) 100%));
   background-clip: text;
   background-size: 200% 100%;
   background-position: 50% 0%;
@@ -331,4 +327,20 @@ input[type="email"] {
     padding-bottom: 0.22rem;
     margin-bottom: -0.22rem;
   }
+}
+
+/* anims */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn 0.8s ease-out forwards;
 }
