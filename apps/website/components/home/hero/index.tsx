@@ -52,7 +52,10 @@ export const HomeHero = ({ version }: { version: string }) => {
         The TypeScript framework for building & shipping MCP servers
       </AnimatedHeading>
       <Shader />
-      <div className="flex items-center justify-center gap-2" ref={buttonsRef}>
+      <div
+        className="flex items-center justify-center gap-2 invisible"
+        ref={buttonsRef}
+      >
         <Button
           variant="primary"
           asChild
