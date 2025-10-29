@@ -5,7 +5,7 @@ import { Tag } from "@/components/ui/tag";
 import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { useRef } from "react";
 
-export function ClientVersionTag({
+export function VersionTag({
   version,
   tag,
 }: {

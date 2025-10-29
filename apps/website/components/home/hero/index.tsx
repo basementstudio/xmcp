@@ -1,16 +1,30 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "../../ui/button";
 import { Icons } from "../../icons";
 import { Logos } from "../logos";
 import Shader from "../shader";
 import { AnimatedHeading } from "../../ui/animated-heading";
-import { VERSION } from "@/lib/get-version";
-import { ClientVersionTag } from "./client-tag";
+import { VersionTag } from "./version-tag";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { useRef } from "react";
 
-export const HomeHero = () => {
+export const HomeHero = ({ version }: { version: string }) => {
+  const buttonsRef = useRef<HTMLDivElement>(null);
+  const logosRef = useRef<HTMLDivElement>(null);
+
+  useFadeIn({
+    refs: [buttonsRef, logosRef],
+    start: "top 90%",
+    duration: 0.6,
+    stagger: 0.2,
+    yOffset: 16,
+  });
+
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
-      <ClientVersionTag version={VERSION} tag="Latest Version" />
+      <VersionTag version={version} tag="Latest Version" />
       <AnimatedHeading
         className="display text-center text-balance z-10"
         masked
@@ -19,7 +33,10 @@ export const HomeHero = () => {
         The TypeScript framework for building & shipping MCP servers
       </AnimatedHeading>
       <Shader />
-      <div className="flex items-center justify-center gap-2">
+      <div
+        className="flex items-center justify-center gap-2 invisible"
+        ref={buttonsRef}
+      >
         <Button variant="primary" asChild>
           <Link href="/docs">Get started</Link>
         </Button>
@@ -32,7 +49,10 @@ export const HomeHero = () => {
           </Link>
         </Button>
       </div>
-      <div className="flex flex-col items-center justify-center gap-4.5 py-8">
+      <div
+        className="flex flex-col items-center justify-center gap-4.5 py-8 invisible"
+        ref={logosRef}
+      >
         <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
         <div className="flex items-center justify-center gap-4 md:gap-10 flex-wrap">
           <Logos.Vercel className="max-w-22 h-auto" />
