@@ -30,7 +30,6 @@ const options = {
   verifyToken,
   required: true,
   requiredScopes: ["read:messages"],
-  resourceMetadataPath: "/.well-known/oauth-protected-resource",
 };
 
 const handler = withAuth(xmcpHandler, options);

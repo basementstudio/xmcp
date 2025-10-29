@@ -1,11 +1,11 @@
 import {
-  protectedResourceHandler,
-  metadataCorsOptionsRequestHandler,
+  resourceMetadataHandler,
+  resourceMetadataOptions,
 } from "@xmcp/adapter";
 
-const handler = protectedResourceHandler({
+const handler = resourceMetadataHandler({
   // Specify the Issuer URL of the associated Authorization Server
-  authServerUrls: ["https://auth-server.com"],
+  authorizationServers: ["https://auth-server.com"],
 });
 
-export { handler as GET, metadataCorsOptionsRequestHandler as OPTIONS };
+export { handler as GET, resourceMetadataOptions as OPTIONS };
