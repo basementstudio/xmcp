@@ -12,6 +12,6 @@ export async function getLatestVersion(): Promise<string> {
     return data.version;
   } catch (error) {
     console.error("Failed to fetch latest version:", error);
-    return "1.0.0";
+    return "";
   }
 }
