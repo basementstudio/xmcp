@@ -6,13 +6,20 @@ import { Icons } from "../../icons";
 import { Logos } from "../logos";
 import Shader from "../shader";
 import { AnimatedHeading } from "../../ui/animated-heading";
-import { VersionTag } from "./version-tag";
 import { useFadeIn } from "@/lib/anim/use-fade-in";
 import { useRef } from "react";
+import { Tag } from "@/components/ui/tag";
 
 export const HomeHero = ({ version }: { version: string }) => {
+  const tagRef = useRef<HTMLAnchorElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
   const logosRef = useRef<HTMLDivElement>(null);
+
+  useFadeIn({
+    refs: [tagRef],
+    delay: 0.2,
+    yOffset: 0,
+  });
 
   useFadeIn({
     refs: [buttonsRef, logosRef],
@@ -24,7 +31,19 @@ export const HomeHero = ({ version }: { version: string }) => {
 
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
-      <VersionTag version={version} tag="Latest Version" />
+      <Link
+        ref={tagRef}
+        className="flex items-center justify-center gap-2 z-10 text-xs group invisible"
+        href="https://npmjs.com/package/xmcp"
+        target="_blank"
+      >
+        {version ? `v${version}` : ""}
+        <Tag
+          animate
+          text="Latest Version"
+          className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
+        />
+      </Link>
       <AnimatedHeading
         className="display text-center text-balance z-10"
         masked
