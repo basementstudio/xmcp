@@ -63,7 +63,6 @@
     "glob": "^11.0.2",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mcp-handler": "^1.0.2",
     "memfs": "^4.17.2",
     "raw-body": "^3.0.0",
     "swc-loader": "^0.2.6",
