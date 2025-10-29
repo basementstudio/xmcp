@@ -90,21 +90,25 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
-export function injectExperimentalVariables(userConfig: any) {
+export function injectSSRVariables(userConfig: any) {
   const experimentalConfig = getResolvedExperimentalConfig(userConfig);
-
-  if (!experimentalConfig) return {};
 
   return {
     SSR_ENABLED: JSON.stringify(experimentalConfig.ssr),
-    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter),
-    OAUTH_CONFIG: JSON.stringify(experimentalConfig.oauth),
   };
 }
 
-export type ExperimentalVariables = ReturnType<
-  typeof injectExperimentalVariables
->;
+export type SSRVariables = ReturnType<typeof injectSSRVariables>;
+
+export function injectAdapterVariables(userConfig: any) {
+  const experimentalConfig = getResolvedExperimentalConfig(userConfig);
+
+  return {
+    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter ?? null),
+  };
+}
+
+export type AdapterVariables = ReturnType<typeof injectAdapterVariables>;
 
 export type InjectedVariables =
   | HttpVariables
@@ -113,4 +117,5 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
-  | ExperimentalVariables;
+  | SSRVariables
+  | AdapterVariables;
