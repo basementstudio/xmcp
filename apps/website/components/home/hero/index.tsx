@@ -1,34 +1,61 @@
-import Link from "next/link";
-import { Button } from "../ui/button";
-import { Icons } from "../icons";
-import { Logos } from "./logos";
-import { Tag } from "../ui/tag";
-import Shader from "./shader";
+"use client";
 
-export const HomeHero = () => {
+import Link from "next/link";
+import { Button } from "../../ui/button";
+import { Icons } from "../../icons";
+import { Logos } from "../logos";
+import Shader from "../shader";
+import { AnimatedHeading } from "../../ui/animated-heading";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { useRef } from "react";
+import { Tag } from "@/components/ui/tag";
+
+export const HomeHero = ({ version }: { version: string }) => {
+  const tagRef = useRef<HTMLAnchorElement>(null);
+  const buttonsRef = useRef<HTMLDivElement>(null);
+  const logosRef = useRef<HTMLDivElement>(null);
+
+  useFadeIn({
+    refs: [tagRef],
+    delay: 0.2,
+    yOffset: 0,
+  });
+
+  useFadeIn({
+    refs: [buttonsRef, logosRef],
+    start: "top 90%",
+    duration: 0.6,
+    stagger: 0.2,
+    yOffset: 16,
+  });
+
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
-        className="flex items-center justify-center gap-2 z-10 text-xs group"
+        ref={tagRef}
+        className="flex items-center justify-center gap-2 z-10 text-xs group invisible"
         href="https://npmjs.com/package/xmcp"
         target="_blank"
       >
-        v0.3.2
+        {version ? `v${version}` : ""}
         <Tag
+          animate
           text="Latest Version"
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
         />
       </Link>
-      <h1 className="display text-center text-balance z-10 text-gradient">
+      <AnimatedHeading
+        className="display text-center text-balance z-10"
+        masked
+        effectDuration={4}
+      >
         The TypeScript framework for building & shipping MCP servers
-      </h1>
-      {/* <Image
-        src={HeroBg}
-        alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
-        className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
-      /> */}
+      </AnimatedHeading>
       <Shader />
-      <div className="flex items-center justify-center gap-2">
+      <div
+        className="flex items-center justify-center gap-2 invisible"
+        ref={buttonsRef}
+      >
         <Button
           variant="primary"
           asChild
@@ -51,7 +78,10 @@ export const HomeHero = () => {
           </Link>
         </Button>
       </div>
-      <div className="flex flex-col items-center justify-center gap-4.5 py-8">
+      <div
+        className="flex flex-col items-center justify-center gap-4.5 py-8 invisible"
+        ref={logosRef}
+      >
         <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
         <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap w-xl">
           <Logos.Vercel className="max-h-5 w-auto" />

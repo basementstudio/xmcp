@@ -10,6 +10,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { AskAIProvider } from "@/components/ai/ask-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,31 +81,43 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <meta name="theme-color" content="#000000" />
+        <noscript>
+          <style>
+            {`
+          body * { 
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+        `}
+          </style>
+        </noscript>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
-        <RootProvider
-          search={{
-            SearchDialog: DefaultSearchDialog,
-            options: {
-              links: [
-                ["Getting Started", "/docs/getting-started/introduction"],
-                ["Configuration", "/docs/configuration/custom-directories"],
-                ["Core Concepts", "/docs/core-concepts/tools"],
-                ["Authentication", "/docs/authentication/api-key"],
-                ["Integrations", "/docs/integrations/nextjs"],
-                ["Deployment", "/docs/deployment/vercel"],
-              ],
-            },
-          }}
-        >
-          <Header />
-          {children}
-          <Prefooter />
-          <Footer />
-          <Toaster />
-        </RootProvider>
+        <AskAIProvider>
+          <RootProvider
+            search={{
+              SearchDialog: DefaultSearchDialog,
+              options: {
+                links: [
+                  ["Getting Started", "/docs/getting-started/introduction"],
+                  ["Configuration", "/docs/configuration/custom-directories"],
+                  ["Core Concepts", "/docs/core-concepts/tools"],
+                  ["Authentication", "/docs/authentication/api-key"],
+                  ["Integrations", "/docs/integrations/nextjs"],
+                  ["Deployment", "/docs/deployment/vercel"],
+                ],
+              },
+            }}
+          >
+            <Header />
+            {children}
+            <Prefooter />
+            <Footer />
+            <Toaster />
+          </RootProvider>
+        </AskAIProvider>
         <Toolbar />
         <Analytics />
         <SpeedInsights />

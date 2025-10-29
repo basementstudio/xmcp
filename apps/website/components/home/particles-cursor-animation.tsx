@@ -125,7 +125,13 @@ void main()
 }
 `;
 
-export default function ParticlesCursorAnimation() {
+interface ParticlesCursorAnimationProps {
+  onLoaded?: () => void;
+}
+
+export default function ParticlesCursorAnimation({
+  onLoaded,
+}: ParticlesCursorAnimationProps) {
   const { size, camera, raycaster, gl } = useThree();
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
@@ -298,8 +304,14 @@ export default function ParticlesCursorAnimation() {
 
   const pictureTexture = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    return loader.load("/xmcp.png");
-  }, []);
+    return loader.load("/xmcp.png", () => {
+      // Texture loaded successfully, call onLoaded after a short delay
+      // to ensure the component is fully rendered
+      setTimeout(() => {
+        onLoaded?.();
+      }, 100);
+    });
+  }, [onLoaded]);
 
   const planeSize = useMemo(() => {
     if (!(camera instanceof THREE.PerspectiveCamera))

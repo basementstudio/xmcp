@@ -28,6 +28,7 @@ export function ProgressiveBlurBackground() {
           duration: 0.4,
           ease: "power2.inOut",
         },
+        delay: 0.4, // wait some time for the header in anim
         scrollTrigger: {
           trigger: "body",
           start: "top top-=20px",

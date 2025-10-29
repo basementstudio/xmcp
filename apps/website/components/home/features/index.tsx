@@ -1,28 +1,50 @@
+"use client";
+
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
+import React, { useRef } from "react";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
 import Feature4 from "./feature-4.jpg";
 import Feature5 from "./feature-5.jpg";
 import Feature6 from "./feature-6.jpg";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { AnimatedHeading } from "@/components/ui/animated-heading";
 
 export const HomeFeatures = () => {
+  const headingRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  useFadeIn({
+    refs: [headingRef, cardsRef],
+    stagger: 0.2,
+  });
+
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <Tag text="Features" />
+      <div
+        className="flex flex-col invisible items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3"
+        ref={headingRef}
+      >
+        <Tag text="Features" animate />
         <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient">
+          <AnimatedHeading
+            effectDuration={2}
+            className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto"
+          >
             The complete stack to ship an MCP server
-          </h2>
+          </AnimatedHeading>
           <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
             Everything you need to set up fast, customize with ease, and plug
             directly into your apps.
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12 invisible"
+        ref={cardsRef}
+      >
         {cards.map((card, index) => (
           <Card key={index} {...card} />
         ))}
@@ -35,11 +57,15 @@ interface CardProps {
   asset: string;
   title: string;
   description: string;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
-const Card = ({ asset, title, description }: CardProps) => {
+const Card = ({ asset, title, description, ref }: CardProps) => {
   return (
-    <div className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full">
+    <div
+      ref={ref}
+      className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full"
+    >
       <div className="flex items-center justify-center w-full gap-2 mb-4">
         <Image
           src={asset}
@@ -54,6 +80,8 @@ const Card = ({ asset, title, description }: CardProps) => {
     </div>
   );
 };
+
+Card.displayName = "Card";
 
 const cards = [
   {

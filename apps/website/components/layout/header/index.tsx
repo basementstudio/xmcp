@@ -1,14 +1,28 @@
+"use client";
+
 import Link from "next/link";
 import { MobileMenu } from "./mobile";
 import { AskAIButton } from "@/components/ai/ask";
-import { SearchToggle } from "../search-toggle";
+import { SearchToggleClient } from "../search-toggle-client";
 import { AnimatedLink } from "@/components/animated-link";
 import { LogoContextMenu } from "./logo-menu";
 import { ProgressiveBlurBackground } from "./progressive-blur-bg";
+import { useFadeIn } from "@/lib/anim/use-fade-in";
+import { useRef } from "react";
 
 export const Header = () => {
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useFadeIn({
+    refs: [headerRef],
+    yOffset: -10,
+  });
+
   return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-[100] flex justify-center items-center">
+    <header
+      ref={headerRef}
+      className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-[100] flex justify-center items-center invisible"
+    >
       <div
         className={
           "w-full flex justify-center items-center z-[100] px-4 py-2 gap-8 relative"
@@ -24,7 +38,7 @@ export const Header = () => {
           </div>
         </div>
         <div className="flex gap-2 ml-auto items-center">
-          <SearchToggle />
+          <SearchToggleClient />
           <AskAIButton />
           <GithubButton />
           <MobileMenu />
