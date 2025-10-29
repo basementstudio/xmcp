@@ -61,25 +61,7 @@ export function getWebpackConfig(
         path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
-    plugins: [
-      new InjectRuntimePlugin(),
-      new CreateTypeDefinitionPlugin(),
-      // Ignore @swc/core native bindings and wasm fallbacks during build
-      // These are externalized and loaded at runtime when SSR is enabled
-      new IgnorePlugin({
-        resourceRegExp: /^@swc\/core/,
-        contextRegExp: /ssr/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/core-(darwin|linux|win32|freebsd|android)/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /swc\.(darwin|linux|win32|freebsd|android).*\.node$/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/wasm/,
-      }),
-    ],
+    plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
     module: {
       rules: [
         {
@@ -102,19 +84,8 @@ export function getWebpackConfig(
             },
           },
         },
-        {
-          test: /\.node$/,
-          loader: "node-loader",
-        },
       ],
     },
-    ignoreWarnings: [
-      // Ignore warnings from @swc/core's optional native bindings
-      /Can't resolve '\.\/swc\./,
-      /Can't resolve '@swc\/core-/,
-      /Can't resolve '@swc\/wasm'/,
-      /Critical dependency: the request of a dependency is an expression/,
-    ],
     optimization: {
       minimize: mode === "production",
       splitChunks: false,
@@ -157,43 +128,6 @@ export function getWebpackConfig(
   // add defined variables to config
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
-
-  config.plugins!.push(
-    new DefinePlugin({
-      SSR_ENABLED: JSON.stringify(xmcpConfig.experimental?.ssr === true),
-    })
-  );
-
-  if (xmcpConfig.experimental?.ssr) {
-    const fs = require("fs");
-    const clientBundlesPath = path.join(processFolder, "dist/client");
-
-    config.plugins!.push(
-      new DefinePlugin({
-        INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
-          if (!fs.existsSync(clientBundlesPath)) {
-            return JSON.stringify({});
-          }
-
-          const bundles: Record<string, string> = {};
-          const files = fs.readdirSync(clientBundlesPath);
-
-          for (const file of files) {
-            if (file.endsWith(".bundle.js")) {
-              const toolName = file.replace(".bundle.js", "");
-              const bundleContent = fs.readFileSync(
-                path.join(clientBundlesPath, file),
-                "utf-8"
-              );
-              bundles[toolName] = bundleContent;
-            }
-          }
-
-          return JSON.stringify(bundles);
-        }),
-      })
-    );
-  }
 
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {

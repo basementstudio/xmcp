@@ -6,6 +6,8 @@ import {
   getResolvedTemplateConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
+import fs from "fs";
+import path from "path";
 
 export function injectHttpVariables(
   httpConfig: HttpTransportConfig | boolean,
@@ -89,10 +91,42 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
+export function injectReactVariables(userConfig: any) {
+  const reactEnabled = userConfig?.experimental?.react ?? false;
+
+  if (!reactEnabled) {
+    return {};
+  }
+
+  const clientBundlesPath = path.join(process.cwd(), "dist/client");
+  const bundles: Record<string, string> = {};
+
+  if (fs.existsSync(clientBundlesPath)) {
+    const files = fs.readdirSync(clientBundlesPath);
+    for (const file of files) {
+      if (file.endsWith(".bundle.js")) {
+        const toolName = file.replace(".bundle.js", "");
+        const bundleContent = fs.readFileSync(
+          path.join(clientBundlesPath, file),
+          "utf-8"
+        );
+        bundles[toolName] = bundleContent;
+      }
+    }
+  }
+
+  return {
+    INJECTED_CLIENT_BUNDLES: JSON.stringify(bundles),
+  };
+}
+
+export type ReactVariables = ReturnType<typeof injectReactVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
   | PathsVariables
   | StdioVariables
-  | TemplateVariables;
+  | TemplateVariables
+  | ReactVariables;

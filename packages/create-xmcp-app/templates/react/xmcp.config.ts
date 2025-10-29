@@ -8,7 +8,7 @@ const config: XmcpConfig = {
     resources: false,
   },
   experimental: {
-    ssr: true,
+    react: true,
   },
 };
 

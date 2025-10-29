@@ -8,6 +8,7 @@ import {
   injectPathsVariables,
   injectStdioVariables,
   injectTemplateVariables,
+  injectReactVariables,
 } from "../config/injection";
 
 /**
@@ -26,6 +27,7 @@ export function getInjectedVariables(
   const pathsVariables = injectPathsVariables(xmcpConfig);
   const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
   const templateVariables = injectTemplateVariables(xmcpConfig);
+  const reactVariables = injectReactVariables(xmcpConfig);
 
   return {
     ...httpVariables,
@@ -34,5 +36,6 @@ export function getInjectedVariables(
     ...pathsVariables,
     ...stdioVariables,
     ...templateVariables,
+    ...reactVariables,
   };
 }

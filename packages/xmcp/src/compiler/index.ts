@@ -181,7 +181,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       }
 
       (async () => {
-        if (xmcpConfig.experimental?.ssr === true) {
+        if (xmcpConfig.experimental?.react === true) {
           const clientBundles = new Map<string, string>();
 
           for (const path of toolPaths) {
@@ -245,7 +245,6 @@ function generateCode() {
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
-  // Append client bundles mapping if SSR is enabled
   const { clientBundles } = compilerContext.getContext();
   if (clientBundles && clientBundles.size > 0) {
     const bundlesCode = generateClientBundlesCode(clientBundles);

@@ -22,7 +22,7 @@ interface CompilerContext {
   hasMiddleware: boolean;
   /** The parsed config. */
   xmcpConfig?: XmcpConfigOuputSchema;
-  /** Client bundles mapping for SSR (toolName -> bundlePath). */
+  /** Client bundles mapping for React (toolName -> bundlePath). */
   clientBundles?: Map<string, string>;
 }
 

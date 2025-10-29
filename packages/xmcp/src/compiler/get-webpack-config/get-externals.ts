@@ -32,17 +32,6 @@ export function getExternals(): Configuration["externals"] {
         return callback(null, `commonjs ${request}`);
       }
 
-      /**
-       * Externalize SSR utilities that depend on @swc/core
-       * These are loaded at runtime only when SSR is enabled
-       */
-      if (
-        request.includes("ssr/transpile") ||
-        request.includes("ssr/bundler")
-      ) {
-        return callback(null, `commonjs ${request}`);
-      }
-
       // Check if request is inside .xmcp folder - if so, bundle it
       if (request.includes(".xmcp")) {
         return callback();
