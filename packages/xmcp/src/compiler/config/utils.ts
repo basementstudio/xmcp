@@ -5,6 +5,7 @@ import {
   OAuthConfig,
   StdioTransportConfig,
   TemplateConfig,
+  ExperimentalConfig,
 } from "./schemas";
 import {
   DEFAULT_HTTP_CONFIG,
@@ -104,4 +105,10 @@ export function getResolvedTemplateConfig(
     return DEFAULT_TEMPLATE_CONFIG;
   }
   return { ...DEFAULT_TEMPLATE_CONFIG, ...userTemplate };
+}
+
+export function getResolvedExperimentalConfig(
+  userConfig: any
+): ExperimentalConfig | null {
+  return userConfig?.experimental || null;
 }

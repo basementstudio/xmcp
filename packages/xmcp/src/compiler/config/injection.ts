@@ -4,6 +4,7 @@ import {
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
+  getResolvedExperimentalConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 
@@ -89,10 +90,27 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
+export function injectExperimentalVariables(userConfig: any) {
+  const experimentalConfig = getResolvedExperimentalConfig(userConfig);
+
+  if (!experimentalConfig) return {};
+
+  return {
+    SSR_ENABLED: JSON.stringify(experimentalConfig.ssr),
+    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter),
+    OAUTH_CONFIG: JSON.stringify(experimentalConfig.oauth),
+  };
+}
+
+export type ExperimentalVariables = ReturnType<
+  typeof injectExperimentalVariables
+>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
   | OAuthVariables
   | PathsVariables
   | StdioVariables
-  | TemplateVariables;
+  | TemplateVariables
+  | ExperimentalVariables;

@@ -158,12 +158,6 @@ export function getWebpackConfig(
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
-  config.plugins!.push(
-    new DefinePlugin({
-      SSR_ENABLED: JSON.stringify(xmcpConfig.experimental?.ssr === true),
-    })
-  );
-
   if (xmcpConfig.experimental?.ssr) {
     const fs = require("fs");
     const clientBundlesPath = path.join(processFolder, "dist/client");
