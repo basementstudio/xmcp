@@ -924,15 +924,18 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
-      mcp-handler:
-        specifier: ^1.0.2
-        version: 1.0.3(@modelcontextprotocol/sdk@1.20.1)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
       memfs:
         specifier: ^4.17.2
         version: 4.49.0
       raw-body:
         specifier: ^3.0.0
         version: 3.0.1
+      react:
+        specifier: '>=19.0.0'
+        version: 19.2.0
+      react-dom:
+        specifier: '>=19.0.0'
+        version: 19.2.0(react@19.2.0)
       swc-loader:
         specifier: ^0.2.6
         version: 0.2.6(@swc/core@1.11.24)(webpack@5.102.1(@swc/core@1.11.24))
@@ -5751,16 +5754,6 @@ packages:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
 
-  mcp-handler@1.0.3:
-    resolution: {integrity: sha512-AQ8I1a6wyfK0hIHeGqvjXqKHGvABDvw5dvwJvMjUiuKAUDgFsFtPExqThFOE/boOTbBKXn7fPSJ94soT0GjL+A==}
-    hasBin: true
-    peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.17.2
-      next: '>=13.0.0'
-    peerDependenciesMeta:
-      next:
-        optional: true
-
   mdast-util-find-and-replace@3.0.2:
     resolution: {integrity: sha512-Tmd1Vg/m3Xz43afeNxDIhWRtFZgM2VLyaf4vSTYwudTyeuTneoL3qtWMA5jeLyz/O1vDJmmV4QuScFCA2tBPwg==}
 
@@ -9946,11 +9939,11 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 20.19.23
+      '@types/node': 22.18.12
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.19.23
+      '@types/node': 22.18.12
 
   '@types/content-type@1.1.9': {}
 
@@ -10109,16 +10102,16 @@ snapshots:
   '@types/send@0.17.5':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 20.19.23
+      '@types/node': 22.18.12
 
   '@types/send@1.2.0':
     dependencies:
-      '@types/node': 20.19.23
+      '@types/node': 22.18.12
 
   '@types/serve-static@1.15.9':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 20.19.23
+      '@types/node': 22.18.12
       '@types/send': 0.17.5
 
   '@types/stats.js@0.17.4': {}
@@ -13027,15 +13020,6 @@ snapshots:
   markdown-table@3.0.4: {}
 
   math-intrinsics@1.1.0: {}
-
-  mcp-handler@1.0.3(@modelcontextprotocol/sdk@1.20.1)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)):
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.20.1
-      chalk: 5.6.2
-      commander: 11.1.0
-      redis: 4.7.1
-    optionalDependencies:
-      next: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
 
   mdast-util-find-and-replace@3.0.2:
     dependencies:

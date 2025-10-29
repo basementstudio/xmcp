@@ -63,7 +63,6 @@
     "glob": "^11.0.2",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mcp-handler": "^1.0.2",
     "memfs": "^4.17.2",
     "raw-body": "^3.0.0",
     "swc-loader": "^0.2.6",
@@ -85,6 +84,16 @@
     "zod": "^3.24.4"
   },
   "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-dom": ">=19.0.0",
     "zod": "^3.24.4"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   }
 }
