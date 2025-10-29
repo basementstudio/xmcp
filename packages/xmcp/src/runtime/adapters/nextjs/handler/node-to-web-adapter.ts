@@ -99,6 +99,11 @@ export function nodeToWebAdapter(
     } as ServerResponse;
 
     // Execute handler
-    void handler(mockResponse);
+    Promise.resolve(handler(mockResponse)).catch((error) => {
+      console.error("Handler error:", error);
+      if (!resolved) {
+        resolve(new Response(JSON.stringify({ error: "Internal server error" }), { status: 500 }));
+      }
+    });
   });
 }
