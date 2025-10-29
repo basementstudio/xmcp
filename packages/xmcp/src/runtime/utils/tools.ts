@@ -107,18 +107,16 @@ export function addToolsToServer(
     }
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
-
+    const meta = isOpenAITool ? flattenedToolMeta : undefined;
     let transformedHandler;
+
     if (isReactFile(path) && isOpenAITool) {
       transformedHandler = async () => ({
         content: [{ type: "text", text: "" }],
-        _meta: flattenedToolMeta,
+        _meta: meta,
       });
     } else {
-      transformedHandler = transformToolHandler(
-        handler,
-        isOpenAITool ? flattenedToolMeta : undefined
-      );
+      transformedHandler = transformToolHandler(handler, meta);
     }
 
     const toolConfigFormatted = {
