@@ -4,9 +4,9 @@ import { Icons } from "@/components/icons";
 import { Logos } from "@/components/home/hero/logos";
 import { Tag } from "@/components/ui/tag";
 import Shader from "@/components/home/hero/shader";
-import { VERSION } from "@/lib/get-version";
 
-export const HomeHero = () => {
+export const HomeHero = ({ version }: { version: string }) => {
+ 
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
@@ -14,7 +14,7 @@ export const HomeHero = () => {
         href="https://npmjs.com/package/xmcp"
         target="_blank"
       >
-        {VERSION ? `v${VERSION}` : ""}
+        {version ? `v${version}` : ""}
         <Tag
           text="Latest Version"
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"

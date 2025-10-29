@@ -17,5 +17,3 @@ export async function getLatestVersion() {
     return "";
   }
 }
-
-export const VERSION = await getLatestVersion();
