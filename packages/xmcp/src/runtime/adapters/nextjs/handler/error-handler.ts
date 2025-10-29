@@ -34,8 +34,8 @@ export function sendJsonRpcError(
   if (!res.headersSent) {
     const statusCode = code >= 400 && code < 600 ? code : 500;
     res.writeHead(statusCode, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(createJsonRpcError(code, message)));
   }
+  res.end(JSON.stringify(createJsonRpcError(code, message)));
 }
 
 /**
