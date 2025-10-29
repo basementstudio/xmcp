@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/cn";
-import { AskAIDialog } from "./ask-dialog";
 import { Icons } from "../icons";
 import { detectWindowsFromClient } from "@/utils/detect-os";
+import { useAskAI } from "./ask-context";
 
 export function AskAIButtonClient() {
-  const [open, setOpen] = useState(false);
+  const { setOpen } = useAskAI();
   const [isWindows, setIsWindows] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export function AskAIButtonClient() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [setOpen]);
 
   return (
     <>
@@ -66,8 +66,6 @@ export function AskAIButtonClient() {
       >
         <Icons.chat className="size-4" />{" "}
       </button>
-
-      <AskAIDialog open={open} onOpenChange={setOpen} />
     </>
   );
 }
