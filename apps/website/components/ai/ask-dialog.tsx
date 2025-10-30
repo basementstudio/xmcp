@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { track } from "@vercel/analytics";
 import { Loader2, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import Link from "fumadocs-core/link";
@@ -118,12 +119,18 @@ function AskAIInput({
   onEscape?: () => void;
   showEscButton?: boolean;
 }) {
-  const { status, sendMessage } = useChatContext();
+  const { status, sendMessage, messages } = useChatContext();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const isLoading = status === "streaming" || status === "submitted";
   const onStart = () => {
     if (input.trim()) {
+      track("ai_question_submitted", {
+        question: input.trim(),
+        location: "Ask AI Dialog",
+        not_first_message: messages.length > 0,
+      });
+
       void sendMessage({ text: input });
       setInput("");
     }

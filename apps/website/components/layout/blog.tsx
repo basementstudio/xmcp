@@ -74,7 +74,7 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
           </div>
         </div>
       )}
-      <main className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
+      <div className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
         <Link
           href="/blog"
           className="px-4 mb-2 text-sm text-brand-neutral-100 hover:text-brand-neutral-50 transition-colors"
@@ -84,7 +84,7 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
         <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 mx-auto px-4 items-start h-full">
           {props.children}
         </article>
-      </main>
+      </div>
     </AnchorProvider>
   );
 }

@@ -4,6 +4,7 @@ import {
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
+  getResolvedExperimentalConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 import fs from "fs";
