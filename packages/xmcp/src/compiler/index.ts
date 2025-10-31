@@ -67,16 +67,21 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle tools
   if (toolsPath) {
     watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
-      onAdd: (path) => {
+      onAdd: async (path) => {
         toolPaths.add(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
-      onUnlink: (path) => {
+      onUnlink: async (path) => {
         toolPaths.delete(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
+        }
+      },
+      onChange: async (changedPath) => {
+        if (compilerStarted) {
+          await generateCode();
         }
       },
     });
@@ -91,16 +96,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle prompts
   if (promptsPath) {
     watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
-      onAdd: (path) => {
+      onAdd: async (path) => {
         promptPaths.add(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
-      onUnlink: (path) => {
+      onUnlink: async (path) => {
         promptPaths.delete(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
     });
@@ -115,16 +120,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle resources
   if (resourcesPath) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
-      onAdd: (path) => {
+      onAdd: async (path) => {
         resourcePaths.add(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
-      onUnlink: (path) => {
+      onUnlink: async (path) => {
         resourcePaths.delete(path);
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
     });
@@ -134,20 +139,20 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
     watcher.watch("./src/middleware.ts", {
-      onAdd: () => {
+      onAdd: async () => {
         compilerContext.setContext({
           hasMiddleware: true,
         });
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
-      onUnlink: () => {
+      onUnlink: async () => {
         compilerContext.setContext({
           hasMiddleware: false,
         });
         if (compilerStarted) {
-          generateCode();
+          await generateCode();
         }
       },
     });
@@ -162,28 +167,8 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
-    // Build client bundles BEFORE webpack runs (so they can be injected)
-    const reactToolPaths = Array.from(toolPaths).filter((toolPath) =>
-      toolPath.endsWith(".tsx")
-    );
-
-    if (reactToolPaths.length > 0) {
-      const clientBundles = new Map<string, string>();
-
-      for (const reactToolPath of reactToolPaths) {
-        const toolName = pathToToolName(reactToolPath);
-        const bundlePath = `dist/client/${toolName}.bundle.js`;
-
-        await transpileClientComponent(reactToolPath, toolName, "dist/client");
-        clientBundles.set(toolName, bundlePath);
-      }
-
-      compilerContext.setContext({ clientBundles });
-    } else {
-      compilerContext.setContext({ clientBundles: undefined });
-    }
-
-    generateCode();
+    // Generate all code (including client bundles) BEFORE webpack runs
+    await generateCode();
 
     webpack(webpackConfig, (err, stats) => {
       if (err) {
@@ -244,12 +229,46 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   });
 }
 
-function generateCode() {
+/**
+ * Builds client bundles for all React tool components (.tsx files)
+ * Returns a map of tool names to their bundle paths
+ */
+async function buildClientBundles(): Promise<Map<string, string> | undefined> {
+  const { toolPaths } = compilerContext.getContext();
+  const reactToolPaths = Array.from(toolPaths).filter((toolPath) =>
+    toolPath.endsWith(".tsx")
+  );
+
+  if (reactToolPaths.length === 0) {
+    return undefined;
+  }
+
+  const clientBundles = new Map<string, string>();
+
+  for (const reactToolPath of reactToolPaths) {
+    const toolName = pathToToolName(reactToolPath);
+    const bundlePath = `dist/client/${toolName}.bundle.js`;
+
+    await transpileClientComponent(reactToolPath, toolName, "dist/client");
+    clientBundles.set(toolName, bundlePath);
+  }
+
+  return clientBundles;
+}
+
+/**
+ * Generates all runtime code and builds client bundles if needed
+ * This centralizes all code generation logic including client bundle building
+ */
+async function generateCode() {
+  // Build client bundles first (if there are React components)
+  const clientBundles = await buildClientBundles();
+
+  // Generate import map code
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
-  // Append client bundles mapping if SSR is enabled
-  const { clientBundles } = compilerContext.getContext();
+  // Append client bundles mapping by default if any
   if (clientBundles && clientBundles.size > 0) {
     const bundlesCode = generateClientBundlesCode(clientBundles);
     fs.appendFileSync(
