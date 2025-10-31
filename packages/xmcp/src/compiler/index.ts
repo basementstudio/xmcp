@@ -2,10 +2,7 @@ import { webpack } from "webpack";
 import { getWebpackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
-import {
-  generateImportCode,
-  generateClientBundlesCode,
-} from "./generate-import-code";
+import { generateImportCode } from "./generate-import-code";
 import {
   generateToolsExportCode,
   generateToolsTypesCode,
@@ -264,18 +261,12 @@ async function generateCode() {
   // Build client bundles first (if there are React components)
   const clientBundles = await buildClientBundles();
 
-  // Generate import map code
+  // Store in context for import map generation
+  compilerContext.setContext({ clientBundles });
+
+  // Generate import map code (includes client bundles)
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
-
-  // Append client bundles mapping by default if any
-  if (clientBundles && clientBundles.size > 0) {
-    const bundlesCode = generateClientBundlesCode(clientBundles);
-    fs.appendFileSync(
-      path.join(runtimeFolderPath, "import-map.js"),
-      bundlesCode
-    );
-  }
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
