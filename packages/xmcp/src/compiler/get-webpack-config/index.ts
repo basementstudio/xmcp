@@ -165,6 +165,8 @@ export function getWebpackConfig(
     new DefinePlugin({
       INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
         if (!fs.existsSync(clientBundlesPath)) {
+          // In development mode, bundles may not exist yet if webpack recompiles
+          // before bundles are rebuilt. The runtime will fall back to reading from filesystem.
           return JSON.stringify({});
         }
 
@@ -197,7 +199,15 @@ export function getWebpackConfig(
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {
     // not needed in adapter mode since it only outputs one file
-    config.plugins!.push(new CleanWebpackPlugin());
+    // Exclude dist/client from being cleaned since client bundles are needed during compilation
+    // Only clean .js files in the output directory root, not subdirectories like dist/client
+    config.plugins!.push(
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: [path.join(outputPath, "*.js")],
+        dangerouslyAllowCleanPatternsOutsideProject: true,
+        dry: false, // Explicitly enable actual file deletion (not dry-run mode)
+      })
+    );
   }
 
   // add shebang to CLI output on stdio mode

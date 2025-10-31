@@ -1,8 +1,13 @@
 import { compilerContext } from "./compiler-context";
 
 export function generateImportCode(): string {
-  const { toolPaths, promptPaths, resourcePaths, hasMiddleware } =
-    compilerContext.getContext();
+  const {
+    toolPaths,
+    promptPaths,
+    resourcePaths,
+    hasMiddleware,
+    clientBundles,
+  } = compilerContext.getContext();
 
   const importToolsCode = Array.from(toolPaths)
     .map((p) => {
@@ -32,6 +37,14 @@ export function generateImportCode(): string {
     ? `export const middleware = () => import("../src/middleware");`
     : "";
 
+  // Generate client bundles mapping (empty object if none)
+  const clientBundlesEntries =
+    clientBundles && clientBundles.size > 0
+      ? Array.from(clientBundles)
+          .map(([toolName, bundlePath]) => `  "${toolName}": "${bundlePath}",`)
+          .join("\n")
+      : "";
+
   return `
 export const tools = {
 ${importToolsCode}
@@ -45,29 +58,10 @@ export const resources = {
 ${importResourcesCode}
 };
 
-${importMiddlewareCode}
-`;
-}
-
-/**
- * Generate client bundles mapping for SSR
- */
-export function generateClientBundlesCode(
-  bundleMap: Map<string, string>
-): string {
-  if (bundleMap.size === 0) {
-    return `\nexport const clientBundles = {};\n`;
-  }
-
-  const bundleEntries = Array.from(bundleMap)
-    .map(([toolName, bundlePath]) => {
-      return `  "${toolName}": "${bundlePath}",`;
-    })
-    .join("\n");
-
-  return `
 export const clientBundles = {
-${bundleEntries}
+${clientBundlesEntries}
 };
+
+${importMiddlewareCode}
 `;
 }
