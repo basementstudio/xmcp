@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Button } from "../ui/button";
-import { Icons } from "../icons";
-import { Logos } from "./logos";
-import { Tag } from "../ui/tag";
-import Shader from "./shader";
+import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/icons";
+import { Logos } from "@/components/home/hero/logos";
+import { Tag } from "@/components/ui/tag";
+import Shader from "@/components/home/hero/shader";
 
-export const HomeHero = () => {
+export const HomeHero = ({ version }: { version?: string }) => {
   return (
     <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
       <Link
@@ -13,7 +13,7 @@ export const HomeHero = () => {
         href="https://npmjs.com/package/xmcp"
         target="_blank"
       >
-        v0.3.2
+        {version ? `v${version}` : ""}
         <Tag
           text="Latest Version"
           className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
@@ -22,11 +22,6 @@ export const HomeHero = () => {
       <h1 className="display text-center text-balance z-10 text-gradient">
         The TypeScript framework for building & shipping MCP servers
       </h1>
-      {/* <Image
-        src={HeroBg}
-        alt="A person, presumably a techno-optimist, shipping an MCP server with xmcp"
-        className="mix-blend-hard-light max-h-[420px] h-auto w-auto rotate-y-[3.142rad]"
-      /> */}
       <Shader />
       <div className="flex items-center justify-center gap-2">
         <Button

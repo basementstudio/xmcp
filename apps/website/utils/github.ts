@@ -12,9 +12,7 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${cleanRepo}`,
       {
-        headers: {
-          "User-Agent": "request",
-        },
+        headers: getGitHubHeaders(),
       }
     );
 
@@ -30,13 +28,6 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
   }
 }
 
-// formatter: 1000 => 1k, etc
-function kFormatter(num: number): string {
-  return Math.abs(num) > 999
-    ? (Math.sign(num) * (Math.abs(num) / 1000)).toFixed(1) + "k"
-    : (Math.sign(num) * Math.abs(num)).toString();
-}
-
 export type ExampleItem = {
   name: string;
   description: string;
@@ -50,9 +41,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
     const response = await fetch(
       `https://api.github.com/repos/basementstudio/xmcp/contents/examples`,
       {
-        headers: {
-          "User-Agent": "request",
-        },
+        headers: getGitHubHeaders(),
         cache: "force-cache",
       }
     );
@@ -74,9 +63,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
           const packageResponse = await fetch(
             `https://api.github.com/repos/basementstudio/xmcp/contents/examples/${dir.name}/package.json`,
             {
-              headers: {
-                "User-Agent": "request",
-              },
+              headers: getGitHubHeaders(),
               cache: "force-cache",
             }
           );
@@ -121,4 +108,23 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
     console.error("Error fetching examples:", error);
     return [];
   }
+}
+
+function getGitHubHeaders() {
+  const headers: Record<string, string> = {
+    "User-Agent": "request",
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers["Authorization"] = `token ${process.env.GITHUB_TOKEN}`;
+  }
+
+  return headers;
+}
+
+// formatter: 1000 => 1k, etc
+function kFormatter(num: number): string {
+  return Math.abs(num) > 999
+    ? (Math.sign(num) * (Math.abs(num) / 1000)).toFixed(1) + "k"
+    : (Math.sign(num) * Math.abs(num)).toString();
 }
