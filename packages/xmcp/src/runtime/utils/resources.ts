@@ -64,7 +64,7 @@ export function addResourcesToServer(
             throw new Error(
               `React client bundle not found for "${autoResource.name}".\n` +
                 `Expected at: ${bundlePath}\n` +
-                `Make sure you ran "xmcp build" with React enabled (experimental.react: true) before starting the server.`
+                `Make sure you ran "xmcp build" to generate the client bundle for this .tsx tool.`
             );
           }
 

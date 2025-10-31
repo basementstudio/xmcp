@@ -162,23 +162,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
-    // Build client bundles BEFORE webpack runs (so they can be injected)
-    if (xmcpConfig.experimental?.react === true) {
-      const clientBundles = new Map<string, string>();
-
-      for (const path of toolPaths) {
-        if (path.endsWith(".tsx")) {
-          const toolName = pathToToolName(path);
-          const bundlePath = `dist/client/${toolName}.bundle.js`;
-
-          await transpileClientComponent(path, toolName, "dist/client");
-          clientBundles.set(toolName, bundlePath);
-        }
-      }
-
-      compilerContext.setContext({ clientBundles });
-    }
-
     generateCode();
 
     webpack(webpackConfig, (err, stats) => {
@@ -195,6 +178,39 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           })
         );
         return;
+      }
+
+      (async () => {
+        const clientBundles = new Map<string, string>();
+
+        for (const path of toolPaths) {
+          if (path.endsWith(".tsx")) {
+            const toolName = pathToToolName(path);
+            const bundlePath = `dist/client/${toolName}.bundle.js`;
+
+            await transpileClientComponent(path, toolName, "dist/client");
+            clientBundles.set(toolName, bundlePath);
+          }
+        }
+
+        if (clientBundles.size > 0) {
+          compilerContext.setContext({ clientBundles });
+        }
+      })();
+
+      if (firstBuild) {
+        onFirstBuild(mode, xmcpConfig);
+        // user defined callback
+        onBuild?.();
+      } else {
+        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
+        if (
+          mode === "development" &&
+          xmcpConfig["http"] &&
+          !xmcpConfig.experimental?.adapter
+        ) {
+          startHttpServer();
+        }
       }
 
       // Track compilation time for all builds

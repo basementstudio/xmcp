@@ -4,7 +4,6 @@ import {
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
-  getResolvedExperimentalConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 import fs from "fs";
@@ -93,12 +92,6 @@ export function injectTemplateVariables(userConfig: any) {
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
 export function injectReactVariables(userConfig: any) {
-  const reactEnabled = userConfig?.experimental?.react ?? false;
-
-  if (!reactEnabled) {
-    return {};
-  }
-
   const clientBundlesPath = path.join(process.cwd(), "dist/client");
   const bundles: Record<string, string> = {};
 
@@ -114,6 +107,10 @@ export function injectReactVariables(userConfig: any) {
         bundles[toolName] = bundleContent;
       }
     }
+  }
+
+  if (Object.keys(bundles).length === 0) {
+    return {};
   }
 
   return {
