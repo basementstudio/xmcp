@@ -13,7 +13,7 @@ This will start the development server with HTTP transport enabled.
 ## Features
 
 - **React Components**: Build interactive widgets using React
-- **Interactive UI**: Enabled with `experimental.react` for optimal performance
+- **Interactive UI**: Automatically enabled for .tsx tools with React components
 - **TypeScript**: Full TypeScript support for type safety
 
 ## Example Tools
