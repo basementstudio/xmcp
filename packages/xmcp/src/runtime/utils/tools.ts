@@ -5,7 +5,7 @@ import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
-import { isReactFile } from "./ssr";
+import { isReactFile } from "./react";
 import { splitOpenAIMetaNested } from "./openai/split-meta";
 
 /** Validates if a value is a valid Zod schema object */

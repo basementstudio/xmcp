@@ -162,23 +162,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
-    // Build client bundles BEFORE webpack runs (so they can be injected)
-    if (xmcpConfig.experimental?.ssr === true) {
-      const clientBundles = new Map<string, string>();
-
-      for (const path of toolPaths) {
-        if (path.endsWith(".tsx")) {
-          const toolName = pathToToolName(path);
-          const bundlePath = `dist/client/${toolName}.bundle.js`;
-
-          await transpileClientComponent(path, toolName, "dist/client");
-          clientBundles.set(toolName, bundlePath);
-        }
-      }
-
-      compilerContext.setContext({ clientBundles });
-    }
-
     generateCode();
 
     webpack(webpackConfig, (err, stats) => {
@@ -196,6 +179,24 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         );
         return;
       }
+
+      (async () => {
+        const clientBundles = new Map<string, string>();
+
+        for (const path of toolPaths) {
+          if (path.endsWith(".tsx")) {
+            const toolName = pathToToolName(path);
+            const bundlePath = `dist/client/${toolName}.bundle.js`;
+
+            await transpileClientComponent(path, toolName, "dist/client");
+            clientBundles.set(toolName, bundlePath);
+          }
+        }
+
+        if (clientBundles.size > 0) {
+          compilerContext.setContext({ clientBundles });
+        }
+      })();
 
       if (firstBuild) {
         onFirstBuild(mode, xmcpConfig);
@@ -244,7 +245,6 @@ function generateCode() {
   const fileContent = generateImportCode();
   fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
-  // Append client bundles mapping if SSR is enabled
   const { clientBundles } = compilerContext.getContext();
   if (clientBundles && clientBundles.size > 0) {
     const bundlesCode = generateClientBundlesCode(clientBundles);

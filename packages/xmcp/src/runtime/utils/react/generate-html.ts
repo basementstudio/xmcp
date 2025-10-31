@@ -1,5 +1,5 @@
 /**
- * Generate full HTML with server-rendered content and hydration
+ * Generate full HTML
  */
 export function generateHTML(componentCode: string): string {
   // we need to replace bare imports with esm CDN imports
@@ -36,8 +36,7 @@ export function generateHTML(componentCode: string): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div id="root"></div>
-  ${renderScript}
+  <div id="root"></div>${renderScript}
 </body>
 </html>`;
 }

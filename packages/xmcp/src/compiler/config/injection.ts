@@ -4,9 +4,10 @@ import {
   getResolvedPathsConfig,
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
-  getResolvedExperimentalConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
+import fs from "fs";
+import path from "path";
 
 export function injectHttpVariables(
   httpConfig: HttpTransportConfig | boolean,
@@ -90,25 +91,34 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
-export function injectSSRVariables(userConfig: any) {
-  const experimentalConfig = getResolvedExperimentalConfig(userConfig);
+export function injectReactVariables(userConfig: any) {
+  const clientBundlesPath = path.join(process.cwd(), "dist/client");
+  const bundles: Record<string, string> = {};
+
+  if (fs.existsSync(clientBundlesPath)) {
+    const files = fs.readdirSync(clientBundlesPath);
+    for (const file of files) {
+      if (file.endsWith(".bundle.js")) {
+        const toolName = file.replace(".bundle.js", "");
+        const bundleContent = fs.readFileSync(
+          path.join(clientBundlesPath, file),
+          "utf-8"
+        );
+        bundles[toolName] = bundleContent;
+      }
+    }
+  }
+
+  if (Object.keys(bundles).length === 0) {
+    return {};
+  }
 
   return {
-    SSR_ENABLED: JSON.stringify(experimentalConfig.ssr),
+    INJECTED_CLIENT_BUNDLES: JSON.stringify(bundles),
   };
 }
 
-export type SSRVariables = ReturnType<typeof injectSSRVariables>;
-
-export function injectAdapterVariables(userConfig: any) {
-  const experimentalConfig = getResolvedExperimentalConfig(userConfig);
-
-  return {
-    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter ?? null),
-  };
-}
-
-export type AdapterVariables = ReturnType<typeof injectAdapterVariables>;
+export type ReactVariables = ReturnType<typeof injectReactVariables>;
 
 export type InjectedVariables =
   | HttpVariables
@@ -117,5 +127,4 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
-  | SSRVariables
-  | AdapterVariables;
+  | ReactVariables;

@@ -50,7 +50,7 @@ ${importMiddlewareCode}
 }
 
 /**
- * Generate client bundles mapping for SSR
+ * Generate client bundles mapping for React
  */
 export function generateClientBundlesCode(
   bundleMap: Map<string, string>
