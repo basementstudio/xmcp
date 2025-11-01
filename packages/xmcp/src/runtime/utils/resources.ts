@@ -13,7 +13,7 @@ import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta } from "./openai/flatten-meta";
 import fs from "fs";
 import path from "path";
-import { generateHTML } from "./ssr/bundler";
+import { generateHTML } from "./react/bundler";
 
 declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
 
