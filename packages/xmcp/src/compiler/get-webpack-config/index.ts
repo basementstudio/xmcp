@@ -65,7 +65,7 @@ export function getWebpackConfig(
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
       // Ignore @swc/core native bindings and wasm fallbacks during build
-      // These are externalized and loaded at runtime when SSR is enabled
+      // These are externalized and loaded at runtime when React is enabled
       new IgnorePlugin({
         resourceRegExp: /^@swc\/core/,
         contextRegExp: /ssr/,
@@ -187,7 +187,7 @@ export function getWebpackConfig(
         const bundleCount = Object.keys(bundles).length;
         if (bundleCount > 0) {
           console.log(
-            `✓ Injected ${bundleCount} SSR client bundle(s): ${Object.keys(bundles).join(", ")}`
+            `✓ Injected ${bundleCount} React client bundle(s): ${Object.keys(bundles).join(", ")}`
           );
         }
 

@@ -62,7 +62,7 @@ export function addResourcesToServer(
 
           if (!clientCode) {
             throw new Error(
-              `SSR client bundle not found for "${autoResource.name}".\n` +
+              `React client bundle not found for "${autoResource.name}".\n` +
                 `Expected to find it either:\n` +
                 `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
                 `  2. On filesystem at: ${path.join(process.cwd(), "dist/client", `${autoResource.name}.bundle.js`)}\n` +
@@ -83,12 +83,12 @@ export function addResourcesToServer(
             ],
           };
         } catch (error) {
-          console.error(`SSR failed for ${autoResource.name}:`, error);
+          console.error(`React failed for ${autoResource.name}:`, error);
           throw error;
         }
       }
 
-      // NON-SSR PATH: Original behavior (backward compatible)
+      // NON-React PATH: Original behavior (backward compatible)
       // Call the original tool handler to get the HTML content
       let response = autoResource.handler({}, extra);
       if (response instanceof Promise) {

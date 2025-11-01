@@ -33,8 +33,8 @@ export function getExternals(): Configuration["externals"] {
       }
 
       /**
-       * Externalize SSR utilities that depend on @swc/core
-       * These are loaded at runtime only when SSR is enabled
+       * Externalize React utilities that depend on @swc/core
+       * These are loaded at runtime only when React is enabled
        */
       if (
         request.includes("ssr/transpile") ||
