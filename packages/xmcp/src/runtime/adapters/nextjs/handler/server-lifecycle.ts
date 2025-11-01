@@ -7,7 +7,6 @@ import {
   loadPrompts,
   loadResources,
   loadTools,
-  SSR_CONFIG,
 } from "@/runtime/utils/server";
 
 export interface ServerLifecycle {
@@ -46,13 +45,7 @@ export async function initializeMcpServer(): Promise<McpServer> {
 
   const server = new McpServer(INJECTED_CONFIG);
 
-  await configureServer(
-    server,
-    toolModules,
-    promptModules,
-    resourceModules,
-    SSR_CONFIG.enabled
-  );
+  await configureServer(server, toolModules, promptModules, resourceModules);
 
   return server;
 }

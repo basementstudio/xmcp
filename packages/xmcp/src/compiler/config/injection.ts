@@ -90,16 +90,6 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
-export function injectSSRVariables(userConfig: any) {
-  const experimentalConfig = getResolvedExperimentalConfig(userConfig);
-
-  return {
-    SSR_ENABLED: JSON.stringify(experimentalConfig.ssr),
-  };
-}
-
-export type SSRVariables = ReturnType<typeof injectSSRVariables>;
-
 export function injectAdapterVariables(userConfig: any) {
   const experimentalConfig = getResolvedExperimentalConfig(userConfig);
 
@@ -117,5 +107,4 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
-  | SSRVariables
   | AdapterVariables;
