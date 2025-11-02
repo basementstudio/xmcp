@@ -1,5 +1,5 @@
 /**
- * Generate full HTML with server-rendered content and hydration
+ * Generate full HTML (CSR)
  */
 export function generateHTML(componentCode: string): string {
   // we need to replace bare imports with esm CDN imports

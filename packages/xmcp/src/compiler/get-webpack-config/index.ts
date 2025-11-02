@@ -61,25 +61,7 @@ export function getWebpackConfig(
         path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
-    plugins: [
-      new InjectRuntimePlugin(),
-      new CreateTypeDefinitionPlugin(),
-      // Ignore @swc/core native bindings and wasm fallbacks during build
-      // These are externalized and loaded at runtime when React is enabled
-      new IgnorePlugin({
-        resourceRegExp: /^@swc\/core/,
-        contextRegExp: /ssr/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/core-(darwin|linux|win32|freebsd|android)/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /swc\.(darwin|linux|win32|freebsd|android).*\.node$/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/wasm/,
-      }),
-    ],
+    plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
     module: {
       rules: [
         {
@@ -102,19 +84,8 @@ export function getWebpackConfig(
             },
           },
         },
-        {
-          test: /\.node$/,
-          loader: "node-loader",
-        },
       ],
     },
-    ignoreWarnings: [
-      // Ignore warnings from @swc/core's optional native bindings
-      /Can't resolve '\.\/swc\./,
-      /Can't resolve '@swc\/core-/,
-      /Can't resolve '@swc\/wasm'/,
-      /Critical dependency: the request of a dependency is an expression/,
-    ],
     optimization: {
       minimize: mode === "production",
       splitChunks: false,
