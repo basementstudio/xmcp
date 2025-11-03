@@ -93,7 +93,7 @@ export default function RootLayout({
                 ["Configuration", "/docs/configuration/custom-directories"],
                 ["Core Concepts", "/docs/core-concepts/tools"],
                 ["Authentication", "/docs/authentication/api-key"],
-                ["Integrations", "/docs/integrations/nextjs"],
+                ["Integrations", "/docs/adapters/nextjs"],
                 ["Deployment", "/docs/deployment/vercel"],
               ],
             },
