@@ -2,20 +2,20 @@
   "name": "init-xmcp",
   "version": "0.0.1",
   "author": {
-    "name": "Basement Studio",
-    "email": "hello@basement.studio",
-    "url": "https://basement.studio"
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
   },
   "contributors": [
-    {
-      "name": "Matias Gonzalez Fernandez",
-      "email": "matiasngf@hotmail.com",
-      "url": "https://github.com/matiasngf"
-    },
     {
       "name": "Valentina Bearzotti",
       "email": "valebearzotti1@gmail.com",
       "url": "https://github.com/valebearzotti"
+    },
+    {
+      "name": "Jose Rago",
+      "email": "jose@basement.studio",
+      "url": "https://github.com/ragojose"
     }
   ],
   "license": "MIT",
