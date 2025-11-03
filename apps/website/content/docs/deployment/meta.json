@@ -1,6 +1,6 @@
 {
   "title": "Deployment",
-  "pages": ["vercel", "replit", "alpic"],
+  "pages": ["vercel", "alpic", "replit"],
   "defaultOpen": true,
   "root": true
 }
