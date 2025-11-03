@@ -442,11 +442,6 @@ export default async function getUserData() {
 }
 ```
 
-<Callout variant="info">
-  Structured outputs are ideal for returning JSON data that LLMs can easily
-  parse and use in subsequent operations.
-</Callout>
-
 ### Combined Response
 
 Return both `content` and `structuredContent` for backwards compatibility. If the client cannot process structured outputs, it will fallback to `content`.
