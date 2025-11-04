@@ -13,6 +13,7 @@ import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import { CreateTypeDefinitionPlugin, InjectRuntimePlugin } from "./plugins";
 import { getExternals } from "./get-externals";
 
@@ -61,7 +62,11 @@ export function getWebpackConfig(
         path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
-    plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
+    plugins: [
+      new InjectRuntimePlugin(),
+      new CreateTypeDefinitionPlugin(),
+      new ForkTsCheckerWebpackPlugin(),
+    ],
     module: {
       rules: [
         {
