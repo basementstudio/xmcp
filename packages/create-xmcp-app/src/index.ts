@@ -39,10 +39,31 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
-  .option("--gpt", "Initialize with OpenAI/ChatGPT widgets template", false)
-  .option("--ui", "Initialize with React widgets template", false)
+  .option(
+    "--gpt",
+    "[DEPRECATED] Initialize with OpenAI/ChatGPT widgets template",
+    false
+  )
+  .option("--ui", "[DEPRECATED] Initialize with React widgets template", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
+
+    // Show deprecation warnings for template flags
+    if (options.gpt || options.ui) {
+      console.log(
+        chalk.yellow(
+          "\nDEPRECATION WARNING: The --gpt and --ui flags will be removed in a future version."
+        )
+      );
+      console.log(
+        chalk.dim(
+          "React components and OpenAI widgets now work natively with any xmcp app."
+        )
+      );
+      console.log(
+        chalk.dim("See: https://xmcp.dev/docs for more information.\n")
+      );
+    }
 
     // If project directory wasn't specified, ask for it
     if (!projectDir) {

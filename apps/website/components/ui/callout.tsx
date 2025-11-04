@@ -41,8 +41,8 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
         {...props}
       >
         {IconComponent && (
-          <span className="mt-0.5 flex-shrink-0">
-            <IconComponent className="h-5 w-5" />
+          <span className="mt-1.5 flex-shrink-0">
+            <IconComponent className="size-4" />
           </span>
         )}
         <div className="[&_p]:leading-relaxed [&_p]:!m-0 [&_p]:text-sm">

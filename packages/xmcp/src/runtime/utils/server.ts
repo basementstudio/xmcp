@@ -66,28 +66,20 @@ export const INJECTED_CONFIG = {
   },
 } as const satisfies Implementation;
 
-// @ts-expect-error: injected by compiler via DefinePlugin
-const SSR_ENABLED_FLAG = SSR_ENABLED;
-
-export const SSR_CONFIG = {
-  enabled: SSR_ENABLED_FLAG,
-};
-
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
 export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
-  resourceModules: Map<string, ResourceFile>,
-  ssrEnabled: boolean = false
+  resourceModules: Map<string, ResourceFile>
 ): Promise<McpServer> {
   // Clear the OpenAI resource registry before configuring to prevent stale entries
   openAIResourceRegistry.clear();
 
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
-  addResourcesToServer(server, resourceModules, ssrEnabled);
+  addResourcesToServer(server, resourceModules);
   return server;
 }
 
@@ -135,11 +127,5 @@ export async function createServer() {
   await Promise.all(toolPromises);
   await Promise.all(promptPromises);
   await Promise.all(resourcePromises);
-  return configureServer(
-    server,
-    toolModules,
-    promptModules,
-    resourceModules,
-    SSR_CONFIG.enabled
-  );
+  return configureServer(server, toolModules, promptModules, resourceModules);
 }

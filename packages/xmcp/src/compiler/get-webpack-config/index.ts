@@ -13,6 +13,7 @@ import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import { CreateTypeDefinitionPlugin, InjectRuntimePlugin } from "./plugins";
 import { getExternals } from "./get-externals";
 
@@ -64,21 +65,7 @@ export function getWebpackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      // Ignore @swc/core native bindings and wasm fallbacks during build
-      // These are externalized and loaded at runtime when SSR is enabled
-      new IgnorePlugin({
-        resourceRegExp: /^@swc\/core/,
-        contextRegExp: /ssr/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/core-(darwin|linux|win32|freebsd|android)/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /swc\.(darwin|linux|win32|freebsd|android).*\.node$/,
-      }),
-      new IgnorePlugin({
-        resourceRegExp: /@swc\/wasm/,
-      }),
+      new ForkTsCheckerWebpackPlugin(),
     ],
     module: {
       rules: [
@@ -102,19 +89,8 @@ export function getWebpackConfig(
             },
           },
         },
-        {
-          test: /\.node$/,
-          loader: "node-loader",
-        },
       ],
     },
-    ignoreWarnings: [
-      // Ignore warnings from @swc/core's optional native bindings
-      /Can't resolve '\.\/swc\./,
-      /Can't resolve '@swc\/core-/,
-      /Can't resolve '@swc\/wasm'/,
-      /Critical dependency: the request of a dependency is an expression/,
-    ],
     optimization: {
       minimize: mode === "production",
       splitChunks: false,
@@ -158,51 +134,63 @@ export function getWebpackConfig(
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
-  if (xmcpConfig.experimental?.ssr) {
-    const fs = require("fs");
-    const clientBundlesPath = path.join(processFolder, "dist/client");
+  const fs = require("fs");
+  const clientBundlesPath = path.join(processFolder, "dist/client");
 
-    config.plugins!.push(
-      new DefinePlugin({
-        INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
-          if (!fs.existsSync(clientBundlesPath)) {
-            console.warn(
-              `⚠️  Client bundles directory not found at: ${clientBundlesPath}`
+  config.plugins!.push(
+    new DefinePlugin({
+      INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
+        if (!fs.existsSync(clientBundlesPath)) {
+          // In development mode, bundles may not exist yet if webpack recompiles
+          // before bundles are rebuilt. The runtime will fall back to reading from filesystem.
+          return JSON.stringify({});
+        }
+
+        const bundles: Record<string, string> = {};
+        const files = fs.readdirSync(clientBundlesPath);
+
+        for (const file of files) {
+          if (file.endsWith(".bundle.js")) {
+            const toolName = file.replace(".bundle.js", "");
+            const bundleContent = fs.readFileSync(
+              path.join(clientBundlesPath, file),
+              "utf-8"
             );
-            return JSON.stringify({});
+            bundles[toolName] = bundleContent;
           }
+        }
 
-          const bundles: Record<string, string> = {};
-          const files = fs.readdirSync(clientBundlesPath);
+        return JSON.stringify(bundles);
+      }, true), // Pass 'true' to indicate this value changes per build
+    })
+  );
 
-          for (const file of files) {
-            if (file.endsWith(".bundle.js")) {
-              const toolName = file.replace(".bundle.js", "");
-              const bundleContent = fs.readFileSync(
-                path.join(clientBundlesPath, file),
-                "utf-8"
-              );
-              bundles[toolName] = bundleContent;
-            }
-          }
+  // Log client bundles once after DefinePlugin is set up
+  if (fs.existsSync(clientBundlesPath)) {
+    const files = fs.readdirSync(clientBundlesPath);
+    const bundleNames = files
+      .filter((file: string) => file.endsWith(".bundle.js"))
+      .map((file: string) => file.replace(".bundle.js", ""));
 
-          const bundleCount = Object.keys(bundles).length;
-          if (bundleCount > 0) {
-            console.log(
-              `✓ Injected ${bundleCount} SSR client bundle(s): ${Object.keys(bundles).join(", ")}`
-            );
-          }
-
-          return JSON.stringify(bundles);
-        }),
-      })
-    );
+    if (bundleNames.length > 0) {
+      console.log(
+        `✓ Injected ${bundleNames.length} React client bundle(s): ${bundleNames.join(", ")}`
+      );
+    }
   }
 
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {
     // not needed in adapter mode since it only outputs one file
-    config.plugins!.push(new CleanWebpackPlugin());
+    // Exclude dist/client from being cleaned since client bundles are needed during compilation
+    // Only clean .js files in the output directory root, not subdirectories like dist/client
+    config.plugins!.push(
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: [path.join(outputPath, "*.js")],
+        dangerouslyAllowCleanPatternsOutsideProject: true,
+        dry: false, // Explicitly enable actual file deletion (not dry-run mode)
+      })
+    );
   }
 
   // add shebang to CLI output on stdio mode

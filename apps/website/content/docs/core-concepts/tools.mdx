@@ -6,7 +6,7 @@ summary: "Learn how to create and use tools in your xmcp application."
 description: "Tools are functions that your LLM can actively call and decides when to use based on user requests. They enable AI models to perform actions such as writing to databases, calling external APIs, modifying files, or triggering other logic."
 ---
 
-`xmcp` detects files under the `/src/tools/` directory and registers them as tools. This path can be configured in the `xmcp.config.ts` file.
+By default, `xmcp` detects files under the `/src/tools/` directory and registers them as tools, but you can specify a [custom directory](/docs/configuration/custom-directories) if you prefer. The directory to use can be configured in the `xmcp.config.ts` file.
 
 A tool file consists of three main exports:
 
@@ -59,34 +59,405 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
-## References
+## Schema Definition
 
-### Schema (optional)
+The schema defines your tool's input parameters using [Zod](https://zod.dev). Use `.describe()` on each parameter to help LLMs understand how to use your tool correctly.
 
-Defines the tool's input parameters with type validation:
+```typescript title="src/tools/create-user.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
 
-- **Key**: Parameter name.
-- **Value**: Zod schema with `.describe()` for documentation and tool inspection.
-- **Purpose**: Type validation and automatic parameter documentation.
+export const schema = {
+  name: z.string().describe("User's full name"),
+  email: z.string().email().describe("Valid email address"),
+  age: z.number().min(18).optional().describe("User's age (18+)"),
+  role: z.enum(["admin", "user"]).describe("User role"),
+};
 
-### Metadata (optional)
+export default async function createUser(args: InferSchema<typeof schema>) {
+  // args is automatically typed: { name: string; email: string; age?: number; role: "admin" | "user" }
+  const { name, email, age, role } = args;
+  // Implementation here
+}
+```
 
-Defines the tool's identity and behavior hints:
+### Type Inference
 
-- **Name**: Unique identifier for the tool (defaults to file name if omitted)
-- **Description**: Brief explanation of what the tool does (defaults to placeholder if omitted)
-- **Annotations**: Behavioral hints for AI models and UIs
+The `InferSchema` utility automatically infers TypeScript types from your Zod schema, giving you full type safety without manual type definitions:
+
+```typescript
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  tags: z.array(z.string()).describe("List of tags"),
+  metadata: z
+    .object({
+      priority: z.number(),
+      assignee: z.string().optional(),
+    })
+    .describe("Task metadata"),
+};
+
+// TypeScript infers:
+// {
+//   tags: string[];
+//   metadata: { priority: number; assignee?: string };
+// }
+export default async function handler(args: InferSchema<typeof schema>) {
+  // Full autocomplete and type checking
+  args.tags.forEach((tag) => console.log(tag));
+  args.metadata.priority; // number
+  args.metadata.assignee; // string | undefined
+}
+```
 
 <Callout variant="info">
-  While metadata is optional, we strongly recommend providing a clear
-  description. This helps LLMs discover and use your tools more efficiently,
-  reducing token costs and improving accuracy.
+  Clear descriptions are crucial for LLM tool discovery. For comprehensive Zod
+  validation options (regex patterns, constraints, transformations), see the
+  [Zod documentation](https://zod.dev).
 </Callout>
 
-### Implementation (required)
+## Metadata
 
-The default export function that performs the actual work:
+The metadata export defines your tool's identity and provides behavioral hints to LLMs and clients.
 
-- **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
-- **Returns**: MCP-compatible response with content array, or a string/number shortcut.
-- **Async**: Supports async operations for API calls, file I/O, etc.
+```typescript title="src/tools/delete-user.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "delete-user",
+  description: "Permanently delete a user account",
+  annotations: {
+    title: "Delete User Account",
+    destructiveHint: true,
+    idempotentHint: false,
+  },
+};
+```
+
+### Core Properties
+
+**`name`** (required)
+
+- Unique identifier for the tool
+- Defaults to the filename if not provided
+- Use kebab-case (e.g., `get-user-profile`)
+
+**`description`** (required)
+
+- Clear explanation of what the tool does
+- Defaults to placeholder if not provided
+- Critical for LLM tool discovery and selection
+
+### Annotations
+
+Behavioral hints that help LLMs and UIs understand how to use your tool:
+
+```typescript
+annotations: {
+  // Human-readable title displayed in UIs
+  title: "Create New Task",
+
+  // Tool doesn't modify its environment (safe to retry)
+  readOnlyHint: true,
+
+  // Tool may perform destructive updates (use with caution)
+  destructiveHint: false,
+
+  // Repeated calls with same args have no additional effect
+  idempotentHint: true,
+
+  // Tool interacts with external entities (APIs, databases)
+  openWorldHint: true,
+}
+```
+
+<Callout variant="info">
+  These hints are advisory only. LLMs may use them to make better decisions
+  about when and how to call your tools, but they don't enforce any behavior.
+</Callout>
+
+### OpenAI Metadata
+
+For ChatGPT widget integration, add OpenAI-specific metadata under `_meta.openai`:
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "show-analytics",
+  description: "Display analytics dashboard",
+  _meta: {
+    openai: {
+      // Tool-specific
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading analytics...",
+        invoked: "Dashboard ready!",
+      },
+
+      // Resource-specific (for auto-generated widgets)
+      widgetDescription: "Real-time analytics dashboard",
+      widgetPrefersBorder: true,
+      widgetCSP: {
+        connect_domains: ["https://api.analytics.com"],
+        resource_domains: ["https://cdn.analytics.com"],
+      },
+    },
+  },
+};
+```
+
+**Tool-specific properties:**
+
+- `widgetAccessible` - Enable widget-to-tool communication (required for widgets)
+- `toolInvocation.invoking` - Message shown while executing (≤64 chars)
+- `toolInvocation.invoked` - Message shown after completion (≤64 chars)
+- `outputTemplate` - Custom widget URI (auto-generated if not provided)
+
+**Resource-specific properties:**
+
+- `widgetDescription` - Human-readable widget summary
+- `widgetPrefersBorder` - UI rendering hint for borders
+- `widgetCSP` - Content Security Policy for external resources
+- `widgetDomain` - Optional dedicated subdomain
+- `widgetState` - Initial state object passed to widget
+
+## Handler Types
+
+Tools support three types of handlers, each suited for different use cases:
+
+| Type             | Best For                              | Returns                            |
+| ---------------- | ------------------------------------- | ---------------------------------- |
+| Standard         | Data queries, calculations, API calls | Unstructured or structured content |
+| Template Literal | Simple widgets with external scripts  | HTML string                        |
+| React Component  | Interactive, stateful widgets         | React component                    |
+
+### 1. Standard Handlers
+
+Standard handlers are functions that return text, structured content, or simple data. This is the default approach for most tools.
+
+**When to use:**
+
+- Performing calculations or data transformations
+- Calling external APIs and returning results
+- Querying databases
+- Any task that returns text or structured data without UI interaction
+
+```typescript title="src/tools/calculate.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  operation: z.enum(["add", "subtract"]),
+  a: z.number(),
+  b: z.number(),
+};
+
+export const metadata = {
+  name: "calculate",
+  description: "Perform basic calculations",
+};
+
+export default async function calculate({
+  operation,
+  a,
+  b,
+}: InferSchema<typeof schema>) {
+  const result = operation === "add" ? a + b : a - b;
+  return `Result: ${result}`;
+}
+```
+
+### 2. Template Literal Handlers
+
+Return HTML directly to create interactive widgets in ChatGPT. When you return HTML and include OpenAI metadata, xmcp automatically generates a widget resource.
+
+To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+
+```typescript title="src/tools/show-chart.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "show-chart",
+  description: "Display an interactive chart",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading chart...",
+        invoked: "Chart loaded!",
+      },
+    },
+  },
+};
+
+export default async function showChart() {
+  return `
+    <div id="chart-container">
+      <h2>Sales Data</h2>
+      <canvas id="chart"></canvas>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      // Chart initialization code
+    </script>
+  `;
+}
+```
+
+### 3. React Component Handlers
+
+Return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
+
+To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+
+```typescript title="src/tools/interactive-todo.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "interactive-todo",
+  description: "Interactive todo list widget",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading todo list...",
+        invoked: "Todo list ready!",
+      },
+    },
+  },
+};
+
+export default function InteractiveTodo() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, input]);
+      setInput("");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Setup Requirements:**
+
+1. Use `.tsx` file extension for React component tools
+2. Install React dependencies: `npm install react react-dom`
+3. Configure `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}
+```
+
+## Return Values
+
+Tools support multiple return formats depending on your needs:
+
+### Simple Values
+
+Return strings or numbers directly - xmcp automatically wraps them in the proper format:
+
+```typescript
+export default async function calculate() {
+  return "Result: 42"; // or return 42;
+}
+```
+
+### Content Array
+
+Return an object with a `content` array for rich media responses:
+
+```typescript
+export default async function getProfile() {
+  return {
+    content: [
+      {
+        type: "text",
+        text: "Profile information:",
+      },
+      {
+        type: "image",
+        data: "base64encodeddata",
+        mimeType: "image/jpeg",
+      },
+      {
+        type: "resource_link",
+        name: "Full Profile",
+        uri: "resource://profile/john",
+      },
+    ],
+  };
+}
+```
+
+**Supported content types:**
+
+- `text` - Plain text content
+- `image` - Base64-encoded images with mimeType
+- `audio` - Base64-encoded audio with mimeType
+- `resource_link` - Links to MCP resources
+
+### Structured Outputs
+
+Return structured data using the `structuredContent` property:
+
+```typescript
+export default async function getUserData() {
+  return {
+    structuredContent: {
+      user: {
+        id: 123,
+        name: "John Doe",
+        email: "john@example.com",
+      },
+      metadata: {
+        timestamp: new Date().toISOString(),
+      },
+    },
+  };
+}
+```
+
+### Combined Response
+
+Return both `content` and `structuredContent` for backwards compatibility. If the client cannot process structured outputs, it will fallback to `content`.
+
+```typescript
+export default async function getData() {
+  return {
+    content: [
+      {
+        type: "text",
+        text: "Data retrieved successfully",
+      },
+    ],
+    structuredContent: {
+      data: { key: "value" },
+    },
+  };
+}
+```

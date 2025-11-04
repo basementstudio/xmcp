@@ -2,9 +2,9 @@
   "name": "create-xmcp-app",
   "version": "0.0.3",
   "author": {
-    "name": "Basement Studio",
-    "email": "hello@basement.studio",
-    "url": "https://basement.studio"
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
   },
   "contributors": [
     {
@@ -13,9 +13,9 @@
       "url": "https://github.com/valebearzotti"
     },
     {
-      "name": "Matias Gonzalez Fernandez",
-      "email": "matiasngf@hotmail.com",
-      "url": "https://github.com/matiasngf"
+      "name": "Jose Rago",
+      "email": "jose@basement.studio",
+      "url": "https://github.com/ragojose"
     }
   ],
   "license": "MIT",
