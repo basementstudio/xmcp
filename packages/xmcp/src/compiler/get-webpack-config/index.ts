@@ -160,17 +160,24 @@ export function getWebpackConfig(
           }
         }
 
-        const bundleCount = Object.keys(bundles).length;
-        if (bundleCount > 0) {
-          console.log(
-            `✓ Injected ${bundleCount} React client bundle(s): ${Object.keys(bundles).join(", ")}`
-          );
-        }
-
         return JSON.stringify(bundles);
-      }),
+      }, true), // Pass 'true' to indicate this value changes per build
     })
   );
+
+  // Log client bundles once after DefinePlugin is set up
+  if (fs.existsSync(clientBundlesPath)) {
+    const files = fs.readdirSync(clientBundlesPath);
+    const bundleNames = files
+      .filter((file: string) => file.endsWith(".bundle.js"))
+      .map((file: string) => file.replace(".bundle.js", ""));
+
+    if (bundleNames.length > 0) {
+      console.log(
+        `✓ Injected ${bundleNames.length} React client bundle(s): ${bundleNames.join(", ")}`
+      );
+    }
+  }
 
   // add clean plugin
   if (!xmcpConfig.experimental?.adapter) {
