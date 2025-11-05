@@ -179,6 +179,16 @@ export default async function Image() {
                     y: 530 - Math.max(day.heightPercent * 4.5, 50),
                   }));
 
+                  if (normalizedData.length === 2) {
+                    // Two points - draw a simple quadratic curve
+                    const controlX = (points[0].x + points[1].x) / 2;
+                    const controlY = (points[0].y + points[1].y) / 2;
+                    let path = `M ${points[0].x} ${points[0].y}`;
+                    path += ` Q ${controlX} ${controlY}, ${points[1].x} ${points[1].y}`;
+                    path += ` L ${680} 530 L ${20} 530 Z`;
+                    return path;
+                  }
+
                   // Generate smooth curve using quadratic bezier curves
                   let path = `M ${points[0].x} ${points[0].y}`;
 
@@ -222,6 +232,15 @@ export default async function Image() {
                     x: 20 + (i * (660 / (normalizedData.length - 1))),
                     y: 530 - Math.max(day.heightPercent * 4.5, 50),
                   }));
+
+                  if (normalizedData.length === 2) {
+                    // Two points - draw a simple quadratic curve
+                    const controlX = (points[0].x + points[1].x) / 2;
+                    const controlY = (points[0].y + points[1].y) / 2;
+                    let path = `M ${points[0].x} ${points[0].y}`;
+                    path += ` Q ${controlX} ${controlY}, ${points[1].x} ${points[1].y}`;
+                    return path;
+                  }
 
                   let path = `M ${points[0].x} ${points[0].y}`;
 
