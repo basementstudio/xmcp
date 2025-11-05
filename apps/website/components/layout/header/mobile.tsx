@@ -107,7 +107,7 @@ export const MobileMenu = () => {
               </div>
               <div
                 className="animate-fade-in-up"
-                style={{ animationDelay: "0.4s" }}
+                style={{ animationDelay: "0.5s" }}
               >
                 <AnimatedLink
                   href="/stats"
