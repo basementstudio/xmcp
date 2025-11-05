@@ -9,7 +9,7 @@ export const revalidate = false;
 export default async function sitemap() {
   const url = (path: string): string => new URL(path, baseUrl).toString();
 
-  const routes = ["", "/docs", "/blog", "/examples", "/x", "/showcase"].map(
+  const routes = ["", "/docs", "/blog", "/examples", "/x", "/showcase", "/stats"].map(
     (route) => ({
       url: url(route),
       lastModified: new Date().toISOString().split("T")[0],
