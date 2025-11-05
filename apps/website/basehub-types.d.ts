@@ -99,17 +99,7 @@ export interface BlockColor {
     __typename: 'BlockColor'
 }
 
-export interface BlockDocument {
-    _analyticsKey: Scalars['String']
-    _dashboardUrl: Scalars['String']
-    _id: Scalars['String']
-    _idPath: Scalars['String']
-    _slug: Scalars['String']
-    _slugPath: Scalars['String']
-    _sys: BlockDocumentSys
-    _title: Scalars['String']
-    __typename: string
-}
+export type BlockDocument = (_AgentStart) & { __isUnion?: true }
 
 export interface BlockDocumentSys {
     apiNamePath: Scalars['String']
@@ -267,6 +257,9 @@ export interface Mutation {
 }
 
 export interface Query {
+    _agent: (_AgentStart | null)
+    /** Query across the custom AI agents in the repository. */
+    _agents: _agents
     /** The diff between the current branch and the head commit. */
     _diff: Scalars['JSON']
     /** The structure of the repository. Used by START. */
@@ -317,6 +310,35 @@ export interface Variant {
     isDefault: Scalars['Boolean']
     label: Scalars['String']
     __typename: 'Variant'
+}
+
+export interface _AgentStart {
+    _agentKey: Scalars['String']
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    accent: Scalars['String']
+    avatar: Scalars['String']
+    chatUrl: Scalars['String']
+    commit: Scalars['Boolean']
+    description: Scalars['String']
+    edit: Scalars['Boolean']
+    embedUrl: Scalars['String']
+    getUserInfo: Scalars['Boolean']
+    grayscale: Scalars['String']
+    manageBranches: Scalars['Boolean']
+    mcpUrl: Scalars['String']
+    model: Scalars['String']
+    openRouterKey: (Scalars['String'] | null)
+    searchTheWeb: Scalars['Boolean']
+    slackInstallUrl: Scalars['String']
+    systemPrompt: Scalars['String']
+    __typename: '_AgentStart'
 }
 
 export interface _BranchInfo {
@@ -384,6 +406,11 @@ export type _ResolveTargetsWithEnum = 'id' | 'objectName'
 
 export type _StructureFormatEnum = 'json' | 'xml'
 
+export interface _agents {
+    start: _AgentStart
+    __typename: '_agents'
+}
+
 export interface BaseRichTextJsonGenqlSelection{
     blocks?: boolean | number
     content?: boolean | number
@@ -442,6 +469,7 @@ export interface BlockDocumentGenqlSelection{
     _slugPath?: boolean | number
     _sys?: BlockDocumentSysGenqlSelection
     _title?: boolean | number
+    on__AgentStart?: _AgentStartGenqlSelection
     __typename?: boolean | number
     __fragmentOn?: "BlockDocument"
 }
@@ -674,6 +702,11 @@ export interface MutationGenqlSelection{
 export interface NumberFilter {eq?: (Scalars['Float'] | null),gt?: (Scalars['Float'] | null),gte?: (Scalars['Float'] | null),isNull?: (Scalars['Boolean'] | null),lt?: (Scalars['Float'] | null),lte?: (Scalars['Float'] | null),neq?: (Scalars['Float'] | null)}
 
 export interface QueryGenqlSelection{
+    _agent?: (_AgentStartGenqlSelection & { __args: {
+    /** The ID of the agent. */
+    id: Scalars['String']} })
+    /** Query across the custom AI agents in the repository. */
+    _agents?: _agentsGenqlSelection
     /** The diff between the current branch and the head commit. */
     _diff?: { __args: {
     /** Simplified diff returns only the items array showing statuses. */
@@ -757,6 +790,42 @@ export interface VariantGenqlSelection{
     __fragmentOn?: "Variant"
 }
 
+export interface _AgentStartGenqlSelection{
+    _agentKey?: boolean | number
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    accent?: boolean | number
+    avatar?: boolean | number
+    chatUrl?: boolean | number
+    commit?: boolean | number
+    description?: boolean | number
+    edit?: boolean | number
+    embedUrl?: boolean | number
+    getUserInfo?: boolean | number
+    grayscale?: boolean | number
+    manageBranches?: boolean | number
+    mcpUrl?: boolean | number
+    model?: boolean | number
+    openRouterKey?: boolean | number
+    searchTheWeb?: boolean | number
+    slackInstallUrl?: boolean | number
+    systemPrompt?: boolean | number
+    __typename?: boolean | number
+    __fragmentOn?: "_AgentStart"
+}
+
 export interface _BranchInfoGenqlSelection{
     archivedAt?: boolean | number
     archivedBy?: boolean | number
@@ -821,6 +890,12 @@ export interface _PlaygroundInfoGenqlSelection{
     id?: boolean | number
     __typename?: boolean | number
     __fragmentOn?: "_PlaygroundInfo"
+}
+
+export interface _agentsGenqlSelection{
+    start?: _AgentStartGenqlSelection
+    __typename?: boolean | number
+    __fragmentOn?: "_agents"
 }
 
 export interface FragmentsMap {
@@ -912,6 +987,10 @@ export interface FragmentsMap {
     root: Variant,
     selection: VariantGenqlSelection,
 }
+  _AgentStart: {
+    root: _AgentStart,
+    selection: _AgentStartGenqlSelection,
+}
   _BranchInfo: {
     root: _BranchInfo,
     selection: _BranchInfoGenqlSelection,
@@ -931,5 +1010,9 @@ export interface FragmentsMap {
   _PlaygroundInfo: {
     root: _PlaygroundInfo,
     selection: _PlaygroundInfoGenqlSelection,
+}
+  _agents: {
+    root: _agents,
+    selection: _agentsGenqlSelection,
 }
 }

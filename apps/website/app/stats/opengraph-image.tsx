@@ -163,6 +163,17 @@ export default async function Image() {
               {/* Generate smooth path using Catmull-Rom interpolation */}
               <path
                 d={(() => {
+                  // Handle empty or insufficient data first
+                  if (normalizedData.length === 0) {
+                    return 'M 20 530 L 680 530 Z'; // Flat line at bottom
+                  }
+
+                  if (normalizedData.length === 1) {
+                    // Single point - create a small area at center
+                    const y = 530 - Math.max(normalizedData[0].heightPercent * 4.5, 50);
+                    return `M 350 ${y} L 350 530 Z`;
+                  }
+
                   const points = normalizedData.map((day, i) => ({
                     x: 20 + (i * (660 / (normalizedData.length - 1))),
                     y: 530 - Math.max(day.heightPercent * 4.5, 50),
@@ -196,6 +207,17 @@ export default async function Image() {
               {/* Smooth line stroke */}
               <path
                 d={(() => {
+                  // Handle empty or insufficient data first
+                  if (normalizedData.length === 0) {
+                    return 'M 20 530 L 680 530'; // Flat line at bottom
+                  }
+
+                  if (normalizedData.length === 1) {
+                    // Single point - just show the point at center
+                    const y = 530 - Math.max(normalizedData[0].heightPercent * 4.5, 50);
+                    return `M 350 ${y} L 350 ${y}`;
+                  }
+
                   const points = normalizedData.map((day, i) => ({
                     x: 20 + (i * (660 / (normalizedData.length - 1))),
                     y: 530 - Math.max(day.heightPercent * 4.5, 50),
