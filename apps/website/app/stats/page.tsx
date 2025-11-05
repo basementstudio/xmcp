@@ -86,8 +86,15 @@ async function getDashboardData() {
     const prevMonthStart = new Date();
     prevMonthStart.setDate(prevMonthStart.getDate() - 60);
 
+    // For 90-day downloads
+    const last90DaysEnd = new Date();
+    last90DaysEnd.setDate(last90DaysEnd.getDate() - 1);
+    const last90DaysStart = new Date();
+    last90DaysStart.setDate(last90DaysStart.getDate() - 90);
+
     const prevWeekRange = `${formatDate(prevWeekStart)}:${formatDate(prevWeekEnd)}`;
     const prevMonthRange = `${formatDate(prevMonthStart)}:${formatDate(prevMonthEnd)}`;
+    const last90DaysRange = `${formatDate(last90DaysStart)}:${formatDate(last90DaysEnd)}`;
 
     // Create date chunks for all-time data (npm API limit: 18 months per request)
     const dateChunks = createDateChunks(startDate, endDate);
@@ -113,6 +120,10 @@ async function getDashboardData() {
         next: { revalidate: 3600 },
         cache: 'force-cache'
       }),
+      fetch(`${NPM_DOWNLOADS_API}/range/${last90DaysRange}/${PACKAGE_NAME}`, {
+        next: { revalidate: 3600 },
+        cache: 'force-cache'
+      }),
       ...dateChunks.map(chunk =>
         fetch(`${NPM_DOWNLOADS_API}/range/${chunk.start}:${chunk.end}/${PACKAGE_NAME}`, {
           next: { revalidate: 3600 },
@@ -129,12 +140,13 @@ async function getDashboardData() {
     }
 
     // Parse responses
-    const [weeklyRes, monthlyRes, versionsRes, prevWeekRes, prevMonthRes, ...chunkResponses] = responses;
+    const [weeklyRes, monthlyRes, versionsRes, prevWeekRes, prevMonthRes, last90DaysRes, ...chunkResponses] = responses;
 
-    const [weekly, monthly, versions, prevWeek, prevMonth]: [
+    const [weekly, monthly, versions, prevWeek, prevMonth, last90Days]: [
       DownloadPoint,
       DownloadPoint,
       VersionDownloads,
+      DownloadRange,
       DownloadRange,
       DownloadRange
     ] = await Promise.all([
@@ -143,6 +155,7 @@ async function getDashboardData() {
       versionsRes.json(),
       prevWeekRes.json(),
       prevMonthRes.json(),
+      last90DaysRes.json(),
     ]);
 
     // Parse and combine all chunk data
@@ -189,6 +202,7 @@ async function getDashboardData() {
     // Calculate trends
     const prevWeekTotal = prevWeek.downloads.reduce((sum, day) => sum + day.downloads, 0);
     const prevMonthTotal = prevMonth.downloads.reduce((sum, day) => sum + day.downloads, 0);
+    const last90DaysTotal = last90Days.downloads.reduce((sum, day) => sum + day.downloads, 0);
 
     const weeklyTrend = prevWeekTotal > 0
       ? Math.round(((weekly.downloads - prevWeekTotal) / prevWeekTotal) * 100)
@@ -241,6 +255,7 @@ async function getDashboardData() {
     return {
       weekly,
       monthly,
+      last90Days: last90DaysTotal,
       range,
       metadata,
       versions,
@@ -276,26 +291,40 @@ function MetricCardSkeleton() {
 }
 
 async function VersionBadge() {
-  const res = await fetch('https://registry.npmjs.org/xmcp', {
-    next: { revalidate: 3600 },
-    cache: 'force-cache'
-  });
-  const data = await res.json();
-  const latestVersion = data['dist-tags']?.latest || '';
-  
-  return (
-    <Badge variant="outline" className="text-lg font-mono">
-      v{latestVersion}
-    </Badge>
-  );
+  try {
+    const res = await fetch('https://registry.npmjs.org/xmcp', {
+      next: { revalidate: 3600 },
+      cache: 'force-cache'
+    });
+    
+    if (!res.ok) {
+      throw new Error('Failed to fetch version data');
+    }
+    
+    const data = await res.json();
+    const latestVersion = data['dist-tags']?.latest || '';
+    
+    return (
+      <Badge variant="outline" className="text-lg font-mono">
+        v{latestVersion}
+      </Badge>
+    );
+  } catch (error) {
+    console.error('Error fetching version badge:', error);
+    return (
+      <Badge variant="outline" className="text-lg font-mono text-muted-foreground">
+        N/A
+      </Badge>
+    );
+  }
 }
 
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
       {/* Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
           <MetricCardSkeleton key={i} />
         ))}
       </div>
@@ -416,6 +445,7 @@ async function DashboardContent() {
       <MetricsCards
         weeklyDownloads={data.weekly.downloads}
         monthlyDownloads={data.monthly.downloads}
+        last90DaysDownloads={data.last90Days}
         totalDownloads={totalRangeDownloads}
         versionsCount={data.metadata.versionsCount}
         maintainersCount={data.metadata.maintainers?.length || 0}

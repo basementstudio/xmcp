@@ -53,6 +53,7 @@ function MetricCard({ title, value, description, trend, icon }: MetricCardProps)
 interface MetricsCardsProps {
   weeklyDownloads: number;
   monthlyDownloads: number;
+  last90DaysDownloads: number;
   totalDownloads: number;
   versionsCount: number;
   maintainersCount: number;
@@ -64,6 +65,7 @@ interface MetricsCardsProps {
 export function MetricsCards({
   weeklyDownloads,
   monthlyDownloads,
+  last90DaysDownloads,
   totalDownloads,
   versionsCount,
   weeklyTrend,
@@ -83,10 +85,8 @@ export function MetricsCards({
   // Determine if we have all metrics to show
   const hasGithubStars = githubStars !== null && githubStars !== undefined;
 
-  const totalMetrics = 3 + (hasGithubStars ? 1 : 0);
-
   return (
-    <div className={`grid gap-4 md:grid-cols-2 ${totalMetrics >= 5 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <MetricCard
         title="Weekly Downloads"
         value={formatNumber(weeklyDownloads)}
@@ -108,9 +108,15 @@ export function MetricsCards({
         } : undefined}
       />
       <MetricCard
-        title="Total Downloads (90 Days)"
-        value={formatNumber(totalDownloads)}
+        title="90-Day Downloads"
+        value={formatNumber(last90DaysDownloads)}
         description="Last 90 days"
+        icon={<TrendingUpIcon />}
+      />
+      <MetricCard
+        title="All-Time Downloads"
+        value={formatNumber(totalDownloads)}
+        description="Since package creation"
         icon={<TrendingUpIcon />}
       />
       {hasGithubStars && (
@@ -121,14 +127,12 @@ export function MetricsCards({
           icon={<Star />}
         />
       )}
-      {!hasGithubStars && (
-        <MetricCard
-          title="Versions"
-          value={versionsCount}
-          description="Total published"
-          icon={<PackageIcon />}
-        />
-      )}
+      <MetricCard
+        title="Versions"
+        value={versionsCount}
+        description="Total published"
+        icon={<PackageIcon />}
+      />
     </div>
   );
 }
