@@ -21,6 +21,7 @@ export const Header = () => {
             <AnimatedLink href="/examples">Examples</AnimatedLink>
             <AnimatedLink href="/blog">Blog</AnimatedLink>
             <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+            <AnimatedLink href="/stats">Stats</AnimatedLink>
           </div>
         </div>
         <div className="flex gap-2 ml-auto items-center">

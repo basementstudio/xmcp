@@ -105,6 +105,18 @@ export const MobileMenu = () => {
                   Blog
                 </AnimatedLink>
               </div>
+              <div
+                className="animate-fade-in-up"
+                style={{ animationDelay: "0.4s" }}
+              >
+                <AnimatedLink
+                  href="/stats"
+                  className="text-white text-lg"
+                  onClick={handleLinkClick}
+                >
+                  Stats
+                </AnimatedLink>
+              </div>
             </nav>
           </div>
         </SheetContent>
