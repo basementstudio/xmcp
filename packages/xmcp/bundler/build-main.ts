@@ -67,6 +67,10 @@ function getConfig() {
     entry: {
       index: path.join(srcPath, "index.ts"),
       cli: path.join(srcPath, "cli.ts"),
+      "detached-flush": path.join(
+        srcPath,
+        "telemetry/events/detached-flush.ts"
+      ),
     },
     mode,
     devtool: mode === "production" ? false : "source-map",
@@ -147,6 +151,12 @@ function getConfig() {
         banner: "#!/usr/bin/env node",
         raw: true,
         include: /^cli\.js$/,
+      }),
+      // add shebang to detached-flush script
+      new webpack.BannerPlugin({
+        banner: "#!/usr/bin/env node",
+        raw: true,
+        include: /^detached-flush\.js$/,
       }),
     ],
     watch: mode === "development",
