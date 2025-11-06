@@ -28,15 +28,14 @@ const TELEMETRY_KEY_ID = "telemetry.anonymousId";
 // See the `oneWayHash` function.
 const TELEMETRY_KEY_SALT = "telemetry.salt";
 
-function getConfigPath(): string {
+function getConfigPath(distDir?: string): string {
   const isEphemeral = isCI || isDockerFunction();
 
-  if (isEphemeral) {
-    // Store in temp directory for CI/Docker (won't persist)
-    return path.join(os.tmpdir(), ".xmcp-cache", "telemetry.json");
+  if (isEphemeral && distDir) {
+    return path.join(distDir, "cache", "telemetry.json");
   }
 
-  // Use system config directory
+  // Use system config directory for local development
   const configDir = path.join(
     os.homedir(),
     process.platform === "win32" ? "AppData/Local/xmcp" : ".config/xmcp"
@@ -57,8 +56,8 @@ export class TelemetryStorage {
   private config: TelemetryConfig | null = null;
   private XMCP_TELEMETRY_DISABLED: string | undefined;
 
-  constructor() {
-    this.configPath = getConfigPath();
+  constructor(distDir?: string) {
+    this.configPath = getConfigPath(distDir);
     this.XMCP_TELEMETRY_DISABLED = process.env.XMCP_TELEMETRY_DISABLED;
     this.ensureConfig();
   }

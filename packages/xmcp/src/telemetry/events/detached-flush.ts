@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 /**
  * Detached flush script
- *
- * This script runs as a separate process to submit telemetry events
- * without blocking the main build process.
- *
  */
 
 import { readFileSync, unlinkSync, existsSync } from "fs";
@@ -17,15 +13,6 @@ import { getProjectId } from "../project-id";
 import type { TelemetryEvent } from "./tracker";
 
 async function main() {
-  const isDebug = true; // TODO: change back to process.env.XMCP_TELEMETRY_DEBUG === "1"
-
-  if (isDebug) {
-    console.error(
-      "[detached-flush] Starting with args:",
-      process.argv.slice(2)
-    );
-  }
-
   const [mode, distDir] = process.argv.slice(2);
 
   if (!mode || !distDir) {
@@ -35,14 +22,7 @@ async function main() {
 
   const eventsFile = path.join(distDir, "_events.json");
 
-  if (isDebug) {
-    console.error("[detached-flush] Looking for events file:", eventsFile);
-  }
-
   if (!existsSync(eventsFile)) {
-    if (isDebug) {
-      console.error("[detached-flush] No events file found");
-    }
     return;
   }
 
@@ -51,22 +31,15 @@ async function main() {
     const eventsData = readFileSync(eventsFile, "utf-8");
     const events: TelemetryEvent[] = JSON.parse(eventsData);
 
-    if (isDebug) {
-      console.error("[detached-flush] Found", events.length, "events");
-    }
-
     if (events.length === 0) {
       return;
     }
 
-    // Initialize storage
-    const storage = new TelemetryStorage();
+    // Initialize storage with distDir to ensure same salt as main process
+    const storage = new TelemetryStorage(distDir);
 
     // Skip if telemetry is disabled
     if (storage.isDisabled) {
-      if (isDebug) {
-        console.error("[detached-flush] Telemetry is disabled, skipping");
-      }
       return;
     }
 
@@ -91,35 +64,14 @@ async function main() {
       }))
     );
 
-    if (isDebug) {
-      console.error(
-        "[detached-flush] Sending payload:",
-        JSON.stringify(payload, null, 2)
-      );
-    }
-
     await postTelemetryPayload(payload);
-
-    if (isDebug) {
-      console.error("[detached-flush] Payload sent successfully");
-    }
 
     // Clean up events file after successful send
     unlinkSync(eventsFile);
-
-    if (isDebug) {
-      console.error("[detached-flush] Cleaned up events file");
-    }
   } catch (error) {
-    // Log errors in debug mode
-    if (isDebug) {
-      console.error("[detached-flush] Error:", error);
-    }
     // Silently fail in production - don't want to spam users with errors
     // If we fail, the events file will remain and might be picked up next time
   }
 }
 
-main().catch((error) => {
-  console.error("[detached-flush] Unhandled error:", error);
-});
+main();

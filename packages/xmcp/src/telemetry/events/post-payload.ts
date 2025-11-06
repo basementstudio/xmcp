@@ -66,24 +66,15 @@ export function postTelemetryPayload(
   payload: TelemetryPayload,
   signal?: AbortSignal
 ): Promise<void> {
-  const isDebug = true; // TODO: change back to process.env.XMCP_TELEMETRY_DEBUG === "1"
-
   if (!signal && "timeout" in AbortSignal) {
     signal = AbortSignal.timeout(5000);
-  }
-
-  if (isDebug) {
-    console.error(
-      "[telemetry] Posting payload:",
-      JSON.stringify(payload, null, 2)
-    );
   }
 
   return (
     retry(
       async () => {
         const response = await fetch(
-          "https://xmcp-telemetry.vercel.app/api/telemetry/events",
+          "https://telemetry.xmcp.dev/api/telemetry/events",
           {
             method: "POST",
             body: JSON.stringify(payload),
@@ -92,30 +83,14 @@ export function postTelemetryPayload(
           }
         );
 
-        if (isDebug) {
-          console.error("[telemetry] Response status:", response.status);
-          console.error(
-            "[telemetry] Response statusText:",
-            response.statusText
-          );
-        }
-
         // Try to parse response body
         const responseText = await response.text();
         let responseData;
         try {
           responseData = JSON.parse(responseText);
-          if (isDebug) {
-            console.error(
-              "[telemetry] Response body:",
-              JSON.stringify(responseData, null, 2)
-            );
-          }
         } catch (e) {
-          // Response might not be JSON
-          if (isDebug) {
-            console.error("[telemetry] Response text:", responseText);
-          }
+          // response might not be json
+          // ignore
         }
 
         if (!response.ok) {
@@ -124,24 +99,13 @@ export function postTelemetryPayload(
           );
           (err as any).response = response;
           (err as any).responseData = responseData;
-          if (isDebug) {
-            console.error("[telemetry] Request failed:", err.message);
-          }
           throw err;
-        }
-
-        if (isDebug) {
-          console.error("[telemetry] Telemetry sent successfully");
         }
       },
       { minTimeout: 500, retries: 1, factor: 1 }
     )
       .catch((error) => {
-        // Log errors in debug mode
-        if (isDebug) {
-          console.error("[telemetry] Final error after retries:", error);
-        }
-        // Swallow errors in production - telemetry should never break the build
+        // swallow errors in production - telemetry should never break the build
       })
       // Ensure promise is voided (fire and forget)
       .then(

@@ -4,7 +4,6 @@ import { createHash } from "crypto";
 
 /**
  * Get raw project ID from package.json
- * This matches Next.js's approach to identifying projects
  */
 export async function getRawProjectId(): Promise<string> {
   try {
@@ -26,8 +25,7 @@ export async function getRawProjectId(): Promise<string> {
 }
 
 /**
- * Get a hashed project ID (for privacy)
- * This will be salted by the storage layer
+ * Get a hashed project ID
  */
 export async function getProjectId(
   oneWayHash: (payload: string) => string

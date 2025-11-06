@@ -1,7 +1,5 @@
 /**
  * Telemetry Event Definitions
- *
- * Simple, privacy-focused telemetry for xmcp builds
  */
 
 export enum TelemetryEventName {
