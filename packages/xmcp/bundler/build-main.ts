@@ -3,10 +3,8 @@
  * */
 
 import path from "path";
+import { rspack, RspackOptions } from "@rspack/core";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import nodeExternals from "webpack-node-externals";
-import webpack from "webpack";
-import type { Configuration } from "webpack";
 import { fileURLToPath } from "url";
 import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
@@ -63,7 +61,7 @@ function getConfig() {
     }
   }
 
-  const config: Configuration = {
+  const config: RspackOptions = {
     entry: {
       index: path.join(srcPath, "index.ts"),
       cli: path.join(srcPath, "cli.ts"),
@@ -72,13 +70,15 @@ function getConfig() {
     devtool: mode === "production" ? false : "source-map",
     target: "node",
     externalsPresets: { node: true },
-    externals: [
-      nodeExternals({
-        allowlist: (modulePath) => {
-          return !libsToExcludeFromCompilation.includes(modulePath);
-        },
-      }),
-    ],
+    externals: {
+      webpack: "webpack",
+      "webpack-virtual-modules": "webpack-virtual-modules",
+      "webpack-node-externals": "webpack-node-externals",
+      "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
+      zod: "zod",
+      "@rspack/core": "@rspack/core",
+      "@rspack/cli": "@rspack/cli",
+    },
     output: {
       filename: "[name].js",
       path: outputPath,
@@ -126,24 +126,19 @@ function getConfig() {
     },
     plugins: [
       new ForkTsCheckerWebpackPlugin(),
-      new webpack.DefinePlugin({
-        RUNTIME_FILES: webpack.DefinePlugin.runtimeValue(
-          () => {
+      new rspack.DefinePlugin({
+        RUNTIME_FILES: JSON.stringify(
+          (() => {
             const runtimeFiles: Record<string, string> = {};
-
             for (const file of fileDependencies) {
               runtimeFiles[file.name] = fs.readFileSync(file.path, "utf-8");
             }
-
-            return JSON.stringify(runtimeFiles);
-          },
-          {
-            fileDependencies: fileDependencies.map((file) => file.path),
-          }
+            return runtimeFiles;
+          })()
         ),
       }),
       // add shebang to CLI output
-      new webpack.BannerPlugin({
+      new rspack.BannerPlugin({
         banner: "#!/usr/bin/env node",
         raw: true,
         include: /^cli\.js$/,
@@ -155,7 +150,7 @@ function getConfig() {
   // Fix issues with importing unsupported fsevents module
   // For more info, see: https://github.com/vinceau/project-clippi/issues/48
   config.plugins?.push(
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
     })
   );
@@ -168,7 +163,7 @@ export function buildMain() {
   console.log(chalk.bgGreen.bold("Starting xmcp compilation"));
 
   const config = getConfig();
-  webpack(config, (err, stats) => {
+  rspack(config, (err, stats) => {
     if (err) {
       console.error(err);
     }

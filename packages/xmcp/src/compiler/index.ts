@@ -1,5 +1,6 @@
-import { webpack } from "webpack";
-import { getWebpackConfig } from "./get-webpack-config";
+// import { webpack } from "webpack";
+import { rspack } from "@rspack/core";
+import { getRSPackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
 import { generateImportCode } from "./generate-import-code";
@@ -42,7 +43,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  let webpackConfig = getWebpackConfig(xmcpConfig);
+  let webpackConfig = getRSPackConfig(xmcpConfig);
 
   if (xmcpConfig.webpack) {
     webpackConfig = xmcpConfig.webpack(webpackConfig);
@@ -167,7 +168,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     // Generate all code (including client bundles) BEFORE webpack runs
     await generateCode();
 
-    webpack(webpackConfig, (err, stats) => {
+    rspack(webpackConfig, (err, stats) => {
       if (err) {
         console.error(err);
         return;
