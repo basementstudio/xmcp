@@ -42,9 +42,7 @@
   ],
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "test:telemetry": "tsx src/telemetry/test-api.ts",
-    "test:telemetry:debug": "XMCP_TELEMETRY_DEBUG=1 tsx src/telemetry/test-api.ts"
+    "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
