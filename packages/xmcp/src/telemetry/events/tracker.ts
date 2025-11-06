@@ -30,7 +30,7 @@ export class TelemetryTracker {
   private distDir: string;
 
   constructor(distDir: string = ".xmcp") {
-    this.storage = new TelemetryStorage(distDir);
+    this.storage = new TelemetryStorage();
     this.sessionId = randomBytes(32).toString("hex");
     this.queue = new Set();
     this.distDir = distDir;

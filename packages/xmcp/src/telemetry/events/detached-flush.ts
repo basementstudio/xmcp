@@ -35,8 +35,8 @@ async function main() {
       return;
     }
 
-    // Initialize storage with distDir to ensure same salt as main process
-    const storage = new TelemetryStorage(distDir);
+    // Initialize storage
+    const storage = new TelemetryStorage();
 
     // Skip if telemetry is disabled
     if (storage.isDisabled) {
