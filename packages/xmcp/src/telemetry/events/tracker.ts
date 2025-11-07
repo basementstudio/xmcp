@@ -239,9 +239,9 @@ export class TelemetryTracker {
 // Singleton instance
 let telemetryInstance: TelemetryTracker | null = null;
 
-export function getTelemetry(distDir?: string): TelemetryTracker {
+export function getTelemetry(): TelemetryTracker {
   if (!telemetryInstance) {
-    telemetryInstance = new TelemetryTracker(distDir);
+    telemetryInstance = new TelemetryTracker();
   }
   return telemetryInstance;
 }
