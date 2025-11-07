@@ -18,6 +18,14 @@ import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";
 import { greenCheck } from "@/utils/cli-icons";
+import {
+  telemetry,
+  TelemetryEventName,
+  TransportType,
+  AdapterType,
+  ErrorPhase,
+} from "../telemetry";
+import { isReactFile } from "../runtime/utils/react";
 import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
 import { isValidPath } from "@/utils/path-validation";
@@ -167,24 +175,121 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     // Generate all code (including client bundles) BEFORE webpack runs
     await generateCode();
 
-    webpack(webpackConfig, (err, stats) => {
-      if (err) {
-        console.error(err);
+    webpack(webpackConfig, async (err, stats) => {
+      // Track compilation time
+      let compilationTime: number;
+      if (stats?.endTime && stats?.startTime) {
+        compilationTime = stats.endTime - stats.startTime;
+      } else {
+        compilationTime = Date.now() - startTime;
+      }
+
+      // Handle errors
+      if (err || stats?.hasErrors()) {
+        if (err) {
+          console.error(err);
+        }
+        if (stats?.hasErrors()) {
+          console.error(
+            stats.toString({
+              colors: true,
+              chunks: false,
+            })
+          );
+        }
+
+        // Track failed build (only in production)
+        if (mode === "production") {
+          const reactToolsCount =
+            Array.from(toolPaths).filter(isReactFile).length;
+
+          telemetry.record(
+            {
+              eventName: TelemetryEventName.BUILD_FAILED,
+              fields: {
+                success: false,
+                duration: compilationTime,
+                errorPhase: ErrorPhase.WEBPACK,
+                errorType: err ? err.constructor.name : "WebpackError",
+                toolsCount: toolPaths.size,
+                reactToolsCount,
+                promptsCount: promptPaths.size,
+                resourcesCount: resourcePaths.size,
+                transport: xmcpConfig.http
+                  ? TransportType.HTTP
+                  : TransportType.STDIO,
+                adapter: xmcpConfig.experimental?.adapter
+                  ? (xmcpConfig.experimental.adapter as AdapterType)
+                  : AdapterType.NONE,
+                nodeVersion: process.version,
+                xmcpVersion: require("../../package.json").version,
+              },
+            },
+            true // deferred - we'll use flushDetached
+          );
+          // Use flushDetached for faster process exit - spawns separate process
+          telemetry.flushDetached("build");
+        }
+
         return;
       }
 
-      if (stats?.hasErrors()) {
-        console.error(
-          stats.toString({
-            colors: true,
-            chunks: false,
-          })
-        );
-        return;
-      }
-
+      // Build succeeded
       if (firstBuild) {
         onFirstBuild(mode, xmcpConfig);
+
+        // Track successful build (only in production)
+        if (mode === "production") {
+          const reactToolsCount =
+            Array.from(toolPaths).filter(isReactFile).length;
+
+          // Get output size
+          let outputSize = 0;
+          try {
+            const distPath = path.join(process.cwd(), "dist");
+            const fs = require("fs");
+            if (fs.existsSync(distPath)) {
+              const files = fs.readdirSync(distPath);
+              files.forEach((file: string) => {
+                const filePath = path.join(distPath, file);
+                const stat = fs.statSync(filePath);
+                if (stat.isFile()) {
+                  outputSize += stat.size;
+                }
+              });
+            }
+          } catch (e) {
+            // Ignore errors getting output size
+          }
+
+          telemetry.record(
+            {
+              eventName: TelemetryEventName.BUILD_COMPLETED,
+              fields: {
+                success: true,
+                duration: compilationTime,
+                toolsCount: toolPaths.size,
+                reactToolsCount,
+                promptsCount: promptPaths.size,
+                resourcesCount: resourcePaths.size,
+                outputSize,
+                transport: xmcpConfig.http
+                  ? TransportType.HTTP
+                  : TransportType.STDIO,
+                adapter: xmcpConfig.experimental?.adapter
+                  ? (xmcpConfig.experimental.adapter as AdapterType)
+                  : AdapterType.NONE,
+                nodeVersion: process.version,
+                xmcpVersion: require("../../package.json").version,
+              },
+            },
+            true // deferred - we'll use flushDetached
+          );
+          // Use flushDetached for faster process exit - spawns separate process
+          telemetry.flushDetached("build");
+          // Telemetry runs in background detached process, build exits immediately
+        }
+
         // user defined callback
         onBuild?.();
       } else {
@@ -196,14 +301,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         ) {
           startHttpServer();
         }
-      }
-
-      // Track compilation time for all builds
-      let compilationTime: number;
-      if (stats?.endTime && stats?.startTime) {
-        compilationTime = stats.endTime - stats.startTime;
-      } else {
-        compilationTime = Date.now() - startTime;
       }
 
       // Choose color based on compilation time
