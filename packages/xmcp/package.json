@@ -42,7 +42,8 @@
   ],
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts"
+    "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
+    "analyze": "./scripts/generate-bundle-metrics.sh"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
@@ -78,9 +79,13 @@
     "@types/node": "^22",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/webpack-bundle-analyzer": "^4.7.0",
     "copy-webpack-plugin": "^12.0.2",
     "node-loader": "^1.0.1",
+    "terser-webpack-plugin": "^5.3.14",
     "typescript": "^5.8.3",
+    "webpack-bundle-analyzer": "^4.10.2",
+    "webpack-cli": "^6.0.1",
     "zod": "^3.24.4"
   },
   "peerDependencies": {

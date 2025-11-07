@@ -2,12 +2,11 @@ import { Configuration } from "webpack";
 import { getXmcpConfig } from "../compiler-context";
 import { builtinModules } from "module";
 import { runtimeFiles } from "./plugins";
-import nodeExternals from "webpack-node-externals";
 
 /**
- * This function will decide is a file is bundled by xmcp compiler or not.
+ * This function will decide if a file is bundled by xmcp compiler or not.
  * We want to avoid building node modules.
- * When using Next.js, we want to avoid building tools/*, since the nexjs compiler will handle that code.
+ * When using Next.js, we want to avoid building tools/*, since the nextjs compiler will handle that code.
  */
 export function getExternals(): Configuration["externals"] {
   const xmcpConfig = getXmcpConfig();
@@ -48,7 +47,8 @@ export function getExternals(): Configuration["externals"] {
         return callback();
       }
 
-      // Check if request is a runtime file - if so, bundle it
+      // Check if request is a runtime file that we've injected - if so, bundle it
+      // Only include runtime files that are actually injected (conditional loading)
       const filesToInclude = [...Object.keys(runtimeFiles), "import-map.js"];
       for (const file of filesToInclude) {
         if (
