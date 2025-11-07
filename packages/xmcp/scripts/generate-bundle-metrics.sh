@@ -29,7 +29,7 @@ echo ""
 # Step 1: Build the framework with bundle analyzer
 echo -e "${YELLOW}[1/5]${NC} Building xmcp framework..."
 cd "$XMCP_PKG_DIR"
-pnpm build
+GENERATE_STATS=true pnpm build
 
 # Check if stats files were generated
 if [ ! -f "$XMCP_PKG_DIR/stats-main.json" ] || [ ! -f "$XMCP_PKG_DIR/stats-runtime.json" ]; then
