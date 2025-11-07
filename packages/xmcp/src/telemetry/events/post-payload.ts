@@ -104,7 +104,7 @@ export function postTelemetryPayload(
       },
       { minTimeout: 500, retries: 1, factor: 1 }
     )
-      .catch((error) => {
+      .catch(() => {
         // swallow errors in production - telemetry should never break the build
       })
       // Ensure promise is voided (fire and forget)

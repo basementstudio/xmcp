@@ -177,7 +177,14 @@ export class TelemetryTracker {
     try {
       mkdirSync(this.distDir, { recursive: true });
       const eventsFilePath = path.join(this.distDir, "_events.json");
-      writeFileSync(eventsFilePath, JSON.stringify(allEvents));
+      // Save both events and sessionId to preserve session across processes
+      writeFileSync(
+        eventsFilePath,
+        JSON.stringify({
+          sessionId: this.sessionId,
+          events: allEvents,
+        })
+      );
 
       // Note: cross-spawn is not used here as it causes
       // a new command window to appear when we don't want it to
