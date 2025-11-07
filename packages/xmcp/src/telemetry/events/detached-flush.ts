@@ -5,7 +5,6 @@
 
 import { readFileSync, unlinkSync, existsSync } from "fs";
 import path from "path";
-import { randomBytes } from "crypto";
 import { TelemetryStorage } from "../storage";
 import { getAnonymousMeta } from "../metadata";
 import { postTelemetryPayload, createPayload } from "./post-payload";
@@ -29,7 +28,10 @@ async function main() {
   try {
     // Read events from disk
     const eventsData = readFileSync(eventsFile, "utf-8");
-    const events: TelemetryEvent[] = JSON.parse(eventsData);
+    const {
+      sessionId,
+      events,
+    }: { sessionId: string; events: TelemetryEvent[] } = JSON.parse(eventsData);
 
     if (events.length === 0) {
       return;
@@ -46,9 +48,8 @@ async function main() {
     // Get project ID with one-way hash
     const projectId = await getProjectId(storage.oneWayHash.bind(storage));
 
-    // Create payload
+    // Create payload using the preserved session ID
     const meta = getAnonymousMeta();
-    const sessionId = randomBytes(32).toString("hex");
 
     const payload = createPayload(
       {
