@@ -215,6 +215,8 @@ export class TelemetryTracker {
       if ("unref" in result && result.unref) {
         result.unref();
       }
+
+      this.queue.clear();
     } catch (error) {
       // Silently fail - telemetry should never break the build
     }
