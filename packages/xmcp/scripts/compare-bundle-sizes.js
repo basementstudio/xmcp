@@ -136,6 +136,37 @@ function compareMetrics(current, baseline) {
   return results;
 }
 
+// Check if there are any changes in the comparison
+function hasChanges(comparison) {
+  // Check framework bundles
+  if (comparison.framework.main) {
+    for (const data of Object.values(comparison.framework.main)) {
+      if (data.change !== null && data.change !== 0) {
+        return true;
+      }
+    }
+  }
+
+  if (comparison.framework.runtime) {
+    for (const data of Object.values(comparison.framework.runtime)) {
+      if (data.change !== null && data.change !== 0) {
+        return true;
+      }
+    }
+  }
+
+  // Check test app metrics
+  if (comparison.testApp) {
+    for (const data of Object.values(comparison.testApp)) {
+      if (data.change !== null && data.change !== 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // Generate markdown report
 function generateMarkdown(comparison, currentMetadata) {
   const lines = [
@@ -251,11 +282,15 @@ function main() {
   // Compare or just format current
   let comparison;
   let markdown;
+  let hasChangesFlag = false;
 
   if (baselineMetrics) {
     comparison = compareMetrics(currentMetrics, baselineMetrics);
+    hasChangesFlag = hasChanges(comparison);
     markdown = generateMarkdown(comparison, currentMetrics.metadata);
   } else {
+    // No baseline - always show on first run
+    hasChangesFlag = true;
     // Just show current metrics without comparison
     markdown = [
       "## Bundle Size Analysis",
@@ -313,10 +348,22 @@ function main() {
     process.env.BUNDLE_COMMENT_PATH ||
     path.join(__dirname, "..", "bundle-comment.md");
   fs.writeFileSync(outputPath, markdown);
+
+  // Write flag file to indicate if there are changes
+  const flagPath =
+    process.env.BUNDLE_HAS_CHANGES_PATH ||
+    path.join(__dirname, "..", "bundle-has-changes.txt");
+  fs.writeFileSync(flagPath, hasChangesFlag ? "true" : "false");
 }
 
 if (require.main === module) {
   main();
 }
 
-module.exports = { compareMetrics, generateMarkdown, parseSize, formatSize };
+module.exports = {
+  compareMetrics,
+  generateMarkdown,
+  parseSize,
+  formatSize,
+  hasChanges,
+};
