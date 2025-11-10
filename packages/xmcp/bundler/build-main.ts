@@ -186,15 +186,15 @@ function getConfig() {
       resourceRegExp: /^fsevents$/,
     }),
     // Ignore @swc/wasm - we use the native binary instead
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^@swc\/wasm$/,
     }),
     // Ignore uglify-js - terser is the default minifier
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^uglify-js$/,
     }),
     // Ignore native binaries from @swc/core
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /\.node$/,
       contextRegExp: /@swc/,
     })

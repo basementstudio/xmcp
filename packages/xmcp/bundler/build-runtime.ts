@@ -4,7 +4,6 @@
 
 import path from "path";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import nodeExternals from "webpack-node-externals";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import { rspack, RspackOptions, EntryObject } from "@rspack/core";
 import { outputPath, runtimeOutputPath } from "./constants";
@@ -153,11 +152,11 @@ if (process.platform !== "darwin") {
 // Always ignore these problematic modules
 config.plugins?.push(
   // Ignore @swc/wasm - we use the native binary instead
-  new webpack.IgnorePlugin({
+  new rspack.IgnorePlugin({
     resourceRegExp: /^@swc\/wasm$/,
   }),
   // Ignore native binaries from @swc/core
-  new webpack.IgnorePlugin({
+  new rspack.IgnorePlugin({
     resourceRegExp: /\.node$/,
     contextRegExp: /@swc/,
   })
