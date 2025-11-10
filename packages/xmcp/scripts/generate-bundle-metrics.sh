@@ -95,6 +95,12 @@ TEST_APP_DIST=$(du -sh "$TEST_DIR/test-app/dist" 2>/dev/null | cut -f1 || echo "
 echo -e "${BLUE}Collecting dependency sizes...${NC}"
 TOP_DEPS=$(cd "$TEST_DIR/test-app" && du -sh node_modules/* 2>/dev/null | sort -hr | head -20)
 
+# Generate JSON array for top dependencies, defaulting to [] if empty
+TOP_DEPS_JSON=$(cd "$TEST_DIR/test-app" && du -sh node_modules/* 2>/dev/null | sort -hr | head -20 | awk '{printf "{\"name\": \"%s\", \"size\": \"%s\"},", $2, $1}' | sed '$s/,$//' | sed '1s/^/[/;$s/$/]/')
+if [ -z "$TOP_DEPS_JSON" ]; then
+  TOP_DEPS_JSON="[]"
+fi
+
 # Generate timestamp
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
@@ -125,7 +131,7 @@ cat > "$XMCP_PKG_DIR/bundle-metrics.json" << EOF
     "node_modules": "$TEST_APP_NODE_MODULES",
     "dist": "$TEST_APP_DIST"
   },
-  "top_dependencies": $(cd "$TEST_DIR/test-app" && du -sh node_modules/* 2>/dev/null | sort -hr | head -20 | awk '{printf "{\"name\": \"%s\", \"size\": \"%s\"},", $2, $1}' | sed '$s/,$//' | sed '1s/^/[/;$s/$/]/')
+  "top_dependencies": $TOP_DEPS_JSON
 }
 EOF
 
