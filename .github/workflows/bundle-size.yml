@@ -57,7 +57,7 @@ jobs:
         id: compare
         continue-on-error: true
         run: |
-          if node scripts/compare-bundle-sizes.js bundle-metrics.json ../../.github/bundle-baseline.json > bundle-comment.md 2>&1; then
+          if node scripts/compare-bundle-sizes.js bundle-metrics.json ../../.github/bundle-baseline.json > bundle-comment.md; then
             if [ -f bundle-has-changes.txt ]; then
               echo "has_changes=$(cat bundle-has-changes.txt)" >> $GITHUB_OUTPUT
             else

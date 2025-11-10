@@ -25,15 +25,21 @@ echo -e "${GREEN}✓${NC} Script directory: $SCRIPT_DIR"
 echo -e "${GREEN}✓${NC} xmcp package directory: $XMCP_PKG_DIR"
 echo ""
 
-# Step 1: Build the framework with bundle analyzer
+# Step 1: Build the framework with bundle analyzer (if stats files don't exist)
 echo -e "${YELLOW}[1/5]${NC} Building xmcp framework..."
 cd "$XMCP_PKG_DIR"
-GENERATE_STATS=true pnpm build
 
-# Check if stats files were generated
-if [ ! -f "$XMCP_PKG_DIR/stats-main.json" ] || [ ! -f "$XMCP_PKG_DIR/stats-runtime.json" ]; then
-    echo -e "${YELLOW}⚠${NC} Stats files not found. Make sure BundleAnalyzerPlugin is configured."
-    exit 1
+# Check if stats files already exist (e.g., from a previous build step)
+if [ -f "$XMCP_PKG_DIR/stats-main.json" ] && [ -f "$XMCP_PKG_DIR/stats-runtime.json" ]; then
+    echo -e "${GREEN}✓${NC} Stats files already exist, skipping build..."
+else
+    GENERATE_STATS=true pnpm build
+    
+    # Check if stats files were generated
+    if [ ! -f "$XMCP_PKG_DIR/stats-main.json" ] || [ ! -f "$XMCP_PKG_DIR/stats-runtime.json" ]; then
+        echo -e "${YELLOW}⚠${NC} Stats files not found. Make sure BundleAnalyzerPlugin is configured."
+        exit 1
+    fi
 fi
 
 STATS_MAIN_SIZE=$(du -h "$XMCP_PKG_DIR/stats-main.json" | cut -f1)
