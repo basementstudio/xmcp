@@ -120,7 +120,7 @@ cat > "$XMCP_PKG_DIR/bundle-metrics.json" << EOF
     "node_modules": "$TEST_APP_NODE_MODULES",
     "dist": "$TEST_APP_DIST"
   },
-  "top_dependencies": $(cd "$TEST_DIR/test-app" && du -sh node_modules/* 2>/dev/null | sort -hr | head -20 | awk '{printf "{\"name\": \"%s\", \"size\": \"%s\"},", $2, $1}' | sed 's/,$//' | sed 's/^/[/' | sed 's/$/]/')
+  "top_dependencies": $(cd "$TEST_DIR/test-app" && du -sh node_modules/* 2>/dev/null | sort -hr | head -20 | awk '{printf "{\"name\": \"%s\", \"size\": \"%s\"},", $2, $1}' | sed '$s/,$//' | sed '1s/^/[/;$s/$/]/')
 }
 EOF
 
