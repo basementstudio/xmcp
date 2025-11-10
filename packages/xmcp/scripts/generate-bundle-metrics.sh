@@ -20,7 +20,6 @@ echo ""
 # Get the script directory and project root
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 XMCP_PKG_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
-PROJECT_ROOT="$( cd "$XMCP_PKG_DIR/../../.." && pwd )"
 
 echo -e "${GREEN}✓${NC} Script directory: $SCRIPT_DIR"
 echo -e "${GREEN}✓${NC} xmcp package directory: $XMCP_PKG_DIR"
