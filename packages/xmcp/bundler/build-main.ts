@@ -10,6 +10,7 @@ import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
 import { execSync } from "child_process";
 import chalk from "chalk";
+import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 const compilePackageTypes = () => {
   // bundle xmcp with its own package tsconfig
@@ -30,6 +31,11 @@ function getConfig() {
     "ts-loader",
     "fork-ts-checker-webpack-plugin",
     "zod",
+    "terser-webpack-plugin", // Contains native dependencies
+    "@swc/core", // Native binary module
+    "@swc/wasm", // WASM module
+    "esbuild", // Native binary module
+    "uglify-js", // Optional minifier
   ];
 
   const __filename = fileURLToPath(import.meta.url);
@@ -109,6 +115,14 @@ function getConfig() {
             },
           },
         },
+        // Ignore .d.ts and .node files that webpack tries to parse
+        {
+          test: /\.(d\.ts|node)$/,
+          type: "asset/resource",
+          generator: {
+            emit: false,
+          },
+        },
       ],
     },
     resolve: {
@@ -147,11 +161,42 @@ function getConfig() {
     watch: mode === "development",
   };
 
-  // Fix issues with importing unsupported fsevents module
-  // For more info, see: https://github.com/vinceau/project-clippi/issues/48
+  // Only generate bundle stats when explicitly requested (for analysis)
+  if (process.env.GENERATE_STATS === "true") {
+    config.plugins?.push(
+      new BundleAnalyzerPlugin({
+        analyzerMode: "disabled",
+        generateStatsFile: true,
+        statsFilename: path.join(__dirname, "..", "stats-main.json"),
+        statsOptions: {
+          source: false,
+          reasons: true,
+          chunks: true,
+          modules: true,
+          assets: true,
+        },
+      })
+    );
+  }
+
+  // Fix issues with importing unsupported modules
+  // Ignore platform-specific and native binary modules
   config.plugins?.push(
     new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
+    }),
+    // Ignore @swc/wasm - we use the native binary instead
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^@swc\/wasm$/,
+    }),
+    // Ignore uglify-js - terser is the default minifier
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^uglify-js$/,
+    }),
+    // Ignore native binaries from @swc/core
+    new webpack.IgnorePlugin({
+      resourceRegExp: /\.node$/,
+      contextRegExp: /@swc/,
     })
   );
 

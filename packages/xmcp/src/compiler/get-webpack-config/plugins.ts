@@ -3,9 +3,38 @@ import fs from "fs-extra";
 import path from "path";
 import { Compiler } from "@rspack/core";
 import { getXmcpConfig } from "../compiler-context";
+import { XmcpConfigOuputSchema } from "@/compiler/config";
 
 // @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
+
+/**
+ * Determines which runtime files are needed based on user configuration.
+ */
+function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOuputSchema): string[] {
+  const neededFiles: string[] = [];
+
+  // headers included if http is configured
+  if (xmcpConfig.http) {
+    neededFiles.push("headers.js");
+  }
+
+  if (xmcpConfig.stdio) {
+    neededFiles.push("stdio.js");
+  }
+
+  if (xmcpConfig.http) {
+    if (xmcpConfig.experimental?.adapter === "express") {
+      neededFiles.push("adapter-express.js");
+    } else if (xmcpConfig.experimental?.adapter === "nextjs") {
+      neededFiles.push("adapter-nextjs.js");
+    } else {
+      neededFiles.push("http.js");
+    }
+  }
+
+  return neededFiles;
+}
 
 export class InjectRuntimePlugin {
   apply(compiler: Compiler) {
@@ -16,8 +45,16 @@ export class InjectRuntimePlugin {
         if (hasRun) return;
         hasRun = true;
 
+        const xmcpConfig = getXmcpConfig();
+        const neededFiles = getNeededRuntimeFiles(xmcpConfig);
+
         for (const [fileName, fileContent] of Object.entries(runtimeFiles)) {
-          fs.writeFileSync(path.join(runtimeFolderPath, fileName), fileContent);
+          if (neededFiles.includes(fileName)) {
+            fs.writeFileSync(
+              path.join(runtimeFolderPath, fileName),
+              fileContent
+            );
+          }
         }
       }
     );

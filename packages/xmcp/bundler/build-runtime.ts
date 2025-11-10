@@ -10,6 +10,7 @@ import { rspack, RspackOptions, EntryObject } from "@rspack/core";
 import { outputPath, runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
+import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
@@ -22,7 +23,9 @@ const libsToExcludeFromCompilation = [
   "ts-loader",
   "fork-ts-checker-webpack-plugin",
   "xmcp/headers",
-  //"@swc/core",
+  "@swc/core", // Native binary module
+  "@swc/wasm", // WASM module
+  "esbuild", // Native binary module
 ];
 
 interface RuntimeRoot {
@@ -119,8 +122,26 @@ const config: RspackOptions = {
   watch: mode === "development",
 };
 
-// Fix issues with importing unsupported fsevents module in Windows and Linux
-// For more info, see: https://github.com/vinceau/project-clippi/issues/48
+// Only generate bundle stats when explicitly requested (for analysis)
+if (process.env.GENERATE_STATS === "true") {
+  config.plugins?.push(
+    new BundleAnalyzerPlugin({
+      analyzerMode: "disabled",
+      generateStatsFile: true,
+      statsFilename: path.join(srcPath, "..", "stats-runtime.json"),
+      statsOptions: {
+        source: false,
+        reasons: true,
+        chunks: true,
+        modules: true,
+        assets: true,
+      },
+    })
+  );
+}
+
+// Fix issues with importing unsupported modules
+// Ignore platform-specific and native binary modules
 if (process.platform !== "darwin") {
   config.plugins?.push(
     new rspack.IgnorePlugin({
@@ -128,6 +149,19 @@ if (process.platform !== "darwin") {
     })
   );
 }
+
+// Always ignore these problematic modules
+config.plugins?.push(
+  // Ignore @swc/wasm - we use the native binary instead
+  new webpack.IgnorePlugin({
+    resourceRegExp: /^@swc\/wasm$/,
+  }),
+  // Ignore native binaries from @swc/core
+  new webpack.IgnorePlugin({
+    resourceRegExp: /\.node$/,
+    contextRegExp: /@swc/,
+  })
+);
 
 let compileStarted = false;
 
