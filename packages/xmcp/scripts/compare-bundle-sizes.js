@@ -266,14 +266,30 @@ function main() {
     process.exit(1);
   }
 
-  const currentMetrics = JSON.parse(
-    fs.readFileSync(currentMetricsPath, "utf8")
-  );
+  let currentMetrics;
+  try {
+    const currentMetricsContent = fs.readFileSync(currentMetricsPath, "utf8");
+    currentMetrics = JSON.parse(currentMetricsContent);
+  } catch (error) {
+    console.error(
+      `Error: Failed to parse current metrics file: ${currentMetricsPath}`
+    );
+    console.error(`JSON parse error: ${error.message}`);
+    process.exit(1);
+  }
 
   // Read baseline (optional - if doesn't exist, just show current)
   let baselineMetrics = null;
   if (fs.existsSync(baselinePath)) {
-    baselineMetrics = JSON.parse(fs.readFileSync(baselinePath, "utf8"));
+    try {
+      const baselineContent = fs.readFileSync(baselinePath, "utf8");
+      baselineMetrics = JSON.parse(baselineContent);
+    } catch (error) {
+      console.error(`Error: Failed to parse baseline file: ${baselinePath}`);
+      console.error(`JSON parse error: ${error.message}`);
+      console.warn("Continuing without baseline comparison...");
+      baselineMetrics = null;
+    }
   } else {
     console.warn(`Warning: Baseline file not found: ${baselinePath}`);
     console.warn("Showing current metrics only (no comparison available)");
