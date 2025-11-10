@@ -74,7 +74,7 @@ export function getRSPackConfig(
         {
           test: /\.(ts|tsx)$/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {

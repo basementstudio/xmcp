@@ -22,9 +22,6 @@ const libsToExcludeFromCompilation = [
   "ts-loader",
   "fork-ts-checker-webpack-plugin",
   "xmcp/headers",
-  "@swc/core", // Native binary module
-  "@swc/wasm", // WASM module
-  "esbuild", // Native binary module
 ];
 
 interface RuntimeRoot {
@@ -53,13 +50,11 @@ const config: RspackOptions = {
   target: "node",
   externalsPresets: { node: true },
   externals: {
-    webpack: "webpack",
     "webpack-virtual-modules": "webpack-virtual-modules",
     "webpack-node-externals": "webpack-node-externals",
     "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
     zod: "zod",
     "@rspack/core": "@rspack/core",
-    "@rspack/cli": "@rspack/cli",
   },
   output: {
     filename: "[name].js",
@@ -75,7 +70,7 @@ const config: RspackOptions = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: {
-          loader: "swc-loader",
+          loader: "builtin:swc-loader",
           options: {
             jsc: {
               parser: {

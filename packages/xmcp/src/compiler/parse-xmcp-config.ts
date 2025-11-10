@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { webpack, type Configuration } from "webpack";
 import { createFsFromVolume, Volume } from "memfs";
 import { compilerContext } from "./compiler-context";
 import {
@@ -9,6 +8,7 @@ import {
   type XmcpConfigOuputSchema,
 } from "./config";
 import { DEFAULT_PATHS_CONFIG } from "./config/constants";
+import rspack, { RspackOptions } from "@rspack/core";
 
 function validateConfig(config: unknown): XmcpConfigOuputSchema {
   return configSchema.parse(config);
@@ -80,7 +80,7 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
   const memoryFs = createFsFromVolume(new Volume());
 
   // Webpack configuration
-  const webpackConfig: Configuration = {
+  const rspackConfig: RspackOptions = {
     mode: "production",
     entry: configPath,
     target: "node",
@@ -106,7 +106,7 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
         {
           test: /\.ts$/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {
@@ -129,10 +129,10 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
   };
 
   return new Promise((resolve, reject) => {
-    const compiler = webpack(webpackConfig);
+    const compiler = rspack(rspackConfig);
 
     if (!compiler) {
-      reject(new Error("Failed to create webpack compiler"));
+      reject(new Error("Failed to create rspack compiler"));
       return;
     }
 
@@ -160,9 +160,9 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
         // Create a temporary module to evaluate the bundled code
         const module = { exports: {} };
         const require = (id: string) => {
-          // Handle webpack require
-          if (id === "webpack") {
-            return webpack;
+          // Handle rspack require
+          if (id === "rspack") {
+            return rspack;
           }
           throw new Error(`Cannot resolve module: ${id}`);
         };
