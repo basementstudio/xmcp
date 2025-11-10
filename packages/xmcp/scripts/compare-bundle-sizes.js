@@ -41,8 +41,8 @@ function formatSize(bytes) {
 
 // Calculate percentage change
 function getChange(current, baseline) {
-  if (!current || !baseline) return null;
   if (baseline === 0) return current > 0 ? 100 : 0;
+  if (!current || !baseline) return null;
   return ((current - baseline) / baseline) * 100;
 }
 
