@@ -158,7 +158,7 @@ function generateMarkdown(comparison, currentMetadata) {
         data.change !== null
           ? `${data.change > 0 ? "+" : ""}${data.change.toFixed(1)}%`
           : "N/A";
-      const bundleName = key.replace(/_/g, ".").replace("js", ".js");
+      const bundleName = key.replace(/_js$/, ".js").replace(/_/g, ".");
       lines.push(
         `| \`${bundleName}\` | ${data.current} | ${data.baseline} | ${changeStr} | ${data.emoji} |`
       );
@@ -172,7 +172,7 @@ function generateMarkdown(comparison, currentMetadata) {
         data.change !== null
           ? `${data.change > 0 ? "+" : ""}${data.change.toFixed(1)}%`
           : "N/A";
-      const bundleName = key.replace(/_/g, ".").replace("js", ".js");
+      const bundleName = key.replace(/_js$/, ".js").replace(/_/g, ".");
       lines.push(
         `| \`runtime/${bundleName}\` | ${data.current} | ${data.baseline} | ${changeStr} | ${data.emoji} |`
       );
@@ -274,7 +274,7 @@ function main() {
       for (const [key, size] of Object.entries(
         currentMetrics.framework_bundles.main
       )) {
-        const bundleName = key.replace(/_/g, ".").replace("js", ".js");
+        const bundleName = key.replace(/_js$/, ".js").replace(/_/g, ".");
         markdown.push(`| \`${bundleName}\` | ${size} |`);
       }
     }
@@ -283,7 +283,7 @@ function main() {
       for (const [key, size] of Object.entries(
         currentMetrics.framework_bundles.runtime
       )) {
-        const bundleName = key.replace(/_/g, ".").replace("js", ".js");
+        const bundleName = key.replace(/_js$/, ".js").replace(/_/g, ".");
         markdown.push(`| \`runtime/${bundleName}\` | ${size} |`);
       }
     }
@@ -300,6 +300,9 @@ function main() {
         markdown.push(`| ${metricName} | ${size} |`);
       }
     }
+
+    // Join array into string
+    markdown = markdown.join("\n");
   }
 
   // Output markdown
