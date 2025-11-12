@@ -271,8 +271,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -314,8 +314,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@types/pg':
         specifier: ^8.15.4
@@ -342,8 +342,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -382,8 +382,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/custom-webpack-config:
     dependencies:
@@ -391,8 +391,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/headers:
     dependencies:
@@ -400,8 +400,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/http-transport:
     dependencies:
@@ -409,8 +409,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/mcp-ui:
     dependencies:
@@ -421,8 +421,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/middlewares-api-key:
     dependencies:
@@ -430,8 +430,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/middlewares-array:
     dependencies:
@@ -439,8 +439,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/middlewares-custom:
     dependencies:
@@ -451,8 +451,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@types/jsonwebtoken':
         specifier: ^9.0.9
@@ -464,8 +464,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/oauth-provider:
     dependencies:
@@ -473,8 +473,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/open-ai:
     dependencies:
@@ -482,8 +482,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/open-ai-react:
     dependencies:
@@ -497,8 +497,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@types/react':
         specifier: ^19.2.2
@@ -513,8 +513,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/polar-http:
     dependencies:
@@ -525,8 +525,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/stdio-transport:
     dependencies:
@@ -534,8 +534,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/template-config:
     dependencies:
@@ -543,8 +543,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/xmcp
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
 
   examples/with-express:
     dependencies:
@@ -555,8 +555,8 @@ importers:
         specifier: ^4.18.2
         version: 4.21.2
       zod:
-        specifier: 3.24.4
-        version: 3.24.4
+        specifier: 4.1.12
+        version: 4.1.12
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -870,9 +870,9 @@ importers:
 
   packages/xmcp:
     dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.17.4
-        version: 1.20.1
+      '@socotra/modelcontextprotocol-sdk':
+        specifier: ^1.21.0
+        version: 1.21.0(zod@4.1.12)
       '@swc/core':
         specifier: 1.11.24
         version: 1.11.24
@@ -992,8 +992,8 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1(webpack-bundle-analyzer@4.10.2)(webpack@5.102.1)
       zod:
-        specifier: ^3.24.4
-        version: 3.24.4
+        specifier: ^4.1.12
+        version: 4.1.12
 
 packages:
 
@@ -3010,6 +3010,16 @@ packages:
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
 
+  '@socotra/modelcontextprotocol-sdk@1.21.0':
+    resolution: {integrity: sha512-Fjriek3XILPdqfEBPW829ZGLBAWSOjl5Rdbg7jT21OFN0OMYOWNZxH2cx8yG40/AYrhse1QU/dPkN1k3Qw5xTg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@cfworker/json-schema':
+        optional: true
+
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
@@ -3734,6 +3744,14 @@ packages:
 
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
+
+  ajv-formats@3.0.1:
+    resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
     peerDependencies:
       ajv: ^8.0.0
     peerDependenciesMeta:
@@ -9975,6 +9993,23 @@ snapshots:
 
   '@sindresorhus/merge-streams@2.3.0': {}
 
+  '@socotra/modelcontextprotocol-sdk@1.21.0(zod@4.1.12)':
+    dependencies:
+      ajv: 8.17.1
+      ajv-formats: 3.0.1(ajv@8.17.1)
+      content-type: 1.0.5
+      cors: 2.8.5
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.0.6
+      express: 5.1.0
+      express-rate-limit: 7.5.1(express@5.1.0)
+      pkce-challenge: 5.0.0
+      raw-body: 3.0.1
+      zod: 4.1.12
+    transitivePeerDependencies:
+      - supports-color
+
   '@standard-schema/spec@1.0.0': {}
 
   '@stitches/react@1.2.8(react@19.2.0)':
@@ -10698,6 +10733,10 @@ snapshots:
       zod: 4.1.12
 
   ajv-formats@2.1.1(ajv@8.17.1):
+    optionalDependencies:
+      ajv: 8.17.1
+
+  ajv-formats@3.0.1(ajv@8.17.1):
     optionalDependencies:
       ajv: 8.17.1
 
@@ -11640,8 +11679,8 @@ snapshots:
       '@typescript-eslint/parser': 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.38.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.38.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react-hooks: 5.2.0(eslint@9.38.0(jiti@2.6.1))
@@ -11660,8 +11699,8 @@ snapshots:
       '@typescript-eslint/parser': 8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)
       eslint: 9.38.0(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0)(eslint@9.38.0(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1))
+      eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.46.2(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1)))(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.38.0(jiti@2.6.1))
       eslint-plugin-react-hooks: 5.2.0(eslint@9.38.0(jiti@2.6.1))

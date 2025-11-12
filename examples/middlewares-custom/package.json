@@ -12,7 +12,7 @@
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
     "xmcp": "workspace:*",
-    "zod": "3.24.4"
+    "zod": "4.1.12"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9"
