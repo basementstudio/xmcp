@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@socotra/modelcontextprotocol-sdk/server/mcp";
 import { ZodRawShape } from "zod";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";

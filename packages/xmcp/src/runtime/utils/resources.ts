@@ -1,11 +1,11 @@
 import {
   McpServer,
   ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp";
-import { ReadResourceResult } from "@modelcontextprotocol/sdk/types";
+} from "@socotra/modelcontextprotocol-sdk/server/mcp";
+import { ReadResourceResult } from "@socotra/modelcontextprotocol-sdk/types";
 import { ResourceFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
-import { ZodRawShape } from "zod";
+import { ZodRawShape, ZodTypeAny } from "zod";
 import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
 import { ResourceMetadata } from "@/types/resource";
@@ -249,7 +249,9 @@ export function addResourcesToServer(
           }
 
           if (paramSchema) {
-            validatedParams[paramName] = paramSchema.parse(paramValue);
+            validatedParams[paramName] = (paramSchema as ZodTypeAny).parse(
+              paramValue
+            );
           } else {
             validatedParams[paramName] = paramValue;
           }

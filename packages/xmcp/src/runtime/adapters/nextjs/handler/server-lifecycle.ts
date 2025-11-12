@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@socotra/modelcontextprotocol-sdk/server/mcp";
 import type { ServerResponse } from "node:http";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
 import {

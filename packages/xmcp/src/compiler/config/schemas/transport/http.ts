@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { DEFAULT_HTTP_CONFIG } from "../../constants";
 
 // ------------------------------------------------------------
@@ -29,7 +29,7 @@ export const httpTransportConfigSchema = z.union([
       endpoint: z.string().optional(),
       cors: corsConfigSchema.optional(),
     })
-    .default(DEFAULT_HTTP_CONFIG)
+    .prefault(DEFAULT_HTTP_CONFIG)
     .optional(),
 ]);
 

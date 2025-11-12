@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 import { OpenAIMetadata } from "./openai-meta";
 
 export interface ToolAnnotations {
@@ -29,12 +29,9 @@ export interface ToolMetadata {
   };
 }
 
-export type ToolSchema = Record<
-  string,
-  z.ZodType<unknown, z.ZodTypeDef, unknown>
->;
+export type ToolSchema = Record<string, z.ZodType<any, any, any>>;
 
-// The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @modelcontextprotocol/sdk but fully resolved to avoid external type dependencies.
+// The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @socotra/modelcontextprotocol-sdk but fully resolved to avoid external type dependencies.
 /**
  * Extra arguments passed to MCP tool functions.
  */
@@ -80,7 +77,7 @@ export interface ToolExtraArguments {
   sendNotification: (notification: any) => Promise<void>;
 
   /** Sends a request that relates to the current request being handled */
-  sendRequest: <U extends z.ZodType<object>>(
+  sendRequest: <U extends z.ZodType<any, any, any>>(
     request: any,
     resultSchema: U,
     options?: {
@@ -100,6 +97,16 @@ export interface ToolExtraArguments {
   ) => Promise<z.infer<U>>;
 }
 
-export type InferSchema<T extends ToolSchema> = {
-  [K in keyof T]: z.infer<T[K]>;
+/**
+ * Infer TypeScript types from a schema object (works with both tool and prompt schemas).
+ * Handles both regular Zod types and completable-wrapped types.
+ */
+export type InferSchema<T extends Record<string, any>> = {
+  [K in keyof T]: T[K] extends { unwrap: () => infer U }
+    ? U extends z.ZodType<any, any, any>
+      ? z.output<U>
+      : never
+    : T[K] extends z.ZodType<any, any, any>
+      ? z.output<T[K]>
+      : never;
 };
