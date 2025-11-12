@@ -15,7 +15,9 @@ export async function GET() {
   }
 
   for (const [key, value] of map) {
-    scanned.push(`## ${key}`);
+    if (key) {
+      scanned.push(`## ${key}`);
+    }
     scanned.push(value.join("\n"));
   }
 
