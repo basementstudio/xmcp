@@ -7,7 +7,8 @@ import {
   webpackConfigSchema,
   templateConfigSchema,
 } from "./schemas";
-import { Configuration } from "webpack";
+// import { Configuration } from "webpack";
+import { RspackOptions } from "@rspack/core";
 
 /**
  * xmcp Config schema
@@ -21,16 +22,18 @@ export const configSchema = z.object({
   template: templateConfigSchema.optional(),
 });
 
-type WebpackConfig = { webpack?: (config: Configuration) => Configuration };
+// type WebpackConfig = { webpack?: (config: Configuration) => Configuration };
+
+type RSPackConfig = { rspack?: (config: RspackOptions) => RspackOptions };
 
 export type XmcpConfigInputSchema = Omit<
   z.input<typeof configSchema>,
-  "webpack"
+  "rspack"
 > &
-  WebpackConfig;
+  RSPackConfig;
 
 export type XmcpConfigOuputSchema = Omit<
   z.output<typeof configSchema>,
-  "webpack"
+  "rspack"
 > &
-  WebpackConfig;
+  RSPackConfig;

@@ -4,10 +4,8 @@
 
 import path from "path";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import nodeExternals from "webpack-node-externals";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import webpack from "webpack";
-import type { Configuration, EntryObject } from "webpack";
+import { rspack, RspackOptions, EntryObject } from "@rspack/core";
 import { outputPath, runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
@@ -24,9 +22,6 @@ const libsToExcludeFromCompilation = [
   "ts-loader",
   "fork-ts-checker-webpack-plugin",
   "xmcp/headers",
-  "@swc/core", // Native binary module
-  "@swc/wasm", // WASM module
-  "esbuild", // Native binary module
 ];
 
 interface RuntimeRoot {
@@ -48,19 +43,19 @@ for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
-const config: Configuration = {
+const config: RspackOptions = {
   entry,
   mode: "production",
   devtool: false,
   target: "node",
   externalsPresets: { node: true },
-  externals: [
-    nodeExternals({
-      allowlist: (modulePath) => {
-        return !libsToExcludeFromCompilation.includes(modulePath);
-      },
-    }),
-  ],
+  externals: {
+    "webpack-virtual-modules": "webpack-virtual-modules",
+    "webpack-node-externals": "webpack-node-externals",
+    "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
+    zod: "zod",
+    "@rspack/core": "@rspack/core",
+  },
   output: {
     filename: "[name].js",
     path: runtimeOutputPath,
@@ -75,7 +70,7 @@ const config: Configuration = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: {
-          loader: "swc-loader",
+          loader: "builtin:swc-loader",
           options: {
             jsc: {
               parser: {
@@ -143,7 +138,7 @@ if (process.env.GENERATE_STATS === "true") {
 // Ignore platform-specific and native binary modules
 if (process.platform !== "darwin") {
   config.plugins?.push(
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
     })
   );
@@ -152,11 +147,11 @@ if (process.platform !== "darwin") {
 // Always ignore these problematic modules
 config.plugins?.push(
   // Ignore @swc/wasm - we use the native binary instead
-  new webpack.IgnorePlugin({
+  new rspack.IgnorePlugin({
     resourceRegExp: /^@swc\/wasm$/,
   }),
   // Ignore native binaries from @swc/core
-  new webpack.IgnorePlugin({
+  new rspack.IgnorePlugin({
     resourceRegExp: /\.node$/,
     contextRegExp: /@swc/,
   })
@@ -167,7 +162,7 @@ let compileStarted = false;
 // ✨
 export function buildRuntime(onCompiled: (stats: any) => void) {
   console.log(chalk.bgGreen.bold("Starting runtime compilation"));
-  webpack(config, (err, stats) => {
+  rspack(config, (err, stats) => {
     if (err) {
       console.error(err);
     }
