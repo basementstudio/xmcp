@@ -3,12 +3,7 @@ import path from "path";
 import { webpack, type Configuration } from "webpack";
 import { createFsFromVolume, Volume } from "memfs";
 import { compilerContext } from "./compiler-context";
-import {
-  configSchema,
-  XmcpConfigInputSchema,
-  type XmcpConfigOuputSchema,
-} from "./config";
-import { DEFAULT_PATHS_CONFIG } from "./config/constants";
+import { configSchema, type XmcpConfigOuputSchema } from "./config";
 
 function validateConfig(config: unknown): XmcpConfigOuputSchema {
   return configSchema.parse(config);
@@ -61,12 +56,11 @@ export async function readConfig(): Promise<XmcpConfigOuputSchema> {
     }
   }
 
-  // Default config
-  return {
+  return configSchema.parse({
     stdio: true,
     http: true,
-    paths: DEFAULT_PATHS_CONFIG,
-  } satisfies XmcpConfigInputSchema;
+    paths: true,
+  });
 }
 
 /**

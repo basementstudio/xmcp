@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DEFAULT_PATHS_CONFIG } from "../constants";
 
 // ------------------------------------------------------------
 // Paths config schema
@@ -11,3 +10,10 @@ export const pathsConfigSchema = z.object({
 });
 
 export type PathsConfig = z.infer<typeof pathsConfigSchema>;
+
+// Default path values (used for resolution when boolean is true)
+export const DEFAULT_PATHS = {
+  tools: "src/tools",
+  prompts: "src/prompts",
+  resources: "src/resources",
+} as const;
