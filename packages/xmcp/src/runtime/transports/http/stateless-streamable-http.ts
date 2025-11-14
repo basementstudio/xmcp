@@ -16,6 +16,7 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { setResponseCorsHeaders } from "./setup-cors";
 import { CorsConfig } from "@/compiler/config/schemas";
+import { DEFAULT_CORS_CONFIG } from "@/compiler/config/constants";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 
@@ -275,7 +276,7 @@ export class StatelessStreamableHTTPTransport {
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
-    corsConfig: CorsConfig = {},
+    corsConfig: CorsConfig = DEFAULT_CORS_CONFIG,
     oauthConfig?: OAuthProxyConfig | null,
     providers?: Provider[]
   ) {
