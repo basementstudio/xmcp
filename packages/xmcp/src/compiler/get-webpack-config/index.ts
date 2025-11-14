@@ -65,8 +65,8 @@ export function getWebpackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      // Skip type checking if ignoreBuildErrors is true
-      xmcpConfig.typescript?.ignoreBuildErrors
+      // Skip type checking if skipTypeCheck is true
+      xmcpConfig.typescript?.skipTypeCheck
         ? null
         : new ForkTsCheckerWebpackPlugin(),
     ],

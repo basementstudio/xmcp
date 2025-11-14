@@ -60,5 +60,5 @@ export const DEFAULT_TEMPLATE_CONFIG = {
  * Default values for the TypeScript config
  */
 export const DEFAULT_TYPESCRIPT_CONFIG = {
-  ignoreBuildErrors: false,
+  skipTypeCheck: false,
 };
