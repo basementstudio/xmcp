@@ -17,3 +17,4 @@ export {
 export { pathsConfigSchema, type PathsConfig } from "./paths";
 export { webpackConfigSchema, type WebpackConfig } from "./webpack";
 export { templateConfigSchema, type TemplateConfig } from "./template";
+export { typescriptConfigSchema, type TypescriptConfig } from "./typescript";

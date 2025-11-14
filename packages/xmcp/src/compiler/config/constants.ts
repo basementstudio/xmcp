@@ -55,3 +55,10 @@ export const DEFAULT_TEMPLATE_CONFIG = {
   description:
     "This MCP server was bootstrapped with xmcp. Click the button below to connect to the endpoint.",
 };
+
+/**
+ * Default values for the TypeScript config
+ */
+export const DEFAULT_TYPESCRIPT_CONFIG = {
+  skipTypeCheck: false,
+};

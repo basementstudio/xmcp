@@ -65,7 +65,9 @@ export function getWebpackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      new ForkTsCheckerWebpackPlugin(),
+      xmcpConfig.typescript?.skipTypeCheck
+        ? null
+        : new ForkTsCheckerWebpackPlugin(),
     ],
     module: {
       rules: [

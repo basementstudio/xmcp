@@ -5,6 +5,8 @@ import {
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
   getResolvedExperimentalConfig,
+  getResolvedTypescriptConfig,
+  ResolvedHttpConfig,
 } from "./utils";
 import { HttpTransportConfig } from "./schemas/transport/http";
 
@@ -29,7 +31,7 @@ export function injectHttpVariables(
 
 export type HttpVariables = ReturnType<typeof injectHttpVariables>;
 
-export function injectCorsVariables(httpConfig: HttpTransportConfig | null) {
+export function injectCorsVariables(httpConfig: ResolvedHttpConfig | null) {
   const corsConfig = getResolvedCorsConfig(httpConfig);
 
   return {
@@ -99,6 +101,16 @@ export function injectAdapterVariables(userConfig: any) {
 }
 
 export type AdapterVariables = ReturnType<typeof injectAdapterVariables>;
+
+export function injectTypescriptVariables(userConfig: any) {
+  const typescriptConfig = getResolvedTypescriptConfig(userConfig);
+
+  return {
+    TYPESCRIPT_CONFIG: JSON.stringify(typescriptConfig),
+  };
+}
+
+export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 
 export type InjectedVariables =
   | HttpVariables
