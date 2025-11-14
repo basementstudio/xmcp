@@ -200,7 +200,7 @@ describe("Config System - Injection Functions", () => {
     const variables = injectHttpVariables(true, "development");
 
     assert.notEqual(variables.HTTP_CONFIG, undefined);
-    const config = JSON.parse(variables.HTTP_CONFIG);
+    const config = JSON.parse(variables.HTTP_CONFIG!);
     assert.equal(config.port, 3001);
     assert.equal(config.debug, true); // mode === "development"
     assert.equal(config.stateless, true);
@@ -320,7 +320,7 @@ describe("Config System - Injection Functions", () => {
     const variables = injectAdapterVariables(config);
 
     assert.notEqual(variables.ADAPTER_CONFIG, undefined);
-    assert.equal(JSON.parse(variables.ADAPTER_CONFIG), "nextjs");
+    assert.equal(JSON.parse(variables.ADAPTER_CONFIG!), "nextjs");
   });
 
   it("should inject STDIO variables when stdio is configured", () => {
@@ -328,7 +328,7 @@ describe("Config System - Injection Functions", () => {
     const variables = injectStdioVariables(config.stdio);
 
     assert.notEqual(variables.STDIO_CONFIG, undefined);
-    const stdio = JSON.parse(variables.STDIO_CONFIG);
+    const stdio = JSON.parse(variables.STDIO_CONFIG!);
     assert.equal(stdio.debug, true);
   });
 
