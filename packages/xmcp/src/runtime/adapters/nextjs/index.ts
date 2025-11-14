@@ -9,7 +9,7 @@ import {
   setupCleanupHandlers,
 } from "./handler/server-lifecycle";
 import { createIncomingMessage } from "./handler/request-converter";
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import type { AuthInfo } from "@socotra/modelcontextprotocol-sdk/server/auth/types";
 
 const BODY_SIZE_LIMIT = "10mb";
 

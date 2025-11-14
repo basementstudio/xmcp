@@ -20,4 +20,4 @@ export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
 
-export { completable } from "@modelcontextprotocol/sdk/server/completable";
+export { completable } from "@socotra/modelcontextprotocol-sdk/server/completable";

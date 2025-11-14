@@ -10,6 +10,6 @@
     "dev": "xmcp dev"
   },
   "dependencies": {
-    "zod": "3.24.4"
+    "zod": "4.1.12"
   }
 }

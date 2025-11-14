@@ -1,29 +1,29 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { z } from "zod";
+import * as z from "zod";
 
 const apiKeyAuthMiddlewareConfigSchema = z
-  .object({
+  .strictObject({
     apiKey: z.string().optional(),
     headerName: z.string().optional(),
     validateApiKey: z
-      .function()
-      .args(z.string())
-      .returns(z.promise(z.boolean()))
+      .function({
+        input: z.tuple([z.string()]),
+        output: z.promise(z.boolean()),
+      })
       .optional(),
   })
-  .strict()
   .refine(
     (config) =>
       config.apiKey !== undefined || config.validateApiKey !== undefined,
     {
-      message: "Either 'apiKey' or 'validateApiKey' must be provided",
+      error: "Either 'apiKey' or 'validateApiKey' must be provided",
     }
   )
   .refine(
     (config) =>
       !(config.apiKey !== undefined && config.validateApiKey !== undefined),
     {
-      message:
+      error:
         "'apiKey' and 'validateApiKey' are mutually exclusive - provide only one",
     }
   );

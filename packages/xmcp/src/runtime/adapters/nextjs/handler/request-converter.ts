@@ -1,7 +1,7 @@
 import { type IncomingHttpHeaders, IncomingMessage } from "node:http";
 import { Socket } from "node:net";
 import { Readable } from "node:stream";
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import type { AuthInfo } from "@socotra/modelcontextprotocol-sdk/server/auth/types";
 
 export interface RequestConversionOptions {
   method: string;

@@ -2,8 +2,8 @@ import {
   CallToolResult,
   ServerRequest,
   ServerNotification,
-} from "@modelcontextprotocol/sdk/types";
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+} from "@socotra/modelcontextprotocol-sdk/types";
+import { RequestHandlerExtra } from "@socotra/modelcontextprotocol-sdk/shared/protocol";
 import { ZodRawShape } from "zod";
 import { validateContent } from "../validators";
 

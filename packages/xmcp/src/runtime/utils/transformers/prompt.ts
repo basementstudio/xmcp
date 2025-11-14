@@ -2,10 +2,10 @@ import {
   GetPromptResult,
   ServerRequest,
   ServerNotification,
-} from "@modelcontextprotocol/sdk/types";
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+} from "@socotra/modelcontextprotocol-sdk/types";
+import { RequestHandlerExtra } from "@socotra/modelcontextprotocol-sdk/shared/protocol";
 import { PromptArgsRawShape } from "../prompts";
-import { contentValidators, validateContent } from "../validators";
+import { validateContent } from "../validators";
 
 /**
  * Type for content that users can return from prompt handlers

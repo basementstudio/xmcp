@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { McpServer } from "@socotra/modelcontextprotocol-sdk/server/mcp.js";
+import { StdioServerTransport } from "@socotra/modelcontextprotocol-sdk/server/stdio.js";
 import { createServer } from "../../utils/server";
 import dotenv from "dotenv";
 dotenv.config();

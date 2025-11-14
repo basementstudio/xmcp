@@ -1,5 +1,5 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { ZodOptional, ZodType, ZodTypeDef } from "zod";
+import { McpServer } from "@socotra/modelcontextprotocol-sdk/server/mcp";
+import { ZodOptional, ZodType } from "zod";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
@@ -13,9 +13,7 @@ interface PromptMetadata {
 }
 
 export type PromptArgsRawShape = {
-  [k: string]:
-    | ZodType<string, ZodTypeDef, string>
-    | ZodOptional<ZodType<string, ZodTypeDef, string>>;
+  [k: string]: ZodType<string> | ZodOptional<ZodType<string>>;
 };
 
 /** Loads prompts and injects them into the server */

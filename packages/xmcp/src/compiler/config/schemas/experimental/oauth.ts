@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "zod";
 
 // ------------------------------------------------------------
 // OAuth endpoints schema
@@ -21,8 +21,8 @@ export const oauthConfigSchema = z.object({
   issuerUrl: z.string(),
   baseUrl: z.string(),
   serviceDocumentationUrl: z.string().optional(),
-  pathPrefix: z.string().default("/oauth2"),
-  defaultScopes: z.array(z.string()).default(["openid", "profile", "email"]),
+  pathPrefix: z.string().prefault("/oauth2"),
+  defaultScopes: z.array(z.string()).prefault(["openid", "profile", "email"]),
 });
 
 export type OAuthConfig = z.infer<typeof oauthConfigSchema>;

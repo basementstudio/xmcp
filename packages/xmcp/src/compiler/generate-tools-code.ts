@@ -29,7 +29,7 @@ export function generateToolsExportCode(): string {
     })
     .join(",\n  ");
 
-  return `import { z } from "zod";
+  return `import * as z from 'zod';
 
 ${importStatements}
 
@@ -112,7 +112,7 @@ export function generateToolsTypesCode(): string {
       ? toolNames.map((name) => `"${name}"`).join(" | ")
       : "never";
 
-  return `import { z } from "zod";
+  return `import * as z from 'zod';
 
 export interface ToolMetadata {
   name: string;

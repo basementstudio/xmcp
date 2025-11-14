@@ -1,4 +1,4 @@
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import type { AuthInfo } from "@socotra/modelcontextprotocol-sdk/server/auth/types";
 
 /**
  * Standard OAuth Protected Resource Metadata path (RFC 9728)

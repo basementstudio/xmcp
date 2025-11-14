@@ -13,7 +13,10 @@ export const metadata: ToolMetadata = {
 };
 
 // Tool implementation
-export default async function extraArguments(_, extra: ToolExtraArguments) {
+export default async function extraArguments(
+  _: any,
+  extra: ToolExtraArguments
+) {
   const extraArguments = JSON.stringify(extra); // to render a readable string
   const result = `Your extra arguments are: ${extraArguments}`;
 
