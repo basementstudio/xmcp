@@ -43,7 +43,8 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "analyze": "./scripts/generate-bundle-metrics.sh"
+    "analyze": "./scripts/generate-bundle-metrics.sh",
+    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
