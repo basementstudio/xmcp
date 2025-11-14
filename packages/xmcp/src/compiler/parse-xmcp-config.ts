@@ -59,7 +59,7 @@ export async function readConfig(): Promise<XmcpConfigOuputSchema> {
   return configSchema.parse({
     stdio: true,
     http: true,
-    paths: true,
+    paths: {},
   });
 }
 
