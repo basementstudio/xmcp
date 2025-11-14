@@ -5,7 +5,7 @@ const config: XmcpConfig = {
     port: 3002,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    skipTypeCheck: true,
   },
 };
 
