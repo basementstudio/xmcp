@@ -11,7 +11,7 @@ import {
 import { HttpTransportConfig } from "./schemas/transport/http";
 
 export function injectHttpVariables(
-  httpConfig: HttpTransportConfig | boolean,
+  httpConfig: HttpTransportConfig | boolean | undefined,
   mode: string
 ) {
   const resolvedConfig = getResolvedHttpConfig(httpConfig);
