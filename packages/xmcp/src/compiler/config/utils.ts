@@ -1,35 +1,37 @@
 import {
   HttpTransportConfig,
   CorsConfig,
-  PathsConfig,
   OAuthConfig,
   StdioTransportConfig,
   TemplateConfig,
-  ExperimentalConfig,
+  TypescriptConfig,
 } from "./schemas";
 import {
   DEFAULT_HTTP_CONFIG,
   DEFAULT_PATHS_CONFIG,
   DEFAULT_STDIO_CONFIG,
   DEFAULT_TEMPLATE_CONFIG,
+  DEFAULT_TYPESCRIPT_CONFIG,
 } from "./constants";
+
+export type ResolvedHttpConfig = typeof DEFAULT_HTTP_CONFIG;
 
 export function getResolvedHttpConfig(
   userConfig: HttpTransportConfig | undefined
-) {
+): ResolvedHttpConfig | null {
   if (typeof userConfig === "boolean") {
     return userConfig ? DEFAULT_HTTP_CONFIG : null;
   }
   if (typeof userConfig === "object") {
-    return { ...DEFAULT_HTTP_CONFIG, ...userConfig };
+    return { ...DEFAULT_HTTP_CONFIG, ...userConfig } as ResolvedHttpConfig;
   }
   return null;
 }
 
 export function getResolvedCorsConfig(
-  httpConfig: HttpTransportConfig | null
+  httpConfig: ResolvedHttpConfig | null
 ): CorsConfig {
-  if (typeof httpConfig === "object" && httpConfig?.cors) {
+  if (httpConfig?.cors) {
     return { ...DEFAULT_HTTP_CONFIG.cors, ...httpConfig.cors };
   }
   return DEFAULT_HTTP_CONFIG.cors;
@@ -114,4 +116,14 @@ export function getResolvedExperimentalConfig(userConfig: any): {
   return {
     adapter: experimental?.adapter,
   };
+}
+
+export function getResolvedTypescriptConfig(
+  userConfig: any
+): TypescriptConfig | null {
+  const typescript = userConfig?.typescript;
+  if (!typescript) {
+    return DEFAULT_TYPESCRIPT_CONFIG;
+  }
+  return { ...DEFAULT_TYPESCRIPT_CONFIG, ...typescript };
 }

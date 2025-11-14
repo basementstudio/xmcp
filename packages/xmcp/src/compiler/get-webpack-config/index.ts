@@ -65,7 +65,10 @@ export function getWebpackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      new ForkTsCheckerWebpackPlugin(),
+      // Skip type checking if ignoreBuildErrors is true
+      xmcpConfig.typescript?.ignoreBuildErrors
+        ? null
+        : new ForkTsCheckerWebpackPlugin(),
     ],
     module: {
       rules: [

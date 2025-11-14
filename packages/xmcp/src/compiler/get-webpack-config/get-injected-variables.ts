@@ -9,7 +9,9 @@ import {
   injectStdioVariables,
   injectTemplateVariables,
   injectAdapterVariables,
+  injectTypescriptVariables,
 } from "../config/injection";
+import { getResolvedHttpConfig } from "../config/utils";
 
 /**
  * The XMCP runtime uses variables that are not defined by default.
@@ -21,13 +23,15 @@ export function getInjectedVariables(
 ): InjectedVariables {
   const { mode } = compilerContext.getContext();
 
+  const resolvedHttpConfig = getResolvedHttpConfig(xmcpConfig.http);
   const httpVariables = injectHttpVariables(xmcpConfig.http, mode);
-  const corsVariables = injectCorsVariables(xmcpConfig.http);
+  const corsVariables = injectCorsVariables(resolvedHttpConfig);
   const oauthVariables = injectOAuthVariables(xmcpConfig);
   const pathsVariables = injectPathsVariables(xmcpConfig);
   const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
   const templateVariables = injectTemplateVariables(xmcpConfig);
   const adapterVariables = injectAdapterVariables(xmcpConfig);
+  const typescriptVariables = injectTypescriptVariables(xmcpConfig);
 
   return {
     ...httpVariables,
@@ -37,5 +41,6 @@ export function getInjectedVariables(
     ...stdioVariables,
     ...templateVariables,
     ...adapterVariables,
+    ...typescriptVariables,
   };
 }
