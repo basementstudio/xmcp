@@ -1,4 +1,4 @@
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { compilerContext } from "../compiler-context";
 import {
   injectCorsVariables,
@@ -19,7 +19,7 @@ import { getResolvedHttpConfig } from "../config/utils";
  * This utility will define those variables based on the user's config.
  */
 export function getInjectedVariables(
-  xmcpConfig: XmcpConfigOuputSchema
+  xmcpConfig: XmcpConfigOutputSchema
 ): InjectedVariables {
   const { mode } = compilerContext.getContext();
 

@@ -1,10 +1,10 @@
 import { runtimeFolderPath } from "@/utils/constants";
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
 import path from "path";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
-  xmcpConfig: XmcpConfigOuputSchema
+  xmcpConfig: XmcpConfigOutputSchema
 ): Record<string, string> {
   const entries: Record<string, string> = {};
   if (xmcpConfig.stdio) {
