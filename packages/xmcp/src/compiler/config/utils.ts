@@ -10,7 +10,7 @@ import {
   DEFAULT_PATHS,
 } from "./schemas";
 import type { z } from "zod";
-import type { XmcpConfigOuputSchema } from "./index";
+import type { XmcpConfigOutputSchema } from "./index";
 import type { CorsConfig } from "./schemas";
 
 // Resolved types derived from function return types
@@ -68,7 +68,7 @@ export type ResolvedPathsConfig = {
 };
 
 export function getResolvedPathsConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): ResolvedPathsConfig {
   const userPaths = userConfig?.paths;
   if (!userPaths) {
@@ -112,7 +112,7 @@ export function getResolvedPathsConfig(
 }
 
 export function getResolvedOAuthConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): z.output<typeof oauthConfigSchema> | null {
   return userConfig?.experimental?.oauth || null;
 }
@@ -123,7 +123,7 @@ export type ResolvedStdioConfig = Extract<
 > | null;
 
 export function getResolvedStdioConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): ResolvedStdioConfig {
   const stdioConfig = userConfig?.stdio;
   if (typeof stdioConfig === "boolean") {
@@ -155,7 +155,7 @@ export function getResolvedStdioConfig(
 }
 
 export function getResolvedTemplateConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): z.output<typeof templateConfigSchema> {
   const userTemplate = userConfig?.template;
   return templateConfigSchema.parse(userTemplate ?? {});
@@ -167,7 +167,7 @@ export type ResolvedExperimentalConfig = Pick<
 >;
 
 export function getResolvedExperimentalConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): ResolvedExperimentalConfig {
   const experimental = userConfig?.experimental;
   return {
@@ -176,7 +176,7 @@ export function getResolvedExperimentalConfig(
 }
 
 export function getResolvedTypescriptConfig(
-  userConfig: XmcpConfigOuputSchema
+  userConfig: XmcpConfigOutputSchema
 ): z.output<typeof typescriptConfigSchema> {
   const typescript = userConfig?.typescript;
   return typescriptConfigSchema.parse(typescript ?? {});

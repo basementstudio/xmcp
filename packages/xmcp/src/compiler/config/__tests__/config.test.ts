@@ -21,7 +21,7 @@ import {
   injectStdioVariables,
 } from "../injection";
 import { configSchema } from "../index";
-import type { XmcpConfigOuputSchema } from "../index";
+import type { XmcpConfigOutputSchema } from "../index";
 
 describe("Config System - Zod Defaults", () => {
   it("should apply defaults when parsing empty config", () => {

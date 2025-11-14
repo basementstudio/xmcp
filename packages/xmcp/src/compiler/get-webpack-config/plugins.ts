@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import path from "path";
 import { Compiler } from "webpack";
 import { getXmcpConfig } from "../compiler-context";
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
 
 // @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
@@ -11,7 +11,7 @@ export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
 /**
  * Determines which runtime files are needed based on user configuration.
  */
-function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOuputSchema): string[] {
+function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
   const neededFiles: string[] = [];
 
   // headers included if http is configured

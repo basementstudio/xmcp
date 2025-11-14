@@ -3,9 +3,9 @@ import path from "path";
 import { webpack, type Configuration } from "webpack";
 import { createFsFromVolume, Volume } from "memfs";
 import { compilerContext } from "./compiler-context";
-import { configSchema, type XmcpConfigOuputSchema } from "./config";
+import { configSchema, type XmcpConfigOutputSchema } from "./config";
 
-function validateConfig(config: unknown): XmcpConfigOuputSchema {
+function validateConfig(config: unknown): XmcpConfigOutputSchema {
   return configSchema.parse(config);
 }
 
@@ -26,7 +26,7 @@ const configPaths = {
 /**
  * Parse and validate xmcp config file
  */
-export async function getConfig(): Promise<XmcpConfigOuputSchema> {
+export async function getConfig(): Promise<XmcpConfigOutputSchema> {
   const config = await readConfig();
   const { platforms } = compilerContext.getContext();
   if (platforms.vercel) {
@@ -39,7 +39,7 @@ export async function getConfig(): Promise<XmcpConfigOuputSchema> {
 /**
  * Read config from file or return default
  */
-export async function readConfig(): Promise<XmcpConfigOuputSchema> {
+export async function readConfig(): Promise<XmcpConfigOutputSchema> {
   // Simple json config
   const jsonFile = readConfigFile(configPaths.json);
   if (jsonFile) {
@@ -67,7 +67,7 @@ export async function readConfig(): Promise<XmcpConfigOuputSchema> {
  * If the user is using a typescript config file,
  * we need to bundle it, run it and return its copiled code
  * */
-async function compileConfig(): Promise<XmcpConfigOuputSchema> {
+async function compileConfig(): Promise<XmcpConfigOutputSchema> {
   const configPath = path.resolve(process.cwd(), configPaths.ts);
 
   // Create memory filesystem

@@ -31,7 +31,7 @@ export type XmcpConfigInputSchema = Omit<
 > &
   WebpackConfig;
 
-export type XmcpConfigOuputSchema = Omit<
+export type XmcpConfigOutputSchema = Omit<
   z.output<typeof configSchema>,
   "webpack"
 > &

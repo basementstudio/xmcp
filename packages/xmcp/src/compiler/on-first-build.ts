@@ -2,11 +2,11 @@ import { spawn } from "child_process";
 import { CompilerMode } from ".";
 import { watchdog } from "../utils/spawn-process";
 import { greenCheck } from "../utils/cli-icons";
-import { XmcpConfigOuputSchema } from "./config";
+import { XmcpConfigOutputSchema } from "./config";
 
 export function onFirstBuild(
   mode: CompilerMode,
-  xmcpConfig: XmcpConfigOuputSchema
+  xmcpConfig: XmcpConfigOutputSchema
 ) {
   if (mode === "development" && false) {
     // disable inspector for now
