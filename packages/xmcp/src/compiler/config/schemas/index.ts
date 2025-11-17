@@ -13,8 +13,9 @@ export { oauthConfigSchema, type OAuthConfig } from "./experimental/oauth";
 export {
   experimentalConfigSchema,
   type ExperimentalConfig,
+  type AdapterConfig,
 } from "./experimental";
-export { pathsConfigSchema, type PathsConfig } from "./paths";
+export { pathsConfigSchema, type PathsConfig, DEFAULT_PATHS } from "./paths";
 export { webpackConfigSchema, type WebpackConfig } from "./webpack";
 export { templateConfigSchema, type TemplateConfig } from "./template";
 export { typescriptConfigSchema, type TypescriptConfig } from "./typescript";

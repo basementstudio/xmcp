@@ -2,7 +2,11 @@ import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "@/types/middleware";
-import { CorsConfig, TemplateConfig } from "@/compiler/config/schemas";
+import {
+  CorsConfig,
+  ResolvedHttpConfig,
+  TemplateConfig,
+} from "@/compiler/config";
 import { Provider, processProviders } from "@/runtime/middlewares/utils";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 import dotenv from "dotenv";
@@ -10,18 +14,9 @@ dotenv.config();
 
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
-// perhaps this should be an exported type from the compiler config
-export type RuntimeHttpConfig = {
-  port?: number;
-  host?: string;
-  bodySizeLimit?: number;
-  debug?: boolean;
-  endpoint?: string;
-  stateless?: boolean; // stateless right now is the only option supported
-};
 
 // @ts-expect-error: injected by compiler
-const httpConfig = HTTP_CONFIG as RuntimeHttpConfig;
+const httpConfig = HTTP_CONFIG as ResolvedHttpConfig;
 // @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // @ts-expect-error: injected by compiler
@@ -57,6 +52,16 @@ async function main() {
     credentials: corsConfig.credentials,
     maxAge: corsConfig.maxAge,
   };
+
+  if (httpConfig?.debug) {
+    console.log("Config:", {
+      http: httpConfig,
+      cors: corsConfig,
+      template: templateConfig,
+      middleware: middleware,
+      oauth: oauthConfig,
+    });
+  }
 
   let providers: Provider[] = [];
 

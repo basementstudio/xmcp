@@ -1,9 +1,9 @@
+import { ResolvedHttpConfig } from "@/compiler/config";
 import { createContext } from "../../utils/context";
-import { RuntimeHttpConfig } from "../transports/http";
 
 export interface HttpTransportContext {
   config: {
-    http?: RuntimeHttpConfig;
+    http?: ResolvedHttpConfig;
   };
 }
 
