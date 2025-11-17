@@ -44,3 +44,5 @@ bundle-analysis/
 stats-*.json
 bundle-*.json
 bundle-*.html
+
+.cursor
