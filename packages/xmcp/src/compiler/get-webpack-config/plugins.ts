@@ -1,7 +1,7 @@
 import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
 import fs from "fs-extra";
 import path from "path";
-import { Compiler } from "webpack";
+import { Compiler } from "@rspack/core";
 import { getXmcpConfig } from "../compiler-context";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 
@@ -144,5 +144,59 @@ export class CreateTypeDefinitionPlugin {
         }
       }
     );
+  }
+}
+
+interface InjectClientBundlesPluginOptions {
+  clientBundlesPath: string;
+}
+
+export class InjectClientBundlesPlugin {
+  private clientBundlesPath: string;
+
+  constructor(options: InjectClientBundlesPluginOptions) {
+    this.clientBundlesPath = options.clientBundlesPath;
+  }
+
+  apply(compiler: Compiler) {
+    compiler.hooks.compilation.tap("InjectClientBundles", (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: "InjectClientBundles",
+          stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+        },
+        (assets) => {
+          let bundles: Record<string, string> = {};
+
+          if (fs.existsSync(this.clientBundlesPath)) {
+            const files = fs.readdirSync(this.clientBundlesPath);
+            for (const file of files) {
+              if (file.endsWith(".bundle.js")) {
+                const toolName = file.replace(".bundle.js", "");
+                const bundleContent = fs.readFileSync(
+                  path.join(this.clientBundlesPath, file),
+                  "utf-8"
+                );
+                bundles[toolName] = bundleContent;
+              }
+            }
+          }
+
+          // Inyecta en todos los archivos JS
+          for (const assetName in assets) {
+            if (assetName.endsWith(".js")) {
+              const source = assets[assetName].source().toString();
+              const injected = source.replace(
+                /var INJECTED_CLIENT_BUNDLES\s*=\s*[^;]+;/,
+                `var INJECTED_CLIENT_BUNDLES = ${JSON.stringify(bundles)};`
+              );
+              assets[assetName] = new compiler.rspack.sources.RawSource(
+                injected
+              );
+            }
+          }
+        }
+      );
+    });
   }
 }

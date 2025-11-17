@@ -1,10 +1,9 @@
 import {
-  Configuration,
-  DefinePlugin,
+  RspackOptions,
   ProvidePlugin,
+  DefinePlugin,
   BannerPlugin,
-  IgnorePlugin,
-} from "webpack";
+} from "@rspack/core";
 import path from "path";
 import { distOutputPath, adapterOutputPath } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
@@ -13,14 +12,18 @@ import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import { CreateTypeDefinitionPlugin, InjectRuntimePlugin } from "./plugins";
+import {
+  CreateTypeDefinitionPlugin,
+  InjectClientBundlesPlugin,
+  InjectRuntimePlugin,
+} from "./plugins";
 import { getExternals } from "./get-externals";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
 /** Creates the webpack configuration that xmcp will use to bundle the user's code */
-export function getWebpackConfig(
+export function getRspackConfig(
   xmcpConfig: XmcpConfigOutputSchema
-): Configuration {
+): RspackOptions {
   const processFolder = process.cwd();
   const { mode } = compilerContext.getContext();
 
@@ -32,7 +35,7 @@ export function getWebpackConfig(
     ? "index.js"
     : "[name].js";
 
-  const config: Configuration = {
+  const config: RspackOptions = {
     mode,
     watch: mode === "development",
     devtool: mode === "development" ? "eval-cheap-module-source-map" : false,
@@ -74,7 +77,7 @@ export function getWebpackConfig(
         {
           test: /\.(ts|tsx)$/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {
@@ -136,34 +139,20 @@ export function getWebpackConfig(
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
+  // Define INJECTED_CLIENT_BUNDLES with initial empty value
+  // This will be replaced by InjectClientBundlesPlugin with actual bundles
+  config.plugins!.push(
+    new DefinePlugin({
+      INJECTED_CLIENT_BUNDLES: JSON.stringify({}),
+    })
+  );
+
   const fs = require("fs");
   const clientBundlesPath = path.join(processFolder, "dist/client");
 
   config.plugins!.push(
-    new DefinePlugin({
-      INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
-        if (!fs.existsSync(clientBundlesPath)) {
-          // In development mode, bundles may not exist yet if webpack recompiles
-          // before bundles are rebuilt. The runtime will fall back to reading from filesystem.
-          return JSON.stringify({});
-        }
-
-        const bundles: Record<string, string> = {};
-        const files = fs.readdirSync(clientBundlesPath);
-
-        for (const file of files) {
-          if (file.endsWith(".bundle.js")) {
-            const toolName = file.replace(".bundle.js", "");
-            const bundleContent = fs.readFileSync(
-              path.join(clientBundlesPath, file),
-              "utf-8"
-            );
-            bundles[toolName] = bundleContent;
-          }
-        }
-
-        return JSON.stringify(bundles);
-      }, true), // Pass 'true' to indicate this value changes per build
+    new InjectClientBundlesPlugin({
+      clientBundlesPath,
     })
   );
 

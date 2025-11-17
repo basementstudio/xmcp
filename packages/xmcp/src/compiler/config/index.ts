@@ -8,7 +8,7 @@ import {
   templateConfigSchema,
   typescriptConfigSchema,
 } from "./schemas";
-import { Configuration } from "webpack";
+import { RspackOptions } from "@rspack/core";
 
 /**
  * xmcp Config schema
@@ -23,19 +23,21 @@ export const configSchema = z.object({
   typescript: typescriptConfigSchema.optional(),
 });
 
-type WebpackConfig = { webpack?: (config: Configuration) => Configuration };
+// type WebpackConfig = { webpack?: (config: Configuration) => Configuration };
+
+type RSPackConfig = { rspack?: (config: RspackOptions) => RspackOptions };
 
 export type XmcpConfigInputSchema = Omit<
   z.input<typeof configSchema>,
-  "webpack"
+  "rspack"
 > &
-  WebpackConfig;
+  RSPackConfig;
 
 export type XmcpConfigOutputSchema = Omit<
   z.output<typeof configSchema>,
-  "webpack"
+  "rspack"
 > &
-  WebpackConfig;
+  RSPackConfig;
 
 // Re-export resolved types from utils (where they're defined)
 // Types are derived from resolution functions using ReturnType

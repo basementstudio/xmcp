@@ -48,12 +48,10 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
-    "@swc/core": "1.11.24",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
-    "swc-loader": "^0.2.6",
-    "webpack": "^5.99.7",
     "webpack-node-externals": "^3.0.0",
-    "webpack-virtual-modules": "^0.5.0"
+    "webpack-virtual-modules": "^0.5.0",
+    "@rspack/core": "^1.6.1"
   },
   "devDependencies": {
     "@types/content-type": "^1.1.9",
@@ -80,13 +78,10 @@
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.2",
     "memfs": "^4.17.2",
-    "node-loader": "^1.0.1",
     "raw-body": "^3.0.0",
-    "terser-webpack-plugin": "^5.3.14",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^6.0.1",
     "zod": "^3.24.4"
   },
   "peerDependencies": {
