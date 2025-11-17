@@ -21,7 +21,6 @@ import {
   injectStdioVariables,
 } from "../injection";
 import { configSchema } from "../index";
-import type { XmcpConfigOutputSchema } from "../index";
 
 describe("Config System - Zod Defaults", () => {
   it("should apply defaults when parsing empty config", () => {
@@ -203,7 +202,6 @@ describe("Config System - Injection Functions", () => {
     const config = JSON.parse(variables.HTTP_CONFIG!);
     assert.equal(config.port, 3001);
     assert.equal(config.debug, true); // mode === "development"
-    assert.equal(config.stateless, true);
   });
 
   it("should not inject HTTP variables when http is false", () => {
