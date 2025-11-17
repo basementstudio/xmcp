@@ -187,8 +187,8 @@ export class InjectClientBundlesPlugin {
             if (assetName.endsWith(".js")) {
               const source = assets[assetName].source().toString();
               const injected = source.replace(
-                /var INJECTED_CLIENT_BUNDLES\s*=\s*\{[^}]*\}/,
-                `var INJECTED_CLIENT_BUNDLES = ${JSON.stringify(bundles)}`
+                /var INJECTED_CLIENT_BUNDLES\s*=\s*[^;]+;/,
+                `var INJECTED_CLIENT_BUNDLES = ${JSON.stringify(bundles)};`
               );
               assets[assetName] = new compiler.rspack.sources.RawSource(
                 injected
