@@ -53,16 +53,6 @@ async function main() {
     maxAge: corsConfig.maxAge,
   };
 
-  if (httpConfig?.debug) {
-    console.log("Config:", {
-      http: httpConfig,
-      cors: corsConfig,
-      template: templateConfig,
-      middleware: middleware,
-      oauth: oauthConfig,
-    });
-  }
-
   let providers: Provider[] = [];
 
   // process the middleware file content splitting into providers (middlewares and/or routers) preserving sequence
