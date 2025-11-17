@@ -73,7 +73,7 @@ async function compileConfig(): Promise<XmcpConfigOutputSchema> {
   // Create memory filesystem
   const memoryFs = createFsFromVolume(new Volume());
 
-  // Webpack configuration
+  // rspack configuration
   const rspackConfig: RspackOptions = {
     mode: "production",
     entry: configPath,
@@ -118,7 +118,7 @@ async function compileConfig(): Promise<XmcpConfigOutputSchema> {
       ],
     },
     externals: {
-      webpack: "commonjs2 webpack",
+      rspack: "commonjs2 rspack",
     },
   };
 

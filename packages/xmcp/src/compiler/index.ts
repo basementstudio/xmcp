@@ -1,4 +1,3 @@
-// import { webpack } from "webpack";
 import { rspack } from "@rspack/core";
 import { getRspackConfig } from "./get-webpack-config";
 import chalk from "chalk";
