@@ -25,7 +25,6 @@ export function injectHttpVariables(
       host: resolvedConfig.host,
       bodySizeLimit: resolvedConfig.bodySizeLimit,
       endpoint: resolvedConfig.endpoint,
-      stateless: true,
       debug: mode === "development",
     }),
   };
