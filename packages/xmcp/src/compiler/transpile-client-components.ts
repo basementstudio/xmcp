@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import { rspack, RspackOptions } from "@rspack/core";
+import { clientComponentCompiler } from "./client-component-compiler";
 
 /**
  * Build a client-side bundle for a React component
@@ -12,100 +10,10 @@ export async function transpileClientComponent(
   outputDir: string
 ): Promise<void> {
   try {
-    const absolutePath = path.resolve(process.cwd(), componentPath);
-    const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
-
-    if (!fs.existsSync(absoluteOutputDir)) {
-      fs.mkdirSync(absoluteOutputDir, { recursive: true });
-    }
-
-    const outputPath = path.join(absoluteOutputDir, `${toolName}.bundle.js`);
-
-    const rspackConfig: RspackOptions = {
-      mode: "production",
-      entry: absolutePath,
-      target: "web",
-      output: {
-        path: absoluteOutputDir,
-        filename: `${toolName}.bundle.js`,
-      },
-      resolve: {
-        extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
-      },
-      resolveLoader: {
-        modules: [
-          "node_modules",
-          path.resolve(__dirname, "../node_modules"), // for monorepo/npm
-          path.resolve(__dirname, "../.."), // for pnpm
-        ],
-      },
-      module: {
-        rules: [
-          {
-            test: /\.(ts|tsx)$/,
-            use: {
-              loader: "builtin:swc-loader",
-              options: {
-                jsc: {
-                  parser: {
-                    syntax: "typescript",
-                    tsx: true,
-                  },
-                  transform: {
-                    react: {
-                      runtime: "automatic",
-                      importSource: "react",
-                    },
-                  },
-                  target: "es2015",
-                },
-                module: {
-                  type: "es6",
-                },
-              },
-            },
-          },
-        ],
-      },
-      optimization: {
-        minimize: false,
-      },
-    };
-
-    return new Promise((resolve, reject) => {
-      const compiler = rspack(rspackConfig);
-
-      if (!compiler) {
-        reject(
-          new Error(
-            `Failed to create rspack compiler for "${toolName}" at ${componentPath}`
-          )
-        );
-        return;
-      }
-
-      compiler.run((err, stats) => {
-        if (err) {
-          reject(
-            new Error(
-              `Failed to transpile client component "${toolName}" at ${componentPath}: ${err.message}`
-            )
-          );
-          return;
-        }
-
-        if (stats?.hasErrors()) {
-          reject(
-            new Error(
-              `Failed to transpile client component "${toolName}" at ${componentPath}: ${stats.toString({ colors: false, errors: true })}`
-            )
-          );
-          return;
-        }
-
-        console.log(`✓ Built client bundle: ${outputPath}`);
-        resolve();
-      });
+    await clientComponentCompiler.compile({
+      componentPath,
+      toolName,
+      outputDir,
     });
   } catch (error) {
     throw new Error(
