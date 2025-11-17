@@ -1,6 +1,6 @@
 // import { webpack } from "webpack";
 import { rspack } from "@rspack/core";
-import { getRSPackConfig } from "./get-webpack-config";
+import { getRspackConfig } from "./get-webpack-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
 import { generateImportCode } from "./generate-import-code";
@@ -43,7 +43,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  let webpackConfig = getRSPackConfig(xmcpConfig);
+  let webpackConfig = getRspackConfig(xmcpConfig);
 
   if (xmcpConfig.webpack) {
     webpackConfig = xmcpConfig.webpack(webpackConfig);
