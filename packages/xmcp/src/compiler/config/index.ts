@@ -6,8 +6,8 @@ import {
   pathsConfigSchema,
   webpackConfigSchema,
   templateConfigSchema,
+  typescriptConfigSchema,
 } from "./schemas";
-// import { Configuration } from "webpack";
 import { RspackOptions } from "@rspack/core";
 
 /**
@@ -20,6 +20,7 @@ export const configSchema = z.object({
   paths: pathsConfigSchema.optional(),
   webpack: webpackConfigSchema.optional(),
   template: templateConfigSchema.optional(),
+  typescript: typescriptConfigSchema.optional(),
 });
 
 // type WebpackConfig = { webpack?: (config: Configuration) => Configuration };
@@ -32,8 +33,34 @@ export type XmcpConfigInputSchema = Omit<
 > &
   RSPackConfig;
 
-export type XmcpConfigOuputSchema = Omit<
+export type XmcpConfigOutputSchema = Omit<
   z.output<typeof configSchema>,
   "rspack"
 > &
   RSPackConfig;
+
+// Re-export resolved types from utils (where they're defined)
+// Types are derived from resolution functions using ReturnType
+export type {
+  ResolvedHttpConfig,
+  ResolvedStdioConfig,
+  ResolvedPathsConfig,
+  ResolvedExperimentalConfig,
+} from "./utils";
+
+// Template, TypeScript, and CORS configs don't need resolved types
+// They can use Zod's output types directly: z.output<typeof templateConfigSchema>
+// OAuth config is just OAuthConfig | null, can be used inline
+
+// Re-export all types from schemas
+export type {
+  HttpTransportConfig,
+  StdioTransportConfig,
+  CorsConfig,
+  OAuthConfig,
+  ExperimentalConfig,
+  PathsConfig,
+  WebpackConfig,
+  TemplateConfig,
+  TypescriptConfig,
+} from "./schemas";

@@ -7,7 +7,7 @@ import {
 import path from "path";
 import { distOutputPath, adapterOutputPath } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
@@ -18,10 +18,11 @@ import {
   InjectRuntimePlugin,
 } from "./plugins";
 import { getExternals } from "./get-externals";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 
-/** Creates the rspack configuration that xmcp will use to bundle the user's code */
-export function getRSPackConfig(
-  xmcpConfig: XmcpConfigOuputSchema
+/** Creates the webpack configuration that xmcp will use to bundle the user's code */
+export function getRspackConfig(
+  xmcpConfig: XmcpConfigOutputSchema
 ): RspackOptions {
   const processFolder = process.cwd();
   const { mode } = compilerContext.getContext();
@@ -67,7 +68,9 @@ export function getRSPackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      // new TsCheckerRspackPlugin(),
+      xmcpConfig.typescript?.skipTypeCheck
+        ? null
+        : new ForkTsCheckerWebpackPlugin(),
     ],
     module: {
       rules: [
