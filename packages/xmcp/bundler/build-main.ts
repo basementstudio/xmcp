@@ -11,6 +11,7 @@ import fs from "fs-extra";
 import { execSync } from "child_process";
 import chalk from "chalk";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+import { runCompiler } from "./compiler-manager";
 
 const compilePackageTypes = () => {
   // bundle xmcp with its own package tsconfig
@@ -22,20 +23,6 @@ const compilePackageTypes = () => {
 function getConfig() {
   const mode =
     process.env.NODE_ENV === "production" ? "production" : "development";
-
-  /** Since we are using webpack to build webpack, we need to exclude some modules */
-  const libsToExcludeFromCompilation = [
-    "webpack",
-    "webpack-virtual-modules",
-    "webpack-node-externals",
-    "ts-loader",
-    "fork-ts-checker-webpack-plugin",
-    "zod",
-    "@swc/core", // Native binary module
-    "@swc/wasm", // WASM module
-    "esbuild", // Native binary module
-    "uglify-js", // Optional minifier
-  ];
 
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
@@ -177,23 +164,9 @@ function getConfig() {
   }
 
   // Fix issues with importing unsupported modules
-  // Ignore platform-specific and native binary modules
   config.plugins?.push(
     new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
-    }),
-    // Ignore @swc/wasm - we use the native binary instead
-    new rspack.IgnorePlugin({
-      resourceRegExp: /^@swc\/wasm$/,
-    }),
-    // Ignore uglify-js - terser is the default minifier
-    new rspack.IgnorePlugin({
-      resourceRegExp: /^uglify-js$/,
-    }),
-    // Ignore native binaries from @swc/core
-    new rspack.IgnorePlugin({
-      resourceRegExp: /\.node$/,
-      contextRegExp: /@swc/,
     })
   );
 
@@ -205,9 +178,11 @@ export function buildMain() {
   console.log(chalk.bgGreen.bold("Starting xmcp compilation"));
 
   const config = getConfig();
-  rspack(config, (err, stats) => {
+
+  const handleStats = (err: Error | null, stats: any) => {
     if (err) {
       console.error(err);
+      return;
     }
 
     if (stats?.hasErrors()) {
@@ -230,5 +205,7 @@ export function buildMain() {
     compilePackageTypes();
 
     console.log(chalk.bgGreen.bold("xmcp compiled"));
-  });
+  };
+
+  runCompiler(config, handleStats, "main");
 }

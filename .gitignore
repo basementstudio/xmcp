@@ -45,4 +45,5 @@ stats-*.json
 bundle-*.json
 bundle-*.html
 
+# cursor
 .cursor

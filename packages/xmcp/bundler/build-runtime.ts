@@ -10,19 +10,10 @@ import { outputPath, runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+import { runCompiler } from "./compiler-manager";
 
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-
-/** Since we are using webpack to build webpack, we need to exclude some modules */
-const libsToExcludeFromCompilation = [
-  "webpack",
-  "webpack-virtual-modules",
-  "webpack-node-externals",
-  "ts-loader",
-  "fork-ts-checker-webpack-plugin",
-  "xmcp/headers",
-];
 
 interface RuntimeRoot {
   name: string;
@@ -50,10 +41,10 @@ const config: RspackOptions = {
   target: "node",
   externalsPresets: { node: true },
   externals: {
+    // Build-time dependencies (not needed in final bundle)
     "webpack-virtual-modules": "webpack-virtual-modules",
     "webpack-node-externals": "webpack-node-externals",
     "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
-    zod: "zod",
     "@rspack/core": "@rspack/core",
   },
   output: {
@@ -144,27 +135,16 @@ if (process.platform !== "darwin") {
   );
 }
 
-// Always ignore these problematic modules
-config.plugins?.push(
-  // Ignore @swc/wasm - we use the native binary instead
-  new rspack.IgnorePlugin({
-    resourceRegExp: /^@swc\/wasm$/,
-  }),
-  // Ignore native binaries from @swc/core
-  new rspack.IgnorePlugin({
-    resourceRegExp: /\.node$/,
-    contextRegExp: /@swc/,
-  })
-);
-
 let compileStarted = false;
 
 // ✨
 export function buildRuntime(onCompiled: (stats: any) => void) {
   console.log(chalk.bgGreen.bold("Starting runtime compilation"));
-  rspack(config, (err, stats) => {
+
+  const handleStats = (err: Error | null, stats: any) => {
     if (err) {
       console.error(err);
+      return;
     }
 
     if (stats?.hasErrors()) {
@@ -186,11 +166,12 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
 
     console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
 
-    if (compileStarted) {
-      return;
-    } else {
+    // Only call onCompiled once for the initial build
+    if (!compileStarted) {
       compileStarted = true;
       onCompiled(stats);
     }
-  });
+  };
+
+  runCompiler(config, handleStats, "runtime");
 }
