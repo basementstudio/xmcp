@@ -973,18 +973,9 @@ importers:
       memfs:
         specifier: ^4.17.2
         version: 4.49.0
-      node-loader:
-        specifier: ^1.0.1
-        version: 1.0.3(webpack@5.102.1(@swc/core@1.11.24))
       raw-body:
         specifier: ^3.0.0
         version: 3.0.1
-      terser-webpack-plugin:
-        specifier: ^5.3.14
-        version: 5.3.14(@swc/core@1.11.24)(webpack@5.102.1(@swc/core@1.11.24))
-      ts-checker-rspack-plugin:
-        specifier: ^1.2.0
-        version: 1.2.0(@rspack/core@1.6.1)(typescript@5.9.3)
       tsx:
         specifier: ^4.19.4
         version: 4.20.6
@@ -5949,9 +5940,6 @@ packages:
   memfs@4.49.0:
     resolution: {integrity: sha512-L9uC9vGuc4xFybbdOpRLoOAOq1YEBBsocCs5NVW32DfU+CZWWIn3OVF+lB8Gp4ttBVSMazwrTrjv8ussX/e3VQ==}
 
-  memfs@4.50.0:
-    resolution: {integrity: sha512-N0LUYQMUA1yS5tJKmMtU9yprPm6ZIg24yr/OVv/7t6q0kKDIho4cBbXRi1XKttUmNYDYgF/q45qrKE/UhGO0CA==}
-
   merge-descriptors@1.0.3:
     resolution: {integrity: sha512-gaNvAS7TZ897/rVaZ0nMtAyxNyi/pdbjbAwUpFQpN70GqnVfOiXpeUUMKRBmzXaSQ8DdTX4/0ms62r2K+hE6mQ==}
 
@@ -6236,12 +6224,6 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
-
-  node-loader@1.0.3:
-    resolution: {integrity: sha512-8c9ef5q24F0AjrPxUjdX7qdTlsU1zZCPeqYvSBCH1TJko3QW4qu1uA1C9KbOPdaRQwREDdbSYZgltBAlbV7l5g==}
-    engines: {node: '>= 10.13.0'}
-    peerDependencies:
-      webpack: ^4.0.0 || ^5.0.0
 
   node-releases@2.0.26:
     resolution: {integrity: sha512-S2M9YimhSjBSvYnlr5/+umAnPHE++ODwt5e2Ij6FoX45HA/s4vHdkDx1eax2pAPeAOqu4s9b7ppahsyEFdVqQA==}
@@ -7394,15 +7376,6 @@ packages:
     engines: {node: '>=18.12'}
     peerDependencies:
       typescript: '>=4.8.4'
-
-  ts-checker-rspack-plugin@1.2.0:
-    resolution: {integrity: sha512-/wnEnvOj7hqW/sGmfR74b95vhqvwFReb6rrN6Z0g5uuqP9M1W17N9y0wywSedjFYEgDOoGXCkfQ+QLbSkh4qyA==}
-    peerDependencies:
-      '@rspack/core': ^1.0.0
-      typescript: '>=3.8.0'
-    peerDependenciesMeta:
-      '@rspack/core':
-        optional: true
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
@@ -13494,15 +13467,6 @@ snapshots:
       tree-dump: 1.1.0(tslib@2.8.1)
       tslib: 2.8.1
 
-  memfs@4.50.0:
-    dependencies:
-      '@jsonjoy.com/json-pack': 1.21.0(tslib@2.8.1)
-      '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
-      glob-to-regex.js: 1.2.0(tslib@2.8.1)
-      thingies: 2.5.0(tslib@2.8.1)
-      tree-dump: 1.1.0(tslib@2.8.1)
-      tslib: 2.8.1
-
   merge-descriptors@1.0.3: {}
 
   merge-descriptors@2.0.0: {}
@@ -13915,12 +13879,6 @@ snapshots:
       - babel-plugin-macros
 
   node-abort-controller@3.1.1: {}
-
-  node-loader@1.0.3(webpack@5.102.1(@swc/core@1.11.24)):
-    dependencies:
-      loader-utils: 2.0.4
-      schema-utils: 3.3.0
-      webpack: 5.102.1(@swc/core@1.11.24)
 
   node-releases@2.0.26: {}
 
@@ -15347,19 +15305,6 @@ snapshots:
   ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
       typescript: 5.9.3
-
-  ts-checker-rspack-plugin@1.2.0(@rspack/core@1.6.1)(typescript@5.9.3):
-    dependencies:
-      '@babel/code-frame': 7.27.1
-      '@rspack/lite-tapable': 1.0.1
-      chokidar: 3.6.0
-      is-glob: 4.0.3
-      memfs: 4.50.0
-      minimatch: 9.0.5
-      picocolors: 1.1.1
-      typescript: 5.9.3
-    optionalDependencies:
-      '@rspack/core': 1.6.1
 
   ts-interface-checker@0.1.13: {}
 

@@ -31,7 +31,6 @@ function getConfig() {
     "ts-loader",
     "fork-ts-checker-webpack-plugin",
     "zod",
-    "terser-webpack-plugin", // Contains native dependencies
     "@swc/core", // Native binary module
     "@swc/wasm", // WASM module
     "esbuild", // Native binary module
