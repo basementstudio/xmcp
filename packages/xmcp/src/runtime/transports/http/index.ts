@@ -53,13 +53,15 @@ async function main() {
     maxAge: corsConfig.maxAge,
   };
 
-  console.log("Config:", {
-    http: httpConfig,
-    cors: corsConfig,
-    template: templateConfig,
-    middleware: middleware,
-    oauth: oauthConfig,
-  });
+  if (httpConfig?.debug) {
+    console.log("Config:", {
+      http: httpConfig,
+      cors: corsConfig,
+      template: templateConfig,
+      middleware: middleware,
+      oauth: oauthConfig,
+    });
+  }
 
   let providers: Provider[] = [];
 
