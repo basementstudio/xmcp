@@ -13,19 +13,20 @@ export async function transpileClientComponent(
 ): Promise<void> {
   try {
     const absolutePath = path.resolve(process.cwd(), componentPath);
+    const absoluteOutputDir = path.resolve(process.cwd(), outputDir);
 
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+    if (!fs.existsSync(absoluteOutputDir)) {
+      fs.mkdirSync(absoluteOutputDir, { recursive: true });
     }
 
-    const outputPath = path.join(outputDir, `${toolName}.bundle.js`);
+    const outputPath = path.join(absoluteOutputDir, `${toolName}.bundle.js`);
 
     const rspackConfig: RspackOptions = {
       mode: "production",
       entry: absolutePath,
       target: "web",
       output: {
-        path: outputDir,
+        path: absoluteOutputDir,
         filename: `${toolName}.bundle.js`,
       },
       resolve: {
