@@ -27,30 +27,22 @@ export function getResolvedHttpConfig(
   if (typeof userConfig === "boolean") {
     if (!userConfig) return null;
     // When boolean is true, parse an empty object to get defaults from Zod
-    // Parse with union schema - {} will match the object branch
+    // The schema transform handles merging all defaults including cors
     const parsed = httpTransportConfigSchema.parse({});
     // Type guard narrows from boolean | object to object
     if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
-    // Ensure cors is always present (parse with defaults if missing)
-    return {
-      ...parsed,
-      cors: parsed.cors ?? corsConfigSchema.parse({}),
-    };
+    return parsed;
   }
   if (typeof userConfig === "object" && userConfig !== null) {
-    // Config is already parsed by Zod, but ensure defaults are applied
+    // The schema transform handles merging defaults for partial configs
     const parsed = httpTransportConfigSchema.parse(userConfig);
     // Type guard narrows from boolean | object to object
     if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
-    // Ensure cors is always present (parse with defaults if missing)
-    return {
-      ...parsed,
-      cors: parsed.cors ?? corsConfigSchema.parse({}),
-    };
+    return parsed;
   }
   return null;
 }
