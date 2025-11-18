@@ -8,7 +8,6 @@ import { rspack, RspackOptions, EntryObject } from "@rspack/core";
 import { runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { runCompiler } from "./compiler-manager";
 
 const mode =
@@ -93,24 +92,6 @@ const config: RspackOptions = {
   plugins: [new TsCheckerRspackPlugin()],
   watch: mode === "development",
 };
-
-// Only generate bundle stats when explicitly requested (for analysis)
-if (process.env.GENERATE_STATS === "true") {
-  config.plugins?.push(
-    new BundleAnalyzerPlugin({
-      analyzerMode: "disabled",
-      generateStatsFile: true,
-      statsFilename: path.join(srcPath, "..", "stats-runtime.json"),
-      statsOptions: {
-        source: false,
-        reasons: true,
-        chunks: true,
-        modules: true,
-        assets: true,
-      },
-    })
-  );
-}
 
 // Fix issues with importing unsupported modules
 // Ignore platform-specific and native binary modules

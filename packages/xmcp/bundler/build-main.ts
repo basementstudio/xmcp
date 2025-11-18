@@ -10,7 +10,6 @@ import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
 import { execSync } from "child_process";
 import chalk from "chalk";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { runCompiler } from "./compiler-manager";
 
 const compilePackageTypes = () => {
@@ -144,24 +143,6 @@ function getConfig() {
     ],
     watch: mode === "development",
   };
-
-  // Only generate bundle stats when explicitly requested (for analysis)
-  if (process.env.GENERATE_STATS === "true") {
-    config.plugins?.push(
-      new BundleAnalyzerPlugin({
-        analyzerMode: "disabled",
-        generateStatsFile: true,
-        statsFilename: path.join(__dirname, "..", "stats-main.json"),
-        statsOptions: {
-          source: false,
-          reasons: true,
-          chunks: true,
-          modules: true,
-          assets: true,
-        },
-      })
-    );
-  }
 
   // Fix issues with importing unsupported modules
   config.plugins?.push(
