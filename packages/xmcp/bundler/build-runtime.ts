@@ -3,10 +3,9 @@
  * */
 
 import path from "path";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import { rspack, RspackOptions, EntryObject } from "@rspack/core";
-import { outputPath, runtimeOutputPath } from "./constants";
+import { runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
@@ -41,9 +40,6 @@ const config: RspackOptions = {
   target: "node",
   externalsPresets: { node: true },
   externals: {
-    // Build-time dependencies (not needed in final bundle)
-    "webpack-virtual-modules": "webpack-virtual-modules",
-    "webpack-node-externals": "webpack-node-externals",
     "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
     "@rspack/core": "@rspack/core",
   },
@@ -54,6 +50,7 @@ const config: RspackOptions = {
     library: {
       type: "umd",
     },
+    clean: true,
   },
   module: {
     rules: [
@@ -93,17 +90,7 @@ const config: RspackOptions = {
     minimize: true,
     splitChunks: false,
   },
-  plugins: [
-    new ForkTsCheckerWebpackPlugin({
-      typescript: {
-        configFile: path.join(srcPath, "..", "tsconfig.json"),
-      },
-    }),
-    new CleanWebpackPlugin({
-      cleanStaleWebpackAssets: false,
-      cleanOnceBeforeBuildPatterns: [outputPath],
-    }),
-  ],
+  plugins: [new TsCheckerRspackPlugin()],
   watch: mode === "development",
 };
 

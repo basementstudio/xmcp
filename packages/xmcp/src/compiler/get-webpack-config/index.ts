@@ -11,14 +11,13 @@ import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import {
   CreateTypeDefinitionPlugin,
   InjectClientBundlesPlugin,
   InjectRuntimePlugin,
 } from "./plugins";
 import { getExternals } from "./get-externals";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 
 /** Creates the webpack configuration that xmcp will use to bundle the user's code */
 export function getRspackConfig(
@@ -43,6 +42,7 @@ export function getRspackConfig(
       filename: outputFilename,
       path: outputPath,
       libraryTarget: "commonjs2",
+      clean: true,
     },
     target: "node",
     externals: getExternals(),
@@ -68,9 +68,7 @@ export function getRspackConfig(
     plugins: [
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
-      xmcpConfig.typescript?.skipTypeCheck
-        ? null
-        : new ForkTsCheckerWebpackPlugin(),
+      xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
     module: {
       rules: [
@@ -98,6 +96,7 @@ export function getRspackConfig(
     },
     optimization: {
       minimize: mode === "production",
+      mergeDuplicateChunks: true,
       splitChunks: false,
     },
   };
@@ -168,20 +167,6 @@ export function getRspackConfig(
         `✓ Injected ${bundleNames.length} React client bundle(s): ${bundleNames.join(", ")}`
       );
     }
-  }
-
-  // add clean plugin
-  if (!xmcpConfig.experimental?.adapter) {
-    // not needed in adapter mode since it only outputs one file
-    // Exclude dist/client from being cleaned since client bundles are needed during compilation
-    // Only clean .js files in the output directory root, not subdirectories like dist/client
-    config.plugins!.push(
-      new CleanWebpackPlugin({
-        cleanOnceBeforeBuildPatterns: [path.join(outputPath, "*.js")],
-        dangerouslyAllowCleanPatternsOutsideProject: true,
-        dry: false, // Explicitly enable actual file deletion (not dry-run mode)
-      })
-    );
   }
 
   // add shebang to CLI output on stdio mode
