@@ -17,14 +17,17 @@ export function generateHTML(componentCode: string): string {
       '$1"https://esm.sh/react@19"'
     )
     .replace(
-      /["']react\/jsx-runtime(?:\.m?js)?["']/g,
-      '"https://esm.sh/react@19/jsx-runtime"'
+      /import\s*\(\s*["']react\/jsx-runtime(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19/jsx-runtime")'
     )
     .replace(
-      /["']react\/jsx-dev-runtime(?:\.m?js)?["']/g,
-      '"https://esm.sh/react@19/jsx-dev-runtime"'
+      /import\s*\(\s*["']react\/jsx-dev-runtime(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19/jsx-dev-runtime")'
     )
-    .replace(/["']react(?:\.m?js)?["']/g, '"https://esm.sh/react@19"');
+    .replace(
+      /import\s*\(\s*["']react(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19")'
+    );
 
   const renderScript = `
   <!-- Component rendering using ESM (React 19) -->
