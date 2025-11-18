@@ -1,4 +1,4 @@
-import { clientComponentCompiler } from "./client-component-compiler";
+import { clientComponentCompiler } from "./component-compiler";
 
 /**
  * Build a client-side bundle for a React component
