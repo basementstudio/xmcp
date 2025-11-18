@@ -41,103 +41,79 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build xmcp package
+      - name: Build xmcp package with stats
         working-directory: packages/xmcp
-        run: |
-          GENERATE_STATS=true pnpm build
+        env:
+          GENERATE_STATS: "true"
+        run: pnpm build
 
-      - name: Generate bundle metrics
+      - name: Generate rspack analysis
         working-directory: packages/xmcp
-        run: |
-          chmod +x scripts/generate-bundle-metrics.sh
-          ./scripts/generate-bundle-metrics.sh
+        run: pnpm tsx scripts/analyze-rspack-stats.ts
 
-      - name: Compare with baseline
-        working-directory: packages/xmcp
-        id: compare
-        continue-on-error: true
-        run: |
-          if node scripts/compare-bundle-sizes.js bundle-metrics.json ../../.github/bundle-baseline.json > bundle-comment.md; then
-            if [ -f bundle-has-changes.txt ]; then
-              echo "has_changes=$(cat bundle-has-changes.txt)" >> $GITHUB_OUTPUT
-            else
-              echo "has_changes=true" >> $GITHUB_OUTPUT
-            fi
-            echo "comparison_status=success" >> $GITHUB_OUTPUT
-          else
-            echo "Error: Bundle comparison failed. Check logs above." >&2
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "comparison_status=failed" >> $GITHUB_OUTPUT
-            exit 1
-          fi
-
-      - name: Upload bundle reports
+      - name: Upload analysis artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: bundle-reports
+          name: rspack-bundle-analysis
           path: |
-            packages/xmcp/bundle-report-main.html
-            packages/xmcp/bundle-report-runtime.html
-            packages/xmcp/bundle-metrics.html
-            packages/xmcp/bundle-metrics.json
+            packages/xmcp/bundle-analysis.md
+            packages/xmcp/stats-main.json
+            packages/xmcp/stats-runtime.json
           retention-days: 30
 
       - name: Comment PR with bundle analysis
-        if: |
-          github.event_name == 'pull_request' && 
-          steps.compare.outputs.comparison_status == 'success' && 
-          steps.compare.outputs.has_changes == 'true'
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
 
-            const commentPath = path.join('packages', 'xmcp', 'bundle-comment.md');
+            const commentPath = path.join('packages', 'xmcp', 'bundle-analysis.md');
             let comment = '';
 
             if (fs.existsSync(commentPath)) {
               comment = fs.readFileSync(commentPath, 'utf8');
-              } else {
-                comment = '## Bundle Size Analysis\n\n⚠ Bundle analysis completed but comment could not be generated.';
-              }
+            } else {
+              comment = '## Rspack Bundle Analysis\n\n⚠ Analysis completed but the markdown output was not found.';
+            }
 
-            // Find existing comment from this bot
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('Bundle Size Analysis')
+            const marker = 'Rspack Bundle Analysis';
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes(marker)
             );
 
+            const nextBody = comment.trim();
+
+            if (!nextBody.length) {
+              core.info('Bundle analysis content empty, skipping PR comment.');
+              return;
+            }
+
             if (botComment) {
-              // Update existing comment
+              if (botComment.body.trim() === nextBody) {
+                core.info('Bundle analysis unchanged; not updating PR comment.');
+                return;
+              }
+
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: comment,
+                body: nextBody,
               });
             } else {
-              // Create new comment
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: comment,
+                body: nextBody,
               });
             }
-
-      - name: Update baseline on merge
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p .github
-          cp packages/xmcp/bundle-metrics.json .github/bundle-baseline.json
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/bundle-baseline.json
-          git diff --staged --quiet || (git commit -m "chore: update bundle size baseline" && git push)

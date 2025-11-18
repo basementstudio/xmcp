@@ -10,8 +10,10 @@ import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
 import { execSync } from "child_process";
 import chalk from "chalk";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import { runCompiler } from "./compiler-manager";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const compilePackageTypes = () => {
   // bundle xmcp with its own package tsconfig
@@ -23,9 +25,6 @@ const compilePackageTypes = () => {
 function getConfig() {
   const mode =
     process.env.NODE_ENV === "production" ? "production" : "development";
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
 
   const srcPath = path.join(__dirname, "..", "src");
   const outputPath = path.join(__dirname, "..", "dist");
@@ -145,24 +144,6 @@ function getConfig() {
     watch: mode === "development",
   };
 
-  // Only generate bundle stats when explicitly requested (for analysis)
-  if (process.env.GENERATE_STATS === "true") {
-    config.plugins?.push(
-      new BundleAnalyzerPlugin({
-        analyzerMode: "disabled",
-        generateStatsFile: true,
-        statsFilename: path.join(__dirname, "..", "stats-main.json"),
-        statsOptions: {
-          source: false,
-          reasons: true,
-          chunks: true,
-          modules: true,
-          assets: true,
-        },
-      })
-    );
-  }
-
   // Fix issues with importing unsupported modules
   config.plugins?.push(
     new rspack.IgnorePlugin({
@@ -201,6 +182,20 @@ export function buildMain() {
         chunks: false,
       })
     );
+
+    if (process.env.GENERATE_STATS === "true" && stats) {
+      const statsJson = stats.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+        modules: true,
+        reasons: true,
+        timings: true,
+      });
+      const statsPath = path.join(__dirname, "..", "stats-main.json");
+      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+      console.log(chalk.green(`Saved main stats to ${statsPath}`));
+    }
 
     compilePackageTypes();
 
