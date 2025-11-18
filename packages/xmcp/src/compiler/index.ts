@@ -23,7 +23,7 @@ import { startHttpServer } from "./start-http-server";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
-import { transpileClientComponent } from "./transpile-client-components";
+import { transpileClientComponent } from "./client/transpile";
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -76,7 +76,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           await generateCode();
         }
       },
-      onChange: async (changedPath) => {
+      onChange: async () => {
         if (compilerStarted) {
           await generateCode();
         }

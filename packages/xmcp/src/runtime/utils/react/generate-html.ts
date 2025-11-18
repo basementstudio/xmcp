@@ -5,15 +5,29 @@ export function generateHTML(componentCode: string): string {
   // we need to replace bare imports with esm CDN imports
   const esmComponentCode = componentCode
     .replace(
-      /from\s+["']react\/jsx-runtime["']/g,
-      'from "https://esm.sh/react@19/jsx-runtime"'
+      /(from\s*)["']react\/jsx-runtime(?:\.m?js)?["']/g,
+      '$1"https://esm.sh/react@19/jsx-runtime"'
     )
     .replace(
-      /from\s+["']react\/jsx-dev-runtime["']/g,
-      'from "https://esm.sh/react@19/jsx-dev-runtime"'
+      /(from\s*)["']react\/jsx-dev-runtime(?:\.m?js)?["']/g,
+      '$1"https://esm.sh/react@19/jsx-dev-runtime"'
     )
-    .replace(/from\s+["']react["']/g, 'from "https://esm.sh/react@19"')
-    .replace(/export\s+default\s+/g, "const Component = ");
+    .replace(
+      /(from\s*)["']react(?:\.m?js)?["']/g,
+      '$1"https://esm.sh/react@19"'
+    )
+    .replace(
+      /import\s*\(\s*["']react\/jsx-runtime(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19/jsx-runtime")'
+    )
+    .replace(
+      /import\s*\(\s*["']react\/jsx-dev-runtime(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19/jsx-dev-runtime")'
+    )
+    .replace(
+      /import\s*\(\s*["']react(?:\.m?js)?["']\s*\)/g,
+      'import("https://esm.sh/react@19")'
+    );
 
   const renderScript = `
   <!-- Component rendering using ESM (React 19) -->
@@ -21,11 +35,23 @@ export function generateHTML(componentCode: string): string {
     import { createRoot } from "https://esm.sh/react-dom@19/client";
     import { createElement } from "https://esm.sh/react@19";
 
-    ${esmComponentCode}
+    const componentSource = ${JSON.stringify(esmComponentCode)};
+    const blobUrl = URL.createObjectURL(new Blob([componentSource], { type: "text/javascript" }));
 
-    const root = document.getElementById('root');
-    if (root) {
-      createRoot(root).render(createElement(Component));
+    try {
+      const mod = await import(blobUrl);
+      const Component = mod.default ?? mod.Component ?? mod.ReactComponent ?? Object.values(mod)[0];
+
+      if (!Component) {
+        throw new Error("React component export not found");
+      }
+
+      const root = document.getElementById('root');
+      if (root) {
+        createRoot(root).render(createElement(Component));
+      }
+    } finally {
+      URL.revokeObjectURL(blobUrl);
     }
   </script>`;
 
