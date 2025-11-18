@@ -23,19 +23,19 @@ export const configSchema = z.object({
   typescript: typescriptConfigSchema.optional(),
 });
 
-type BundlerConfig = { bundler?: (config: RspackOptions) => RspackOptions };
+type BundlerConfigType = { bundler?: (config: RspackOptions) => RspackOptions };
 
 export type XmcpConfigInputSchema = Omit<
   z.input<typeof configSchema>,
   "bundler"
 > &
-  BundlerConfig;
+  BundlerConfigType;
 
 export type XmcpConfigOutputSchema = Omit<
   z.output<typeof configSchema>,
   "bundler"
 > &
-  BundlerConfig;
+  BundlerConfigType;
 
 // Re-export resolved types from utils (where they're defined)
 // Types are derived from resolution functions using ReturnType
