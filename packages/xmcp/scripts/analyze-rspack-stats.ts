@@ -35,6 +35,41 @@ const STAT_FILES = [
   { label: "Runtime Compiler", file: "stats-runtime.json" },
 ];
 
+function ensureStatsFiles(): void {
+  const missing = STAT_FILES.filter(({ file }) =>
+    fs.existsSync(path.join(process.cwd(), file)) ? false : true
+  ).map(({ file }) => file);
+
+  if (missing.length === 0) {
+    return;
+  }
+
+  console.log(
+    `[bundle-analysis] Missing stats files (${missing.join(
+      ", "
+    )}). Running build with GENERATE_STATS=true...`
+  );
+
+  execFileSync("pnpm", ["build"], {
+    cwd: process.cwd(),
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      GENERATE_STATS: "true",
+    },
+  });
+
+  const stillMissing = STAT_FILES.filter(({ file }) =>
+    fs.existsSync(path.join(process.cwd(), file)) ? false : true
+  ).map(({ file }) => file);
+
+  if (stillMissing.length > 0) {
+    throw new Error(
+      `[bundle-analysis] Could not generate stats files: ${stillMissing.join(", ")}`
+    );
+  }
+}
+
 function readStatsFile(file: string): StatsSummary {
   const statsPath = path.join(process.cwd(), file);
   if (!fs.existsSync(statsPath)) {
@@ -178,6 +213,8 @@ function measurePackageFootprint(): PackageFootprint {
 }
 
 function analyze(): void {
+  ensureStatsFiles();
+
   const builds: BuildStats[] = STAT_FILES.map(({ label, file }) => {
     const stats = readStatsFile(file);
     const assets =
