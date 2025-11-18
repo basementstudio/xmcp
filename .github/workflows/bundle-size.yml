@@ -68,7 +68,6 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const core = require('@actions/core');
 
             const commentPath = path.join('packages', 'xmcp', 'bundle-analysis.md');
             let comment = '';
