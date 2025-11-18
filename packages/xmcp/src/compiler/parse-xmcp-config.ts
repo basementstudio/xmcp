@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { createFsFromVolume, Volume } from "memfs";
 import { compilerContext } from "./compiler-context";
-import rspack, { RspackOptions } from "@rspack/core";
+import { rspack, RspackOptions } from "@rspack/core";
 import { configSchema, type XmcpConfigOutputSchema } from "./config";
 
 function validateConfig(config: unknown): XmcpConfigOutputSchema {
