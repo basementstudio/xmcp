@@ -16,9 +16,16 @@ import path from "path";
 import { generateHTML } from "./react/generate-html";
 import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
 
-const INJECTED_CLIENT_BUNDLES = CLIENT_BUNDLE_PLACEHOLDER as unknown as
+declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
+
+const PLACEHOLDER_CLIENT_BUNDLES = CLIENT_BUNDLE_PLACEHOLDER as unknown as
   | Record<string, string>
   | undefined;
+
+const resolvedClientBundles =
+  typeof INJECTED_CLIENT_BUNDLES !== "undefined"
+    ? INJECTED_CLIENT_BUNDLES
+    : PLACEHOLDER_CLIENT_BUNDLES;
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -48,7 +55,7 @@ export function addResourcesToServer(
           let clientCode: string | undefined;
 
           // Priority 1: Use injected bundles (reliable in Lambda/serverless)
-          clientCode = INJECTED_CLIENT_BUNDLES?.[autoResource.name];
+          clientCode = resolvedClientBundles?.[autoResource.name];
 
           // Priority 2: Fallback to filesystem (for local development)
           if (!clientCode) {
