@@ -40,7 +40,6 @@ const config: RspackOptions = {
   target: "node",
   externalsPresets: { node: true },
   externals: {
-    "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
     "@rspack/core": "@rspack/core",
   },
   output: {
