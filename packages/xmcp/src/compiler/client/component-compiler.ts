@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { rspack } from "@rspack/core";
-import type { Compiler, RspackOptions } from "@rspack/core";
+import type { RspackOptions } from "@rspack/core";
 
 interface BuildRequest {
   componentPath: string;
@@ -16,7 +16,6 @@ interface ResolvedBuildRequest extends BuildRequest {
 }
 
 export class ClientComponentCompiler {
-  private compiler: Compiler | null = null;
   private buildQueue: Promise<void> = Promise.resolve();
 
   async compile(request: BuildRequest): Promise<string> {
@@ -46,14 +45,6 @@ export class ClientComponentCompiler {
       absoluteOutputDir,
       outputPath: path.join(absoluteOutputDir, `${request.toolName}.bundle.js`),
     };
-  }
-
-  private ensureCompiler(resolved: ResolvedBuildRequest): Compiler {
-    if (!this.compiler) {
-      const config = this.createConfig(resolved);
-      this.compiler = rspack(config);
-    }
-    return this.compiler;
   }
 
   private createConfig(resolved: ResolvedBuildRequest): RspackOptions {
@@ -125,42 +116,28 @@ export class ClientComponentCompiler {
     };
   }
 
-  private applyBuildOverrides(
-    compiler: Compiler,
-    resolved: ResolvedBuildRequest
-  ) {
-    const options = compiler.options;
-
-    (options as RspackOptions).entry = resolved.absoluteComponentPath;
-    const output = options.output;
-
-    if (!output) {
-      throw new Error(
-        "Client component compiler output options not initialized"
-      );
-    }
-
-    output.path = resolved.absoluteOutputDir;
-    output.filename = `${resolved.toolName}.bundle.js`;
-    output.module = true;
-    output.library = {
-      type: "module",
-    };
-  }
-
   private runBuild(resolved: ResolvedBuildRequest): Promise<void> {
-    const compiler = this.ensureCompiler(resolved);
-    this.applyBuildOverrides(compiler, resolved);
+    const compiler = rspack(this.createConfig(resolved));
 
     return new Promise((resolve, reject) => {
       compiler.run((err, stats) => {
+        const finalize = (maybeError?: Error) => {
+          compiler.close((closeErr) => {
+            if (maybeError || closeErr) {
+              reject(maybeError ?? closeErr);
+              return;
+            }
+            resolve();
+          });
+        };
+
         if (err) {
-          reject(err);
+          finalize(err);
           return;
         }
 
         if (stats?.hasErrors()) {
-          reject(
+          finalize(
             new Error(
               stats.toString({
                 colors: false,
@@ -172,7 +149,7 @@ export class ClientComponentCompiler {
         }
 
         console.log(`✓ Built client bundle: ${resolved.outputPath}`);
-        resolve();
+        finalize();
       });
     });
   }
