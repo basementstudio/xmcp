@@ -1,12 +1,12 @@
 import z from "zod";
 
 // ------------------------------------------------------------
-// Webpack config schema
+// Bundler config schema - currently supports Rspack
 // ------------------------------------------------------------
-export const webpackConfigSchema = z
+export const bundlerConfigSchema = z
   .function()
   .args(z.any())
   .returns(z.any())
   .optional();
 
-export type WebpackConfig = z.infer<typeof webpackConfigSchema>;
+export type BundlerConfig = z.infer<typeof bundlerConfigSchema>;

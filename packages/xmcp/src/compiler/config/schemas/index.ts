@@ -16,6 +16,6 @@ export {
   type AdapterConfig,
 } from "./experimental";
 export { pathsConfigSchema, type PathsConfig, DEFAULT_PATHS } from "./paths";
-export { webpackConfigSchema, type WebpackConfig } from "./webpack";
+export { bundlerConfigSchema, type BundlerConfig } from "./bundler";
 export { templateConfigSchema, type TemplateConfig } from "./template";
 export { typescriptConfigSchema, type TypescriptConfig } from "./typescript";

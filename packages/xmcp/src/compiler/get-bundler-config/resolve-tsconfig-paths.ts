@@ -5,10 +5,10 @@ import { readFileSync, existsSync } from "fs";
 import { parseJson } from "@/utils/fs-utils";
 
 /**
- * Resolve tsconfig.json paths to Webpack aliases
+ * Resolve tsconfig.json paths to Rspack aliases
  * @param  {string} tsconfigPath           - Path to tsconfig
- * @param  {string} webpackConfigBasePath  - Path from tsconfig to Webpack config to create absolute aliases
- * @return {object}                        - Webpack alias config
+ * @param  {string} bundlerConfigBasePath  - Path from tsconfig to bundler config to create absolute aliases
+ * @return {object}                        - bundler alias config
  */
 export function resolveTsconfigPathsToAlias({
   tsconfigPath = "./tsconfig.json",

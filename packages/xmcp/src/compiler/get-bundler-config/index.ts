@@ -19,7 +19,7 @@ import {
 import { getExternals } from "./get-externals";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 
-/** Creates the webpack configuration that xmcp will use to bundle the user's code */
+/** Creates the bundler configuration that xmcp will use to bundle the user's code */
 export function getRspackConfig(
   xmcpConfig: XmcpConfigOutputSchema
 ): RspackOptions {
