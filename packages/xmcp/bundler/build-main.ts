@@ -4,7 +4,7 @@
 
 import path from "path";
 import { rspack, RspackOptions } from "@rspack/core";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import { fileURLToPath } from "url";
 import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
@@ -63,11 +63,10 @@ function getConfig() {
     target: "node",
     externalsPresets: { node: true },
     externals: {
-      "webpack-virtual-modules": "webpack-virtual-modules",
-      "webpack-node-externals": "webpack-node-externals",
-      "fork-ts-checker-webpack-plugin": "fork-ts-checker-webpack-plugin",
       zod: "zod",
       "@rspack/core": "@rspack/core",
+      "ts-checker-rspack-plugin": "ts-checker-rspack-plugin",
+      typescript: "typescript",
     },
     output: {
       filename: "[name].js",
@@ -123,7 +122,7 @@ function getConfig() {
       minimize: mode === "production",
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin(),
+      new TsCheckerRspackPlugin(),
       new rspack.DefinePlugin({
         RUNTIME_FILES: JSON.stringify(
           (() => {
