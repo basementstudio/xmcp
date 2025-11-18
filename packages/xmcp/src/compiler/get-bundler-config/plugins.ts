@@ -4,6 +4,7 @@ import path from "path";
 import { Compiler } from "@rspack/core";
 import { getXmcpConfig } from "../compiler-context";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
+import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
 
 // @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
@@ -118,6 +119,9 @@ const expressTypeDefinition = `
 export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -159,6 +163,11 @@ export class InjectClientBundlesPlugin {
   }
 
   apply(compiler: Compiler) {
+    const placeholderPattern = new RegExp(
+      `["']${escapeRegex(CLIENT_BUNDLE_PLACEHOLDER)}["']`,
+      "g"
+    );
+
     compiler.hooks.compilation.tap("InjectClientBundles", (compilation) => {
       compilation.hooks.processAssets.tap(
         {
@@ -182,18 +191,24 @@ export class InjectClientBundlesPlugin {
             }
           }
 
-          // Inyecta en todos los archivos JS
+          const replacement =
+            Object.keys(bundles).length > 0
+              ? JSON.stringify(bundles)
+              : "undefined";
+
           for (const assetName in assets) {
-            if (assetName.endsWith(".js")) {
-              const source = assets[assetName].source().toString();
-              const injected = source.replace(
-                /var INJECTED_CLIENT_BUNDLES\s*=\s*[^;]+;/,
-                `var INJECTED_CLIENT_BUNDLES = ${JSON.stringify(bundles)};`
-              );
-              assets[assetName] = new compiler.rspack.sources.RawSource(
-                injected
-              );
+            if (!assetName.endsWith(".js")) {
+              continue;
             }
+
+            const source = assets[assetName].source().toString();
+
+            if (!source.includes(CLIENT_BUNDLE_PLACEHOLDER)) {
+              continue;
+            }
+
+            const injected = source.replace(placeholderPattern, replacement);
+            assets[assetName] = new compiler.rspack.sources.RawSource(injected);
           }
         }
       );

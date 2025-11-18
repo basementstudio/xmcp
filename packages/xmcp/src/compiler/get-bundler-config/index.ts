@@ -142,14 +142,6 @@ export function getRspackConfig(
   const definedVariables = getInjectedVariables(xmcpConfig);
   config.plugins!.push(new DefinePlugin(definedVariables));
 
-  // Define INJECTED_CLIENT_BUNDLES with initial empty value
-  // This will be replaced by InjectClientBundlesPlugin with actual bundles
-  config.plugins!.push(
-    new DefinePlugin({
-      INJECTED_CLIENT_BUNDLES: JSON.stringify({}),
-    })
-  );
-
   const fs = require("fs");
   const clientBundlesPath = path.join(processFolder, "dist/client");
 
