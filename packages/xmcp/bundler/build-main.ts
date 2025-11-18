@@ -54,6 +54,7 @@ function getConfig() {
   }
 
   const config: RspackOptions = {
+    name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
       cli: path.join(srcPath, "cli.ts"),
@@ -207,5 +208,5 @@ export function buildMain() {
     console.log(chalk.bgGreen.bold("xmcp compiled"));
   };
 
-  runCompiler(config, handleStats, "main");
+  runCompiler(config, handleStats);
 }

@@ -35,6 +35,7 @@ for (const root of runtimeRoots) {
 }
 
 const config: RspackOptions = {
+  name: "runtime",
   entry,
   mode: "production",
   devtool: false,
@@ -173,5 +174,5 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
     }
   };
 
-  runCompiler(config, handleStats, "runtime");
+  runCompiler(config, handleStats);
 }

@@ -67,8 +67,7 @@ export function getCompiler(config: RspackOptions, key?: string): Compiler {
 
 export function runCompiler(
   config: RspackOptions,
-  callback: (err: Error | null, stats: any) => void,
-  key?: string
+  callback: (err: Error | null, stats: any) => void
 ): void {
-  return compilerManager.run(config, callback, key);
+  return compilerManager.run(config, callback, config?.name);
 }
