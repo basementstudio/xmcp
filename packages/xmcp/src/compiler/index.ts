@@ -1,5 +1,5 @@
 import { rspack } from "@rspack/core";
-import { getRspackConfig } from "./get-webpack-config";
+import { getRspackConfig } from "./get-bundler-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
 import { generateImportCode } from "./generate-import-code";
@@ -42,10 +42,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  let webpackConfig = getRspackConfig(xmcpConfig);
+  let bundlerConfig = getRspackConfig(xmcpConfig);
 
-  if (xmcpConfig.webpack) {
-    webpackConfig = xmcpConfig.webpack(webpackConfig);
+  if (xmcpConfig.bundler) {
+    bundlerConfig = xmcpConfig.bundler(bundlerConfig);
   }
 
   const watcher = new Watcher({
@@ -164,10 +164,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
-    // Generate all code (including client bundles) BEFORE webpack runs
+    // Generate all code (including client bundles) BEFORE bundler runs
     await generateCode();
 
-    rspack(webpackConfig, (err, stats) => {
+    rspack(bundlerConfig, (err, stats) => {
       if (err) {
         console.error(err);
         return;
@@ -188,7 +188,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         // user defined callback
         onBuild?.();
       } else {
-        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
+        // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
           mode === "development" &&
           xmcpConfig["http"] &&
