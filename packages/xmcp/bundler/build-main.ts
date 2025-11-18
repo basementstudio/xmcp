@@ -3,16 +3,17 @@
  * */
 
 import path from "path";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import nodeExternals from "webpack-node-externals";
-import webpack from "webpack";
-import type { Configuration } from "webpack";
+import { rspack, RspackOptions } from "@rspack/core";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import { fileURLToPath } from "url";
 import { runtimeOutputPath } from "./constants";
 import fs from "fs-extra";
 import { execSync } from "child_process";
 import chalk from "chalk";
-import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
+import { runCompiler } from "./compiler-manager";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const compilePackageTypes = () => {
   // bundle xmcp with its own package tsconfig
@@ -24,24 +25,6 @@ const compilePackageTypes = () => {
 function getConfig() {
   const mode =
     process.env.NODE_ENV === "production" ? "production" : "development";
-
-  /** Since we are using webpack to build webpack, we need to exclude some modules */
-  const libsToExcludeFromCompilation = [
-    "webpack",
-    "webpack-virtual-modules",
-    "webpack-node-externals",
-    "ts-loader",
-    "fork-ts-checker-webpack-plugin",
-    "zod",
-    "terser-webpack-plugin", // Contains native dependencies
-    "@swc/core", // Native binary module
-    "@swc/wasm", // WASM module
-    "esbuild", // Native binary module
-    "uglify-js", // Optional minifier
-  ];
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
 
   const srcPath = path.join(__dirname, "..", "src");
   const outputPath = path.join(__dirname, "..", "dist");
@@ -69,7 +52,8 @@ function getConfig() {
     }
   }
 
-  const config: Configuration = {
+  const config: RspackOptions = {
+    name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
       cli: path.join(srcPath, "cli.ts"),
@@ -78,13 +62,12 @@ function getConfig() {
     devtool: mode === "production" ? false : "source-map",
     target: "node",
     externalsPresets: { node: true },
-    externals: [
-      nodeExternals({
-        allowlist: (modulePath) => {
-          return !libsToExcludeFromCompilation.includes(modulePath);
-        },
-      }),
-    ],
+    externals: {
+      zod: "zod",
+      "@rspack/core": "@rspack/core",
+      "ts-checker-rspack-plugin": "ts-checker-rspack-plugin",
+      typescript: "typescript",
+    },
     output: {
       filename: "[name].js",
       path: outputPath,
@@ -99,7 +82,7 @@ function getConfig() {
           test: /\.ts$/,
           exclude: /node_modules/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {
@@ -139,25 +122,20 @@ function getConfig() {
       minimize: mode === "production",
     },
     plugins: [
-      new ForkTsCheckerWebpackPlugin(),
-      new webpack.DefinePlugin({
-        RUNTIME_FILES: webpack.DefinePlugin.runtimeValue(
-          () => {
+      new TsCheckerRspackPlugin(),
+      new rspack.DefinePlugin({
+        RUNTIME_FILES: JSON.stringify(
+          (() => {
             const runtimeFiles: Record<string, string> = {};
-
             for (const file of fileDependencies) {
               runtimeFiles[file.name] = fs.readFileSync(file.path, "utf-8");
             }
-
-            return JSON.stringify(runtimeFiles);
-          },
-          {
-            fileDependencies: fileDependencies.map((file) => file.path),
-          }
+            return runtimeFiles;
+          })()
         ),
       }),
       // add shebang to CLI output
-      new webpack.BannerPlugin({
+      new rspack.BannerPlugin({
         banner: "#!/usr/bin/env node",
         raw: true,
         include: /^cli\.js$/,
@@ -166,42 +144,10 @@ function getConfig() {
     watch: mode === "development",
   };
 
-  // Only generate bundle stats when explicitly requested (for analysis)
-  if (process.env.GENERATE_STATS === "true") {
-    config.plugins?.push(
-      new BundleAnalyzerPlugin({
-        analyzerMode: "disabled",
-        generateStatsFile: true,
-        statsFilename: path.join(__dirname, "..", "stats-main.json"),
-        statsOptions: {
-          source: false,
-          reasons: true,
-          chunks: true,
-          modules: true,
-          assets: true,
-        },
-      })
-    );
-  }
-
   // Fix issues with importing unsupported modules
-  // Ignore platform-specific and native binary modules
   config.plugins?.push(
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
-    }),
-    // Ignore @swc/wasm - we use the native binary instead
-    new webpack.IgnorePlugin({
-      resourceRegExp: /^@swc\/wasm$/,
-    }),
-    // Ignore uglify-js - terser is the default minifier
-    new webpack.IgnorePlugin({
-      resourceRegExp: /^uglify-js$/,
-    }),
-    // Ignore native binaries from @swc/core
-    new webpack.IgnorePlugin({
-      resourceRegExp: /\.node$/,
-      contextRegExp: /@swc/,
     })
   );
 
@@ -213,9 +159,11 @@ export function buildMain() {
   console.log(chalk.bgGreen.bold("Starting xmcp compilation"));
 
   const config = getConfig();
-  webpack(config, (err, stats) => {
+
+  const handleStats = (err: Error | null, stats: any) => {
     if (err) {
       console.error(err);
+      return;
     }
 
     if (stats?.hasErrors()) {
@@ -235,8 +183,24 @@ export function buildMain() {
       })
     );
 
+    if (process.env.GENERATE_STATS === "true" && stats) {
+      const statsJson = stats.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+        modules: true,
+        reasons: true,
+        timings: true,
+      });
+      const statsPath = path.join(__dirname, "..", "stats-main.json");
+      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+      console.log(chalk.green(`Saved main stats to ${statsPath}`));
+    }
+
     compilePackageTypes();
 
     console.log(chalk.bgGreen.bold("xmcp compiled"));
-  });
+  };
+
+  runCompiler(config, handleStats);
 }
