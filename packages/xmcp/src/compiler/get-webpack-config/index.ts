@@ -42,7 +42,11 @@ export function getRspackConfig(
       filename: outputFilename,
       path: outputPath,
       libraryTarget: "commonjs2",
-      clean: true,
+      clean: {
+        keep: xmcpConfig.experimental?.adapter
+          ? undefined
+          : path.join(outputPath, "client"),
+      },
     },
     target: "node",
     externals: getExternals(),
