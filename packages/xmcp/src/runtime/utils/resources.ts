@@ -14,8 +14,11 @@ import { flattenMeta } from "./openai/flatten-meta";
 import fs from "fs";
 import path from "path";
 import { generateHTML } from "./react/generate-html";
+import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
 
-declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
+const INJECTED_CLIENT_BUNDLES = CLIENT_BUNDLE_PLACEHOLDER as unknown as
+  | Record<string, string>
+  | undefined;
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -49,26 +52,38 @@ export function addResourcesToServer(
 
           // Priority 2: Fallback to filesystem (for local development)
           if (!clientCode) {
-            const bundlePath = path.join(
-              process.cwd(),
-              "dist/client",
-              `${autoResource.name}.bundle.js`
-            );
+            const searchRoots = [
+              path.join(process.cwd(), "dist", "client"),
+              path.join(process.cwd(), "client"),
+            ];
+            const attemptedPaths: string[] = [];
 
-            if (fs.existsSync(bundlePath)) {
-              clientCode = fs.readFileSync(bundlePath, "utf-8");
+            for (const root of searchRoots) {
+              const candidate = path.join(
+                root,
+                `${autoResource.name}.bundle.js`
+              );
+              attemptedPaths.push(candidate);
+
+              if (fs.existsSync(candidate)) {
+                clientCode = fs.readFileSync(candidate, "utf-8");
+                break;
+              }
             }
-          }
 
-          if (!clientCode) {
-            throw new Error(
-              `React client bundle not found for "${autoResource.name}".\n` +
-                `Expected to find it either:\n` +
-                `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
-                `  2. On filesystem at: ${path.join(process.cwd(), "dist/client", `${autoResource.name}.bundle.js`)}\n` +
-                `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
-                `Please re-run the build so the framework can regenerate the bundle.`
-            );
+            if (!clientCode) {
+              const formattedPaths = attemptedPaths
+                .map((p) => `  - ${p}`)
+                .join("\n");
+              throw new Error(
+                `React client bundle not found for "${autoResource.name}".\n` +
+                  `Expected to find it either:\n` +
+                  `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
+                  `  2. On filesystem at one of:\n${formattedPaths}\n` +
+                  `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
+                  `Please re-run the build so the framework can regenerate the bundle.`
+              );
+            }
           }
 
           // Render empty shell HTML - the client will hydrate with the actual component
