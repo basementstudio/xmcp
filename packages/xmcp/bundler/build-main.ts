@@ -12,6 +12,9 @@ import { execSync } from "child_process";
 import chalk from "chalk";
 import { runCompiler } from "./compiler-manager";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const compilePackageTypes = () => {
   // bundle xmcp with its own package tsconfig
   execSync("tsc --emitDeclarationOnly --project xmcp.tsconfig.json", {
@@ -22,9 +25,6 @@ const compilePackageTypes = () => {
 function getConfig() {
   const mode =
     process.env.NODE_ENV === "production" ? "production" : "development";
-
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
 
   const srcPath = path.join(__dirname, "..", "src");
   const outputPath = path.join(__dirname, "..", "dist");
@@ -182,6 +182,20 @@ export function buildMain() {
         chunks: false,
       })
     );
+
+    if (process.env.GENERATE_STATS === "true" && stats) {
+      const statsJson = stats.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+        modules: true,
+        reasons: true,
+        timings: true,
+      });
+      const statsPath = path.join(__dirname, "..", "stats-main.json");
+      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+      console.log(chalk.green(`Saved main stats to ${statsPath}`));
+    }
 
     compilePackageTypes();
 

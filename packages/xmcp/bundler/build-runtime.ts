@@ -3,12 +3,14 @@
  * */
 
 import path from "path";
+import { fileURLToPath } from "url";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import { rspack, RspackOptions, EntryObject } from "@rspack/core";
 import { runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
 import { runCompiler } from "./compiler-manager";
+import fs from "fs-extra";
 
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
@@ -93,6 +95,9 @@ const config: RspackOptions = {
   watch: mode === "development",
 };
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Fix issues with importing unsupported modules
 // Ignore platform-specific and native binary modules
 if (process.platform !== "darwin") {
@@ -133,6 +138,20 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
     );
 
     console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
+
+    if (process.env.GENERATE_STATS === "true" && stats) {
+      const statsJson = stats.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+        modules: true,
+        reasons: true,
+        timings: true,
+      });
+      const statsPath = path.join(__dirname, "..", "stats-runtime.json");
+      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+      console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
+    }
 
     // Only call onCompiled once for the initial build
     if (!compileStarted) {
