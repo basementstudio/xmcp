@@ -1,19 +1,19 @@
 import { z } from "zod";
 
 // ------------------------------------------------------------
-// stdio transport config schema
+// TypeScript config schema
 // ------------------------------------------------------------
 // Base schema with defaults - used for parsing with defaults applied
-const stdioTransportObjectBaseSchema = z.object({
-  debug: z.boolean().default(false),
+const typescriptConfigBaseSchema = z.object({
+  skipTypeCheck: z.boolean().default(false),
 });
 
 // Input schema - all fields optional for partial configs
-const stdioTransportObjectSchema = stdioTransportObjectBaseSchema
+export const typescriptConfigSchema = typescriptConfigBaseSchema
   .partial()
   .transform((val) => {
     // Merge provided values with defaults, filtering out undefined values
-    const defaults = stdioTransportObjectBaseSchema.parse({});
+    const defaults = typescriptConfigBaseSchema.parse({});
     const provided = Object.fromEntries(
       Object.entries(val).filter(([_, v]) => v !== undefined)
     );
@@ -23,8 +23,4 @@ const stdioTransportObjectSchema = stdioTransportObjectBaseSchema
     };
   });
 
-export const stdioTransportConfigSchema = z
-  .union([z.boolean(), stdioTransportObjectSchema])
-  .optional();
-
-export type StdioTransportConfig = z.infer<typeof stdioTransportConfigSchema>;
+export type TypescriptConfig = z.infer<typeof typescriptConfigSchema>;
