@@ -8,9 +8,7 @@ const templateConfigBaseSchema = z.object({
   name: z.string().default("xmcp server"),
   description: z
     .string()
-    .default(
-      "This MCP server was bootstrapped with xmcp. Click the button below to connect to the endpoint."
-    ),
+    .default("This MCP server was bootstrapped with xmcp."),
 });
 
 // Input schema - all fields optional for partial configs
