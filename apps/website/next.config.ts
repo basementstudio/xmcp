@@ -34,6 +34,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/docs/webpack",
+        destination: "/docs/bundler",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withMDX(nextConfig);
