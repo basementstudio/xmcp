@@ -37,8 +37,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: "/docs/webpack",
-        destination: "/docs/bundler",
+        source: "/docs/configuration/webpack",
+        destination: "/docs/configuration/bundler",
         permanent: true,
       },
     ];
