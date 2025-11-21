@@ -240,17 +240,17 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
     return undefined;
   }
 
-  const clientBundles = new Map<string, string>();
+  const entries = new Map<string, string>();
 
   for (const reactToolPath of reactToolPaths) {
     const toolName = pathToToolName(reactToolPath);
-    const bundlePath = `dist/client/${toolName}.bundle.js`;
 
-    await transpileClientComponent(reactToolPath, toolName, "dist/client");
-    clientBundles.set(toolName, bundlePath);
+    entries.set(toolName, reactToolPath);
   }
 
-  return clientBundles;
+  await transpileClientComponent(entries, "dist/client");
+
+  return entries;
 }
 
 /**

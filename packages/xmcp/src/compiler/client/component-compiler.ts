@@ -3,65 +3,89 @@ import path from "path";
 import { rspack } from "@rspack/core";
 import type { RspackOptions } from "@rspack/core";
 
-interface BuildRequest {
-  componentPath: string;
-  toolName: string;
+interface CompileOptions {
+  entries: Map<string, string>;
   outputDir: string;
 }
 
-interface ResolvedBuildRequest extends BuildRequest {
-  absoluteComponentPath: string;
+interface ResolvedBuildRequest {
+  absoluteEntries: { [k: string]: string };
   absoluteOutputDir: string;
-  outputPath: string;
 }
 
 export class ClientComponentCompiler {
-  private buildQueue: Promise<void> = Promise.resolve();
-
-  async compile(request: BuildRequest): Promise<string> {
+  async compile(request: CompileOptions): Promise<string> {
     const resolved = this.resolveRequest(request);
 
-    const nextBuild = this.buildQueue.then(() => this.runBuild(resolved));
-    this.buildQueue = nextBuild.catch(() => Promise.resolve());
+    const compiler = rspack(this.createConfig(resolved));
 
-    await nextBuild;
-    return resolved.outputPath;
+    return new Promise((resolve, reject) => {
+      compiler.run((err, stats) => {
+        const finalize = (maybeError?: Error) => {
+          compiler.close((closeErr) => {
+            if (maybeError || closeErr) {
+              reject(maybeError ?? closeErr);
+              return;
+            }
+            resolve(request.outputDir);
+          });
+        };
+
+        if (err) {
+          finalize(err);
+          return;
+        }
+
+        if (stats?.hasErrors()) {
+          finalize(
+            new Error(
+              stats.toString({
+                colors: false,
+                errors: true,
+              })
+            )
+          );
+          return;
+        }
+
+        console.log(`✓ Built client bundle: ${request.outputDir}`);
+        finalize();
+      });
+    });
   }
 
-  private resolveRequest(request: BuildRequest): ResolvedBuildRequest {
-    const absoluteComponentPath = path.resolve(
-      process.cwd(),
-      request.componentPath
+  private resolveRequest(request: CompileOptions): ResolvedBuildRequest {
+    const absoluteEntries = Object.fromEntries(
+      Array.from(request.entries, ([key, value]) => [
+        key,
+        path.resolve(process.cwd(), value),
+      ])
     );
+
     const absoluteOutputDir = path.resolve(process.cwd(), request.outputDir);
 
-    if (!fs.existsSync(absoluteOutputDir)) {
-      fs.mkdirSync(absoluteOutputDir, { recursive: true });
-    }
-
     return {
-      ...request,
-      absoluteComponentPath,
+      absoluteEntries,
       absoluteOutputDir,
-      outputPath: path.join(absoluteOutputDir, `${request.toolName}.bundle.js`),
     };
   }
 
-  private createConfig(resolved: ResolvedBuildRequest): RspackOptions {
+  private createConfig(config: ResolvedBuildRequest): RspackOptions {
     return {
       mode: "production",
-      entry: resolved.absoluteComponentPath,
+      entry: config.absoluteEntries,
       target: "web",
       experiments: {
         outputModule: true,
       },
       output: {
-        path: resolved.absoluteOutputDir,
-        filename: `${resolved.toolName}.bundle.js`,
+        path: config.absoluteOutputDir,
+        filename: "[name].bundle.js",
         module: true,
         library: {
           type: "module",
         },
+        clean: true,
       },
       externals: {
         react: "react",
@@ -114,44 +138,6 @@ export class ClientComponentCompiler {
       },
       cache: true,
     };
-  }
-
-  private runBuild(resolved: ResolvedBuildRequest): Promise<void> {
-    const compiler = rspack(this.createConfig(resolved));
-
-    return new Promise((resolve, reject) => {
-      compiler.run((err, stats) => {
-        const finalize = (maybeError?: Error) => {
-          compiler.close((closeErr) => {
-            if (maybeError || closeErr) {
-              reject(maybeError ?? closeErr);
-              return;
-            }
-            resolve();
-          });
-        };
-
-        if (err) {
-          finalize(err);
-          return;
-        }
-
-        if (stats?.hasErrors()) {
-          finalize(
-            new Error(
-              stats.toString({
-                colors: false,
-                errors: true,
-              })
-            )
-          );
-          return;
-        }
-
-        console.log(`✓ Built client bundle: ${resolved.outputPath}`);
-        finalize();
-      });
-    });
   }
 }
 
