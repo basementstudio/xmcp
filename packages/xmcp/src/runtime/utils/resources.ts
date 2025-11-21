@@ -15,6 +15,7 @@ import fs from "fs";
 import path from "path";
 import { generateHTML } from "./react/generate-html";
 import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
+import { pathToToolName } from "@/compiler/utils/path-utils";
 
 declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
 
@@ -54,8 +55,10 @@ export function addResourcesToServer(
         try {
           let clientCode: string | undefined;
 
+          const bundleName = pathToToolName(autoResource.toolPath);
+
           // Priority 1: Use injected bundles (reliable in Lambda/serverless)
-          clientCode = resolvedClientBundles?.[autoResource.name];
+          clientCode = resolvedClientBundles?.[bundleName];
 
           // Priority 2: Fallback to filesystem (for local development)
           if (!clientCode) {
@@ -66,10 +69,7 @@ export function addResourcesToServer(
             const attemptedPaths: string[] = [];
 
             for (const root of searchRoots) {
-              const candidate = path.join(
-                root,
-                `${autoResource.name}.bundle.js`
-              );
+              const candidate = path.join(root, `${bundleName}.bundle.js`);
               attemptedPaths.push(candidate);
 
               if (fs.existsSync(candidate)) {
@@ -83,7 +83,7 @@ export function addResourcesToServer(
                 .map((p) => `  - ${p}`)
                 .join("\n");
               throw new Error(
-                `React client bundle not found for "${autoResource.name}".\n` +
+                `React client bundle not found for "${autoResource.name}" (bundle: "${bundleName}").\n` +
                   `Expected to find it either:\n` +
                   `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
                   `  2. On filesystem at one of:\n${formattedPaths}\n` +
