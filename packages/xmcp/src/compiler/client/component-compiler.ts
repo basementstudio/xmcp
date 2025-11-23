@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import { rspack } from "@rspack/core";
 import type { RspackOptions } from "@rspack/core";
