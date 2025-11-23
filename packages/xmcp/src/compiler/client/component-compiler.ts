@@ -14,9 +14,24 @@ interface ResolvedBuildRequest {
 }
 
 export class ClientComponentCompiler {
+  private buildQueue: Promise<void> = Promise.resolve();
+
   async compile(request: CompileOptions): Promise<string> {
     const resolved = this.resolveRequest(request);
 
+    const nextBuild = this.buildQueue.then(() =>
+      this.runBuild(resolved, request.outputDir)
+    );
+    this.buildQueue = nextBuild.catch(() => Promise.resolve());
+
+    await nextBuild;
+    return request.outputDir;
+  }
+
+  private runBuild(
+    resolved: ResolvedBuildRequest,
+    outputDir: string
+  ): Promise<void> {
     const compiler = rspack(this.createConfig(resolved));
 
     return new Promise((resolve, reject) => {
@@ -27,7 +42,7 @@ export class ClientComponentCompiler {
               reject(maybeError ?? closeErr);
               return;
             }
-            resolve(request.outputDir);
+            resolve();
           });
         };
 
@@ -48,7 +63,7 @@ export class ClientComponentCompiler {
           return;
         }
 
-        console.log(`✓ Built client bundle: ${request.outputDir}`);
+        console.log(`✓ Built client bundle: ${outputDir}`);
         finalize();
       });
     });
