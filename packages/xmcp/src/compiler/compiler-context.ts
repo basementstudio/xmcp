@@ -31,7 +31,7 @@ export const compilerContext = createContext<CompilerContext>({
 });
 
 // Preset some defaults for the compiler context
-export const compilerContextProvider = (
+export const compilerContextProvider = async (
   initialValue: Omit<
     CompilerContext,
     "toolPaths" | "promptPaths" | "resourcePaths" | "hasMiddleware"
@@ -46,7 +46,7 @@ export const compilerContextProvider = (
       resourcePaths: new Set(),
       hasMiddleware: false,
     },
-    callback
+    () => Promise.resolve(callback())
   );
 };
 
