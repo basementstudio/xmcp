@@ -60,7 +60,7 @@ async function main() {
       meta,
       events.map((event) => ({
         eventName: event.eventName,
-        timestamp: new Date().toISOString(),
+        timestamp: event.timestamp ?? new Date().toISOString(),
         fields: event.fields,
       }))
     );

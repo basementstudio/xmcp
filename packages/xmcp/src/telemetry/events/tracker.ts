@@ -13,6 +13,7 @@ import { getProjectId } from "../project-id";
 export type TelemetryEvent = {
   eventName: string;
   fields: BuildEventData;
+  timestamp?: string;
 };
 
 type RecordObject = {
@@ -67,6 +68,17 @@ export class TelemetryTracker {
     _events: TelemetryEvent | TelemetryEvent[],
     deferred?: boolean
   ): Promise<RecordObject> {
+    const eventsWithTimestamps = (
+      Array.isArray(_events) ? _events : [_events]
+    ).map((event) => ({
+      ...event,
+      timestamp: event.timestamp ?? new Date().toISOString(),
+    }));
+
+    const normalizedEvents = Array.isArray(_events)
+      ? eventsWithTimestamps
+      : eventsWithTimestamps[0];
+
     const prom = (
       deferred
         ? // if we know we are going to immediately call
@@ -76,10 +88,10 @@ export class TelemetryTracker {
             resolve({
               isFulfilled: true,
               isRejected: false,
-              value: _events,
+              value: normalizedEvents,
             })
           )
-        : this.submitRecord(_events)
+        : this.submitRecord(normalizedEvents)
     )
       .then((value) => ({
         isFulfilled: true,
@@ -100,7 +112,7 @@ export class TelemetryTracker {
         return res;
       });
 
-    (prom as any)._events = Array.isArray(_events) ? _events : [_events];
+    (prom as any)._events = eventsWithTimestamps;
 
     // Track this `Promise` so we can flush pending events
     this.queue.add(prom);
@@ -138,7 +150,7 @@ export class TelemetryTracker {
       meta,
       events.map((event) => ({
         eventName: event.eventName,
-        timestamp: new Date().toISOString(),
+        timestamp: event.timestamp ?? new Date().toISOString(),
         fields: event.fields,
       }))
     );
