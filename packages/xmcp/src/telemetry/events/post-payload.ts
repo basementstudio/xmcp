@@ -62,16 +62,28 @@ export interface TelemetryPayload {
  * @param signal - Optional AbortSignal for timeout control
  * @returns Voided promise
  */
-export function postTelemetryPayload(
+export interface PostTelemetryOptions {
+  signal?: AbortSignal;
+  /**
+   * When true (default) errors are swallowed to avoid interrupting builds.
+   * Set to false when the caller needs to know if the request failed.
+   */
+  swallowErrors?: boolean;
+}
+
+export async function postTelemetryPayload(
   payload: TelemetryPayload,
-  signal?: AbortSignal
+  options?: PostTelemetryOptions
 ): Promise<void> {
+  let signal = options?.signal;
+  const swallowErrors = options?.swallowErrors ?? true;
+
   if (!signal && "timeout" in AbortSignal) {
     signal = AbortSignal.timeout(5000);
   }
 
-  return (
-    retry(
+  try {
+    await retry(
       async () => {
         const response = await fetch(
           "https://telemetry.xmcp.dev/api/telemetry/events",
@@ -103,16 +115,12 @@ export function postTelemetryPayload(
         }
       },
       { minTimeout: 500, retries: 1, factor: 1 }
-    )
-      .catch(() => {
-        // swallow errors in production - telemetry should never break the build
-      })
-      // Ensure promise is voided (fire and forget)
-      .then(
-        () => {},
-        () => {}
-      )
-  );
+    );
+  } catch (error) {
+    if (!swallowErrors) {
+      throw error;
+    }
+  }
 }
 
 /**

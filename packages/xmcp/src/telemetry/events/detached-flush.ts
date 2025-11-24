@@ -65,7 +65,7 @@ async function main() {
       }))
     );
 
-    await postTelemetryPayload(payload);
+    await postTelemetryPayload(payload, { swallowErrors: false });
 
     // Clean up events file after successful send
     unlinkSync(eventsFile);
