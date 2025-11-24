@@ -5,15 +5,19 @@ import {
   getResolvedOAuthConfig,
   getResolvedTemplateConfig,
   getResolvedExperimentalConfig,
+  getResolvedTypescriptConfig,
 } from "./utils";
-import { HttpTransportConfig } from "./schemas/transport/http";
+import type { ResolvedHttpConfig, XmcpConfigOutputSchema } from "./index";
+import type { HttpTransportConfig } from "./schemas/transport/http";
 
 export function injectHttpVariables(
-  httpConfig: HttpTransportConfig | boolean,
+  httpConfig: HttpTransportConfig | boolean | undefined,
   mode: string
 ) {
   const resolvedConfig = getResolvedHttpConfig(httpConfig);
-  if (!resolvedConfig) return {};
+  if (!resolvedConfig) {
+    return {};
+  }
 
   return {
     HTTP_CONFIG: JSON.stringify({
@@ -21,7 +25,6 @@ export function injectHttpVariables(
       host: resolvedConfig.host,
       bodySizeLimit: resolvedConfig.bodySizeLimit,
       endpoint: resolvedConfig.endpoint,
-      stateless: true,
       debug: mode === "development",
     }),
   };
@@ -29,7 +32,7 @@ export function injectHttpVariables(
 
 export type HttpVariables = ReturnType<typeof injectHttpVariables>;
 
-export function injectCorsVariables(httpConfig: HttpTransportConfig | null) {
+export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
   const corsConfig = getResolvedCorsConfig(httpConfig);
 
   return {
@@ -46,27 +49,42 @@ export function injectCorsVariables(httpConfig: HttpTransportConfig | null) {
 
 export type CorsVariables = ReturnType<typeof injectCorsVariables>;
 
-export function injectOAuthVariables(userConfig: any) {
+export function injectOAuthVariables(userConfig: XmcpConfigOutputSchema) {
   const oauthConfig = getResolvedOAuthConfig(userConfig);
 
+  // Always inject OAUTH_CONFIG (runtime expects it to exist)
+  // If oauth is not configured, inject undefined (as string for DefinePlugin)
   return {
-    OAUTH_CONFIG: JSON.stringify(oauthConfig),
+    OAUTH_CONFIG: oauthConfig ? JSON.stringify(oauthConfig) : "undefined",
   };
 }
 
 export type OAuthVariables = ReturnType<typeof injectOAuthVariables>;
 
-export function injectPathsVariables(userConfig: any) {
+export function injectPathsVariables(userConfig: XmcpConfigOutputSchema) {
   const pathsConfig = getResolvedPathsConfig(userConfig);
 
-  return {
-    TOOLS_PATH: JSON.stringify(pathsConfig.tools),
-  };
+  // Only inject paths that are not null
+  const variables: Record<string, string> = {};
+
+  if (pathsConfig.tools !== null) {
+    variables.TOOLS_PATH = JSON.stringify(pathsConfig.tools);
+  }
+  if (pathsConfig.prompts !== null) {
+    variables.PROMPTS_PATH = JSON.stringify(pathsConfig.prompts);
+  }
+  if (pathsConfig.resources !== null) {
+    variables.RESOURCES_PATH = JSON.stringify(pathsConfig.resources);
+  }
+
+  return variables;
 }
 
 export type PathsVariables = ReturnType<typeof injectPathsVariables>;
 
-export function injectStdioVariables(stdioConfig: any) {
+export function injectStdioVariables(
+  stdioConfig: XmcpConfigOutputSchema["stdio"]
+) {
   if (!stdioConfig) return {};
 
   const debug = typeof stdioConfig === "object" ? stdioConfig.debug : false;
@@ -80,7 +98,7 @@ export function injectStdioVariables(stdioConfig: any) {
 
 export type StdioVariables = ReturnType<typeof injectStdioVariables>;
 
-export function injectTemplateVariables(userConfig: any) {
+export function injectTemplateVariables(userConfig: XmcpConfigOutputSchema) {
   const resolvedConfig = getResolvedTemplateConfig(userConfig);
 
   return {
@@ -90,15 +108,30 @@ export function injectTemplateVariables(userConfig: any) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
-export function injectAdapterVariables(userConfig: any) {
+export function injectAdapterVariables(userConfig: XmcpConfigOutputSchema) {
   const experimentalConfig = getResolvedExperimentalConfig(userConfig);
 
+  // Only inject if adapter is defined
+  if (!experimentalConfig.adapter) {
+    return {};
+  }
+
   return {
-    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter ?? null),
+    ADAPTER_CONFIG: JSON.stringify(experimentalConfig.adapter),
   };
 }
 
 export type AdapterVariables = ReturnType<typeof injectAdapterVariables>;
+
+export function injectTypescriptVariables(userConfig: XmcpConfigOutputSchema) {
+  const typescriptConfig = getResolvedTypescriptConfig(userConfig);
+
+  return {
+    TYPESCRIPT_CONFIG: JSON.stringify(typescriptConfig),
+  };
+}
+
+export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 
 export type InjectedVariables =
   | HttpVariables
@@ -107,4 +140,5 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
-  | AdapterVariables;
+  | AdapterVariables
+  | TypescriptVariables;

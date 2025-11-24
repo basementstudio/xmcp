@@ -1,6 +1,6 @@
 import { CompilerMode } from ".";
 import { createContext } from "../utils/context";
-import { XmcpConfigOuputSchema } from "./config";
+import { XmcpConfigOutputSchema } from "./config";
 
 interface CompilerContext {
   /** The mode of the compiler. */
@@ -21,7 +21,7 @@ interface CompilerContext {
   /** Whether the middleware is enabled. */
   hasMiddleware: boolean;
   /** The parsed config. */
-  xmcpConfig?: XmcpConfigOuputSchema;
+  xmcpConfig?: XmcpConfigOutputSchema;
   /** Client bundles mapping for React (toolName -> bundlePath). */
   clientBundles?: Map<string, string>;
 }
@@ -31,7 +31,7 @@ export const compilerContext = createContext<CompilerContext>({
 });
 
 // Preset some defaults for the compiler context
-export const compilerContextProvider = (
+export const compilerContextProvider = async (
   initialValue: Omit<
     CompilerContext,
     "toolPaths" | "promptPaths" | "resourcePaths" | "hasMiddleware"
@@ -46,7 +46,7 @@ export const compilerContextProvider = (
       resourcePaths: new Set(),
       hasMiddleware: false,
     },
-    callback
+    () => Promise.resolve(callback())
   );
 };
 

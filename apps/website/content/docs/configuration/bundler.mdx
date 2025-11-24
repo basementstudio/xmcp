@@ -1,0 +1,28 @@
+---
+title: "Bundler"
+metadataTitle: "Custom Bundler Configuration | xmcp Documentation"
+publishedAt: "2025-11-20"
+summary: "Learn how to customize the bundler configuration."
+description: "Extend the bundler configuration for your MCP server."
+---
+
+`xmcp` uses rspack to bundle your tools. You can customize the configuration by adding the following to your `xmcp.config.ts` file:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  bundler: (config) => {
+    // Add raw loader for images to get them as base64
+    config.module?.rules?.push({
+      test: /\.(png|jpe?g|gif|svg|webp)$/i,
+      type: "asset/inline",
+    });
+
+    return config;
+  },
+};
+```
+
+<Callout type="info">
+  Rspack provides configurations similar to webpack. You can find more details
+  in the [rspack documentation](https://rspack.rs/config/).
+</Callout>

@@ -3,28 +3,17 @@
  * */
 
 import path from "path";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
-import nodeExternals from "webpack-node-externals";
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import webpack from "webpack";
-import type { Configuration, EntryObject } from "webpack";
-import { outputPath, runtimeOutputPath } from "./constants";
+import { fileURLToPath } from "url";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
+import { rspack, RspackOptions, EntryObject } from "@rspack/core";
+import { runtimeOutputPath } from "./constants";
 import { srcPath } from "./constants";
 import chalk from "chalk";
+import { runCompiler } from "./compiler-manager";
+import fs from "fs-extra";
 
 const mode =
   process.env.NODE_ENV === "production" ? "production" : "development";
-
-/** Since we are using webpack to build webpack, we need to exclude some modules */
-const libsToExcludeFromCompilation = [
-  "webpack",
-  "webpack-virtual-modules",
-  "webpack-node-externals",
-  "ts-loader",
-  "fork-ts-checker-webpack-plugin",
-  "xmcp/headers",
-  //"@swc/core",
-];
 
 interface RuntimeRoot {
   name: string;
@@ -45,19 +34,16 @@ for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
-const config: Configuration = {
+const config: RspackOptions = {
+  name: "runtime",
   entry,
   mode: "production",
   devtool: false,
   target: "node",
   externalsPresets: { node: true },
-  externals: [
-    nodeExternals({
-      allowlist: (modulePath) => {
-        return !libsToExcludeFromCompilation.includes(modulePath);
-      },
-    }),
-  ],
+  externals: {
+    "@rspack/core": "@rspack/core",
+  },
   output: {
     filename: "[name].js",
     path: runtimeOutputPath,
@@ -65,6 +51,7 @@ const config: Configuration = {
     library: {
       type: "umd",
     },
+    clean: true,
   },
   module: {
     rules: [
@@ -72,7 +59,7 @@ const config: Configuration = {
         test: /\.ts$/,
         exclude: /node_modules/,
         use: {
-          loader: "swc-loader",
+          loader: "builtin:swc-loader",
           options: {
             jsc: {
               parser: {
@@ -104,25 +91,18 @@ const config: Configuration = {
     minimize: true,
     splitChunks: false,
   },
-  plugins: [
-    new ForkTsCheckerWebpackPlugin({
-      typescript: {
-        configFile: path.join(srcPath, "..", "tsconfig.json"),
-      },
-    }),
-    new CleanWebpackPlugin({
-      cleanStaleWebpackAssets: false,
-      cleanOnceBeforeBuildPatterns: [outputPath],
-    }),
-  ],
+  plugins: [new TsCheckerRspackPlugin()],
   watch: mode === "development",
 };
 
-// Fix issues with importing unsupported fsevents module in Windows and Linux
-// For more info, see: https://github.com/vinceau/project-clippi/issues/48
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Fix issues with importing unsupported modules
+// Ignore platform-specific and native binary modules
 if (process.platform !== "darwin") {
   config.plugins?.push(
-    new webpack.IgnorePlugin({
+    new rspack.IgnorePlugin({
       resourceRegExp: /^fsevents$/,
     })
   );
@@ -133,9 +113,11 @@ let compileStarted = false;
 // ✨
 export function buildRuntime(onCompiled: (stats: any) => void) {
   console.log(chalk.bgGreen.bold("Starting runtime compilation"));
-  webpack(config, (err, stats) => {
+
+  const handleStats = (err: Error | null, stats: any) => {
     if (err) {
       console.error(err);
+      return;
     }
 
     if (stats?.hasErrors()) {
@@ -157,11 +139,26 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
 
     console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
 
-    if (compileStarted) {
-      return;
-    } else {
+    if (process.env.GENERATE_STATS === "true" && stats) {
+      const statsJson = stats.toJson({
+        all: false,
+        assets: true,
+        chunks: true,
+        modules: true,
+        reasons: true,
+        timings: true,
+      });
+      const statsPath = path.join(__dirname, "..", "stats-runtime.json");
+      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+      console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
+    }
+
+    // Only call onCompiled once for the initial build
+    if (!compileStarted) {
       compileStarted = true;
       onCompiled(stats);
     }
-  });
+  };
+
+  runCompiler(config, handleStats);
 }

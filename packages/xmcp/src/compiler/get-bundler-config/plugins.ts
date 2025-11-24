@@ -1,11 +1,41 @@
 import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
 import fs from "fs-extra";
 import path from "path";
-import { Compiler } from "webpack";
+import { Compiler } from "@rspack/core";
 import { getXmcpConfig } from "../compiler-context";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
+import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
 
 // @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
+
+/**
+ * Determines which runtime files are needed based on user configuration.
+ */
+function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
+  const neededFiles: string[] = [];
+
+  // headers included if http is configured
+  if (xmcpConfig.http) {
+    neededFiles.push("headers.js");
+  }
+
+  if (xmcpConfig.stdio) {
+    neededFiles.push("stdio.js");
+  }
+
+  if (xmcpConfig.http) {
+    if (xmcpConfig.experimental?.adapter === "express") {
+      neededFiles.push("adapter-express.js");
+    } else if (xmcpConfig.experimental?.adapter === "nextjs") {
+      neededFiles.push("adapter-nextjs.js");
+    } else {
+      neededFiles.push("http.js");
+    }
+  }
+
+  return neededFiles;
+}
 
 export class InjectRuntimePlugin {
   apply(compiler: Compiler) {
@@ -16,8 +46,16 @@ export class InjectRuntimePlugin {
         if (hasRun) return;
         hasRun = true;
 
+        const xmcpConfig = getXmcpConfig();
+        const neededFiles = getNeededRuntimeFiles(xmcpConfig);
+
         for (const [fileName, fileContent] of Object.entries(runtimeFiles)) {
-          fs.writeFileSync(path.join(runtimeFolderPath, fileName), fileContent);
+          if (neededFiles.includes(fileName)) {
+            fs.writeFileSync(
+              path.join(runtimeFolderPath, fileName),
+              fileContent
+            );
+          }
         }
       }
     );
@@ -81,6 +119,9 @@ const expressTypeDefinition = `
 export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -107,5 +148,70 @@ export class CreateTypeDefinitionPlugin {
         }
       }
     );
+  }
+}
+
+interface InjectClientBundlesPluginOptions {
+  clientBundlesPath: string;
+}
+
+export class InjectClientBundlesPlugin {
+  private clientBundlesPath: string;
+
+  constructor(options: InjectClientBundlesPluginOptions) {
+    this.clientBundlesPath = options.clientBundlesPath;
+  }
+
+  apply(compiler: Compiler) {
+    const placeholderPattern = new RegExp(
+      `["']${escapeRegex(CLIENT_BUNDLE_PLACEHOLDER)}["']`,
+      "g"
+    );
+
+    compiler.hooks.compilation.tap("InjectClientBundles", (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: "InjectClientBundles",
+          stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+        },
+        (assets) => {
+          let bundles: Record<string, string> = {};
+
+          if (fs.existsSync(this.clientBundlesPath)) {
+            const files = fs.readdirSync(this.clientBundlesPath);
+            for (const file of files) {
+              if (file.endsWith(".bundle.js")) {
+                const toolName = file.replace(".bundle.js", "");
+                const bundleContent = fs.readFileSync(
+                  path.join(this.clientBundlesPath, file),
+                  "utf-8"
+                );
+                bundles[toolName] = bundleContent;
+              }
+            }
+          }
+
+          const replacement =
+            Object.keys(bundles).length > 0
+              ? JSON.stringify(bundles)
+              : "undefined";
+
+          for (const assetName in assets) {
+            if (!assetName.endsWith(".js")) {
+              continue;
+            }
+
+            const source = assets[assetName].source().toString();
+
+            if (!source.includes(CLIENT_BUNDLE_PLACEHOLDER)) {
+              continue;
+            }
+
+            const injected = source.replace(placeholderPattern, replacement);
+            assets[assetName] = new compiler.rspack.sources.RawSource(injected);
+          }
+        }
+      );
+    });
   }
 }

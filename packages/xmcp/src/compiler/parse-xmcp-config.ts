@@ -1,16 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { webpack, type Configuration } from "webpack";
 import { createFsFromVolume, Volume } from "memfs";
 import { compilerContext } from "./compiler-context";
-import {
-  configSchema,
-  XmcpConfigInputSchema,
-  type XmcpConfigOuputSchema,
-} from "./config";
-import { DEFAULT_PATHS_CONFIG } from "./config/constants";
+import { rspack, RspackOptions } from "@rspack/core";
+import { configSchema, type XmcpConfigOutputSchema } from "./config";
 
-function validateConfig(config: unknown): XmcpConfigOuputSchema {
+function validateConfig(config: unknown): XmcpConfigOutputSchema {
   return configSchema.parse(config);
 }
 
@@ -31,7 +26,7 @@ const configPaths = {
 /**
  * Parse and validate xmcp config file
  */
-export async function getConfig(): Promise<XmcpConfigOuputSchema> {
+export async function getConfig(): Promise<XmcpConfigOutputSchema> {
   const config = await readConfig();
   const { platforms } = compilerContext.getContext();
   if (platforms.vercel) {
@@ -44,7 +39,7 @@ export async function getConfig(): Promise<XmcpConfigOuputSchema> {
 /**
  * Read config from file or return default
  */
-export async function readConfig(): Promise<XmcpConfigOuputSchema> {
+export async function readConfig(): Promise<XmcpConfigOutputSchema> {
   // Simple json config
   const jsonFile = readConfigFile(configPaths.json);
   if (jsonFile) {
@@ -61,26 +56,25 @@ export async function readConfig(): Promise<XmcpConfigOuputSchema> {
     }
   }
 
-  // Default config
-  return {
+  return configSchema.parse({
     stdio: true,
     http: true,
-    paths: DEFAULT_PATHS_CONFIG,
-  } satisfies XmcpConfigInputSchema;
+    paths: {},
+  });
 }
 
 /**
  * If the user is using a typescript config file,
  * we need to bundle it, run it and return its copiled code
  * */
-async function compileConfig(): Promise<XmcpConfigOuputSchema> {
+async function compileConfig(): Promise<XmcpConfigOutputSchema> {
   const configPath = path.resolve(process.cwd(), configPaths.ts);
 
   // Create memory filesystem
   const memoryFs = createFsFromVolume(new Volume());
 
-  // Webpack configuration
-  const webpackConfig: Configuration = {
+  // rspack configuration
+  const rspackConfig: RspackOptions = {
     mode: "production",
     entry: configPath,
     target: "node",
@@ -106,7 +100,7 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
         {
           test: /\.ts$/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {
@@ -124,15 +118,15 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
       ],
     },
     externals: {
-      webpack: "commonjs2 webpack",
+      rspack: "commonjs2 rspack",
     },
   };
 
   return new Promise((resolve, reject) => {
-    const compiler = webpack(webpackConfig);
+    const compiler = rspack(rspackConfig);
 
     if (!compiler) {
-      reject(new Error("Failed to create webpack compiler"));
+      reject(new Error("Failed to create rspack compiler"));
       return;
     }
 
@@ -160,9 +154,9 @@ async function compileConfig(): Promise<XmcpConfigOuputSchema> {
         // Create a temporary module to evaluate the bundled code
         const module = { exports: {} };
         const require = (id: string) => {
-          // Handle webpack require
-          if (id === "webpack") {
-            return webpack;
+          // Handle rspack require
+          if (id === "rspack") {
+            return rspack;
           }
           throw new Error(`Cannot resolve module: ${id}`);
         };

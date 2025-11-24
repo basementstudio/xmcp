@@ -1,25 +1,28 @@
 import {
-  Configuration,
-  DefinePlugin,
+  RspackOptions,
   ProvidePlugin,
+  DefinePlugin,
   BannerPlugin,
-  IgnorePlugin,
-} from "webpack";
+} from "@rspack/core";
 import path from "path";
 import { distOutputPath, adapterOutputPath } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
-import { XmcpConfigOuputSchema } from "@/compiler/config";
+import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
-import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import { CreateTypeDefinitionPlugin, InjectRuntimePlugin } from "./plugins";
+import {
+  CreateTypeDefinitionPlugin,
+  InjectClientBundlesPlugin,
+  InjectRuntimePlugin,
+} from "./plugins";
 import { getExternals } from "./get-externals";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 
-/** Creates the webpack configuration that xmcp will use to bundle the user's code */
-export function getWebpackConfig(
-  xmcpConfig: XmcpConfigOuputSchema
-): Configuration {
+/** Creates the bundler configuration that xmcp will use to bundle the user's code */
+export function getRspackConfig(
+  xmcpConfig: XmcpConfigOutputSchema
+): RspackOptions {
   const processFolder = process.cwd();
   const { mode } = compilerContext.getContext();
 
@@ -31,7 +34,7 @@ export function getWebpackConfig(
     ? "index.js"
     : "[name].js";
 
-  const config: Configuration = {
+  const config: RspackOptions = {
     mode,
     watch: mode === "development",
     devtool: mode === "development" ? "eval-cheap-module-source-map" : false,
@@ -39,6 +42,11 @@ export function getWebpackConfig(
       filename: outputFilename,
       path: outputPath,
       libraryTarget: "commonjs2",
+      clean: {
+        keep: xmcpConfig.experimental?.adapter
+          ? undefined
+          : path.join(outputPath, "client"),
+      },
     },
     target: "node",
     externals: getExternals(),
@@ -61,13 +69,17 @@ export function getWebpackConfig(
         path.resolve(__dirname, "../.."), // for pnpm
       ],
     },
-    plugins: [new InjectRuntimePlugin(), new CreateTypeDefinitionPlugin()],
+    plugins: [
+      new InjectRuntimePlugin(),
+      new CreateTypeDefinitionPlugin(),
+      xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
+    ],
     module: {
       rules: [
         {
           test: /\.(ts|tsx)$/,
           use: {
-            loader: "swc-loader",
+            loader: "builtin:swc-loader",
             options: {
               jsc: {
                 parser: {
@@ -88,6 +100,7 @@ export function getWebpackConfig(
     },
     optimization: {
       minimize: mode === "production",
+      mergeDuplicateChunks: true,
       splitChunks: false,
     },
   };
@@ -133,52 +146,23 @@ export function getWebpackConfig(
   const clientBundlesPath = path.join(processFolder, "dist/client");
 
   config.plugins!.push(
-    new DefinePlugin({
-      INJECTED_CLIENT_BUNDLES: DefinePlugin.runtimeValue(() => {
-        if (!fs.existsSync(clientBundlesPath)) {
-          // In development mode, bundles may not exist yet if webpack recompiles
-          // before bundles are rebuilt. The runtime will fall back to reading from filesystem.
-          return JSON.stringify({});
-        }
-
-        const bundles: Record<string, string> = {};
-        const files = fs.readdirSync(clientBundlesPath);
-
-        for (const file of files) {
-          if (file.endsWith(".bundle.js")) {
-            const toolName = file.replace(".bundle.js", "");
-            const bundleContent = fs.readFileSync(
-              path.join(clientBundlesPath, file),
-              "utf-8"
-            );
-            bundles[toolName] = bundleContent;
-          }
-        }
-
-        const bundleCount = Object.keys(bundles).length;
-        if (bundleCount > 0) {
-          console.log(
-            `✓ Injected ${bundleCount} React client bundle(s): ${Object.keys(bundles).join(", ")}`
-          );
-        }
-
-        return JSON.stringify(bundles);
-      }),
+    new InjectClientBundlesPlugin({
+      clientBundlesPath,
     })
   );
 
-  // add clean plugin
-  if (!xmcpConfig.experimental?.adapter) {
-    // not needed in adapter mode since it only outputs one file
-    // Exclude dist/client from being cleaned since client bundles are needed during compilation
-    // Only clean .js files in the output directory root, not subdirectories like dist/client
-    config.plugins!.push(
-      new CleanWebpackPlugin({
-        cleanOnceBeforeBuildPatterns: [path.join(outputPath, "*.js")],
-        dangerouslyAllowCleanPatternsOutsideProject: true,
-        dry: false, // Explicitly enable actual file deletion (not dry-run mode)
-      })
-    );
+  // Log client bundles once after DefinePlugin is set up
+  if (fs.existsSync(clientBundlesPath)) {
+    const files = fs.readdirSync(clientBundlesPath);
+    const bundleNames = files
+      .filter((file: string) => file.endsWith(".bundle.js"))
+      .map((file: string) => file.replace(".bundle.js", ""));
+
+    if (bundleNames.length > 0) {
+      console.log(
+        `✓ Injected ${bundleNames.length} React client bundle(s): ${bundleNames.join(", ")}`
+      );
+    }
   }
 
   // add shebang to CLI output on stdio mode

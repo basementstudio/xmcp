@@ -1,5 +1,5 @@
-import { webpack } from "webpack";
-import { getWebpackConfig } from "./get-webpack-config";
+import { rspack } from "@rspack/core";
+import { getRspackConfig } from "./get-bundler-config";
 import chalk from "chalk";
 import { getConfig } from "./parse-xmcp-config";
 import { generateImportCode } from "./generate-import-code";
@@ -31,7 +31,7 @@ import { startHttpServer } from "./start-http-server";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
-import { transpileClientComponent } from "./transpile-client-components";
+import { transpileClientComponent } from "./client/transpile";
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -50,10 +50,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  let webpackConfig = getWebpackConfig(xmcpConfig);
+  let bundlerConfig = getRspackConfig(xmcpConfig);
 
-  if (xmcpConfig.webpack) {
-    webpackConfig = xmcpConfig.webpack(webpackConfig);
+  if (xmcpConfig.bundler) {
+    bundlerConfig = xmcpConfig.bundler(bundlerConfig);
   }
 
   const watcher = new Watcher({
@@ -84,7 +84,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           await generateCode();
         }
       },
-      onChange: async (changedPath) => {
+      onChange: async () => {
         if (compilerStarted) {
           await generateCode();
         }
@@ -172,10 +172,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
-    // Generate all code (including client bundles) BEFORE webpack runs
+    // Generate all code (including client bundles) BEFORE bundler runs
     await generateCode();
 
-    webpack(webpackConfig, async (err, stats) => {
+    rspack(bundlerConfig, (err, stats) => {
       // Track compilation time
       let compilationTime: number;
       if (stats?.endTime && stats?.startTime) {
@@ -293,7 +293,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         // user defined callback
         onBuild?.();
       } else {
-        // on dev mode, webpack will recompile the code, so we need to start the http server after the first one
+        // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
           mode === "development" &&
           xmcpConfig["http"] &&

@@ -48,7 +48,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
               )}
             </div>
 
-            <h1 className="text-base md:text-2xl text-brand-white font-medium mb-3 md:mb-4 leading-tight uppercase">
+            <h1 className="text-base md:text-2xl text-brand-white font-medium mb-3 md:mb-4 leading-tight">
               {featuredPost.title}
             </h1>
 

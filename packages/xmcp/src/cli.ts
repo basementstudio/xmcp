@@ -13,16 +13,16 @@ program.name("xmcp").description("The MCP framework CLI").version("0.0.1");
 program
   .command("dev")
   .description("Start development mode")
-  .action(() => {
+  .action(async () => {
     console.log(`${xmcpLogo} Starting development mode...`);
-    compilerContextProvider(
+    await compilerContextProvider(
       {
         mode: "development",
         // Ignore platforms on dev mode
         platforms: {},
       },
-      () => {
-        compile();
+      async () => {
+        await compile();
       }
     );
   });
@@ -35,15 +35,15 @@ program
     console.log(`${xmcpLogo} Building for production...`);
     const isVercelBuild = options.vercel || process.env.VERCEL === "1";
 
-    compilerContextProvider(
+    await compilerContextProvider(
       {
         mode: "production",
         platforms: {
           vercel: isVercelBuild,
         },
       },
-      () => {
-        compile({
+      async () => {
+        await compile({
           onBuild: async () => {
             if (isVercelBuild) {
               console.log(`${xmcpLogo} Building for Vercel...`);

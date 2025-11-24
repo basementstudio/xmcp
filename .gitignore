@@ -38,3 +38,12 @@ dist
 .xmcp
 xmcp-env.d.ts
 .env*.local
+
+# bundle analysis
+bundle-analysis/
+stats-*.json
+bundle-*.json
+bundle-*.html
+
+# cursor
+.cursor

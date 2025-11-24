@@ -1,0 +1,119 @@
+name: Bundle Size Analysis
+
+on:
+  pull_request:
+    paths:
+      - "packages/xmcp/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/xmcp/**"
+      - "pnpm-lock.yaml"
+      - "package.json"
+
+jobs:
+  analyze-bundle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build xmcp package with stats
+        working-directory: packages/xmcp
+        env:
+          GENERATE_STATS: "true"
+        run: pnpm build
+
+      - name: Generate rspack analysis
+        working-directory: packages/xmcp
+        run: pnpm tsx scripts/analyze-rspack-stats.ts
+
+      - name: Upload analysis artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rspack-bundle-analysis
+          path: |
+            packages/xmcp/bundle-analysis.md
+            packages/xmcp/stats-main.json
+            packages/xmcp/stats-runtime.json
+          retention-days: 30
+
+      - name: Comment PR with bundle analysis
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const commentPath = path.join('packages', 'xmcp', 'bundle-analysis.md');
+            let comment = '';
+
+            if (fs.existsSync(commentPath)) {
+              comment = fs.readFileSync(commentPath, 'utf8');
+            } else {
+              comment = '## Rspack Bundle Analysis\n\n⚠ Analysis completed but the markdown output was not found.';
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const marker = 'Rspack Bundle Analysis';
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes(marker)
+            );
+
+            const nextBody = comment.trim();
+
+            if (!nextBody.length) {
+              core.info('Bundle analysis content empty, skipping PR comment.');
+              return;
+            }
+
+            if (botComment) {
+              if (botComment.body.trim() === nextBody) {
+                core.info('Bundle analysis unchanged; not updating PR comment.');
+                return;
+              }
+
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: nextBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: nextBody,
+              });
+            }
