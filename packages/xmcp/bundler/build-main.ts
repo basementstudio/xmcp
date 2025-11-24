@@ -144,12 +144,6 @@ function getConfig() {
         raw: true,
         include: /^cli\.js$/,
       }),
-      // add shebang to detached-flush script
-      new webpack.BannerPlugin({
-        banner: "#!/usr/bin/env node",
-        raw: true,
-        include: /^detached-flush\.js$/,
-      }),
     ],
     watch: mode === "development",
   };
