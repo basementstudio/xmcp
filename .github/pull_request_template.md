@@ -1,4 +1,6 @@
 > **Important: Please ensure your pull request is targeting the `canary` branch. PRs to other branches may be closed or require retargeting.**
+>
+> ⚠️ _If you are updating documentation or the site, please target the **main** branch instead of `canary`._
 
 ## Summary
 
