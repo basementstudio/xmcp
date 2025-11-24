@@ -1,4 +1,5 @@
 import retry from "async-retry";
+import type { TelemetryMeta } from "../metadata";
 
 /**
  * Build event data (only event type we track)
@@ -29,18 +30,7 @@ export interface TelemetryPayload {
     sessionId: string;
   };
 
-  meta: {
-    platform?: string;
-    arch?: string;
-    systemRelease?: string;
-    cpuModel?: string;
-    cpuSpeed?: number;
-    cpuCores?: number;
-    memoryTotal?: number;
-    isCI?: boolean;
-    ciName?: string | null;
-    isDocker?: boolean;
-  };
+  meta: TelemetryMeta;
 
   events: Array<{
     eventName: string;
@@ -128,7 +118,7 @@ export async function postTelemetryPayload(
  */
 export function createPayload(
   context: TelemetryPayload["context"],
-  meta: Record<string, any>,
+  meta: TelemetryMeta,
   events: TelemetryPayload["events"]
 ): TelemetryPayload {
   return { context, meta, events };

@@ -6,23 +6,23 @@ import ciEnvironment from "ci-info";
 // CI details
 const { isCI: _isCI, name: _name } = ciEnvironment;
 
-type AnonymousMeta = {
-  systemPlatform: NodeJS.Platform;
+export type TelemetryMeta = {
+  platform: NodeJS.Platform;
   systemRelease: string;
-  systemArchitecture: string;
-  cpuCount: number;
+  arch: string;
+  cpuCores: number;
   cpuModel: string | null;
   cpuSpeed: number | null;
-  memoryInMb: number;
+  memoryTotal: number;
   isDocker: boolean;
   isWsl: boolean;
   isCI: typeof _isCI;
   ciName: typeof _name | null;
 };
 
-let traits: AnonymousMeta | undefined;
+let traits: TelemetryMeta | undefined;
 
-export function getAnonymousMeta(): AnonymousMeta {
+export function getAnonymousMeta(): TelemetryMeta {
   if (traits) {
     return traits;
   }
@@ -30,14 +30,14 @@ export function getAnonymousMeta(): AnonymousMeta {
   const cpus = os.cpus() || [];
   traits = {
     // Software information
-    systemPlatform: os.platform(),
+    platform: os.platform(),
     systemRelease: os.release(),
-    systemArchitecture: os.arch(),
+    arch: os.arch(),
     // Machine information
-    cpuCount: cpus.length,
+    cpuCores: cpus.length,
     cpuModel: cpus.length ? cpus[0].model : null,
     cpuSpeed: cpus.length ? cpus[0].speed : null,
-    memoryInMb: Math.trunc(os.totalmem() / Math.pow(1024, 2)),
+    memoryTotal: Math.trunc(os.totalmem() / Math.pow(1024, 2)),
     // Environment information
     isDocker: isDockerFunction(),
     isWsl: isWslBoolean,
