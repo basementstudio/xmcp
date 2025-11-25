@@ -77,9 +77,11 @@ export default function TelemetryPage() {
             </p>
             <p>
               Set <code>XMCP_DEBUG_TELEMETRY=true</code> to print every payload
-              locally. When enabled, telemetry data is <em>not</em> sent and is
-              instead written to <code>stderr</code> with the{" "}
-              <code>[telemetry]</code> prefix so you can review it line by line.
+              locally. This flag mirrors the data to <code>stderr</code> with
+              the <code>[telemetry]</code> prefix but does <em>not</em> stop
+              events from being sent; use{" "}
+              <code>XMCP_TELEMETRY_DISABLED=true</code> if you want to pause
+              telemetry entirely.
             </p>
           </section>
 
