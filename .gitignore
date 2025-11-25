@@ -47,3 +47,6 @@ bundle-*.html
 
 # cursor
 .cursor
+
+# pnpm-lock.yaml
+pnpm-lock.yaml
