@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useControls, folder } from "leva";
 
+// Vertex shader: Transforms particle positions based on image intensity, cursor displacement, and time-based animations
 const vertexShader = `
 uniform vec2 uResolution;
 uniform sampler2D uPictureTexture;
@@ -100,6 +101,7 @@ void main()
     vUv = uv;
 }
 `;
+// Fragment shader: Renders particles as circular points with smooth edges and glow effects
 const fragmentShader = `
 varying vec3 vColor;
 varying vec2 vUv;
@@ -129,6 +131,14 @@ export default function ParticlesCursorAnimation() {
   const { size, camera, raycaster, gl } = useThree();
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
+  const intersectionsRef = useRef<THREE.Intersection[]>([]);
+  // Track previous cursor positions to optimize raycaster and canvas updates
+  const previousScreenCursorRef = useRef<THREE.Vector2>(
+    new THREE.Vector2(9999, 9999)
+  );
+  const previousCanvasCursorRef = useRef<THREE.Vector2>(
+    new THREE.Vector2(9999, 9999)
+  );
 
   // Check if debug mode is enabled via URL
   const isDebugMode =
@@ -263,6 +273,7 @@ export default function ParticlesCursorAnimation() {
     motionBlurStrength,
   } = controls;
 
+  // Canvas for displacement texture: tracks cursor movement and creates interactive effects
   const displacement = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = canvasResolution;
@@ -296,11 +307,19 @@ export default function ParticlesCursorAnimation() {
     return img;
   }, []);
 
+  const [imageAspect, setImageAspect] = useState(1);
+
   const pictureTexture = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    return loader.load("/xmcp.png");
+    return loader.load("/xmcp.png", (texture) => {
+      const { width, height } = texture.image as HTMLImageElement;
+      if (width && height) {
+        setImageAspect(width / height);
+      }
+    });
   }, []);
 
+  // Calculate plane dimensions to fill 90% of the visible viewport
   const planeSize = useMemo(() => {
     if (!(camera instanceof THREE.PerspectiveCamera))
       return { width: 10, height: 10, aspect: 1 };
@@ -319,13 +338,7 @@ export default function ParticlesCursorAnimation() {
     };
   }, [camera, size]);
 
-  const imageAspect = useMemo(() => {
-    if (pictureTexture.image) {
-      return pictureTexture.image.width / pictureTexture.image.height;
-    }
-    return 1;
-  }, [pictureTexture]);
-
+  // Create particle geometry with random intensity and angle attributes for variation
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(
       planeSize.width,
@@ -354,6 +367,7 @@ export default function ParticlesCursorAnimation() {
     return geo;
   }, [planeSize, particleQuantity]);
 
+  // Create material only once - uniforms will be updated in useEffect
   const material = useMemo(() => {
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
 
@@ -379,19 +393,20 @@ export default function ParticlesCursorAnimation() {
       },
       blending: THREE.AdditiveBlending,
     });
-  }, [
-    size,
-    pictureTexture,
-    displacement.texture,
-    displacementForce,
-    particleSize,
-    smoothstepMin,
-    smoothstepMax,
-    motionBlurStrength,
-    planeSize.aspect,
-    imageAspect,
-  ]);
+    // Only recreate material when textures change (rare events)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pictureTexture, displacement.texture]);
 
+  useEffect(() => {
+    return () => {
+      displacement.texture.dispose();
+      geometry.dispose();
+      material.dispose();
+      pictureTexture.dispose();
+    };
+  }, [displacement.texture, geometry, material, pictureTexture]);
+
+  // Track mouse position and convert to normalized device coordinates for raycaster
   useEffect(() => {
     const canvas = gl.domElement;
 
@@ -407,30 +422,50 @@ export default function ParticlesCursorAnimation() {
       displacement.screenCursor.y = -(y / rect.height) * 2 + 1;
     };
 
+    const handlePointerLeave = () => {
+      displacement.screenCursor.set(9999, 9999);
+      displacement.canvasCursorTarget.set(9999, 9999);
+      displacement.canvasCursorSmoothed.set(9999, 9999);
+      previousCanvasCursorRef.current.set(9999, 9999);
+    };
+
     window.addEventListener("pointermove", handlePointerMove);
-    return () => window.removeEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerleave", handlePointerLeave);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerleave", handlePointerLeave);
+    };
   }, [displacement, gl]);
 
+  // Update uniforms when values change (material is created once)
   useEffect(() => {
+    if (!material) return;
+
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
     material.uniforms.uResolution.value.set(
       size.width * pixelRatio,
       size.height * pixelRatio
     );
+    material.uniforms.uDisplacementTexture.value = displacement.texture;
     material.uniforms.uDisplacementStrength.value = displacementForce;
     material.uniforms.uPointSizeMultiplier.value = particleSize;
     material.uniforms.uSmoothstepMin.value = smoothstepMin;
     material.uniforms.uSmoothstepMax.value = smoothstepMax;
     material.uniforms.uMotionBlurStrength.value = motionBlurStrength;
     material.uniforms.uViewportWidth.value = size.width;
+    material.uniforms.uPlaneAspect.value = planeSize.aspect;
+    material.uniforms.uImageAspect.value = imageAspect;
   }, [
-    size,
     material,
+    size,
+    displacement.texture,
     displacementForce,
     particleSize,
     smoothstepMin,
     smoothstepMax,
     motionBlurStrength,
+    planeSize.aspect,
+    imageAspect,
   ]);
 
   // Update interactive plane when planeSize changes
@@ -446,25 +481,47 @@ export default function ParticlesCursorAnimation() {
     }
   }, [planeSize]);
 
+  // Animation loop: update cursor tracking, calculate velocity, and render displacement texture
   useFrame((state) => {
     if (!interactivePlaneRef.current || !displacement.context) return;
 
     material.uniforms.uTime.value = state.clock.elapsedTime;
 
-    // Update raycaster with current camera and mouse position
-    raycaster.setFromCamera(displacement.screenCursor, camera);
-    const intersections = raycaster.intersectObject(
-      interactivePlaneRef.current,
-      false
-    );
+    const hasPointerInView =
+      Math.abs(displacement.screenCursor.x) <= 1 &&
+      Math.abs(displacement.screenCursor.y) <= 1;
 
-    if (intersections.length > 0 && intersections[0].uv) {
-      const uv = intersections[0].uv;
-      displacement.canvasCursorTarget.x = uv.x * displacement.canvas.width;
-      displacement.canvasCursorTarget.y =
-        (1 - uv.y) * displacement.canvas.height;
+    // Only execute raycaster if screenCursor has changed (performance optimization)
+    const cursorChanged =
+      previousScreenCursorRef.current.x !== displacement.screenCursor.x ||
+      previousScreenCursorRef.current.y !== displacement.screenCursor.y;
+
+    if (hasPointerInView && cursorChanged) {
+      // Update raycaster with current camera and mouse position
+      raycaster.setFromCamera(displacement.screenCursor, camera);
+      const intersections = intersectionsRef.current;
+      intersections.length = 0;
+      raycaster.intersectObject(
+        interactivePlaneRef.current,
+        false,
+        intersections
+      );
+
+      if (intersections.length > 0 && intersections[0].uv) {
+        const uv = intersections[0].uv;
+        displacement.canvasCursorTarget.x = uv.x * displacement.canvas.width;
+        displacement.canvasCursorTarget.y =
+          (1 - uv.y) * displacement.canvas.height;
+      }
+
+      // Update previous cursor position
+      previousScreenCursorRef.current.copy(displacement.screenCursor);
+    } else if (!hasPointerInView) {
+      // Reset previous cursor when pointer leaves view
+      previousScreenCursorRef.current.set(9999, 9999);
     }
 
+    // Smooth cursor movement with exponential interpolation
     displacement.canvasCursorSmoothed.x +=
       (displacement.canvasCursorTarget.x -
         displacement.canvasCursorSmoothed.x) *
@@ -477,6 +534,7 @@ export default function ParticlesCursorAnimation() {
     const oldX = displacement.canvasCursor.x;
     const oldY = displacement.canvasCursor.y;
 
+    // Lerp cursor position for fluid animation
     displacement.canvasCursor.x +=
       (displacement.canvasCursorSmoothed.x - displacement.canvasCursor.x) *
       cursorLerpStrength;
@@ -484,11 +542,13 @@ export default function ParticlesCursorAnimation() {
       (displacement.canvasCursorSmoothed.y - displacement.canvasCursor.y) *
       cursorLerpStrength;
 
+    // Calculate velocity for flow displacement effect
     displacement.velocity.x =
       (displacement.canvasCursor.x - oldX) / displacement.canvas.width;
     displacement.velocity.y =
       -(displacement.canvasCursor.y - oldY) / displacement.canvas.height;
 
+    // Smooth velocity to reduce jitter
     displacement.velocitySmoothed.x +=
       (displacement.velocity.x - displacement.velocitySmoothed.x) * 0.15;
     displacement.velocitySmoothed.y +=
@@ -496,15 +556,14 @@ export default function ParticlesCursorAnimation() {
 
     material.uniforms.uCursorVelocity.value.copy(displacement.velocitySmoothed);
 
-    displacement.context.globalCompositeOperation = "source-over";
-    displacement.context.globalAlpha = fadeSpeed;
-    displacement.context.fillStyle = "#000000";
-    displacement.context.fillRect(
-      0,
-      0,
-      displacement.canvas.width,
-      displacement.canvas.height
-    );
+    // Check if canvas cursor moved significantly (using a threshold to avoid micro-movements)
+    const canvasCursorMoved =
+      Math.abs(
+        displacement.canvasCursor.x - previousCanvasCursorRef.current.x
+      ) > 0.1 ||
+      Math.abs(
+        displacement.canvasCursor.y - previousCanvasCursorRef.current.y
+      ) > 0.1;
 
     const cursorDistance = displacement.canvasCursorPrevious.distanceTo(
       displacement.canvasCursor
@@ -512,30 +571,48 @@ export default function ParticlesCursorAnimation() {
     displacement.canvasCursorPrevious.copy(displacement.canvasCursor);
     const alpha = Math.min(cursorDistance * speedAlphaMultiplier, 1);
 
-    const glowSize = displacement.canvas.width * mouseAreaSize;
-    displacement.context.globalCompositeOperation = "lighten";
-    displacement.context.globalAlpha = alpha;
+    // Only update canvas if cursor moved significantly or if we need to draw glow
+    const shouldUpdateCanvas =
+      canvasCursorMoved || (alpha > 0.001 && glowImage.complete);
 
-    if (glowImage.complete) {
-      displacement.context.drawImage(
-        glowImage,
-        displacement.canvasCursor.x - glowSize * 0.5,
-        displacement.canvasCursor.y - glowSize * 0.5,
-        glowSize,
-        glowSize
+    if (shouldUpdateCanvas) {
+      displacement.context.globalCompositeOperation = "source-over";
+      displacement.context.globalAlpha = fadeSpeed;
+      displacement.context.fillStyle = "#000000";
+      displacement.context.fillRect(
+        0,
+        0,
+        displacement.canvas.width,
+        displacement.canvas.height
       );
-    }
 
-    displacement.texture.needsUpdate = true;
+      if (alpha > 0.001 && glowImage.complete) {
+        const glowSize = displacement.canvas.width * mouseAreaSize;
+        displacement.context.globalCompositeOperation = "lighten";
+        displacement.context.globalAlpha = alpha;
+        displacement.context.drawImage(
+          glowImage,
+          displacement.canvasCursor.x - glowSize * 0.5,
+          displacement.canvasCursor.y - glowSize * 0.5,
+          glowSize,
+          glowSize
+        );
+      }
+
+      displacement.texture.needsUpdate = true;
+      previousCanvasCursorRef.current.copy(displacement.canvasCursor);
+    }
   });
 
   return (
     <>
+      {/* Invisible plane for raycaster intersection detection */}
       <mesh ref={interactivePlaneRef} visible={false} position={[0, 0, 0]}>
         <planeGeometry args={[planeSize.width, planeSize.height]} />
         <meshBasicMaterial color="red" side={THREE.DoubleSide} />
       </mesh>
 
+      {/* Particle system rendered as points */}
       <points
         ref={meshRef}
         geometry={geometry}
