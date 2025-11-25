@@ -48,27 +48,36 @@ export function createContext<T extends Object>({
   name,
 }: CreateContextOptions): Context<T> {
   const storageKey = Symbol.for(`xmcp-context-${name}`);
+  const fallbackKey = Symbol.for(`xmcp-context-${name}-fallback-store`);
 
   if (getGlobalContext(storageKey)) {
     return getGlobalContext<Context<T>>(storageKey);
   }
 
   const context = new AsyncLocalStorage<T>();
+  const fallbackStoreWrapper = (globalThis as any)[fallbackKey] ?? {
+    current: null as T | null,
+  };
+  setGlobalContext(fallbackKey, fallbackStoreWrapper);
 
   const getContext: GetContext<T> = () => {
     const store = context.getStore();
 
-    if (!store) {
-      throw new Error(
-        `getContext() can only be used within the ${name} context.`
-      );
+    if (store) {
+      return store;
     }
 
-    return store;
+    if (fallbackStoreWrapper.current) {
+      return fallbackStoreWrapper.current;
+    }
+
+    throw new Error(
+      `getContext() can only be used within the ${name} context.`
+    );
   };
 
   const setContext: SetContext<T> = (data) => {
-    const store = context.getStore();
+    const store = context.getStore() ?? fallbackStoreWrapper.current;
 
     if (!store) {
       throw new Error(
@@ -80,6 +89,7 @@ export function createContext<T extends Object>({
   };
 
   const provider = (initialValue: T, callback: () => void) => {
+    fallbackStoreWrapper.current = initialValue;
     return context.run(initialValue, callback);
   };
 

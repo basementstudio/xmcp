@@ -7,7 +7,6 @@ let httpServerProcess: ChildProcess | null = null;
 function spawnHttpServer() {
   const process = spawn("node", ["dist/http.js"], {
     stdio: "inherit",
-    shell: true,
   });
 
   watchdog(process);
