@@ -63,6 +63,11 @@ export class TelemetryStorage {
     this.ensureConfig();
   }
 
+  private isEnvTelemetryDisabled(): boolean {
+    const value = this.XMCP_TELEMETRY_DISABLED;
+    return typeof value === "string" && value.toLowerCase() === "true";
+  }
+
   private ensureConfig(): void {
     try {
       // Ensure directory exists
@@ -161,7 +166,7 @@ export class TelemetryStorage {
   }
 
   get isDisabled(): boolean {
-    if (!!this.XMCP_TELEMETRY_DISABLED || !this.config) {
+    if (!this.config || this.isEnvTelemetryDisabled()) {
       return true;
     }
     return this.get<boolean>(TELEMETRY_KEY_ENABLED, true) === false;
@@ -169,7 +174,7 @@ export class TelemetryStorage {
 
   get isEnabled(): boolean {
     return (
-      !this.XMCP_TELEMETRY_DISABLED &&
+      !this.isEnvTelemetryDisabled() &&
       !!this.config &&
       this.get<boolean>(TELEMETRY_KEY_ENABLED, true) !== false
     );
