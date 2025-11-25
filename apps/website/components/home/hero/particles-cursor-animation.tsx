@@ -133,6 +133,9 @@ export default function ParticlesCursorAnimation() {
   const previousScreenCursorRef = useRef<THREE.Vector2>(
     new THREE.Vector2(9999, 9999)
   );
+  const previousCanvasCursorRef = useRef<THREE.Vector2>(
+    new THREE.Vector2(9999, 9999)
+  );
 
   // Check if debug mode is enabled via URL
   const isDebugMode =
@@ -424,6 +427,7 @@ export default function ParticlesCursorAnimation() {
       displacement.screenCursor.set(9999, 9999);
       displacement.canvasCursorTarget.set(9999, 9999);
       displacement.canvasCursorSmoothed.set(9999, 9999);
+      previousCanvasCursorRef.current.set(9999, 9999);
     };
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -543,15 +547,14 @@ export default function ParticlesCursorAnimation() {
 
     material.uniforms.uCursorVelocity.value.copy(displacement.velocitySmoothed);
 
-    displacement.context.globalCompositeOperation = "source-over";
-    displacement.context.globalAlpha = fadeSpeed;
-    displacement.context.fillStyle = "#000000";
-    displacement.context.fillRect(
-      0,
-      0,
-      displacement.canvas.width,
-      displacement.canvas.height
-    );
+    // Check if canvas cursor moved significantly (using a threshold to avoid micro-movements)
+    const canvasCursorMoved =
+      Math.abs(
+        displacement.canvasCursor.x - previousCanvasCursorRef.current.x
+      ) > 0.1 ||
+      Math.abs(
+        displacement.canvasCursor.y - previousCanvasCursorRef.current.y
+      ) > 0.1;
 
     const cursorDistance = displacement.canvasCursorPrevious.distanceTo(
       displacement.canvasCursor
@@ -559,20 +562,37 @@ export default function ParticlesCursorAnimation() {
     displacement.canvasCursorPrevious.copy(displacement.canvasCursor);
     const alpha = Math.min(cursorDistance * speedAlphaMultiplier, 1);
 
-    if (alpha > 0.001 && glowImage.complete) {
-      const glowSize = displacement.canvas.width * mouseAreaSize;
-      displacement.context.globalCompositeOperation = "lighten";
-      displacement.context.globalAlpha = alpha;
-      displacement.context.drawImage(
-        glowImage,
-        displacement.canvasCursor.x - glowSize * 0.5,
-        displacement.canvasCursor.y - glowSize * 0.5,
-        glowSize,
-        glowSize
-      );
-    }
+    // Only update canvas if cursor moved significantly or if we need to draw glow
+    const shouldUpdateCanvas =
+      canvasCursorMoved || (alpha > 0.001 && glowImage.complete);
 
-    displacement.texture.needsUpdate = true;
+    if (shouldUpdateCanvas) {
+      displacement.context.globalCompositeOperation = "source-over";
+      displacement.context.globalAlpha = fadeSpeed;
+      displacement.context.fillStyle = "#000000";
+      displacement.context.fillRect(
+        0,
+        0,
+        displacement.canvas.width,
+        displacement.canvas.height
+      );
+
+      if (alpha > 0.001 && glowImage.complete) {
+        const glowSize = displacement.canvas.width * mouseAreaSize;
+        displacement.context.globalCompositeOperation = "lighten";
+        displacement.context.globalAlpha = alpha;
+        displacement.context.drawImage(
+          glowImage,
+          displacement.canvasCursor.x - glowSize * 0.5,
+          displacement.canvasCursor.y - glowSize * 0.5,
+          glowSize,
+          glowSize
+        );
+      }
+
+      displacement.texture.needsUpdate = true;
+      previousCanvasCursorRef.current.copy(displacement.canvasCursor);
+    }
   });
 
   return (
