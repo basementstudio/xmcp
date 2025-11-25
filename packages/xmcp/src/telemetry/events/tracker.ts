@@ -186,6 +186,11 @@ export class TelemetryTracker {
    * the main process from exiting
    */
   flushDetached(mode: "dev" | "build"): void {
+    if (this.isDisabled) {
+      this.queue.clear();
+      return;
+    }
+
     const allEvents: TelemetryEvent[] = [];
 
     this.queue.forEach((item: any) => {

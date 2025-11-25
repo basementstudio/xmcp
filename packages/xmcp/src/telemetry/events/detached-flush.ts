@@ -42,6 +42,11 @@ async function main() {
 
     // Skip if telemetry is disabled
     if (storage.isDisabled) {
+      try {
+        unlinkSync(eventsFile);
+      } catch (_) {
+        // ignore cleanup failure
+      }
       return;
     }
 
