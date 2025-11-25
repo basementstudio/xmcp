@@ -1,0 +1,33 @@
+---
+title: "Telemetry"
+metadataTitle: "Telemetry Controls | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Understand what xmcp collects and the fastest ways to turn telemetry off."
+description: "A condensed version of the telemetry policy with actionable opt-out instructions."
+---
+
+## What we collect (in brief)
+
+xmcp tracks anonymous build stats—command, versions, OS, adapter/transport picks, component counts, and coarse success/error signals. No code, prompts, logs, or secrets leave your machine, and every payload stays tied to a random anonymous ID rather than repository data. For the long-form policy, visit [/telemetry](/telemetry).
+
+## Disable telemetry per run
+
+Use the environment flag in front of any command, including CI tasks:
+
+```bash
+XMCP_TELEMETRY_DISABLED=true npx xmcp dev
+XMCP_TELEMETRY_DISABLED=true npx xmcp build
+```
+
+Only the literal string `true` (case-insensitive) disables telemetry, so values like `false` or `0` keep it enabled.
+
+## Opt out globally
+
+- **Shell/CI env:** Export `XMCP_TELEMETRY_DISABLED=true` in your shell profile, `.env`, or CI secrets to stop telemetry everywhere.
+- **Config file:** Delete the generated `telemetry.json` (location printed in debug logs) after setting the env flag if you want to purge the existing anonymous ID. Removing the file while the env variable is set keeps telemetry off and regenerates a fresh opt-in prompt whenever you re-enable it.
+
+When disabled, xmcp skips generating anonymous IDs, avoids writing telemetry event files, and no build metadata leaves the machine.
+
+## Inspecting payloads
+
+If you want to audit what would be sent without disabling telemetry, set `XMCP_DEBUG_TELEMETRY=true`. This mirrors each payload to `stderr` with the `[telemetry]` prefix while still sending events.
