@@ -35,6 +35,25 @@ After setting up the project, your build and dev commands should look like this:
 }
 ```
 
+<Callout variant="info">
+  Before using the `@xmcp/adapter` import, you need to:
+  
+  1. Run `npx xmcp build` to generate the `.xmcp` folder
+  2. Update your `tsconfig.json` to include the path mapping:
+  
+  ```json title="tsconfig.json"
+  {
+    "compilerOptions": {
+      "paths": {
+        "@xmcp/*": ["./.xmcp/*"]
+      }
+    }
+  }
+  ```
+  
+  After these steps, TypeScript errors will be resolved.
+</Callout>
+
 Based on your configuration, it will create the tools, prompts, resources and route folders and add an endpoint to your Next.js app.
 
 ```typescript title="app/mcp/route.ts"
