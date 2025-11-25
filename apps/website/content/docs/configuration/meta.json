@@ -1,7 +1,13 @@
 {
   "title": "Configuration",
   "icon": "RocketLaunchIcon",
-  "pages": ["transports", "custom-directories", "middlewares", "bundler"],
+  "pages": [
+    "transports",
+    "custom-directories",
+    "middlewares",
+    "bundler",
+    "telemetry"
+  ],
   "defaultOpen": true,
   "root": true
 }
