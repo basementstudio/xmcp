@@ -28,10 +28,12 @@ import {
 import { isReactFile } from "../runtime/utils/react";
 import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
+import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
+const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -184,6 +186,45 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         compilationTime = Date.now() - startTime;
       }
 
+      const collectBaseTelemetryData = () => {
+        const reactToolsCount =
+          Array.from(toolPaths).filter(isReactFile).length;
+
+        return {
+          duration: compilationTime,
+          toolsCount: toolPaths.size,
+          reactToolsCount,
+          promptsCount: promptPaths.size,
+          resourcesCount: resourcePaths.size,
+          transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
+          adapter: xmcpConfig.experimental?.adapter
+            ? (xmcpConfig.experimental.adapter as AdapterType)
+            : AdapterType.NONE,
+          nodeVersion: process.version,
+          xmcpVersion: XMCP_VERSION,
+        };
+      };
+
+      const getOutputSize = () => {
+        let outputSize = 0;
+        try {
+          const distPath = path.join(process.cwd(), "dist");
+          if (fs.existsSync(distPath)) {
+            const files = fs.readdirSync(distPath);
+            files.forEach((file) => {
+              const filePath = path.join(distPath, file);
+              const stat = fs.statSync(filePath);
+              if (stat.isFile()) {
+                outputSize += stat.size;
+              }
+            });
+          }
+        } catch (e) {
+          // Ignore errors getting output size
+        }
+        return outputSize;
+      };
+
       // Handle errors
       if (err || stats?.hasErrors()) {
         if (err) {
@@ -200,35 +241,26 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
         // Track failed build (only in production)
         if (mode === "production") {
-          const reactToolsCount =
-            Array.from(toolPaths).filter(isReactFile).length;
+          const statsJson = stats?.toJson({
+            all: false,
+            errors: true,
+            warnings: false,
+          });
+          const statsError = statsJson?.errors?.[0];
+          const errorType =
+            (err && err.constructor ? err.constructor.name : undefined) ||
+            (statsError?.name as string | undefined) ||
+            (typeof statsError?.moduleName === "string"
+              ? statsError.moduleName
+              : undefined) ||
+            (statsError?.message as string | undefined) ||
+            "WebpackError";
 
-          telemetry.record(
-            {
-              eventName: TelemetryEventName.BUILD_FAILED,
-              fields: {
-                success: false,
-                duration: compilationTime,
-                errorPhase: ErrorPhase.WEBPACK,
-                errorType: err ? err.constructor.name : "WebpackError",
-                toolsCount: toolPaths.size,
-                reactToolsCount,
-                promptsCount: promptPaths.size,
-                resourcesCount: resourcePaths.size,
-                transport: xmcpConfig.http
-                  ? TransportType.HTTP
-                  : TransportType.STDIO,
-                adapter: xmcpConfig.experimental?.adapter
-                  ? (xmcpConfig.experimental.adapter as AdapterType)
-                  : AdapterType.NONE,
-                nodeVersion: process.version,
-                xmcpVersion: require("../../package.json").version,
-              },
-            },
-            true // deferred - we'll use flushDetached
-          );
-          // Use flushDetached for faster process exit - spawns separate process
-          telemetry.flushDetached("build");
+          logBuildFailure({
+            ...collectBaseTelemetryData(),
+            errorPhase: ErrorPhase.WEBPACK,
+            errorType,
+          });
         }
 
         return;
@@ -237,61 +269,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       // Build succeeded
       if (firstBuild) {
         onFirstBuild(mode, xmcpConfig);
-
-        // Track successful build (only in production)
-        if (mode === "production") {
-          const reactToolsCount =
-            Array.from(toolPaths).filter(isReactFile).length;
-
-          // Get output size
-          let outputSize = 0;
-          try {
-            const distPath = path.join(process.cwd(), "dist");
-            const fs = require("fs");
-            if (fs.existsSync(distPath)) {
-              const files = fs.readdirSync(distPath);
-              files.forEach((file: string) => {
-                const filePath = path.join(distPath, file);
-                const stat = fs.statSync(filePath);
-                if (stat.isFile()) {
-                  outputSize += stat.size;
-                }
-              });
-            }
-          } catch (e) {
-            // Ignore errors getting output size
-          }
-
-          telemetry.record(
-            {
-              eventName: TelemetryEventName.BUILD_COMPLETED,
-              fields: {
-                success: true,
-                duration: compilationTime,
-                toolsCount: toolPaths.size,
-                reactToolsCount,
-                promptsCount: promptPaths.size,
-                resourcesCount: resourcePaths.size,
-                outputSize,
-                transport: xmcpConfig.http
-                  ? TransportType.HTTP
-                  : TransportType.STDIO,
-                adapter: xmcpConfig.experimental?.adapter
-                  ? (xmcpConfig.experimental.adapter as AdapterType)
-                  : AdapterType.NONE,
-                nodeVersion: process.version,
-                xmcpVersion: require("../../package.json").version,
-              },
-            },
-            true // deferred - we'll use flushDetached
-          );
-          // Use flushDetached for faster process exit - spawns separate process
-          telemetry.flushDetached("build");
-          // Telemetry runs in background detached process, build exits immediately
-        }
-
-        // user defined callback
-        onBuild?.();
       } else {
         // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
@@ -302,6 +279,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           startHttpServer();
         }
       }
+
+      if (mode === "production") {
+        logBuildSuccess({
+          ...collectBaseTelemetryData(),
+          outputSize: getOutputSize(),
+        });
+      }
+
+      // user defined callback should fire after every successful build
+      onBuild?.();
 
       // Choose color based on compilation time
       let timeColor = (str: string) => str;

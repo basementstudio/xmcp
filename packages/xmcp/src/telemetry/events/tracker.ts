@@ -9,6 +9,7 @@ import {
   BuildEventData,
 } from "./post-payload";
 import { getProjectId } from "../project-id";
+import { isTelemetryDebugEnabled } from "../debug";
 
 export type TelemetryEvent = {
   eventName: string;
@@ -35,6 +36,20 @@ export class TelemetryTracker {
     this.sessionId = randomBytes(32).toString("hex");
     this.queue = new Set();
     this.distDir = distDir;
+
+    if (isTelemetryDebugEnabled()) {
+      const enabled = this.storage.isEnabled;
+      console.log(
+        `[telemetry] Telemetry is ${enabled ? "enabled" : "disabled"}`
+      );
+      if (enabled) {
+        console.log(`[telemetry] Anonymous ID ${this.storage.anonymousId}`);
+      } else if (process.env.XMCP_TELEMETRY_DISABLED) {
+        console.log(
+          "[telemetry] Disabled via XMCP_TELEMETRY_DISABLED environment variable"
+        );
+      }
+    }
   }
 
   get anonymousId(): string {

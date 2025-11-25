@@ -1,5 +1,6 @@
 import retry from "async-retry";
 import type { TelemetryMeta } from "../metadata";
+import { isTelemetryDebugEnabled } from "../debug";
 
 /**
  * Build event data (only event type we track)
@@ -61,6 +62,20 @@ export interface PostTelemetryOptions {
   swallowErrors?: boolean;
 }
 
+function debugLogTelemetryPayload(payload: TelemetryPayload) {
+  if (!isTelemetryDebugEnabled()) {
+    return;
+  }
+  try {
+    console.log(
+      "[telemetry] Sending payload",
+      JSON.stringify(payload, null, 2)
+    );
+  } catch (_) {
+    console.log("[telemetry] Sending payload (unable to stringify)");
+  }
+}
+
 export async function postTelemetryPayload(
   payload: TelemetryPayload,
   options?: PostTelemetryOptions
@@ -73,6 +88,7 @@ export async function postTelemetryPayload(
   }
 
   try {
+    debugLogTelemetryPayload(payload);
     await retry(
       async () => {
         const response = await fetch(
