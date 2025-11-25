@@ -18,12 +18,22 @@ import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";
 import { greenCheck } from "@/utils/cli-icons";
+import {
+  telemetry,
+  TelemetryEventName,
+  TransportType,
+  AdapterType,
+  ErrorPhase,
+} from "../telemetry";
+import { isReactFile } from "../runtime/utils/react";
 import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
+import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
+const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
 export type CompilerMode = "development" | "production";
@@ -168,25 +178,97 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     await generateCode();
 
     rspack(bundlerConfig, (err, stats) => {
-      if (err) {
-        console.error(err);
+      // Track compilation time
+      let compilationTime: number;
+      if (stats?.endTime && stats?.startTime) {
+        compilationTime = stats.endTime - stats.startTime;
+      } else {
+        compilationTime = Date.now() - startTime;
+      }
+
+      const collectBaseTelemetryData = () => {
+        const reactToolsCount =
+          Array.from(toolPaths).filter(isReactFile).length;
+
+        return {
+          duration: compilationTime,
+          toolsCount: toolPaths.size,
+          reactToolsCount,
+          promptsCount: promptPaths.size,
+          resourcesCount: resourcePaths.size,
+          transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
+          adapter: xmcpConfig.experimental?.adapter
+            ? (xmcpConfig.experimental.adapter as AdapterType)
+            : AdapterType.NONE,
+          nodeVersion: process.version,
+          xmcpVersion: XMCP_VERSION,
+        };
+      };
+
+      const getOutputSize = () => {
+        let outputSize = 0;
+        try {
+          const distPath = path.join(process.cwd(), "dist");
+          if (fs.existsSync(distPath)) {
+            const files = fs.readdirSync(distPath);
+            files.forEach((file) => {
+              const filePath = path.join(distPath, file);
+              const stat = fs.statSync(filePath);
+              if (stat.isFile()) {
+                outputSize += stat.size;
+              }
+            });
+          }
+        } catch (e) {
+          // Ignore errors getting output size
+        }
+        return outputSize;
+      };
+
+      // Handle errors
+      if (err || stats?.hasErrors()) {
+        if (err) {
+          console.error(err);
+        }
+        if (stats?.hasErrors()) {
+          console.error(
+            stats.toString({
+              colors: true,
+              chunks: false,
+            })
+          );
+        }
+
+        // Track failed build (only in production)
+        if (mode === "production") {
+          const statsJson = stats?.toJson({
+            all: false,
+            errors: true,
+            warnings: false,
+          });
+          const statsError = statsJson?.errors?.[0];
+          const errorType =
+            (err && err.constructor ? err.constructor.name : undefined) ||
+            (statsError?.name as string | undefined) ||
+            (typeof statsError?.moduleName === "string"
+              ? statsError.moduleName
+              : undefined) ||
+            (statsError?.message as string | undefined) ||
+            "WebpackError";
+
+          logBuildFailure({
+            ...collectBaseTelemetryData(),
+            errorPhase: ErrorPhase.WEBPACK,
+            errorType,
+          });
+        }
+
         return;
       }
 
-      if (stats?.hasErrors()) {
-        console.error(
-          stats.toString({
-            colors: true,
-            chunks: false,
-          })
-        );
-        return;
-      }
-
+      // Build succeeded
       if (firstBuild) {
         onFirstBuild(mode, xmcpConfig);
-        // user defined callback
-        onBuild?.();
       } else {
         // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
@@ -198,13 +280,15 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         }
       }
 
-      // Track compilation time for all builds
-      let compilationTime: number;
-      if (stats?.endTime && stats?.startTime) {
-        compilationTime = stats.endTime - stats.startTime;
-      } else {
-        compilationTime = Date.now() - startTime;
+      if (mode === "production") {
+        logBuildSuccess({
+          ...collectBaseTelemetryData(),
+          outputSize: getOutputSize(),
+        });
       }
+
+      // user defined callback should fire after every successful build
+      onBuild?.();
 
       // Choose color based on compilation time
       let timeColor = (str: string) => str;
