@@ -130,6 +130,9 @@ export default function ParticlesCursorAnimation() {
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
   const intersectionsRef = useRef<THREE.Intersection[]>([]);
+  const previousScreenCursorRef = useRef<THREE.Vector2>(
+    new THREE.Vector2(9999, 9999)
+  );
 
   // Check if debug mode is enabled via URL
   const isDebugMode =
@@ -395,27 +398,12 @@ export default function ParticlesCursorAnimation() {
 
   useEffect(() => {
     return () => {
-      geometry.dispose();
-    };
-  }, [geometry]);
-
-  useEffect(() => {
-    return () => {
-      material.dispose();
-    };
-  }, [material]);
-
-  useEffect(() => {
-    return () => {
       displacement.texture.dispose();
-    };
-  }, [displacement.texture]);
-
-  useEffect(() => {
-    return () => {
+      geometry.dispose();
+      material.dispose();
       pictureTexture.dispose();
     };
-  }, [pictureTexture]);
+  }, [displacement.texture, geometry, material, pictureTexture]);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -494,7 +482,12 @@ export default function ParticlesCursorAnimation() {
       Math.abs(displacement.screenCursor.x) <= 1 &&
       Math.abs(displacement.screenCursor.y) <= 1;
 
-    if (hasPointerInView) {
+    // Only execute raycaster if screenCursor has changed
+    const cursorChanged =
+      previousScreenCursorRef.current.x !== displacement.screenCursor.x ||
+      previousScreenCursorRef.current.y !== displacement.screenCursor.y;
+
+    if (hasPointerInView && cursorChanged) {
       // Update raycaster with current camera and mouse position
       raycaster.setFromCamera(displacement.screenCursor, camera);
       const intersections = intersectionsRef.current;
@@ -511,6 +504,12 @@ export default function ParticlesCursorAnimation() {
         displacement.canvasCursorTarget.y =
           (1 - uv.y) * displacement.canvas.height;
       }
+
+      // Update previous cursor position
+      previousScreenCursorRef.current.copy(displacement.screenCursor);
+    } else if (!hasPointerInView) {
+      // Reset previous cursor when pointer leaves view
+      previousScreenCursorRef.current.set(9999, 9999);
     }
 
     displacement.canvasCursorSmoothed.x +=
