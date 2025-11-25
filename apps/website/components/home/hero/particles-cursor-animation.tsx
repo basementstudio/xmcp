@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useControls, folder } from "leva";
 
+// Vertex shader: Transforms particle positions based on image intensity, cursor displacement, and time-based animations
 const vertexShader = `
 uniform vec2 uResolution;
 uniform sampler2D uPictureTexture;
@@ -100,6 +101,7 @@ void main()
     vUv = uv;
 }
 `;
+// Fragment shader: Renders particles as circular points with smooth edges and glow effects
 const fragmentShader = `
 varying vec3 vColor;
 varying vec2 vUv;
@@ -130,6 +132,7 @@ export default function ParticlesCursorAnimation() {
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
   const intersectionsRef = useRef<THREE.Intersection[]>([]);
+  // Track previous cursor positions to optimize raycaster and canvas updates
   const previousScreenCursorRef = useRef<THREE.Vector2>(
     new THREE.Vector2(9999, 9999)
   );
@@ -270,6 +273,7 @@ export default function ParticlesCursorAnimation() {
     motionBlurStrength,
   } = controls;
 
+  // Canvas for displacement texture: tracks cursor movement and creates interactive effects
   const displacement = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = canvasResolution;
@@ -315,6 +319,7 @@ export default function ParticlesCursorAnimation() {
     });
   }, []);
 
+  // Calculate plane dimensions to fill 90% of the visible viewport
   const planeSize = useMemo(() => {
     if (!(camera instanceof THREE.PerspectiveCamera))
       return { width: 10, height: 10, aspect: 1 };
@@ -333,6 +338,7 @@ export default function ParticlesCursorAnimation() {
     };
   }, [camera, size]);
 
+  // Create particle geometry with random intensity and angle attributes for variation
   const geometry = useMemo(() => {
     const geo = new THREE.PlaneGeometry(
       planeSize.width,
@@ -361,6 +367,7 @@ export default function ParticlesCursorAnimation() {
     return geo;
   }, [planeSize, particleQuantity]);
 
+  // Create material only once - uniforms will be updated in useEffect
   const material = useMemo(() => {
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
 
@@ -386,18 +393,9 @@ export default function ParticlesCursorAnimation() {
       },
       blending: THREE.AdditiveBlending,
     });
-  }, [
-    size,
-    pictureTexture,
-    displacement.texture,
-    displacementForce,
-    particleSize,
-    smoothstepMin,
-    smoothstepMax,
-    motionBlurStrength,
-    planeSize.aspect,
-    imageAspect,
-  ]);
+    // Only recreate material when textures change (rare events)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pictureTexture, displacement.texture]);
 
   useEffect(() => {
     return () => {
@@ -408,6 +406,7 @@ export default function ParticlesCursorAnimation() {
     };
   }, [displacement.texture, geometry, material, pictureTexture]);
 
+  // Track mouse position and convert to normalized device coordinates for raycaster
   useEffect(() => {
     const canvas = gl.domElement;
 
@@ -438,12 +437,16 @@ export default function ParticlesCursorAnimation() {
     };
   }, [displacement, gl]);
 
+  // Update uniforms when values change (material is created once)
   useEffect(() => {
+    if (!material) return;
+
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
     material.uniforms.uResolution.value.set(
       size.width * pixelRatio,
       size.height * pixelRatio
     );
+    material.uniforms.uDisplacementTexture.value = displacement.texture;
     material.uniforms.uDisplacementStrength.value = displacementForce;
     material.uniforms.uPointSizeMultiplier.value = particleSize;
     material.uniforms.uSmoothstepMin.value = smoothstepMin;
@@ -453,8 +456,9 @@ export default function ParticlesCursorAnimation() {
     material.uniforms.uPlaneAspect.value = planeSize.aspect;
     material.uniforms.uImageAspect.value = imageAspect;
   }, [
-    size,
     material,
+    size,
+    displacement.texture,
     displacementForce,
     particleSize,
     smoothstepMin,
@@ -477,6 +481,7 @@ export default function ParticlesCursorAnimation() {
     }
   }, [planeSize]);
 
+  // Animation loop: update cursor tracking, calculate velocity, and render displacement texture
   useFrame((state) => {
     if (!interactivePlaneRef.current || !displacement.context) return;
 
@@ -486,7 +491,7 @@ export default function ParticlesCursorAnimation() {
       Math.abs(displacement.screenCursor.x) <= 1 &&
       Math.abs(displacement.screenCursor.y) <= 1;
 
-    // Only execute raycaster if screenCursor has changed
+    // Only execute raycaster if screenCursor has changed (performance optimization)
     const cursorChanged =
       previousScreenCursorRef.current.x !== displacement.screenCursor.x ||
       previousScreenCursorRef.current.y !== displacement.screenCursor.y;
@@ -516,6 +521,7 @@ export default function ParticlesCursorAnimation() {
       previousScreenCursorRef.current.set(9999, 9999);
     }
 
+    // Smooth cursor movement with exponential interpolation
     displacement.canvasCursorSmoothed.x +=
       (displacement.canvasCursorTarget.x -
         displacement.canvasCursorSmoothed.x) *
@@ -528,6 +534,7 @@ export default function ParticlesCursorAnimation() {
     const oldX = displacement.canvasCursor.x;
     const oldY = displacement.canvasCursor.y;
 
+    // Lerp cursor position for fluid animation
     displacement.canvasCursor.x +=
       (displacement.canvasCursorSmoothed.x - displacement.canvasCursor.x) *
       cursorLerpStrength;
@@ -535,11 +542,13 @@ export default function ParticlesCursorAnimation() {
       (displacement.canvasCursorSmoothed.y - displacement.canvasCursor.y) *
       cursorLerpStrength;
 
+    // Calculate velocity for flow displacement effect
     displacement.velocity.x =
       (displacement.canvasCursor.x - oldX) / displacement.canvas.width;
     displacement.velocity.y =
       -(displacement.canvasCursor.y - oldY) / displacement.canvas.height;
 
+    // Smooth velocity to reduce jitter
     displacement.velocitySmoothed.x +=
       (displacement.velocity.x - displacement.velocitySmoothed.x) * 0.15;
     displacement.velocitySmoothed.y +=
@@ -597,11 +606,13 @@ export default function ParticlesCursorAnimation() {
 
   return (
     <>
+      {/* Invisible plane for raycaster intersection detection */}
       <mesh ref={interactivePlaneRef} visible={false} position={[0, 0, 0]}>
         <planeGeometry args={[planeSize.width, planeSize.height]} />
         <meshBasicMaterial color="red" side={THREE.DoubleSide} />
       </mesh>
 
+      {/* Particle system rendered as points */}
       <points
         ref={meshRef}
         geometry={geometry}
