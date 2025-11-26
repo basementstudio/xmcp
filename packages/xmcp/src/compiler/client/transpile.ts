@@ -5,19 +5,17 @@ import { clientComponentCompiler } from "./component-compiler";
  * Writes the bundle to disk at outputDir/${toolName}.bundle.js
  */
 export async function transpileClientComponent(
-  componentPath: string,
-  toolName: string,
+  entries: Map<string, string>,
   outputDir: string
 ): Promise<void> {
   try {
     await clientComponentCompiler.compile({
-      componentPath,
-      toolName,
+      entries,
       outputDir,
     });
   } catch (error) {
     throw new Error(
-      `Failed to transpile client component "${toolName}" at ${componentPath}: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to transpile client component: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
