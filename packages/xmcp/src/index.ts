@@ -21,3 +21,6 @@ export { jwtAuthMiddleware } from "./auth/jwt";
 export { createContext } from "./utils/context";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
+
+export { createHTTPClient } from "./client";
+export type { HttpClient } from "./client/types";
