@@ -25,6 +25,7 @@
     "url": "https://github.com/basementstudio/xmcp",
     "directory": "packages/cli"
   },
+  "homepage": "https://xmcp.dev",
   "type": "module",
   "bin": {
     "xmcp-dev-cli": "./dist/index.js"

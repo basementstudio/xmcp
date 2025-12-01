@@ -690,8 +690,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(esbuild@0.25.12)
       xmcp:
-        specifier: workspace:*
-        version: link:../xmcp
+        specifier: latest
+        version: 0.5.1(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -7768,6 +7768,19 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  xmcp@0.5.1:
+    resolution: {integrity: sha512-GgC9R37GG3pVM3wVY3y7ZhzfSrKJwf01E8FtFCT9RFjDHCGei5vsOXtUs6x3cGRnIU9mv3tTF78N8O7NfmoG5A==}
+    hasBin: true
+    peerDependencies:
+      react: '>=19.0.0'
+      react-dom: '>=19.0.0'
+      zod: ^3.24.4
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
 
   xtend@2.2.0:
     resolution: {integrity: sha512-SLt5uylT+4aoXxXuwtQp5ZnMMzhDb1Xkg4pEqc00WUJCQifPfV9Ub1VrNhp9kXkrjZD2I2Hl8WnjP37jzZLPZw==}
@@ -15786,6 +15799,21 @@ snapshots:
       strip-ansi: 7.1.2
 
   wrappy@1.0.2: {}
+
+  xmcp@0.5.1(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@4.1.13):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.22.0
+      '@rspack/core': 1.6.3(@swc/helpers@0.5.15)
+      ts-checker-rspack-plugin: 1.2.0(@rspack/core@1.6.3(@swc/helpers@0.5.15))(typescript@5.9.3)
+      typescript: 5.9.3
+      zod: 4.1.13
+    optionalDependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@swc/helpers'
+      - supports-color
 
   xtend@2.2.0: {}
 
