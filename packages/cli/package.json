@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/cli",
-  "description": "Official XMCP developer CLI",
-  "version": "0.0.0",
+  "description": "Official xmcp developer CLI",
+  "version": "0.0.1",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
-    "xmcp": "workspace:*",
+    "xmcp": "latest",
     "zod": "^4.1.13"
   },
   "devDependencies": {
