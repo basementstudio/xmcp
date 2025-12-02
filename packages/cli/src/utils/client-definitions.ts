@@ -1,10 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import { bundleRequire } from "bundle-require";
+import { CustomHeaders } from "xmcp";
 
 export type ClientDefinition = {
   name: string;
   url: string;
+  headers?: CustomHeaders;
 };
 
 export type LoadedClients = {
@@ -110,6 +112,10 @@ function createClientDefinition(
     "url" in entry && typeof (entry as any).url === "string"
       ? (entry as any).url
       : undefined;
+  const headersProp =
+    "headers" in entry && Array.isArray((entry as any).headers)
+      ? (entry as any).headers
+      : undefined;
 
   if (!nameProp || !urlProp) {
     return undefined;
@@ -118,5 +124,6 @@ function createClientDefinition(
   return {
     name: nameProp,
     url: urlProp,
+    headers: headersProp,
   };
 }

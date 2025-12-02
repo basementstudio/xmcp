@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import pkg from "xmcp";
+import pkg, { CustomHeaders } from "xmcp";
 const { createHTTPClient } = pkg;
 import {
   loadClientDefinitions,
@@ -44,7 +44,10 @@ export async function runGenerate(options: GenerateOptions = {}) {
   const generatedFiles: GeneratedFileInfo[] = [];
 
   for (const target of targets) {
-    const client = await createHTTPClient({ url: target.url });
+    const client = await createHTTPClient({
+      url: target.url,
+      headers: target.headers,
+    });
     const { tools } = await client.listTools();
     const exportName = `client${pascalCase(target.name)}`;
 
@@ -101,6 +104,7 @@ function resolveTargets(
       {
         name: clientDefinitions[0]?.name ?? "client",
         url: resolvedUrl,
+        headers: clientDefinitions[0]?.headers ?? ([] as CustomHeaders),
       },
     ];
   }
