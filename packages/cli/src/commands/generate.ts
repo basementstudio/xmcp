@@ -52,11 +52,12 @@ export async function runGenerate(options: GenerateOptions = {}) {
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-    const fileContents = buildClientFileContents(
+    const fileContents = buildClientFileContents({
       tools,
-      JSON.stringify(target.url),
-      exportName
-    );
+      clientUrlLiteral: JSON.stringify(target.url),
+      exportName,
+      headers: target.headers,
+    });
     fs.writeFileSync(outputPath, fileContents);
 
     generatedFiles.push({

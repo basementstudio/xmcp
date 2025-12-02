@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { HttpClient } from "xmcp";
+import type { HttpClient, CustomHeaders } from "xmcp";
 import { toIdentifier, pascalCase } from "./naming.js";
 
 export type ToolListResult = Awaited<ReturnType<HttpClient["listTools"]>>;
@@ -12,11 +12,19 @@ export type GeneratedFileInfo = {
   outputPath: string;
 };
 
-export function buildClientFileContents(
-  tools: ToolDefinition[],
-  clientUrlLiteral: string,
-  exportName: string
-): string {
+export type BuildClientOptions = {
+  tools: ToolDefinition[];
+  clientUrlLiteral: string;
+  exportName: string;
+  headers?: CustomHeaders;
+};
+
+export function buildClientFileContents({
+  tools,
+  clientUrlLiteral,
+  exportName,
+  headers,
+}: BuildClientOptions): string {
   const helperFunctions = `
 function jsonSchemaToZodShape(schema: any): Record<string, z.ZodTypeAny> {
   if (!schema || typeof schema !== "object" || schema.type !== "object") {
@@ -157,25 +165,36 @@ async function ${identifier}(client: HttpClient${
     })
     .join("\n");
 
+  const headersLiteral =
+    headers && headers.length > 0
+      ? JSON.stringify(headers, null, 2)
+      : undefined;
+
+  const headersConstant = headersLiteral
+    ? `\nconst DEFAULT_HEADERS: CustomHeaders = ${headersLiteral};\n`
+    : "";
+
+  const headersImport = headersLiteral ? ", type CustomHeaders" : "";
+
   return `/* auto-generated - do not edit */
 import { z } from "zod";
-import { createHTTPClient, type HttpClient, type ToolMetadata } from "xmcp";
+import { createHTTPClient, type HttpClient, type ToolMetadata${headersImport} } from "xmcp";
 
 const DEFAULT_REMOTE_URL = ${clientUrlLiteral};
-
+${headersConstant}
 ${helperFunctions}
 
 ${schemasAndHandlers}
 
 export interface RemoteToolClientOptions {
-  url?: string;
+  url?: string;${headersLiteral ? "\n  headers?: CustomHeaders;" : ""}
 }
 
 export async function createRemoteToolClient(
   options: RemoteToolClientOptions = {}
 ) {
   const client = await createHTTPClient({
-    url: options.url ?? DEFAULT_REMOTE_URL,
+    url: options.url ?? DEFAULT_REMOTE_URL,${headersLiteral ? "\n    headers: options.headers ?? DEFAULT_HEADERS," : ""}
   });
 
   return {
