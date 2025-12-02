@@ -17,7 +17,7 @@ Commands:
 
 Options:
   -u, --url <url>     MCP server URL (overrides clients.ts)
-  -o, --out <path>    Output file path (default: src/generated/tools.ts)
+  -o, --out <path>    Output directory (default: src/generated)
   -c, --clients <path>  Path to clients config (default: src/clients.ts)
   -h, --help          Show this help message
 `;
