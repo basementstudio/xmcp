@@ -24,3 +24,4 @@ export { completable } from "@modelcontextprotocol/sdk/server/completable";
 
 export { createHTTPClient } from "./client";
 export type { HttpClient } from "./client/types";
+export type { CustomHeaders } from "./client/headers";
