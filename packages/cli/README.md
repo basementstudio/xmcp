@@ -10,11 +10,11 @@ npx @xmcp-dev/cli generate [options]
 
 ## Options
 
-| Flag                   | Description         | Default                  |
-| ---------------------- | ------------------- | ------------------------ |
-| `-u, --url <url>`      | MCP server URL      | —                        |
-| `-o, --out <path>`     | Output path         | `src/generated/tools.ts` |
-| `-c, --clients <path>` | Clients config file | `src/clients.ts`         |
+| Flag                   | Description         | Default          |
+| ---------------------- | ------------------- | ---------------- |
+| `-u, --url <url>`      | MCP server URL      | —                |
+| `-o, --out <path>`     | Output directory    | `src/generated`  |
+| `-c, --clients <path>` | Clients config file | `src/clients.ts` |
 
 ## Client Configuration
 
@@ -34,7 +34,7 @@ Run `npx @xmcp-dev/cli generate` to produce the typed client files.
 
 ## Generated Output
 
-The CLI produces typed client files containing:
+For each client defined in `clients.ts`, the CLI generates a `client.{name}.ts` file containing:
 
 - Zod schemas for each tool's arguments
 - Type exports (e.g., `GreetArgs`)
@@ -42,7 +42,7 @@ The CLI produces typed client files containing:
 - `createRemoteToolClient()` factory function
 - Pre-instantiated client export
 
-For multiple clients, an index file is generated with a unified `generatedClients` object:
+An index file (`client.index.ts`) is always generated with a unified `generatedClients` object:
 
 ```ts
 import { generatedClients } from "./generated/client.index";

@@ -20,7 +20,7 @@ export interface GenerateOptions {
   clientsFile?: string;
 }
 
-const DEFAULT_OUTPUT = "src/generated/tools.ts";
+const DEFAULT_OUTPUT = "src/generated";
 const DEFAULT_CLIENTS_FILE = "src/clients.ts";
 
 export async function runGenerate(options: GenerateOptions = {}) {
@@ -123,20 +123,15 @@ function logDetectedClients(
 }
 
 type OutputPaths = {
-  resolvedOut: string;
-  outIsFile: boolean;
   outputDir: string;
 };
 
 function resolveOutputPaths(out: string): OutputPaths {
   const resolvedOut = path.resolve(process.cwd(), out);
-  const outExt = path.extname(resolvedOut);
-  const outIsFile = outExt === ".ts";
-  const outputDir = outIsFile ? path.dirname(resolvedOut) : resolvedOut;
+  const isFileTarget = path.extname(resolvedOut) === ".ts";
+  const outputDir = isFileTarget ? path.dirname(resolvedOut) : resolvedOut;
 
   return {
-    resolvedOut,
-    outIsFile,
     outputDir,
   };
 }
