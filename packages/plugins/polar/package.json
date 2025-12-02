@@ -43,7 +43,7 @@
     "build": "rm -rf dist && tsc"
   },
   "devDependencies": {
-    "express": "^4.19.1",
+    "express": "^4.22.0",
     "@types/node": "^22",
     "typescript": "^5.0.4",
     "xmcp": "workspace:*"
