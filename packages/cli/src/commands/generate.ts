@@ -33,13 +33,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
 
   logDetectedClients(loadedClients, clientDefinitions);
 
-  const {
-    resolvedOut,
-    outIsFile,
-    outputDir,
-    multiFileBaseName,
-    fileExtension,
-  } = resolveOutputPaths(options.out ?? DEFAULT_OUTPUT);
+  const { outputDir } = resolveOutputPaths(options.out ?? DEFAULT_OUTPUT);
 
   const generatedFiles: GeneratedFileInfo[] = [];
 
@@ -51,15 +45,10 @@ export async function runGenerate(options: GenerateOptions = {}) {
     const { tools } = await client.listTools();
     const exportName = `client${pascalCase(target.name)}`;
 
-    const outputPath =
-      targets.length === 1 && outIsFile
-        ? resolvedOut
-        : path.join(
-            outputDir,
-            `${outIsFile ? `${multiFileBaseName}.` : ""}${toFileSafeName(target.name)}${
-              outIsFile ? path.extname(resolvedOut) : fileExtension
-            }`
-          );
+    const outputPath = path.join(
+      outputDir,
+      `client.${toFileSafeName(target.name)}.ts`
+    );
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
@@ -86,10 +75,10 @@ export async function runGenerate(options: GenerateOptions = {}) {
     );
   }
 
-  if (generatedFiles.length > 1) {
+  if (generatedFiles.length > 0) {
     writeGeneratedClientsIndex(
       generatedFiles,
-      path.join(outputDir, `${multiFileBaseName}.index.ts`)
+      path.join(outputDir, "client.index.ts")
     );
   }
 }
@@ -137,8 +126,6 @@ type OutputPaths = {
   resolvedOut: string;
   outIsFile: boolean;
   outputDir: string;
-  multiFileBaseName: string;
-  fileExtension: string;
 };
 
 function resolveOutputPaths(out: string): OutputPaths {
@@ -146,16 +133,10 @@ function resolveOutputPaths(out: string): OutputPaths {
   const outExt = path.extname(resolvedOut);
   const outIsFile = outExt === ".ts";
   const outputDir = outIsFile ? path.dirname(resolvedOut) : resolvedOut;
-  const baseFileName = outIsFile
-    ? path.basename(resolvedOut, outExt)
-    : "client";
-  const multiFileBaseName = outIsFile ? "client" : baseFileName;
 
   return {
     resolvedOut,
     outIsFile,
     outputDir,
-    multiFileBaseName,
-    fileExtension: ".ts",
   };
 }
