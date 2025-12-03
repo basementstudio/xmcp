@@ -14,6 +14,19 @@ import {
   type GeneratedFileInfo,
 } from "../utils/templates.js";
 
+/**
+ * Deep clone headers to prevent mutation during client creation
+ * from affecting code generation. This is critical for security
+ * as env headers should remain as { env: "VAR_NAME" } references
+ * rather than being resolved to their values at generation time.
+ */
+function cloneHeaders(
+  headers: CustomHeaders | undefined
+): CustomHeaders | undefined {
+  if (!headers) return undefined;
+  return headers.map((header) => ({ ...header })) as CustomHeaders;
+}
+
 export interface GenerateOptions {
   url?: string;
   out?: string;
@@ -38,6 +51,11 @@ export async function runGenerate(options: GenerateOptions = {}) {
   const generatedFiles: GeneratedFileInfo[] = [];
 
   for (const target of targets) {
+    // Deep clone headers BEFORE createHTTPClient to preserve env references
+    // This ensures the original { env: "VAR_NAME" } format is kept for code generation
+    // rather than being resolved to { value: "actual_value" } at generation time
+    const headersForGeneration = cloneHeaders(target.headers);
+
     const client = await createHTTPClient({
       url: target.url,
       headers: target.headers,
@@ -56,7 +74,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
       tools,
       clientUrlLiteral: JSON.stringify(target.url),
       exportName,
-      headers: target.headers,
+      headers: headersForGeneration,
     });
     fs.writeFileSync(outputPath, fileContents);
 

@@ -165,28 +165,37 @@ async function ${identifier}(client: HttpClient${
     })
     .join("\n");
 
-  const headersLiteral =
-    headers && headers.length > 0
-      ? JSON.stringify(headers, null, 2)
-      : undefined;
-
-  // Warn if any headers contain literal values (potential secrets)
+  // Generate headers code with proper process.env references for security
+  // Instead of JSON.stringify which would embed resolved values,
+  // we generate code that references process.env at runtime
+  let headersCode: string | undefined;
   if (headers && headers.length > 0) {
-    const staticHeaders = headers.filter(
-      (h) => "value" in h && h.value && !h.value.startsWith("$")
-    );
-    if (staticHeaders.length > 0) {
-      console.warn(
-        `Warning: Headers with static values detected. Consider using { env: "ENV_VAR_NAME" } for sensitive values like API keys.`
-      );
-    }
+    const headerEntries = headers.map((header) => {
+      const nameStr = JSON.stringify(header.name);
+      if ("env" in header && typeof (header as any).env === "string") {
+        // Generate process.env reference for env headers - value resolved at runtime
+        const envVar = (header as any).env;
+        return `  { name: ${nameStr}, value: process.env.${envVar}! }`;
+      } else if ("value" in header) {
+        // Static value header - warn about potential secrets
+        const value = (header as any).value;
+        if (value && !value.startsWith("$")) {
+          console.warn(
+            `Warning: Header "${header.name}" has a static value. Consider using { env: "ENV_VAR_NAME" } for sensitive values like API keys.`
+          );
+        }
+        return `  { name: ${nameStr}, value: ${JSON.stringify(value)} }`;
+      }
+      return `  { name: ${nameStr}, value: "" }`;
+    });
+    headersCode = `[\n${headerEntries.join(",\n")}\n]`;
   }
 
-  const headersConstant = headersLiteral
-    ? `\nconst DEFAULT_HEADERS: CustomHeaders = ${headersLiteral};\n`
+  const headersConstant = headersCode
+    ? `\nfunction getDefaultHeaders(): CustomHeaders {\n  return ${headersCode};\n}\n`
     : "";
 
-  const headersImport = headersLiteral ? ", type CustomHeaders" : "";
+  const headersImport = headersCode ? ", type CustomHeaders" : "";
 
   return `/* auto-generated - do not edit */
 import { z } from "zod";
@@ -199,14 +208,14 @@ ${helperFunctions}
 ${schemasAndHandlers}
 
 export interface RemoteToolClientOptions {
-  url?: string;${headersLiteral ? "\n  headers?: CustomHeaders;" : ""}
+  url?: string;${headersCode ? "\n  headers?: CustomHeaders;" : ""}
 }
 
 export async function createRemoteToolClient(
   options: RemoteToolClientOptions = {}
 ) {
   const client = await createHTTPClient({
-    url: options.url ?? DEFAULT_REMOTE_URL,${headersLiteral ? "\n    headers: options.headers ?? DEFAULT_HEADERS," : ""}
+    url: options.url ?? DEFAULT_REMOTE_URL,${headersCode ? "\n    headers: options.headers ?? getDefaultHeaders()," : ""}
   });
 
   return {
