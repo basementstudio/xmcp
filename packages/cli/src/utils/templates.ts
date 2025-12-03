@@ -170,6 +170,18 @@ async function ${identifier}(client: HttpClient${
       ? JSON.stringify(headers, null, 2)
       : undefined;
 
+  // Warn if any headers contain literal values (potential secrets)
+  if (headers && headers.length > 0) {
+    const staticHeaders = headers.filter(
+      (h) => "value" in h && h.value && !h.value.startsWith("$")
+    );
+    if (staticHeaders.length > 0) {
+      console.warn(
+        `Warning: Headers with static values detected. Consider using { env: "ENV_VAR_NAME" } for sensitive values like API keys.`
+      );
+    }
+  }
+
   const headersConstant = headersLiteral
     ? `\nconst DEFAULT_HEADERS: CustomHeaders = ${headersLiteral};\n`
     : "";
