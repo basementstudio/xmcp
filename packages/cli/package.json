@@ -1,7 +1,7 @@
 {
-  "name": "@xmcp-dev/polar",
-  "description": "Polar integration for xmcp",
-  "version": "0.1.6",
+  "name": "@xmcp-dev/cli",
+  "description": "Official xmcp developer CLI",
+  "version": "0.0.6",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -20,35 +20,33 @@
     }
   ],
   "license": "MIT",
-  "keywords": [
-    "xmcp",
-    "polar",
-    "monetization",
-    "mcp"
-  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/basementstudio/xmcp",
-    "directory": "packages/plugins/polar"
+    "directory": "packages/cli"
   },
   "homepage": "https://xmcp.dev",
   "type": "module",
+  "bin": {
+    "xmcp-dev-cli": "./dist/index.js"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "dev": "tsc --watch",
-    "build": "rm -rf dist && tsc"
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -w -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "bundle-require": "^5.1.0",
+    "xmcp": "0.5.2-canary.1",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
-    "express": "^4.22.0",
     "@types/node": "^22",
-    "typescript": "^5.0.4",
-    "xmcp": "workspace:*"
-  },
-  "peerDependencies": {
-    "xmcp": "workspace:*"
+    "typescript": "^5.8.3"
   }
 }
