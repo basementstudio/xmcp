@@ -87,6 +87,14 @@ function normalizeClientDefinitions(
   return undefined;
 }
 
+function isValidHeader(header: unknown): boolean {
+  if (!header || typeof header !== "object") return false;
+  const h = header as Record<string, unknown>;
+  if (typeof h.name !== "string") return false;
+  // Must have either 'value' (static) or 'env' (environment variable reference)
+  return typeof h.value === "string" || typeof h.env === "string";
+}
+
 function createClientDefinition(
   entry: unknown,
   fallbackName?: string
@@ -112,10 +120,12 @@ function createClientDefinition(
     "url" in entry && typeof (entry as any).url === "string"
       ? (entry as any).url
       : undefined;
-  const headersProp =
-    "headers" in entry && Array.isArray((entry as any).headers)
-      ? (entry as any).headers
-      : undefined;
+
+  let headersProp: CustomHeaders | undefined;
+  if ("headers" in entry && Array.isArray((entry as any).headers)) {
+    const rawHeaders = (entry as any).headers;
+    headersProp = rawHeaders.filter(isValidHeader) as CustomHeaders;
+  }
 
   if (!nameProp || !urlProp) {
     return undefined;
