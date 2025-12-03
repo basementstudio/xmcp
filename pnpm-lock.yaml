@@ -690,8 +690,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(esbuild@0.25.12)
       xmcp:
-        specifier: 0.5.2-canary.1
-        version: 0.5.2-canary.1(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@3.24.4)
+        specifier: ^0.5.3
+        version: 0.5.3(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@3.24.4)
       zod:
         specifier: ^3.24.4
         version: 3.24.4
@@ -7773,8 +7773,8 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  xmcp@0.5.2-canary.1:
-    resolution: {integrity: sha512-Ud/rHcC3H4J8iJK3FE8aTqAjTQXspK+PMH0WB7cKod4fWAY8yxzetfjLCuHK45nJiWalRrbbNUiFiHm+HeV/ng==}
+  xmcp@0.5.3:
+    resolution: {integrity: sha512-IsE1+YctcGGG45nmcvBThazirRlhzBNra8b7U48cD+tvGr08FHqH2ZVBmkStTGg0m6FV2WOrBHABPNzeVTrCrA==}
     hasBin: true
     peerDependencies:
       react: '>=19.0.0'
@@ -15840,7 +15840,7 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xmcp@0.5.2-canary.1(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@3.24.4):
+  xmcp@0.5.3(@swc/helpers@0.5.15)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(zod@3.24.4):
     dependencies:
       '@modelcontextprotocol/sdk': 1.22.0
       '@rspack/core': 1.6.3(@swc/helpers@0.5.15)
