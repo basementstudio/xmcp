@@ -3,12 +3,12 @@ import {
   StreamableHTTPClientTransport,
   StreamableHTTPClientTransportOptions,
 } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-
 import {
   Request,
   Result,
   Notification,
 } from "@modelcontextprotocol/sdk/types.js";
+import { CustomHeaders, headersToRecord } from "./headers";
 
 const packageJson = require("../../package.json");
 
@@ -21,6 +21,7 @@ export const CLIENT_IDENTITY = {
 interface HttpClientOptions {
   /** Full MCP server base URL — example: https://host.tld/mcp */
   url: string;
+  headers?: CustomHeaders;
 }
 
 /**
@@ -28,6 +29,7 @@ interface HttpClientOptions {
  */
 export async function createHTTPClient({
   url,
+  headers,
 }: HttpClientOptions): Promise<Client<Request, Notification, Result>> {
   const clientCapabilities = {
     capabilities: {
@@ -42,36 +44,17 @@ export async function createHTTPClient({
     clientCapabilities
   );
 
-  // ----- Auth -----
-  // skip for now
-  /*
-  const authProvider = new InspectorOAuthClientProvider(url);
-  const oauthToken = (await authProvider.tokens())?.access_token;
-
-  const headers: Record<string, string> = {};
-
-  // Inject OAuth only if no Authorization header is supplied manually
-  const needsOAuth = !customHeaders.some(
-    (h) => h.enabled && h.name.toLowerCase() === "authorization"
-  );
-  if (needsOAuth && oauthToken) {
-    headers["Authorization"] = `Bearer ${oauthToken}`;
-  }
-
-  // Merge enabled custom headers
-  customHeaders.forEach((h) => {
-    if (h.enabled && h.name && h.value) {
-      headers[h.name.trim()] = h.value.trim();
-    }
-  });
-  */
+  // ----- headers -----
+  const headersRecord = headers
+    ? headersToRecord(headers)
+    : ({} as Record<string, string>);
 
   // ----- Build URL -----
   const serverUrl = new URL(url);
 
   // ----- Construct HTTP transport -----
   const transportOptions: StreamableHTTPClientTransportOptions = {
-    //requestInit: { headers },
+    ...(headers ? { requestInit: { headers: headersRecord } } : {}),
     reconnectionOptions: {
       maxReconnectionDelay: 30000,
       initialReconnectionDelay: 1000,
