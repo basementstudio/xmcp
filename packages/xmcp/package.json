@@ -47,7 +47,7 @@
     "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.17.4",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "@rspack/core": "^1.6.3",
     "ts-checker-rspack-plugin": "^1.2.0",
     "typescript": "^5.8.3"
