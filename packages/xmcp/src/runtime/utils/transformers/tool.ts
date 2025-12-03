@@ -75,6 +75,9 @@ export function transformToolHandler(
               text: "",
             },
           ],
+          structuredContent: {
+            args,
+          },
           _meta: meta,
         };
       }

@@ -1,5 +1,6 @@
-import { type ToolMetadata } from "xmcp";
+import { InferSchema, type ToolMetadata } from "xmcp";
 import { useState } from "react";
+import { z } from "zod";
 
 export const metadata: ToolMetadata = {
   name: "counter",
@@ -16,8 +17,12 @@ export const metadata: ToolMetadata = {
   },
 };
 
-export default function handler() {
-  const [count, setCount] = useState(0);
+export const schema = {
+  initialCount: z.number().describe("The name of the user to greet"),
+};
+
+export default function handler({ initialCount }: InferSchema<typeof schema>) {
+  const [count, setCount] = useState(initialCount);
 
   return (
     <div>
