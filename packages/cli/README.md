@@ -18,17 +18,28 @@ npx @xmcp-dev/cli generate [options]
 
 ## Client Configuration
 
-Create a `src/clients.ts` file to define multiple MCP servers:
+Create a `src/clients.ts` file to define multiple MCP servers or STDIO packages:
 
 ```ts
 export const clients = {
-  remote: { url: "https://my-remote-mcp.app/mcp" },
-  // Example for Figma cloud MCP server:
-  figma: { url: "https://mcp.figma.com/mcp" },
-  // Example for custom staging server:
-  staging: { url: "https://staging.mycorp.com/mcp" },
+  remote: {
+    url: "https://my-remote-mcp.app/mcp",
+  },
+  figma: {
+    url: "https://mcp.figma.com/mcp",
+    headers: [{ name: "x-api-key", env: "FIGMA_TOKEN" }],
+  },
+  playwright: {
+    npm: "@playwright/mcp@latest",
+    args: ["--browser", "chromium"],
+    env: { DEBUG: "pw:api,pw:browser*" },
+  },
 };
 ```
+
+- Entries with a `url` use the HTTP transport (optional `headers` are supported, just like before).
+- Entries with `npm` (optionally `command`, `args`, `env`, `cwd`, `stderr`) use STDIO. The CLI will run `command` (defaults to `npx`) with `[npm, ...args]` to connect to the server and discover its tools.
+- STDIO packages must already be installed in the environment the CLI runs in (global install, workspace dependency, or cached `npx` package).
 
 Run `npx @xmcp-dev/cli generate` to produce the typed client files.
 
@@ -53,6 +64,6 @@ await generatedClients.production.randomNumber();
 
 ## Caveats
 
-- **`--url` overrides `clients.ts`** — When provided, only a single client is generated using the specified URL, ignoring all entries in the config file.
-- **Server must be running** — The CLI fetches tool definitions via HTTP; the target MCP server(s) must be accessible at generation time.
+- **`--url` overrides `clients.ts`** — When provided, only a single HTTP client is generated using the specified URL, ignoring all entries in the config file.
+- **Server/process must be available** — The CLI connects over HTTP or spawns the STDIO package to fetch tool definitions. Ensure the remote server is reachable or the npm package is installed and executable in your environment.
 - **`MCP_URL` env var** — Falls back to this if no `--url` or `clients.ts` is found.

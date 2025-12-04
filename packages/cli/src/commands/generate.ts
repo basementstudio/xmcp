@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import pkg, { CustomHeaders } from "xmcp";
-const { createHTTPClient } = pkg;
+const { createHTTPClient, createSTDIOClient, disconnectSTDIOClient } = pkg;
 import {
   loadClientDefinitions,
   type ClientDefinition,
@@ -38,11 +38,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
   const generatedFiles: GeneratedFileInfo[] = [];
 
   for (const target of targets) {
-    const client = await createHTTPClient({
-      url: target.url,
-      headers: target.headers,
-    });
-    const { tools } = await client.listTools();
+    const tools = await fetchToolsForTarget(target);
     const exportName = `client${pascalCase(target.name)}`;
 
     const outputPath = path.join(
@@ -54,9 +50,24 @@ export async function runGenerate(options: GenerateOptions = {}) {
 
     const fileContents = buildClientFileContents({
       tools,
-      clientUrlLiteral: JSON.stringify(target.url),
       exportName,
-      headers: target.headers,
+      transport:
+        target.type === "http"
+          ? {
+              type: "http" as const,
+              url: target.url,
+              headers: target.headers,
+            }
+          : {
+              type: "stdio" as const,
+              command: target.command,
+              args: target.args,
+              npm: target.npm,
+              npmArgs: target.npmArgs,
+              env: target.env,
+              cwd: target.cwd,
+              stderr: target.stderr,
+            },
     });
     fs.writeFileSync(outputPath, fileContents);
 
@@ -69,7 +80,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
     console.log(
       `Generated ${tools.length} tool${
         tools.length === 1 ? "" : "s"
-      } for "${target.name}" client -> ${path.relative(
+      } for "${target.name}" (${target.type}) -> ${path.relative(
         process.cwd(),
         outputPath
       )}`
@@ -92,9 +103,13 @@ function resolveTargets(
     const resolvedUrl = explicitUrl ?? process.env.MCP_URL!;
     return [
       {
+        type: "http",
         name: clientDefinitions[0]?.name ?? "client",
         url: resolvedUrl,
-        headers: clientDefinitions[0]?.headers ?? ([] as CustomHeaders),
+        headers:
+          clientDefinitions[0]?.type === "http"
+            ? clientDefinitions[0].headers
+            : undefined,
       },
     ];
   }
@@ -135,4 +150,30 @@ function resolveOutputPaths(out: string): OutputPaths {
   return {
     outputDir,
   };
+}
+
+async function fetchToolsForTarget(target: ClientDefinition) {
+  if (target.type === "http") {
+    const client = await createHTTPClient({
+      url: target.url,
+      headers: target.headers,
+    });
+    const { tools } = await client.listTools();
+    return tools;
+  }
+
+  const connection = await createSTDIOClient({
+    command: target.command,
+    args: target.args,
+    env: target.env,
+    cwd: target.cwd,
+    stderr: target.stderr,
+  });
+
+  try {
+    const { tools } = await connection.client.listTools();
+    return tools;
+  } finally {
+    await disconnectSTDIOClient(connection);
+  }
 }

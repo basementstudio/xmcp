@@ -12,20 +12,30 @@ export type GeneratedFileInfo = {
   outputPath: string;
 };
 
-export type BuildClientOptions = {
-  tools: ToolDefinition[];
-  clientUrlLiteral: string;
-  exportName: string;
+type HttpTransportTemplate = {
+  type: "http";
+  url: string;
   headers?: CustomHeaders;
 };
 
-export function buildClientFileContents({
-  tools,
-  clientUrlLiteral,
-  exportName,
-  headers,
-}: BuildClientOptions): string {
-  const helperFunctions = `
+type StdioTransportTemplate = {
+  type: "stdio";
+  command: string;
+  args: string[];
+  npm?: string;
+  npmArgs?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+  stderr?: "pipe" | "inherit" | "ignore";
+};
+
+export type BuildClientOptions = {
+  tools: ToolDefinition[];
+  exportName: string;
+  transport: HttpTransportTemplate | StdioTransportTemplate;
+};
+
+const helperFunctions = `
 function jsonSchemaToZodShape(schema: any): Record<string, z.ZodTypeAny> {
   if (!schema || typeof schema !== "object" || schema.type !== "object") {
     return {};
@@ -99,6 +109,45 @@ function jsonSchemaToZodObject(
 }
 `;
 
+export function buildClientFileContents({
+  tools,
+  exportName,
+  transport,
+}: BuildClientOptions): string {
+  const clientTypeName =
+    transport.type === "http" ? "HttpClient" : "StdioClient";
+  const { schemasAndHandlers, registryEntries } = buildSchemaSections(
+    tools,
+    clientTypeName
+  );
+
+  if (transport.type === "http") {
+    return buildHttpTemplate({
+      exportName,
+      schemasAndHandlers,
+      registryEntries,
+      url: transport.url,
+      headers: transport.headers,
+    });
+  }
+
+  return buildStdioTemplate({
+    exportName,
+    schemasAndHandlers,
+    registryEntries,
+    transport,
+  });
+}
+
+type SchemaSection = {
+  schemasAndHandlers: string;
+  registryEntries: string;
+};
+
+function buildSchemaSections(
+  tools: ToolDefinition[],
+  clientTypeName: string
+): SchemaSection {
   const schemaBlocks = tools.map((tool) => {
     const identifier = toIdentifier(tool.name);
     const schemaShapeId = `${identifier}Shape`;
@@ -140,7 +189,7 @@ export const ${identifier}Metadata: ToolMetadata = ${JSON.stringify(
         2
       )};
 
-async function ${identifier}(client: HttpClient${
+async function ${identifier}(client: ${clientTypeName}${
         requiresArgs ? `, args: ${argsType}` : ""
       }) {
   return client.callTool({
@@ -152,25 +201,39 @@ async function ${identifier}(client: HttpClient${
     };
   });
 
-  const schemasAndHandlers = schemaBlocks
-    .map((block) => block.block)
-    .join("\n");
+  return {
+    schemasAndHandlers: schemaBlocks.map((block) => block.block).join("\n"),
+    registryEntries: schemaBlocks
+      .map(({ identifier, argsType, requiresArgs }) => {
+        const signature = requiresArgs
+          ? `(args: ${argsType}) => ${identifier}(client, args)`
+          : `() => ${identifier}(client)`;
+        return `    ${identifier}: async ${signature},`;
+      })
+      .join("\n"),
+  };
+}
 
-  const registryEntries = schemaBlocks
-    .map(({ identifier, argsType, requiresArgs }) => {
-      const signature = requiresArgs
-        ? `(args: ${argsType}) => ${identifier}(client, args)`
-        : `() => ${identifier}(client)`;
-      return `    ${identifier}: async ${signature},`;
-    })
-    .join("\n");
+type HttpTemplateOptions = {
+  exportName: string;
+  schemasAndHandlers: string;
+  registryEntries: string;
+  url: string;
+  headers?: CustomHeaders;
+};
 
+function buildHttpTemplate({
+  exportName,
+  schemasAndHandlers,
+  registryEntries,
+  url,
+  headers,
+}: HttpTemplateOptions): string {
   const headersLiteral =
     headers && headers.length > 0
       ? JSON.stringify(headers, null, 2)
       : undefined;
 
-  // Warn if any headers contain literal values (potential secrets)
   if (headers && headers.length > 0) {
     const staticHeaders = headers.filter(
       (h) => "value" in h && h.value && !h.value.startsWith("$")
@@ -187,31 +250,152 @@ async function ${identifier}(client: HttpClient${
     : "";
 
   const headersImport = headersLiteral ? ", type CustomHeaders" : "";
+  const optionLines = [
+    "url?: string;",
+    headersLiteral ? "headers?: CustomHeaders;" : undefined,
+  ].filter(Boolean);
+  const optionsInterface = optionLines.length
+    ? `export interface RemoteToolClientOptions {\n  ${optionLines.join(
+        "\n  "
+      )}\n}`
+    : `export interface RemoteToolClientOptions {}`;
 
   return `/* auto-generated - do not edit */
 import { z } from "zod";
 import { createHTTPClient, type HttpClient, type ToolMetadata${headersImport} } from "xmcp";
 
-const DEFAULT_REMOTE_URL = ${clientUrlLiteral};
-${headersConstant}
-${helperFunctions}
+const DEFAULT_REMOTE_URL = ${JSON.stringify(url)};
+${headersConstant}${helperFunctions}
 
 ${schemasAndHandlers}
 
-export interface RemoteToolClientOptions {
-  url?: string;${headersLiteral ? "\n  headers?: CustomHeaders;" : ""}
-}
+${optionsInterface}
 
 export async function createRemoteToolClient(
   options: RemoteToolClientOptions = {}
 ) {
   const client = await createHTTPClient({
-    url: options.url ?? DEFAULT_REMOTE_URL,${headersLiteral ? "\n    headers: options.headers ?? DEFAULT_HEADERS," : ""}
+    url: options.url ?? DEFAULT_REMOTE_URL,${
+      headersLiteral ? "\n    headers: options.headers ?? DEFAULT_HEADERS," : ""
+    }
   });
 
   return {
 ${registryEntries}
     rawClient: client,
+  } as const;
+}
+
+export type RemoteToolClient = Awaited<
+  ReturnType<typeof createRemoteToolClient>
+>;
+
+export const ${exportName} = createRemoteToolClient();
+`;
+}
+
+type StdioTemplateOptions = {
+  exportName: string;
+  schemasAndHandlers: string;
+  registryEntries: string;
+  transport: StdioTransportTemplate;
+};
+
+function buildStdioTemplate({
+  exportName,
+  schemasAndHandlers,
+  registryEntries,
+  transport,
+}: StdioTemplateOptions): string {
+  const hasNpmPackage = typeof transport.npm === "string";
+  const commandLiteral = JSON.stringify(transport.command);
+  const npmLiteral = hasNpmPackage ? JSON.stringify(transport.npm) : undefined;
+  const argsLiteral = JSON.stringify(
+    hasNpmPackage ? (transport.npmArgs ?? []) : transport.args
+  );
+  const envLiteral = transport.env
+    ? JSON.stringify(transport.env, null, 2)
+    : undefined;
+  const cwdLiteral = transport.cwd ? JSON.stringify(transport.cwd) : undefined;
+  const stderrLiteral = JSON.stringify(transport.stderr ?? "pipe");
+
+  const commandConstant = `\nconst DEFAULT_STDIO_COMMAND = ${commandLiteral};\n`;
+  const npmConstant = hasNpmPackage
+    ? `\nconst DEFAULT_NPM_PACKAGE = ${npmLiteral};\n`
+    : "";
+  const argsConstName = hasNpmPackage
+    ? "DEFAULT_NPM_ARGS"
+    : "DEFAULT_STDIO_ARGS";
+  const argsConstant = `\nconst ${argsConstName} = ${argsLiteral};\n`;
+  const envConstant = envLiteral
+    ? `\nconst DEFAULT_STDIO_ENV: Record<string, string> = ${envLiteral};\n`
+    : "";
+  const cwdConstant = cwdLiteral
+    ? `\nconst DEFAULT_STDIO_CWD = ${cwdLiteral};\n`
+    : "";
+  const stderrConstant = `\nconst DEFAULT_STDIO_STDERR = ${stderrLiteral} as const;\n`;
+
+  const optionLines = [
+    "command?: string;",
+    hasNpmPackage ? "npm?: string;" : undefined,
+    "args?: string[];",
+    "env?: Record<string, string>;",
+    "cwd?: string;",
+    'stderr?: "pipe" | "inherit" | "ignore";',
+  ].filter(Boolean);
+
+  const optionsInterface = `export interface RemoteToolClientOptions {
+  ${optionLines.join("\n  ")}
+}`;
+
+  const argsResolution = hasNpmPackage
+    ? `  const npmPackage = options.npm ?? DEFAULT_NPM_PACKAGE;
+  const extraArgs = options.args ?? ${argsConstName};`
+    : `  const resolvedArgs = options.args ?? ${argsConstName};`;
+
+  const envResolution = `  const env = ${
+    envLiteral ? "options.env ?? DEFAULT_STDIO_ENV" : "options.env"
+  };`;
+  const cwdResolution = `  const cwd = ${
+    cwdLiteral ? "options.cwd ?? DEFAULT_STDIO_CWD" : "options.cwd"
+  };`;
+
+  const argsExpression = hasNpmPackage
+    ? "[npmPackage, ...extraArgs]"
+    : "resolvedArgs";
+
+  return `/* auto-generated - do not edit */
+import { z } from "zod";
+import { createSTDIOClient, type StdioClient, type ToolMetadata } from "xmcp";
+
+${commandConstant}${npmConstant}${argsConstant}${envConstant}${cwdConstant}${stderrConstant}${helperFunctions}
+
+${schemasAndHandlers}
+
+${optionsInterface}
+
+export async function createRemoteToolClient(
+  options: RemoteToolClientOptions = {}
+) {
+  const command = options.command ?? DEFAULT_STDIO_COMMAND;
+${argsResolution}
+${envResolution}
+${cwdResolution}
+  const stderr = options.stderr ?? DEFAULT_STDIO_STDERR;
+
+  const connection = await createSTDIOClient({
+    command,
+    args: ${argsExpression},
+    env,
+    cwd,
+    stderr,
+  });
+  const client = connection.client;
+
+  return {
+${registryEntries}
+    rawClient: client,
+    connection,
   } as const;
 }
 
@@ -249,13 +433,13 @@ export function writeGeneratedClientsIndex(
     .join("\n");
 
   const proxyPromiseHelper = `/**
- * Wraps a promise-based client so you can call methods directly
- * without awaiting the client first.
- *
- * Usage:
- *   generatedClients.local.randomNumber()  // returns Promise, no need to await client first
- *   generatedClients.remote.greet({ name: "World" })
- */
+* Wraps a promise-based client so you can call methods directly
+* without awaiting the client first.
+*
+* Usage:
+*   generatedClients.local.randomNumber()  // returns Promise, no need to await client first
+*   generatedClients.remote.greet({ name: "World" })
+*/
 function proxyPromise<T extends object>(clientPromise: Promise<T>): T {
   return new Proxy({} as T, {
     get(_target, prop) {
