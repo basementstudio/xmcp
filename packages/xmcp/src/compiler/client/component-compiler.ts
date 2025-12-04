@@ -1,5 +1,6 @@
 import path from "path";
 import { rspack } from "@rspack/core";
+import fs from "fs";
 import type { RspackOptions } from "@rspack/core";
 
 interface CompileOptions {
@@ -85,6 +86,15 @@ export class ClientComponentCompiler {
   }
 
   private createConfig(config: ResolvedBuildRequest): RspackOptions {
+    const pkgPath = path.join(process.cwd(), "package.json");
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+
+    const dependencies = {
+      ...pkg.dependencies,
+      ...pkg.devDependencies,
+      ...pkg.peerDependencies,
+    };
+
     return {
       mode: "production",
       entry: config.absoluteEntries,
@@ -101,13 +111,44 @@ export class ClientComponentCompiler {
         },
         clean: true,
       },
-      externals: {
-        react: "react",
-        "react/jsx-runtime": "react/jsx-runtime",
-        "react/jsx-dev-runtime": "react/jsx-dev-runtime",
-        "react-dom/client": "react-dom/client",
-        zod: "zod",
-      },
+      externals: [
+        {
+          react: "react",
+          "react/jsx-runtime": "react/jsx-runtime",
+          "react/jsx-dev-runtime": "react/jsx-dev-runtime",
+          "react-dom/client": "react-dom/client",
+        },
+        function ({ request }, callback) {
+          if (!request) {
+            return callback();
+          }
+
+          if (
+            request.startsWith("./") ||
+            request.startsWith("../") ||
+            request.startsWith("/")
+          ) {
+            return callback();
+          }
+
+          const basePackage = request.startsWith("@")
+            ? request.split("/").slice(0, 2).join("/")
+            : request.split("/")[0];
+
+          const rawVersion = dependencies[basePackage];
+          const version = rawVersion?.replace(/^[\^~>=<]+/, "").trim();
+
+          if (version) {
+            const subpath = request.slice(basePackage.length);
+            return callback(
+              undefined,
+              `https://esm.sh/${basePackage}@${version}${subpath}`
+            );
+          }
+
+          return callback(undefined, `https://esm.sh/${request}`);
+        },
+      ],
       externalsType: "module",
       resolve: {
         extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
