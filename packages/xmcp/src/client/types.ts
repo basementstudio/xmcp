@@ -1,4 +1,4 @@
-import { createHTTPClient } from ".";
+import type { createHTTPClient, StdioClientConnection } from ".";
 
 export type JsonValue =
   | string
@@ -54,3 +54,4 @@ export type JsonSchemaType = {
 };
 
 export type HttpClient = Awaited<ReturnType<typeof createHTTPClient>>;
+export type StdioClient = StdioClientConnection["client"];
