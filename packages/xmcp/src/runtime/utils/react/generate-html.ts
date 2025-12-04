@@ -46,9 +46,11 @@ export function generateHTML(componentCode: string): string {
         throw new Error("React component export not found");
       }
 
+      const props = window.openai?.toolInput || {};
+
       const root = document.getElementById('root');
       if (root) {
-        createRoot(root).render(createElement(Component));
+        createRoot(root).render(createElement(Component, props));
       }
     } finally {
       URL.revokeObjectURL(blobUrl);
