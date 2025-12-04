@@ -106,6 +106,7 @@ export class ClientComponentCompiler {
         "react/jsx-runtime": "react/jsx-runtime",
         "react/jsx-dev-runtime": "react/jsx-dev-runtime",
         "react-dom/client": "react-dom/client",
+        zod: "zod",
       },
       externalsType: "module",
       resolve: {
