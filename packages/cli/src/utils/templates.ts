@@ -326,7 +326,7 @@ function buildStdioTemplate({
   const argsConstName = hasNpmPackage
     ? "DEFAULT_NPM_ARGS"
     : "DEFAULT_STDIO_ARGS";
-  const argsConstant = `\nconst ${argsConstName} = ${argsLiteral};\n`;
+  const argsConstant = `\nconst ${argsConstName}: string[] = ${argsLiteral};\n`;
   const envConstant = envLiteral
     ? `\nconst DEFAULT_STDIO_ENV: Record<string, string> = ${envLiteral};\n`
     : "";
