@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { HttpClient, CustomHeaders } from "xmcp";
 import { toIdentifier, pascalCase } from "./naming.js";
+import { jsonSchemaToZodObjectCode } from "./json-schema-to-zod.js";
 
 export type ToolListResult = Awaited<ReturnType<HttpClient["listTools"]>>;
 export type ToolDefinition = ToolListResult["tools"][number];
@@ -34,80 +35,6 @@ export type BuildClientOptions = {
   exportName: string;
   transport: HttpTransportTemplate | StdioTransportTemplate;
 };
-
-const helperFunctions = `
-function jsonSchemaToZodShape(schema: any): Record<string, z.ZodTypeAny> {
-  if (!schema || typeof schema !== "object" || schema.type !== "object") {
-    return {};
-  }
-
-  const properties = schema.properties ?? {};
-  const required = new Set(
-    Array.isArray(schema.required) ? (schema.required as string[]) : []
-  );
-
-  const shape: Record<string, z.ZodTypeAny> = {};
-
-  for (const [key, propertySchema] of Object.entries(properties)) {
-    shape[key] = jsonSchemaToZod(propertySchema, required.has(key));
-  }
-
-  return shape;
-}
-
-function jsonSchemaToZod(
-  schema: any,
-  isRequired: boolean
-): z.ZodTypeAny {
-  if (!schema || typeof schema !== "object") {
-    return z.any();
-  }
-
-  let zodType: z.ZodTypeAny;
-
-  if (Array.isArray(schema.enum) && schema.enum.length > 0) {
-    const enumValues = schema.enum as [string, ...string[]];
-    zodType = z.enum(enumValues);
-  } else {
-    switch (schema.type) {
-      case "string":
-        zodType = z.string();
-        break;
-      case "number":
-      case "integer":
-        zodType = z.number();
-        break;
-      case "boolean":
-        zodType = z.boolean();
-        break;
-      case "array":
-        zodType = z.array(jsonSchemaToZod(schema.items ?? {}, true));
-        break;
-      case "object":
-        zodType = z.object(jsonSchemaToZodShape(schema));
-        break;
-      default:
-        zodType = z.any();
-    }
-  }
-
-  if (typeof schema.description === "string") {
-    zodType = zodType.describe(schema.description);
-  }
-
-  if (!isRequired) {
-    zodType = zodType.optional();
-  }
-
-  return zodType;
-}
-
-function jsonSchemaToZodObject(
-  schema: any
-): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  return z.object(jsonSchemaToZodShape(schema));
-}
-`;
 
 export function buildClientFileContents({
   tools,
@@ -150,17 +77,22 @@ function buildSchemaSections(
 ): SchemaSection {
   const schemaBlocks = tools.map((tool) => {
     const identifier = toIdentifier(tool.name);
-    const schemaShapeId = `${identifier}Shape`;
     const schemaExportId = `${identifier}Schema`;
-    const schemaObjectId = `${identifier}SchemaObject`;
     const argsType = `${pascalCase(tool.name)}Args`;
-    const schemaLiteral = JSON.stringify(tool.inputSchema ?? {}, null, 2);
+
+    const inputSchema = (tool.inputSchema ?? {
+      type: "object",
+      properties: {},
+    }) as Record<string, unknown>;
+    const zodSchemaCode = jsonSchemaToZodObjectCode(inputSchema);
+
     const requiresArgs =
       tool.inputSchema &&
       typeof tool.inputSchema === "object" &&
       "required" in tool.inputSchema &&
-      Array.isArray((tool.inputSchema as any).required) &&
-      (tool.inputSchema as any).required.length > 0;
+      Array.isArray((tool.inputSchema as Record<string, unknown>).required) &&
+      ((tool.inputSchema as Record<string, unknown>).required as unknown[])
+        .length > 0;
 
     const metadata = {
       name: tool.name,
@@ -177,11 +109,8 @@ function buildSchemaSections(
       identifier,
       argsType,
       requiresArgs,
-      block: `const ${schemaShapeId}Json = ${schemaLiteral} as const;
-export const ${schemaShapeId} = jsonSchemaToZodShape(${schemaShapeId}Json);
-const ${schemaObjectId} = z.object(${schemaShapeId});
-export const ${schemaExportId} = jsonSchemaToZodObject(${schemaShapeId}Json);
-export type ${argsType} = z.infer<typeof ${schemaObjectId}>;
+      block: `export const ${schemaExportId} = ${zodSchemaCode};
+export type ${argsType} = z.infer<typeof ${schemaExportId}>;
 
 export const ${identifier}Metadata: ToolMetadata = ${JSON.stringify(
         metadata,
@@ -265,8 +194,7 @@ import { z } from "zod";
 import { createHTTPClient, type HttpClient, type ToolMetadata${headersImport} } from "xmcp";
 
 const DEFAULT_REMOTE_URL = ${JSON.stringify(url)};
-${headersConstant}${helperFunctions}
-
+${headersConstant}
 ${schemasAndHandlers}
 
 ${optionsInterface}
@@ -368,8 +296,7 @@ function buildStdioTemplate({
 import { z } from "zod";
 import { createSTDIOClient, type StdioClient, type ToolMetadata } from "xmcp";
 
-${commandConstant}${npmConstant}${argsConstant}${envConstant}${cwdConstant}${stderrConstant}${helperFunctions}
-
+${commandConstant}${npmConstant}${argsConstant}${envConstant}${cwdConstant}${stderrConstant}
 ${schemasAndHandlers}
 
 ${optionsInterface}
