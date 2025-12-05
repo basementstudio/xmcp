@@ -11,97 +11,10 @@ const DEFAULT_HEADERS: CustomHeaders = [
   }
 ];
 
-function jsonSchemaToZodShape(schema: any): Record<string, z.ZodTypeAny> {
-  if (!schema || typeof schema !== "object" || schema.type !== "object") {
-    return {};
-  }
-
-  const properties = schema.properties ?? {};
-  const required = new Set(
-    Array.isArray(schema.required) ? (schema.required as string[]) : []
-  );
-
-  const shape: Record<string, z.ZodTypeAny> = {};
-
-  for (const [key, propertySchema] of Object.entries(properties)) {
-    shape[key] = jsonSchemaToZod(propertySchema, required.has(key));
-  }
-
-  return shape;
-}
-
-function jsonSchemaToZod(
-  schema: any,
-  isRequired: boolean
-): z.ZodTypeAny {
-  if (!schema || typeof schema !== "object") {
-    return z.any();
-  }
-
-  let zodType: z.ZodTypeAny;
-
-  if (Array.isArray(schema.enum) && schema.enum.length > 0) {
-    const enumValues = schema.enum as [string, ...string[]];
-    zodType = z.enum(enumValues);
-  } else {
-    switch (schema.type) {
-      case "string":
-        zodType = z.string();
-        break;
-      case "number":
-      case "integer":
-        zodType = z.number();
-        break;
-      case "boolean":
-        zodType = z.boolean();
-        break;
-      case "array":
-        zodType = z.array(jsonSchemaToZod(schema.items ?? {}, true));
-        break;
-      case "object":
-        zodType = z.object(jsonSchemaToZodShape(schema));
-        break;
-      default:
-        zodType = z.any();
-    }
-  }
-
-  if (typeof schema.description === "string") {
-    zodType = zodType.describe(schema.description);
-  }
-
-  if (!isRequired) {
-    zodType = zodType.optional();
-  }
-
-  return zodType;
-}
-
-function jsonSchemaToZodObject(
-  schema: any
-): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  return z.object(jsonSchemaToZodShape(schema));
-}
-
-
-const greetShapeJson = {
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "The name of the user to greet"
-    }
-  },
-  "required": [
-    "name"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const greetShape = jsonSchemaToZodShape(greetShapeJson);
-const greetSchemaObject = z.object(greetShape);
-export const greetSchema = jsonSchemaToZodObject(greetShapeJson);
-export type GreetArgs = z.infer<typeof greetSchemaObject>;
+export const greetSchema = z.object({
+  name: z.string().describe("The name of the user to greet"),
+});
+export type GreetArgs = z.infer<typeof greetSchema>;
 
 export const greetMetadata: ToolMetadata = {
   "name": "greet",

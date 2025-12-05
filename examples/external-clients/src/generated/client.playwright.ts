@@ -7,93 +7,12 @@ const DEFAULT_STDIO_COMMAND = "npx";
 
 const DEFAULT_NPM_PACKAGE = "@playwright/mcp";
 
-const DEFAULT_NPM_ARGS = [];
+const DEFAULT_NPM_ARGS: string[] = [];
 
 const DEFAULT_STDIO_STDERR = "pipe" as const;
 
-function jsonSchemaToZodShape(schema: any): Record<string, z.ZodTypeAny> {
-  if (!schema || typeof schema !== "object" || schema.type !== "object") {
-    return {};
-  }
-
-  const properties = schema.properties ?? {};
-  const required = new Set(
-    Array.isArray(schema.required) ? (schema.required as string[]) : []
-  );
-
-  const shape: Record<string, z.ZodTypeAny> = {};
-
-  for (const [key, propertySchema] of Object.entries(properties)) {
-    shape[key] = jsonSchemaToZod(propertySchema, required.has(key));
-  }
-
-  return shape;
-}
-
-function jsonSchemaToZod(
-  schema: any,
-  isRequired: boolean
-): z.ZodTypeAny {
-  if (!schema || typeof schema !== "object") {
-    return z.any();
-  }
-
-  let zodType: z.ZodTypeAny;
-
-  if (Array.isArray(schema.enum) && schema.enum.length > 0) {
-    const enumValues = schema.enum as [string, ...string[]];
-    zodType = z.enum(enumValues);
-  } else {
-    switch (schema.type) {
-      case "string":
-        zodType = z.string();
-        break;
-      case "number":
-      case "integer":
-        zodType = z.number();
-        break;
-      case "boolean":
-        zodType = z.boolean();
-        break;
-      case "array":
-        zodType = z.array(jsonSchemaToZod(schema.items ?? {}, true));
-        break;
-      case "object":
-        zodType = z.object(jsonSchemaToZodShape(schema));
-        break;
-      default:
-        zodType = z.any();
-    }
-  }
-
-  if (typeof schema.description === "string") {
-    zodType = zodType.describe(schema.description);
-  }
-
-  if (!isRequired) {
-    zodType = zodType.optional();
-  }
-
-  return zodType;
-}
-
-function jsonSchemaToZodObject(
-  schema: any
-): z.ZodObject<Record<string, z.ZodTypeAny>> {
-  return z.object(jsonSchemaToZodShape(schema));
-}
-
-
-const browserCloseShapeJson = {
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserCloseShape = jsonSchemaToZodShape(browserCloseShapeJson);
-const browserCloseSchemaObject = z.object(browserCloseShape);
-export const browserCloseSchema = jsonSchemaToZodObject(browserCloseShapeJson);
-export type BrowserCloseArgs = z.infer<typeof browserCloseSchemaObject>;
+export const browserCloseSchema = z.object({});
+export type BrowserCloseArgs = z.infer<typeof browserCloseSchema>;
 
 export const browserCloseMetadata: ToolMetadata = {
   "name": "browser_close",
@@ -113,29 +32,11 @@ async function browserClose(client: StdioClient) {
   });
 }
 
-const browserResizeShapeJson = {
-  "type": "object",
-  "properties": {
-    "width": {
-      "type": "number",
-      "description": "Width of the browser window"
-    },
-    "height": {
-      "type": "number",
-      "description": "Height of the browser window"
-    }
-  },
-  "required": [
-    "width",
-    "height"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserResizeShape = jsonSchemaToZodShape(browserResizeShapeJson);
-const browserResizeSchemaObject = z.object(browserResizeShape);
-export const browserResizeSchema = jsonSchemaToZodObject(browserResizeShapeJson);
-export type BrowserResizeArgs = z.infer<typeof browserResizeSchemaObject>;
+export const browserResizeSchema = z.object({
+  width: z.number().describe("Width of the browser window"),
+  height: z.number().describe("Height of the browser window"),
+});
+export type BrowserResizeArgs = z.infer<typeof browserResizeSchema>;
 
 export const browserResizeMetadata: ToolMetadata = {
   "name": "browser_resize",
@@ -155,21 +56,10 @@ async function browserResize(client: StdioClient, args: BrowserResizeArgs) {
   });
 }
 
-const browserConsoleMessagesShapeJson = {
-  "type": "object",
-  "properties": {
-    "onlyErrors": {
-      "type": "boolean",
-      "description": "Only return error messages"
-    }
-  },
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserConsoleMessagesShape = jsonSchemaToZodShape(browserConsoleMessagesShapeJson);
-const browserConsoleMessagesSchemaObject = z.object(browserConsoleMessagesShape);
-export const browserConsoleMessagesSchema = jsonSchemaToZodObject(browserConsoleMessagesShapeJson);
-export type BrowserConsoleMessagesArgs = z.infer<typeof browserConsoleMessagesSchemaObject>;
+export const browserConsoleMessagesSchema = z.object({
+  onlyErrors: z.boolean().describe("Only return error messages").optional(),
+});
+export type BrowserConsoleMessagesArgs = z.infer<typeof browserConsoleMessagesSchema>;
 
 export const browserConsoleMessagesMetadata: ToolMetadata = {
   "name": "browser_console_messages",
@@ -189,28 +79,11 @@ async function browserConsoleMessages(client: StdioClient) {
   });
 }
 
-const browserHandleDialogShapeJson = {
-  "type": "object",
-  "properties": {
-    "accept": {
-      "type": "boolean",
-      "description": "Whether to accept the dialog."
-    },
-    "promptText": {
-      "type": "string",
-      "description": "The text of the prompt in case of a prompt dialog."
-    }
-  },
-  "required": [
-    "accept"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserHandleDialogShape = jsonSchemaToZodShape(browserHandleDialogShapeJson);
-const browserHandleDialogSchemaObject = z.object(browserHandleDialogShape);
-export const browserHandleDialogSchema = jsonSchemaToZodObject(browserHandleDialogShapeJson);
-export type BrowserHandleDialogArgs = z.infer<typeof browserHandleDialogSchemaObject>;
+export const browserHandleDialogSchema = z.object({
+  accept: z.boolean().describe("Whether to accept the dialog."),
+  promptText: z.string().describe("The text of the prompt in case of a prompt dialog.").optional(),
+});
+export type BrowserHandleDialogArgs = z.infer<typeof browserHandleDialogSchema>;
 
 export const browserHandleDialogMetadata: ToolMetadata = {
   "name": "browser_handle_dialog",
@@ -230,32 +103,12 @@ async function browserHandleDialog(client: StdioClient, args: BrowserHandleDialo
   });
 }
 
-const browserEvaluateShapeJson = {
-  "type": "object",
-  "properties": {
-    "function": {
-      "type": "string",
-      "description": "() => { /* code */ } or (element) => { /* code */ } when element is provided"
-    },
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to interact with the element"
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    }
-  },
-  "required": [
-    "function"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserEvaluateShape = jsonSchemaToZodShape(browserEvaluateShapeJson);
-const browserEvaluateSchemaObject = z.object(browserEvaluateShape);
-export const browserEvaluateSchema = jsonSchemaToZodObject(browserEvaluateShapeJson);
-export type BrowserEvaluateArgs = z.infer<typeof browserEvaluateSchemaObject>;
+export const browserEvaluateSchema = z.object({
+  function: z.string().describe("() => { /* code */ } or (element) => { /* code */ } when element is provided"),
+  element: z.string().describe("Human-readable element description used to obtain permission to interact with the element").optional(),
+  ref: z.string().describe("Exact target element reference from the page snapshot").optional(),
+});
+export type BrowserEvaluateArgs = z.infer<typeof browserEvaluateSchema>;
 
 export const browserEvaluateMetadata: ToolMetadata = {
   "name": "browser_evaluate",
@@ -275,24 +128,10 @@ async function browserEvaluate(client: StdioClient, args: BrowserEvaluateArgs) {
   });
 }
 
-const browserFileUploadShapeJson = {
-  "type": "object",
-  "properties": {
-    "paths": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "The absolute paths to the files to upload. Can be single file or multiple files. If omitted, file chooser is cancelled."
-    }
-  },
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserFileUploadShape = jsonSchemaToZodShape(browserFileUploadShapeJson);
-const browserFileUploadSchemaObject = z.object(browserFileUploadShape);
-export const browserFileUploadSchema = jsonSchemaToZodObject(browserFileUploadShapeJson);
-export type BrowserFileUploadArgs = z.infer<typeof browserFileUploadSchemaObject>;
+export const browserFileUploadSchema = z.object({
+  paths: z.array(z.string()).describe("The absolute paths to the files to upload. Can be single file or multiple files. If omitted, file chooser is cancelled.").optional(),
+});
+export type BrowserFileUploadArgs = z.infer<typeof browserFileUploadSchema>;
 
 export const browserFileUploadMetadata: ToolMetadata = {
   "name": "browser_file_upload",
@@ -312,59 +151,15 @@ async function browserFileUpload(client: StdioClient) {
   });
 }
 
-const browserFillFormShapeJson = {
-  "type": "object",
-  "properties": {
-    "fields": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Human-readable field name"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "textbox",
-              "checkbox",
-              "radio",
-              "combobox",
-              "slider"
-            ],
-            "description": "Type of the field"
-          },
-          "ref": {
-            "type": "string",
-            "description": "Exact target field reference from the page snapshot"
-          },
-          "value": {
-            "type": "string",
-            "description": "Value to fill in the field. If the field is a checkbox, the value should be `true` or `false`. If the field is a combobox, the value should be the text of the option."
-          }
-        },
-        "required": [
-          "name",
-          "type",
-          "ref",
-          "value"
-        ],
-        "additionalProperties": false
-      },
-      "description": "Fields to fill in"
-    }
-  },
-  "required": [
-    "fields"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserFillFormShape = jsonSchemaToZodShape(browserFillFormShapeJson);
-const browserFillFormSchemaObject = z.object(browserFillFormShape);
-export const browserFillFormSchema = jsonSchemaToZodObject(browserFillFormShapeJson);
-export type BrowserFillFormArgs = z.infer<typeof browserFillFormSchemaObject>;
+export const browserFillFormSchema = z.object({
+  fields: z.array(z.object({
+  name: z.string().describe("Human-readable field name"),
+  type: z.enum(["textbox", "checkbox", "radio", "combobox", "slider"]).describe("Type of the field"),
+  ref: z.string().describe("Exact target field reference from the page snapshot"),
+  value: z.string().describe("Value to fill in the field. If the field is a checkbox, the value should be `true` or `false`. If the field is a combobox, the value should be the text of the option."),
+})).describe("Fields to fill in"),
+});
+export type BrowserFillFormArgs = z.infer<typeof browserFillFormSchema>;
 
 export const browserFillFormMetadata: ToolMetadata = {
   "name": "browser_fill_form",
@@ -384,16 +179,8 @@ async function browserFillForm(client: StdioClient, args: BrowserFillFormArgs) {
   });
 }
 
-const browserInstallShapeJson = {
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserInstallShape = jsonSchemaToZodShape(browserInstallShapeJson);
-const browserInstallSchemaObject = z.object(browserInstallShape);
-export const browserInstallSchema = jsonSchemaToZodObject(browserInstallShapeJson);
-export type BrowserInstallArgs = z.infer<typeof browserInstallSchemaObject>;
+export const browserInstallSchema = z.object({});
+export type BrowserInstallArgs = z.infer<typeof browserInstallSchema>;
 
 export const browserInstallMetadata: ToolMetadata = {
   "name": "browser_install",
@@ -413,24 +200,10 @@ async function browserInstall(client: StdioClient) {
   });
 }
 
-const browserPressKeyShapeJson = {
-  "type": "object",
-  "properties": {
-    "key": {
-      "type": "string",
-      "description": "Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"
-    }
-  },
-  "required": [
-    "key"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserPressKeyShape = jsonSchemaToZodShape(browserPressKeyShapeJson);
-const browserPressKeySchemaObject = z.object(browserPressKeyShape);
-export const browserPressKeySchema = jsonSchemaToZodObject(browserPressKeyShapeJson);
-export type BrowserPressKeyArgs = z.infer<typeof browserPressKeySchemaObject>;
+export const browserPressKeySchema = z.object({
+  key: z.string().describe("Name of the key to press or a character to generate, such as `ArrowLeft` or `a`"),
+});
+export type BrowserPressKeyArgs = z.infer<typeof browserPressKeySchema>;
 
 export const browserPressKeyMetadata: ToolMetadata = {
   "name": "browser_press_key",
@@ -450,42 +223,14 @@ async function browserPressKey(client: StdioClient, args: BrowserPressKeyArgs) {
   });
 }
 
-const browserTypeShapeJson = {
-  "type": "object",
-  "properties": {
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to interact with the element"
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    },
-    "text": {
-      "type": "string",
-      "description": "Text to type into the element"
-    },
-    "submit": {
-      "type": "boolean",
-      "description": "Whether to submit entered text (press Enter after)"
-    },
-    "slowly": {
-      "type": "boolean",
-      "description": "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once."
-    }
-  },
-  "required": [
-    "element",
-    "ref",
-    "text"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserTypeShape = jsonSchemaToZodShape(browserTypeShapeJson);
-const browserTypeSchemaObject = z.object(browserTypeShape);
-export const browserTypeSchema = jsonSchemaToZodObject(browserTypeShapeJson);
-export type BrowserTypeArgs = z.infer<typeof browserTypeSchemaObject>;
+export const browserTypeSchema = z.object({
+  element: z.string().describe("Human-readable element description used to obtain permission to interact with the element"),
+  ref: z.string().describe("Exact target element reference from the page snapshot"),
+  text: z.string().describe("Text to type into the element"),
+  submit: z.boolean().describe("Whether to submit entered text (press Enter after)").optional(),
+  slowly: z.boolean().describe("Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.").optional(),
+});
+export type BrowserTypeArgs = z.infer<typeof browserTypeSchema>;
 
 export const browserTypeMetadata: ToolMetadata = {
   "name": "browser_type",
@@ -505,24 +250,10 @@ async function browserType(client: StdioClient, args: BrowserTypeArgs) {
   });
 }
 
-const browserNavigateShapeJson = {
-  "type": "object",
-  "properties": {
-    "url": {
-      "type": "string",
-      "description": "The URL to navigate to"
-    }
-  },
-  "required": [
-    "url"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserNavigateShape = jsonSchemaToZodShape(browserNavigateShapeJson);
-const browserNavigateSchemaObject = z.object(browserNavigateShape);
-export const browserNavigateSchema = jsonSchemaToZodObject(browserNavigateShapeJson);
-export type BrowserNavigateArgs = z.infer<typeof browserNavigateSchemaObject>;
+export const browserNavigateSchema = z.object({
+  url: z.string().describe("The URL to navigate to"),
+});
+export type BrowserNavigateArgs = z.infer<typeof browserNavigateSchema>;
 
 export const browserNavigateMetadata: ToolMetadata = {
   "name": "browser_navigate",
@@ -542,16 +273,8 @@ async function browserNavigate(client: StdioClient, args: BrowserNavigateArgs) {
   });
 }
 
-const browserNavigateBackShapeJson = {
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserNavigateBackShape = jsonSchemaToZodShape(browserNavigateBackShapeJson);
-const browserNavigateBackSchemaObject = z.object(browserNavigateBackShape);
-export const browserNavigateBackSchema = jsonSchemaToZodObject(browserNavigateBackShapeJson);
-export type BrowserNavigateBackArgs = z.infer<typeof browserNavigateBackSchemaObject>;
+export const browserNavigateBackSchema = z.object({});
+export type BrowserNavigateBackArgs = z.infer<typeof browserNavigateBackSchema>;
 
 export const browserNavigateBackMetadata: ToolMetadata = {
   "name": "browser_navigate_back",
@@ -571,16 +294,8 @@ async function browserNavigateBack(client: StdioClient) {
   });
 }
 
-const browserNetworkRequestsShapeJson = {
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserNetworkRequestsShape = jsonSchemaToZodShape(browserNetworkRequestsShapeJson);
-const browserNetworkRequestsSchemaObject = z.object(browserNetworkRequestsShape);
-export const browserNetworkRequestsSchema = jsonSchemaToZodObject(browserNetworkRequestsShapeJson);
-export type BrowserNetworkRequestsArgs = z.infer<typeof browserNetworkRequestsSchemaObject>;
+export const browserNetworkRequestsSchema = z.object({});
+export type BrowserNetworkRequestsArgs = z.infer<typeof browserNetworkRequestsSchema>;
 
 export const browserNetworkRequestsMetadata: ToolMetadata = {
   "name": "browser_network_requests",
@@ -600,24 +315,10 @@ async function browserNetworkRequests(client: StdioClient) {
   });
 }
 
-const browserRunCodeShapeJson = {
-  "type": "object",
-  "properties": {
-    "code": {
-      "type": "string",
-      "description": "Playwright code snippet to run. The snippet should access the `page` object to interact with the page. Can make multiple statements. For example: `await page.getByRole('button', { name: 'Submit' }).click();`"
-    }
-  },
-  "required": [
-    "code"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserRunCodeShape = jsonSchemaToZodShape(browserRunCodeShapeJson);
-const browserRunCodeSchemaObject = z.object(browserRunCodeShape);
-export const browserRunCodeSchema = jsonSchemaToZodObject(browserRunCodeShapeJson);
-export type BrowserRunCodeArgs = z.infer<typeof browserRunCodeSchemaObject>;
+export const browserRunCodeSchema = z.object({
+  code: z.string().describe("Playwright code snippet to run. The snippet should access the `page` object to interact with the page. Can make multiple statements. For example: `await page.getByRole('button', { name: 'Submit' }).click();`"),
+});
+export type BrowserRunCodeArgs = z.infer<typeof browserRunCodeSchema>;
 
 export const browserRunCodeMetadata: ToolMetadata = {
   "name": "browser_run_code",
@@ -637,42 +338,14 @@ async function browserRunCode(client: StdioClient, args: BrowserRunCodeArgs) {
   });
 }
 
-const browserTakeScreenshotShapeJson = {
-  "type": "object",
-  "properties": {
-    "type": {
-      "type": "string",
-      "enum": [
-        "png",
-        "jpeg"
-      ],
-      "default": "png",
-      "description": "Image format for the screenshot. Default is png."
-    },
-    "filename": {
-      "type": "string",
-      "description": "File name to save the screenshot to. Defaults to `page-{timestamp}.{png|jpeg}` if not specified. Prefer relative file names to stay within the output directory."
-    },
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too."
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too."
-    },
-    "fullPage": {
-      "type": "boolean",
-      "description": "When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots."
-    }
-  },
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserTakeScreenshotShape = jsonSchemaToZodShape(browserTakeScreenshotShapeJson);
-const browserTakeScreenshotSchemaObject = z.object(browserTakeScreenshotShape);
-export const browserTakeScreenshotSchema = jsonSchemaToZodObject(browserTakeScreenshotShapeJson);
-export type BrowserTakeScreenshotArgs = z.infer<typeof browserTakeScreenshotSchemaObject>;
+export const browserTakeScreenshotSchema = z.object({
+  type: z.enum(["png", "jpeg"]).describe("Image format for the screenshot. Default is png.").optional(),
+  filename: z.string().describe("File name to save the screenshot to. Defaults to `page-{timestamp}.{png|jpeg}` if not specified. Prefer relative file names to stay within the output directory.").optional(),
+  element: z.string().describe("Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too.").optional(),
+  ref: z.string().describe("Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too.").optional(),
+  fullPage: z.boolean().describe("When true, takes a screenshot of the full scrollable page, instead of the currently visible viewport. Cannot be used with element screenshots.").optional(),
+});
+export type BrowserTakeScreenshotArgs = z.infer<typeof browserTakeScreenshotSchema>;
 
 export const browserTakeScreenshotMetadata: ToolMetadata = {
   "name": "browser_take_screenshot",
@@ -692,16 +365,8 @@ async function browserTakeScreenshot(client: StdioClient) {
   });
 }
 
-const browserSnapshotShapeJson = {
-  "type": "object",
-  "properties": {},
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserSnapshotShape = jsonSchemaToZodShape(browserSnapshotShapeJson);
-const browserSnapshotSchemaObject = z.object(browserSnapshotShape);
-export const browserSnapshotSchema = jsonSchemaToZodObject(browserSnapshotShapeJson);
-export type BrowserSnapshotArgs = z.infer<typeof browserSnapshotSchemaObject>;
+export const browserSnapshotSchema = z.object({});
+export type BrowserSnapshotArgs = z.infer<typeof browserSnapshotSchema>;
 
 export const browserSnapshotMetadata: ToolMetadata = {
   "name": "browser_snapshot",
@@ -721,56 +386,14 @@ async function browserSnapshot(client: StdioClient) {
   });
 }
 
-const browserClickShapeJson = {
-  "type": "object",
-  "properties": {
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to interact with the element"
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    },
-    "doubleClick": {
-      "type": "boolean",
-      "description": "Whether to perform a double click instead of a single click"
-    },
-    "button": {
-      "type": "string",
-      "enum": [
-        "left",
-        "right",
-        "middle"
-      ],
-      "description": "Button to click, defaults to left"
-    },
-    "modifiers": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "enum": [
-          "Alt",
-          "Control",
-          "ControlOrMeta",
-          "Meta",
-          "Shift"
-        ]
-      },
-      "description": "Modifier keys to press"
-    }
-  },
-  "required": [
-    "element",
-    "ref"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserClickShape = jsonSchemaToZodShape(browserClickShapeJson);
-const browserClickSchemaObject = z.object(browserClickShape);
-export const browserClickSchema = jsonSchemaToZodObject(browserClickShapeJson);
-export type BrowserClickArgs = z.infer<typeof browserClickSchemaObject>;
+export const browserClickSchema = z.object({
+  element: z.string().describe("Human-readable element description used to obtain permission to interact with the element"),
+  ref: z.string().describe("Exact target element reference from the page snapshot"),
+  doubleClick: z.boolean().describe("Whether to perform a double click instead of a single click").optional(),
+  button: z.enum(["left", "right", "middle"]).describe("Button to click, defaults to left").optional(),
+  modifiers: z.array(z.enum(["Alt", "Control", "ControlOrMeta", "Meta", "Shift"])).describe("Modifier keys to press").optional(),
+});
+export type BrowserClickArgs = z.infer<typeof browserClickSchema>;
 
 export const browserClickMetadata: ToolMetadata = {
   "name": "browser_click",
@@ -790,39 +413,13 @@ async function browserClick(client: StdioClient, args: BrowserClickArgs) {
   });
 }
 
-const browserDragShapeJson = {
-  "type": "object",
-  "properties": {
-    "startElement": {
-      "type": "string",
-      "description": "Human-readable source element description used to obtain the permission to interact with the element"
-    },
-    "startRef": {
-      "type": "string",
-      "description": "Exact source element reference from the page snapshot"
-    },
-    "endElement": {
-      "type": "string",
-      "description": "Human-readable target element description used to obtain the permission to interact with the element"
-    },
-    "endRef": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    }
-  },
-  "required": [
-    "startElement",
-    "startRef",
-    "endElement",
-    "endRef"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserDragShape = jsonSchemaToZodShape(browserDragShapeJson);
-const browserDragSchemaObject = z.object(browserDragShape);
-export const browserDragSchema = jsonSchemaToZodObject(browserDragShapeJson);
-export type BrowserDragArgs = z.infer<typeof browserDragSchemaObject>;
+export const browserDragSchema = z.object({
+  startElement: z.string().describe("Human-readable source element description used to obtain the permission to interact with the element"),
+  startRef: z.string().describe("Exact source element reference from the page snapshot"),
+  endElement: z.string().describe("Human-readable target element description used to obtain the permission to interact with the element"),
+  endRef: z.string().describe("Exact target element reference from the page snapshot"),
+});
+export type BrowserDragArgs = z.infer<typeof browserDragSchema>;
 
 export const browserDragMetadata: ToolMetadata = {
   "name": "browser_drag",
@@ -842,29 +439,11 @@ async function browserDrag(client: StdioClient, args: BrowserDragArgs) {
   });
 }
 
-const browserHoverShapeJson = {
-  "type": "object",
-  "properties": {
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to interact with the element"
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    }
-  },
-  "required": [
-    "element",
-    "ref"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserHoverShape = jsonSchemaToZodShape(browserHoverShapeJson);
-const browserHoverSchemaObject = z.object(browserHoverShape);
-export const browserHoverSchema = jsonSchemaToZodObject(browserHoverShapeJson);
-export type BrowserHoverArgs = z.infer<typeof browserHoverSchemaObject>;
+export const browserHoverSchema = z.object({
+  element: z.string().describe("Human-readable element description used to obtain permission to interact with the element"),
+  ref: z.string().describe("Exact target element reference from the page snapshot"),
+});
+export type BrowserHoverArgs = z.infer<typeof browserHoverSchema>;
 
 export const browserHoverMetadata: ToolMetadata = {
   "name": "browser_hover",
@@ -884,37 +463,12 @@ async function browserHover(client: StdioClient, args: BrowserHoverArgs) {
   });
 }
 
-const browserSelectOptionShapeJson = {
-  "type": "object",
-  "properties": {
-    "element": {
-      "type": "string",
-      "description": "Human-readable element description used to obtain permission to interact with the element"
-    },
-    "ref": {
-      "type": "string",
-      "description": "Exact target element reference from the page snapshot"
-    },
-    "values": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Array of values to select in the dropdown. This can be a single value or multiple values."
-    }
-  },
-  "required": [
-    "element",
-    "ref",
-    "values"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserSelectOptionShape = jsonSchemaToZodShape(browserSelectOptionShapeJson);
-const browserSelectOptionSchemaObject = z.object(browserSelectOptionShape);
-export const browserSelectOptionSchema = jsonSchemaToZodObject(browserSelectOptionShapeJson);
-export type BrowserSelectOptionArgs = z.infer<typeof browserSelectOptionSchemaObject>;
+export const browserSelectOptionSchema = z.object({
+  element: z.string().describe("Human-readable element description used to obtain permission to interact with the element"),
+  ref: z.string().describe("Exact target element reference from the page snapshot"),
+  values: z.array(z.string()).describe("Array of values to select in the dropdown. This can be a single value or multiple values."),
+});
+export type BrowserSelectOptionArgs = z.infer<typeof browserSelectOptionSchema>;
 
 export const browserSelectOptionMetadata: ToolMetadata = {
   "name": "browser_select_option",
@@ -934,34 +488,11 @@ async function browserSelectOption(client: StdioClient, args: BrowserSelectOptio
   });
 }
 
-const browserTabsShapeJson = {
-  "type": "object",
-  "properties": {
-    "action": {
-      "type": "string",
-      "enum": [
-        "list",
-        "new",
-        "close",
-        "select"
-      ],
-      "description": "Operation to perform"
-    },
-    "index": {
-      "type": "number",
-      "description": "Tab index, used for close/select. If omitted for close, current tab is closed."
-    }
-  },
-  "required": [
-    "action"
-  ],
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserTabsShape = jsonSchemaToZodShape(browserTabsShapeJson);
-const browserTabsSchemaObject = z.object(browserTabsShape);
-export const browserTabsSchema = jsonSchemaToZodObject(browserTabsShapeJson);
-export type BrowserTabsArgs = z.infer<typeof browserTabsSchemaObject>;
+export const browserTabsSchema = z.object({
+  action: z.enum(["list", "new", "close", "select"]).describe("Operation to perform"),
+  index: z.number().describe("Tab index, used for close/select. If omitted for close, current tab is closed.").optional(),
+});
+export type BrowserTabsArgs = z.infer<typeof browserTabsSchema>;
 
 export const browserTabsMetadata: ToolMetadata = {
   "name": "browser_tabs",
@@ -981,29 +512,12 @@ async function browserTabs(client: StdioClient, args: BrowserTabsArgs) {
   });
 }
 
-const browserWaitForShapeJson = {
-  "type": "object",
-  "properties": {
-    "time": {
-      "type": "number",
-      "description": "The time to wait in seconds"
-    },
-    "text": {
-      "type": "string",
-      "description": "The text to wait for"
-    },
-    "textGone": {
-      "type": "string",
-      "description": "The text to wait for to disappear"
-    }
-  },
-  "additionalProperties": false,
-  "$schema": "http://json-schema.org/draft-07/schema#"
-} as const;
-export const browserWaitForShape = jsonSchemaToZodShape(browserWaitForShapeJson);
-const browserWaitForSchemaObject = z.object(browserWaitForShape);
-export const browserWaitForSchema = jsonSchemaToZodObject(browserWaitForShapeJson);
-export type BrowserWaitForArgs = z.infer<typeof browserWaitForSchemaObject>;
+export const browserWaitForSchema = z.object({
+  time: z.number().describe("The time to wait in seconds").optional(),
+  text: z.string().describe("The text to wait for").optional(),
+  textGone: z.string().describe("The text to wait for to disappear").optional(),
+});
+export type BrowserWaitForArgs = z.infer<typeof browserWaitForSchema>;
 
 export const browserWaitForMetadata: ToolMetadata = {
   "name": "browser_wait_for",
