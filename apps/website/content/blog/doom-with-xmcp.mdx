@@ -1,0 +1,404 @@
+---
+title: "Play DOOM in ChatGPT"
+description: "Learn how we made DOOM playable in ChatGPT thanks to xmcp"
+category: "guides"
+date: "2025-12-05"
+order: 6
+previewImage: "/blog/better-auth.webp"
+---
+
+Learn how we made DOOM playable in ChatGPT using xmcp's Apps SDK. This guide shows you how to build interactive game experiences that run directly inside ChatGPT.
+
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="/blog/doom-apps-sdk.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## What You'll Learn
+
+By the end of this guide, you'll understand:
+
+- How to use xmcp
+- How to use Apps SDK
+- How to build a retro arcade experience with multiple games
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- An existing xmcp project (or [create one](https://xmcp.dev/docs))
+- Basic understanding of Next.js and React
+- ChatGPT Plus subscription (for testing the integration) or you can alternatively use [MCPJam](https://www.mcpjam.com/)
+
+---
+
+## How It Works
+
+The project consists of two main components:
+
+1. **MCP Server built with xmcp**: Exposes tools to ChatGPT that return interactive widgets
+2. **Next.js Application**: Renders the game selection interface and runs the games using [js-dos](https://js-dos.com/)
+
+Users can interact with the arcade in two ways:
+
+- **`arcade` tool**: Displays the full arcade interface with multiple game options
+- **`launch_game` tool**: Directly launches a specific game like DOOM
+
+When ChatGPT invokes either tool, it receives a URL pointing to the hosted Next.js application. The OpenAI Apps SDK then renders this as an interactive widget within the chat interface.
+
+## Building the MCP Server
+
+With xmcp's Apps SDK support, creating interactive tools is straightforward. Let's look at how we defined the tools.
+
+### The Arcade Tool
+
+The `arcade` tool displays the game selection interface:
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "arcade",
+  description: "Shows the retro arcade game selection interface",
+    annotations: {
+    destructiveHint: false,
+    openWorldHint: false,
+    readOnlyHint: true,
+  },
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+      toolInvocation: {
+        invoking: "Loading arcade...",
+        invoked: "Arcade loaded",
+      },
+    },
+  },
+};
+```
+
+### The Launch Game Tool
+
+The `launch_game` tool directly launches a specific game:
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "launch_game",
+  description: "Launches a classic arcade game in the retro arcade emulator",
+  annotations: {
+    destructiveHint: false,
+    openWorldHint: false,
+    readOnlyHint: true,
+  },
+    _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+      toolInvocation: {
+        invoking: "Loading game...",
+        invoked: "Game launched successfully",
+      },
+    },
+  },
+};
+```
+
+### Understanding the Metadata
+
+The `_meta.openai` configuration is key to enabling widget functionality:
+
+- **`widgetAccessible: true`**: Allows the tool result to be displayed as a widget
+- **`resultCanProduceWidget: true`**: Indicates the tool returns widget-compatible content
+- **`toolInvocation`**: Provides user feedback during tool execution
+
+<Callout variant="info" icon="info">
+  The Apps SDK metadata tells ChatGPT that this tool returns interactive
+  content that should be rendered as a widget rather than plain text.
+</Callout>
+
+## Implementing Tool Handlers
+
+Now let's look at how the tool handlers actually work. Instead of manually building widget URLs, we fetch the complete HTML from our Next.js application.
+
+### The Arcade Tool Handler
+
+The arcade tool fetches the HTML for the game selection interface:
+
+```typescript
+import { baseURL } from "@/base-url";
+import { getAppsSdkCompatibleHtml } from "@/lib/utils";
+
+export default async function handler() {
+  const html = await getAppsSdkCompatibleHtml(baseURL, "/widgets/arcade");
+  return html;
+}
+```
+
+### Utility Function
+
+The `getAppsSdkCompatibleHtml` utility function fetches the rendered HTML from your Next.js app:
+
+```typescript
+// xmcp/lib/utils.ts
+export const getAppsSdkCompatibleHtml = async (
+  baseUrl: string, 
+  path: string
+): Promise<string> => {
+  const result = await fetch(`${baseUrl}${path}`);
+  return await result.text();
+};
+```
+
+This approach allows you to leverage Next.js's server-side rendering and return fully interactive HTML to ChatGPT.
+
+<Callout variant="warning" icon="alertTriangle">
+  Tools don't render React components directly. Instead, they fetch HTML from a
+  hosted web application. Make sure your Next.js app is deployed and accessible.
+</Callout>
+
+## The Launch Game Tool
+
+The `launch_game` tool is more complex - it accepts parameters, validates input, and returns structured content that the widget can access:
+
+```typescript
+import { z } from "zod";
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { baseURL } from "@/base-url";
+import { getAppsSdkCompatibleHtml } from "@/lib/utils";
+
+// Supported games configuration
+const SUPPORTED_GAMES = {
+  doom: {
+    title: "DOOM",
+    dosUrl: "https://v8.js-dos.com/bundles/doom.jsdos",
+    description: "Battle the forces of hell in the classic 1993 FPS.",
+  },
+  digger: {
+    title: "Digger",
+    dosUrl: "https://v8.js-dos.com/bundles/digger.jsdos",
+    description: "Collect gems and dodge monsters in an arcade staple.",
+  },
+} as const;
+
+// Schema definition
+export const schema = {
+  game: z
+    .enum(["doom", "digger"])
+    .describe("The name of the arcade game to launch"),
+};
+
+// Tool handler
+export default async function handler({
+  game,
+}: InferSchema<typeof schema>) {
+  if (!game) {
+    return await getAppsSdkCompatibleHtml(baseURL, "/widgets/launch-game");
+  }
+
+  const selectedGame = SUPPORTED_GAMES[game.toLowerCase()];
+
+  if (!selectedGame) {
+    return {
+      structuredContent: {
+        game,
+        title: "Unsupported game",
+        dosUrl: "",
+        error: `Unsupported game "${game}". Try doom or digger.`,
+      },
+      content: [
+        {
+          type: "text",
+          text: `Sorry, "${game}" is not available. Try doom or digger.`,
+        },
+      ],
+      _meta: metadata._meta,
+    };
+  }
+
+  return {
+    structuredContent: {
+      game: game.toLowerCase(),
+      title: selectedGame.title,
+      dosUrl: selectedGame.dosUrl,
+      description: selectedGame.description,
+    },
+    content: [
+      {
+        type: "text",
+        text: `Launching ${selectedGame.title}...`,
+      },
+    ],
+    _meta: metadata._meta,
+  };
+}
+```
+
+The key here is the `structuredContent` - this data is accessible to your Next.js widget via the `useToolOutput()` hook, enabling seamless communication between tools and widgets.
+
+## Widget-to-Tool Communication
+
+One of the most powerful features is that widgets can call MCP tools directly. This creates a dynamic, interactive experience.
+
+### Custom Hooks for Communication
+
+Your Next.js application uses custom hooks to interact with the MCP server:
+
+```typescript
+import { useCallTool } from "@/app/hooks/use-call-tool";
+import { useToolOutput } from "@/app/hooks/use-tool-output";
+
+const callTool = useCallTool();
+const toolOutput = useToolOutput<GameLauncherStructuredContent>();
+```
+
+### Arcade Interface Implementation
+
+The arcade widget displays game cards. When a user clicks a card, it invokes the `launch_game` tool:
+
+```typescript
+function ArcadeGameCard({ name }: { name: string }) {
+  const callTool = useCallTool();
+  
+  const handleClick = async () => {
+    await callTool("launch_game", { game: name });
+  };
+
+  return (
+    <button onClick={handleClick}>
+      <div className="game-card">
+        <h3>{name}</h3>
+        <p>Insert Coin</p>
+      </div>
+    </button>
+  );
+}
+```
+
+### Checking Tool Output
+
+The widget can check if a game has been launched by reading the `toolOutput`:
+
+```typescript
+const toolOutput = useToolOutput<GameLauncherStructuredContent>();
+
+// If a game has been launched, show the game widget
+if (toolOutput?.game) {
+  return <ArcadeGameWidget />;
+}
+
+// Otherwise, show the game selection interface
+return <GameSelectionUI />;
+```
+
+<Callout variant="info">
+  The `structuredContent` returned by `launch_game` is accessible in the widget
+  via `useToolOutput()`. This enables seamless data flow between tool
+  invocations and widget rendering.
+</Callout>
+
+## Project Structure
+
+Here's how the project is organized:
+
+```
+project/
+├── xmcp/                          # MCP Server
+│   ├── src/tools/
+│   │   ├── arcade.ts              # Arcade selection tool
+│   │   └── game-launcher.ts       # Game launch tool
+│   ├── lib/
+│   │   ├── utils.ts               # getAppsSdkCompatibleHtml
+│   │   └── types.ts               # Structured content types
+│   └── base-url.ts                # Environment config
+└── application/                   # Next.js App
+    ├── app/
+    │   ├── widgets/
+    │   │   ├── arcade/page.tsx    # Arcade interface
+    │   │   └── launch-game/page.tsx
+    │   └── hooks/
+    │       ├── use-call-tool.ts   # Call MCP tools
+    │       └── use-tool-output.ts # Access structured data
+    └── components/
+        └── arcade-game-widget.tsx # Game player
+```
+
+## Building the Next.js Application
+
+The Next.js application uses the OpenAI Apps SDK to integrate with ChatGPT's widget system and js-dos to run the games:
+
+```typescript
+import { Dos } from "js-dos";
+
+export function ArcadeWidget() {
+  
+  const launchGame = (gameUrl: string) => {
+    // Initialize js-dos with the game file
+    // Render the game canvas
+  };
+
+  return (
+    <div className="arcade-interface">
+      {/* Game selection UI */}
+    </div>
+  );
+}
+```
+
+The OpenAI Apps SDK provides hooks and utilities for:
+
+- Communicating with ChatGPT
+- Handling user interactions within the widget
+- Managing the widget lifecycle
+
+## Testing in ChatGPT
+
+Here's the complete user flow for testing your arcade:
+
+1. **Start your xmcp server** - Deploy your MCP server and Next.js application
+2. **Connect to ChatGPT** - Link your MCP server through ChatGPT's integration settings
+3. **Ask ChatGPT**: "Show me the arcade"
+4. **ChatGPT invokes** the `arcade` tool
+5. **Widget displays** the game selection interface with game cards
+6. **User clicks** a game card (e.g., DOOM)
+7. **Widget calls** `launch_game` tool via `useCallTool()`
+8. **Game loads** in the js-dos emulator within the widget
+
+<Callout variant="info">
+  You need a ChatGPT Plus subscription to access custom MCP servers, or you can
+  use [MCPJam](https://www.mcpjam.com/) as an alternative testing platform.
+</Callout>
+
+## Conclusion
+
+You've now learned how to create interactive game experiences in ChatGPT using xmcp's Apps SDK! This same pattern can be applied to build any interactive widget - from data visualizations to interactive forms.
+
+The key concepts covered:
+- Using Apps SDK metadata to enable widget rendering
+- Fetching HTML from Next.js applications via tool handlers
+- Implementing structured content for data passing
+- Enabling widget-to-tool communication with custom hooks
+- Building interactive arcade experiences with js-dos
+
+For more examples and detailed documentation:
+
+- [xmcp Documentation](https://xmcp.dev/docs) - Complete framework guide
+- [Apps SDK Guide](/blog/apps-sdk) - Deep dive into Apps SDK features
+- [GitHub Repository](https://github.com/basementstudio/xmcp) - Source code and examples
+- [Discord Community](https://discord.gg/d9a7JBBxV9) - Get help and share your projects
+
+## Contributing to xmcp
+
+Want to help make xmcp even better? We welcome contributions from the community! Whether it's bug fixes, new features, documentation improvements, or examples like this DOOM arcade - your contributions are valued.
+
+Visit our [GitHub repository](https://github.com/basementstudio/xmcp) to:
+- Report issues or suggest features
+- Submit pull requests
+- Review our contribution guidelines
+- Explore the codebase and examples
+
+Every contribution helps make MCP development more accessible and powerful for everyone.
+
+Happy building! 🎮
