@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2017",
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -8,8 +8,5 @@
     "skipLibCheck": true,
     "rootDir": "./src"
   },
-  "include": [
-    "xmcp-env.d.ts",
-    "src/**/*.ts"
-  ]
+  "include": ["xmcp-env.d.ts", "src/**/*.ts"]
 }
