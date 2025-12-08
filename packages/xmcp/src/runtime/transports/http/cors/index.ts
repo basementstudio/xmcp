@@ -10,8 +10,10 @@ export function setHeaders(
   origin?: string
 ): void {
   if (config.origin !== undefined) {
-    if (config.origin === true && origin) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
+    if (config.origin === true) {
+      if (origin) {
+        res.setHeader("Access-Control-Allow-Origin", origin);
+      }
     } else if (config.origin !== false) {
       res.setHeader(
         "Access-Control-Allow-Origin",

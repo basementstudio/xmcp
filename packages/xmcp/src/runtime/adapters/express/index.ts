@@ -38,7 +38,8 @@ export async function xmcpHandler(req: Request, res: Response) {
             exposedHeaders: corsExposedHeaders,
             credentials: corsCredentials,
             maxAge: corsMaxAge,
-          }
+          },
+          req.headers.origin
         );
 
         const server = await createServer();
