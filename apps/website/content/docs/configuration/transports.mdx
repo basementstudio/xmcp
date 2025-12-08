@@ -34,9 +34,15 @@ CORS (Cross-Origin Resource Sharing) middleware that can be configured to contro
 const config: XmcpConfig = {
   http: {
     cors: {
-      origin: "*", // or ["https://example.com"] for specific origins
+      origin: "*",
       methods: ["GET", "POST"],
-      allowedHeaders: ["Content-Type", "Authorization"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+      ],
+      exposedHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
       credentials: false,
       maxAge: 86400,
     },
