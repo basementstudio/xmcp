@@ -332,6 +332,12 @@ export class StatelessStreamableHTTPTransport {
       const cors = this.corsConfig;
       // set cors headers dynamically
       setResponseCorsHeaders(cors, res);
+
+      if (req.method === "OPTIONS") {
+        res.status(204).end();
+        return;
+      }
+
       next();
     });
 

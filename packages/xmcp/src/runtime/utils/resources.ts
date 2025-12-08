@@ -42,7 +42,7 @@ export function addResourcesToServer(
     const resourceConfig: ResourceMetadata = {
       name: autoResource.name,
       description: `Auto-generated resource for ${autoResource.name} tool`,
-      mimeType: "text/html+skybridge",
+      mimeType: autoResource.mimeType,
       _meta: flattenedResourceMeta, // Apply flattened resource-specific metadata
     };
 
@@ -51,7 +51,7 @@ export function addResourcesToServer(
       uri: URL,
       extra: any
     ): Promise<ReadResourceResult> => {
-      if (autoResource.isReactComponent && autoResource.toolPath) {
+      if (autoResource.mimeType && autoResource.toolPath) {
         try {
           let clientCode: string | undefined;
 
@@ -93,7 +93,6 @@ export function addResourcesToServer(
             }
           }
 
-          // Render empty shell HTML - the client will hydrate with the actual component
           const fullHTML = generateHTML(clientCode);
 
           return {
@@ -101,6 +100,7 @@ export function addResourcesToServer(
               {
                 uri: autoResource.uri,
                 text: fullHTML,
+                mimeType: autoResource.mimeType,
               },
             ],
           };

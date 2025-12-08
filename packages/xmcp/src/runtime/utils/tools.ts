@@ -4,9 +4,10 @@ import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
-import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
+import { flattenMeta, getUIType } from "./openai/flatten-meta";
 import { isReactFile } from "./react";
 import { splitOpenAIMetaNested } from "./openai/split-meta";
+import { uIResource } from "./ext-apps-registry";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -70,13 +71,13 @@ export function addToolsToServer(
     }
 
     // Check if this is an OpenAI widget tool
-    const isOpenAITool = hasOpenAIMeta(toolConfig._meta);
+    const ui = getUIType(toolConfig._meta);
 
     // Split metadata into tool-specific and resource-specific
     let toolSpecificMeta = toolConfig._meta;
     let resourceSpecificMeta: Record<string, any> = {};
 
-    if (isOpenAITool) {
+    if (ui) {
       const split = splitOpenAIMetaNested(toolConfig._meta);
       toolSpecificMeta = split.toolMeta;
       resourceSpecificMeta = split.resourceMeta;
@@ -94,26 +95,35 @@ export function addToolsToServer(
 
       const isReact = isReactFile(path);
 
-      // Add to the OpenAI resource registry for auto-generation
-      openAIResourceRegistry.add(toolConfig.name, {
+      if (ui === "openai-apps") {
+        openAIResourceRegistry.add(toolConfig.name, {
+          name: toolConfig.name,
+          uri: resourceUri,
+          handler: handler, // Store the original handler
+          toolMeta: toolSpecificMeta,
+          resourceMeta: resourceSpecificMeta,
+          toolPath: isReact ? path : undefined,
+          mimeType: "text/html+skybridge",
+        });
+      }
+
+      uIResource.add(toolConfig.name, {
         name: toolConfig.name,
+        mimeType: "text/html;profile=mcp-app",
         uri: resourceUri,
-        handler: handler, // Store the original handler
-        toolMeta: toolSpecificMeta,
-        resourceMeta: resourceSpecificMeta,
-        isReactComponent: isReact,
-        toolPath: isReact ? path : undefined,
       });
     }
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
-    const meta = isOpenAITool ? flattenedToolMeta : undefined;
+    const meta = ui ? flattenedToolMeta : undefined;
     let transformedHandler;
 
-    if (isReactFile(path) && isOpenAITool) {
+    if (isReactFile(path) && ui) {
       transformedHandler = async (args: any, extra: any) => ({
         content: [{ type: "text", text: "" }],
         _meta: meta,
+        mimeType:
+          ui === "apps" ? "text/html;profile=mcp-app" : "text/html+skybridge",
         structuredContent: {
           args,
         },
