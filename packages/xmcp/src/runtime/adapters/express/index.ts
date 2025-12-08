@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { createServer } from "@/runtime/utils/server";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
-import { setResponseCorsHeaders } from "@/runtime/transports/http/setup-cors";
+import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 
@@ -29,7 +29,8 @@ export async function xmcpHandler(req: Request, res: Response) {
     const id = randomUUID();
     httpRequestContextProvider({ id, headers: req.headers }, async () => {
       try {
-        setResponseCorsHeaders(
+        setHeaders(
+          res,
           {
             origin: corsOrigin,
             methods: corsMethods,
@@ -37,8 +38,7 @@ export async function xmcpHandler(req: Request, res: Response) {
             exposedHeaders: corsExposedHeaders,
             credentials: corsCredentials,
             maxAge: corsMaxAge,
-          },
-          res
+          }
         );
 
         const server = await createServer();

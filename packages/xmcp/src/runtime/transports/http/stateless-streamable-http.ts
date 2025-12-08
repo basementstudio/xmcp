@@ -14,7 +14,7 @@ import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
 import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
-import { setResponseCorsHeaders } from "./setup-cors";
+import { cors } from "./cors";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
@@ -328,12 +328,7 @@ export class StatelessStreamableHTTPTransport {
   }
 
   private setupInitialMiddleware(): void {
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      const cors = this.corsConfig;
-      // set cors headers dynamically
-      setResponseCorsHeaders(cors, res);
-      next();
-    });
+    this.app.use(cors(this.corsConfig));
 
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       this.log(`${req.method} ${req.path}`);
