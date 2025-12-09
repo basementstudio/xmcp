@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import pkg, { CustomHeaders } from "xmcp";
+import pkg from "xmcp";
 const { createHTTPClient, createSTDIOClient, disconnectSTDIOClient } = pkg;
 import {
   loadClientDefinitions,
@@ -15,7 +15,6 @@ import {
 } from "../utils/templates.js";
 
 export interface GenerateOptions {
-  url?: string;
   out?: string;
   clientsFile?: string;
 }
@@ -29,7 +28,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
     DEFAULT_CLIENTS_FILE
   );
   const clientDefinitions = loadedClients?.definitions ?? [];
-  const targets = resolveTargets(options.url, clientDefinitions);
+  const targets = resolveTargets(clientDefinitions);
 
   logDetectedClients(loadedClients, clientDefinitions);
 
@@ -96,27 +95,11 @@ export async function runGenerate(options: GenerateOptions = {}) {
 }
 
 function resolveTargets(
-  explicitUrl: string | undefined,
   clientDefinitions: ClientDefinition[]
 ): ClientDefinition[] {
-  if (explicitUrl || process.env.MCP_URL) {
-    const resolvedUrl = explicitUrl ?? process.env.MCP_URL!;
-    return [
-      {
-        type: "http",
-        name: clientDefinitions[0]?.name ?? "client",
-        url: resolvedUrl,
-        headers:
-          clientDefinitions[0]?.type === "http"
-            ? clientDefinitions[0].headers
-            : undefined,
-      },
-    ];
-  }
-
   if (clientDefinitions.length === 0) {
     throw new Error(
-      "Unable to determine MCP URL. Provide --url, set MCP_URL, or add entries to clients.ts."
+      "No clients found. Add entries to clients.ts (or point --clients to your config)."
     );
   }
 

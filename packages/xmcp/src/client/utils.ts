@@ -1,7 +1,3 @@
-import {
-  isJSONRPCRequest,
-  JSONRPCMessage,
-} from "@modelcontextprotocol/sdk/types";
 import { JsonSchemaType } from "./types";
 
 export function resolveRef(
@@ -43,7 +39,7 @@ export function resolveRef(
 }
 
 export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
-  // Handle anyOf with exactly string and null (FastMCP pattern)
+  // Handle anyOf with exactly string and null
   if (
     schema.anyOf &&
     schema.anyOf.length === 2 &&
@@ -53,7 +49,7 @@ export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
     return { ...schema, type: "string", anyOf: undefined, nullable: true };
   }
 
-  // Handle anyOf with exactly boolean and null (FastMCP pattern)
+  // Handle anyOf with exactly boolean and null
   if (
     schema.anyOf &&
     schema.anyOf.length === 2 &&
@@ -63,7 +59,7 @@ export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
     return { ...schema, type: "boolean", anyOf: undefined, nullable: true };
   }
 
-  // Handle anyOf with exactly number and null (FastMCP pattern)
+  // Handle anyOf with exactly number and null
   if (
     schema.anyOf &&
     schema.anyOf.length === 2 &&
@@ -73,7 +69,7 @@ export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
     return { ...schema, type: "number", anyOf: undefined, nullable: true };
   }
 
-  // Handle anyOf with exactly integer and null (FastMCP pattern)
+  // Handle anyOf with exactly integer and null
   if (
     schema.anyOf &&
     schema.anyOf.length === 2 &&
@@ -83,7 +79,7 @@ export function normalizeUnionType(schema: JsonSchemaType): JsonSchemaType {
     return { ...schema, type: "integer", anyOf: undefined, nullable: true };
   }
 
-  // Handle anyOf with exactly array and null (FastMCP pattern)
+  // Handle anyOf with exactly array and null
   if (
     schema.anyOf &&
     schema.anyOf.length === 2 &&
