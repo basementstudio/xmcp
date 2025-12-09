@@ -5,14 +5,14 @@ import path from "node:path";
 import os from "node:os";
 import { beforeEach, afterEach, describe, it } from "node:test";
 
-function runCli(args: string[], cwd: string) {
+function runCli(args: string[], cwd: string, env: NodeJS.ProcessEnv = {}) {
   return spawnSync(
     "node",
     [path.join(process.cwd(), "dist/index.js"), ...args],
     {
       cwd,
       encoding: "utf8",
-      env: { ...process.env, XMCP_CLI_TEST_MODE: "1" },
+      env: { ...process.env, XMCP_CLI_TEST_MODE: "1", ...env },
     }
   );
 }
@@ -61,5 +61,29 @@ describe("xmcp-dev/cli generate", () => {
     const client = readGeneratedFile(tempDir, "client.remote.ts");
     assert.match(index, /generatedClients/);
     assert.match(client, /clientRemote/);
+  });
+
+  it("continues generating other clients when one fetch fails", () => {
+    writeClientsFile(
+      tempDir,
+      `export const clients = {
+        bad: { url: "http://localhost:3001/mcp" },
+        good: { url: "http://localhost:3002/mcp" }
+      };`
+    );
+
+    const result = runCli(["generate"], tempDir, {
+      XMCP_CLI_TEST_FAIL_CLIENTS: "bad",
+    });
+
+    assert.equal(result.status, 0);
+    const index = readGeneratedFile(tempDir, "client.index.ts");
+    const badClient = readGeneratedFile(tempDir, "client.bad.ts");
+    const goodClient = readGeneratedFile(tempDir, "client.good.ts");
+
+    assert.equal(badClient, "");
+    assert.notEqual(goodClient, "");
+    assert.match(index, /clientGood/);
+    assert.ok(!index.includes("clientBad"));
   });
 });
