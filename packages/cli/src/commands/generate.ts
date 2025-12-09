@@ -136,27 +136,40 @@ function resolveOutputPaths(out: string): OutputPaths {
 }
 
 async function fetchToolsForTarget(target: ClientDefinition) {
-  if (target.type === "http") {
-    const client = await createHTTPClient({
-      url: target.url,
-      headers: target.headers,
-    });
-    const { tools } = await client.listTools();
-    return tools;
-  }
-
-  const connection = await createSTDIOClient({
-    command: target.command,
-    args: target.args,
-    env: target.env,
-    cwd: target.cwd,
-    stderr: target.stderr,
-  });
-
   try {
-    const { tools } = await connection.client.listTools();
-    return tools;
-  } finally {
-    await disconnectSTDIOClient(connection);
+    // In CI/unit tests we skip live discovery to avoid external calls.
+    if (process.env.XMCP_CLI_TEST_MODE === "1") {
+      return [];
+    }
+
+    if (target.type === "http") {
+      const client = await createHTTPClient({
+        url: target.url,
+        headers: target.headers,
+      });
+      const { tools } = await client.listTools();
+      return tools;
+    }
+
+    const connection = await createSTDIOClient({
+      command: target.command,
+      args: target.args,
+      env: target.env,
+      cwd: target.cwd,
+      stderr: target.stderr,
+    });
+
+    try {
+      const { tools } = await connection.client.listTools();
+      return tools;
+    } finally {
+      await disconnectSTDIOClient(connection);
+    }
+  } catch (error) {
+    const reason =
+      error instanceof Error ? error.message : "Unknown error during fetch";
+    throw new Error(
+      `Failed to fetch tools for "${target.name}" (${target.type}): ${reason}`
+    );
   }
 }
