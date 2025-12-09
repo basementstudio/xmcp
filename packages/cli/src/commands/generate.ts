@@ -35,9 +35,22 @@ export async function runGenerate(options: GenerateOptions = {}) {
   const { outputDir } = resolveOutputPaths(options.out ?? DEFAULT_OUTPUT);
 
   const generatedFiles: GeneratedFileInfo[] = [];
+  const failedClients: { name: string; type: string; reason: string }[] = [];
 
   for (const target of targets) {
-    const tools = await fetchToolsForTarget(target);
+    const tools = await fetchToolsForTarget(target).catch((error) => {
+      const reason =
+        error instanceof Error ? error.message : "Unknown error during fetch";
+      console.warn(
+        `Skipping "${target.name}" (${target.type}) — failed to fetch tools: ${reason}`
+      );
+      failedClients.push({ name: target.name, type: target.type, reason });
+      return undefined;
+    });
+
+    if (!tools) {
+      continue;
+    }
     const exportName = `client${pascalCase(target.name)}`;
 
     const outputPath = path.join(
@@ -91,6 +104,12 @@ export async function runGenerate(options: GenerateOptions = {}) {
       generatedFiles,
       path.join(outputDir, "client.index.ts")
     );
+  } else if (failedClients.length > 0) {
+    throw new Error(
+      `Failed to generate clients. ${failedClients.length} client${
+        failedClients.length === 1 ? "" : "s"
+      } could not be fetched.`
+    );
   }
 }
 
@@ -136,27 +155,50 @@ function resolveOutputPaths(out: string): OutputPaths {
 }
 
 async function fetchToolsForTarget(target: ClientDefinition) {
-  if (target.type === "http") {
-    const client = await createHTTPClient({
-      url: target.url,
-      headers: target.headers,
-    });
-    const { tools } = await client.listTools();
-    return tools;
-  }
-
-  const connection = await createSTDIOClient({
-    command: target.command,
-    args: target.args,
-    env: target.env,
-    cwd: target.cwd,
-    stderr: target.stderr,
-  });
-
   try {
-    const { tools } = await connection.client.listTools();
-    return tools;
-  } finally {
-    await disconnectSTDIOClient(connection);
+    // In CI/unit tests we skip live discovery to avoid external calls.
+    if (process.env.XMCP_CLI_TEST_MODE === "1") {
+      const failingClients =
+        process.env.XMCP_CLI_TEST_FAIL_CLIENTS?.split(",")
+          .map((name) => name.trim())
+          .filter(Boolean) ?? [];
+
+      if (failingClients.includes(target.name)) {
+        throw new Error(
+          `Simulated fetch failure for "${target.name}" in test mode`
+        );
+      }
+      return [];
+    }
+
+    if (target.type === "http") {
+      const client = await createHTTPClient({
+        url: target.url,
+        headers: target.headers,
+      });
+      const { tools } = await client.listTools();
+      return tools;
+    }
+
+    const connection = await createSTDIOClient({
+      command: target.command,
+      args: target.args,
+      env: target.env,
+      cwd: target.cwd,
+      stderr: target.stderr,
+    });
+
+    try {
+      const { tools } = await connection.client.listTools();
+      return tools;
+    } finally {
+      await disconnectSTDIOClient(connection);
+    }
+  } catch (error) {
+    const reason =
+      error instanceof Error ? error.message : "Unknown error during fetch";
+    throw new Error(
+      `Failed to fetch tools for "${target.name}" (${target.type}): ${reason}`
+    );
   }
 }
