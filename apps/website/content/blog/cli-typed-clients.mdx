@@ -41,7 +41,7 @@ npx @xmcp-dev/cli generate
 You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/canary/packages/cli/README.md#optional-cli-flags) for more details.
 
 ## Using the new tools
-The generator emits `client.index.ts` with ready-to-use factories and instances for every entry in your config.
+We will now have the tools from our external clients in the `client.index.ts` file, now you only have to import the tools and use them inside your tools.
 
 ```typescript
 import { InferSchema, type ToolMetadata } from "xmcp";
