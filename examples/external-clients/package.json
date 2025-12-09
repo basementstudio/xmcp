@@ -14,7 +14,7 @@
   "dependencies": {
     "@xmcp-dev/cli": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "3.25.0",
+    "zod": "3.25.76",
     "@playwright/mcp": "^0.0.49"
   }
 }

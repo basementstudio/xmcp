@@ -16,6 +16,6 @@
   "dependencies": {
     "@mcp-ui/server": "^5.16.2",
     "xmcp": "workspace:*",
-    "zod": "3.25.0"
+    "zod": "3.25.76"
   }
 }
