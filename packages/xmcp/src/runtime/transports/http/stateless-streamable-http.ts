@@ -15,9 +15,9 @@ import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
-import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas/index";
 
 // Global type declarations for tool name context
 declare global {

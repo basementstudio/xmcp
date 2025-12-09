@@ -1,3 +1,5 @@
+import { UserToolHandler } from "./transformers/tool";
+
 interface UIResourceMeta {
   /**
    * Content Security Policy configuration
@@ -104,6 +106,14 @@ interface UIResource {
   _meta?: {
     ui?: UIResourceMeta;
   };
+  /**
+   * Path to the tool file (for React bundling)
+   */
+  toolPath?: string;
+  /**
+   * Tool handler function
+   */
+  handler: UserToolHandler;
 }
 
 class UIResourceRegistry {

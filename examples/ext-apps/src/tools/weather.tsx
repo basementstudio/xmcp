@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 export const metadata: ToolMetadata = {
   name: "weather",
   description: "Weather App",
+  _meta: {
+    ui: {
+      // "ui/resourceUri": "ui://widget/counter.html",
+      csp: {
+        resourceDomains: ["https://esm.sh"],
+        connectDomains: ["https://api.open-meteo.com"],
+      },
+    },
+  },
 };
 
 const cities = {

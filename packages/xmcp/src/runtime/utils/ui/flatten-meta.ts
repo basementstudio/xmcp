@@ -30,15 +30,15 @@ export function flattenMeta(meta: Record<string, any>): Record<string, any> {
   return result;
 }
 
-/** Checks if metadata contains OpenAI-specific keys.*/
-export function hasOpenAIMeta(meta?: Record<string, any>): boolean {
+/** Checks if metadata contains UI-specific keys.*/
+export function hasUIMeta(meta?: Record<string, any>): boolean {
   if (!meta || typeof meta !== "object") {
     return false;
   }
 
-  if ("openai" in meta && typeof meta.openai === "object") {
+  if ("ui" in meta && typeof meta.ui === "object") {
     return true;
   }
 
-  return Object.keys(meta).some((key) => key.startsWith("openai/"));
+  return false;
 }

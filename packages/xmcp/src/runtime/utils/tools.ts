@@ -4,10 +4,12 @@ import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { openAIResourceRegistry } from "./openai-resource-registry";
-import { flattenMeta, getUIType } from "./openai/flatten-meta";
+import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
 import { isReactFile } from "./react";
 import { splitOpenAIMetaNested } from "./openai/split-meta";
 import { uIResource } from "./ext-apps-registry";
+import { hasUIMeta } from "./ui/flatten-meta";
+import { splitUIMetaNested } from "./ui/split-meta";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -71,59 +73,74 @@ export function addToolsToServer(
     }
 
     // Check if this is an OpenAI widget tool
-    const ui = getUIType(toolConfig._meta);
+    const openaiWidget = hasOpenAIMeta(toolConfig._meta);
+    const uiWidget = hasUIMeta(toolConfig._meta);
 
-    // Split metadata into tool-specific and resource-specific
+    // Split metadata into tool-specific
     let toolSpecificMeta = toolConfig._meta;
-    let resourceSpecificMeta: Record<string, any> = {};
 
-    if (ui) {
-      const split = splitOpenAIMetaNested(toolConfig._meta);
-      toolSpecificMeta = split.toolMeta;
-      resourceSpecificMeta = split.resourceMeta;
-
+    if (uiWidget || openaiWidget) {
       // Auto-generate the resource URI
       const resourceUri = `ui://widget/${toolConfig.name}.html`;
 
-      // Auto-inject the outputTemplate if not already present
-      if (!toolSpecificMeta.openai) {
-        toolSpecificMeta.openai = {};
-      }
-      if (!toolSpecificMeta.openai.outputTemplate) {
-        toolSpecificMeta.openai.outputTemplate = resourceUri;
-      }
-
       const isReact = isReactFile(path);
 
-      if (ui === "openai-apps") {
+      if (openaiWidget) {
+        // Auto-inject the outputTemplate if not already present
+        if (!toolSpecificMeta.openai) {
+          toolSpecificMeta.openai = {};
+        }
+        if (!toolSpecificMeta.openai.outputTemplate) {
+          toolSpecificMeta.openai.outputTemplate = resourceUri;
+        }
+
+        const split = splitOpenAIMetaNested(toolConfig._meta);
+        toolSpecificMeta = split.toolMeta;
+        const resourceSpecificMeta = split.resourceMeta;
+
         openAIResourceRegistry.add(toolConfig.name, {
           name: toolConfig.name,
           uri: resourceUri,
-          handler: handler, // Store the original handler
+          handler,
           toolMeta: toolSpecificMeta,
-          resourceMeta: resourceSpecificMeta,
+          _meta: resourceSpecificMeta,
           toolPath: isReact ? path : undefined,
           mimeType: "text/html+skybridge",
         });
       }
 
-      uIResource.add(toolConfig.name, {
-        name: toolConfig.name,
-        mimeType: "text/html;profile=mcp-app",
-        uri: resourceUri,
-      });
+      if (uiWidget) {
+        if (!toolSpecificMeta.ui) {
+          toolSpecificMeta.ui = {};
+        }
+
+        if (!toolSpecificMeta.ui.resourceUri) {
+          toolSpecificMeta.ui.resourceUri = resourceUri;
+        }
+
+        const split = splitUIMetaNested(toolConfig._meta);
+        toolSpecificMeta = split.toolMeta;
+        const resourceSpecificMeta = split.resourceMeta;
+
+        uIResource.add(toolConfig.name, {
+          name: toolConfig.name,
+          uri: resourceUri,
+          handler,
+          mimeType: "text/html;profile=mcp-app",
+          _meta: resourceSpecificMeta,
+          toolPath: isReact ? path : undefined,
+        });
+      }
     }
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
-    const meta = ui ? flattenedToolMeta : undefined;
+    const meta = openaiWidget || uiWidget ? flattenedToolMeta : undefined;
     let transformedHandler;
 
-    if (isReactFile(path) && ui) {
+    if (isReactFile(path) && (openaiWidget || uiWidget)) {
       transformedHandler = async (args: any, extra: any) => ({
         content: [{ type: "text", text: "" }],
         _meta: meta,
-        mimeType:
-          ui === "apps" ? "text/html;profile=mcp-app" : "text/html+skybridge",
         structuredContent: {
           args,
         },
