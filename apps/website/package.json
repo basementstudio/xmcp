@@ -35,7 +35,6 @@
     "@types/mdx": "^2.0.13",
     "@types/three": "^0.178.0",
     "@vercel/analytics": "^1.5.0",
-    "@vercel/mcp-adapter": "^0.11.1",
     "@vercel/speed-insights": "^1.2.0",
     "ai": "^5.0.56",
     "basehub": "^9.0.19",

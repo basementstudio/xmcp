@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import pkg, { CustomHeaders } from "xmcp";
-const { createHTTPClient } = pkg;
+import pkg from "xmcp";
+const { createHTTPClient, createSTDIOClient, disconnectSTDIOClient } = pkg;
 import {
   loadClientDefinitions,
   type ClientDefinition,
@@ -15,7 +15,6 @@ import {
 } from "../utils/templates.js";
 
 export interface GenerateOptions {
-  url?: string;
   out?: string;
   clientsFile?: string;
 }
@@ -29,20 +28,29 @@ export async function runGenerate(options: GenerateOptions = {}) {
     DEFAULT_CLIENTS_FILE
   );
   const clientDefinitions = loadedClients?.definitions ?? [];
-  const targets = resolveTargets(options.url, clientDefinitions);
+  const targets = resolveTargets(clientDefinitions);
 
   logDetectedClients(loadedClients, clientDefinitions);
 
   const { outputDir } = resolveOutputPaths(options.out ?? DEFAULT_OUTPUT);
 
   const generatedFiles: GeneratedFileInfo[] = [];
+  const failedClients: { name: string; type: string; reason: string }[] = [];
 
   for (const target of targets) {
-    const client = await createHTTPClient({
-      url: target.url,
-      headers: target.headers,
+    const tools = await fetchToolsForTarget(target).catch((error) => {
+      const reason =
+        error instanceof Error ? error.message : "Unknown error during fetch";
+      console.warn(
+        `Skipping "${target.name}" (${target.type}) — failed to fetch tools: ${reason}`
+      );
+      failedClients.push({ name: target.name, type: target.type, reason });
+      return undefined;
     });
-    const { tools } = await client.listTools();
+
+    if (!tools) {
+      continue;
+    }
     const exportName = `client${pascalCase(target.name)}`;
 
     const outputPath = path.join(
@@ -54,9 +62,24 @@ export async function runGenerate(options: GenerateOptions = {}) {
 
     const fileContents = buildClientFileContents({
       tools,
-      clientUrlLiteral: JSON.stringify(target.url),
       exportName,
-      headers: target.headers,
+      transport:
+        target.type === "http"
+          ? {
+              type: "http" as const,
+              url: target.url,
+              headers: target.headers,
+            }
+          : {
+              type: "stdio" as const,
+              command: target.command,
+              args: target.args,
+              npm: target.npm,
+              npmArgs: target.npmArgs,
+              env: target.env,
+              cwd: target.cwd,
+              stderr: target.stderr,
+            },
     });
     fs.writeFileSync(outputPath, fileContents);
 
@@ -69,7 +92,7 @@ export async function runGenerate(options: GenerateOptions = {}) {
     console.log(
       `Generated ${tools.length} tool${
         tools.length === 1 ? "" : "s"
-      } for "${target.name}" client -> ${path.relative(
+      } for "${target.name}" (${target.type}) -> ${path.relative(
         process.cwd(),
         outputPath
       )}`
@@ -81,27 +104,21 @@ export async function runGenerate(options: GenerateOptions = {}) {
       generatedFiles,
       path.join(outputDir, "client.index.ts")
     );
+  } else if (failedClients.length > 0) {
+    throw new Error(
+      `Failed to generate clients. ${failedClients.length} client${
+        failedClients.length === 1 ? "" : "s"
+      } could not be fetched.`
+    );
   }
 }
 
 function resolveTargets(
-  explicitUrl: string | undefined,
   clientDefinitions: ClientDefinition[]
 ): ClientDefinition[] {
-  if (explicitUrl || process.env.MCP_URL) {
-    const resolvedUrl = explicitUrl ?? process.env.MCP_URL!;
-    return [
-      {
-        name: clientDefinitions[0]?.name ?? "client",
-        url: resolvedUrl,
-        headers: clientDefinitions[0]?.headers ?? ([] as CustomHeaders),
-      },
-    ];
-  }
-
   if (clientDefinitions.length === 0) {
     throw new Error(
-      "Unable to determine MCP URL. Provide --url, set MCP_URL, or add entries to clients.ts."
+      "No clients found. Add entries to clients.ts (or point --clients to your config)."
     );
   }
 
@@ -135,4 +152,53 @@ function resolveOutputPaths(out: string): OutputPaths {
   return {
     outputDir,
   };
+}
+
+async function fetchToolsForTarget(target: ClientDefinition) {
+  try {
+    // In CI/unit tests we skip live discovery to avoid external calls.
+    if (process.env.XMCP_CLI_TEST_MODE === "1") {
+      const failingClients =
+        process.env.XMCP_CLI_TEST_FAIL_CLIENTS?.split(",")
+          .map((name) => name.trim())
+          .filter(Boolean) ?? [];
+
+      if (failingClients.includes(target.name)) {
+        throw new Error(
+          `Simulated fetch failure for "${target.name}" in test mode`
+        );
+      }
+      return [];
+    }
+
+    if (target.type === "http") {
+      const client = await createHTTPClient({
+        url: target.url,
+        headers: target.headers,
+      });
+      const { tools } = await client.listTools();
+      return tools;
+    }
+
+    const connection = await createSTDIOClient({
+      command: target.command,
+      args: target.args,
+      env: target.env,
+      cwd: target.cwd,
+      stderr: target.stderr,
+    });
+
+    try {
+      const { tools } = await connection.client.listTools();
+      return tools;
+    } finally {
+      await disconnectSTDIOClient(connection);
+    }
+  } catch (error) {
+    const reason =
+      error instanceof Error ? error.message : "Unknown error during fetch";
+    throw new Error(
+      `Failed to fetch tools for "${target.name}" (${target.type}): ${reason}`
+    );
+  }
 }
