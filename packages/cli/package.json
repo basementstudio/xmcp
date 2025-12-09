@@ -40,7 +40,7 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist",
     "pretest": "pnpm run build",
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test __tests__/*.test.ts"
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
