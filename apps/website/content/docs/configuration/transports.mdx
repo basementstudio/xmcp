@@ -17,6 +17,22 @@ const config: XmcpConfig = {
     host: "127.0.0.1",
     endpoint: "/mcp",
     bodySizeLimit: 10485760, // 10MB
+    debug: false, // adds extra logging to the console
+  },
+};
+
+export default config;
+```
+
+These are the default values. Override only what you need to customize.
+
+### CORS
+
+CORS (Cross-Origin Resource Sharing) middleware that can be configured to control cross-origin requests.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: {
     cors: {
       origin: "*",
       methods: ["GET", "POST"],
@@ -30,14 +46,11 @@ const config: XmcpConfig = {
       credentials: false,
       maxAge: 86400,
     },
-    debug: false, // adds extra logging to the console
   },
 };
 
 export default config;
 ```
-
-These are the default values. Override only what you need to customize.
 
 ## STDIO transport
 
