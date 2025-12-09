@@ -1,5 +1,5 @@
 ---
-title: "Generate Typed MCP Clients with @xmcp-dev/cli"
+title: "Connect to externals and make their tools yours"
 description: "Produce fully typed MCP clients from remote servers or STDIO packages with one command."
 category: "guides"
 date: "2025-12-09"
@@ -9,20 +9,9 @@ previewImage: "/blog/cli-typed-clients.png"
 
 xmcp now let's you generate tools for external clients.
 
-## How it works
+# How it works
 
-Run the following command:
-```bash
-npx @xmcp-dev/cli generate
-```
-This command will fetch the tools from the MCP servers (HTTP or STDIO) and generate typed tools for you to use inside your tools.
-
-## Prerequisites
-- Node.js 20+ installed
-- An MCP server URL and/or an installed STDIO package (e.g., `@playwright/mcp`)
-- Any required env vars (e.g., `API_KEY`) available to the CLI (if you use headers)
-
-## Describe your clients
+## Add your clients
 You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages.
 
 ```typescript
@@ -51,30 +40,61 @@ npx @xmcp-dev/cli generate
 
 You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/canary/packages/cli/README.md#optional-cli-flags) for more details.
 
-## Use the generated clients
+## Using the new tools
 The generator emits `client.index.ts` with ready-to-use factories and instances for every entry in your config.
 
 ```typescript
-import { generatedClients } from "./generated/client.index";
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
 
+export const schema = {
+  url: z.string().describe("The URL to navigate to"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "browser-navigate",
+  description: "Navigate to a URL",
+};
+
+// Tool implementation
 export default async function handler({ url }: InferSchema<typeof schema>) {
-  // Replace with the tool names your servers expose
-  const context7Result = await generatedClients.context7.getLibraryDocs({ libraryName: "xmcp" });
-  const playwrightResult = await generatedClients.playwright.browserNavigate({
-    url: "https://www.xmcp.dev",
+  await generatedClients.playwright.browserNavigate({
+    url,
   });
 
-  return `Context7 result: ${context7Result}, Playwright result: ${playwrightResult}`;
+  return `Navigated to: ${url}`;
+}
+```
+
+```typescript
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  libraryName: z.string().describe("The name of the library to get docs for"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "get-library-docs",
+  description: "Get the docs for a library",
+};
+
+// Tool implementation
+export default async function handler({ libraryName }: InferSchema<typeof schema>) {
+  await generatedClients.context7.getLibraryDocs({
+    libraryName: "xmcp",
+  });
+
+  return `Library docs: ${libraryDocs}`;
 }
 ```
 
 ### Build and run the example
-You can test this with the `examples/external-clients` project, just run the following commands:
-
-```bash
-pnpm install
-pnpm dev
-```
+You can test this in [examples/external-clients](https://github.com/basementstudio/xmcp/tree/canary/examples/external-clients).
 
 ## Contributing
 
