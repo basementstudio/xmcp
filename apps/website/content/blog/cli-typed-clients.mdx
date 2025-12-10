@@ -9,8 +9,6 @@ previewImage: "/blog/cli-typed-clients.png"
 
 xmcp now let's you generate tools for external clients.
 
-# How it works
-
 ## Add your clients
 You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages. You can type your clients out by using `ClientConnections`.
 
@@ -35,8 +33,10 @@ export const clients: ClientConnections = {
 ```
 
 <Callout variant="warning" icon="alertTriangle" title="Headers and secrets">
-You need to have the npm package installed in your app if you wanna use STDIO.
+You need to have the npm package installed in your app if you want to use STDIO.
 </Callout>
+
+
 
 ## Generate typed clients
 Run the generator from your project root. By default it looks for `src/clients.ts` and writes to `src/generated`.
@@ -51,7 +51,7 @@ You can also specify the output directory and the clients file path, check out t
 We will now have the tools from our external clients in the `client.index.ts` file, now you only have to import them and use them.
 
 
-### Web Navigation
+## Web Navigation
 ```typescript
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
@@ -78,7 +78,7 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 ```
 
 
-### Get Library Docs
+## Get Library Docs
 ```typescript
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
@@ -96,7 +96,7 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function handler({ libraryName }: InferSchema<typeof schema>) {
-  await generatedClients.context7.getLibraryDocs({
+  const libraryDocs = await generatedClients.context7.getLibraryDocs({
     libraryName: "xmcp",
   });
 
@@ -108,7 +108,7 @@ export default async function handler({ libraryName }: InferSchema<typeof schema
  Autocomplete is available for the tools and their arguments, for easier usage.
 </Callout>
 
-### Build and run the example
+## Build and run the example
 If you want to see an example of how to generate clients and use them, you can checkout the [external-clients](https://github.com/basementstudio/xmcp/tree/canary/examples/external-clients) example.
 
 ## Contributing
