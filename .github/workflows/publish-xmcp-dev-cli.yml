@@ -1,0 +1,43 @@
+name: Publish @xmcp-dev/cli
+
+on:
+  push:
+    tags:
+      - "@xmcp-dev/cli@*"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --filter @xmcp-dev/cli --frozen-lockfile
+
+      - name: Build @xmcp-dev/cli
+        run: pnpm --filter @xmcp-dev/cli build
+
+      - name: Test @xmcp-dev/cli
+        run: pnpm --filter @xmcp-dev/cli test
+
+      - name: Publish @xmcp-dev/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/cli
+          pnpm publish --access public --no-git-checks
