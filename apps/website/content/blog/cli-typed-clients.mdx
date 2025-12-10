@@ -96,7 +96,7 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function handler({ libraryName }: InferSchema<typeof schema>) {
-  await generatedClients.context7.getLibraryDocs({
+  const libraryDocs = await generatedClients.context7.getLibraryDocs({
     libraryName: "xmcp",
   });
 
