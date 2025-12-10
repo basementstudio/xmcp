@@ -1,8 +1,8 @@
 {
   "name": "Ext apps React",
-  "description": "Learn how to set up an xmcp server using ChatGPT widgets using React and single tool handlers",
+  "description": "Learn how to set up an xmcp server using ext-apps widgets using React and single tool handlers",
   "keywords": [
-    "chatgpt"
+    "ext-apps"
   ],
   "scripts": {
     "build": "xmcp build",

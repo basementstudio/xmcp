@@ -7,7 +7,6 @@ export const metadata: ToolMetadata = {
   _meta: {
     ui: {
       csp: {
-        resourceDomains: ["https://esm.sh"],
         connectDomains: ["https://api.open-meteo.com"],
       },
     },

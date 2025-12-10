@@ -5,17 +5,6 @@ import { z } from "zod";
 export const metadata: ToolMetadata = {
   name: "counter",
   description: "Counter React",
-  _meta: {
-    ui: {
-      // "ui/resourceUri": "ui://widget/counter.html",
-      csp: {
-        resourceDomains: [
-          "https://esm.sh/react-dom@19/client",
-          "https://esm.sh/react@19",
-        ],
-      },
-    },
-  },
 };
 
 export const schema = {
