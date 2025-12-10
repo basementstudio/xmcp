@@ -7,7 +7,7 @@ export const clients: ClientConnections = {
       {
         // Use 'env' for sensitive values - the string is the ENV VAR NAME
         // The generated client will use process.env.X_API_KEY at runtime
-        name: "API_KEY",
+        name: "CONTEXT7_API_KEY",
         env: "CONTEXT7_API_KEY",
         // Use 'value' only for non-sensitive static headers
         // { name: "x-custom", value: "static-value" },
