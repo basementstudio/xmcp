@@ -2,7 +2,7 @@
 title: "Connect to externals and make their tools yours"
 description: "Produce fully typed MCP clients from remote servers or STDIO packages with one command."
 category: "guides"
-date: "2025-12-09"
+date: "2025-12-11"
 order: 7
 previewImage: "/blog/cli-typed-clients.png"
 ---
@@ -16,10 +16,17 @@ You need to create the `clients.ts` in the `/src` directory and then add the MCP
 
 ```typescript
 // src/clients.ts
-export const clients = {
-  context7: {
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
     url: "https://mcp.context7.com/mcp",
-    headers: [{ name: "CONTEXT7_API_KEY", env: "API_KEY" }],
+    headers: [
+      {
+        name: "API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
   },
   playwright: {
     npm: "@playwright/mcp",
