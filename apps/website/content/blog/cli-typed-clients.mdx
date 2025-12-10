@@ -12,34 +12,52 @@ xmcp now let's you generate tools for external clients.
 ## Add your clients
 You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages.
 
-### Adding HTTP clients
 ```typescript
 // src/clients.ts
 import { ClientConnections } from "xmcp";
 
 export const clients: ClientConnections = {
-  name: {
-    url: string;
-    headers?: CustomHeaders;
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      {
+        name: "CONTEXT7_API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
   },
 };
 ```
 
-### Adding STDIO clients
-```typescript
-// src/clients.ts
-import { ClientConnections } from "xmcp";
+### Adding HTTP clients
+For HTTP clients, this is the type you have to follow:
 
-export const clients: ClientConnections = {
-  name: {
-    command: string;
-    args: string[];
-    npm?: string;
-    npmArgs?: string[];
-    env?: Record<string, string>;
-    cwd?: string;
-    stderr?: "pipe" | "inherit" | "ignore";
-  },
+```typescript
+export type HttpClientDefinition = {
+  type: "http";
+  name: string;
+  url: string;
+  headers?: CustomHeaders;
+};
+```
+
+### Adding STDIO clients
+For STDIO clients, this is the type you have to follow:
+
+```typescript
+export type StdioClientDefinition = {
+  type: "stdio";
+  name: string;
+  command: string;
+  args: string[];
+  npm?: string;
+  npmArgs?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+  stderr?: StdioIOStrategy;
 };
 ```
 
@@ -88,7 +106,6 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 }
 ```
 
-
 ## Get Library Docs
 ```typescript
 import { InferSchema, type ToolMetadata } from "xmcp";
@@ -106,12 +123,16 @@ export const metadata: ToolMetadata = {
 };
 
 // Tool implementation
-export default async function handler({ libraryName }: InferSchema<typeof schema>) {
-  const libraryDocs = await generatedClients.context7.getLibraryDocs({
-    libraryName: "xmcp",
+export default async function handler({
+  libraryName,
+}: InferSchema<typeof schema>) {
+  const libraryDocs = await generatedClients.context.getLibraryDocs({
+    context7CompatibleLibraryID: libraryName,
   });
 
-  return `Library docs: ${libraryDocs}`;
+  const result = (libraryDocs.content as any)[0].text;
+
+  return `Library docs: ${result}`;
 }
 ```
 
