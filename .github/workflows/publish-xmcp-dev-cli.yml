@@ -1,9 +1,7 @@
 name: Publish @xmcp-dev/cli
 
 on:
-  push:
-    tags:
-      - "@xmcp-dev/cli@*"
+  workflow_dispatch:
 
 permissions:
   id-token: write
