@@ -6,7 +6,6 @@ export const metadata: ToolMetadata = {
   description: "Weather App",
   _meta: {
     ui: {
-      // "ui/resourceUri": "ui://widget/counter.html",
       csp: {
         resourceDomains: ["https://esm.sh"],
         connectDomains: ["https://api.open-meteo.com"],

@@ -5,6 +5,13 @@ const config: XmcpConfig = {
     cors: {
       origin: "*",
       methods: ["*"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+      ],
+      exposedHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
       credentials: false,
       maxAge: 86400,
     },
