@@ -52,18 +52,6 @@ export const INJECTED_CONFIG = {
   // TODO get from project config
   name: "MCP Server",
   version: "0.0.1",
-  capabilities: {
-    tools: {
-      listChanged: true,
-    },
-    prompts: {
-      listChanged: true,
-    },
-    resources: {
-      listChanged: true,
-      subscribe: true,
-    },
-  },
 } as const satisfies Implementation;
 
 /* Loads all modules and injects them into the server */

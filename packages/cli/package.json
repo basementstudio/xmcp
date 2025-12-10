@@ -45,11 +45,11 @@
   "dependencies": {
     "bundle-require": "^5.1.0",
     "xmcp": "workspace:*",
-    "zod": "^3.24.4"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22",
-    "tsx": "^4.19.2",
-    "typescript": "^5.8.3"
+    "@types/node": "^22.19.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
