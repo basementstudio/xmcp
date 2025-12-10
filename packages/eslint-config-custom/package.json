@@ -3,13 +3,13 @@
   "private": true,
   "main": "eslint.config.js",
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.27.0",
-    "@typescript-eslint/parser": "^8.27.0",
-    "eslint": "^9.23.0",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-config-turbo": "^2.5.3",
-    "eslint-plugin-prettier": "^5.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-config-turbo": "^2.6.3",
+    "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "typescript-eslint": "^8.27.0"
+    "typescript-eslint": "^8.49.0"
   }
 }
