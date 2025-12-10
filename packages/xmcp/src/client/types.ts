@@ -1,5 +1,5 @@
 import type { createHTTPClient, StdioClientConnection } from ".";
-import { CustomHeaders } from "..";
+import { CustomHeaders } from "./headers";
 
 export type JsonValue =
   | string
