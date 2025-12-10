@@ -54,9 +54,7 @@ export async function generateMetadata(
   const description = page.data.description;
   const previewImage = blogPost?.previewImage;
 
-  const imageUrl = previewImage
-    ? `https://xmcp.dev${previewImage}`
-    : undefined;
+  const imageUrl = `https://xmcp.dev${previewImage}`;
 
   return {
     title,
