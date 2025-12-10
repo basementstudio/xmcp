@@ -82,6 +82,7 @@ We will now have the tools from our external clients in the `client.index.ts` fi
 
 ## Web Navigation
 ```typescript
+// src/tools/browser-navigate.ts
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
 import { z } from "zod";
@@ -108,6 +109,7 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 
 ## Get Library Docs
 ```typescript
+// src/tools/get-library-docs.ts
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
 import { z } from "zod";
