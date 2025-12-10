@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/cli",
   "description": "Official xmcp developer CLI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -22,13 +22,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/basementstudio/xmcp",
+    "url": "git+https://github.com/basementstudio/xmcp.git",
     "directory": "packages/cli"
   },
   "homepage": "https://xmcp.dev",
   "type": "module",
   "bin": {
-    "xmcp-dev-cli": "./dist/index.js"
+    "xmcp-dev-cli": "dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
-    "xmcp": "workspace:*",
+    "xmcp": "0.5.4-canary.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
