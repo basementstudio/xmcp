@@ -6,8 +6,8 @@
     "clients"
   ],
   "scripts": {
-    "build": "xmcp-dev-cli build",
-    "dev": "xmcp-dev-cli dev",
+    "build": "xmcp build",
+    "dev": "xmcp dev",
     "start": "node dist/http.js",
     "generate": "xmcp-dev-cli generate"
   },

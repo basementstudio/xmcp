@@ -29,7 +29,16 @@ export {
   callSTDIOClientTool,
   disconnectSTDIOClient,
 } from "./client";
-export type { HttpClient, StdioClient } from "./client/types";
+export type {
+  HttpClient,
+  StdioClient,
+  StdioIOStrategy,
+  ClientConnectionEntry,
+  ClientConnections,
+  ClientDefinition,
+  HttpClientConfig,
+  StdioClientConfig,
+} from "./client/types";
 export type { StdioClientConnection, StdioClientOptions } from "./client";
 export type {
   CustomHeaders,

@@ -10,24 +10,35 @@ previewImage: "/blog/cli-typed-clients.png"
 xmcp now let's you generate tools for external clients.
 
 ## Add your clients
-You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages. You can type your clients out by using `ClientConnections`.
+You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages.
 
+### Adding HTTP clients
 ```typescript
 // src/clients.ts
 import { ClientConnections } from "xmcp";
 
 export const clients: ClientConnections = {
-  context: {
-    url: "https://mcp.context7.com/mcp",
-    headers: [
-      {
-        name: "API_KEY",
-        env: "CONTEXT7_API_KEY",
-      },
-    ],
+  name: {
+    url: string;
+    headers?: CustomHeaders;
   },
-  playwright: {
-    npm: "@playwright/mcp",
+};
+```
+
+### Adding STDIO clients
+```typescript
+// src/clients.ts
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  name: {
+    command: string;
+    args: string[];
+    npm?: string;
+    npmArgs?: string[];
+    env?: Record<string, string>;
+    cwd?: string;
+    stderr?: "pipe" | "inherit" | "ignore";
   },
 };
 ```
