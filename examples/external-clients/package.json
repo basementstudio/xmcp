@@ -1,0 +1,20 @@
+{
+  "name": "External Clients",
+  "description": "Learn how to use external clients in xmcp",
+  "keywords": [
+    "external",
+    "clients"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js",
+    "generate": "xmcp-dev-cli generate"
+  },
+  "dependencies": {
+    "@xmcp-dev/cli": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "3.25.76",
+    "@playwright/mcp": "^0.0.49"
+  }
+}

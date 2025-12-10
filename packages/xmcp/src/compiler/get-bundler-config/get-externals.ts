@@ -31,17 +31,6 @@ export function getExternals(): RspackOptions["externals"] {
         return callback(undefined, `commonjs ${request}`);
       }
 
-      /**
-       * Externalize React utilities that depend on @swc/core
-       * These are loaded at runtime only when React is enabled
-       */
-      if (
-        request.includes("ssr/transpile") ||
-        request.includes("ssr/bundler")
-      ) {
-        return callback(undefined, `commonjs ${request}`);
-      }
-
       // Check if request is inside .xmcp folder - if so, bundle it
       if (request.includes(".xmcp")) {
         return callback();
