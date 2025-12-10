@@ -1,4 +1,6 @@
-export const clients = {
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
   remote: {
     url: "https://test-0-5-2-canary.vercel.app/mcp",
     headers: [
