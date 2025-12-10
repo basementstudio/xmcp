@@ -1,9 +1,10 @@
 ---
-title: "Connect to externals and make their tools yours"
+title: "Connect to external MCPs and make their tools yours"
 description: "Generate fully typed MCPs clients from remote servers or STDIO packages with one command."
 category: "guides"
 date: "2025-12-11"
 order: 7
+featured: true
 previewImage: "/blog/cli-typed-clients.png"
 ---
 
@@ -74,7 +75,7 @@ Run the generator from your project root. By default it looks for `src/clients.t
 npx @xmcp-dev/cli generate
 ```
 
-You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/canary/packages/cli/README.md#optional-cli-flags) for more details.
+You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/main/packages/cli/README.md#optional-cli-flags) for more details.
 
 ## Using the new tools
 We will now have the tools from our external clients in the `client.index.ts` file, now you only have to import and use them.
@@ -143,7 +144,7 @@ export default async function handler({
 </Callout>
 
 ## Build and run the example
-If you want to see an example of how to generate clients and use them, you can checkout the [external-clients](https://github.com/basementstudio/xmcp/tree/canary/examples/external-clients) example.
+If you want to see an example of how to generate clients and use them, you can checkout the [external-clients](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients) example.
 
 ## Contributing
 
