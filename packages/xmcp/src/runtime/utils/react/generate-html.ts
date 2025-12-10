@@ -1,7 +1,12 @@
 /**
  * Generate full HTML (CSR)
+ * @param componentCode - The React component code to render
+ * @param useMCPApps - If true, use MCP Apps protocol (JSON-RPC), otherwise use OpenAI protocol
  */
-export function generateHTML(componentCode: string): string {
+export function generateHTML(
+  componentCode: string,
+  useMCPApps = false
+): string {
   // we need to replace bare imports with esm CDN imports
   const esmComponentCode = componentCode
     .replace(
@@ -46,11 +51,44 @@ export function generateHTML(componentCode: string): string {
         throw new Error("React component export not found");
       }
 
-      const props = window.openai?.toolInput || {};
-
       const root = document.getElementById('root');
+
+      ${
+        useMCPApps
+          ? `
+      // MCP Apps Protocol - JSON-RPC over postMessage
+      let nextId = 1;
+
+      window.parent.postMessage({
+        jsonrpc: "2.0",
+        id: nextId++,
+        method: "ui/initialize",
+        params: {
+          capabilities: {},
+          clientInfo: { name: "xMCP React Widget", version: "1.0.0" },
+          protocolVersion: "2025-06-18"
+        }
+      }, '*');
+
+      window.addEventListener('message', (event) => {
+        const data = event.data;
+        if (data?.result?.hostContext && data?.id === 1) {
+          window.parent.postMessage({
+            jsonrpc: "2.0",
+            method: "ui/notifications/initialized",
+            params: {}
+          }, '*');
+        }
+        if (data?.method === 'ui/notifications/tool-input') {
+          const props = data.params?.arguments || {};
+          createRoot(root).render(createElement(Component, props));
+        }
+      });`
+          : `
+      const props = window.openai?.toolInput || {};
       if (root) {
         createRoot(root).render(createElement(Component, props));
+      }`
       }
     } finally {
       URL.revokeObjectURL(blobUrl);

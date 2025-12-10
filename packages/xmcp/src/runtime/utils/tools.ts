@@ -72,9 +72,11 @@ export function addToolsToServer(
       toolConfig._meta = {};
     }
 
+    const isReact = isReactFile(path);
+
     // Check if this is an OpenAI widget tool
     const openaiWidget = hasOpenAIMeta(toolConfig._meta);
-    const uiWidget = hasUIMeta(toolConfig._meta);
+    const uiWidget = hasUIMeta(toolConfig._meta) || (isReact && !openaiWidget);
 
     // Split metadata into tool-specific
     let toolSpecificMeta = toolConfig._meta;
@@ -82,8 +84,6 @@ export function addToolsToServer(
     if (uiWidget || openaiWidget) {
       // Auto-generate the resource URI
       const resourceUri = `ui://widget/${toolConfig.name}.html`;
-
-      const isReact = isReactFile(path);
 
       if (openaiWidget) {
         // Auto-inject the outputTemplate if not already present
@@ -121,6 +121,20 @@ export function addToolsToServer(
         const split = splitUIMetaNested(toolConfig._meta);
         toolSpecificMeta = split.toolMeta;
         const resourceSpecificMeta = split.resourceMeta;
+
+        // Ensure CSP resource domains includes esm.sh
+        resourceSpecificMeta.ui = resourceSpecificMeta.ui || {};
+        resourceSpecificMeta.ui.csp = resourceSpecificMeta.ui.csp || {};
+        resourceSpecificMeta.ui.csp.resourceDomains =
+          resourceSpecificMeta.ui.csp.resourceDomains || [];
+
+        if (
+          !resourceSpecificMeta.ui.csp.resourceDomains.includes(
+            "https://esm.sh"
+          )
+        ) {
+          resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
+        }
 
         uIResource.add(toolConfig.name, {
           name: toolConfig.name,

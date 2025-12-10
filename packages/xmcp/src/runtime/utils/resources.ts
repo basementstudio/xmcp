@@ -99,7 +99,9 @@ export function addResourcesToServer(
             }
           }
 
-          const fullHTML = generateHTML(clientCode);
+          const isMCPApps =
+            autoResource.mimeType === "text/html;profile=mcp-app";
+          const fullHTML = generateHTML(clientCode, isMCPApps);
 
           return {
             contents: [
