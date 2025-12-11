@@ -7,6 +7,7 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
 import { getBlogPostBySlug } from "@/utils/blog";
+import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -53,8 +54,11 @@ export async function generateMetadata(
   const title = page.data.title;
   const description = page.data.description;
   const previewImage = blogPost?.previewImage;
+  const baseUrl = getBaseUrl();
 
-  const imageUrl = `https://xmcp.dev${previewImage}`;
+  const imageUrl = previewImage
+    ? `${baseUrl}${previewImage}`
+    : `${baseUrl}/api/og/blog/${slug}`;
 
   return {
     title,
@@ -65,25 +69,21 @@ export async function generateMetadata(
       siteName: "xmcp",
       type: "article",
       locale: "en_US",
-      ...(imageUrl && {
-        images: {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-        },
-      }),
+      images: {
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+      },
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(imageUrl && {
-        images: {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-        },
-      }),
+      images: {
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+      },
     },
   };
 }
