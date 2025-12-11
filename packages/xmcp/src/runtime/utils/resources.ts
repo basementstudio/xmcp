@@ -168,7 +168,7 @@ export function addResourcesToServer(
         );
         if (
           textContent &&
-          textContent.text &&
+          textContent.type === "text" &&
           typeof textContent.text === "string"
         ) {
           return {

@@ -1,5 +1,5 @@
 /* auto-generated - do not edit */
-import { clientRemote, type RemoteToolClient as ClientRemoteClient } from "./client.remote";
+import { clientContext, type RemoteToolClient as ClientContextClient } from "./client.context";
 import { clientPlaywright, type RemoteToolClient as ClientPlaywrightClient } from "./client.playwright";
 
 /**
@@ -26,6 +26,6 @@ function proxyPromise<T extends object>(clientPromise: Promise<T>): T {
 }
 
 export const generatedClients = {
-  "remote": proxyPromise<ClientRemoteClient>(clientRemote),
+  "context": proxyPromise<ClientContextClient>(clientContext),
   "playwright": proxyPromise<ClientPlaywrightClient>(clientPlaywright),
 } as const;
