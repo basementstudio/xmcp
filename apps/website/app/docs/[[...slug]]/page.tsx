@@ -12,6 +12,7 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
 import { getBaseUrl } from "@/lib/base-url";
+import { getDocsMetadata } from "@/utils/docs";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -52,14 +53,12 @@ export async function generateMetadata(
   props: PageProps<"/docs/[[...slug]]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = source.getPage(params.slug);
-  if (!page) notFound();
-
-  const title = page.data.title + " | xmcp Documentation";
-  const description = page.data.description;
-  const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
   const baseUrl = getBaseUrl();
-  const imageUrl = `${baseUrl}/api/og/docs/${slug.join("/")}`;
+  const meta = getDocsMetadata(params.slug, baseUrl);
+  if (!meta) notFound();
+
+  const title = meta.title + " | xmcp Documentation";
+  const description = meta.summary ?? meta.description;
 
   return {
     title,
@@ -71,7 +70,7 @@ export async function generateMetadata(
       type: "article",
       locale: "en_US",
       images: {
-        url: imageUrl,
+        url: meta.ogImageUrl,
         width: 1200,
         height: 630,
       },
@@ -81,7 +80,7 @@ export async function generateMetadata(
       title,
       description,
       images: {
-        url: imageUrl,
+        url: meta.ogImageUrl,
         width: 1200,
         height: 630,
       },

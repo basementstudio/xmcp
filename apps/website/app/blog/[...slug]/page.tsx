@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import { getBlogPostBySlug } from "@/utils/blog";
+import { getBlogMetadata } from "@/utils/blog";
 import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
@@ -45,20 +45,12 @@ export async function generateMetadata(
   props: PageProps<"/blog/[...slug]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = blogSource.getPage(params.slug);
-  if (!page) notFound();
-
   const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
-  const blogPost = getBlogPostBySlug(slug);
-
-  const title = page.data.title;
-  const description = page.data.description;
-  const previewImage = blogPost?.previewImage;
   const baseUrl = getBaseUrl();
+  const meta = getBlogMetadata(slug, baseUrl);
+  if (!meta) notFound();
 
-  const imageUrl = previewImage
-    ? `${baseUrl}${previewImage}`
-    : `${baseUrl}/api/og/blog/${slug}`;
+  const { title, description, ogImageUrl } = meta;
 
   return {
     title,
@@ -70,7 +62,7 @@ export async function generateMetadata(
       type: "article",
       locale: "en_US",
       images: {
-        url: imageUrl,
+        url: ogImageUrl,
         width: 1200,
         height: 630,
       },
@@ -80,7 +72,7 @@ export async function generateMetadata(
       title,
       description,
       images: {
-        url: imageUrl,
+        url: ogImageUrl,
         width: 1200,
         height: 630,
       },
