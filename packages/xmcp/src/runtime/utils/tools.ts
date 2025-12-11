@@ -82,8 +82,9 @@ export function addToolsToServer(
     let toolSpecificMeta = toolConfig._meta;
 
     if (uiWidget || openaiWidget) {
-      // Auto-generate the resource URI
-      const resourceUri = `ui://widget/${toolConfig.name}.html`;
+      // Auto-generate different resource URIs for OpenAI and MCP UI
+      const openaiResourceUri = `ui://widget/${toolConfig.name}.html`;
+      const mcpuiResourceUri = `ui://app/${toolConfig.name}.html`;
 
       if (openaiWidget) {
         // Auto-inject the outputTemplate if not already present
@@ -91,7 +92,7 @@ export function addToolsToServer(
           toolSpecificMeta.openai = {};
         }
         if (!toolSpecificMeta.openai.outputTemplate) {
-          toolSpecificMeta.openai.outputTemplate = resourceUri;
+          toolSpecificMeta.openai.outputTemplate = openaiResourceUri;
         }
 
         const split = splitOpenAIMetaNested(toolConfig._meta);
@@ -100,7 +101,7 @@ export function addToolsToServer(
 
         openAIResourceRegistry.add(toolConfig.name, {
           name: toolConfig.name,
-          uri: resourceUri,
+          uri: openaiResourceUri,
           handler,
           toolMeta: toolSpecificMeta,
           _meta: resourceSpecificMeta,
@@ -115,7 +116,7 @@ export function addToolsToServer(
         }
 
         if (!toolSpecificMeta.ui.resourceUri) {
-          toolSpecificMeta.ui.resourceUri = resourceUri;
+          toolSpecificMeta.ui.resourceUri = mcpuiResourceUri;
         }
 
         const split = splitUIMetaNested(toolConfig._meta);
@@ -138,7 +139,7 @@ export function addToolsToServer(
 
         uIResource.add(toolConfig.name, {
           name: toolConfig.name,
-          uri: resourceUri,
+          uri: mcpuiResourceUri,
           handler,
           mimeType: "text/html;profile=mcp-app",
           _meta: resourceSpecificMeta,
