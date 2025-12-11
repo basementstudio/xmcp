@@ -4,6 +4,12 @@ import { source } from "@/lib/source";
 import { NextRequest } from "next/server";
 import { getBaseUrl } from "@/lib/base-url";
 
+const geistRegular = fetch(
+  new URL(
+    "https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-400-normal.woff"
+  )
+).then((res) => res.arrayBuffer());
+
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   const months = [
@@ -75,6 +81,7 @@ export async function GET(
         title = "Examples & templates";
         description =
           "Explore examples and templates to get started with xmcp. Learn from real-world implementations and best practices.";
+        date = "2025-10-03";
         break;
       }
 
@@ -84,179 +91,66 @@ export async function GET(
 
     return new ImageResponse(
       (
-        <div
-          style={{
-            height: "630px",
-            width: "1200px",
-            display: "flex",
-            flexDirection: "row",
-            backgroundColor: "#000000",
-            position: "relative",
-            overflow: "hidden",
-            padding: "5px",
-          }}
-        >
+        <div tw="h-[630px] w-[1200px] flex flex-row bg-black relative overflow-hidden">
           {/* Background image with rotation and blend mode */}
           <img
             src={`${getBaseUrl()}/og/bg.png`}
-            alt=""
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "1200px",
-              height: "630px",
-              objectFit: "cover",
-              mixBlendMode: "plus-lighter",
-            }}
+            alt="Background"
+            width={1200}
+            height={630}
+            tw="absolute top-0 left-0 w-[1200px] h-[630px] object-cover"
+            style={{ mixBlendMode: "plus-lighter" }}
           />
           {/* Noise overlay with opacity and blend mode */}
           <img
             src={`${getBaseUrl()}/og/noise.png`}
-            alt=""
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "1200px",
-              height: "630px",
-              objectFit: "cover",
-              opacity: 0.4,
-              mixBlendMode: "overlay",
-            }}
+            alt="Noise"
+            width={1200}
+            height={630}
+            tw="absolute top-0 left-0 w-[1200px] h-[630px] object-cover opacity-40"
+            style={{ mixBlendMode: "overlay" }}
           />
-          {/* Left section - Logo (span 2 of 6) */}
+          {/* Left section - Logo (1 of 4 columns) */}
           <div
+            tw="flex items-start justify-start relative p-10"
             style={{
-              flex: "0 0 33.33%",
-              height: "100%",
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "flex-start",
-              position: "relative",
-              padding: "80px 40px",
-              filter: "drop-shadow(0 0 52px rgba(255, 255, 255, 0.4))",
-              background: "radial-gradient(circle, hsla(0, 0%, 85%, 0.12) 0%, hsla(0, 0%, 45%, 0) 100%)",
+              flex: "0 0 25%",
+              width: "300px",
+              height: "630px",
+              overflow: "hidden",
             }}
           >
-            {/* Code snippets confined to the logo column (|-X|, |X-|, |-X|) */}
-            <div
+            {/* Blur background */}
+            <img
+              src={`${getBaseUrl()}/og/blur.png`}
+              alt=""
+              width={300}
+              height={630}
               style={{
                 position: "absolute",
                 top: 0,
                 left: 0,
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                gap: "12px",
-                padding: "32px 24px",
-                pointerEvents: "none",
+                width: "300px",
+                height: "630px",
+                objectFit: "cover",
+                opacity: 0.8,
               }}
-            >
-              {/* Row 1: empty | code (|-X|) */}
-              <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: "8px" }}>
-                <div style={{ flex: "1 1 50%" }} />
-                <div
-                  style={{
-                    flex: "1 1 50%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    fontFamily: "monospace",
-                    fontSize: "12px",
-                    color: "#757575",
-                    lineHeight: "1.6",
-                    opacity: 0.6,
-                  }}
-                >
-                  <pre style={{ margin: 0, fontFamily: "monospace" }}>
-                    {`export const clients = {
-  local: {
-    url: "http://127.0.0.1:3002/mcp",
-  },
-  remote: {
-    url: "https://test-0-5-2-canary.vercel.app/mcp",
-    headers: [
-      {
-        value: "12345",
-        name: "x-api-key",
-      },
-    ],
-  },
-};`}
-                  </pre>
-                </div>
-              </div>
-              {/* Row 2: code | empty (|X-|) */}
-              <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: "8px" }}>
-                <div
-                  style={{
-                    flex: "1 1 50%",
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    fontFamily: "monospace",
-                    fontSize: "12px",
-                    color: "#757575",
-                    lineHeight: "1.6",
-                    opacity: 0.6,
-                  }}
-                >
-                  <pre style={{ margin: 0, fontFamily: "monospace" }}>
-                    {`export const clients = {
-  local: {
-    url: "http://127.0.0.1:3002/mcp",
-  },
-  remote: {
-    url: "https://test-0-5-2-canary.vercel.app/mcp",
-    headers: [
-      {
-        value: "12345",
-        name: "x-api-key",
-      },
-    ],
-  },
-};`}
-                  </pre>
-                </div>
-                <div style={{ flex: "1 1 50%" }} />
-              </div>
-              {/* Row 3: empty | code (|-X|) */}
-              <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: "8px" }}>
-                <div style={{ flex: "1 1 50%" }} />
-                <div
-                  style={{
-                    flex: "1 1 50%",
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    fontFamily: "monospace",
-                    fontSize: "12px",
-                    color: "#757575",
-                    lineHeight: "1.6",
-                    opacity: 0.6,
-                  }}
-                >
-                  <pre style={{ margin: 0, fontFamily: "monospace" }}>
-                    {`export const clients = {
-  local: {
-    url: "http://127.0.0.1:3002/mcp",
-  },
-  remote: {
-    url: "https://test-0-5-2-canary.vercel.app/mcp",
-    headers: [
-      {
-        value: "12345",
-        name: "x-api-key",
-      },
-    ],
-  },
-};`}
-                  </pre>
-                </div>
-              </div>
-            </div>
+            />
+            {/* Right border gradient */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                width: "1px",
+                height: "100%",
+                background:
+                  "linear-gradient(180deg, rgba(92, 92, 92, 0.00) 0%, #5C5C5C 37.99%, rgba(92, 92, 92, 0.00) 100%)",
+              }}
+            />
             <svg
-              width="126"
-              height="48"
+              width="84"
+              height="32"
               viewBox="0 0 63 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -285,74 +179,55 @@ export async function GET(
               />
             </svg>
           </div>
-          {/* Right section - Dynamic content (span 4 of 6) */}
+          {/* Right section - Dynamic content (3 of 4 columns) */}
           <div
-            style={{
-              flex: "1 1 0%",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              justifyContent: "center",
-              position: "relative",
-              padding: "80px 40px 80px 0",
-            }}
+            tw="h-full flex flex-col items-start justify-center relative"
+            style={{ flex: "0 0 75%", padding: "80px 128px 80px 64px" }}
           >
-            {/* Date badge */}
-            {date && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  marginBottom: "32px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "8px 16px",
-                    border: "1px dashed #757575",
-                    backgroundColor: "#262626",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#dbdbdb",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {formatDate(date)}
-                  </span>
-                </div>
-              </div>
-            )}
-            <h1
+            {/* Date tag */}
+            <div
               style={{
-                fontSize: "64px",
-                fontWeight: 600,
-                color: "#ffffff",
-                lineHeight: "110%",
-                margin: 0,
-                letterSpacing: "-2%",
+                display: "flex",
+                alignItems: "center",
                 marginBottom: "24px",
+                padding: "4px 8px",
+                fontSize: "16px",
+                textTransform: "uppercase",
+                border: "1px dashed #525252",
+                backgroundColor: "rgba(245, 245, 245, 0.07)",
+                color: "#fafafa",
+                fontFamily: "Geist",
+              }}
+            >
+              {date ? formatDate(date) : "NO DATE"}
+            </div>
+            <h1
+              tw="text-white m-0 mb-6"
+              style={{
+                fontFamily: "Geist",
+                fontSize: "52px",
+                fontWeight: 400,
+                lineHeight: "110%",
+                letterSpacing: "-1.04px",
+                textShadow: "0 0 52px rgba(255, 255, 255, 0.60)",
+                textWrap: "balance",
               }}
             >
               {title}
             </h1>
             {description && (
               <p
+                tw="m-0"
                 style={{
-                  fontSize: "28px",
-                  color: "#dbdbdb",
+                  fontFamily: "Geist",
+                  fontSize: "26px",
+                  fontWeight: 400,
+                  color: "#A8A8A8",
                   lineHeight: "120%",
-                  letterSpacing: "1%",
-                  margin: 0,
+                  letterSpacing: "0.26px",
+                  textShadow: "0 0 40px rgba(0, 0, 0, 0.50)",
+                  textWrap: "balance",
+                  maxWidth: "85%",
                 }}
               >
                 {description}
@@ -364,6 +239,14 @@ export async function GET(
       {
         width: 1200,
         height: 630,
+        fonts: [
+          {
+            name: "Geist",
+            data: await geistRegular,
+            style: "normal",
+            weight: 400,
+          },
+        ],
       }
     );
   } catch (error) {
@@ -371,4 +254,3 @@ export async function GET(
     return new Response("Error generating image", { status: 500 });
   }
 }
-
