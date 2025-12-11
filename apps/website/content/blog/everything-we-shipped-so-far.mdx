@@ -213,11 +213,20 @@ One of our most recent released features is the ability to connect to external M
 You just need a `src/clients.ts` file to define the clients you want to connect, HTTP or STDIO.
 
 ```typescript title="src/clients.ts"
-import { clients } from "xmcp";
+import { ClientConnections } from "xmcp";
 
-export const clients = {
-  external: {
-    url: "https://external-mcp.com",
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      {
+        name: "CONTEXT7_API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
   },
 };
 ```

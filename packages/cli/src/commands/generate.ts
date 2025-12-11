@@ -176,8 +176,18 @@ async function fetchToolsForTarget(target: ClientDefinition) {
         url: target.url,
         headers: target.headers,
       });
-      const { tools } = await client.listTools();
-      return tools;
+      try {
+        const { tools } = await client.listTools();
+        return tools;
+      } finally {
+        await client.close().catch((error) => {
+          console.warn(
+            `Failed to close HTTP client for "${target.name}": ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
+        });
+      }
     }
 
     const connection = await createSTDIOClient({

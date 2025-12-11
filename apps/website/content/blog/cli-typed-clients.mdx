@@ -1,0 +1,152 @@
+---
+title: "Connect to external MCPs and make their tools yours"
+description: "Generate fully typed MCPs clients from remote servers or STDIO packages with one command."
+category: "guides"
+date: "2025-12-11"
+order: 7
+featured: true
+previewImage: "/blog/cli-typed-clients.png"
+---
+
+xmcp now let's you generate tools for external clients.
+
+## Add your clients
+You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages.
+
+```typescript
+// src/clients.ts
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      {
+        name: "CONTEXT7_API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
+  },
+};
+```
+
+#### Adding HTTP clients
+For HTTP clients, this is the type you have to follow:
+
+```typescript
+export type HttpClientDefinition = {
+  type: "http";
+  name: string;
+  url: string;
+  headers?: CustomHeaders;
+};
+```
+
+#### Adding STDIO clients
+For STDIO clients, this is the type you have to follow:
+
+```typescript
+export type StdioClientDefinition = {
+  type: "stdio";
+  name: string;
+  command: string;
+  args: string[];
+  npm?: string;
+  npmArgs?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+  stderr?: StdioIOStrategy;
+};
+```
+
+<Callout variant="warning" icon="alertTriangle" title="Headers and secrets">
+You need to have the npm package installed in your app if you want to use STDIO.
+</Callout>
+
+
+
+## Generate typed clients
+Run the generator from your project root. By default it looks for `src/clients.ts` and writes to `src/generated`.
+
+```bash
+npx @xmcp-dev/cli generate
+```
+
+You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/main/packages/cli/README.md#optional-cli-flags) for more details.
+
+## Using the new tools
+We will now have the tools from our external clients in the `client.index.ts` file, now you only have to import and use them.
+
+
+## Web Navigation
+```typescript
+// src/tools/browser-navigate.ts
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  url: z.string().describe("The URL to navigate to"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "browser-navigate",
+  description: "Navigate to a URL",
+};
+
+// Tool implementation
+export default async function handler({ url }: InferSchema<typeof schema>) {
+  await generatedClients.playwright.browserNavigate({
+    url,
+  });
+
+  return `Navigated to: ${url}`;
+}
+```
+
+## Get Library Docs
+```typescript
+// src/tools/get-library-docs.ts
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  libraryName: z.string().describe("The name of the library to get docs for"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "get-library-docs",
+  description: "Get the docs for a library",
+};
+
+// Tool implementation
+export default async function handler({
+  libraryName,
+}: InferSchema<typeof schema>) {
+  const libraryDocs = await generatedClients.context.getLibraryDocs({
+    context7CompatibleLibraryID: libraryName,
+  });
+
+  const result = (libraryDocs.content as any)[0].text;
+
+  return `Library docs: ${result}`;
+}
+```
+
+<Callout variant="info" icon="info" title="Autocomplete">
+ Autocomplete is available for the tools and their arguments, for easier usage.
+</Callout>
+
+## Build and run the example
+If you want to see an example of how to generate clients and use them, you can checkout the [external-clients](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients) example.
+
+## Contributing
+
+Share your feedback and help shape the future of xmcp:
+[GitHub](https://github.com/basementstudio/xmcp)
