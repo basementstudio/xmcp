@@ -8,11 +8,11 @@ previewImage: "/blog/everything-we-shipped-so-far.webp"
 featured: true
 ---
 
-It's been busy months and we've shipped a lot of new features and improvements. Let's recap on them one by one.
+It's been busy months and we've shipped a lot of new features and improvements. Let's recap them one by one.
 
 ## Polar Integration
 
-Managing tool usage and billing is a thing, and we've got you covered with the Polar integration released some months ago. You can add paywalls to your tools and track usage for billing with Polar in a few steps.
+Managing tool usage and billing is a thing, and we've got you covered with the Polar. You can add paywalls to your tools and track usage for billing in a few steps.
 
 ```typescript title="src/lib/polar.ts"
 import { PolarProvider } from "@xmcp-dev/polar";
@@ -64,9 +64,64 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 }
 ```
 
+## React handler
+
+You can return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
+
+To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+
+```typescript title="src/tools/interactive-todo.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "interactive-todo",
+  description: "Interactive todo list widget",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading todo list...",
+        invoked: "Todo list ready!",
+      },
+    },
+  },
+};
+
+export default function InteractiveTodo() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, input]);
+      setInput("");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
 ## GPT Apps SDK integration
 
-xmcp is fully integrated with the Apps SDK for you to easily build them and whats makes it even better is that xmcp tools are able to return React components directly.
+xmcp is fully integrated with the Apps SDK from OpenAI, so you can easily build and run app in ChatGPT.
 
 ### Counter tool
 
@@ -204,12 +259,12 @@ export default function handler() {
 ## Rspack Migration
 
 xmcp was initially built with Webpack and with the v0.5.0 release, we introduced a major performance overhaul by replacing it with Rspack. This was one of our goals, to have a fast and efficient build times.
-But not only that, bundle sizes decreased by nearly a third and native type checking was added. This enables us to have a better developer experience and more robust tools. Better for us, better for you.
+But not only that, bundle sizes decreased by a third. This enables us to have a better developer experience and more robust tools.
 
 
 ## Connect to external MCP, discover their tools and use them in yours
 
-One of our most recent released features is the ability to connect to external MCP servers, discover their tools and use them in your workflow. 
+One of our most recent released features is the ability to connect to external MCP servers, discover their tools and use them. 
 You just need a `src/clients.ts` file to define the clients you want to connect, HTTP or STDIO.
 
 ```typescript title="src/clients.ts"
@@ -230,32 +285,81 @@ export const clients: ClientConnections = {
   },
 };
 ```
+<Callout variant="info" icon="info" title="CLI">
+STDIO need to be installed in your environment for it to work
+</Callout>
 
+
+Afterwards, you can generate the clients with the CLI:
 ```bash
 npx @xmcp-dev/cli generate
 ```
 
 This will output the typed clients in the `src/generated` directory.
 
-```typescript title="src/tools/external-tool.ts"
-import { createRemoteToolClient } from "./generated/client.index";
+### Browser navigate
+```typescript title="src/tools/browser-navigate.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
 
-const client = createRemoteToolClient("external");
+export const schema = {
+  url: z.string().describe("The URL to navigate to"),
+};
 
-export default async function externalTool() {
-## Other Improvements
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "browser-navigate",
+  description: "Navigate to a URL",
+};
 
-- **OpenAI Apps SDK support**: First-class integration for ChatGPT widgets (see [OpenAI Apps SDK Support](/blog/apps-sdk))
-- **Next.js adapter improvements**: Better handler types, auth support, and error handling
-- **Structured Content output**: Tools can return structured content alongside UI for richer responses
+// Tool implementation
+export default async function handler({ url }: InferSchema<typeof schema>) {
+  await generatedClients.playwright.browserNavigate({
+    url,
+  });
 
-Polar SH integration
-Structured Content output
-CORS middleware add preflight flag
-structuredContent
+  return `Navigated to: ${url}`;
+}
+```
+
+### Get library docs
+```typescript title="src/tools/get-library-docs.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  libraryName: z.string().describe("The name of the library to get docs for"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "get-library-docs",
+  description: "Get the docs for a library",
+};
+
+// Tool implementation
+export default async function handler({
+  libraryName,
+}: InferSchema<typeof schema>) {
+  const libraryDocs = await generatedClients.context.getLibraryDocs({
+    context7CompatibleLibraryID: libraryName,
+  });
+
+  const result = (libraryDocs.content as any)[0].text;
+
+  return `Library docs: ${result}`;
+}
+```
+
+## Some other improvements
+
+- You can configure CORS middleware to allow requests from external domains, headers, methods and credentials.
+- Structured Content output is now supported, tools can return structured content alongside UI for better responses.
+- Bun support.
+
 
 ## Contributing
 
-Share your feedback and help shape the future of xmcp:
-[GitHub](https://github.com/basementstudio/xmcp)
-
+Share your feedback and help shape the future of xmcp: [GitHub](https://github.com/basementstudio/xmcp)
