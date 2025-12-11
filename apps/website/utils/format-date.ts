@@ -23,3 +23,4 @@ export function formatDate(dateString: string): string {
   const year = date.getFullYear();
   return `${month} ${day}.${year}`;
 }
+
