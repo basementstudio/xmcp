@@ -3,6 +3,13 @@ import { BlogPost, getAllBlogPosts } from "@/utils/blog";
 import Link from "fumadocs-core/link";
 import Image from "next/image";
 
+const TEXTURE_IMAGES = [
+  "/textures/text1.png",
+  "/textures/text2.png",
+  "/textures/text3.png",
+  "/textures/text4.png",
+];
+
 export const HomeBlog = () => {
   const posts = getAllBlogPosts().slice(0, 3);
 
@@ -32,6 +39,15 @@ export const HomeBlog = () => {
 };
 
 export const BlogCard = ({ post }: { post: BlogPost }) => {
+  const texture =
+    post.previewImage ||
+    post.textureImage ||
+    TEXTURE_IMAGES[
+      Math.abs(
+        Array.from(post.slug).reduce((hash, char) => hash + char.charCodeAt(0), 0)
+      ) % TEXTURE_IMAGES.length
+    ];
+
   return (
     <Link
       key={post.slug}
@@ -40,9 +56,9 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
     >
       <div className="relative border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
-          {post.previewImage ? (
+          {texture ? (
             <Image
-              src={post.previewImage}
+              src={texture}
               alt={post.title}
               fill
               className="object-cover"
