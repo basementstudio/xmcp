@@ -53,6 +53,7 @@ export async function generateMetadata(
   const { title, description, ogImageUrl } = meta;
 
   return {
+    metadataBase: new URL(baseUrl),
     title,
     description,
     openGraph: {
