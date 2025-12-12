@@ -25,6 +25,7 @@ export interface ToolMetadata {
   /** Metadata for the tool. Supports nested OpenAI metadata and other vendor extensions. */
   _meta?: {
     openai?: OpenAIMetadata;
+    ui?: OpenAIMetadata;
     [key: string]: unknown;
   };
 }
