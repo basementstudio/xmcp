@@ -127,7 +127,6 @@ function resolveOgContent(
           }),
         };
       }
-      console.log(page.data as any);
       // Access frontmatter data from fumadocs page
       const data = page.data as {
         readonly title: string;
