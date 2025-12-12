@@ -1,9 +1,8 @@
 import { ImageResponse } from "@vercel/og";
-import { getBlogMetadata } from "@/utils/blog";
-import { getDocsMetadata } from "@/utils/docs";
 import { formatDate } from "@/utils/format-date";
 import type { NextRequest } from "next/server";
 import { getBaseUrl } from "@/lib/base-url";
+import { blogSource, source } from "@/lib/source";
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
@@ -60,13 +59,11 @@ type ResolveResult =
 
 function resolveOgContent(
   type: string,
-  rest: string[],
-  baseUrl: string
+  rest: string[]
 ): ResolveResult {
   switch (type) {
     case "blog": {
-      const slug = rest.join("/");
-      if (!slug) {
+      if (rest.length === 0) {
         return {
           ok: true,
           content: {
@@ -78,28 +75,37 @@ function resolveOgContent(
         };
       }
 
-      const meta = getBlogMetadata(slug, baseUrl);
-      if (!meta) {
+      // Use fumadocs blogSource instead of fs-based getBlogMetadata
+      const page = blogSource.getPage(rest);
+      if (!page) {
         return {
           ok: false,
           response: new Response("Blog post not found", { status: 404 }),
         };
       }
 
+      // Access frontmatter data from fumadocs page
+      const data = page.data as {
+        readonly title: string;
+        readonly description?: string;
+        readonly summary?: string;
+        readonly date?: string;
+      };
+
       return {
         ok: true,
         content: {
-          title: meta.title,
-          description: meta.description,
-          summary: meta.summary,
-          date: meta.date,
+          title: data.title,
+          description: data.description ?? "",
+          summary: data.summary,
+          date: data.date,
         },
       };
     }
 
     case "docs": {
-      const slug = rest.length === 0 ? undefined : rest;
-      if (!slug) {
+      if (rest.length === 0) {
+
         return {
           ok: true,
           content: {
@@ -111,8 +117,9 @@ function resolveOgContent(
         };
       }
 
-      const meta = getDocsMetadata(slug, baseUrl);
-      if (!meta) {
+      // Use fumadocs source instead of fs-based getDocsMetadata
+      const page = source.getPage(rest);
+      if (!page) {
         return {
           ok: false,
           response: new Response("Documentation page not found", {
@@ -120,13 +127,20 @@ function resolveOgContent(
           }),
         };
       }
+      console.log(page.data as any);
+      // Access frontmatter data from fumadocs page
+      const data = page.data as {
+        readonly title: string;
+        readonly description?: string;
+        readonly summary?: string;
+      };
 
       return {
         ok: true,
         content: {
-          title: meta.title,
-          description: meta.description,
-          summary: meta.summary,
+          title: data.title,
+          description: data.description ?? "",
+          summary: data.summary,
           date: undefined,
         },
       };
@@ -166,9 +180,9 @@ export async function GET(
     }
 
     const [type, ...rest] = path;
-    const baseUrl = getBaseUrl();
 
-    const result = resolveOgContent(type, rest, baseUrl);
+    const result = resolveOgContent(type, rest);
+    const baseUrl = getBaseUrl();
     if (!result.ok) {
       return result.response;
     }
