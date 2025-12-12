@@ -217,8 +217,8 @@ export async function GET(
           alt="Background"
           width={OG_WIDTH}
           height={OG_HEIGHT}
-          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover`}
-          style={{ mixBlendMode: "plus-lighter" }}
+          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px]`}
+          style={{ mixBlendMode: "plus-lighter", objectFit: "cover" }}
         />
         {/* Noise overlay */}
         <img
@@ -226,8 +226,8 @@ export async function GET(
           alt="Noise"
           width={OG_WIDTH}
           height={OG_HEIGHT}
-          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover opacity-40`}
-          style={{ mixBlendMode: "overlay" }}
+          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px]`}
+          style={{ mixBlendMode: "overlay", objectFit: "cover", opacity: 0.4 }}
         />
         {/* Logo - top right */}
         <div
