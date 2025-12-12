@@ -7,7 +7,6 @@ import { getBaseUrl } from "@/lib/base-url";
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
-const LOGO_WIDTH = 300;
 
 const geistRegular = fetch(
   new URL(
@@ -116,7 +115,9 @@ function resolveOgContent(
       if (!meta) {
         return {
           ok: false,
-          response: new Response("Documentation page not found", { status: 404 }),
+          response: new Response("Documentation page not found", {
+            status: 404,
+          }),
         };
       }
 
@@ -135,10 +136,11 @@ function resolveOgContent(
       return {
         ok: true,
         content: {
-          title: "Examples & templates",
-          description: "Explore examples and templates to get started with xmcp.",
+          title: "Shaping the future of MCP tooling",
+          description:
+            "xmcp now supports building compatible UI resources and tools with the OpenAI Apps SDK, out of the box.",
           summary: undefined,
-          date: undefined,
+          date: "2025-12-11",
         },
       };
     }
@@ -174,128 +176,118 @@ export async function GET(
     const { title, description, summary, date } = result.content;
 
     return new ImageResponse(
-      (
+      <div
+        tw={`h-[${OG_HEIGHT}px] w-[${OG_WIDTH}px] flex bg-black relative overflow-hidden`}
+        style={{
+          padding: "64px",
+          boxShadow: "0 0 250px 8px rgba(0, 0, 0, 0.80) inset",
+        }}
+      >
+        {/* Background image */}
+        <img
+          src={`${baseUrl}/og/bg.png`}
+          alt="Background"
+          width={OG_WIDTH}
+          height={OG_HEIGHT}
+          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover`}
+          style={{ mixBlendMode: "plus-lighter" }}
+        />
+        {/* Noise overlay */}
+        <img
+          src={`${baseUrl}/og/noise.png`}
+          alt="Noise"
+          width={OG_WIDTH}
+          height={OG_HEIGHT}
+          tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover opacity-40`}
+          style={{ mixBlendMode: "overlay" }}
+        />
+        {/* Logo - top right */}
         <div
-          tw={`h-[${OG_HEIGHT}px] w-[${OG_WIDTH}px] flex flex-row bg-black relative overflow-hidden`}
+          style={{
+            position: "absolute",
+            top: "64px",
+            right: "64px",
+            display: "flex",
+          }}
         >
-          {/* Background image */}
-          <img
-            src={`${baseUrl}/og/bg.png`}
-            alt="Background"
-            width={OG_WIDTH}
-            height={OG_HEIGHT}
-            tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover`}
-            style={{ mixBlendMode: "plus-lighter" }}
-          />
-          {/* Noise overlay */}
-          <img
-            src={`${baseUrl}/og/noise.png`}
-            alt="Noise"
-            width={OG_WIDTH}
-            height={OG_HEIGHT}
-            tw={`absolute top-0 left-0 w-[${OG_WIDTH}px] h-[${OG_HEIGHT}px] object-cover opacity-40`}
-            style={{ mixBlendMode: "overlay" }}
-          />
-          {/* Left section - Logo */}
+          <XmcpLogo />
+        </div>
+        {/* Date tag - top left */}
+        {date && (
           <div
-            tw="flex items-start justify-start relative p-10"
             style={{
-              flex: "0 0 25%",
-              width: `${LOGO_WIDTH}px`,
-              height: `${OG_HEIGHT}px`,
-              overflow: "hidden",
+              position: "absolute",
+              top: "64px",
+              left: "64px",
+              display: "flex",
+              alignItems: "center",
+              padding: "4px 8px",
+              border: "1px dashed #525252",
+              backgroundColor: "rgba(245, 245, 245, 0.07)",
+              color: "#A8A8A8",
+              fontFamily: "Geist",
+              fontStyle: "normal",
+              fontSize: "24px",
+              fontWeight: 500,
+              lineHeight: "100%",
+              letterSpacing: "1.92px",
+              textTransform: "uppercase",
             }}
           >
-            {/* Blur background */}
-            <img
-              src={`${baseUrl}/og/blur.png`}
-              alt=""
-              width={LOGO_WIDTH}
-              height={OG_HEIGHT}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: `${LOGO_WIDTH}px`,
-                height: `${OG_HEIGHT}px`,
-                objectFit: "cover",
-                opacity: 0.8,
-              }}
-            />
-            {/* Right border gradient */}
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                width: "1px",
-                height: "100%",
-                background:
-                  "linear-gradient(180deg, rgba(92, 92, 92, 0.00) 0%, #5C5C5C 37.99%, rgba(92, 92, 92, 0.00) 100%)",
-              }}
-            />
-            <XmcpLogo />
+            {formatDate(date)}
           </div>
-          {/* Right section - Dynamic content */}
-          <div
-            tw="h-full flex flex-col items-start justify-center relative"
-            style={{ flex: "0 0 75%", padding: "80px 128px 80px 64px" }}
+        )}
+        {/* Text content - bottom left */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "64px",
+            left: "64px",
+            right: "64px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "flex-end",
+          }}
+        >
+          <h1
+            style={{
+              display: "flex",
+              color: "white",
+              margin: 0,
+              marginBottom: "16px",
+              fontFamily: "Geist",
+              fontSize: "74px",
+              fontWeight: 400,
+              lineHeight: "110%",
+              letterSpacing: "-1.04px",
+              textShadow: "0 0 52px rgba(255, 255, 255, 0.60)",
+              textWrap: "balance",
+            }}
           >
-            {/* Date tag */}
-            {date && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "24px",
-                  padding: "4px 8px",
-                  fontSize: "16px",
-                  textTransform: "uppercase",
-                  border: "1px dashed #525252",
-                  backgroundColor: "rgba(245, 245, 245, 0.07)",
-                  color: "#fafafa",
-                  fontFamily: "Geist",
-                }}
-              >
-                {formatDate(date)}
-              </div>
-            )}
-            <h1
-              tw="text-white m-0 mb-6"
+            {title}
+          </h1>
+          {(summary || description) && (
+            <p
+              key={summary ?? description}
               style={{
+                display: "flex",
+                margin: 0,
                 fontFamily: "Geist",
-                fontSize: "52px",
+                fontSize: "32px",
                 fontWeight: 400,
-                lineHeight: "110%",
-                letterSpacing: "-1.04px",
-                textShadow: "0 0 52px rgba(255, 255, 255, 0.60)",
+                color: "#A8A8A8",
+                lineHeight: "120%",
+                letterSpacing: "0.26px",
+                textShadow: "0 0 40px rgba(0, 0, 0, 0.50)",
                 textWrap: "balance",
               }}
             >
-              {title}
-            </h1>
-            {(summary || description) && (
-              <p
-                key={summary ?? description}
-                tw="m-0"
-                style={{
-                  fontFamily: "Geist",
-                  fontSize: "26px",
-                  fontWeight: 400,
-                  color: "#A8A8A8",
-                  lineHeight: "120%",
-                  letterSpacing: "0.26px",
-                  textShadow: "0 0 40px rgba(0, 0, 0, 0.50)",
-                  textWrap: "balance",
-                  maxWidth: "85%",
-                }}
-              >
-                {summary ?? description}
-              </p>
-            )}
-          </div>
+              {summary ?? description}
+            </p>
+          )}
         </div>
-      ),
+      </div>,
       {
         width: OG_WIDTH,
         height: OG_HEIGHT,
