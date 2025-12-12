@@ -12,6 +12,7 @@ export interface BlogFrontmatter {
   readonly order?: number;
   readonly featured?: boolean;
   readonly previewImage?: string;
+  readonly textureImage?: string;
   readonly [key: string]: unknown;
 }
 
@@ -28,6 +29,7 @@ export interface BlogPost {
   readonly summary?: string;
   readonly featured?: boolean;
   readonly previewImage?: string;
+  readonly textureImage?: string;
 }
 
 export interface BlogMetadata {
@@ -77,6 +79,7 @@ export function getAllBlogPosts(): BlogPost[] {
         summary: data.summary,
         featured: data.featured || false,
         previewImage: data.previewImage,
+        textureImage: data.textureImage,
       });
     }
   }
