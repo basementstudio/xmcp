@@ -1,4 +1,4 @@
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/og";
 import { getBlogMetadata } from "@/utils/blog";
 import { getDocsMetadata } from "@/utils/docs";
 import { formatDate } from "@/utils/format-date";
