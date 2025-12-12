@@ -16,7 +16,6 @@ Commands:
   generate            Generate a typed remote tool client file
 
 Options:
-  -u, --url <url>     MCP server URL (overrides clients.ts)
   -o, --out <path>    Output directory (default: src/generated)
   -c, --clients <path>  Path to clients config (default: src/clients.ts)
   -h, --help          Show this help message
@@ -39,10 +38,6 @@ function parseArgs(argv: string[]): ParsedArgs {
       case "-h":
       case "--help":
         helpRequested = true;
-        break;
-      case "-u":
-      case "--url":
-        options.url = args[++i];
         break;
       case "-o":
       case "--out":
@@ -84,7 +79,6 @@ async function main() {
   }
 
   await runGenerate({
-    url: typeof options.url === "string" ? options.url : undefined,
     out: typeof options.out === "string" ? options.out : undefined,
     clientsFile:
       typeof options.clients === "string" ? options.clients : undefined,

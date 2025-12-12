@@ -111,9 +111,12 @@ export function addToolsToServer(
     let transformedHandler;
 
     if (isReactFile(path) && isOpenAITool) {
-      transformedHandler = async () => ({
+      transformedHandler = async (args: any, extra: any) => ({
         content: [{ type: "text", text: "" }],
         _meta: meta,
+        structuredContent: {
+          args,
+        },
       });
     } else {
       transformedHandler = transformToolHandler(handler, meta);

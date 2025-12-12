@@ -22,8 +22,24 @@ export { createContext } from "./utils/context";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 
-export { createHTTPClient } from "./client";
-export type { HttpClient } from "./client/types";
+export {
+  createHTTPClient,
+  createSTDIOClient,
+  listSTDIOClientTools,
+  callSTDIOClientTool,
+  disconnectSTDIOClient,
+} from "./client";
+export type {
+  HttpClient,
+  StdioClient,
+  StdioIOStrategy,
+  ClientConnectionEntry,
+  ClientConnections,
+  ClientDefinition,
+  HttpClientConfig,
+  StdioClientConfig,
+} from "./client/types";
+export type { StdioClientConnection, StdioClientOptions } from "./client";
 export type {
   CustomHeaders,
   CustomHeader,

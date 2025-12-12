@@ -49,9 +49,9 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "devDependencies": {
-    "eslint-config-custom": "workspace:",
-    "prettier": "^3.5.3",
-    "turbo": "^2.5.3"
+    "eslint-config-custom": "workspace:^",
+    "prettier": "^3.7.4",
+    "turbo": "^2.6.3"
   },
   "packageManager": "pnpm@10.8.1",
   "engines": {

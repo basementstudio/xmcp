@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/cli",
   "description": "Official xmcp developer CLI",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -22,13 +22,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/basementstudio/xmcp",
+    "url": "git+https://github.com/basementstudio/xmcp.git",
     "directory": "packages/cli"
   },
   "homepage": "https://xmcp.dev",
   "type": "module",
   "bin": {
-    "xmcp-dev-cli": "./dist/index.js"
+    "xmcp-dev-cli": "dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -38,15 +38,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -w -p tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "pretest": "pnpm run build",
+    "test": "tsx --test __tests__/*.test.ts"
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
-    "xmcp": "^0.5.3",
-    "zod": "^3.24.4"
+    "xmcp": "0.5.4-canary.1",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^22",
-    "typescript": "^5.8.3"
+    "@types/node": "^22.19.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
