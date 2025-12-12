@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import fs from "fs";
+import path from "path";
 import { getBlogMetadata } from "@/utils/blog";
 import { getDocsMetadata } from "@/utils/docs";
 import { formatDate } from "@/utils/format-date";
@@ -9,6 +11,23 @@ const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
 export const runtime = "nodejs";
+
+function readImageAsDataUrl(filePath: string, mimeType = "image/png") {
+  try {
+    const buffer = fs.readFileSync(filePath);
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  } catch (error) {
+    console.error(`Failed to read image at ${filePath}:`, error);
+    return null;
+  }
+}
+
+const BG_IMAGE =
+  readImageAsDataUrl(path.join(process.cwd(), "public", "og", "bg.png")) ??
+  null;
+const NOISE_IMAGE =
+  readImageAsDataUrl(path.join(process.cwd(), "public", "og", "noise.png")) ??
+  null;
 
 const geistRegular = fetch(
   new URL(
@@ -194,7 +213,7 @@ export async function GET(
       >
         {/* Background image */}
         <img
-          src={`${baseUrl}/og/bg.png`}
+          src={BG_IMAGE ?? `${baseUrl}/og/bg.png`}
           alt="Background"
           width={OG_WIDTH}
           height={OG_HEIGHT}
@@ -203,7 +222,7 @@ export async function GET(
         />
         {/* Noise overlay */}
         <img
-          src={`${baseUrl}/og/noise.png`}
+          src={NOISE_IMAGE ?? `${baseUrl}/og/noise.png`}
           alt="Noise"
           width={OG_WIDTH}
           height={OG_HEIGHT}
