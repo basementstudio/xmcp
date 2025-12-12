@@ -8,11 +8,18 @@ import { getBaseUrl } from "@/lib/base-url";
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 
+export const runtime = "nodejs";
+
 const geistRegular = fetch(
   new URL(
     "https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-400-normal.woff"
   )
-).then((res) => res.arrayBuffer());
+)
+  .then((res) => res.arrayBuffer())
+  .catch((error) => {
+    console.error("Failed to fetch Geist font for OG image:", error);
+    return null;
+  });
 
 const XmcpLogo = () => (
   <svg
@@ -175,6 +182,8 @@ export async function GET(
 
     const { title, description, summary, date } = result.content;
 
+    const geistData = await geistRegular;
+
     return new ImageResponse(
       <div
         tw={`h-[${OG_HEIGHT}px] w-[${OG_WIDTH}px] flex bg-black relative overflow-hidden`}
@@ -291,14 +300,17 @@ export async function GET(
       {
         width: OG_WIDTH,
         height: OG_HEIGHT,
-        fonts: [
-          {
-            name: "Geist",
-            data: await geistRegular,
-            style: "normal",
-            weight: 400,
-          },
-        ],
+        fonts:
+          geistData !== null
+            ? [
+                {
+                  name: "Geist",
+                  data: geistData,
+                  style: "normal",
+                  weight: 400,
+                },
+              ]
+            : [],
       }
     );
   } catch (error) {
