@@ -1,4 +1,8 @@
 export function getBaseUrl(): string {
+  if (process.env.VERCEL_ENV === "production") {
+    return "https://xmcp.dev";
+  }
+
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
@@ -9,7 +13,3 @@ export function getBaseUrl(): string {
 
   return "https://xmcp.dev";
 }
-
-
-
-
