@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "@xmcp-dev/polar": "workspace:*",
+    "@xmcp-dev/polar": "latest",
     "zod": "3.25.76"
   }
 }

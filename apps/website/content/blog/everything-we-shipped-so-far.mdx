@@ -1,0 +1,363 @@
+---
+title: "Everything we shipped so far"
+description: "From Rspack builds to React components, external MCP clients, and monetization."
+category: "changelog"
+date: "2025-12-20"
+order: 8
+previewImage: "/blog/everything-we-shipped-so-far.webp"
+featured: true
+---
+
+It's been a busy few months. We've shipped performance improvements, new output formats, integrations with external MCPs, and even monetization support. Here's a recap of everything we've built.
+
+## Rspack Migration
+
+Everything got faster. xmcp was initially built with Webpack, but with v0.5.0 we replaced it with Rspack for a major performance overhaul. Build times dropped significantly, and bundle sizes decreased by a third. As a result, we have a faster development loop.
+
+## React Handler
+
+With faster builds in place, we could focus on richer output formats. Tools can now return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
+
+To enable widgets, add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+
+```typescript title="src/tools/interactive-todo.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "interactive-todo",
+  description: "Interactive todo list widget",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading todo list...",
+        invoked: "Todo list ready!",
+      },
+    },
+  },
+};
+
+export default function InteractiveTodo() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, input]);
+      setInput("");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+## GPT Apps SDK Integration
+
+These React components also work in ChatGPT. xmcp is fully integrated with OpenAI Apps SDK, so you can build and run apps directly inside ChatGPT.
+
+### Counter tool
+
+```typescript title="src/tools/counter.tsx"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { useState } from "react";
+import { z } from "zod";
+
+export const metadata: ToolMetadata = {
+  name: "counter",
+  description: "Counter React",
+  _meta: {
+    openai: {
+      toolInvocation: {
+        invoking: "Loading counter",
+        invoked: "Counter loaded",
+      },
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+export const schema = {
+  initialCount: z.number().describe("The name of the user to greet"),
+};
+
+export default function handler({ initialCount }: InferSchema<typeof schema>) {
+  const [count, setCount] = useState(initialCount);
+
+  return (
+    <div>
+      <h1>Counter: {count}</h1>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
+      <button onClick={() => setCount(count - 1)}>Decrement</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  );
+}
+```
+
+### Weather tool
+
+```typescript title="src/tools/weather.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState, useEffect } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "weather",
+  description: "Weather App",
+  _meta: {
+    openai: {
+      toolInvocation: {
+        invoking: "Loading weather",
+        invoked: "Weather loaded",
+      },
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+const cities = {
+  "Buenos Aires": { lat: -34.6037, lon: -58.3816 },
+  "San Francisco": { lat: 37.7749, lon: -122.4194 },
+  Berlin: { lat: 52.52, lon: 13.405 },
+  Tokyo: { lat: 35.6762, lon: 139.6503 },
+  "New York": { lat: 40.7128, lon: -74.006 },
+};
+
+export default function handler() {
+  const [selectedCity, setSelectedCity] = useState("Buenos Aires");
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setLoading(true);
+      setError(null);
+
+      const city = cities[selectedCity as keyof typeof cities];
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch weather data");
+        }
+        const data = await response.json();
+        setWeatherData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, [selectedCity]);
+
+  return (
+    <div>
+      <h1>Weather App</h1>
+
+      <div>
+        <h2>Select a city:</h2>
+        {Object.keys(cities).map((city) => (
+          <button key={city} onClick={() => setSelectedCity(city)}>
+            {city}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        <h2>{selectedCity}</h2>
+
+        {loading && <p>Loading...</p>}
+
+        {error && <p>Error: {error}</p>}
+
+        {weatherData && !loading && (
+          <div>
+            <p>Temperature: {weatherData.current.temperature_2m}°C</p>
+            <p>Humidity: {weatherData.current.relative_humidity_2m}%</p>
+            <p>Wind Speed: {weatherData.current.wind_speed_10m} km/h</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## Connect to External MCPs
+
+Beyond building your own tools, you can now connect to existing MCP servers, discover their tools, and use them in yours. Define your clients in a `src/clients.ts` file, the client can be HTTP or STDIO.
+
+```typescript title="src/clients.ts"
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      {
+        name: "CONTEXT7_API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
+  },
+};
+```
+
+<Callout variant="info" icon="info" title="STDIO packages">
+STDIO clients need to be installed in your environment for them to work.
+</Callout>
+
+Then generate the typed clients with the CLI:
+
+```bash
+npx @xmcp-dev/cli generate
+```
+
+This outputs fully typed clients to the `src/generated` directory. Here are two examples of how to use them:
+
+### Browser navigate
+
+```typescript title="src/tools/browser-navigate.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  url: z.string().describe("The URL to navigate to"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "browser-navigate",
+  description: "Navigate to a URL",
+};
+
+export default async function handler({ url }: InferSchema<typeof schema>) {
+  await generatedClients.playwright.browserNavigate({
+    url,
+  });
+
+  return `Navigated to: ${url}`;
+}
+```
+
+### Get library docs
+
+```typescript title="src/tools/get-library-docs.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  libraryName: z.string().describe("The name of the library to get docs for"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-library-docs",
+  description: "Get the docs for a library",
+};
+
+export default async function handler({
+  libraryName,
+}: InferSchema<typeof schema>) {
+  const libraryDocs = await generatedClients.context.getLibraryDocs({
+    context7CompatibleLibraryID: libraryName,
+  });
+
+  const result = (libraryDocs.content as any)[0].text;
+
+  return `Library docs: ${result}`;
+}
+```
+
+## Polar Integration
+
+Once you have powerful tools, you might want to monetize them. We've integrated with Polar to add paywalls and track usage for billing.
+
+```typescript title="src/lib/polar.ts"
+import { PolarProvider } from "@xmcp-dev/polar";
+
+export const polar = PolarProvider.getInstance({
+  type: "sandbox",
+  token: process.env.POLAR_TOKEN!,
+  organizationId: process.env.POLAR_ORGANIZATION_ID!,
+  productId: process.env.POLAR_PRODUCT_ID!,
+});
+```
+
+### Paywalling a tool
+
+Use the `validateLicenseKey` method to check if the user has access before running the tool:
+
+```typescript title="src/tools/paywall.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { headers } from "xmcp/headers";
+import { polar } from "../lib/polar";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user",
+  annotations: {
+    title: "Greet the user",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const result = `Hello, ${name}!`;
+  const licenseKey = headers()["license-key"];
+  const response = await polar.validateLicenseKey(licenseKey as string, {
+    name: "test_tool_call",
+    metadata: { tool_name: "greet", calls: 1 },
+  });
+  if (!response.valid) {
+    return response.message;
+  }
+  return result;
+}
+```
+
+## Other Improvements
+
+We also shipped some smaller but useful updates:
+
+- **CORS configuration**: Configure CORS middleware to allow requests from external domains, headers, methods, and credentials.
+- **Structured Content output**: Tools can return structured content alongside UI for richer responses.
+- **Project scaffolding**: `create-xmcp-app` now sets up everything you need in one command.
+- **Opt-in telemetry**: Anonymous usage data helps us improve xmcp. Fully opt-in.
+
+## Contributing
+
+Share your feedback and help shape the future of xmcp: [GitHub](https://github.com/basementstudio/xmcp)

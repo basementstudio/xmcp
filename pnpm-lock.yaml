@@ -534,8 +534,8 @@ importers:
   examples/polar-http:
     dependencies:
       '@xmcp-dev/polar':
-        specifier: workspace:*
-        version: link:../../packages/plugins/polar
+        specifier: latest
+        version: 0.1.6(xmcp@packages+xmcp)
       xmcp:
         specifier: workspace:*
         version: link:../../packages/xmcp
@@ -3779,6 +3779,11 @@ packages:
 
   '@webgpu/types@0.1.67':
     resolution: {integrity: sha512-uk53+2ECGUkWoDFez/hymwpRfdgdIn6y1ref70fEecGMe5607f4sozNFgBk0oxlr7j2CRGWBEc3IBYMmFdGGTQ==}
+
+  '@xmcp-dev/polar@0.1.6':
+    resolution: {integrity: sha512-VWAjCFW45tLXVmBaNzGSEWQs375wnIbT3bgfdlSS2F362/039AQfJjeRHXrgM7Wr1slJrJmJPxMtf8OIA48dxA==}
+    peerDependencies:
+      xmcp: workspace:*
 
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
@@ -10596,6 +10601,10 @@ snapshots:
       '@xtuc/long': 4.2.2
 
   '@webgpu/types@0.1.67': {}
+
+  '@xmcp-dev/polar@0.1.6(xmcp@packages+xmcp)':
+    dependencies:
+      xmcp: link:packages/xmcp
 
   '@xmldom/xmldom@0.9.8': {}
 
