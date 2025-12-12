@@ -148,4 +148,4 @@ class UIResourceRegistry {
   }
 }
 
-export const uIResource = new UIResourceRegistry();
+export const uIResourceRegistry = new UIResourceRegistry();

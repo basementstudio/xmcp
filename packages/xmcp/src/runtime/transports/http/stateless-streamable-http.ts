@@ -17,7 +17,7 @@ import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
-import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas/index";
+import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 
 // Global type declarations for tool name context
 declare global {

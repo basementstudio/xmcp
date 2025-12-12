@@ -7,7 +7,7 @@ import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
 import { isReactFile } from "./react";
 import { splitOpenAIMetaNested } from "./openai/split-meta";
-import { uIResource } from "./ext-apps-registry";
+import { uIResourceRegistry } from "./ext-apps-registry";
 import { hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 
@@ -78,50 +78,49 @@ export function addToolsToServer(
     const openaiWidget = hasOpenAIMeta(toolConfig._meta);
     const uiWidget = hasUIMeta(toolConfig._meta) || (isReact && !openaiWidget);
 
-    // Split metadata into tool-specific
     let toolSpecificMeta = toolConfig._meta;
 
     if (uiWidget || openaiWidget) {
-      // Auto-generate different resource URIs for OpenAI and MCP UI
       const openaiResourceUri = `ui://widget/${toolConfig.name}.html`;
       const mcpuiResourceUri = `ui://app/${toolConfig.name}.html`;
 
+      // Auto-inject outputTemplate and resourceUri before splitting
       if (openaiWidget) {
-        // Auto-inject the outputTemplate if not already present
-        if (!toolSpecificMeta.openai) {
-          toolSpecificMeta.openai = {};
+        if (!toolConfig._meta.openai) {
+          toolConfig._meta.openai = {};
         }
-        if (!toolSpecificMeta.openai.outputTemplate) {
-          toolSpecificMeta.openai.outputTemplate = openaiResourceUri;
+        if (!toolConfig._meta.openai.outputTemplate) {
+          toolConfig._meta.openai.outputTemplate = openaiResourceUri;
         }
+      }
 
-        const split = splitOpenAIMetaNested(toolConfig._meta);
-        toolSpecificMeta = split.toolMeta;
-        const resourceSpecificMeta = split.resourceMeta;
+      if (uiWidget) {
+        if (!toolConfig._meta.ui) {
+          toolConfig._meta.ui = {};
+        }
+        if (!toolConfig._meta.ui.resourceUri) {
+          toolConfig._meta.ui.resourceUri = mcpuiResourceUri;
+        }
+      }
 
+      // Split metadata once, chaining both splits
+      const openaiSplit = splitOpenAIMetaNested(toolConfig._meta);
+      const uiSplit = splitUIMetaNested(openaiSplit.toolMeta);
+      toolSpecificMeta = uiSplit.toolMeta;
+
+      if (openaiWidget) {
         openAIResourceRegistry.add(toolConfig.name, {
           name: toolConfig.name,
           uri: openaiResourceUri,
           handler,
-          toolMeta: toolSpecificMeta,
-          _meta: resourceSpecificMeta,
+          _meta: openaiSplit.resourceMeta,
           toolPath: isReact ? path : undefined,
           mimeType: "text/html+skybridge",
         });
       }
 
       if (uiWidget) {
-        if (!toolSpecificMeta.ui) {
-          toolSpecificMeta.ui = {};
-        }
-
-        if (!toolSpecificMeta.ui.resourceUri) {
-          toolSpecificMeta.ui.resourceUri = mcpuiResourceUri;
-        }
-
-        const split = splitUIMetaNested(toolConfig._meta);
-        toolSpecificMeta = split.toolMeta;
-        const resourceSpecificMeta = split.resourceMeta;
+        const resourceSpecificMeta = uiSplit.resourceMeta;
 
         // Ensure CSP resource domains includes esm.sh
         resourceSpecificMeta.ui = resourceSpecificMeta.ui || {};
@@ -137,7 +136,7 @@ export function addToolsToServer(
           resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
         }
 
-        uIResource.add(toolConfig.name, {
+        uIResourceRegistry.add(toolConfig.name, {
           name: toolConfig.name,
           uri: mcpuiResourceUri,
           handler,
