@@ -1,6 +1,6 @@
 ---
 title: "Everything we shipped so far"
-description: "From tools returning React components to Rspack builds, and remote MCP client generation."
+description: "From Rspack builds to React components, external MCP clients, and monetization."
 category: "changelog"
 date: "2025-12-11"
 order: 0
@@ -8,67 +8,17 @@ previewImage: "/blog/everything-we-shipped-so-far.webp"
 featured: true
 ---
 
-It's been busy months and we've shipped a lot of new features and improvements. Let's recap them one by one.
+It's been a busy few months. We've shipped performance improvements, new output formats, integrations with external MCPs, and even monetization support. Here's a recap of everything we've built.
 
-## Polar Integration
+## Rspack Migration
 
-Managing tool usage and billing is a thing, and we've got you covered with the Polar. You can add paywalls to your tools and track usage for billing in a few steps.
+Everything got faster. xmcp was initially built with Webpack, but with v0.5.0 we replaced it with Rspack for a major performance overhaul. Build times dropped significantly, and bundle sizes decreased by a third. As a result, we have a faster development loop.
 
-```typescript title="src/lib/polar.ts"
-import { PolarProvider } from "@xmcp-dev/polar";
+## React Handler
 
-export const polar = PolarProvider.getInstance({
-  type: "sandbox",
-  token: process.env.POLAR_TOKEN!,
-  organizationId: process.env.POLAR_ORGANIZATION_ID!,
-  productId: process.env.POLAR_PRODUCT_ID!,
-});
-```
+With faster builds in place, we could focus on richer output formats. Tools can now return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
 
-### Paywalling a tool
-
-To paywall a tool, you need to use `validateLicenseKey` method to validate the license key and check if the user has access to the tool.
-
-```typescript title="src/tools/paywall.ts"
-import { z } from "zod";
-import { type InferSchema, type ToolMetadata } from "xmcp";
-import { headers } from "xmcp/headers";
-import { polar } from "../lib/polar";
-
-export const schema = {
-  name: z.string().describe("The name of the user to greet"),
-};
-
-export const metadata: ToolMetadata = {
-  name: "greet",
-  description: "Greet the user",
-  annotations: {
-    title: "Greet the user",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
-};
-
-export default async function greet({ name }: InferSchema<typeof schema>) {
-  const result = `Hello, ${name}!`;
-  const licenseKey = headers()["license-key"];
-  const response = await polar.validateLicenseKey(licenseKey as string, {
-    name: "test_tool_call",
-    metadata: { tool_name: "greet", calls: 1 },
-  });
-  if (!response.valid) {
-    return response.message;
-  }
-  return result;
-}
-```
-
-## React handler
-
-You can return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
-
-To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+To enable widgets, add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
 
 ```typescript title="src/tools/interactive-todo.tsx"
 import { type ToolMetadata } from "xmcp";
@@ -119,9 +69,9 @@ export default function InteractiveTodo() {
 }
 ```
 
-## GPT Apps SDK integration
+## GPT Apps SDK Integration
 
-xmcp is fully integrated with the Apps SDK from OpenAI, so you can easily build and run app in ChatGPT.
+These React components also work in ChatGPT. xmcp is fully integrated with OpenAI Apps SDK, so you can build and run apps directly inside ChatGPT.
 
 ### Counter tool
 
@@ -165,7 +115,7 @@ export default function handler({ initialCount }: InferSchema<typeof schema>) {
 
 ### Weather tool
 
-```typescript title="ui/widget/weather.html"
+```typescript title="src/tools/weather.tsx"
 import { type ToolMetadata } from "xmcp";
 import { useState, useEffect } from "react";
 
@@ -256,16 +206,9 @@ export default function handler() {
 }
 ```
 
-## Rspack Migration
+## Connect to External MCPs
 
-xmcp was initially built with Webpack and with the v0.5.0 release, we introduced a major performance overhaul by replacing it with Rspack. This was one of our goals, to have a fast and efficient build times.
-But not only that, bundle sizes decreased by a third. This enables us to have a better developer experience and more robust tools.
-
-
-## Connect to external MCP, discover their tools and use them in yours
-
-One of our most recent released features is the ability to connect to external MCP servers, discover their tools and use them. 
-You just need a `src/clients.ts` file to define the clients you want to connect, HTTP or STDIO.
+Beyond building your own tools, you can now connect to existing MCP servers, discover their tools, and use them in yours. Define your clients in a `src/clients.ts` file, the client can be HTTP or STDIO.
 
 ```typescript title="src/clients.ts"
 import { ClientConnections } from "xmcp";
@@ -285,19 +228,21 @@ export const clients: ClientConnections = {
   },
 };
 ```
-<Callout variant="info" icon="info" title="CLI">
-STDIO need to be installed in your environment for it to work
+
+<Callout variant="info" icon="info" title="STDIO packages">
+STDIO clients need to be installed in your environment for them to work.
 </Callout>
 
+Then generate the typed clients with the CLI:
 
-Afterwards, you can generate the clients with the CLI:
 ```bash
 npx @xmcp-dev/cli generate
 ```
 
-This will output the typed clients in the `src/generated` directory.
+This outputs fully typed clients to the `src/generated` directory. Here are two examples of how to use them:
 
 ### Browser navigate
+
 ```typescript title="src/tools/browser-navigate.ts"
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
@@ -307,13 +252,11 @@ export const schema = {
   url: z.string().describe("The URL to navigate to"),
 };
 
-// Define tool metadata
 export const metadata: ToolMetadata = {
   name: "browser-navigate",
   description: "Navigate to a URL",
 };
 
-// Tool implementation
 export default async function handler({ url }: InferSchema<typeof schema>) {
   await generatedClients.playwright.browserNavigate({
     url,
@@ -324,6 +267,7 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 ```
 
 ### Get library docs
+
 ```typescript title="src/tools/get-library-docs.ts"
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
@@ -333,13 +277,11 @@ export const schema = {
   libraryName: z.string().describe("The name of the library to get docs for"),
 };
 
-// Define tool metadata
 export const metadata: ToolMetadata = {
   name: "get-library-docs",
   description: "Get the docs for a library",
 };
 
-// Tool implementation
 export default async function handler({
   libraryName,
 }: InferSchema<typeof schema>) {
@@ -353,12 +295,68 @@ export default async function handler({
 }
 ```
 
-## Some other improvements
+## Polar Integration
 
-- You can configure CORS middleware to allow requests from external domains, headers, methods and credentials.
-- Structured Content output is now supported, tools can return structured content alongside UI for better responses.
-- Bun support.
+Once you have powerful tools, you might want to monetize them. We've integrated with Polar to add paywalls and track usage for billing.
 
+```typescript title="src/lib/polar.ts"
+import { PolarProvider } from "@xmcp-dev/polar";
+
+export const polar = PolarProvider.getInstance({
+  type: "sandbox",
+  token: process.env.POLAR_TOKEN!,
+  organizationId: process.env.POLAR_ORGANIZATION_ID!,
+  productId: process.env.POLAR_PRODUCT_ID!,
+});
+```
+
+### Paywalling a tool
+
+Use the `validateLicenseKey` method to check if the user has access before running the tool:
+
+```typescript title="src/tools/paywall.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { headers } from "xmcp/headers";
+import { polar } from "../lib/polar";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user",
+  annotations: {
+    title: "Greet the user",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const result = `Hello, ${name}!`;
+  const licenseKey = headers()["license-key"];
+  const response = await polar.validateLicenseKey(licenseKey as string, {
+    name: "test_tool_call",
+    metadata: { tool_name: "greet", calls: 1 },
+  });
+  if (!response.valid) {
+    return response.message;
+  }
+  return result;
+}
+```
+
+## Other Improvements
+
+We also shipped some smaller but useful updates:
+
+- **CORS configuration**: Configure CORS middleware to allow requests from external domains, headers, methods, and credentials.
+- **Structured Content output**: Tools can return structured content alongside UI for richer responses.
+- **Project scaffolding**: `create-xmcp-app` now sets up everything you need in one command.
+- **Opt-in telemetry**: Anonymous usage data helps us improve xmcp. Fully opt-in.
 
 ## Contributing
 
