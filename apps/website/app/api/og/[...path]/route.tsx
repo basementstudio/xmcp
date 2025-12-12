@@ -1,4 +1,4 @@
-import { ImageResponse } from "@vercel/og";
+import { ImageResponse } from "next/og";
 import { formatDate } from "@/utils/format-date";
 import type { NextRequest } from "next/server";
 import { getBaseUrl } from "@/lib/base-url";
