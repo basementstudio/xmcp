@@ -103,12 +103,11 @@ export function addToolsToServer(
         }
       }
 
-      // Split metadata once, chaining both splits
-      const openaiSplit = splitOpenAIMetaNested(toolConfig._meta);
-      const uiSplit = splitUIMetaNested(openaiSplit.toolMeta);
-      toolSpecificMeta = uiSplit.toolMeta;
-
+      // Split metadata only for the widgets that are enabled
       if (openaiWidget) {
+        const openaiSplit = splitOpenAIMetaNested(toolSpecificMeta);
+        toolSpecificMeta = openaiSplit.toolMeta;
+
         openAIResourceRegistry.add(toolConfig.name, {
           name: toolConfig.name,
           uri: openaiResourceUri,
@@ -120,6 +119,8 @@ export function addToolsToServer(
       }
 
       if (uiWidget) {
+        const uiSplit = splitUIMetaNested(toolSpecificMeta);
+        toolSpecificMeta = uiSplit.toolMeta;
         const resourceSpecificMeta = uiSplit.resourceMeta;
 
         // Ensure CSP resource domains includes esm.sh
