@@ -1,5 +1,13 @@
 export function generateOpenAIHTML(componentCode: string): string {
-  const renderScript = `
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <div id="root"></div>
+
   <script type="module">
     const componentSource = ${JSON.stringify(componentCode)};
     const blobUrl = URL.createObjectURL(
@@ -11,17 +19,7 @@ export function generateOpenAIHTML(componentCode: string): string {
     requestAnimationFrame(() => {
       URL.revokeObjectURL(blobUrl);
     });
-  </script>`;
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-  <div id="root"></div>
-  ${renderScript}
+  </script>
 </body>
 </html>`;
 }
@@ -35,6 +33,38 @@ export function generateUIHTML(componentCode: string): string {
     );
 
     await import(blobUrl);
+
+    let nextId = 1;
+
+    window.parent.postMessage({
+      jsonrpc: "2.0",
+      id: nextId++,
+      method: "ui/initialize",
+      params: {
+        capabilities: {},
+        clientInfo: { name: "xmcp React Widget", version: "1.0.0" },
+        protocolVersion: "2025-06-18"
+      }
+    }, "*");
+
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+
+      // handshake ack
+      if (data?.result?.hostContext && data?.id === 1) {
+        window.parent.postMessage({
+          jsonrpc: "2.0",
+          method: "ui/notifications/initialized",
+          params: {}
+        }, "*");
+      }
+
+      if (data?.method === "ui/notifications/tool-input") {
+        window.dispatchEvent(
+          new MessageEvent("message", { data })
+        );
+      }
+    });
 
     requestAnimationFrame(() => {
       URL.revokeObjectURL(blobUrl);
