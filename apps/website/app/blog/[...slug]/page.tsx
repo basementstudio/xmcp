@@ -6,6 +6,8 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
+import { getBlogMetadata } from "@/utils/blog";
+import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -43,14 +45,38 @@ export async function generateMetadata(
   props: PageProps<"/blog/[...slug]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = blogSource.getPage(params.slug);
-  if (!page) notFound();
+  const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
+  const baseUrl = getBaseUrl();
+  const meta = getBlogMetadata(slug, baseUrl);
+  if (!meta) notFound();
+
+  const { title, description, ogImageUrl } = meta;
 
   return {
-    title: page.data.title + " | xmcp Blog",
-    description: page.data.description,
-    /*     openGraph: {
-      images: getPageImage(page).url,
-    }, */
+    metadataBase: new URL(baseUrl),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      siteName: "xmcp",
+      type: "article",
+      locale: "en_US",
+      images: {
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: {
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
+    },
   };
 }

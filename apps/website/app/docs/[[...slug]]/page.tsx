@@ -11,6 +11,8 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
+import { getBaseUrl } from "@/lib/base-url";
+import { getDocsMetadata } from "@/utils/docs";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -51,14 +53,37 @@ export async function generateMetadata(
   props: PageProps<"/docs/[[...slug]]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = source.getPage(params.slug);
-  if (!page) notFound();
+  const baseUrl = getBaseUrl();
+  const meta = getDocsMetadata(params.slug, baseUrl);
+  if (!meta) notFound();
+
+  const title = meta.title + " | xmcp Documentation";
+  const description = meta.summary ?? meta.description;
 
   return {
-    title: page.data.title + " | xmcp Documentation",
-    description: page.data.description,
-    /*     openGraph: {
-      images: getPageImage(page).url,
-    }, */
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      siteName: "xmcp",
+      type: "article",
+      locale: "en_US",
+      images: {
+        url: meta.ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: {
+        url: meta.ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
+    },
   };
 }
