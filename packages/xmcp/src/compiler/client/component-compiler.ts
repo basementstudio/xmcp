@@ -196,7 +196,11 @@ export class ClientComponentCompiler {
       },
       plugins: [new rspack.experiments.VirtualModulesPlugin(virtualModules)],
       optimization: {
-        minimize: false,
+        minimize: true,
+        usedExports: true,
+        sideEffects: true,
+        concatenateModules: true,
+        moduleIds: "deterministic",
       },
       cache: true,
     };
