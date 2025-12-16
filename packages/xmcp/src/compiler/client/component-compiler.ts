@@ -84,23 +84,28 @@ export class ClientComponentCompiler {
     };
   }
 
-  private createConfig(config: ResolvedBuildRequest): RspackOptions {
+  private createVirtualModules(absoluteEntries: Record<string, string>) {
     const virtualModules: Record<string, string> = {};
     const virtualEntries: Record<string, string> = {};
 
-    for (const [name, realEntry] of Object.entries(config.absoluteEntries)) {
-      const virtualPath = path.posix.join(
-        ".",
-        "__virtual__",
-        `${name}.entry.tsx`
-      );
-
+    for (const [name, realEntry] of Object.entries(absoluteEntries)) {
+      const virtualPath = this.getVirtualPath(name);
       virtualEntries[name] = virtualPath;
+      virtualModules[virtualPath] = this.createEntryModule(realEntry);
+    }
 
-      virtualModules[virtualPath] = `
+    return { virtualModules, virtualEntries };
+  }
+
+  private getVirtualPath(name: string): string {
+    return path.posix.join(".", "__virtual__", `${name}.entry.tsx`);
+  }
+
+  private createEntryModule(componentPath: string): string {
+    return `
   import React from "react";
   import { createRoot } from "react-dom/client";
-  import Component from ${JSON.stringify(realEntry)};
+  import Component from ${JSON.stringify(componentPath)};
 
   const el = document.getElementById("root");
   if (!el) {
@@ -121,17 +126,20 @@ export class ClientComponentCompiler {
     }
   });
   `;
-    }
+  }
+
+  private createConfig(config: ResolvedBuildRequest): RspackOptions {
+    const { virtualModules, virtualEntries } = this.createVirtualModules(
+      config.absoluteEntries
+    );
 
     return {
       mode: "production",
       entry: virtualEntries,
       target: "web",
-
       experiments: {
         outputModule: true,
       },
-
       output: {
         path: config.absoluteOutputDir,
         filename: "[name].bundle.js",
@@ -141,14 +149,11 @@ export class ClientComponentCompiler {
         },
         clean: true,
       },
-
       externalsType: "module",
-
       resolve: {
         extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
         preferRelative: true,
       },
-
       resolveLoader: {
         modules: [
           "node_modules",
@@ -156,7 +161,6 @@ export class ClientComponentCompiler {
           path.resolve(__dirname, "../.."),
         ],
       },
-
       module: {
         rules: [
           {
@@ -186,13 +190,10 @@ export class ClientComponentCompiler {
           },
         ],
       },
-
       plugins: [new rspack.experiments.VirtualModulesPlugin(virtualModules)],
-
       optimization: {
         minimize: false,
       },
-
       cache: true,
     };
   }
