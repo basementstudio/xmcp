@@ -1,6 +1,6 @@
 ---
 title: "Everything we shipped so far"
-description: "From Rspack builds to React components, external MCP clients, and monetization."
+description: "From GPT apps to React components, external MCP clients, and monetization."
 category: "changelog"
 date: "2025-12-20"
 order: 8
@@ -8,70 +8,11 @@ previewImage: "/blog/everything-we-shipped-so-far.webp"
 featured: true
 ---
 
-It's been a busy few months. We've shipped performance improvements, new output formats, integrations with external MCPs, and even monetization support. Here's a recap of everything we've built.
+It's been a busy few months. We've shipped GPT app integrations, React components, connections to external MCPs, and even monetization support. Here's a recap of everything we've built.
 
-## Rspack Migration
+## GPT Apps
 
-Everything got faster. xmcp was initially built with Webpack, but with v0.5.0 we replaced it with Rspack for a major performance overhaul. Build times dropped significantly, and bundle sizes decreased by a third. As a result, we have a faster development loop.
-
-## React Handler
-
-With faster builds in place, we could focus on richer output formats. Tools can now return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
-
-To enable widgets, add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
-
-```typescript title="src/tools/interactive-todo.tsx"
-import { type ToolMetadata } from "xmcp";
-import { useState } from "react";
-
-export const metadata: ToolMetadata = {
-  name: "interactive-todo",
-  description: "Interactive todo list widget",
-  _meta: {
-    openai: {
-      widgetAccessible: true,
-      toolInvocation: {
-        invoking: "Loading todo list...",
-        invoked: "Todo list ready!",
-      },
-    },
-  },
-};
-
-export default function InteractiveTodo() {
-  const [todos, setTodos] = useState<string[]>([]);
-  const [input, setInput] = useState("");
-
-  const addTodo = () => {
-    if (input.trim()) {
-      setTodos([...todos, input]);
-      setInput("");
-    }
-  };
-
-  return (
-    <div>
-      <h2>Todo List</h2>
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Add a todo..."
-      />
-      <button onClick={addTodo}>Add</button>
-      <ul>
-        {todos.map((todo, idx) => (
-          <li key={idx}>{todo}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-```
-
-## GPT Apps SDK Integration
-
-These React components also work in ChatGPT. xmcp is fully integrated with OpenAI Apps SDK, so you can build and run apps directly inside ChatGPT.
+xmcp is fully integrated with OpenAI Apps SDK, so you can build and run apps directly inside ChatGPT. Tools can return React components for interactive, composable widgets.
 
 ### Counter tool
 
@@ -206,6 +147,61 @@ export default function handler() {
 }
 ```
 
+## React Client Components
+
+Tools can return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
+
+To enable widgets, add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+
+```typescript title="src/tools/interactive-todo.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "interactive-todo",
+  description: "Interactive todo list widget",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading todo list...",
+        invoked: "Todo list ready!",
+      },
+    },
+  },
+};
+
+export default function InteractiveTodo() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, input]);
+      setInput("");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
 ## Connect to External MCPs
 
 Beyond building your own tools, you can now connect to existing MCP servers, discover their tools, and use them in yours. Define your clients in a `src/clients.ts` file, the client can be HTTP or STDIO.
@@ -295,7 +291,15 @@ export default async function handler({
 }
 ```
 
-## Polar Integration
+## Next.js Adapter
+
+{/* TODO: Add content for Next.js Adapter */}
+
+## Authentication
+
+{/* TODO: Add content for Authentication */}
+
+## Monetization
 
 Once you have powerful tools, you might want to monetize them. We've integrated with Polar to add paywalls and track usage for billing.
 
@@ -353,6 +357,7 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 
 We also shipped some smaller but useful updates:
 
+- **Rspack migration**: xmcp was initially built with Webpack, but with v0.5.0 we replaced it with Rspack for a major performance overhaul. Build times dropped significantly, and bundle sizes decreased by a third.
 - **CORS configuration**: Configure CORS middleware to allow requests from external domains, headers, methods, and credentials.
 - **Structured Content output**: Tools can return structured content alongside UI for richer responses.
 - **Project scaffolding**: `create-xmcp-app` now sets up everything you need in one command.
