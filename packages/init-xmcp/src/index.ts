@@ -151,30 +151,35 @@ const program = new Command()
 
       const prompts = [];
 
+      const componentChoices = [];
       if (!options.skipTools) {
-        prompts.push({
-          type: "input",
-          name: "toolsPath",
-          message: "Tools directory path:",
-          default: toolsPath,
+        componentChoices.push({
+          name: "Tools",
+          value: "tools",
+          checked: true,
         });
       }
-
       if (!options.skipPrompts) {
-        prompts.push({
-          type: "input",
-          name: "promptsPath",
-          message: "Prompts directory path:",
-          default: promptsPath,
+        componentChoices.push({
+          name: "Prompts",
+          value: "prompts",
+          checked: true,
+        });
+      }
+      if (!options.skipResources) {
+        componentChoices.push({
+          name: "Resources",
+          value: "resources",
+          checked: true,
         });
       }
 
-      if (!options.skipResources) {
+      if (componentChoices.length > 0) {
         prompts.push({
-          type: "input",
-          name: "resourcesPath",
-          message: "Resources directory path:",
-          default: resourcesPath,
+          type: "checkbox",
+          name: "components",
+          message: "Select components to initialize:",
+          choices: componentChoices,
         });
       }
 
@@ -220,15 +225,20 @@ const program = new Command()
         process.exit(0);
       }
 
-      if (!options.skipTools) {
-        toolsPath = answers.toolsPath;
+      if (answers.components) {
+        const selectedComponents = answers.components as string[];
+
+        if (!selectedComponents.includes("tools")) {
+          toolsPath = undefined;
+        }
+        if (!selectedComponents.includes("prompts")) {
+          promptsPath = undefined;
+        }
+        if (!selectedComponents.includes("resources")) {
+          resourcesPath = undefined;
+        }
       }
-      if (!options.skipPrompts) {
-        promptsPath = answers.promptsPath;
-      }
-      if (!options.skipResources) {
-        resourcesPath = answers.resourcesPath;
-      }
+
       if (
         detectedFramework === "nextjs" &&
         !options.skipRoute &&
