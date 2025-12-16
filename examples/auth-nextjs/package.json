@@ -12,9 +12,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.5.7",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
+    "next": "15.5.9",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "xmcp": "workspace:*",
     "zod": "3.25.76"
   },
