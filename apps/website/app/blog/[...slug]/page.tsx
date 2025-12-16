@@ -6,7 +6,8 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import { getBlogPostBySlug } from "@/utils/blog";
+import { getBlogMetadata } from "@/utils/blog";
+import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -44,21 +45,15 @@ export async function generateMetadata(
   props: PageProps<"/blog/[...slug]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const page = blogSource.getPage(params.slug);
-  if (!page) notFound();
-
   const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
-  const blogPost = getBlogPostBySlug(slug);
+  const baseUrl = getBaseUrl();
+  const meta = getBlogMetadata(slug, baseUrl);
+  if (!meta) notFound();
 
-  const title = page.data.title;
-  const description = page.data.description;
-  const previewImage = blogPost?.previewImage;
-
-  const imageUrl = previewImage
-    ? `https://xmcp.dev${previewImage}`
-    : undefined;
+  const { title, description, ogImageUrl } = meta;
 
   return {
+    metadataBase: new URL(baseUrl),
     title,
     description,
     openGraph: {
@@ -67,25 +62,21 @@ export async function generateMetadata(
       siteName: "xmcp",
       type: "article",
       locale: "en_US",
-      ...(imageUrl && {
-        images: {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-        },
-      }),
+      images: {
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(imageUrl && {
-        images: {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-        },
-      }),
+      images: {
+        url: ogImageUrl,
+        width: 1200,
+        height: 630,
+      },
     },
   };
 }

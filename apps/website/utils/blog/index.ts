@@ -4,28 +4,40 @@ import matter from "gray-matter";
 export type BlogCategory = "changelog" | "guides";
 
 export interface BlogFrontmatter {
-  title?: string;
-  description?: string;
-  date?: string;
-  category?: BlogCategory;
-  order?: number;
-  featured?: boolean;
-  previewImage?: string;
-  [key: string]: unknown;
+  readonly title?: string;
+  readonly description?: string;
+  readonly summary?: string;
+  readonly date?: string;
+  readonly category?: BlogCategory;
+  readonly order?: number;
+  readonly featured?: boolean;
+  readonly previewImage?: string;
+  readonly textureImage?: string;
+  readonly [key: string]: unknown;
 }
 
 export interface BlogPost {
-  slug: string;
-  title: string;
-  content: string;
-  data: BlogFrontmatter;
-  path: string;
-  order: number;
-  category: BlogCategory;
-  date?: string;
-  description?: string;
-  featured?: boolean;
-  previewImage?: string;
+  readonly slug: string;
+  readonly title: string;
+  readonly content: string;
+  readonly data: BlogFrontmatter;
+  readonly path: string;
+  readonly order: number;
+  readonly category: BlogCategory;
+  readonly date?: string;
+  readonly description?: string;
+  readonly summary?: string;
+  readonly featured?: boolean;
+  readonly previewImage?: string;
+  readonly textureImage?: string;
+}
+
+export interface BlogMetadata {
+  readonly title: string;
+  readonly description: string;
+  readonly summary: string | undefined;
+  readonly date: string | undefined;
+  readonly ogImageUrl: string;
 }
 
 export function getAllBlogPosts(): BlogPost[] {
@@ -64,8 +76,10 @@ export function getAllBlogPosts(): BlogPost[] {
         category,
         date: data.date,
         description: data.description,
+        summary: data.summary,
         featured: data.featured || false,
         previewImage: data.previewImage,
+        textureImage: data.textureImage,
       });
     }
   }
@@ -98,6 +112,27 @@ export function getBlogPostBySlug(slug: string): BlogPost | null {
   }
 
   return found || null;
+}
+
+/**
+ * Get metadata for a blog post, suitable for generating page metadata and OG images.
+ */
+export function getBlogMetadata(
+  slug: string,
+  baseUrl: string
+): BlogMetadata | null {
+  const post = getBlogPostBySlug(slug);
+  if (!post) return null;
+
+  return {
+    title: post.title,
+    description: post.description ?? "",
+    summary: post.summary,
+    date: post.date,
+    ogImageUrl: post.previewImage
+      ? `${baseUrl}${post.previewImage}`
+      : `${baseUrl}/api/og/blog/${slug}`,
+  };
 }
 
 export function getBlogPostsByCategory(category: BlogCategory): BlogPost[] {

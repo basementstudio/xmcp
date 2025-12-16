@@ -1,0 +1,392 @@
+---
+title: "Monetize your GPT apps with Stripe"
+description: "Learn how to monetize your GPT apps using Stripe external checkout integration."
+summary: "Learn how to monetize your GPT apps using Stripe external checkout integration."
+category: "guide"
+date: "2025-12-16"
+order: 2
+textureImage: "/textures/text2.png"
+---
+
+Allow users to buy products directly from ChatGPT through Stripe's external checkout integration.
+
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="/blog/apps-monetization.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+Find the complete project on [GitHub](https://github.com/xmcp-dev/gpt-apps-monetization).
+
+## Project Setup
+
+Create a new Next.js project and initialize it with xmcp:
+
+```bash
+npx create-next-app@latest gpt-apps-monetization
+cd gpt-apps-monetization
+npx init-xmcp@latest
+```
+
+The final structure of the project would look like this:
+
+```
+gpt-apps-monetization/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── success/page.tsx
+│   ├── cancel/page.tsx
+│   ├── mcp/
+│   │   └── route.ts          # MCP endpoint
+│   └── products/
+│       └── page.tsx          # Products widget
+├── hooks/
+│   ├── types.ts              # Type definitions
+│   ├── use-call-tool.ts      # Hook to invoke MCP tools
+│   ├── use-tool-output.ts    # Hook to access tool output
+│   └── use-openai-global.ts  # Hook to access OpenAI global variables
+│   └── use-open-external.ts   # Hook to access external links
+├── lib/
+│   ├── base-url.ts           # Base URL utility
+│   ├── stripe.ts             # Stripe integration
+│   └── utils.ts              # Utility functions
+├── tools/
+│   ├── buy-products.ts         # Buy products tool
+│   └── list-products.ts        # List products tool
+├── .env                      # Environment variables
+├── xmcp.config.ts            # xmcp configuration
+└── package.json
+```
+
+### Stripe 
+
+Start by creating a Stripe account, enable the sandbox environment, copy the secret key (`sk_test_…`), and define several one-off products.
+
+Then install the Stripe package:
+
+```bash
+pnpm add stripe
+```
+
+Create `lib/stripe.ts` file that will initilize the Stripe client and create a checkout session for the selected products:
+
+```typescript title="lib/stripe.ts"
+import Stripe from "stripe";
+import { getBaseUrl } from "./base-url";
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+export type CheckoutItem = { priceId: string; quantity: number };
+
+export async function getCheckoutSession(items: CheckoutItem[]) {
+  // Merge duplicate priceIds so Stripe receives a single line item per price.
+  const quantityByPriceId = items.reduce<Record<string, number>>(
+    (acc, { priceId, quantity }) => {
+      const safeQuantity = Math.max(1, Math.floor(quantity));
+      acc[priceId] = (acc[priceId] ?? 0) + safeQuantity;
+      return acc;
+    },
+    {}
+  );
+
+  const url = getBaseUrl();
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    line_items: Object.entries(quantityByPriceId).map(
+      ([priceId, quantity]) => ({
+        price: priceId,
+        quantity,
+      })
+    ),
+    success_url: `${url}/success`,
+    cancel_url: `${url}/cancel`,
+  });
+
+  return session;
+}
+
+export type FormattedProduct = {
+  id: string;
+  priceId: string;
+  image: string | null;
+  name: string;
+  description: string | null;
+};
+
+export async function getProducts(): Promise<FormattedProduct[]> {
+  const { data: products } = await stripe.products.list();
+  return products.map((product) => {
+    return {
+      id: product.id,
+      priceId: product.default_price as string,
+      image: product.images?.[0],
+      name: product.name,
+      description: product.description,
+    };
+  });
+}
+```
+
+## Setting up our server
+
+Once your project setup is complete, let's create the tools for our MCP server that will handle the listing and the checkout of the products.
+
+### Listing your products
+
+This tool will be used to get the products available for purchase and display them in a widget.
+
+```typescript title="tools/list-products.ts"
+import { getProducts } from "@/lib/stripe";
+import { getAppsSdkCompatibleHtml } from "@/lib/utils";
+import { ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "list_products",
+  description: "List the products available for purchase",
+  annotations: {
+    readOnlyHint: true,
+  },
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+export default async function handler() {
+  return {
+    content: [
+      {
+        type: "text",
+        text: await getAppsSdkCompatibleHtml("/products"),
+      },
+    ],
+    structuredContent: {
+      products: await getProducts(),
+    },
+  };
+}
+```
+
+### Buying a product
+
+This tool will be used to create a checkout session for the selected products and quantities, then return the URL to the checkout page.
+
+```typescript title="tools/buy-products.ts"
+import { CheckoutItem, getCheckoutSession } from "@/lib/stripe";
+import { ToolMetadata, InferSchema } from "xmcp";
+import { z } from "zod";
+
+export const schema = {
+  items: z
+    .array(
+      z.object({
+        priceId: z.string().describe("The Stripe price ID to purchase"),
+        quantity: z
+          .number()
+          .int()
+          .min(1)
+          .describe("How many units of this price to purchase"),
+      })
+    )
+    .nonempty()
+    .describe("The line items to include in checkout"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "buy-products",
+  description:
+    "Create a checkout page link for purchasing the selected products",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+export default async function handler({ items }: InferSchema<typeof schema>) {
+  try {
+    const session = await getCheckoutSession(items as CheckoutItem[]);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `[Complete your purchase here](${session.url})`,
+        },
+      ],
+      structuredContent: {
+        checkoutSessionId: session.id,
+        checkoutSessionUrl: session.url,
+      },
+    };
+  } catch (error) {
+    console.error("Failed to create checkout session for products", error);
+    return {
+      content: [
+        {
+          type: "text",
+          text: "Unable to start checkout right now. Please try again.",
+        },
+      ],
+      // structuredContent must always be a plain object for MCP; return an empty object on error.
+      structuredContent: {},
+    };
+  }
+}
+```
+
+## Completing the checkout
+
+On the application side, you will find the `products/page.tsx` file, which displays the products and handles the checkout process.
+
+This components calls our MCP server tools using the OpenAI SDK hooks: `useCallTool` to invoke the `buy-products` tool and `useToolOutput` to access the products. Finally, it uses the `useOpenExternal` hook to open the checkout page in a new tab.
+
+```tsx title="app/products/page.tsx"
+"use client";
+
+import { FormEvent, useMemo, useState } from "react";
+import { ProductGrid } from "@/components/product-grid";
+import { useToolOutput } from "@/hooks/use-tool-output";
+import { useCallTool } from "@/hooks/use-call-tool";
+import { useOpenExternal } from "@/hooks/use-open-external";
+
+type Product = {
+  name: string;
+  priceId: string;
+  image: string | null;
+};
+
+type CheckoutItem = { priceId: string; quantity: number };
+
+export default function ProductsPage() {
+  const callTool = useCallTool();
+  const openExternal = useOpenExternal();
+  const toolOutput = useToolOutput<{ products?: Product[] }>();
+  const products = useMemo(
+    () => (Array.isArray(toolOutput?.products) ? toolOutput.products : []),
+    [toolOutput]
+  );
+
+  const [status, setStatus] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  const canCheckout = useMemo(
+    () => products.some((product) => (quantities[product.priceId] ?? 0) > 0),
+    [products, quantities]
+  );
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const items: CheckoutItem[] = Object.entries(quantities)
+      .map(([priceId, quantity]) => ({ priceId, quantity }))
+      .filter((item) => item.quantity > 0);
+
+    if (!items.length) {
+      setStatus("Set a quantity for at least one product to continue.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await callTool("buy-products", {
+        items,
+      });
+
+      const checkoutUrl =
+        result?.structuredContent &&
+        (result.structuredContent as { checkoutSessionUrl?: string })
+          .checkoutSessionUrl;
+
+      if (checkoutUrl) {
+        setCheckoutUrl(checkoutUrl);
+        setStatus("Checkout ready. Click the button below to continue.");
+      } else {
+        setStatus("No checkout URL returned. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to start checkout", error);
+      setStatus("Failed to start checkout. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="mx-auto flex max-w-2xl flex-col gap-6 p-6">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-semibold">Select products to purchase</h1>
+      </header>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {products.length ? (
+          <ProductGrid
+            products={products}
+            quantities={quantities}
+            onQuantityChange={(priceId, quantity) =>
+              setQuantities((prev) => ({ ...prev, [priceId]: quantity }))
+            }
+          />
+        ) : checkoutUrl ? null : (
+          <p className="text-sm text-gray-500">
+            Waiting for products from the tool output…
+          </p>
+        )}
+
+        <button
+          type={checkoutUrl ? "button" : "submit"}
+          className="inline-flex w-full items-center justify-center rounded bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90 disabled:opacity-60"
+          disabled={
+            isSubmitting || (!checkoutUrl && (!products.length || !canCheckout))
+          }
+          onClick={() =>
+            !isSubmitting && checkoutUrl && openExternal(checkoutUrl)
+          }
+        >
+          {isSubmitting
+            ? "Processing…"
+            : checkoutUrl
+            ? "Open checkout"
+            : "Proceed to checkout"}
+        </button>
+
+        {status ? (
+          <p className="text-sm text-gray-700" role="status">
+            {status}
+          </p>
+        ) : null}
+      </form>
+    </main>
+  );
+}
+```
+
+## Handling successful orders
+
+Once a customer completes a payment, your application must reliably fulfill the order. Even if you configure a `success_url`, Stripe strongly recommends subscribing to webhooks to handle order fulfillment.
+
+Refer to [Stripe’s guide to handling successful payments](https://stripe.com/docs/payments/checkout/fulfill-orders) for implementation details and best practices.
+
+## Deployment and testing
+
+Here's the complete user flow for testing your application:
+
+1. Deploy your application to Vercel and get the URL with the MCP endpoint (`https://your-app.vercel.app/mcp`).
+2. In ChatGPT go to `Apps & Connectors` → `Advanced Settings` and enable developer mode.
+3. Create Connector: 
+   - Go back to `Apps & Connectors` and click `Create`
+   - Enter a name for your connector and your MCP server URL
+   - Select `No Authentication`
+   - Accept the terms and conditions
+   - Click `Create`
+4. Create a new chat and use the `/`  command to access the connector.
