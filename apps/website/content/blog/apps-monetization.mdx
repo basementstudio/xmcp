@@ -3,7 +3,7 @@ title: "Monetize your GPT apps with Stripe"
 description: "Learn how to monetize your GPT apps using Stripe external checkout integration."
 summary: "Learn how to monetize your GPT apps using Stripe external checkout integration."
 category: "guide"
-date: "2025-12-15"
+date: "2025-12-16"
 order: 2
 textureImage: "/textures/text2.png"
 ---
@@ -370,6 +370,12 @@ export default function ProductsPage() {
   );
 }
 ```
+
+## Handling successful orders
+
+Once a customer completes a payment, your application must reliably fulfill the order. Even if you configure a `success_url`, Stripe strongly recommends subscribing to webhooks to handle order fulfillment.
+
+Refer to [Stripe’s guide to handling successful payments](https://stripe.com/docs/payments/checkout/fulfill-orders) for implementation details and best practices.
 
 ## Deployment and testing
 
