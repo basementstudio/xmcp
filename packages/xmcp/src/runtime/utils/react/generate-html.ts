@@ -50,6 +50,8 @@ export function generateUIHTML(componentCode: string): string {
     window.addEventListener("message", (event) => {
       const data = event.data;
 
+      if (event.source !== window.parent) return;
+
       // handshake ack
       if (data?.result?.hostContext && data?.id === 1) {
         window.parent.postMessage({
@@ -57,12 +59,6 @@ export function generateUIHTML(componentCode: string): string {
           method: "ui/notifications/initialized",
           params: {}
         }, "*");
-      }
-
-      if (data?.method === "ui/notifications/tool-input") {
-        window.dispatchEvent(
-          new MessageEvent("message", { data })
-        );
       }
     });
 

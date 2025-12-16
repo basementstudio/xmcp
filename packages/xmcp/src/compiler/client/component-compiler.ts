@@ -118,9 +118,13 @@ export class ClientComponentCompiler {
     root.render(React.createElement(Component, props));
   }
 
-  render(window.openai?.toolInput ?? {});
+  if (window.openai !== undefined) {
+    render(window.openai.toolInput ?? {});
+  }
 
   window.addEventListener("message", (event) => {
+    if (event.source !== window.parent && event.source !== null) return;
+
     if (event.data?.method === "ui/notifications/tool-input") {
       render(event.data.params?.arguments ?? {});
     }
