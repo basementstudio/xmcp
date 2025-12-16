@@ -4,17 +4,14 @@ description: "From GPT apps to React components, external MCP clients, and monet
 category: "changelog"
 date: "2025-12-20"
 order: 8
-previewImage: "/blog/everything-we-shipped-so-far.webp"
-featured: true
+textureImage: "/textures/text4.png"
 ---
 
-It's been a busy few months. We've shipped GPT app integrations, React components, connections to external MCPs, and even monetization support. Here's a recap of everything we've built.
+xmcp now lets you build GPT apps, render React widgets, connect to external MCPs, monetize and authenticate your tools.
 
 ## GPT Apps
 
-xmcp is fully integrated with OpenAI Apps SDK, so you can build and run apps directly inside ChatGPT. Tools can return React components for interactive, composable widgets.
-
-### Counter tool
+Build apps that run directly inside ChatGPT. xmcp integrates with OpenAI's Apps SDK, so your tools can return interactive widgets.
 
 ```typescript title="src/tools/counter.tsx"
 import { InferSchema, type ToolMetadata } from "xmcp";
@@ -23,7 +20,7 @@ import { z } from "zod";
 
 export const metadata: ToolMetadata = {
   name: "counter",
-  description: "Counter React",
+  description: "Interactive counter widget",
   _meta: {
     openai: {
       toolInvocation: {
@@ -37,7 +34,7 @@ export const metadata: ToolMetadata = {
 };
 
 export const schema = {
-  initialCount: z.number().describe("The name of the user to greet"),
+  initialCount: z.number().describe("Starting count value"),
 };
 
 export default function handler({ initialCount }: InferSchema<typeof schema>) {
@@ -54,104 +51,11 @@ export default function handler({ initialCount }: InferSchema<typeof schema>) {
 }
 ```
 
-### Weather tool
-
-```typescript title="src/tools/weather.tsx"
-import { type ToolMetadata } from "xmcp";
-import { useState, useEffect } from "react";
-
-export const metadata: ToolMetadata = {
-  name: "weather",
-  description: "Weather App",
-  _meta: {
-    openai: {
-      toolInvocation: {
-        invoking: "Loading weather",
-        invoked: "Weather loaded",
-      },
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
-    },
-  },
-};
-
-const cities = {
-  "Buenos Aires": { lat: -34.6037, lon: -58.3816 },
-  "San Francisco": { lat: 37.7749, lon: -122.4194 },
-  Berlin: { lat: 52.52, lon: 13.405 },
-  Tokyo: { lat: 35.6762, lon: 139.6503 },
-  "New York": { lat: 40.7128, lon: -74.006 },
-};
-
-export default function handler() {
-  const [selectedCity, setSelectedCity] = useState("Buenos Aires");
-  const [weatherData, setWeatherData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchWeather = async () => {
-      setLoading(true);
-      setError(null);
-
-      const city = cities[selectedCity as keyof typeof cities];
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
-
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error("Failed to fetch weather data");
-        }
-        const data = await response.json();
-        setWeatherData(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWeather();
-  }, [selectedCity]);
-
-  return (
-    <div>
-      <h1>Weather App</h1>
-
-      <div>
-        <h2>Select a city:</h2>
-        {Object.keys(cities).map((city) => (
-          <button key={city} onClick={() => setSelectedCity(city)}>
-            {city}
-          </button>
-        ))}
-      </div>
-
-      <div>
-        <h2>{selectedCity}</h2>
-
-        {loading && <p>Loading...</p>}
-
-        {error && <p>Error: {error}</p>}
-
-        {weatherData && !loading && (
-          <div>
-            <p>Temperature: {weatherData.current.temperature_2m}°C</p>
-            <p>Humidity: {weatherData.current.relative_humidity_2m}%</p>
-            <p>Wind Speed: {weatherData.current.wind_speed_10m} km/h</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-```
+For the full setup guide, check out the [OpenAI Apps SDK integration](/blog/apps-sdk) blog post.
 
 ## React Client Components
 
-Tools can return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
-
-To enable widgets, add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+Tools can return React components that xmcp renders to HTML and serves as widget resources. Enable this by setting `widgetAccessible: true` in your metadata.
 
 ```typescript title="src/tools/interactive-todo.tsx"
 import { type ToolMetadata } from "xmcp";
@@ -204,7 +108,7 @@ export default function InteractiveTodo() {
 
 ## Connect to External MCPs
 
-Beyond building your own tools, you can now connect to existing MCP servers, discover their tools, and use them in yours. Define your clients in a `src/clients.ts` file, the client can be HTTP or STDIO.
+Connect to existing MCP servers and use their tools in yours. Define external clients in `src/clients.ts`:
 
 ```typescript title="src/clients.ts"
 import { ClientConnections } from "xmcp";
@@ -224,145 +128,200 @@ export const clients: ClientConnections = {
   },
 };
 ```
-
 <Callout variant="info" icon="info" title="STDIO packages">
-STDIO clients need to be installed in your environment for them to work.
+STDIO clients like `@playwright/mcp` must be installed in your project.
 </Callout>
 
-Then generate the typed clients with the CLI:
+Then generate typed clients:
 
 ```bash
 npx @xmcp-dev/cli generate
 ```
 
-This outputs fully typed clients to the `src/generated` directory. Here are two examples of how to use them:
-
-### Browser navigate
+And use them in your tools:
 
 ```typescript title="src/tools/browser-navigate.ts"
-import { InferSchema, type ToolMetadata } from "xmcp";
 import { generatedClients } from "../generated/client.index";
-import { z } from "zod";
 
-export const schema = {
-  url: z.string().describe("The URL to navigate to"),
-};
-
-export const metadata: ToolMetadata = {
-  name: "browser-navigate",
-  description: "Navigate to a URL",
-};
-
-export default async function handler({ url }: InferSchema<typeof schema>) {
-  await generatedClients.playwright.browserNavigate({
-    url,
-  });
-
+export default async function handler({ url }: { url: string }) {
+  await generatedClients.playwright.browserNavigate({ url });
   return `Navigated to: ${url}`;
 }
 ```
 
-### Get library docs
-
-```typescript title="src/tools/get-library-docs.ts"
-import { InferSchema, type ToolMetadata } from "xmcp";
-import { generatedClients } from "../generated/client.index";
-import { z } from "zod";
-
-export const schema = {
-  libraryName: z.string().describe("The name of the library to get docs for"),
-};
-
-export const metadata: ToolMetadata = {
-  name: "get-library-docs",
-  description: "Get the docs for a library",
-};
-
-export default async function handler({
-  libraryName,
-}: InferSchema<typeof schema>) {
-  const libraryDocs = await generatedClients.context.getLibraryDocs({
-    context7CompatibleLibraryID: libraryName,
-  });
-
-  const result = (libraryDocs.content as any)[0].text;
-
-  return `Library docs: ${result}`;
-}
-```
+For the complete guide, see [Connect to external MCPs](/blog/cli-typed-clients).
 
 ## Next.js Adapter
 
-{/* TODO: Add content for Next.js Adapter */}
+Bring xmcp to your existing Next.js application with a single command:
+
+```bash
+npx init-xmcp@latest
+```
+
+After running it, your project structure should look like this:
+
+```
+nextjs-app/
+├── app/
+│   └── mcp/
+│       └── route.ts      # MCP HTTP endpoint
+├── tools/
+│   └── greet.ts          # Example tool
+├── prompts/
+│   └── review-code.ts    # Example prompt
+├── resources/
+│   ├── (config)/
+│   │   └── app.ts        # Static resource
+│   └── (users)/
+│       └── [userId]/
+│           └── profile.ts # Dynamic resource
+└── xmcp.config.ts        # xmcp configuration
+```
+
+The package.json scripts will be modified to run xmcp alongside Next.js, as so is the tsconfig.json will have the paths updated to include the xmcp folder.
+
+For the full setup including authentication, see [Next.js adapter docs](/docs/adapters/nextjs).
 
 ## Authentication
 
-{/* TODO: Add content for Authentication */}
+xmcp integrates with [Better Auth](https://www.better-auth.com/), adding authentication to your tools with email/password login, OAuth providers, and session management out of the box.
 
-## Monetization
+Configure the middleware with your database and auth providers in `src/middleware.ts`:
 
-Once you have powerful tools, you might want to monetize them. We've integrated with Polar to add paywalls and track usage for billing.
+```typescript title="src/middleware.ts"
+import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { Pool } from "pg";
 
-```typescript title="src/lib/polar.ts"
-import { PolarProvider } from "@xmcp-dev/polar";
-
-export const polar = PolarProvider.getInstance({
-  type: "sandbox",
-  token: process.env.POLAR_TOKEN!,
-  organizationId: process.env.POLAR_ORGANIZATION_ID!,
-  productId: process.env.POLAR_PRODUCT_ID!,
+export default betterAuthProvider({
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
+  baseURL: process.env.BETTER_AUTH_BASE_URL,
+  secret: process.env.BETTER_AUTH_SECRET,
+  providers: {
+    emailAndPassword: { enabled: true },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
 });
 ```
 
-### Paywalling a tool
+Access the authenticated user in your tools with `getBetterAuthSession`:
 
-Use the `validateLicenseKey` method to check if the user has access before running the tool:
+```typescript title="src/tools/get-user-profile.ts"
+import { getBetterAuthSession } from "@xmcp-dev/better-auth";
 
-```typescript title="src/tools/paywall.ts"
-import { z } from "zod";
-import { type InferSchema, type ToolMetadata } from "xmcp";
-import { headers } from "xmcp/headers";
-import { polar } from "../lib/polar";
-
-export const schema = {
-  name: z.string().describe("The name of the user to greet"),
-};
-
-export const metadata: ToolMetadata = {
-  name: "greet",
-  description: "Greet the user",
-  annotations: {
-    title: "Greet the user",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
-};
-
-export default async function greet({ name }: InferSchema<typeof schema>) {
-  const result = `Hello, ${name}!`;
-  const licenseKey = headers()["license-key"];
-  const response = await polar.validateLicenseKey(licenseKey as string, {
-    name: "test_tool_call",
-    metadata: { tool_name: "greet", calls: 1 },
-  });
-  if (!response.valid) {
-    return response.message;
-  }
-  return result;
+export default async function getUserProfile() {
+  const session = await getBetterAuthSession();
+  return `Hello! Your user id is ${session.userId}`;
 }
 ```
 
+For the full setup with database schema and OAuth configuration, see [Integrating Better Auth with xmcp](/blog/better-auth-integration) or the [Better Auth docs](/docs/integrations/better-auth).
+
+## Monetization
+
+Sell products directly from ChatGPT using Stripe checkout. Create tools that list your products and handle purchases.
+
+### Listing products
+
+List the products available for purchase from your Stripe business.
+
+```typescript title="tools/list-products.ts"
+import { getProducts } from "@/lib/stripe";
+import { ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "list_products",
+  description: "List the products available for purchase",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+export default async function handler() {
+  return {
+    structuredContent: { products: await getProducts() },
+  };
+}
+```
+
+### Buying products
+
+Create a checkout session for the selected products and quantities and return the URL to the checkout page.
+
+```typescript title="tools/buy-products.ts"
+import { getCheckoutSession } from "@/lib/stripe";
+import { ToolMetadata, InferSchema } from "xmcp";
+import { z } from "zod";
+
+export const schema = {
+  items: z.array(
+    z.object({
+      priceId: z.string().describe("The Stripe price ID"),
+      quantity: z.number().int().min(1).describe("Quantity to purchase"),
+    })
+  ),
+};
+
+export const metadata: ToolMetadata = {
+  name: "buy-products",
+  description: "Create a checkout link for purchasing products",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+    },
+  },
+};
+
+export default async function handler({ items }: InferSchema<typeof schema>) {
+  const session = await getCheckoutSession(items);
+
+  return {
+    content: [{ type: "text", text: `[Complete your purchase](${session.url})` }],
+    structuredContent: { checkoutSessionUrl: session.url },
+  };
+}
+```
+
+For the full Stripe implementation with UI components, see [Monetize your GPT apps with Stripe](/blog/apps-monetization).
+
+### Tools suscription based access or usage tracking
+
+Use Polar to validate license keys or track the usage of your tools.
+
+```typescript title="src/tools/premium-tool.ts"
+import { headers } from "xmcp/headers";
+import { polar } from "../lib/polar";
+
+export default async function handler() {
+  const licenseKey = headers()["license-key"];
+  const response = await polar.validateLicenseKey(licenseKey as string);
+
+  if (!response.valid) {
+    return response.message;
+  }
+
+  return "Premium content here";
+}
+```
+
+For the full Polar setup with usage metering, see [Integrating Polar with xmcp](/blog/polar-integration).
+
 ## Other Improvements
 
-We also shipped some smaller but useful updates:
-
-- **Rspack migration**: xmcp was initially built with Webpack, but with v0.5.0 we replaced it with Rspack for a major performance overhaul. Build times dropped significantly, and bundle sizes decreased by a third.
-- **CORS configuration**: Configure CORS middleware to allow requests from external domains, headers, methods, and credentials.
-- **Structured Content output**: Tools can return structured content alongside UI for richer responses.
-- **Project scaffolding**: `create-xmcp-app` now sets up everything you need in one command.
-- **Opt-in telemetry**: Anonymous usage data helps us improve xmcp. Fully opt-in.
+- **Rspack migration**: Replaced Webpack with Rspack for faster builds and smaller bundles.
+- **CORS configuration**: Configure CORS middleware for cross-domain requests.
+- **Structured Content output**: Return structured content alongside UI for richer responses.
+- **Project scaffolding**: `create-xmcp-app` sets up everything in one command.
 
 ## Contributing
 
-Share your feedback and help shape the future of xmcp: [GitHub](https://github.com/basementstudio/xmcp)
+If you have any questions, you can reach out to us on [Discord](https://discord.gg/65ngK7bWEA).
