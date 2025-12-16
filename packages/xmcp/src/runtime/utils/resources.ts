@@ -64,7 +64,12 @@ export function addResourcesToServer(
           const bundleName = pathToToolName(autoResource.toolPath);
 
           // Priority 1: Use injected bundles (reliable in Lambda/serverless)
-          clientCode = resolvedClientBundles?.[bundleName];
+          const injectedBundle = resolvedClientBundles?.[bundleName];
+          if (injectedBundle) {
+            clientCode = Buffer.from(injectedBundle, "base64").toString(
+              "utf-8"
+            );
+          }
 
           // Priority 2: Fallback to filesystem (for local development)
           if (!clientCode) {

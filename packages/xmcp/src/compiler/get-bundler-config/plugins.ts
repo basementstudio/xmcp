@@ -186,7 +186,8 @@ export class InjectClientBundlesPlugin {
                   path.join(this.clientBundlesPath, file),
                   "utf-8"
                 );
-                bundles[toolName] = bundleContent;
+                bundles[toolName] =
+                  Buffer.from(bundleContent).toString("base64");
               }
             }
           }
