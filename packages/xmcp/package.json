@@ -49,6 +49,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
     "@rspack/core": "^1.6.7",
+    "postcss-loader": "^8.2.0",
     "ts-checker-rspack-plugin": "^1.2.1",
     "typescript": "^5.9.3"
   },

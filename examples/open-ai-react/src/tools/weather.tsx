@@ -1,6 +1,5 @@
 import { type ToolMetadata } from "xmcp";
 import { useState, useEffect } from "react";
-import "../../index.css";
 
 export const metadata: ToolMetadata = {
   name: "weather",
@@ -57,7 +56,7 @@ export default function handler() {
   }, [selectedCity]);
 
   return (
-    <div className="container">
+    <div>
       <h1>Weather App</h1>
 
       <div>
