@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { OpenAIMetadata } from "./openai-meta";
 
 export interface ToolAnnotations {

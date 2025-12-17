@@ -7,7 +7,7 @@ import { PromptMetadata } from "@/types/prompt";
 import { UserToolHandler } from "./transformers/tool";
 import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
-import { ZodRawShape } from "zod";
+import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { openAIResourceRegistry } from "./openai-resource-registry";

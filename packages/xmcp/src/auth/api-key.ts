@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const apiKeyAuthMiddlewareConfigSchema = z
   .object({
