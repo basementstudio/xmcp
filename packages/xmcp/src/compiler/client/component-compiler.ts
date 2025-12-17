@@ -143,6 +143,7 @@ export class ClientComponentCompiler {
       target: "web",
       experiments: {
         outputModule: true,
+        css: true,
       },
       output: {
         path: config.absoluteOutputDir,
@@ -191,6 +192,15 @@ export class ClientComponentCompiler {
                 },
               },
             },
+          },
+          {
+            test: /\.css$/,
+            type: "css/auto",
+          },
+          {
+            test: /\.less$/,
+            type: "css/auto",
+            use: ["less-loader"],
           },
         ],
       },

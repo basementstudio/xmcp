@@ -14,20 +14,8 @@ import { flattenMeta } from "./openai/flatten-meta";
 import fs from "fs";
 import path from "path";
 import { generateOpenAIHTML, generateUIHTML } from "./react/generate-html";
-import { CLIENT_BUNDLE_PLACEHOLDER } from "@/constants/client-bundle-placeholder";
 import { pathToToolName } from "@/compiler/utils/path-utils";
 import { uIResourceRegistry } from "./ext-apps-registry";
-
-declare const INJECTED_CLIENT_BUNDLES: Record<string, string> | undefined;
-
-const PLACEHOLDER_CLIENT_BUNDLES = CLIENT_BUNDLE_PLACEHOLDER as unknown as
-  | Record<string, string>
-  | undefined;
-
-const resolvedClientBundles =
-  typeof INJECTED_CLIENT_BUNDLES !== "undefined"
-    ? INJECTED_CLIENT_BUNDLES
-    : PLACEHOLDER_CLIENT_BUNDLES;
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -60,55 +48,50 @@ export function addResourcesToServer(
       if (autoResource.mimeType && autoResource.toolPath) {
         try {
           let clientCode: string | undefined;
+          let clientCss: string | undefined;
 
           const bundleName = pathToToolName(autoResource.toolPath);
 
-          // Priority 1: Use injected bundles (reliable in Lambda/serverless)
-          const injectedBundle = resolvedClientBundles?.[bundleName];
-          if (injectedBundle) {
-            clientCode = Buffer.from(injectedBundle, "base64").toString(
-              "utf-8"
-            );
+          const searchRoots = [
+            path.join(process.cwd(), "dist", "client"),
+            path.join(process.cwd(), "client"),
+          ];
+          const attemptedPaths: string[] = [];
+
+          for (const root of searchRoots) {
+            const candidate = path.join(root, `${bundleName}.bundle.js`);
+            const cssCandidate = path.join(root, `${bundleName}.bundle.css`);
+            attemptedPaths.push(candidate);
+
+            if (fs.existsSync(candidate)) {
+              clientCode = fs.readFileSync(candidate, "utf-8");
+
+              if (fs.existsSync(cssCandidate)) {
+                clientCss = fs.readFileSync(cssCandidate, "utf-8");
+              }
+              break;
+            }
           }
 
-          // Priority 2: Fallback to filesystem (for local development)
           if (!clientCode) {
-            const searchRoots = [
-              path.join(process.cwd(), "dist", "client"),
-              path.join(process.cwd(), "client"),
-            ];
-            const attemptedPaths: string[] = [];
-
-            for (const root of searchRoots) {
-              const candidate = path.join(root, `${bundleName}.bundle.js`);
-              attemptedPaths.push(candidate);
-
-              if (fs.existsSync(candidate)) {
-                clientCode = fs.readFileSync(candidate, "utf-8");
-                break;
-              }
-            }
-
-            if (!clientCode) {
-              const formattedPaths = attemptedPaths
-                .map((p) => `  - ${p}`)
-                .join("\n");
-              throw new Error(
-                `React client bundle not found for "${autoResource.name}" (bundle: "${bundleName}").\n` +
-                  `Expected to find it either:\n` +
-                  `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
-                  `  2. On filesystem at one of:\n${formattedPaths}\n` +
-                  `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
-                  `Please re-run the build so the framework can regenerate the bundle.`
-              );
-            }
+            const formattedPaths = attemptedPaths
+              .map((p) => `  - ${p}`)
+              .join("\n");
+            throw new Error(
+              `React client bundle not found for "${autoResource.name}" (bundle: "${bundleName}").\n` +
+                `Expected to find it either:\n` +
+                `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
+                `  2. On filesystem at one of:\n${formattedPaths}\n` +
+                `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
+                `Please re-run the build so the framework can regenerate the bundle.`
+            );
           }
 
           const isMCPApp =
             autoResource.mimeType === "text/html;profile=mcp-app";
           const fullHTML = isMCPApp
-            ? generateUIHTML(clientCode)
-            : generateOpenAIHTML(clientCode);
+            ? generateUIHTML(clientCode, clientCss)
+            : generateOpenAIHTML(clientCode, clientCss);
 
           return {
             contents: [
