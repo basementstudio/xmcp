@@ -7,53 +7,56 @@ order: 8
 textureImage: "/textures/text4.png"
 ---
 
-7th of july
-
-Since our launch on xmcp now lets you build GPT apps, render React widgets, connect to external MCPs, monetize and authenticate your tools.
+It’s been five months since we launched xmcp, and we’re excited to share that we’ve reached 100K downloads. Here’s a recap of what we’ve shipped so far.
 
 ## GPT Apps
 
 Build apps that run directly inside ChatGPT. xmcp integrates with OpenAI's Apps SDK, so your tools can return interactive widgets.
 
-```typescript title="src/tools/counter.tsx"
-import { InferSchema, type ToolMetadata } from "xmcp";
-import { useState } from "react";
-import { z } from "zod";
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="/blog/doom-apps-sdk.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+### Arcade Tool
+
+The `arcade` tool displays a retro arcade game selection interface:
+
+```typescript title="src/tools/arcade.ts"
+import { type ToolMetadata } from "xmcp";
+import { baseURL } from "@/base-url";
+import { getAppsSdkCompatibleHtml } from "@/lib/utils";
 
 export const metadata: ToolMetadata = {
-  name: "counter",
-  description: "Interactive counter widget",
+  name: "arcade",
+  description: "Shows the retro arcade game selection interface",
+  annotations: {
+    readOnlyHint: true,
+  },
   _meta: {
     openai: {
-      toolInvocation: {
-        invoking: "Loading counter",
-        invoked: "Counter loaded",
-      },
       widgetAccessible: true,
       resultCanProduceWidget: true,
+      toolInvocation: {
+        invoking: "Loading arcade...",
+        invoked: "Arcade loaded",
+      },
     },
   },
 };
 
-export const schema = {
-  initialCount: z.number().describe("Starting count value"),
-};
-
-export default function handler({ initialCount }: InferSchema<typeof schema>) {
-  const [count, setCount] = useState(initialCount);
-
-  return (
-    <div>
-      <h1>Counter: {count}</h1>
-      <button onClick={() => setCount(count + 1)}>Increment</button>
-      <button onClick={() => setCount(count - 1)}>Decrement</button>
-      <button onClick={() => setCount(0)}>Reset</button>
-    </div>
-  );
+// Tool implementation
+export default async function handler() {
+  const html = await getAppsSdkCompatibleHtml(baseURL, "/widgets/arcade");
+  return html;
 }
 ```
 
-For the full setup guide, check out the [OpenAI Apps SDK integration](/docs/) blog post.
+A full breakdown of the project is available in the [Running DOOM in ChatGPT](/blog/doom-with-xmcp) blog post.
 
 ## React Client Components
 
@@ -106,11 +109,13 @@ export default function InteractiveTodo() {
     </div>
   );
 }
-```
+``` 
 
-## Connect to External MCPs
+Find out more in the [React Client Components](/docs/core-concepts/tools#react-client-components) documentation.
 
-Connect to existing MCP servers and use their tools in yours. Define external clients in `src/clients.ts`:
+## Connect to external MCPs 
+
+Connect to external MCP servers and use their tools in your own tools. Define external clients in `src/clients.ts`:
 
 ```typescript title="src/clients.ts"
 import { ClientConnections } from "xmcp";
@@ -130,9 +135,6 @@ export const clients: ClientConnections = {
   },
 };
 ```
-<Callout variant="info" icon="info" title="STDIO packages">
-STDIO clients like `@playwright/mcp` must be installed in your project.
-</Callout>
 
 Then generate typed clients:
 
@@ -161,7 +163,7 @@ Bring xmcp to your existing Next.js application with a single command:
 npx init-xmcp@latest
 ```
 
-After running it, your project structure should look like this:
+After running it, your project structure would look like this:
 
 ```
 nextjs-app/
@@ -181,9 +183,9 @@ nextjs-app/
 └── xmcp.config.ts        # xmcp configuration
 ```
 
-The package.json scripts will be modified to run xmcp alongside Next.js, as so is the tsconfig.json will have the paths updated to include the xmcp folder.
+The package.json scripts will be modified to run xmcp alongside Next.js, while tsconfig.json will be updated to include the xmcp folder in its paths
 
-For the full setup including authentication, see [Next.js adapter docs](/docs/adapters/nextjs).
+For the full setup, including authentication, check out the [Next.js adapter](/docs/adapters/nextjs) documentation.
 
 ## Authentication
 
@@ -228,76 +230,20 @@ For the full setup with database schema and OAuth configuration, see [Integratin
 
 Sell products directly from ChatGPT using Stripe checkout. Create tools that list your products and handle purchases.
 
-### Listing products
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="/blog/apps-monetization.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-List the products available for purchase from your Stripe business.
-
-```typescript title="tools/list-products.ts"
-import { getProducts } from "@/lib/stripe";
-import { ToolMetadata } from "xmcp";
-
-export const metadata: ToolMetadata = {
-  name: "list_products",
-  description: "List the products available for purchase",
-  _meta: {
-    openai: {
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
-    },
-  },
-};
-
-export default async function handler() {
-  return {
-    structuredContent: { products: await getProducts() },
-  };
-}
-```
-
-### Buying products
-
-Create a checkout session for the selected products and quantities and return the URL to the checkout page.
-
-```typescript title="tools/buy-products.ts"
-import { getCheckoutSession } from "@/lib/stripe";
-import { ToolMetadata, InferSchema } from "xmcp";
-import { z } from "zod";
-
-export const schema = {
-  items: z.array(
-    z.object({
-      priceId: z.string().describe("The Stripe price ID"),
-      quantity: z.number().int().min(1).describe("Quantity to purchase"),
-    })
-  ),
-};
-
-export const metadata: ToolMetadata = {
-  name: "buy-products",
-  description: "Create a checkout link for purchasing products",
-  _meta: {
-    openai: {
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
-    },
-  },
-};
-
-export default async function handler({ items }: InferSchema<typeof schema>) {
-  const session = await getCheckoutSession(items);
-
-  return {
-    content: [{ type: "text", text: `[Complete your purchase](${session.url})` }],
-    structuredContent: { checkoutSessionUrl: session.url },
-  };
-}
-```
-
-For the full Stripe implementation with UI components, see [Monetize your GPT apps with Stripe](/blog/apps-monetization).
+For the full guide, check out the [Monetize your GPT apps with Stripe](/blog/apps-monetization) blog post.
 
 ### Tools suscription based access or usage tracking
 
-Use Polar to validate license keys or track the usage of your tools.
+Use Polar to paywall your tools or track usage:
 
 ```typescript title="src/tools/premium-tool.ts"
 import { headers } from "xmcp/headers";
@@ -317,13 +263,6 @@ export default async function handler() {
 
 For the full Polar setup with usage metering, see [Integrating Polar with xmcp](/blog/polar-integration).
 
-## Other Improvements
-
-- **Rspack migration**: Replaced Webpack with Rspack for faster builds and smaller bundles.
-- **CORS configuration**: Configure CORS middleware for cross-domain requests.
-- **Structured Content output**: Return structured content alongside UI for richer responses.
-- **Project scaffolding**: `create-xmcp-app` sets up everything in one command.
-
 ## Contributing
 
-If you have any questions, you can reach out to us on [Discord](https://discord.gg/d9a7JBBxV9).
+Share your feedback and help shape the future of xmcp [GitHub](https://github.com/basementstudio/xmcp). If you have any questions, you can reach out to us on [Discord](https://discord.gg/d9a7JBBxV9).
