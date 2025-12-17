@@ -5,7 +5,7 @@ import {
 import { ReadResourceResult } from "@modelcontextprotocol/sdk/types";
 import { ResourceFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
-import { ZodRawShape } from "zod";
+import { ZodRawShape } from "zod/v3";
 import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
 import { ResourceMetadata } from "@/types/resource";

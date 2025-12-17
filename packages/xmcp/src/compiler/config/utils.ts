@@ -9,7 +9,7 @@ import {
   experimentalConfigSchema,
   DEFAULT_PATHS,
 } from "./schemas";
-import type { z } from "zod";
+import type { z } from "zod/v3";
 import type { XmcpConfigOutputSchema } from "./index";
 import type { CorsConfig } from "./schemas";
 

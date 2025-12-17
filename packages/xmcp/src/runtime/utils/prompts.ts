@@ -1,9 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { ZodOptional, ZodType, ZodTypeDef } from "zod";
+import { ZodOptional, ZodType, ZodTypeDef, ZodRawShape } from "zod/v3";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
-import { ZodRawShape } from "zod";
 
 interface PromptMetadata {
   name: string;
