@@ -4,7 +4,7 @@ import {
   ServerNotification,
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
-import { ZodRawShape } from "zod";
+import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
 
 /**
