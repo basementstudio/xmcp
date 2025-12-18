@@ -147,37 +147,6 @@ export const clients: ClientConnections = {
 };
 ```
 
-#### HTTP Clients
-
-For adding HTTP clients, this is the type you have to follow:
-
-```typescript
-export type HttpClientDefinition = {
-  type: "http";
-  name: string;
-  url: string;
-  headers?: CustomHeaders;
-};
-```
-
-#### STDIO Clients
-
-For adding STDIO clients, the npm package must be installed in your project. This is the type you have to follow:
-
-```typescript
-export type StdioClientDefinition = {
-  type: "stdio";
-  name: string;
-  command: string;
-  args: string[];
-  npm?: string;
-  npmArgs?: string[];
-  env?: Record<string, string>;
-  cwd?: string;
-  stderr?: StdioIOStrategy;
-};
-```
-
 Then generate typed clients:
 
 ```bash
@@ -231,9 +200,15 @@ See the [Next.js adapter](/docs/adapters/nextjs) documentation for setup details
 
 ## Authentication
 
-xmcp integrates with [Better Auth](https://www.better-auth.com/), adding authentication to your tools with email/password login, OAuth providers, and session management out of the box.
+xmcp integrates with [Better Auth](https://www.better-auth.com/), adding authentication mcp server with email/password login, OAuth providers, and session management out of the box.
 
-Configure the middleware with your database and auth providers in `src/middleware.ts`:
+You need to install the Better Auth plugin 
+
+```bash
+npm install @xmcp-dev/better-auth
+```
+
+Afterwards, you can configure the middleware with your database and auth providers in `src/middleware.ts`:
 
 ```typescript title="src/middleware.ts"
 import { betterAuthProvider } from "@xmcp-dev/better-auth";
@@ -270,7 +245,9 @@ See [Integrating Better Auth with xmcp](/blog/better-auth-integration) for datab
 
 ## Monetization
 
-Sell products directly from ChatGPT using Stripe checkout. Create tools that list your products and handle purchases.
+### Checkout inside GPT Apps
+
+Create product listings and handle payments in ChatGPT with Stripe.
 
 <video
   controls
