@@ -18,7 +18,7 @@ Build apps that run directly inside ChatGPT. xmcp integrates with OpenAI's Apps 
   width="100%"
   style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
 >
-  <source src="/blog/doom-apps-sdk.mp4" type="video/mp4" />
+  <source src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/doom-apps-sdk.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
@@ -113,9 +113,20 @@ export default function InteractiveTodo() {
 
 Find out more in the [React Client Components](/docs/core-concepts/tools#react-client-components) documentation.
 
-## Connect to external MCPs 
+## Connect to external MCPs
 
-Connect to external MCP servers over HTTP or STDIO, then turn their tools into building blocks for yours. Define clients in `src/clients.ts`:
+Use MCP servers over HTTP or STDIO, then turn their tools into building blocks for yours.
+
+<video
+  controls
+  width="100%"
+  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
+>
+  <source src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/cli-typed-clients.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+Define clients in `src/clients.ts`:
 
 ```typescript title="src/clients.ts"
 import { ClientConnections } from "xmcp";
@@ -173,7 +184,7 @@ Then generate typed clients:
 npx @xmcp-dev/cli generate
 ```
 
-Afterwards, import them in your tools:
+You will find the generated clients in the `src/generated` directory. Then you can import them in your tools:
 
 ```typescript title="src/tools/browser-navigate.ts"
 import { generatedClients } from "../generated/client.index";
@@ -184,7 +195,7 @@ export default async function handler({ url }: { url: string }) {
 }
 ```
 
-For the complete guide, see [Connect to external MCPs](/blog/cli-typed-clients).
+Learn more in [Connect to external MCPs](/blog/cli-typed-clients).
 
 ## Next.js Adapter
 
@@ -214,9 +225,9 @@ nextjs-app/
 └── xmcp.config.ts        # xmcp configuration
 ```
 
-The package.json scripts will be modified to run xmcp alongside Next.js, while tsconfig.json will be updated to include the xmcp folder in its paths
+The package.json scripts will be modified to run xmcp alongside Next.js, while tsconfig.json will be updated to include the xmcp folder in its paths.
 
-For the full setup, including authentication, check out the [Next.js adapter](/docs/adapters/nextjs) documentation.
+See the [Next.js adapter](/docs/adapters/nextjs) documentation for setup details and authentication.
 
 ## Authentication
 
@@ -255,7 +266,7 @@ export default async function getUserProfile() {
 }
 ```
 
-For the full setup with database schema and OAuth configuration, see [Integrating Better Auth with xmcp](/blog/better-auth-integration) or the [Better Auth docs](/docs/integrations/better-auth).
+See [Integrating Better Auth with xmcp](/blog/better-auth-integration) for database schema and OAuth setup, or visit the [Better Auth docs](/docs/integrations/better-auth).
 
 ## Monetization
 
@@ -266,15 +277,15 @@ Sell products directly from ChatGPT using Stripe checkout. Create tools that lis
   width="100%"
   style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
 >
-  <source src="/blog/apps-monetization.mp4" type="video/mp4" />
+  <source src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4" type="video/mp4" />
   Your browser does not support the video tag.
 </video>
 
-For the full guide, check out the [Monetize your GPT apps with Stripe](/blog/apps-monetization) blog post.
+Read [Monetize your GPT apps with Stripe](/blog/apps-monetization) for the complete walkthrough.
 
-### Tools suscription based access or usage tracking
+### Tools subscription-based access
 
-Use Polar to paywall your tools or track usage:
+Paywall your tools or meter usage with Polar:
 
 ```typescript title="src/tools/premium-tool.ts"
 import { headers } from "xmcp/headers";
@@ -292,8 +303,8 @@ export default async function handler() {
 }
 ```
 
-For the full Polar setup with usage metering, see [Integrating Polar with xmcp](/blog/polar-integration).
+Learn about paywalling tools in [Integrating Polar with xmcp](/blog/polar-integration).
 
-## Contributing
+## What's next?
 
-Share your feedback and help shape the future of xmcp [GitHub](https://github.com/basementstudio/xmcp). If you have any questions, you can reach out to us on [Discord](https://discord.gg/d9a7JBBxV9).
+We're just getting started. Join us on [GitHub](https://github.com/basementstudio/xmcp) to share feedback, report issues, or contribute. Questions? Come chat on [Discord](https://discord.gg/d9a7JBBxV9).
