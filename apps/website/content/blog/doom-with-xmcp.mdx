@@ -15,7 +15,10 @@ Learn how we made DOOM playable in ChatGPT using xmcp's Apps SDK integration. Th
   width="100%"
   style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
 >
-  <source src="/blog/doom-apps-sdk.mp4" type="video/mp4" />
+  <source
+    src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/doom-apps-sdk.mp4"
+    type="video/mp4"
+  />
   Your browser does not support the video tag.
 </video>
 
@@ -67,7 +70,7 @@ export const metadata: ToolMetadata = {
   description: "Shows the retro arcade game selection interface",
   _meta: {
     openai: {
-      widgetAccessible: true
+      widgetAccessible: true,
     },
   },
 };
@@ -84,14 +87,14 @@ export const metadata: ToolMetadata = {
   annotations: {
     readOnlyHint: true,
   },
-    _meta: {
-      openai: {
-        widgetAccessible: true,
-        resultCanProduceWidget: true,
-        toolInvocation: {
-          invoking: "Loading game...",
-          invoked: "Game launched successfully",
-        },
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+      toolInvocation: {
+        invoking: "Loading game...",
+        invoked: "Game launched successfully",
+      },
     },
   },
 };
@@ -124,7 +127,7 @@ The `getAppsSdkCompatibleHtml` utility function fetches the rendered HTML from y
 ```typescript
 // xmcp/lib/utils.ts
 export const getAppsSdkCompatibleHtml = async (
-  baseUrl: string, 
+  baseUrl: string,
   path: string
 ): Promise<string> => {
   const result = await fetch(`${baseUrl}${path}`);
@@ -153,8 +156,7 @@ import {
 // Define tool metadata
 export const metadata: ToolMetadata = {
   name: TOOL_NAMES.LAUNCH_GAME,
-  description:
-    "Launches a classic arcade game in the retro arcade emulator",
+  description: "Launches a classic arcade game in the retro arcade emulator",
   annotations: {
     readOnlyHint: true,
   },
@@ -190,7 +192,9 @@ export default async function handler({
     }
 > {
   if (!game) {
-    console.warn("[launch_game] Missing game argument. Returning widget shell only.");
+    console.warn(
+      "[launch_game] Missing game argument. Returning widget shell only."
+    );
     return await fetchWidgetShell();
   }
 
@@ -211,7 +215,7 @@ export default async function handler({
           type: "text",
           text: `Sorry, "${game}" is not available. Try doom or digger.`,
         },
-      ]
+      ],
     };
   }
 
@@ -229,7 +233,7 @@ export default async function handler({
         type: "text",
         text: `Launching ${selectedGame.title}...`,
       },
-    ]
+    ],
   };
 }
 ```
@@ -259,7 +263,7 @@ The arcade widget displays game cards. When a user clicks a card, it invokes the
 ```typescript
 function ArcadeGameCard({ name }: { name: string }) {
   const callTool = useCallTool();
-  
+
   const handleClick = async () => {
     await callTool("launch_game", { game: name });
   };
@@ -354,7 +358,7 @@ Here's the complete user flow for testing your arcade:
 
 1. **Deploy** your MCP server and Next.js app
 2. **Enable Developer Mode**: Navigate to `Apps & Connectors` → `Advanced Settings` and enable developer mode
-3. **Create Connector**: 
+3. **Create Connector**:
    - Go back to `Apps & Connectors` and click `Create`
    - Enter a name for your connector and your MCP server URL
    - Select `No Authentication`
