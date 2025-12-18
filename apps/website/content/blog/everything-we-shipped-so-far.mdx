@@ -115,7 +115,7 @@ Find out more in the [React Client Components](/docs/core-concepts/tools#react-c
 
 ## Connect to external MCPs 
 
-Connect to external MCP servers and use their tools in your own tools. Define external clients in `src/clients.ts`:
+Connect to external MCP servers over HTTP or STDIO, then turn their tools into building blocks for yours. Define clients in `src/clients.ts`:
 
 ```typescript title="src/clients.ts"
 import { ClientConnections } from "xmcp";
@@ -136,13 +136,44 @@ export const clients: ClientConnections = {
 };
 ```
 
+#### HTTP Clients
+
+For adding HTTP clients, this is the type you have to follow:
+
+```typescript
+export type HttpClientDefinition = {
+  type: "http";
+  name: string;
+  url: string;
+  headers?: CustomHeaders;
+};
+```
+
+#### STDIO Clients
+
+For adding STDIO clients, the npm package must be installed in your project. This is the type you have to follow:
+
+```typescript
+export type StdioClientDefinition = {
+  type: "stdio";
+  name: string;
+  command: string;
+  args: string[];
+  npm?: string;
+  npmArgs?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+  stderr?: StdioIOStrategy;
+};
+```
+
 Then generate typed clients:
 
 ```bash
 npx @xmcp-dev/cli generate
 ```
 
-And use them in your tools:
+Afterwards, import them in your tools:
 
 ```typescript title="src/tools/browser-navigate.ts"
 import { generatedClients } from "../generated/client.index";
