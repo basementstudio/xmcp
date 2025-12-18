@@ -79,9 +79,7 @@ export function addResourcesToServer(
               .join("\n");
             throw new Error(
               `React client bundle not found for "${autoResource.name}" (bundle: "${bundleName}").\n` +
-                `Expected to find it either:\n` +
-                `  1. Injected in the bundle (INJECTED_CLIENT_BUNDLES)\n` +
-                `  2. On filesystem at one of:\n${formattedPaths}\n` +
+                `Expected to find it on filesystem at one of:\n${formattedPaths}\n` +
                 `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
                 `Please re-run the build so the framework can regenerate the bundle.`
             );

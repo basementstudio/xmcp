@@ -59,7 +59,6 @@ export default function handler() {
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-12">
           <div className="text-sm font-mono text-zinc-500 uppercase tracking-wider mb-2">
             Weather
@@ -67,7 +66,6 @@ export default function handler() {
           <h1 className="text-5xl font-light tracking-tight">{selectedCity}</h1>
         </div>
 
-        {/* City Selection */}
         <div className="mb-16">
           <div className="flex flex-wrap justify-center gap-3">
             {Object.keys(cities).map((city) => (
@@ -86,7 +84,6 @@ export default function handler() {
           </div>
         </div>
 
-        {/* Weather Data */}
         {loading && (
           <div className="text-center text-zinc-500 font-mono text-sm">
             Loading...
