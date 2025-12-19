@@ -22,16 +22,17 @@ const corsConfigBaseSchema = z.object({
   maxAge: z.number().default(86400),
 });
 
+const defaultCorsConfig = corsConfigBaseSchema.parse({});
+
 // Input schema - all fields optional for partial configs
 export const corsConfigSchema = corsConfigBaseSchema
   .partial()
   .transform((val) => {
-    const defaults = corsConfigBaseSchema.parse({});
     const provided = Object.fromEntries(
       Object.entries(val).filter(([_, v]) => v !== undefined)
     );
     const result = {
-      ...defaults,
+      ...defaultCorsConfig,
       ...provided,
     };
 
