@@ -20,7 +20,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
                 src={image}
                 alt={featuredPost.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (
