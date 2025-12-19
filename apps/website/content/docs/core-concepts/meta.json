@@ -1,6 +1,7 @@
 {
   "title": "Core Concepts",
-  "pages": ["tools", "prompts", "resources", "middlewares"],
+  "pages": ["tools", "prompts", "resources", "middlewares", "external-clients"],
   "defaultOpen": true,
   "root": true
 }
+
