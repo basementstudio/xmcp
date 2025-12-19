@@ -19,7 +19,6 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   return (
     <BlogPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
-      {/* <DocsDescription>{page.data.description}</DocsDescription> */}
       <DocsBody className="w-full">
         <MDX
           components={getMDXComponents({
