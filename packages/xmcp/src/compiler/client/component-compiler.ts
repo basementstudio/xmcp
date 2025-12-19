@@ -1,6 +1,7 @@
 import path from "path";
 import { rspack } from "@rspack/core";
 import type { RspackOptions } from "@rspack/core";
+import { hasPostCSSConfig } from "../utils/config-detection";
 
 interface CompileOptions {
   entries: Map<string, string>;
@@ -143,6 +144,7 @@ export class ClientComponentCompiler {
       target: "web",
       experiments: {
         outputModule: true,
+        css: true,
       },
       output: {
         path: config.absoluteOutputDir,
@@ -191,6 +193,16 @@ export class ClientComponentCompiler {
                 },
               },
             },
+          },
+          {
+            test: /\.css$/,
+            use: hasPostCSSConfig() ? ["postcss-loader"] : [],
+            type: "css/auto",
+          },
+          {
+            test: /\.less$/,
+            type: "css/auto",
+            use: ["less-loader"],
           },
         ],
       },

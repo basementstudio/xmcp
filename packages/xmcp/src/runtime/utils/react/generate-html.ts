@@ -1,9 +1,15 @@
-export function generateOpenAIHTML(componentCode: string): string {
+export function generateOpenAIHTML(
+  componentCode: string,
+  css: string | undefined
+): string {
+  const styleTag = css ? `<style>${css}</style>` : "";
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  ${styleTag}
 </head>
 <body>
   <div id="root"></div>
@@ -24,7 +30,10 @@ export function generateOpenAIHTML(componentCode: string): string {
 </html>`;
 }
 
-export function generateUIHTML(componentCode: string): string {
+export function generateUIHTML(
+  componentCode: string,
+  css: string | undefined
+): string {
   const renderScript = `
   <script type="module">
     const componentSource = ${JSON.stringify(componentCode)};
@@ -67,11 +76,14 @@ export function generateUIHTML(componentCode: string): string {
     });
   </script>`;
 
+  const styleTag = css ? `<style>${css}</style>` : "";
+
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${styleTag}
 </head>
 <body>
   <div id="root"></div>
