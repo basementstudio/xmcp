@@ -1,0 +1,192 @@
+---
+title: "External Clients"
+metadataTitle: "External Clients | xmcp Documentation"
+publishedAt: "2025-12-19"
+summary: "Connect to external MCP servers and generate typed clients."
+description: "Learn how to connect to external MCP servers via HTTP or STDIO and generate fully typed TypeScript clients with autocomplete support."
+---
+
+xmcp lets you connect to external MCP servers and generate fully typed clients. The CLI generates TypeScript clients with autocomplete for all tools exposed by HTTP or STDIO-based MCP servers.
+
+## Creating the Clients File
+
+Create a `src/clients.ts` file and export a `ClientConnections` object. The object keys become the client names:
+
+```typescript title="src/clients.ts"
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      { name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
+  },
+};
+```
+
+## HTTP Clients
+
+HTTP clients connect to remote MCP servers over HTTP.
+
+```typescript
+type HttpClientConfig = {
+  name?: string;           // Optional, defaults to object key
+  type?: "http";           // Optional, inferred from url
+  url: string;             // MCP server URL (required)
+  headers?: CustomHeaders; // Optional headers array
+};
+
+type CustomHeaders = CustomHeader[];
+
+type CustomHeader = StaticHeader | EnvHeader;
+
+// Static value (non-sensitive)
+interface StaticHeader {
+  name: string;
+  value: string;
+}
+
+// Environment variable (sensitive values like API keys)
+interface EnvHeader {
+  name: string;
+  env: string;  // Environment variable name to read at runtime
+}
+```
+
+Example:
+
+```typescript
+{
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      { name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" },
+    ],
+  },
+}
+```
+
+## STDIO Clients
+
+STDIO clients spawn local processes that communicate via standard input/output.
+
+```typescript
+type StdioClientConfig = {
+  name?: string;                    // Optional, defaults to object key
+  type?: "stdio";                   // Optional, inferred from npm/command
+  command?: string;                 // Command to run (e.g., "npx", "bunx", "node")
+  args?: string[];                  // Command arguments
+  npm?: string;                     // npm package to run via npx
+  npmArgs?: string[];               // Arguments to pass to npm package
+  env?: Record<string, string>;     // Environment variables
+  cwd?: string;                     // Working directory
+  stderr?: "pipe" | "inherit" | "ignore";  // Stderr handling
+};
+```
+
+Examples:
+
+```typescript
+// Simple npm package
+{ npm: "@playwright/mcp" }
+
+// With arguments
+{ npm: "@playwright/mcp", npmArgs: ["--browser", "chromium"] }
+
+// Custom command
+{ command: "bunx", args: ["-y", "@upstash/context7-mcp"] }
+
+// With environment variables
+{
+  npm: "@some/mcp-server",
+  env: { DEBUG: "true", LOG_LEVEL: "verbose" }
+}
+```
+
+The npm package will be installed automatically if it is not already installed in your project.
+
+## Running the Generator
+
+Run the generator from your project root:
+
+```bash
+npx @xmcp-dev/cli generate
+```
+
+This reads from `src/clients.ts` and writes generated clients to `src/generated/`.
+
+**Options:**
+
+- `-o, --out <path>` - Output directory (default: `src/generated`)
+- `-c, --clients <path>` - Clients file path (default: `src/clients.ts`)
+
+## Generated Output
+
+For each client defined in `clients.ts`, the CLI generates a `client.{name}.ts` file containing:
+
+- Zod schemas for each tool's arguments
+- Type exports (e.g., `GreetArgs`)
+- Tool metadata objects
+- `createRemoteToolClient()` factory function
+- Pre-instantiated client export
+
+An index file (`client.index.ts`) is always generated with a unified `generatedClients` object for accessing all clients.
+
+## Using Generated Clients
+
+Import `generatedClients` from the generated index file and call tools directly:
+
+```typescript title="src/tools/get-library-docs.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  libraryName: z.string().describe("The name of the library"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-library-docs",
+  description: "Get documentation for a library",
+};
+
+export default async function handler({ libraryName }: InferSchema<typeof schema>) {
+  const docs = await generatedClients.context.getLibraryDocs({
+    context7CompatibleLibraryID: libraryName,
+  });
+  return (docs.content as any)[0].text;
+}
+```
+
+The generated clients provide full autocomplete for all available tools and their arguments.
+
+## Example: Browser Navigation
+
+```typescript title="src/tools/browser-navigate.ts"
+import { InferSchema, type ToolMetadata } from "xmcp";
+import { generatedClients } from "../generated/client.index";
+import { z } from "zod";
+
+export const schema = {
+  url: z.string().describe("The URL to navigate to"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "browser-navigate",
+  description: "Navigate to a URL",
+};
+
+export default async function handler({ url }: InferSchema<typeof schema>) {
+  await generatedClients.playwright.browserNavigate({ url });
+  return `Navigated to: ${url}`;
+}
+```
+
+## Caveats
+
+- **Server must be available** — The CLI connects over HTTP or spawns the STDIO package to fetch tool definitions. Ensure the remote server is reachable or the npm package is installed.
+- **Prefer env for secrets** — API keys can be provided as CLI args or via the `env` map. Prefer `env` for sensitive values.
