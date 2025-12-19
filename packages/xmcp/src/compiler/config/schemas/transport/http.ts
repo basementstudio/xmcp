@@ -26,15 +26,28 @@ const corsConfigBaseSchema = z.object({
 export const corsConfigSchema = corsConfigBaseSchema
   .partial()
   .transform((val) => {
-    // Merge provided values with defaults, filtering out undefined values
     const defaults = corsConfigBaseSchema.parse({});
     const provided = Object.fromEntries(
       Object.entries(val).filter(([_, v]) => v !== undefined)
     );
-    return {
+    const result = {
       ...defaults,
       ...provided,
     };
+
+    if (Array.isArray(result.allowedHeaders)) {
+      const headers = new Set(result.allowedHeaders);
+      headers.add("mcp-session-id");
+      headers.add("mcp-protocol-version");
+      result.allowedHeaders = Array.from(headers);
+    }
+    if (Array.isArray(result.exposedHeaders)) {
+      const headers = new Set(result.exposedHeaders);
+      headers.add("mcp-session-id");
+      result.exposedHeaders = Array.from(headers);
+    }
+
+    return result;
   });
 
 export type CorsConfig = z.infer<typeof corsConfigSchema>;
