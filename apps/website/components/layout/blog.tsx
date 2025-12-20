@@ -60,30 +60,38 @@ export function BlogPage({ toc = [], ...props }: BlogPageProps) {
 
   return (
     <AnchorProvider toc={toc}>
-      {toc.length > 0 && (
-        <div className="sticky top-24 w-[286px] mt-16 shrink-0 h-full p-4 pt-0 overflow-auto max-xl:hidden flex flex-col gap-4">
-          <span className="text-xl text-brand-white">Table of contents</span>
-          <div className="flex flex-col">
-            {toc.map((item) => (
-              <TocItem
-                key={item.url}
-                item={item}
-                activeAnchors={activeAnchors}
-              />
-            ))}
-          </div>
+      <div className="w-full px-4 mx-auto max-w-[1440px] flex justify-center items-start gap-12">
+        <aside
+          className="hidden xl:block w-[286px] shrink-0"
+          aria-hidden="true"
+        />
+
+        <div className="flex min-w-0 flex-col max-w-[860px] w-full mt-8">
+          <Link
+            href="/blog"
+            className="px-4 mb-2 text-sm text-brand-neutral-100 hover:text-brand-neutral-50 transition-colors"
+          >
+            ← Back to blog
+          </Link>
+          <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 px-4 items-start">
+            {props.children}
+          </article>
         </div>
-      )}
-      <div className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
-        <Link
-          href="/blog"
-          className="px-4 mb-2 text-sm text-brand-neutral-100 hover:text-brand-neutral-50 transition-colors"
-        >
-          ← Back to blog
-        </Link>
-        <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 mx-auto px-4 items-start h-full">
-          {props.children}
-        </article>
+
+        {toc.length > 0 && (
+          <aside className="hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-24 mt-16 p-4 pt-0 gap-4 max-h-[calc(100vh-120px)] self-start">
+            <span className="text-xl text-brand-white">Table of contents</span>
+            <nav className="flex flex-col overflow-y-auto">
+              {toc.map((item) => (
+                <TocItem
+                  key={item.url}
+                  item={item}
+                  activeAnchors={activeAnchors}
+                />
+              ))}
+            </nav>
+          </aside>
+        )}
       </div>
     </AnchorProvider>
   );

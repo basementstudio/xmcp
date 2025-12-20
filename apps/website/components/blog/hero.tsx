@@ -8,17 +8,19 @@ interface BlogHeroProps {
 }
 
 export function BlogHero({ featuredPost }: BlogHeroProps) {
+  const image = featuredPost.previewImage || featuredPost.textureImage;
+
   return (
     <Link href={`/blog/${featuredPost.slug}`} className="block col-span-12">
       <section className="relative group overflow-visible h-full mb-8 md:mb-12">
         <div className="relative border border-brand-neutral-500 group-hover:border-brand-neutral-300 h-full w-full flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 aspect-video md:border-r border-brand-neutral-500 flex-shrink-0 relative overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300">
-            {featuredPost.previewImage ? (
+            {image ? (
               <Image
-                src={featuredPost.previewImage}
+                src={image}
                 alt={featuredPost.title}
                 fill
-                className="object-cover"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             ) : (

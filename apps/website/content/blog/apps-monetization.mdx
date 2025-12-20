@@ -3,24 +3,17 @@ title: "Monetize your GPT apps with Stripe"
 description: "Learn how to monetize your GPT apps using Stripe external checkout integration."
 summary: "Learn how to monetize your GPT apps using Stripe external checkout integration."
 category: "guide"
-date: "2025-12-15"
+date: "2025-12-16"
 order: 2
 textureImage: "/textures/text2.png"
 ---
 
 Allow users to buy products directly from ChatGPT through Stripe's external checkout integration.
 
-<video
+<Video
+  src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4"
   controls
-  width="100%"
-  style={{ borderRadius: "8px", marginTop: "1rem", marginBottom: "1rem" }}
->
-  <source
-    src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4"
-    type="video/mp4"
-  />
-  Your browser does not support the video tag.
-</video>
+/>
 
 Find the complete project on [GitHub](https://github.com/xmcp-dev/gpt-apps-monetization).
 
@@ -373,6 +366,12 @@ export default function ProductsPage() {
   );
 }
 ```
+
+## Handling successful orders
+
+Once a customer completes a payment, your application must reliably fulfill the order. Even if you configure a `success_url`, Stripe strongly recommends subscribing to webhooks to handle order fulfillment.
+
+Refer to [Stripe’s guide to handling successful payments](https://stripe.com/docs/payments/checkout/fulfill-orders) for implementation details and best practices.
 
 ## Deployment and testing
 
