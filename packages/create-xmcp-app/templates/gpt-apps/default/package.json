@@ -1,18 +1,20 @@
 {
-  "name": "ChatGPT Widgets",
-  "description": "Learn how to set up an xmcp server using ChatGPT widgets",
+  "name": "create-xmcp-app",
+  "version": "0.1.0",
+  "description": "An xmcp application with ChatGPT widgets",
   "keywords": [
     "chatgpt"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "xmcp build",
-    "dev": "xmcp dev",
-    "start": "node dist/http.js"
+    "dev": "xmcp dev"
   },
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "xmcp": "latest",
     "zod": "3.25.76"
   },
   "devDependencies": {

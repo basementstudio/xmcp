@@ -124,7 +124,7 @@ const program = new Command()
     let selectedPaths = ["tools", "prompts", "resources"];
     let template = "typescript";
     let templateChoice = "default";
-    let useTailwind = false;
+    let tailwind = false;
 
     // Handle new --gpt-app flag
     if (options.gptApp) {
@@ -132,7 +132,7 @@ const program = new Command()
       transports = ["http"];
       selectedPaths = ["tools"];
       templateChoice = "gpt-app";
-      useTailwind = options.tailwind || false;
+      tailwind = options.tailwind || false;
     }
 
     // Handle new --mcp-app flag
@@ -141,7 +141,7 @@ const program = new Command()
       transports = ["http"];
       selectedPaths = ["tools"];
       templateChoice = "mcp-app";
-      useTailwind = options.tailwind || false;
+      tailwind = options.tailwind || false;
     }
 
     // If --gpt flag is set, use gpt-apps template and force certain settings (DEPRECATED)
@@ -218,12 +218,12 @@ const program = new Command()
           const tailwindAnswers = await inquirer.prompt([
             {
               type: "confirm",
-              name: "useTailwind",
+              name: "tailwind",
               message: "Would you like to use Tailwind CSS?",
               default: true,
             },
           ]);
-          useTailwind = tailwindAnswers.useTailwind;
+          tailwind = tailwindAnswers.tailwind;
         }
       }
 
@@ -337,7 +337,7 @@ const program = new Command()
 
       // Default to Tailwind for gpt-app and mcp-app templates in non-interactive mode
       if (templateChoice === "gpt-app" || templateChoice === "mcp-app") {
-        useTailwind = true;
+        tailwind = true;
       }
     }
 
@@ -352,7 +352,7 @@ const program = new Command()
         skipInstall,
         paths: selectedPaths,
         template,
-        useTailwind,
+        tailwind,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
