@@ -55,7 +55,6 @@ const program = new Command()
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
-    // Validate --tailwind flag usage
     if (options.tailwind && !options.gptApp && !options.mcpApp) {
       console.error(
         chalk.red(
@@ -144,7 +143,6 @@ const program = new Command()
       tailwind = options.tailwind || false;
     }
 
-    // If --gpt flag is set, use gpt-apps template and force certain settings (DEPRECATED)
     if (options.gpt) {
       template = "gpt-apps";
       transports = ["http"];
@@ -152,7 +150,6 @@ const program = new Command()
       templateChoice = "gpt-app";
     }
 
-    // If --ui flag is set, use mcp-apps template and force certain settings (DEPRECATED)
     if (options.ui) {
       template = "mcp-apps";
       transports = ["http"];
@@ -160,7 +157,6 @@ const program = new Command()
       templateChoice = "mcp-app";
     }
 
-    // Handle transport selection from CLI options (only for default template)
     if (
       !options.gpt &&
       !options.ui &&
@@ -199,7 +195,6 @@ const program = new Command()
         ]);
         templateChoice = templateAnswers.template;
 
-        // Map template choice to actual template directory
         if (templateChoice === "gpt-app") {
           template = "gpt-apps";
           transports = ["http"];
@@ -210,7 +205,6 @@ const program = new Command()
           selectedPaths = ["tools"];
         }
 
-        // Ask about Tailwind for gpt-app and mcp-app templates (only if not already specified via flag)
         if (
           (templateChoice === "gpt-app" || templateChoice === "mcp-app") &&
           !options.tailwind
@@ -254,7 +248,6 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options or using template other than default)
       if (templateChoice === "default" && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
