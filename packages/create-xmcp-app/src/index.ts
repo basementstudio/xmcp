@@ -39,46 +39,17 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
-  .option("--gpt-app", "Initialize with GPT App template", false)
-  .option("--mcp-app", "Initialize with MCP App template", false)
-  .option(
-    "--tailwind",
-    "Use Tailwind CSS (only with --gpt-app or --mcp-app)",
-    false
-  )
-  .option(
-    "--gpt",
-    "[DEPRECATED] Initialize with OpenAI/ChatGPT widgets template",
-    false
-  )
-  .option("--ui", "[DEPRECATED] Initialize with React widgets template", false)
+  .option("--gpt", "Initialize with GPT App template", false)
+  .option("--ui", "Initialize with MCP App template", false)
+  .option("--tailwind", "Use Tailwind CSS (only with --gpt or --ui)", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
-    if (options.tailwind && !options.gptApp && !options.mcpApp) {
+    if (options.tailwind && !options.gpt && !options.ui) {
       console.error(
-        chalk.red(
-          "\nError: --tailwind can only be used with --gpt-app or --mcp-app"
-        )
+        chalk.red("\nError: --tailwind can only be used with --gpt or --ui")
       );
       process.exit(1);
-    }
-
-    // Show deprecation warnings for template flags
-    if (options.gpt || options.ui) {
-      console.log(
-        chalk.yellow(
-          "\nDEPRECATION WARNING: The --gpt and --ui flags will be removed in a future version."
-        )
-      );
-      console.log(
-        chalk.dim(
-          "React components and OpenAI widgets now work natively with any xmcp app."
-        )
-      );
-      console.log(
-        chalk.dim("See: https://xmcp.dev/docs for more information.\n")
-      );
     }
 
     // If project directory wasn't specified, ask for it
@@ -125,52 +96,32 @@ const program = new Command()
     let templateChoice = "default";
     let tailwind = false;
 
-    // Handle new --gpt-app flag
-    if (options.gptApp) {
-      template = "gpt-apps";
-      transports = ["http"];
-      selectedPaths = ["tools"];
-      templateChoice = "gpt-app";
-      tailwind = options.tailwind || false;
-    }
-
-    // Handle new --mcp-app flag
-    if (options.mcpApp) {
-      template = "mcp-apps";
-      transports = ["http"];
-      selectedPaths = ["tools"];
-      templateChoice = "mcp-app";
-      tailwind = options.tailwind || false;
-    }
-
+    // Handle --gpt flag
     if (options.gpt) {
       template = "gpt-apps";
       transports = ["http"];
-      selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
+      selectedPaths = ["tools"];
       templateChoice = "gpt-app";
+      tailwind = options.tailwind || false;
     }
 
+    // Handle --ui flag
     if (options.ui) {
       template = "mcp-apps";
       transports = ["http"];
-      selectedPaths = ["tools"]; // React template uses only tools
+      selectedPaths = ["tools"];
       templateChoice = "mcp-app";
+      tailwind = options.tailwind || false;
     }
 
-    if (
-      !options.gpt &&
-      !options.ui &&
-      !options.gptApp &&
-      !options.mcpApp &&
-      (options.http || options.stdio)
-    ) {
+    if (!options.gpt && !options.ui && (options.http || options.stdio)) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
     }
 
     if (!options.yes) {
-      if (!options.gpt && !options.ui && !options.gptApp && !options.mcpApp) {
+      if (!options.gpt && !options.ui) {
         const templateAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -328,7 +279,7 @@ const program = new Command()
         selectedPaths = ["tools", "prompts", "resources"];
       }
 
-      // Default to Tailwind for gpt-app and mcp-app templates in non-interactive mode
+      // Default to Tailwind for GPT and UI templates in non-interactive mode
       if (templateChoice === "gpt-app" || templateChoice === "mcp-app") {
         tailwind = true;
       }
