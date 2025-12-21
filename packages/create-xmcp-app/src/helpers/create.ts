@@ -19,6 +19,7 @@ interface ProjectOptions {
   skipInstall?: boolean;
   paths?: string[];
   template?: string;
+  useTailwind?: boolean;
 }
 
 /**
@@ -43,13 +44,26 @@ export function createProject(options: ProjectOptions): void {
     skipInstall,
     paths = ["tools", "prompts"],
     template = "typescript",
+    useTailwind = false,
   } = options;
 
   // Ensure the project directory exists
   fs.ensureDirSync(projectPath);
 
   // Get the template directory path
-  const templateDir = path.join(__dirname, "../../templates", template);
+  // For gpt-apps and mcp-apps, use subdirectory based on Tailwind choice
+  let templateDir: string;
+  if (template === "gpt-apps" || template === "mcp-apps") {
+    const subTemplate = useTailwind ? "tailwind" : "default";
+    templateDir = path.join(
+      __dirname,
+      "../../templates",
+      template,
+      subTemplate
+    );
+  } else {
+    templateDir = path.join(__dirname, "../../templates", template);
+  }
 
   // Copy template files to project directory
   copyTemplate(templateDir, projectPath, paths);
@@ -57,9 +71,9 @@ export function createProject(options: ProjectOptions): void {
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
 
-  // For openai and react templates, skip config generation and package.json update
+  // For gpt-apps and mcp-apps templates, skip config generation and package.json update
   // as they're already provided in the template
-  if (template === "openai" || template === "react") {
+  if (template === "gpt-apps" || template === "mcp-apps") {
     // Update package.json name only
     const packageJsonPath = path.join(projectPath, "package.json");
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));

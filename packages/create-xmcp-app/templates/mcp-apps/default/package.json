@@ -1,0 +1,22 @@
+{
+  "name": "ChatGPT Widgets",
+  "description": "Learn how to set up an xmcp server using ChatGPT widgets",
+  "keywords": [
+    "chatgpt"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "xmcp": "latest",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  }
+}

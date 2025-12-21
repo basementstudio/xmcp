@@ -39,6 +39,13 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--gpt-app", "Initialize with GPT App template", false)
+  .option("--mcp-app", "Initialize with MCP App template", false)
+  .option(
+    "--tailwind",
+    "Use Tailwind CSS (only with --gpt-app or --mcp-app)",
+    false
+  )
   .option(
     "--gpt",
     "[DEPRECATED] Initialize with OpenAI/ChatGPT widgets template",
@@ -47,6 +54,16 @@ const program = new Command()
   .option("--ui", "[DEPRECATED] Initialize with React widgets template", false)
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
+
+    // Validate --tailwind flag usage
+    if (options.tailwind && !options.gptApp && !options.mcpApp) {
+      console.error(
+        chalk.red(
+          "\nError: --tailwind can only be used with --gpt-app or --mcp-app"
+        )
+      );
+      process.exit(1);
+    }
 
     // Show deprecation warnings for template flags
     if (options.gpt || options.ui) {
@@ -106,29 +123,110 @@ const program = new Command()
     let transports = ["http"];
     let selectedPaths = ["tools", "prompts", "resources"];
     let template = "typescript";
+    let templateChoice = "default";
+    let useTailwind = false;
 
-    // If --gpt flag is set, use openai template and force certain settings
+    // Handle new --gpt-app flag
+    if (options.gptApp) {
+      template = "gpt-apps";
+      transports = ["http"];
+      selectedPaths = ["tools"];
+      templateChoice = "gpt-app";
+      useTailwind = options.tailwind || false;
+    }
+
+    // Handle new --mcp-app flag
+    if (options.mcpApp) {
+      template = "mcp-apps";
+      transports = ["http"];
+      selectedPaths = ["tools"];
+      templateChoice = "mcp-app";
+      useTailwind = options.tailwind || false;
+    }
+
+    // If --gpt flag is set, use gpt-apps template and force certain settings (DEPRECATED)
     if (options.gpt) {
-      template = "openai";
+      template = "gpt-apps";
       transports = ["http"];
       selectedPaths = ["tools"]; // new OpenAI template doesn't use prompts or resources
+      templateChoice = "gpt-app";
     }
 
-    // If --ui flag is set, use react template and force certain settings
+    // If --ui flag is set, use mcp-apps template and force certain settings (DEPRECATED)
     if (options.ui) {
-      template = "react";
+      template = "mcp-apps";
       transports = ["http"];
       selectedPaths = ["tools"]; // React template uses only tools
+      templateChoice = "mcp-app";
     }
 
-    // Handle transport selection from CLI options (only for non-gpt/ui templates)
-    if (!options.gpt && !options.ui && (options.http || options.stdio)) {
+    // Handle transport selection from CLI options (only for default template)
+    if (
+      !options.gpt &&
+      !options.ui &&
+      !options.gptApp &&
+      !options.mcpApp &&
+      (options.http || options.stdio)
+    ) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
     }
 
     if (!options.yes) {
+      if (!options.gpt && !options.ui && !options.gptApp && !options.mcpApp) {
+        const templateAnswers = await inquirer.prompt([
+          {
+            type: "list",
+            name: "template",
+            message: "Select a template:",
+            choices: [
+              {
+                name: "Default (Standard MCP server)",
+                value: "default",
+              },
+              {
+                name: "GPT App (ChatGPT/OpenAI widgets)",
+                value: "gpt-app",
+              },
+              {
+                name: "MCP App (React widgets for ext-apps)",
+                value: "mcp-app",
+              },
+            ],
+            default: "default",
+          },
+        ]);
+        templateChoice = templateAnswers.template;
+
+        // Map template choice to actual template directory
+        if (templateChoice === "gpt-app") {
+          template = "gpt-apps";
+          transports = ["http"];
+          selectedPaths = ["tools"];
+        } else if (templateChoice === "mcp-app") {
+          template = "mcp-apps";
+          transports = ["http"];
+          selectedPaths = ["tools"];
+        }
+
+        // Ask about Tailwind for gpt-app and mcp-app templates (only if not already specified via flag)
+        if (
+          (templateChoice === "gpt-app" || templateChoice === "mcp-app") &&
+          !options.tailwind
+        ) {
+          const tailwindAnswers = await inquirer.prompt([
+            {
+              type: "confirm",
+              name: "useTailwind",
+              message: "Would you like to use Tailwind CSS?",
+              default: true,
+            },
+          ]);
+          useTailwind = tailwindAnswers.useTailwind;
+        }
+      }
+
       if (options.useYarn) packageManager = "yarn";
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
@@ -156,8 +254,8 @@ const program = new Command()
         packageManager = pmAnswers.packageManager;
       }
 
-      // Transport selection (skip if already specified via CLI options or using --gpt/--ui)
-      if (!options.gpt && !options.ui && !options.http && !options.stdio) {
+      // Transport selection (skip if already specified via CLI options or using template other than default)
+      if (templateChoice === "default" && !options.http && !options.stdio) {
         const transportAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -179,8 +277,8 @@ const program = new Command()
         transports = [transportAnswers.transport];
       }
 
-      // Path selection checklist (skip for --gpt/--ui template)
-      if (!options.gpt && !options.ui) {
+      // Path selection checklist (only for none template)
+      if (templateChoice === "default") {
         const pathAnswers = await inquirer.prompt([
           {
             type: "checkbox",
@@ -232,9 +330,14 @@ const program = new Command()
       if (options.usePnpm) packageManager = "pnpm";
       if (options.useBun) packageManager = "bun";
 
-      // Use all paths by default in non-interactive mode (unless --gpt or --ui is set)
-      if (!options.gpt && !options.ui) {
+      // Use all paths by default in non-interactive mode (unless template is set)
+      if (templateChoice === "default") {
         selectedPaths = ["tools", "prompts", "resources"];
+      }
+
+      // Default to Tailwind for gpt-app and mcp-app templates in non-interactive mode
+      if (templateChoice === "gpt-app" || templateChoice === "mcp-app") {
+        useTailwind = true;
       }
     }
 
@@ -249,6 +352,7 @@ const program = new Command()
         skipInstall,
         paths: selectedPaths,
         template,
+        useTailwind,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
