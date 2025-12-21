@@ -4,6 +4,7 @@ import { TerminalPrompt } from "./terminal/terminal-prompt";
 import { TerminalTabs } from "./terminal/terminal-tabs";
 import { ConceptBoxes, ConceptBox } from "./concept-boxes";
 import { Callout } from "./ui/callout";
+import { Video } from "./video";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -13,6 +14,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ConceptBoxes,
     ConceptBox,
     Callout,
+    Video,
     ...components,
   };
 }

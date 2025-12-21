@@ -1,0 +1,265 @@
+---
+title: "Everything we shipped so far"
+description: "From GPT apps to React components, external MCP clients, and monetization."
+category: "changelog"
+date: "2025-12-20"
+order: 8
+previewImage: "/blog/everything-bento.png"
+---
+
+It’s been five months since we launched xmcp, and we’re excited to share that we’ve reached 100K downloads. Here’s a recap of what we’ve shipped so far.
+
+## GPT Apps
+
+Build apps that run directly inside ChatGPT. xmcp integrates with OpenAI's Apps SDK, so your tools can return interactive widgets.
+
+<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/doom-apps-sdk.mp4" controls />
+
+### Arcade Tool
+
+The `arcade` tool displays a retro arcade game selection interface:
+
+```typescript title="src/tools/arcade.ts"
+import { type ToolMetadata } from "xmcp";
+import { baseURL } from "@/base-url";
+import { getAppsSdkCompatibleHtml } from "@/lib/utils";
+
+export const metadata: ToolMetadata = {
+  name: "arcade",
+  description: "Shows the retro arcade game selection interface",
+  annotations: {
+    readOnlyHint: true,
+  },
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      resultCanProduceWidget: true,
+      toolInvocation: {
+        invoking: "Loading arcade...",
+        invoked: "Arcade loaded",
+      },
+    },
+  },
+};
+
+// Tool implementation
+export default async function handler() {
+  const html = await getAppsSdkCompatibleHtml(baseURL, "/widgets/arcade");
+  return html;
+}
+```
+
+A full breakdown of the project is available in the [Running DOOM in ChatGPT](/blog/doom-with-xmcp) blog post.
+
+## React Client Components
+
+Tools can return React components that xmcp renders to HTML and serves as widget resources. Enable this by setting `widgetAccessible: true` in your metadata.
+
+```typescript title="src/tools/interactive-todo.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "interactive-todo",
+  description: "Interactive todo list widget",
+  _meta: {
+    openai: {
+      widgetAccessible: true,
+      toolInvocation: {
+        invoking: "Loading todo list...",
+        invoked: "Todo list ready!",
+      },
+    },
+  },
+};
+
+export default function InteractiveTodo() {
+  const [todos, setTodos] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, input]);
+      setInput("");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Todo List</h2>
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map((todo, idx) => (
+          <li key={idx}>{todo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+``` 
+
+Find out more in the [React Client Components](/docs/core-concepts/tools#react-client-components) documentation.
+
+## Connect to external MCPs
+
+Use MCP servers over HTTP or STDIO, then turn their tools into building blocks for yours.
+
+<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/generate.mp4" controls />
+
+Define clients in `src/clients.ts`:
+
+```typescript title="src/clients.ts"
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [
+      {
+        name: "CONTEXT7_API_KEY",
+        env: "CONTEXT7_API_KEY",
+      },
+    ],
+  },
+  playwright: {
+    npm: "@playwright/mcp",
+  },
+};
+```
+
+Then generate typed clients:
+
+```bash
+npx @xmcp-dev/cli generate
+```
+
+You will find the generated clients in the `src/generated` directory. Then you can import them in your tools:
+
+```typescript title="src/tools/browser-navigate.ts"
+import { generatedClients } from "../generated/client.index";
+
+export default async function handler({ url }: { url: string }) {
+  await generatedClients.playwright.browserNavigate({ url });
+  return `Navigated to: ${url}`;
+}
+```
+
+Learn more in [Connect to external MCPs](/blog/cli-typed-clients).
+
+## Next.js Adapter
+
+Bring xmcp to your existing Next.js application with a single command:
+
+```bash
+npx init-xmcp@latest
+```
+
+After running it, your project structure would look like this:
+
+```
+nextjs-app/
+├── app/
+│   └── mcp/
+│       └── route.ts      # MCP HTTP endpoint
+├── tools/
+│   └── greet.ts          # Example tool
+├── prompts/
+│   └── review-code.ts    # Example prompt
+├── resources/
+│   ├── (config)/
+│   │   └── app.ts        # Static resource
+│   └── (users)/
+│       └── [userId]/
+│           └── profile.ts # Dynamic resource
+└── xmcp.config.ts        # xmcp configuration
+```
+
+The package.json scripts will be modified to run xmcp alongside Next.js, while tsconfig.json will be updated to include the xmcp folder in its paths.
+
+See the [Next.js adapter](/docs/adapters/nextjs) documentation for setup details and authentication.
+
+## Authentication
+
+xmcp integrates with [Better Auth](https://www.better-auth.com/), adding authentication mcp server with email/password login, OAuth providers, and session management out of the box.
+
+You need to install the Better Auth plugin 
+
+```bash
+npm install @xmcp-dev/better-auth
+```
+
+Afterwards, you can configure the middleware with your database and auth providers in `src/middleware.ts`:
+
+```typescript title="src/middleware.ts"
+import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { Pool } from "pg";
+
+export default betterAuthProvider({
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
+  baseURL: process.env.BETTER_AUTH_BASE_URL,
+  secret: process.env.BETTER_AUTH_SECRET,
+  providers: {
+    emailAndPassword: { enabled: true },
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    },
+  },
+});
+```
+
+Access the authenticated user in your tools with `getBetterAuthSession`:
+
+```typescript title="src/tools/get-user-profile.ts"
+import { getBetterAuthSession } from "@xmcp-dev/better-auth";
+
+export default async function getUserProfile() {
+  const session = await getBetterAuthSession();
+  return `Hello! Your user id is ${session.userId}`;
+}
+```
+
+See [Integrating Better Auth with xmcp](/blog/better-auth-integration) for database schema and OAuth setup, or visit the [Better Auth docs](/docs/integrations/better-auth).
+
+## Monetization
+
+### Checkout inside GPT Apps
+
+Create product listings and handle payments in ChatGPT with Stripe.
+
+<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4" controls />
+
+Read [Monetize your GPT apps with Stripe](/blog/apps-monetization) for the complete walkthrough.
+
+### Tools subscription-based access
+
+Paywall your tools or meter usage with Polar:
+
+```typescript title="src/tools/premium-tool.ts"
+import { headers } from "xmcp/headers";
+import { polar } from "../lib/polar";
+
+export default async function handler() {
+  const licenseKey = headers()["license-key"];
+  const response = await polar.validateLicenseKey(licenseKey as string);
+
+  if (!response.valid) {
+    return response.message;
+  }
+  return "Premium content here";
+}
+```
+
+Learn about paywalling tools in [Integrating Polar with xmcp](/blog/polar-integration).
+
+## What's next?
+
+We're just getting started. Join us on [GitHub](https://github.com/basementstudio/xmcp) to share feedback, report issues, or contribute. Questions? Come chat on [Discord](https://discord.gg/d9a7JBBxV9).
