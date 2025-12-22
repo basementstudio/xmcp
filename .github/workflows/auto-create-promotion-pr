@@ -42,7 +42,7 @@ jobs:
               
               **Original PR:** #${{ github.event.pull_request.number }}
               **Merged by:** @${{ github.event.pull_request.merged_by.login }}
-              **Docs changes detected:** ✅
+              **Docs changes detected:**
               
               ---
               
