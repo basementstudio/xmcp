@@ -41,15 +41,16 @@ const program = new Command()
   .option("--stdio", "Enable STDIO transport", false)
   .option("--gpt", "Initialize with GPT App template", false)
   .option("--ui", "Initialize with MCP App template", false)
-  .option("--tailwind", "Use Tailwind CSS (only with --gpt or --ui)", false)
+  .option(
+    "--tailwind, --tw",
+    "Use Tailwind CSS (only with --gpt or --ui)",
+    false
+  )
   .action(async (projectDir, options) => {
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
     if (options.tailwind && !options.gpt && !options.ui) {
-      console.error(
-        chalk.red("\nError: --tailwind can only be used with --gpt or --ui")
-      );
-      process.exit(1);
+      options.ui = true;
     }
 
     // If project directory wasn't specified, ask for it

@@ -42,7 +42,7 @@ export function createProject(options: ProjectOptions): void {
     transports,
     packageVersion,
     skipInstall,
-    paths = ["tools", "prompts"],
+    paths = ["tools", "prompts", "resources"],
     template = "typescript",
     tailwind = false,
   } = options;
