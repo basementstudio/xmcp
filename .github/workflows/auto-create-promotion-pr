@@ -1,9 +1,14 @@
-name: auto-create-promotion-pr
+name: Auto create promotion PR
 on:
   pull_request:
     types: [closed]
     branches:
       - canary
+
+permissions:
+  pull-requests: write
+  contents: write
+
 jobs:
   create-promotion-pr:
     if: github.event.pull_request.merged == true
@@ -14,7 +19,15 @@ jobs:
         with:
           ref: canary
           fetch-depth: 0
+
+      - name: Check for docs changes
+        id: docs
+        run: |
+          git diff --name-only origin/main...HEAD \
+            | grep '^apps/website/content/docs/' && echo "changed=true" >> $GITHUB_OUTPUT || echo "changed=false" >> $GITHUB_OUTPUT
+
       - name: Create PR to main
+        if: steps.docs.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -29,6 +42,7 @@ jobs:
               
               **Original PR:** #${{ github.event.pull_request.number }}
               **Merged by:** @${{ github.event.pull_request.merged_by.login }}
+              **Docs changes detected:** ✅
               
               ---
               
@@ -37,3 +51,7 @@ jobs:
           else
             echo "PR already exists: #$EXISTING_PR"
           fi
+
+      - name: Skip PR creation
+        if: steps.docs.outputs.changed == 'false'
+        run: echo "No docs changes detected, skipping PR creation"
