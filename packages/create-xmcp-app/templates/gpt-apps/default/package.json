@@ -1,0 +1,24 @@
+{
+  "name": "create-xmcp-app",
+  "version": "0.1.0",
+  "description": "An xmcp application with ChatGPT widgets",
+  "keywords": [
+    "chatgpt"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  }
+}

@@ -1,0 +1,7 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: "Geist Mono", ui-monospace, monospace;
+}
