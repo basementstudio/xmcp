@@ -31,21 +31,23 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          EXISTING_PR=$(gh pr list --base main --head canary --state open --json number --jq '.[0].number')
-          
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+
+          EXISTING_PR=$(gh pr list --base main --head "$SOURCE_BRANCH" --state open --json number --jq '.[0].number')
+
           if [ -z "$EXISTING_PR" ]; then
             gh pr create \
               --base main \
-              --head canary \
+              --head "$SOURCE_BRANCH" \
               --title "${{ github.event.pull_request.title }}" \
               --body "Auto-generated PR to promote changes from canary to main.
-              
-              **Original PR:** #${{ github.event.pull_request.number }}
+
+              **Original PR to canary:** #${{ github.event.pull_request.number }}
               **Merged by:** @${{ github.event.pull_request.merged_by.login }}
-              **Docs changes detected:**
-              
+              **Docs changes detected**
+
               ---
-              
+
               ${{ github.event.pull_request.body }}"
             echo "PR created successfully"
           else
