@@ -27,11 +27,13 @@ On installation, you'll see the following prompts:
 
 <TerminalPrompt>
   {
-    "? What is your project named? (my-xmcp-app)\n? Select a package manager: (Use arrow keys)\n❯ npm \n  yarn \n  pnpm \n  bun\n? Select the transport you want to use: (Use arrow keys)\n❯ HTTP (runs on a server) \n  STDIO (runs on the user's machine)\n? Select components to initialize: (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)\n❯◉ Tools\n ◉ Prompts\n ◉ Resources"
+    "? What is your project named? (my-xmcp-app)\n? Select a template: (Use arrow keys)\n❯ Default (Standard MCP server)\n  GPT App (ChatGPT/OpenAI widgets)\n  MCP App (React widgets for ext-apps)\n? Would you like to use Tailwind CSS? (Y/n)\n? Select a package manager: (Use arrow keys)\n❯ npm \n  yarn \n  pnpm \n  bun\n? Select the transport you want to use: (Use arrow keys)\n❯ HTTP (runs on a server) \n  STDIO (runs on the user's machine)\n? Select components to initialize: (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)\n❯◉ Tools\n ◉ Prompts\n ◉ Resources"
   }
 </TerminalPrompt>
 
 After the prompts, create-xmcp-app will create a folder with your project name and install the required dependencies.
+
+You can also skip prompts using flags: `--gpt` (GPT App), `--ui` (MCP App), `--tailwind` or `--tw` (Tailwind CSS). Run `npx create-xmcp-app --help` for all options.
 
 ## Manual installation
 
