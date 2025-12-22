@@ -1,67 +1,89 @@
-/**
- * Generate full HTML (CSR)
- */
-export function generateHTML(componentCode: string): string {
-  // we need to replace bare imports with esm CDN imports
-  const esmComponentCode = componentCode
-    .replace(
-      /(from\s*)["']react\/jsx-runtime(?:\.m?js)?["']/g,
-      '$1"https://esm.sh/react@19/jsx-runtime"'
-    )
-    .replace(
-      /(from\s*)["']react\/jsx-dev-runtime(?:\.m?js)?["']/g,
-      '$1"https://esm.sh/react@19/jsx-dev-runtime"'
-    )
-    .replace(
-      /(from\s*)["']react(?:\.m?js)?["']/g,
-      '$1"https://esm.sh/react@19"'
-    )
-    .replace(
-      /import\s*\(\s*["']react\/jsx-runtime(?:\.m?js)?["']\s*\)/g,
-      'import("https://esm.sh/react@19/jsx-runtime")'
-    )
-    .replace(
-      /import\s*\(\s*["']react\/jsx-dev-runtime(?:\.m?js)?["']\s*\)/g,
-      'import("https://esm.sh/react@19/jsx-dev-runtime")'
-    )
-    .replace(
-      /import\s*\(\s*["']react(?:\.m?js)?["']\s*\)/g,
-      'import("https://esm.sh/react@19")'
+export function generateOpenAIHTML(
+  componentCode: string,
+  css: string | undefined
+): string {
+  const styleTag = css ? `<style>${css}</style>` : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  ${styleTag}
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    const componentSource = ${JSON.stringify(componentCode)};
+    const blobUrl = URL.createObjectURL(
+      new Blob([componentSource], { type: "text/javascript" })
     );
 
-  const renderScript = `
-  <!-- Component rendering using ESM (React 19) -->
-  <script type="module">
-    import { createRoot } from "https://esm.sh/react-dom@19/client";
-    import { createElement } from "https://esm.sh/react@19";
+    await import(blobUrl);
 
-    const componentSource = ${JSON.stringify(esmComponentCode)};
-    const blobUrl = URL.createObjectURL(new Blob([componentSource], { type: "text/javascript" }));
-
-    try {
-      const mod = await import(blobUrl);
-      const Component = mod.default ?? mod.Component ?? mod.ReactComponent ?? Object.values(mod)[0];
-
-      if (!Component) {
-        throw new Error("React component export not found");
-      }
-
-      const props = window.openai?.toolInput || {};
-
-      const root = document.getElementById('root');
-      if (root) {
-        createRoot(root).render(createElement(Component, props));
-      }
-    } finally {
+    requestAnimationFrame(() => {
       URL.revokeObjectURL(blobUrl);
-    }
+    });
+  </script>
+</body>
+</html>`;
+}
+
+export function generateUIHTML(
+  componentCode: string,
+  css: string | undefined
+): string {
+  const renderScript = `
+  <script type="module">
+    const componentSource = ${JSON.stringify(componentCode)};
+    const blobUrl = URL.createObjectURL(
+      new Blob([componentSource], { type: "text/javascript" })
+    );
+
+    await import(blobUrl);
+
+    let nextId = 1;
+
+    window.parent.postMessage({
+      jsonrpc: "2.0",
+      id: nextId++,
+      method: "ui/initialize",
+      params: {
+        capabilities: {},
+        clientInfo: { name: "xmcp React Widget", version: "1.0.0" },
+        protocolVersion: "2025-06-18"
+      }
+    }, "*");
+
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+
+      if (event.source !== window.parent) return;
+
+      // handshake ack
+      if (data?.result?.hostContext && data?.id === 1) {
+        window.parent.postMessage({
+          jsonrpc: "2.0",
+          method: "ui/notifications/initialized",
+          params: {}
+        }, "*");
+      }
+    });
+
+    requestAnimationFrame(() => {
+      URL.revokeObjectURL(blobUrl);
+    });
   </script>`;
+
+  const styleTag = css ? `<style>${css}</style>` : "";
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${styleTag}
 </head>
 <body>
   <div id="root"></div>

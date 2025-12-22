@@ -10,7 +10,10 @@ textureImage: "/textures/text2.png"
 
 Allow users to buy products directly from ChatGPT through Stripe's external checkout integration.
 
-<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4" controls />
+<Video
+  src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4"
+  controls
+/>
 
 Find the complete project on [GitHub](https://github.com/xmcp-dev/gpt-apps-monetization).
 
@@ -55,7 +58,7 @@ gpt-apps-monetization/
 └── package.json
 ```
 
-### Stripe 
+### Stripe
 
 Start by creating a Stripe account, enable the sandbox environment, copy the secret key (`sk_test_…`), and define several one-off products.
 
@@ -349,8 +352,8 @@ export default function ProductsPage() {
           {isSubmitting
             ? "Processing…"
             : checkoutUrl
-            ? "Open checkout"
-            : "Proceed to checkout"}
+              ? "Open checkout"
+              : "Proceed to checkout"}
         </button>
 
         {status ? (
@@ -376,10 +379,10 @@ Here's the complete user flow for testing your application:
 
 1. Deploy your application to Vercel and get the URL with the MCP endpoint (`https://your-app.vercel.app/mcp`).
 2. In ChatGPT go to `Apps & Connectors` → `Advanced Settings` and enable developer mode.
-3. Create Connector: 
+3. Create Connector:
    - Go back to `Apps & Connectors` and click `Create`
    - Enter a name for your connector and your MCP server URL
    - Select `No Authentication`
    - Accept the terms and conditions
    - Click `Create`
-4. Create a new chat and use the `/`  command to access the connector.
+4. Create a new chat and use the `/` command to access the connector.

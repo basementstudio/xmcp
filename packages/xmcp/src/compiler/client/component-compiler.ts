@@ -1,7 +1,7 @@
 import path from "path";
 import { rspack } from "@rspack/core";
-import fs from "fs";
 import type { RspackOptions } from "@rspack/core";
+import { hasPostCSSConfig } from "../utils/config-detection";
 
 interface CompileOptions {
   entries: Map<string, string>;
@@ -85,22 +85,66 @@ export class ClientComponentCompiler {
     };
   }
 
-  private createConfig(config: ResolvedBuildRequest): RspackOptions {
-    const pkgPath = path.join(process.cwd(), "package.json");
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+  private createVirtualModules(absoluteEntries: Record<string, string>) {
+    const virtualModules: Record<string, string> = {};
+    const virtualEntries: Record<string, string> = {};
 
-    const dependencies = {
-      ...pkg.dependencies,
-      ...pkg.devDependencies,
-      ...pkg.peerDependencies,
-    };
+    for (const [name, realEntry] of Object.entries(absoluteEntries)) {
+      const virtualPath = this.getVirtualPath(name);
+      virtualEntries[name] = virtualPath;
+      virtualModules[virtualPath] = this.createEntryModule(realEntry);
+    }
+
+    return { virtualModules, virtualEntries };
+  }
+
+  private getVirtualPath(name: string): string {
+    return path.posix.join(".", "__virtual__", `${name}.entry.tsx`);
+  }
+
+  private createEntryModule(componentPath: string): string {
+    return `
+  import React from "react";
+  import { createRoot } from "react-dom/client";
+  import Component from ${JSON.stringify(componentPath)};
+
+  const el = document.getElementById("root");
+  if (!el) {
+    throw new Error("Root element not found");
+  }
+
+  const root = createRoot(el);
+
+  function render(props) {
+    root.render(React.createElement(Component, props));
+  }
+
+  if (window.openai !== undefined) {
+    render(window.openai.toolInput ?? {});
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent && event.source !== null) return;
+
+    if (event.data?.method === "ui/notifications/tool-input") {
+      render(event.data.params?.arguments ?? {});
+    }
+  });
+  `;
+  }
+
+  private createConfig(config: ResolvedBuildRequest): RspackOptions {
+    const { virtualModules, virtualEntries } = this.createVirtualModules(
+      config.absoluteEntries
+    );
 
     return {
       mode: "production",
-      entry: config.absoluteEntries,
+      entry: virtualEntries,
       target: "web",
       experiments: {
         outputModule: true,
+        css: true,
       },
       output: {
         path: config.absoluteOutputDir,
@@ -111,47 +155,10 @@ export class ClientComponentCompiler {
         },
         clean: true,
       },
-      externals: [
-        {
-          react: "react",
-          "react/jsx-runtime": "react/jsx-runtime",
-          "react/jsx-dev-runtime": "react/jsx-dev-runtime",
-          "react-dom/client": "react-dom/client",
-        },
-        function ({ request }, callback) {
-          if (!request) {
-            return callback();
-          }
-
-          if (
-            request.startsWith("./") ||
-            request.startsWith("../") ||
-            request.startsWith("/")
-          ) {
-            return callback();
-          }
-
-          const basePackage = request.startsWith("@")
-            ? request.split("/").slice(0, 2).join("/")
-            : request.split("/")[0];
-
-          const rawVersion = dependencies[basePackage];
-          const version = rawVersion?.replace(/^[\^~>=<]+/, "").trim();
-
-          if (version) {
-            const subpath = request.slice(basePackage.length);
-            return callback(
-              undefined,
-              `https://esm.sh/${basePackage}@${version}${subpath}`
-            );
-          }
-
-          return callback(undefined, `https://esm.sh/${request}`);
-        },
-      ],
       externalsType: "module",
       resolve: {
         extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+        preferRelative: true,
       },
       resolveLoader: {
         modules: [
@@ -187,10 +194,25 @@ export class ClientComponentCompiler {
               },
             },
           },
+          {
+            test: /\.css$/,
+            use: hasPostCSSConfig() ? ["postcss-loader"] : [],
+            type: "css/auto",
+          },
+          {
+            test: /\.less$/,
+            type: "css/auto",
+            use: ["less-loader"],
+          },
         ],
       },
+      plugins: [new rspack.experiments.VirtualModulesPlugin(virtualModules)],
       optimization: {
-        minimize: false,
+        minimize: true,
+        usedExports: true,
+        sideEffects: true,
+        concatenateModules: true,
+        moduleIds: "deterministic",
       },
       cache: true,
     };

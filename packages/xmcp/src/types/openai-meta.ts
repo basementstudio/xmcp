@@ -70,6 +70,16 @@ export interface OpenAIMetadata {
   widgetAccessible?: boolean;
 
   /**
+   * URI template for the widget resource for MCP Apps
+   * Maps to: `ui/resourceUri`
+   *
+   * Auto-generated as `ui://widget/{toolName}.html` if not provided.
+   *
+   * @example "ui://widget/my-tool.html"
+   */
+  resourceUri?: string;
+
+  /**
    * URI template for the widget resource
    * Maps to: `openai/outputTemplate`
    *
@@ -123,6 +133,36 @@ export interface OpenAIMetadata {
     connect_domains?: string[];
     /** URLs allowed for scripts, images, and fonts (script-src, img-src, font-src) */
     resource_domains?: string[];
+  };
+
+  /**
+   * Content Security Policy configuration (mcp-apps-only)
+   *
+   * Servers declare which external origins their UI needs to access.
+   * Hosts use this to enforce appropriate CSP headers.
+   */
+  csp?: {
+    /**
+     * Origins for network requests
+     *
+     * - Empty or omitted = no external connections (secure default)
+     * - Maps to CSP `connect-src` directive
+     *
+     * @example
+     * ["https://api.weather.com", "wss://realtime.service.com"]
+     */
+    connectDomains?: string[];
+    /**
+     * Origins for static resources (images, scripts, stylesheets, fonts)
+     *
+     * - Empty or omitted = no external resources (secure default)
+     * - Wildcard subdomains supported: `https://*.example.com`
+     * - Maps to CSP `img-src`, `script-src`, `style-src`, `font-src` directives
+     *
+     * @example
+     * ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"]
+     */
+    resourceDomains?: string[];
   };
 
   /**

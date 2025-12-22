@@ -41,7 +41,7 @@ export async function install(
   packageManager: "npm" | "pnpm" | "yarn" | "bun",
   version: string
 ) {
-  const dependencies = [`xmcp@${version}`, "zod@^3.25.76"]; // pin zod to specific version to avoid compilation errors
+  const dependencies = [`xmcp@${version}`, "zod"];
 
   const commands = {
     npm: `npm install ${dependencies.join(" ")}`,
