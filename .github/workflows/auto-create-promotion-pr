@@ -1,0 +1,39 @@
+name: auto-create-promotion-pr
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - canary
+jobs:
+  create-promotion-pr:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: canary
+          fetch-depth: 0
+      - name: Create PR to main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head canary --state open --json number --jq '.[0].number')
+          
+          if [ -z "$EXISTING_PR" ]; then
+            gh pr create \
+              --base main \
+              --head canary \
+              --title "${{ github.event.pull_request.title }}" \
+              --body "Auto-generated PR to promote changes from canary to main.
+              
+              **Original PR:** #${{ github.event.pull_request.number }}
+              **Merged by:** @${{ github.event.pull_request.merged_by.login }}
+              
+              ---
+              
+              ${{ github.event.pull_request.body }}"
+            echo "PR created successfully"
+          else
+            echo "PR already exists: #$EXISTING_PR"
+          fi
