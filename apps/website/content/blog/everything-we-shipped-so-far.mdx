@@ -5,6 +5,7 @@ category: "changelog"
 date: "2025-12-20"
 order: 8
 previewImage: "/blog/everything-bento.png"
+featured: true
 ---
 
 It’s been five months since we launched xmcp, and we’re excited to share that we’ve reached 100K downloads. Here’s a recap of what we’ve shipped so far.
@@ -13,7 +14,10 @@ It’s been five months since we launched xmcp, and we’re excited to share tha
 
 Build apps that run directly inside ChatGPT. xmcp integrates with OpenAI's Apps SDK, so your tools can return interactive widgets.
 
-<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/doom-apps-sdk.mp4" controls />
+<Video
+  src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/doom-apps-sdk.mp4"
+  controls
+/>
 
 ### Arcade Tool
 
@@ -102,7 +106,7 @@ export default function InteractiveTodo() {
     </div>
   );
 }
-``` 
+```
 
 Find out more in the [React Client Components](/docs/core-concepts/tools#react-client-components) documentation.
 
@@ -110,7 +114,10 @@ Find out more in the [React Client Components](/docs/core-concepts/tools#react-c
 
 Use MCP servers over HTTP or STDIO, then turn their tools into building blocks for yours.
 
-<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/generate.mp4" controls />
+<Video
+  src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/generate.mp4"
+  controls
+/>
 
 Define clients in `src/clients.ts`:
 
@@ -188,7 +195,7 @@ See the [Next.js adapter](/docs/adapters/nextjs) documentation for setup details
 
 xmcp integrates with [Better Auth](https://www.better-auth.com/), adding authentication mcp server with email/password login, OAuth providers, and session management out of the box.
 
-You need to install the Better Auth plugin 
+You need to install the Better Auth plugin
 
 ```bash
 npm install @xmcp-dev/better-auth
@@ -235,7 +242,10 @@ See [Integrating Better Auth with xmcp](/blog/better-auth-integration) for datab
 
 Create product listings and handle payments in ChatGPT with Stripe.
 
-<Video src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4" controls />
+<Video
+  src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/apps-monetization.mp4"
+  controls
+/>
 
 Read [Monetize your GPT apps with Stripe](/blog/apps-monetization) for the complete walkthrough.
 
