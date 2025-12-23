@@ -19,6 +19,7 @@ interface ProjectOptions {
   skipInstall?: boolean;
   paths?: string[];
   template?: string;
+  tailwind?: boolean;
 }
 
 /**
@@ -41,15 +42,27 @@ export function createProject(options: ProjectOptions): void {
     transports,
     packageVersion,
     skipInstall,
-    paths = ["tools", "prompts"],
+    paths = ["tools", "prompts", "resources"],
     template = "typescript",
+    tailwind = false,
   } = options;
 
   // Ensure the project directory exists
   fs.ensureDirSync(projectPath);
 
   // Get the template directory path
-  const templateDir = path.join(__dirname, "../../templates", template);
+  let templateDir: string;
+  if (template === "gpt-apps" || template === "mcp-apps") {
+    const subTemplate = tailwind ? "tailwind" : "default";
+    templateDir = path.join(
+      __dirname,
+      "../../templates",
+      template,
+      subTemplate
+    );
+  } else {
+    templateDir = path.join(__dirname, "../../templates", template);
+  }
 
   // Copy template files to project directory
   copyTemplate(templateDir, projectPath, paths);
@@ -57,24 +70,11 @@ export function createProject(options: ProjectOptions): void {
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
 
-  // For openai and react templates, skip config generation and package.json update
-  // as they're already provided in the template
-  if (template === "openai" || template === "react") {
-    // Update package.json name only
-    const packageJsonPath = path.join(projectPath, "package.json");
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
-    packageJson.name = projectName;
-    fs.writeFileSync(
-      packageJsonPath,
-      JSON.stringify(packageJson, null, 2) + "\n"
-    );
-  } else {
-    // Generate xmcp.config.ts based on selected transports and paths
-    generateConfig(projectPath, transports, paths);
+  // Generate xmcp.config.ts based on selected transports and paths
+  generateConfig(projectPath, transports, paths);
 
-    // Update package.json with project configuration
-    updatePackageJson(projectPath, projectName, transports);
-  }
+  // Update package.json with project configuration
+  updatePackageJson(projectPath, projectName, transports);
 
   // Create necessary project directories
   createProjectDirectories(projectPath);

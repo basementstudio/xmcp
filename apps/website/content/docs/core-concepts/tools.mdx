@@ -251,6 +251,36 @@ export const metadata: ToolMetadata = {
 - `domain` - Optional dedicated subdomain for the widget's sandbox origin
 - `prefersBorder` - Request visible border + background (`true`/`false`/omitted)
 
+### MCP Apps metadata
+
+<Callout variant="info">
+  Unlike OpenAI widgets, MCP Apps do not require specific metadata configuration. Widgets work automatically without additional setup.
+</Callout>
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "show-analytics",
+  description: "Display analytics dashboard",
+	_meta: {
+    ui: {
+      csp: {
+        connectDomains: ["https://api.analytics.com"],
+        resourceDomains: ["https://cdn.analytics.com"],
+      },
+      domain: "https://analytics-widget.example.com",
+      prefersBorder: true,
+    },
+  },
+};
+```
+
+**Resource-specific properties:**
+
+- `csp.connectDomains` - Origins for fetch/XHR/WebSocket connections
+- `csp.resourceDomains` - Origins for images, scripts, stylesheets, fonts, media
+- `domain` - Optional dedicated subdomain for the widget's sandbox origin
+- `prefersBorder` - Request visible border + background (`true`/`false`/omitted)
+
 ## Handler Types
 
 Tools support three types of handlers, each suited for different use cases:
