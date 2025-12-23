@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "basehub dev & next dev --turbopack",
-    "build": "basehub && next build --turbopack",
+    "dev": "xmcp dev & basehub dev & next dev --turbopack",
+    "build": "xmcp build && basehub && next build --turbopack",
     "start": "next start",
     "lint": "next lint"
   },
@@ -66,6 +66,7 @@
     "tailwind-merge": "^3.4.0",
     "three": "^0.178.0",
     "unist-util-visit": "^5.0.0",
+    "xmcp": "0.5.5",
     "zod": "^4.1.13",
     "zustand": "^5.0.9"
   },

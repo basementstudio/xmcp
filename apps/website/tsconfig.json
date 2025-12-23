@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,8 +23,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@public/*": ["./public/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@public/*": [
+        "./public/*"
+      ],
+      "@xmcp/*": [
+        "./.xmcp/*"
+      ]
     }
   },
   "include": [
@@ -32,7 +43,10 @@
     "basehub.d.ts",
     "basehub.config.ts",
     "basehub-types.d.ts",
-    "next.config.mjs"
+    "next.config.mjs",
+    "xmcp-env.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
