@@ -68,7 +68,7 @@ export default async function search({
     return { content: [{ type: "text", text: `Provide a query or an id` }] };
   }
 
-  const results = await searchAPI.search(query);
+  const results = (await searchAPI.search(query)).slice(0, 10);
 
   if (!results.length) {
     return { content: [{ type: "text", text: `No results for "${query}"` }] };
