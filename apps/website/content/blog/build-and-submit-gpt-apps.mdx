@@ -1,0 +1,122 @@
+---
+title: "How to submit your GPT app"
+description: "A complete guide to submitting your ChatGPT App to the OpenAI directory"
+category: "guides"
+date: "2025-12-23"
+order: 5
+textureImage: "/textures/text1.png"
+featured: true
+---
+
+Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everything from preparing your assets to getting your app approved.
+
+<Callout variant="info">
+  In this guide, we'll use the arcade app as an example project. You can find
+  the complete source code on{" "}
+  <a
+    href="https://github.com/xmcp-dev/arcade"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    GitHub
+  </a>{" "}
+  and a build guide <a href="/blog/doom-with-xmcp">here</a>.
+</Callout>
+
+## First steps
+
+If you don't have your assets ready, this is the moment to prepare them. The checklist includes:
+
+- **Icon**: An SVG icon 64x64 pixels in size. Test it in dark mode as many icons become invisible on dark backgrounds.
+- **Demo video**: A video hosted in the same domain as your app. You will need to provide the URL later.
+- **Legal pages**: Privacy policy and terms of service pages hosted in the same domain as your app.
+- **Screenshots**: At least one screenshot of your app and up to 4. The width must be exactly 706px with a height between 400 and 860px (recommended height: 860px).
+
+After you have your assets ready, head to the [OpenAI Platform Dashboard](https://platform.openai.com) and navigate to ChatGPT Apps and click on `+ New App`.
+
+## App info
+
+In this section, you will upload your assets and provide information about your app.
+All fields are required, so be sure to fill them out correctly. Pay special attention to the following fields:
+
+- **Subtitle**: This is your best opportunity for discoverability, so keep it clear and descriptive.
+- **Description**: Write it in a marketing-friendly way while ensuring users understand what your app does.
+- **Email address or contact support URL**: This will be used to contact you if there are any issues with your app.
+- **App Commerce and purchasing**: For apps that involve sales of physical goods.
+
+As of December 2025, only physical goods are allowed to be sold through the OpenAI directory. You can find the guidelines on allowed products [here](https://developers.openai.com/apps-sdk/app-submission-guidelines) and the guide to monetize your app with Stripe [here](/blog/apps-monetization).
+
+## MCP Server
+
+Provide your MCP server URL for OpenAI to scan for available tools and proceed with the verification process. Here, you will specify whether your server requires authentication or not.
+
+You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions.
+
+- **Read-only**: Only reads data, no modifications
+- **Open-world**: Has web access or makes external calls
+- **Destructive**: Modifies or deletes data
+
+Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`.
+
+If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI-APPS-VERIFICATION-TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
+
+## Testing
+
+If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered.
+
+For the positive test cases, you will need to provide:
+
+- Scenario: The use case of your tool to be triggered
+- User prompt: The prompt or interaction that will trigger your tool
+- Tool triggered: The tool that should be called
+- Expected output: The output or experience the user should expect
+
+For the negative test cases, you will need to provide:
+
+- Scenario: A scenario where the app should not be triggered
+- User prompt: The prompt or interaction that will not trigger your app
+
+For our arcade app, the test cases would be:
+
+### Positive test cases
+
+A user wants to see what games are available in the arcade:
+
+- Scenario: User wants to browse the available classic arcade games before deciding which one to play
+- User prompt: I want to see what retro arcade games are available. Can you show me the arcade interface?
+- Tool triggered: "list_games"
+- Expected output: The retro arcade game selection interface is displayed showing available games
+
+A user wants to launch the DOOM game:
+
+- Scenario: User wants to play the classic DOOM game
+- User prompt: I'm in the mood for some classic gaming. Launch Doom for me!
+- Tool triggered: "launch_game"
+- Expected output: Doom arcade game is launched
+
+### Negative test cases
+
+A user wants to know more about Doom:
+
+- Scenario: User is asking about the documentation and capabilities of the arcade system, not requesting to use it
+- User prompt: Can you explain how the arcade tool works and what games it supports?
+
+You can automatically generate these test cases for your server using [MCPJam](https://www.mcpjam.com/), it will provide you with a list of positive and negative test cases for your server.
+
+These will be used by OpenAI to test your app and ensure it works as expected. Remember that your app review can be done by automation or by a human reviewer, so be sure to test your app thoroughly before submitting.
+
+## Screenshots
+
+This section is where you will upload your screenshots. Make them explicit and clear so users can understand what your app does without reading the description.
+
+## Global
+
+This section is optional. You can limit access to your app to specific countries or regions and provide translations for your app.
+
+## Submit
+
+In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app.
+
+Before you send your submission, keep a local backup of your app description, tool explanations, and test cases since the form can occasionally clear fields. If your submission gets rejected, you will need to start a new one from the beginning.
+
+For reference, check [OpenAI's App Submission Guidelines](https://developers.openai.com/apps-sdk/app-submission-guidelines) to ensure your app meets all requirements.
