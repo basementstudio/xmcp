@@ -199,7 +199,7 @@ export async function GET(
       return result.response;
     }
 
-    const { title, description, summary, date } = result.content;
+    const { title, summary, date } = result.content;
 
     const geistData = await geistRegular;
 
@@ -295,9 +295,9 @@ export async function GET(
           >
             {title}
           </h1>
-          {(summary || description) && (
+          {summary && (
             <p
-              key={summary ?? description}
+              key={summary}
               style={{
                 display: "flex",
                 margin: 0,
@@ -311,7 +311,7 @@ export async function GET(
                 textWrap: "balance",
               }}
             >
-              {summary ?? description}
+              {summary}
             </p>
           )}
         </div>
