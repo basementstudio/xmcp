@@ -2,40 +2,103 @@
 title: "Build and submit your GPT apps"
 description: "A complete guide to building and submitting your ChatGPT App to the OpenAI directory"
 category: "guides"
-date: "2025-12-19"
+date: "2025-12-23"
 order: 5
 textureImage: "/textures/text1.png"
+summary: "A complete guide to submitting your ChatGPT App to the OpenAI directory"
 ---
 
-OpenAI's ChatGPT Apps allow you to integrate your application directly with users inside ChatGPT. In this guide, we'll walk through the complete process from building your app to publishing it in the OpenAI directory.
-
-Before diving in, review [OpenAI's App Submission Guidelines](https://developers.openai.com/apps-sdk/app-submission-guidelines) to ensure your app complies with their safety requirements and prohibitions. Once you have your idea, you'll choose from three possible approaches: a text-only app, a React components app, or a full Next.js app.
-
-In this guide, we'll build a simple yet fully integrated React app. By the end, you'll have a working application submitted to the OpenAI directory.
+Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everything from preparing your assets to getting your app approved.
+In this guide, we'll use the arcade app as an example. You can find the complete project on [GitHub](https://github.com/xmcp-dev/arcade) and the build guide [here](/blog/doom-with-xmcp).
 
 
-## BREAK
+## First steps
 
+If you don't have your assets ready, this is the moment to prepare them. The checklist includes:
 
-Possible projects:
-- Talk to your neon database and execute queries and rls
+- **Icon**: An SVG icon 64x64 pixels in size. Test it in dark mode as many icons become invisible on dark backgrounds.
+- **Demo video**: A video hosted in the same domain as your app. You will need to provide the URL later.
+- **Legal pages**: Privacy policy and terms of service pages hosted in the same domain as your app.
+- **Screenshots**: At least one screenshot of your app and up to 4. The width must be exactly 706px with a height between 400 and 860px (recommended height: 860px).
 
+After you have your assets ready, head to the [OpenAI Platform Dashboard](https://platform.openai.com) and navigate to ChatGPT Apps and click on `+ New App`.
 
-We will start by ……
+## App info
 
+In this section, you will upload your assets and provide information about your app.
+All fields are required, so be sure to fill them out correctly. Pay special attention to the following fields:
 
-And then …..
+- **Subtitle**: This is your best opportunity for discoverability, so keep it clear and descriptive. 
+- **Description**: Write it in a marketing-friendly way while ensuring users understand what your app does.
+- **Email address or contact support URL**: This will be used to contact you if there are any issues with your app.
+- **App Commerce and purchasing**: For apps that involve sales of physical goods.
 
+As of December 2025, only physical goods are allowed to be sold through the OpenAI directory. You can find the guidelines on allowed products [here](https://developers.openai.com/apps-sdk/app-submission-guidelines) and the guide to monetize your app with Stripe [here](/blog/apps-monetization).
 
-After that….
+## MCP Server
 
+Provide your MCP server URL for OpenAI to scan for available tools and proceed with the verification process. Here, you will specify whether your server requires authentication or not.
 
-## Submission
-Go to the OpenAI Platform Dashboard, there you will find the ChatGPT Apps section, one you are there go to create.It will present you a form for completion, some of the most important fields, besides logo and name, are the following:
-- Subtitle -> this will be the best way to make your tool discoverable
-- Description -> make it the most marketing way, but structured and understandable, so every user understand the full scope of your app
-- Demo video, this will be displayed once the user clicks on your app at the directory, the user will be more likely to watch the video rather than read the description, show all the use cases and make sure to show them in the best possible way.
-- App Commerce and purchasing, if your app involves sales but remember they should be physical good, you will need to check this.
-Afterward, you will need to provide the link to your server, you will verify if it requires auth or not and it will scan for tools. If it detects them, it will ask you to justify the annotations added to your tools, and to add a ver
+You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions. 
 
-If you fetch from other places csp should be there.Before submitting your app, we encourage you to read the guidelines around safety and privacy for GPT Apps
+- **Read-only**: Only reads data, no modifications
+- **Open-world**: Has web access or makes external calls
+- **Destructive**: Modifies or deletes data
+
+Next, you will need to verify your domain. Create the route `/.well-known/openai-apps-challenge` and return the verification token provided by OpenAI.
+
+## Testing
+
+If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered. 
+
+For the positive test cases, you will need to provide:
+
+- Scenario: The use case of your tool to be triggered
+- User prompt: The prompt or interaction that will trigger your tool
+- Tool triggered: The tool that should be called
+- Expected output: The output or experience the user should expect
+
+For the negative test cases, you will need to provide:
+
+- Scenario: A scenario where the app should not be triggered
+- User prompt: The prompt or interaction that will not trigger your app
+
+For our arcade app, the test cases would be:
+
+### Positive test cases
+
+A user wants to see what games are available in the arcade:
+- Scenario: The user wants to see the list of games
+- User prompt: "What games are available?"
+- Tool triggered: "list_games"
+- Expected output: The user should see a list of games
+
+A user wants to launch the DOOM game:
+- Scenario: The user wants to launch a game
+- User prompt: "Launch DOOM"
+- Tool triggered: "launch_game"
+- Expected output: The user should see the DOOM game launched
+
+### Negative test cases
+
+A user wants to know more about Doom:
+- Scenario: The user wants to research about Doom
+- User prompt: "Show me information about DOOM"
+
+These test cases will be used by OpenAI to test your app and ensure it works as expected. Remember that your app review can be done by automation or by a human reviewer, so be sure to test your app thoroughly before submitting it and provide detailed test cases.
+
+## Screenshots
+
+This section is where you will upload your screenshots. Make them explicit and clear so users can understand what your app does without reading the description.
+
+## Global
+
+This section is optional. You can limit access to your app to specific countries or regions and provide translations for your app.
+
+## Submit
+
+In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app. 
+
+Before you send your submission, keep a local backup of your app description, tool explanations, and test cases since the form can occasionally clear fields. If your submission gets rejected, you will need to start a new one from the beginning.
+
+For reference, check [OpenAI's App Submission Guidelines](https://developers.openai.com/apps-sdk/app-submission-guidelines) to ensure your app meets all requirements.
