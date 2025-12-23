@@ -383,25 +383,20 @@ export class StatelessStreamableHTTPTransport {
    * The presence of OPENAI_APPS_VERIFICATION_TOKEN acts as the feature flag
    */
   private setupOpenAIAppsChallengeRoute(): void {
+    const token = process.env.OPENAI_APPS_VERIFICATION_TOKEN;
+
+    if (!token) {
+      if (this.debug) {
+        this.log(
+          "OpenAI Apps verification token not configured; skipping challenge route"
+        );
+      }
+      return;
+    }
+
     this.app.get(
       "/.well-known/openai-apps-challenge",
       (_req: Request, res: Response) => {
-        const token = process.env.OPENAI_APPS_VERIFICATION_TOKEN;
-
-        if (!token) {
-          if (this.debug) {
-            this.log(
-              "OpenAI Apps verification token not configured; returning 500"
-            );
-          }
-
-          res
-            .status(500)
-            .set("Content-Type", "text/plain")
-            .send("Verification token not configured");
-          return;
-        }
-
         res.status(200).set("Content-Type", "text/plain").send(token);
       }
     );
