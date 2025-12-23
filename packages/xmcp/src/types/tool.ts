@@ -1,4 +1,5 @@
 import { z } from "zod/v3";
+import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
 import { OpenAIMetadata } from "./openai-meta";
 
 export interface ToolAnnotations {
@@ -30,10 +31,9 @@ export interface ToolMetadata {
   };
 }
 
-export type ToolSchema = Record<
-  string,
-  z.ZodType<unknown, z.ZodTypeDef, unknown>
->;
+type CompatibleZodType = z.ZodTypeAny | ZodTypeV4<unknown>;
+
+export type ToolSchema = Record<string, CompatibleZodType>;
 
 // The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @modelcontextprotocol/sdk but fully resolved to avoid external type dependencies.
 /**
@@ -102,5 +102,9 @@ export interface ToolExtraArguments {
 }
 
 export type InferSchema<T extends ToolSchema> = {
-  [K in keyof T]: z.infer<T[K]>;
+  [K in keyof T]: T[K] extends z.ZodTypeAny
+    ? z.infer<T[K]>
+    : T[K] extends ZodTypeV4<unknown>
+      ? inferV4<T[K]>
+      : never;
 };
