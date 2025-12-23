@@ -1,16 +1,16 @@
 ---
-title: "Build and submit your GPT apps"
-description: "A complete guide to building and submitting your ChatGPT App to the OpenAI directory"
+title: "How to submit your GPT app"
+description: ""
 category: "guides"
 date: "2025-12-23"
 order: 5
 textureImage: "/textures/text1.png"
-summary: "A complete guide to submitting your ChatGPT App to the OpenAI directory"
 ---
 
 Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everything from preparing your assets to getting your app approved.
-In this guide, we'll use the arcade app as an example. You can find the complete project on [GitHub](https://github.com/xmcp-dev/arcade) and the build guide [here](/blog/doom-with-xmcp).
 
+In this guide, we'll use the arcade app as an example. You can find the complete project on [GitHub](https://github.com/xmcp-dev/arcade) and the build guide [here](/blog/doom-with-xmcp).
+    
 
 ## First steps
 
@@ -45,7 +45,10 @@ You will need to explain why each permission is needed or not. Be specific about
 - **Open-world**: Has web access or makes external calls
 - **Destructive**: Modifies or deletes data
 
-Next, you will need to verify your domain. Create the route `/.well-known/openai-apps-challenge` and return the verification token provided by OpenAI.
+Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`. 
+
+If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI-APPS-VERIFICATION-TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
+
 
 ## Testing
 
@@ -68,24 +71,26 @@ For our arcade app, the test cases would be:
 ### Positive test cases
 
 A user wants to see what games are available in the arcade:
-- Scenario: The user wants to see the list of games
-- User prompt: "What games are available?"
+- Scenario: User wants to browse the available classic arcade games before deciding which one to play
+- User prompt: I want to see what retro arcade games are available. Can you show me the arcade interface?
 - Tool triggered: "list_games"
-- Expected output: The user should see a list of games
+- Expected output: The retro arcade game selection interface is displayed showing available games
 
 A user wants to launch the DOOM game:
-- Scenario: The user wants to launch a game
-- User prompt: "Launch DOOM"
+- Scenario: User wants to play the classic DOOM game
+- User prompt: I'm in the mood for some classic gaming. Launch Doom for me!
 - Tool triggered: "launch_game"
-- Expected output: The user should see the DOOM game launched
+- Expected output: Doom arcade game is launched
 
 ### Negative test cases
 
 A user wants to know more about Doom:
-- Scenario: The user wants to research about Doom
-- User prompt: "Show me information about DOOM"
+- Scenario: User is asking about the documentation and capabilities of the arcade system, not requesting to use it
+- User prompt: Can you explain how the arcade tool works and what games it supports?
 
-These test cases will be used by OpenAI to test your app and ensure it works as expected. Remember that your app review can be done by automation or by a human reviewer, so be sure to test your app thoroughly before submitting it and provide detailed test cases.
+You can automatically generate these test cases for your server using [MCPJam](https://www.mcpjam.com/), it will provide you with a list of positive and negative test cases for your server.
+
+These will be used by OpenAI to test your app and ensure it works as expected. Remember that your app review can be done by automation or by a human reviewer, so be sure to test your app thoroughly before submitting.
 
 ## Screenshots
 
