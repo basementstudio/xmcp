@@ -295,9 +295,9 @@ export async function GET(
           >
             {title}
           </h1>
-          {(summary || description) && (
+          {((type === "blog" && summary) || (type !== "blog" && description)) && (
             <p
-              key={summary ?? description}
+              key={type === "blog" ? summary : description}
               style={{
                 display: "flex",
                 margin: 0,
@@ -311,7 +311,7 @@ export async function GET(
                 textWrap: "balance",
               }}
             >
-              {summary ?? description}
+              {type === "blog" ? summary : description}
             </p>
           )}
         </div>
