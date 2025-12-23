@@ -355,6 +355,8 @@ export class StatelessStreamableHTTPTransport {
       );
     });
 
+    this.setupOpenAIAppsChallengeRoute();
+
     // to do move this to a separate provider with the same approach as better auth
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.router);
@@ -374,6 +376,35 @@ export class StatelessStreamableHTTPTransport {
     if (this.oauthProxy) {
       this.app.use(this.oauthProxy.middleware);
     }
+  }
+
+  /**
+   * Exposes the OpenAI Apps verification challenge file when configured.
+   * The presence of OPENAI_APPS_VERIFICATION_TOKEN acts as the feature flag
+   */
+  private setupOpenAIAppsChallengeRoute(): void {
+    this.app.get(
+      "/.well-known/openai-apps-challenge",
+      (_req: Request, res: Response) => {
+        const token = process.env.OPENAI_APPS_VERIFICATION_TOKEN;
+
+        if (!token) {
+          if (this.debug) {
+            this.log(
+              "OpenAI Apps verification token not configured; returning 500"
+            );
+          }
+
+          res
+            .status(500)
+            .set("Content-Type", "text/plain")
+            .send("Verification token not configured");
+          return;
+        }
+
+        res.status(200).set("Content-Type", "text/plain").send(token);
+      }
+    );
   }
 
   private setupEndpointRoute(): void {
