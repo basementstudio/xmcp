@@ -5,22 +5,15 @@ category: "guides"
 date: "2025-12-23"
 order: 5
 textureImage: "/textures/text1.png"
+
 featured: true
 ---
 
 Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everything from preparing your assets to getting your app approved.
 
 <Callout variant="info">
-  In this guide, we'll use the arcade app as an example project. You can find
-  the complete source code on{" "}
-  <a
-    href="https://github.com/xmcp-dev/arcade"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    GitHub
-  </a>{" "}
-  and a build guide <a href="/blog/doom-with-xmcp">here</a>.
+  In this guide, we'll use the arcade app as an example project.
+  You can find the complete source code on <a href="https://github.com/xmcp-dev/arcade" target="_blank" rel="noopener noreferrer">GitHub</a> and a build guide <a href="/blog/doom-with-xmcp">here</a>.
 </Callout>
 
 ## First steps
@@ -50,19 +43,19 @@ As of December 2025, only physical goods are allowed to be sold through the Open
 
 Provide your MCP server URL for OpenAI to scan for available tools and proceed with the verification process. Here, you will specify whether your server requires authentication or not.
 
-You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions.
+You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions. 
 
 - **Read-only**: Only reads data, no modifications
 - **Open-world**: Has web access or makes external calls
 - **Destructive**: Modifies or deletes data
 
-Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`.
+Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`. 
 
 If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI-APPS-VERIFICATION-TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
 
 ## Testing
 
-If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered.
+If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered. 
 
 For the positive test cases, you will need to provide:
 
@@ -115,7 +108,7 @@ This section is optional. You can limit access to your app to specific countries
 
 ## Submit
 
-In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app.
+In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app. 
 
 Before you send your submission, keep a local backup of your app description, tool explanations, and test cases since the form can occasionally clear fields. If your submission gets rejected, you will need to start a new one from the beginning.
 

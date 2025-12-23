@@ -9,8 +9,3 @@ npm run dev
 ```
 
 This will start the development server with HTTP transport enabled.
-
-## Learn More
-
-- [xmcp Documentation](https://xmcp.dev)
-- [ChatGPT Widgets Guide](https://xmcp.dev/docs/integrations/chatgpt)
