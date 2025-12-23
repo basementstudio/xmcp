@@ -10,10 +10,17 @@ textureImage: "/textures/text1.png"
 Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everything from preparing your assets to getting your app approved.
 
 <Callout variant="info">
-  In this guide, we'll use the arcade app as an example project.
-  You can find the complete source code on <a href="https://github.com/xmcp-dev/arcade" target="_blank" rel="noopener noreferrer">GitHub</a> and a build guide <a href="/blog/doom-with-xmcp">here</a>.
+  In this guide, we'll use the arcade app as an example project. You can find
+  the complete source code on{" "}
+  <a
+    href="https://github.com/xmcp-dev/arcade"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    GitHub
+  </a>{" "}
+  and a build guide <a href="/blog/doom-with-xmcp">here</a>.
 </Callout>
-    
 
 ## First steps
 
@@ -31,7 +38,7 @@ After you have your assets ready, head to the [OpenAI Platform Dashboard](https:
 In this section, you will upload your assets and provide information about your app.
 All fields are required, so be sure to fill them out correctly. Pay special attention to the following fields:
 
-- **Subtitle**: This is your best opportunity for discoverability, so keep it clear and descriptive. 
+- **Subtitle**: This is your best opportunity for discoverability, so keep it clear and descriptive.
 - **Description**: Write it in a marketing-friendly way while ensuring users understand what your app does.
 - **Email address or contact support URL**: This will be used to contact you if there are any issues with your app.
 - **App Commerce and purchasing**: For apps that involve sales of physical goods.
@@ -42,20 +49,19 @@ As of December 2025, only physical goods are allowed to be sold through the Open
 
 Provide your MCP server URL for OpenAI to scan for available tools and proceed with the verification process. Here, you will specify whether your server requires authentication or not.
 
-You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions. 
+You will need to explain why each permission is needed or not. Be specific about what each tool does and why it requires or doesn't require those permissions.
 
 - **Read-only**: Only reads data, no modifications
 - **Open-world**: Has web access or makes external calls
 - **Destructive**: Modifies or deletes data
 
-Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`. 
+Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`.
 
 If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI-APPS-VERIFICATION-TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
 
-
 ## Testing
 
-If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered. 
+If you follow OpenAI's guidelines for creating a GPT App, this will be the easy part. In this section, you will need to provide test cases for scenarios where your app should be triggered and where it should not be triggered.
 
 For the positive test cases, you will need to provide:
 
@@ -74,12 +80,14 @@ For our arcade app, the test cases would be:
 ### Positive test cases
 
 A user wants to see what games are available in the arcade:
+
 - Scenario: User wants to browse the available classic arcade games before deciding which one to play
 - User prompt: I want to see what retro arcade games are available. Can you show me the arcade interface?
 - Tool triggered: "list_games"
 - Expected output: The retro arcade game selection interface is displayed showing available games
 
 A user wants to launch the DOOM game:
+
 - Scenario: User wants to play the classic DOOM game
 - User prompt: I'm in the mood for some classic gaming. Launch Doom for me!
 - Tool triggered: "launch_game"
@@ -88,6 +96,7 @@ A user wants to launch the DOOM game:
 ### Negative test cases
 
 A user wants to know more about Doom:
+
 - Scenario: User is asking about the documentation and capabilities of the arcade system, not requesting to use it
 - User prompt: Can you explain how the arcade tool works and what games it supports?
 
@@ -105,7 +114,7 @@ This section is optional. You can limit access to your app to specific countries
 
 ## Submit
 
-In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app. 
+In this final step, you will need to add the release notes, check policy compliance, and set the age requirements for your app.
 
 Before you send your submission, keep a local backup of your app description, tool explanations, and test cases since the form can occasionally clear fields. If your submission gets rejected, you will need to start a new one from the beginning.
 
