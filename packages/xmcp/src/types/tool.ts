@@ -101,7 +101,7 @@ export interface ToolExtraArguments {
   ) => Promise<z.infer<U>>;
 }
 
-export type InferSchema<T extends ToolSchema> = {
+export type InferSchema<T extends Record<string, unknown>> = {
   [K in keyof T]: T[K] extends z.ZodTypeAny
     ? z.infer<T[K]>
     : T[K] extends ZodTypeV4<unknown>
