@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type InferSchema } from "xmcp";
 import { source } from "@/lib/source";
-import { cleanId, getPageContent } from "@/lib/docs-utils";
+import { cleanId, getPageContent } from "@/utils/docs";
 import { getBaseUrl } from "@/lib/base-url";
 
 export const schema = {
