@@ -1,0 +1,21 @@
+{
+  "name": "HTTP with WorkOS",
+  "description": "HTTP-based xmcp server with WorkOS integration",
+  "keywords": [
+    "http",
+    "authentication",
+    "workos",
+    "sso"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/workos": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "3.25.76"
+  }
+}
+

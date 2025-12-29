@@ -1,0 +1,48 @@
+{
+  "name": "@xmcp-dev/workos",
+  "description": "WorkOS integration for xmcp",
+  "version": "0.0.1",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "workos",
+    "authentication",
+    "mcp",
+    "oauth",
+    "sso"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/workos"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.1.9-canary.1"
+  }
+}
+
