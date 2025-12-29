@@ -13,7 +13,6 @@ import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
 import { getBaseUrl } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
-import { cn } from "@/utils/cn";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -21,20 +20,17 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (!page) notFound();
 
   const MDX = page.data.body;
-  const isGuide = params.slug?.[0] === "guides";
+  const displayTitle =
+    (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
 
   return (
     <DocsPage
       toc={page.data.toc}
       pageActions={<PageActions markdownUrl={`${page.url}.mdx`} />}
     >
-      {!isGuide && (
-        <>
-          <DocsTitle>{page.data.title}</DocsTitle>
-          <DocsDescription>{page.data.description}</DocsDescription>
-        </>
-      )}
-      <DocsBody className={cn(!isGuide && "border-t border-white/20 pt-4")}>
+      <DocsTitle>{displayTitle}</DocsTitle>
+      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsBody className="border-t border-white/20 pt-4">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
