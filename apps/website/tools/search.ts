@@ -2,6 +2,7 @@ import { z } from "zod";
 import { type InferSchema } from "xmcp";
 import { source } from "@/lib/source";
 import { cleanId, getPageContent } from "@/lib/docs-utils";
+import { getBaseUrl } from "@/lib/base-url";
 
 export const schema = {
   query: z.string().describe("Search query for docs").optional(),
@@ -41,14 +42,7 @@ export default async function search({
     return `Provide a query or an id`;
   }
 
-  const domain =
-    process.env.VERCEL_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-    "localhost:3000";
-
-  const baseUrl = domain.startsWith("localhost")
-    ? `http://${domain}`
-    : `https://${domain}`;
+  const baseUrl = getBaseUrl();
   const response = await fetch(
     `${baseUrl}/api/search?query=${encodeURIComponent(query)}`
   );

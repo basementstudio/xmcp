@@ -1,11 +1,10 @@
 export function getBaseUrl(): string {
-  if (process.env.VERCEL_ENV === "production") {
-    return "https://xmcp.dev";
-  }
+  const domain =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    process.env.VERCEL_URL ||
+    "localhost:3000";
 
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:3000";
-  }
-
-  return "https://xmcp.dev";
+  return domain.startsWith("localhost")
+    ? `http://${domain}`
+    : `https://${domain}`;
 }
