@@ -1,8 +1,13 @@
-import { defineDocs, defineConfig } from "fumadocs-mdx/config";
+import {
+  defineDocs,
+  defineConfig,
+  frontmatterSchema,
+} from "fumadocs-mdx/config";
 import {
   rehypeCode,
   rehypeCodeDefaultOptions,
 } from "fumadocs-core/mdx-plugins";
+import z from "zod";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -10,6 +15,9 @@ export const docs = defineDocs({
     postprocess: {
       includeProcessedMarkdown: true,
     },
+    schema: frontmatterSchema.extend({
+      displayTitle: z.string().optional(),
+    }),
   },
 });
 

@@ -131,6 +131,24 @@ export function PageActions({ markdownUrl }: { markdownUrl: string }) {
           {item.title}
         </Link>
       ))}
+      <Link
+        href="/docs/guides/xmcp-mcp-server"
+        className={cn(
+          "text-sm py-1 px-0 inline-flex items-center gap-2 text-brand-neutral-100 hover:text-brand-white transition-colors duration-200 bg-transparent hover:bg-transparent justify-start border-0"
+        )}
+        onClick={() => {
+          track("docs action clicked", {
+            action: "connect_mcp",
+            markdownUrl: markdownUrl,
+            location: "docs_page_actions",
+          });
+        }}
+      >
+        <span className="size-3 inline-flex items-center justify-center">
+          <Icons.mcp className="size-5" />
+        </span>
+        Connect MCP
+      </Link>
     </div>
   );
 }
