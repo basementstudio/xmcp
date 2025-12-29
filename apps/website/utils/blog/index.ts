@@ -3,6 +3,72 @@ import matter from "gray-matter";
 
 export type BlogCategory = "changelog" | "guides";
 
+export interface BlogAuthor {
+  readonly id: string;
+  readonly name: string;
+  readonly profilePicture: string;
+  readonly xHandle: string;
+  readonly xUrl: string;
+  readonly role?: string;
+}
+
+const DEFAULT_AUTHOR_ID = "valebearzotti";
+
+export const BLOG_AUTHORS: Record<string, BlogAuthor> = {
+  [DEFAULT_AUTHOR_ID]: {
+    id: DEFAULT_AUTHOR_ID,
+    name: "Valentina Bearzotti",
+    profilePicture: "/blog/authors/valebearzotti.png",
+    xHandle: "@valebearzotti",
+    xUrl: "https://x.com/valebearzotti",
+    role: "Creator & Tech Lead",
+  },
+  fveiras_: {
+    id: "fveiras_",
+    name: "Francisco Veiras",
+    profilePicture: "/blog/authors/fveiras_.png",
+    xHandle: "@fveiras_",
+    xUrl: "https://x.com/fveiras_",
+    role: "Core Maintainer",
+  },
+  "0xkoller": {
+    id: "0xkoller",
+    name: "Jose Luis Koller",
+    profilePicture: "/blog/authors/0xkoller.png",
+    xHandle: "@0xkoller",
+    xUrl: "https://x.com/0xkoller",
+    role: "DX Engineer",
+  },
+};
+
+export function resolveAuthors(authors?: unknown): BlogAuthor[] {
+  const ids =
+    typeof authors === "string"
+      ? [authors]
+      : Array.isArray(authors)
+        ? authors
+        : [];
+
+  const normalizedIds = ids.filter(
+    (id): id is string => typeof id === "string" && id.trim().length > 0
+  );
+
+  const finalIds =
+    normalizedIds.length > 0 ? normalizedIds : [DEFAULT_AUTHOR_ID];
+
+  const fallback = BLOG_AUTHORS[DEFAULT_AUTHOR_ID];
+
+  return finalIds.map((id) => {
+    const author = BLOG_AUTHORS[id];
+    if (author) return author;
+
+    return {
+      ...fallback,
+      id,
+    };
+  });
+}
+
 export interface BlogFrontmatter {
   readonly title?: string;
   readonly description?: string;
@@ -13,6 +79,7 @@ export interface BlogFrontmatter {
   readonly featured?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
+  readonly authors?: string[];
   readonly [key: string]: unknown;
 }
 
@@ -30,6 +97,7 @@ export interface BlogPost {
   readonly featured?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
+  readonly authors: BlogAuthor[];
 }
 
 export interface BlogMetadata {
@@ -38,6 +106,7 @@ export interface BlogMetadata {
   readonly summary: string | undefined;
   readonly date: string | undefined;
   readonly ogImageUrl: string;
+  readonly authors: BlogAuthor[];
 }
 
 export function getAllBlogPosts(): BlogPost[] {
@@ -80,6 +149,7 @@ export function getAllBlogPosts(): BlogPost[] {
         featured: data.featured || false,
         previewImage: data.previewImage,
         textureImage: data.textureImage,
+        authors: resolveAuthors(data.authors),
       });
     }
   }
@@ -132,6 +202,7 @@ export function getBlogMetadata(
     ogImageUrl: post.previewImage
       ? `${baseUrl}${post.previewImage}`
       : `${baseUrl}/api/og/blog/${slug}`,
+    authors: post.authors,
   };
 }
 

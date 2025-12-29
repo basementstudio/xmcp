@@ -1,24 +1,49 @@
 import { blogSource } from "../../../lib/source";
-import { DocsBody, DocsTitle } from "@/components/layout/page";
+import { DocsBody } from "@/components/layout/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import { getBlogMetadata } from "@/utils/blog";
+import {
+  getBlogMetadata,
+  getBlogPostBySlug,
+  resolveAuthors,
+} from "@/utils/blog";
 import { getBaseUrl } from "@/lib/base-url";
+import { PostAuthors } from "@/components/blog/post-authors";
+import { PostMeta } from "@/components/blog/post-meta";
+import { DocsTitle } from "@/components/layout/page";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
   const page = blogSource.getPage(params.slug);
   if (!page) notFound();
 
+  const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
+  const post = getBlogPostBySlug(slug);
   const MDX = page.data.body;
+  const authors = resolveAuthors(page.data.authors);
+  const words = post ? post.content.split(/\s+/).filter(Boolean).length : 0;
+  const readingTimeMinutes =
+    words > 0 ? Math.max(1, Math.round(words / 200)) : null;
+  const shareUrl = `${getBaseUrl()}/blog/${slug}`;
 
   return (
     <BlogPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
+      {page.data.description && (
+        <p className="text-base text-brand-neutral-50 max-w-3xl">
+          {page.data.description}
+        </p>
+      )}
+      <PostAuthors authors={authors} />
+      <PostMeta
+        readingTimeMinutes={readingTimeMinutes}
+        shareUrl={shareUrl}
+        date={page.data.date}
+      />
       <DocsBody className="w-full">
         <MDX
           components={getMDXComponents({
