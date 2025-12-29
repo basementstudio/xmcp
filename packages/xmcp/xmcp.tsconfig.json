@@ -14,12 +14,13 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
-    }
+      "@/*": ["src/*"],
+      "@xmcp/icons": ["../icons/src/index.ts"],
+    },
   },
   "include": [
     "src/types/declarations.d.ts",
     "src/types/adapter.d.ts",
-    "src/index.ts"
-  ]
+    "src/index.ts",
+  ],
 }

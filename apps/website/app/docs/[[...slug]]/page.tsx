@@ -13,6 +13,7 @@ import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
 import { getBaseUrl } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
+import { cn } from "@/utils/cn";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -33,7 +34,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           <DocsDescription>{page.data.description}</DocsDescription>
         </>
       )}
-      <DocsBody className={isGuide ? "" : "border-t border-white/20 pt-4"}>
+      <DocsBody className={cn(!isGuide && "border-t border-white/20 pt-4")}>
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
