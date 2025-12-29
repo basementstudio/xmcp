@@ -1,0 +1,58 @@
+---
+title: "xmcp MCP Server"
+metadataTitle: "xmcp Documentation MCP Server for Coding Agents | xmcp Documentation"
+publishedAt: "2025-12-27"
+summary: "Enable AI coding agents to access xmcp documentation through MCP."
+description: "Connect coding agents to xmcp's documentation MCP server to get real-time answers about xmcp features, configuration, and best practices."
+---
+
+# xmcp MCP server setup guide for agents
+
+Connect your AI assistant to xmcp's [MCP](https://modelcontextprotocol.io) server to search and query the documentation in real-time.
+
+## Getting started
+
+### Connect to a client
+
+<McpConnect serverName="xmcp-docs" serverUrl="https://xmcp.dev/mcp" />
+
+Click any card to copy the connection config for your client.
+
+### Standard connection
+
+For clients not listed above, you can use the following connection method.
+
+```json
+{
+  "command": "npx",
+  "args": ["mcp-remote", "https://xmcp.dev/mcp"]
+}
+```
+
+## Available tool
+
+The server exposes a `search` tool that agents use automatically:
+
+```typescript
+// Search by query
+search({ query: "how to configure transports" });
+
+// Get specific page by ID
+search({ id: "configuration/transports" });
+```
+
+## Example usage
+
+Once connected, just ask your agent about xmcp:
+
+- "How do I configure xmcp for Next.js?"
+- "What transport options does xmcp support?"
+- "How do I create a tool with authentication?"
+
+The agent will search the docs and provide accurate answers with code examples.
+
+## Troubleshooting
+
+- **Not connecting**: Verify the URL `https://xmcp.dev/mcp` is correct and restart your agent
+- **No results**: Try more specific queries or use exact doc IDs
+- **Agent not using MCP**: Check your agent's MCP configuration and logs
