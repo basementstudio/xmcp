@@ -47,7 +47,6 @@
     "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts"
   },
   "dependencies": {
-    "@xmcp/icons": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@rspack/core": "^1.6.7",
     "postcss-loader": "^8.2.0",

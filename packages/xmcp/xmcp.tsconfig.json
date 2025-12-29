@@ -15,7 +15,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@xmcp/icons": ["../icons/src/index.ts"],
     },
   },
   "include": [

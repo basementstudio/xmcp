@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import { rspack, RspackOptions, EntryObject } from "@rspack/core";
-import { runtimeOutputPath, srcPath, iconsPath } from "./constants";
+import { runtimeOutputPath, srcPath } from "./constants";
 import chalk from "chalk";
 import { runCompiler } from "./compiler-manager";
 import fs from "fs-extra";
@@ -80,7 +80,6 @@ const config: RspackOptions = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     alias: {
       "@": srcPath,
-      "@xmcp/icons": iconsPath,
     },
   },
   watchOptions: {
