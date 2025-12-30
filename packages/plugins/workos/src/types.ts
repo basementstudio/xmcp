@@ -1,3 +1,6 @@
+import type { IncomingHttpHeaders } from "http";
+import type { WorkOS, User } from "@workos-inc/node";
+
 /**
  * WorkOS plugin configuration
  */
@@ -22,32 +25,37 @@ export interface WorkOSConfig {
 }
 
 /**
- * User information from WorkOS session
+ * Internal config with initialized WorkOS client
  */
-export interface WorkOSUser {
-  readonly id: string;
-  readonly email: string;
-  readonly firstName: string | null;
-  readonly lastName: string | null;
-  readonly profilePictureUrl: string | null;
-  readonly emailVerified: boolean;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+export interface WorkOSInternalConfig extends WorkOSConfig {
+  /**
+   * Initialized WorkOS SDK client instance
+   */
+  readonly client: WorkOS;
 }
 
 /**
- * Organization membership information
+ * JWT payload from a decoded WorkOS access token
  */
-export interface WorkOSOrganizationMembership {
-  readonly id: string;
-  readonly organizationId: string;
-  readonly userId: string;
-  readonly role: {
-    readonly slug: string;
+export interface JWTPayload {
+  readonly sub?: string;
+  readonly email?: string;
+  readonly first_name?: string | null;
+  readonly last_name?: string | null;
+  readonly profile_picture_url?: string | null;
+  readonly email_verified?: boolean;
+  readonly org_id?: string;
+  readonly created_at?: string;
+  readonly updated_at?: string;
+  readonly exp?: number;
+  readonly iat?: number;
+  readonly iss?: string;
+  readonly aud?: string | string[];
+  readonly act?: {
+    readonly sub: string;
+    readonly reason?: string;
   };
-  readonly status: string;
-  readonly createdAt: string;
-  readonly updatedAt: string;
+  readonly [key: string]: unknown;
 }
 
 /**
@@ -56,7 +64,7 @@ export interface WorkOSOrganizationMembership {
 export interface WorkOSSession {
   readonly accessToken: string;
   readonly refreshToken?: string;
-  readonly user: WorkOSUser;
+  readonly user: User;
   readonly organizationId?: string;
   readonly impersonator?: {
     readonly email: string;
@@ -72,4 +80,13 @@ export interface ProtectedResourceMetadata {
   readonly resource: string;
   readonly authorization_servers: readonly string[];
   readonly bearer_methods_supported: readonly string[];
+}
+
+/**
+ * Context stored for WorkOS authentication
+ */
+export interface WorkOSContext {
+  readonly config: WorkOSInternalConfig;
+  readonly headers: IncomingHttpHeaders;
+  readonly payload?: JWTPayload;
 }

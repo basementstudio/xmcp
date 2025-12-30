@@ -15,7 +15,7 @@
   "dependencies": {
     "@xmcp-dev/workos": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "3.25.76"
+    "zod": "4.0.10"
   }
 }
 
