@@ -11,7 +11,7 @@ export function PostAuthors({ authors }: PostAuthorsProps) {
   if (authors.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-4 text-sm text-brand-neutral-100 pb-2">
+    <div className="flex flex-wrap items-center gap-4 text-sm text-brand-neutral-100">
       {authors.map((author) => (
         <Link
           key={author.id}
