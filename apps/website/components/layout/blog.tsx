@@ -65,7 +65,7 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
   return (
     <AnchorProvider toc={toc}>
       <div className="flex flex-1 w-full px-4 md:px-6 lg:px-8 xl:px-0 items-start">
-        <aside className="hidden xl:flex w-[300px] shrink-0 sticky top-28 md:h-[calc(100dvh-156px)] p-4 pt-0">
+        <aside className="hidden xl:flex w-[300px] shrink-0 sticky top-[104px] h-[calc(100dvh-156px)] p-4 pt-0 overflow-auto">
           <div className="flex flex-col gap-4 w-full">
             <Link
               href="/blog"
@@ -83,7 +83,7 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
           >
             ← Back to blog
           </Link>
-          <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 px-4 md:px-8 md:mx-auto items-start">
+          <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 px-4 md:px-8 md:mx-auto items-start min-h-[calc(100dvh-96px)]">
             {props.children}
           </article>
         </div>
