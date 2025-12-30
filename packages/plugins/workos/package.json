@@ -33,7 +33,9 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "express": "^4.22.1"
+    "@workos-inc/node": "^7.77.0",
+    "express": "^4.22.1",
+    "jose": "^6.0.11"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -42,7 +44,7 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "^0.1.9-canary.1"
+    "xmcp": "workspace:*"
   }
 }
 
