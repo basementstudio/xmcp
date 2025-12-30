@@ -42,3 +42,6 @@ next-env.d.ts
 .env*.local
 xmcp-adapter
 /.source/
+# xmcp
+.xmcp
+xmcp-env.d.ts

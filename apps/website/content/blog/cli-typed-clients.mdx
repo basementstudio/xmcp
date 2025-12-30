@@ -5,11 +5,15 @@ category: "guides"
 date: "2025-12-11"
 order: 7
 previewImage: "/blog/cli-typed-clients.png"
+authors:
+  - valebearzotti
+  - 0xkoller
 ---
 
 xmcp now let's you generate tools for external clients.
 
 ## Add your clients
+
 You need to create the `clients.ts` in the `/src` directory and then add the MCP servers. HTTP entries can forward headers; STDIO entries spawn npm packages.
 
 ```typescript title="src/clients.ts"
@@ -32,6 +36,7 @@ export const clients: ClientConnections = {
 ```
 
 #### Adding HTTP clients
+
 For HTTP clients, this is the type you have to follow:
 
 ```typescript title="src/clients.ts"
@@ -44,6 +49,7 @@ export type HttpClientDefinition = {
 ```
 
 #### Adding STDIO clients
+
 For STDIO clients, this is the type you have to follow:
 
 ```typescript title="src/clients.ts"
@@ -61,12 +67,12 @@ export type StdioClientDefinition = {
 ```
 
 <Callout variant="warning" icon="alertTriangle" title="Headers and secrets">
-You need to have the npm package installed in your app if you want to use STDIO.
+  You need to have the npm package installed in your app if you want to use
+  STDIO.
 </Callout>
 
-
-
 ## Generate typed clients
+
 Run the generator from your project root. By default it looks for `src/clients.ts` and writes to `src/generated`.
 
 ```bash
@@ -76,10 +82,11 @@ npx @xmcp-dev/cli generate
 You can also specify the output directory and the clients file path, check out the [CLI documentation](https://github.com/basementstudio/xmcp/blob/main/packages/cli/README.md#optional-cli-flags) for more details.
 
 ## Using the new tools
+
 We will now have the tools from our external clients in the `client.index.ts` file, now you only have to import and use them.
 
-
 ## Web Navigation
+
 ```typescript
 // src/tools/browser-navigate.ts
 import { InferSchema, type ToolMetadata } from "xmcp";
@@ -107,6 +114,7 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 ```
 
 ## Get Library Docs
+
 ```typescript
 // src/tools/get-library-docs.ts
 import { InferSchema, type ToolMetadata } from "xmcp";
@@ -138,10 +146,11 @@ export default async function handler({
 ```
 
 <Callout variant="info" icon="info" title="Autocomplete">
- Autocomplete is available for the tools and their arguments, for easier usage.
+  Autocomplete is available for the tools and their arguments, for easier usage.
 </Callout>
 
 ## Build and run the example
+
 If you want to see an example of how to generate clients and use them, you can checkout the [external-clients](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients) example.
 
 ## Contributing

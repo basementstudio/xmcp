@@ -44,7 +44,10 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
     post.textureImage ||
     TEXTURE_IMAGES[
       Math.abs(
-        Array.from(post.slug).reduce((hash, char) => hash + char.charCodeAt(0), 0)
+        Array.from(post.slug).reduce(
+          (hash, char) => hash + char.charCodeAt(0),
+          0
+        )
       ) % TEXTURE_IMAGES.length
     ];
 

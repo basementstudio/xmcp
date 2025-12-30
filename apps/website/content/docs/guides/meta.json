@@ -1,0 +1,6 @@
+{
+  "title": "Guides",
+  "pages": ["xmcp-mcp-server"],
+  "defaultOpen": true,
+  "root": true
+}
