@@ -16,7 +16,7 @@ export const docs = defineDocs({
       includeProcessedMarkdown: true,
     },
     schema: frontmatterSchema.extend({
-      sidebarTitle: z.string().optional(),
+      displayTitle: z.string().optional(),
     }),
   },
 });
