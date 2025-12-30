@@ -16,9 +16,7 @@
     "---Deployment---",
     "...deployment",
     "---Integrations---",
-    "...integrations",
-    "---Guides---",
-    "...guides"
+    "...integrations"
   ],
   "defaultOpen": true
 }

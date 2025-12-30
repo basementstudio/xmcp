@@ -1,4 +1,4 @@
-import { blogSource } from "@/lib/source";
+import { blogSource } from "../../../lib/source";
 import { DocsBody, DocsTitle } from "@/components/layout/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
@@ -6,8 +6,7 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import { getBlogMetadata, resolveAuthors } from "@/utils/blog";
-import { PostAuthors } from "@/components/blog/post-authors";
+import { getBlogMetadata } from "@/utils/blog";
 import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
@@ -15,34 +14,12 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const page = blogSource.getPage(params.slug);
   if (!page) notFound();
 
-  const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
   const MDX = page.data.body;
-  const authors = resolveAuthors(page.data.authors);
 
   return (
-    <BlogPage toc={page.data.toc} slug={slug}>
-      <div className="flex flex-col gap-4">
-        {page.data.date && (
-          <time
-            dateTime={page.data.date}
-            className="text-xs uppercase tracking-wide text-brand-neutral-50"
-          >
-            {new Date(page.data.date).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </time>
-        )}
-        <DocsTitle>{page.data.title}</DocsTitle>
-        {page.data.description && (
-          <p className="text-base text-brand-neutral-50 max-w-3xl pb-1">
-            {page.data.description}
-          </p>
-        )}
-        <PostAuthors authors={authors} />
-      </div>
-      <DocsBody className="w-full border-t border-white/20 pt-4">
+    <BlogPage toc={page.data.toc}>
+      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsBody className="w-full">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

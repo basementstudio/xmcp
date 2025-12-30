@@ -7,7 +7,6 @@ description: "Learn how to connect to external MCP servers via HTTP or STDIO and
 ---
 
 xmcp lets you connect to external MCP servers and generate fully typed clients. The CLI generates TypeScript clients with autocomplete for all tools exposed by HTTP or STDIO-based MCP servers.
-For production deployments, use the HTTP transport. STDIO is limited to local development because it cannot be deployed in production environments.
 
 ## Creating the Clients File
 
@@ -19,7 +18,9 @@ import { ClientConnections } from "xmcp";
 export const clients: ClientConnections = {
   context: {
     url: "https://mcp.context7.com/mcp",
-    headers: [{ name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" }],
+    headers: [
+      { name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" },
+    ],
   },
   playwright: {
     npm: "@playwright/mcp",
@@ -27,15 +28,15 @@ export const clients: ClientConnections = {
 };
 ```
 
-## HTTP Clients (recommended)
+## HTTP Clients
 
-HTTP clients connect to remote MCP servers over HTTP. This is the recommended transport for production deployments.
+HTTP clients connect to remote MCP servers over HTTP.
 
 ```typescript
 type HttpClientConfig = {
-  name?: string; // Optional, defaults to object key
-  type?: "http"; // Optional, inferred from url
-  url: string; // MCP server URL (required)
+  name?: string;           // Optional, defaults to object key
+  type?: "http";           // Optional, inferred from url
+  url: string;             // MCP server URL (required)
   headers?: CustomHeaders; // Optional headers array
 };
 
@@ -52,7 +53,7 @@ interface StaticHeader {
 // Environment variable (sensitive values like API keys)
 interface EnvHeader {
   name: string;
-  env: string; // Environment variable name to read at runtime
+  env: string;  // Environment variable name to read at runtime
 }
 ```
 
@@ -69,21 +70,21 @@ Example:
 }
 ```
 
-## STDIO Clients (local servers)
+## STDIO Clients
 
 STDIO clients spawn local processes that communicate via standard input/output.
 
 ```typescript
 type StdioClientConfig = {
-  name?: string; // Optional, defaults to object key
-  type?: "stdio"; // Optional, inferred from npm/command
-  command?: string; // Command to run (e.g., "npx", "bunx", "node")
-  args?: string[]; // Command arguments
-  npm?: string; // npm package to run via npx
-  npmArgs?: string[]; // Arguments to pass to npm package
-  env?: Record<string, string>; // Environment variables
-  cwd?: string; // Working directory
-  stderr?: "pipe" | "inherit" | "ignore"; // Stderr handling
+  name?: string;                    // Optional, defaults to object key
+  type?: "stdio";                   // Optional, inferred from npm/command
+  command?: string;                 // Command to run (e.g., "npx", "bunx", "node")
+  args?: string[];                  // Command arguments
+  npm?: string;                     // npm package to run via npx
+  npmArgs?: string[];               // Arguments to pass to npm package
+  env?: Record<string, string>;     // Environment variables
+  cwd?: string;                     // Working directory
+  stderr?: "pipe" | "inherit" | "ignore";  // Stderr handling
 };
 ```
 
@@ -153,9 +154,7 @@ export const metadata: ToolMetadata = {
   description: "Get documentation for a library",
 };
 
-export default async function handler({
-  libraryName,
-}: InferSchema<typeof schema>) {
+export default async function handler({ libraryName }: InferSchema<typeof schema>) {
   const docs = await generatedClients.context.getLibraryDocs({
     context7CompatibleLibraryID: libraryName,
   });
