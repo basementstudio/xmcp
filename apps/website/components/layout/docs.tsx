@@ -33,11 +33,13 @@ function Sidebar() {
 
   const children = useMemo(() => {
     function renderItems(items: PageTree.Node[]) {
-      return items.map((item) => (
-        <SidebarItem key={item.$id} item={item}>
-          {item.type === "folder" ? renderItems(item.children) : null}
-        </SidebarItem>
-      ));
+      return items.map((item) => {
+        return (
+          <SidebarItem key={item.$id} item={item}>
+            {item.type === "folder" ? renderItems(item.children) : null}
+          </SidebarItem>
+        );
+      });
     }
 
     return renderItems(root.children);

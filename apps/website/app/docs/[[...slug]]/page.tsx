@@ -20,13 +20,15 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const displayTitle =
+    (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
 
   return (
     <DocsPage
       toc={page.data.toc}
       pageActions={<PageActions markdownUrl={`${page.url}.mdx`} />}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsTitle>{displayTitle}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody className="border-t border-white/20 pt-4">
         <MDX
