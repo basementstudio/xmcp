@@ -14,18 +14,17 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
     <Link href={`/blog/${featuredPost.slug}`} className="block col-span-12">
       <section className="relative group overflow-visible mb-2">
         <div className="relative border border-brand-neutral-500 group-hover:border-brand-neutral-300 w-full flex flex-col md:flex-row">
-          <div className="w-full md:w-1/2 md:border-r border-brand-neutral-500 overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300">
+          <div className="w-full md:w-1/2 md:border-r border-brand-neutral-500 overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300 relative aspect-video">
             {image ? (
               <Image
                 src={image}
                 alt={featuredPost.title}
-                width={0}
-                height={0}
+                fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="w-full h-auto"
+                className="object-cover"
               />
             ) : (
-              <div className="w-full aspect-video flex items-center justify-center text-brand-neutral-200 text-sm">
+              <div className="w-full h-full flex items-center justify-center text-brand-neutral-200 text-sm">
                 No preview image
               </div>
             )}
