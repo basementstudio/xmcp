@@ -1,20 +1,14 @@
-import { blogSource } from "../../../lib/source";
-import { DocsBody } from "@/components/layout/page";
+import { blogSource } from "@/lib/source";
+import { DocsBody, DocsTitle } from "@/components/layout/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import {
-  getBlogMetadata,
-  getBlogPostBySlug,
-  resolveAuthors,
-} from "@/utils/blog";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBlogMetadata, resolveAuthors } from "@/utils/blog";
 import { PostAuthors } from "@/components/blog/post-authors";
-import { PostMeta } from "@/components/blog/post-meta";
-import { DocsTitle } from "@/components/layout/page";
+import { getBaseUrl } from "@/lib/base-url";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -22,29 +16,33 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   if (!page) notFound();
 
   const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
-  const post = getBlogPostBySlug(slug);
   const MDX = page.data.body;
   const authors = resolveAuthors(page.data.authors);
-  const words = post ? post.content.split(/\s+/).filter(Boolean).length : 0;
-  const readingTimeMinutes =
-    words > 0 ? Math.max(1, Math.round(words / 200)) : null;
-  const shareUrl = `${getBaseUrl()}/blog/${slug}`;
 
   return (
-    <BlogPage toc={page.data.toc}>
-      <DocsTitle>{page.data.title}</DocsTitle>
-      {page.data.description && (
-        <p className="text-base text-brand-neutral-50 max-w-3xl">
-          {page.data.description}
-        </p>
-      )}
-      <PostAuthors authors={authors} />
-      <PostMeta
-        readingTimeMinutes={readingTimeMinutes}
-        shareUrl={shareUrl}
-        date={page.data.date}
-      />
-      <DocsBody className="w-full">
+    <BlogPage toc={page.data.toc} slug={slug}>
+      <div className="flex flex-col gap-4">
+        {page.data.date && (
+          <time
+            dateTime={page.data.date}
+            className="text-xs uppercase tracking-wide text-brand-neutral-50"
+          >
+            {new Date(page.data.date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </time>
+        )}
+        <DocsTitle>{page.data.title}</DocsTitle>
+        {page.data.description && (
+          <p className="text-base text-brand-neutral-50 max-w-3xl">
+            {page.data.description}
+          </p>
+        )}
+        <PostAuthors authors={authors} />
+      </div>
+      <DocsBody className="w-full border-t border-white/20 pt-4">
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
