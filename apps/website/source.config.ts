@@ -1,9 +1,4 @@
-import {
-  defineDocs,
-  defineConfig,
-  frontmatterSchema,
-} from "fumadocs-mdx/config";
-import { z } from "zod";
+import { defineDocs, defineConfig } from "fumadocs-mdx/config";
 import {
   rehypeCode,
   rehypeCodeDefaultOptions,
@@ -15,26 +10,11 @@ export const docs = defineDocs({
     postprocess: {
       includeProcessedMarkdown: true,
     },
-    schema: frontmatterSchema.extend({
-      displayTitle: z.string().optional(),
-    }),
   },
 });
 
 export const blog = defineDocs({
   dir: "content/blog",
-  docs: {
-    schema: frontmatterSchema.extend({
-      category: z.string().optional(),
-      order: z.number().optional(),
-      featured: z.boolean().optional(),
-      previewImage: z.string().optional(),
-      textureImage: z.string().optional(),
-      authors: z.array(z.string()).optional(),
-      date: z.string().optional(),
-      summary: z.string().optional(),
-    }),
-  },
 });
 
 export default defineConfig({

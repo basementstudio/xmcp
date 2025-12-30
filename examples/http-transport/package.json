@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^3.25.76"
   }
 }
