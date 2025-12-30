@@ -76,14 +76,8 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-col max-w-[860px] w-full h-full mt-8">
-          <Link
-            href="/blog"
-            className="px-4 mb-2 text-sm text-brand-neutral-100 hover:text-brand-neutral-50 transition-colors xl:hidden"
-          >
-            ← Back to blog
-          </Link>
-          <article className="flex flex-1 flex-col w-full max-w-[860px] gap-6 py-8 pt-0 px-4 md:px-8 md:mx-auto items-start min-h-[calc(100dvh-96px)]">
+        <div className="flex min-w-0 flex-col max-w-full lg:max-w-[860px] w-full h-full mt-8">
+          <article className="flex flex-1 flex-col w-full max-w-full lg:max-w-[860px] gap-6 py-8 pt-0 px-4 md:px-8 md:mx-auto items-start min-h-[calc(100dvh-96px)]">
             {props.children}
           </article>
         </div>
