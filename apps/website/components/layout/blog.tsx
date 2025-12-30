@@ -83,7 +83,7 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
         </div>
 
         {toc.length > 0 && (
-          <aside className="hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-34 h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
+          <aside className="hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-[104px] h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
             <p className="text-sm text-brand-white font-medium">
               Table of contents
             </p>
