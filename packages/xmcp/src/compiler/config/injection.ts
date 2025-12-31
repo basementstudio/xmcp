@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 import {
   getResolvedHttpConfig,
   getResolvedCorsConfig,
@@ -101,8 +103,23 @@ export type StdioVariables = ReturnType<typeof injectStdioVariables>;
 export function injectTemplateVariables(userConfig: XmcpConfigOutputSchema) {
   const resolvedConfig = getResolvedTemplateConfig(userConfig);
 
+  let homePage = resolvedConfig.homePage;
+
+  if (homePage && homePage.endsWith(".html")) {
+    const filePath = resolve(process.cwd(), homePage);
+    if (existsSync(filePath)) {
+      homePage = readFileSync(filePath, "utf-8");
+    } else {
+      console.warn(`[xmcp] homePage file not found: ${filePath}`);
+      homePage = undefined;
+    }
+  }
+
   return {
-    TEMPLATE_CONFIG: JSON.stringify(resolvedConfig),
+    TEMPLATE_CONFIG: JSON.stringify({
+      ...resolvedConfig,
+      homePage,
+    }),
   };
 }
 
