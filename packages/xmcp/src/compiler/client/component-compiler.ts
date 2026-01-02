@@ -205,6 +205,11 @@ export class ClientComponentCompiler {
             use: ["less-loader"],
           },
         ],
+        parser: {
+          "css/auto": {
+            namedExports: false,
+          },
+        },
       },
       plugins: [new rspack.experiments.VirtualModulesPlugin(virtualModules)],
       optimization: {
