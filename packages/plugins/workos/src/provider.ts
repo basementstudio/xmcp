@@ -13,11 +13,7 @@ import type { WorkOSConfig, WorkOSInternalConfig, ProtectedResourceMetadata } fr
 import { workosContextProvider } from "./context.js";
 import { extractBearerToken, verifyAccessToken, getAuthKitBaseUrl } from "./utils.js";
 
-/**
- * Create the WorkOS authentication provider for xmcp
- */
 export function workosProvider(config: WorkOSConfig): Middleware {
-  // Validate required config
   if (!config.apiKey) {
     throw new Error("workosProvider: apiKey is required");
   }
@@ -31,7 +27,6 @@ export function workosProvider(config: WorkOSConfig): Middleware {
     throw new Error("workosProvider: baseURL is required");
   }
 
-  // Initialize the WorkOS SDK client
   const client = new WorkOS(config.apiKey, {
     clientId: config.clientId,
   });
@@ -53,7 +48,6 @@ export function workosProvider(config: WorkOSConfig): Middleware {
 function workosMiddleware(config: WorkOSInternalConfig): RequestHandler {
   const authKitBaseUrl = getAuthKitBaseUrl(config.authkitDomain);
 
-  // Fetch OAuth metadata from AuthKit (no cache - serverless compatible)
   const getOAuthMetadata = async (): Promise<Record<string, unknown>> => {
     const response = await fetch(
       `${authKitBaseUrl}/.well-known/oauth-authorization-server`
@@ -74,7 +68,6 @@ function workosMiddleware(config: WorkOSInternalConfig): RequestHandler {
   };
 
   return async (req: Request, res: Response, next: NextFunction) => {
-    // Only protect /mcp routes
     if (!req.path.startsWith("/mcp")) {
       next();
       return;
@@ -94,7 +87,6 @@ function workosMiddleware(config: WorkOSInternalConfig): RequestHandler {
     }
 
     // Verify the JWT using WorkOS JWKS
-    // This validates: signature, issuer (iss), audience (aud), and expiration (exp)
     const payload = await verifyAccessToken(
       token,
       config.authkitDomain,
@@ -102,7 +94,7 @@ function workosMiddleware(config: WorkOSInternalConfig): RequestHandler {
     );
 
     if (!payload) {
-      // Token verification failed (invalid signature, wrong issuer/audience, expired, etc.)
+      // Token verification failed
       try {
         const oauthConfig = await getOAuthMetadata();
         res.status(401).json(oauthConfig);
@@ -112,7 +104,6 @@ function workosMiddleware(config: WorkOSInternalConfig): RequestHandler {
       return;
     }
 
-    // Token is valid, set up context and proceed
     workosContextProvider(
       {
         config,
@@ -133,11 +124,9 @@ function workosRouter(config: WorkOSInternalConfig): Router {
   const router = Router();
   const authKitBaseUrl = getAuthKitBaseUrl(config.authkitDomain);
 
-  // Parse request bodies for OAuth endpoints
   router.use(json());
   router.use(urlencoded({ extended: true }));
 
-  // Set up context for all router requests
   router.use((req: Request, _res: Response, next: NextFunction) => {
     workosContextProvider(
       {
@@ -183,11 +172,9 @@ function workosRouter(config: WorkOSInternalConfig): Router {
 
   /**
    * OAuth authorize endpoint - redirect to AuthKit
-   * Some MCP clients expect OAuth endpoints on the MCP server
    */
   router.get("/authorize", (req, res) => {
     const authkitUrl = new URL(`${authKitBaseUrl}/oauth2/authorize`);
-    // Forward all query parameters
     Object.entries(req.query).forEach(([key, value]) => {
       if (typeof value === "string") {
         authkitUrl.searchParams.set(key, value);
@@ -200,9 +187,6 @@ function workosRouter(config: WorkOSInternalConfig): Router {
     res.redirect(307, `${authKitBaseUrl}/oauth2/authorize`);
   });
 
-  /**
-   * OAuth token endpoint - proxy to AuthKit
-   */
   router.post("/token", async (req, res) => {
     try {
       const response = await fetch(`${authKitBaseUrl}/oauth2/token`, {
@@ -219,9 +203,6 @@ function workosRouter(config: WorkOSInternalConfig): Router {
     }
   });
 
-  /**
-   * OAuth register endpoint - proxy to AuthKit for DCR
-   */
   router.post("/register", async (req, res) => {
     try {
       const response = await fetch(`${authKitBaseUrl}/oauth2/register`, {
@@ -240,7 +221,6 @@ function workosRouter(config: WorkOSInternalConfig): Router {
 
   /**
    * OAuth callback endpoint - handles redirect from AuthKit after login
-   * Exchanges the authorization code for tokens using the WorkOS SDK
    */
   router.get("/auth/callback", async (req, res) => {
     const { code, state, error, error_description } = req.query as Record<string, string | undefined>;
@@ -262,13 +242,11 @@ function workosRouter(config: WorkOSInternalConfig): Router {
     }
 
     try {
-      // Exchange the authorization code for tokens using the WorkOS SDK
       const authResult = await config.client.userManagement.authenticateWithCode({
         code,
         clientId: config.clientId,
       });
 
-      // Return tokens as JSON (MCP clients will handle this)
       res.json({
         access_token: authResult.accessToken,
         refresh_token: authResult.refreshToken,
