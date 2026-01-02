@@ -1,5 +1,6 @@
 import type { IncomingHttpHeaders } from "http";
 import type { WorkOS, User } from "@workos-inc/node";
+import type { JWTPayload } from "jose";
 
 /**
  * WorkOS plugin configuration
@@ -24,43 +25,21 @@ export interface WorkOSConfig {
   readonly baseURL: string;
 }
 
-/**
- * Internal config with initialized WorkOS client
- */
 export interface WorkOSInternalConfig extends WorkOSConfig {
-  /**
-   * Initialized WorkOS SDK client instance
-   */
   readonly client: WorkOS;
 }
 
-/**
- * JWT payload from a decoded WorkOS access token
- */
-export interface JWTPayload {
-  readonly sub?: string;
-  readonly email?: string;
-  readonly first_name?: string | null;
-  readonly last_name?: string | null;
-  readonly profile_picture_url?: string | null;
-  readonly email_verified?: boolean;
+export interface WorkOSJWTPayload extends JWTPayload {
+  readonly sid?: string;
   readonly org_id?: string;
-  readonly created_at?: string;
-  readonly updated_at?: string;
-  readonly exp?: number;
-  readonly iat?: number;
-  readonly iss?: string;
-  readonly aud?: string | string[];
+  readonly role?: string;
+  readonly permissions?: readonly string[];
   readonly act?: {
     readonly sub: string;
     readonly reason?: string;
   };
-  readonly [key: string]: unknown;
 }
 
-/**
- * Session data returned by getWorkOSSession
- */
 export interface WorkOSSession {
   readonly accessToken: string;
   readonly refreshToken?: string;
@@ -72,21 +51,14 @@ export interface WorkOSSession {
   };
 }
 
-/**
- * OAuth Protected Resource Metadata
- * Returned by /.well-known/oauth-protected-resource
- */
 export interface ProtectedResourceMetadata {
   readonly resource: string;
   readonly authorization_servers: readonly string[];
   readonly bearer_methods_supported: readonly string[];
 }
 
-/**
- * Context stored for WorkOS authentication
- */
 export interface WorkOSContext {
   readonly config: WorkOSInternalConfig;
   readonly headers: IncomingHttpHeaders;
-  readonly payload?: JWTPayload;
+  readonly payload?: WorkOSJWTPayload;
 }

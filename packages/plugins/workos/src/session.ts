@@ -53,7 +53,6 @@ export async function getWorkOSSession(): Promise<WorkOSSession> {
     );
   }
 
-  // Get the verified payload from context (already validated by middleware)
   const payload = context.payload;
 
   if (!payload) {
