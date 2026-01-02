@@ -1,0 +1,86 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
+
+.container {
+    min-height: 100vh;
+    background-color: black;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.wrapper {
+    width: 100%;
+    max-width: 28rem;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    color: rgb(113 113 122);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.count {
+    font-size: 6rem;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.5rem;
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.buttonRow {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.button {
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 200ms;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.resetButton {
+    width: 100%;
+    padding: 1rem 2rem;
+    background-color: white;
+    color: black;
+    border: none;
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 200ms;
+    cursor: pointer;
+}
+
+.resetButton:hover {
+    background-color: rgb(228 228 231);
+}

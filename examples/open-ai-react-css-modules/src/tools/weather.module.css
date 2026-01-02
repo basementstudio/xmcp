@@ -1,0 +1,131 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
+
+.container {
+    min-height: 100vh;
+    background-color: black;
+    color: white;
+    padding: 2rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.wrapper {
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    color: rgb(113 113 122);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+}
+
+.citySelector {
+    margin-bottom: 4rem;
+}
+
+.buttonContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.cityButton {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 200ms;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+}
+
+.cityButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cityButtonActive {
+    background-color: white;
+    color: black;
+    border: none;
+}
+
+.loading,
+.error {
+    text-align: center;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    font-size: 0.875rem;
+}
+
+.loading {
+    color: rgb(113 113 122);
+}
+
+.error {
+    color: rgb(248 113 113);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    background-color: rgba(248, 113, 113, 0.05);
+    padding: 1rem;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.card {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 2rem;
+    transition: all 200ms;
+}
+
+.card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cardLabel {
+    font-size: 0.875rem;
+    font-family: "Geist Mono", ui-monospace, monospace;
+    color: rgb(113 113 122);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+.cardValue {
+    font-size: 3rem;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+}
+
+.unit {
+    font-size: 1.5rem;
+    color: rgb(113 113 122);
+    margin-left: 0.5rem;
+}
