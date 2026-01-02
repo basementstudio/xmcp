@@ -44,6 +44,13 @@ const config: XmcpConfig = {
   },`;
   }
 
+  if (frameworkAdapter === "nextjs") {
+    configContent += `
+  typescript: {
+    skipTypeCheck: true,
+  },`;
+  }
+
   configContent += `
 };
 
