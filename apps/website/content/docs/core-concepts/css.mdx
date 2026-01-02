@@ -1,0 +1,132 @@
+---
+title: CSS
+description: Style your xmcp tools with Tailwind CSS, CSS, or CSS Modules
+---
+
+If you're using [ChatGPT widgets](/docs/core-concepts/tools#openai-metadata) or [MCP Apps](/docs/core-concepts/tools#mcp-apps-metadata), xmcp provides your application multiple ways to use CSS:
+
+- [Tailwind CSS](#tailwind-css)
+- [CSS](#css)
+- [CSS Modules](#css-modules)
+
+## Tailwind CSS
+
+A CSS framework that provides utility classes like `flex`, `pt-4`, `text-center`, and `rotate-90`. You use these classes directly in your component to build layouts and designs.
+
+Install Tailwind CSS:
+
+```bash
+pnpm add -D tailwindcss @tailwindcss/postcss
+```
+
+Add the PostCSS plugin to your `postcss.config.mjs` file:
+
+```js
+export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+}
+```
+
+Import Tailwind in your global CSS file:
+
+```css
+@import 'tailwindcss';
+```
+
+Import the CSS file in your tsx component:
+
+```tsx
+import type { ToolMetadata } from "xmcp";
+import "./globals.css";
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Hello, world!",
+};
+
+export default function handler() {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <h1 className="text-2xl font-bold">Hello, world!</h1>
+    </div>
+  );
+}
+```
+
+## CSS
+
+Write standard CSS to style your components without any framework or tooling.
+
+```css
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+```
+
+```tsx
+import type { ToolMetadata } from "xmcp";
+import "./globals.css";
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Hello, world!",
+};
+
+export default function handler() {
+  return (
+    <div>
+      <h1 className="title">Hello, world!</h1>
+    </div>
+  );
+}
+```
+
+## CSS Modules
+
+Scoped styles that are tied to a specific component file.
+
+Create a CSS module file with the `.module.css` extension:
+
+```css
+.container {
+  padding: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+```
+
+Import the styles object and use it in your component:
+
+```tsx
+import type { ToolMetadata } from "xmcp";
+import styles from "./greet.module.css";
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Hello, world!",
+};
+
+export default function handler() {
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Hello, world!</h1>
+    </div>
+  );
+}
+```
+
+## Summary
+
+| Approach | Best for |
+| --- | --- |
+| **Tailwind CSS** | Rapid prototyping, utility-first styling |
+| **CSS** | Simple styling, full control |
+| **CSS Modules** | Component-scoped styles |
+
+Pick the approach that fits your project. You can also mix them, for example, use Tailwind for layout and CSS Modules for component-specific styles.
