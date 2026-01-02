@@ -1,5 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap");
 
+body {
+    font-family: "Geist Mono", ui-monospace, monospace;
+}
+
 .container {
     min-height: 100vh;
     background-color: black;
@@ -8,7 +12,6 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    font-family: "Geist Mono", ui-monospace, monospace;
 }
 
 .wrapper {
@@ -23,7 +26,6 @@
 
 .label {
     font-size: 0.875rem;
-    font-family: "Geist Mono", ui-monospace, monospace;
     color: rgb(113 113 122);
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -52,7 +54,6 @@
 .button {
     padding: 1rem 2rem;
     font-size: 0.875rem;
-    font-family: "Geist Mono", ui-monospace, monospace;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: all 200ms;
@@ -74,7 +75,6 @@
     color: black;
     border: none;
     font-size: 0.875rem;
-    font-family: "Geist Mono", ui-monospace, monospace;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     transition: all 200ms;
