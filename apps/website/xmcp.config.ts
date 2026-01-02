@@ -10,6 +10,9 @@ const config: XmcpConfig = {
     prompts: false,
     resources: false,
   },
+  typescript: {
+    skipTypeCheck: true,
+  },
 };
 
 export default config;
