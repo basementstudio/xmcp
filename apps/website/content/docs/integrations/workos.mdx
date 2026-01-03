@@ -3,16 +3,8 @@ title: "WorkOS"
 metadataTitle: "Usage with WorkOS | xmcp Documentation"
 publishedAt: "2025-07-06"
 summary: "Add secure authentication to your MCP server using WorkOS AuthKit"
-description: "Add secure authentication to your MCP server using WorkOS AuthKit"
+description: "The WorkOS plugin provides authentication for your mcp server using WorkOS AuthKit."
 ---
-
-## Overview
-
-The WorkOS plugin provides authentication for your xmcp server using [WorkOS AuthKit](https://workos.com/authkit), a hosted OAuth authorization server with enterprise SSO support.
-
-<Callout variant="info">
-  AuthKit handles all authentication - no database required on your end.
-</Callout>
 
 ## Installation
 
@@ -26,16 +18,12 @@ npm install @xmcp-dev/workos
 
 Before integrating the plugin, configure your WorkOS account:
 
-1. Create a [WorkOS account](https://workos.com) if you don't have one
-2. Navigate to your dashboard and note your:
+1. Navigate to your [WorkOS account](https://workos.com) dashboard and note your:
    - **API Key** (starts with `sk_`)
    - **Client ID** (starts with `client_`)
    - **AuthKit domain** (e.g., `yourcompany.authkit.app`)
-3. Enable **Client ID Metadata Document** in Connect → Configuration
+2. Enable **Client ID Metadata Document** in Connect → Configuration
 
-<Callout variant="warning" icon="alertTriangle" title="Required">
-  The Client ID Metadata Document must be enabled for MCP clients to discover your authorization server.
-</Callout>
 
 ## Environment Variables
 
@@ -48,7 +36,7 @@ WORKOS_CLIENT_ID=client_...
 WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
 
 # App configuration
-BASE_URL=http://127.0.0.1:3001
+BASE_URL=http://127.0.0.1:3002
 ```
 
 ## Configuration
@@ -62,7 +50,7 @@ export default workosProvider({
   apiKey: process.env.WORKOS_API_KEY!,
   clientId: process.env.WORKOS_CLIENT_ID!,
   authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
-  baseURL: process.env.BASE_URL || "http://127.0.0.1:3001",
+  baseURL: process.env.BASE_URL!,
 });
 ```
 
@@ -75,15 +63,39 @@ export default workosProvider({
 
 ## Usage in Tools
 
-Access the authenticated user session in your xmcp tools using `getWorkOSSession`:
+Access the authenticated user in your xmcp tools using `getWorkOSSession` and `getWorkOSUser`:
 
 ```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
 import { getWorkOSSession } from "@xmcp-dev/workos";
 
-export default async function greet({ name }: { name: string }) {
-  const session = await getWorkOSSession();
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
 
-  return `Hello, ${name}! Your email is ${session.user.email}`;
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their WorkOS identity",
+  annotations: {
+    title: "Greet User",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+// Tool implementation
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const session = getWorkOSSession();
+
+  const result = `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
+
+  return {
+    content: [{ type: "text", text: result }],
+  };
 }
 ```
 
@@ -92,12 +104,25 @@ export default async function greet({ name }: { name: string }) {
   `workosProvider` middleware context.
 </Callout>
 
-The session includes user profile data fetched from WorkOS:
+### Session Properties
 
-- `session.user.id` - Unique user identifier
-- `session.user.email` - User's email address
-- `session.user.firstName` / `lastName` - User's name
+The session contains data from the JWT token:
+
+- `session.userId` - Unique user identifier
+- `session.sessionId` - Current session ID
 - `session.organizationId` - Organization ID (if applicable)
+- `session.role` - User's role (if applicable)
+- `session.permissions` - Array of user permissions
+
+### User Properties
+
+Use `getWorkOSUser()` to fetch the full user profile from WorkOS:
+
+- `user.id` - User ID
+- `user.email` - User's email address
+- `user.firstName` / `user.lastName` - User's name
+- `user.emailVerified` - Whether email is verified
+- `user.profilePictureUrl` - Profile picture URL
 
 ## Next Steps
 
