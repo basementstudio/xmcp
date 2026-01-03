@@ -1,39 +1,29 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { WorkOSJWTClaims, WorkOSSession } from "./types.js";
+import { getJwksUrl, getAuthKitBaseUrl } from "./utils.js";
 
-// Cache the JWKS to avoid repeated fetches
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-/**
- * Get or create a cached JWKS for the given AuthKit domain
- */
 function getJWKS(authkitDomain: string) {
   if (!jwksCache.has(authkitDomain)) {
-    const jwksUri = new URL(`https://${authkitDomain}/oauth2/jwks`);
+    const jwksUri = new URL(getJwksUrl(authkitDomain));
     jwksCache.set(authkitDomain, createRemoteJWKSet(jwksUri));
   }
   return jwksCache.get(authkitDomain)!;
 }
 
-/**
- * Verify a WorkOS AuthKit JWT token
- * @param token - The JWT token to verify
- * @param authkitDomain - The AuthKit domain (e.g., balanced-farm-35-staging.authkit.app)
- * @returns The verified JWT claims or null if invalid
- */
 export async function verifyWorkOSToken(
   token: string,
   authkitDomain: string
 ): Promise<WorkOSJWTClaims | null> {
   try {
     const JWKS = getJWKS(authkitDomain);
-    const issuer = `https://${authkitDomain}`;
+    const issuer = getAuthKitBaseUrl(authkitDomain);
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer,
     });
 
-    // Validate required claims exist
     if (!payload.sub || !payload.sid) {
       console.error("[WorkOS] Missing required JWT claims (sub or sid)");
       return null;
@@ -46,9 +36,6 @@ export async function verifyWorkOSToken(
   }
 }
 
-/**
- * Convert JWT claims to a WorkOS session object
- */
 export function claimsToSession(claims: WorkOSJWTClaims): WorkOSSession {
   return {
     userId: claims.sub,
@@ -62,9 +49,6 @@ export function claimsToSession(claims: WorkOSJWTClaims): WorkOSSession {
   };
 }
 
-/**
- * Extract bearer token from Authorization header
- */
 export function extractBearerToken(
   authHeader: string | undefined
 ): string | null {

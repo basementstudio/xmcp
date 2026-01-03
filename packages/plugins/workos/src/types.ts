@@ -1,3 +1,5 @@
+import { IncomingHttpHeaders } from "http";
+
 /**
  * WorkOS AuthKit configuration
  */
@@ -82,4 +84,9 @@ export interface OAuthAuthorizationServerMetadata {
   grant_types_supported: string[];
   code_challenge_methods_supported?: string[];
   token_endpoint_auth_methods_supported?: string[];
+}
+
+export interface WorkOSContext {
+  session: WorkOSSession | null;
+  headers: IncomingHttpHeaders;
 }
