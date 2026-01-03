@@ -1,0 +1,19 @@
+{
+  "name": "workos-http-example",
+  "description": "HTTP-based xmcp server with WorkOS AuthKit integration",
+  "keywords": [
+    "http",
+    "authentication",
+    "workos"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/workos": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

@@ -1,0 +1,129 @@
+---
+title: "WorkOS"
+metadataTitle: "Usage with WorkOS | xmcp Documentation"
+publishedAt: "2025-07-06"
+summary: "Add secure authentication to your MCP server using WorkOS AuthKit"
+description: "The WorkOS plugin provides authentication for your mcp server using WorkOS AuthKit."
+---
+
+## Installation
+
+Install the WorkOS plugin:
+
+```bash
+npm install @xmcp-dev/workos
+```
+
+## WorkOS Setup
+
+Before integrating the plugin, configure your WorkOS account:
+
+1. Navigate to your [WorkOS account](https://workos.com) dashboard and note your:
+   - **API Key** (starts with `sk_`)
+   - **Client ID** (starts with `client_`)
+   - **AuthKit domain** (e.g., `yourcompany.authkit.app`)
+2. Enable **Client ID Metadata Document** in Connect → Configuration
+
+
+## Environment Variables
+
+Configure the following environment variables in your `.env` file:
+
+```bash
+# WorkOS credentials
+WORKOS_API_KEY=sk_test_...
+WORKOS_CLIENT_ID=client_...
+WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
+
+# App configuration
+BASE_URL=http://127.0.0.1:3002
+```
+
+## Configuration
+
+Create a `middleware.ts` file in your xmcp app root directory:
+
+```typescript title="src/middleware.ts"
+import { workosProvider } from "@xmcp-dev/workos";
+
+export default workosProvider({
+  apiKey: process.env.WORKOS_API_KEY!,
+  clientId: process.env.WORKOS_CLIENT_ID!,
+  authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
+  baseURL: process.env.BASE_URL!,
+});
+```
+
+### Configuration Options
+
+- **`apiKey`** - WorkOS API key from your dashboard
+- **`clientId`** - WorkOS client ID for OAuth
+- **`authkitDomain`** - Your AuthKit domain (e.g., `yourcompany.authkit.app`)
+- **`baseURL`** - Base URL of your app for OAuth callbacks
+
+## Usage in Tools
+
+Access the authenticated user in your xmcp tools using `getWorkOSSession` and `getWorkOSUser`:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { getWorkOSSession } from "@xmcp-dev/workos";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their WorkOS identity",
+  annotations: {
+    title: "Greet User",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+// Tool implementation
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const session = getWorkOSSession();
+
+  const result = `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
+
+  return {
+    content: [{ type: "text", text: result }],
+  };
+}
+```
+
+<Callout variant="warning">
+  `getWorkOSSession` will throw an error if called outside of a
+  `workosProvider` middleware context.
+</Callout>
+
+### Session Properties
+
+The session contains data from the JWT token:
+
+- `session.userId` - Unique user identifier
+- `session.sessionId` - Current session ID
+- `session.organizationId` - Organization ID (if applicable)
+- `session.role` - User's role (if applicable)
+- `session.permissions` - Array of user permissions
+
+### User Properties
+
+Use `getWorkOSUser()` to fetch the full user profile from WorkOS:
+
+- `user.id` - User ID
+- `user.email` - User's email address
+- `user.firstName` / `user.lastName` - User's name
+- `user.emailVerified` - Whether email is verified
+- `user.profilePictureUrl` - Profile picture URL
+
+## Next Steps
+
+After authentication is configured, users will be redirected to WorkOS AuthKit's hosted UI when establishing a connection to your MCP server.
