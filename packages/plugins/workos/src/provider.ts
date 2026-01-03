@@ -51,7 +51,6 @@ function workosRouter(config: WorkOSConfig): Router {
     );
   });
 
-  // RFC 8707
   router.get(
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {

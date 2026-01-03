@@ -9,11 +9,7 @@ export type {
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 
-export {
-  getWorkOSSession,
-  getWorkOSSessionOrNull,
-  getWorkOSUser,
-} from "./session.js";
+export { getWorkOSSession, getWorkOSUser } from "./session.js";
 
 export { getWorkOSClient } from "./client.js";
 
