@@ -1,10 +1,6 @@
 import { type ToolMetadata } from "xmcp";
 import { getWorkOSSession, getWorkOSUser } from "@xmcp-dev/workos";
 
-// No schema needed - this tool takes no parameters
-export const schema = {};
-
-// Define tool metadata
 export const metadata: ToolMetadata = {
   name: "whoami",
   description: "Returns the full WorkOS user session and account information",
@@ -16,16 +12,11 @@ export const metadata: ToolMetadata = {
   },
 };
 
-// Tool implementation
 export default async function whoami() {
-  // Get session data from JWT claims (fast, no API call)
   const session = getWorkOSSession();
-
-  // Get full user data from WorkOS API (includes email, name, etc.)
   const user = await getWorkOSUser();
 
   const userInfo = {
-    // From JWT session
     session: {
       userId: session.userId,
       sessionId: session.sessionId,
@@ -35,7 +26,6 @@ export default async function whoami() {
       expiresAt: session.expiresAt.toISOString(),
       issuedAt: session.issuedAt.toISOString(),
     },
-    // From WorkOS API (full user details)
     user: {
       id: user.id,
       email: user.email,
@@ -52,7 +42,7 @@ export default async function whoami() {
     content: [
       {
         type: "text",
-        text: `WorkOS User Information:\n${JSON.stringify(userInfo, null, 2)}`,
+        text: `${JSON.stringify(userInfo, null, 2)}`,
       },
     ],
   };

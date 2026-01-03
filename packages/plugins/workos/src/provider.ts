@@ -28,6 +28,19 @@ import {
 } from "./utils.js";
 
 export function workosProvider(config: WorkOSConfig): Middleware {
+  if (!config.apiKey) {
+    throw new Error("[WorkOS] Missing required config: apiKey");
+  }
+  if (!config.clientId) {
+    throw new Error("[WorkOS] Missing required config: clientId");
+  }
+  if (!config.baseURL) {
+    throw new Error("[WorkOS] Missing required config: baseURL");
+  }
+  if (!config.authkitDomain) {
+    throw new Error("[WorkOS] Missing required config: authkitDomain");
+  }
+
   initWorkOS(config.apiKey, config.clientId);
 
   return {
