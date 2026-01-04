@@ -15,9 +15,31 @@ A CSS framework that provides utility classes like `flex`, `pt-4`, `text-center`
 
 Install Tailwind CSS:
 
-```bash
-pnpm add -D tailwindcss @tailwindcss/postcss
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm add -D tailwindcss @tailwindcss/postcss",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i -D tailwindcss @tailwindcss/postcss",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add -D tailwindcss @tailwindcss/postcss",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add -D tailwindcss @tailwindcss/postcss",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 Add the PostCSS plugin to your `postcss.config.mjs` file:
 
@@ -29,13 +51,13 @@ export default {
 }
 ```
 
-Import Tailwind in your global CSS file:
+Create a global CSS file (e.g., `globals.css`) and import Tailwind:
 
 ```css
 @import 'tailwindcss';
 ```
 
-Import the CSS file in your tsx component:
+Import the CSS file in your tool file:
 
 ```tsx
 import type { ToolMetadata } from "xmcp";
@@ -86,7 +108,7 @@ export default function handler() {
 
 ## CSS Modules
 
-Scoped styles that are tied to a specific component file.
+Scoped styles that are tied to a specific tool file.
 
 Create a CSS module file with the `.module.css` extension:
 
@@ -101,7 +123,7 @@ Create a CSS module file with the `.module.css` extension:
 }
 ```
 
-Import the styles object and use it in your component:
+Import the styles object and use it in your tool:
 
 ```tsx
 import type { ToolMetadata } from "xmcp";
@@ -122,11 +144,5 @@ export default function handler() {
 ```
 
 ## Summary
-
-| Approach | Best for |
-| --- | --- |
-| **Tailwind CSS** | Rapid prototyping, utility-first styling |
-| **CSS** | Simple styling, full control |
-| **CSS Modules** | Component-scoped styles |
 
 Pick the approach that fits your project. You can also mix them, for example, use Tailwind for layout and CSS Modules for component-specific styles.

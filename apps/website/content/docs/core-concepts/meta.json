@@ -5,8 +5,8 @@
     "prompts",
     "resources",
     "middlewares",
-    "external-clients",
-    "css"
+    "css",
+    "external-clients"
   ],
   "defaultOpen": true,
   "root": true
