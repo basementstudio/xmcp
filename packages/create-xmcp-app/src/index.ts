@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { checkNodeVersion } from "./utils/check-node.js";
 import { createProject } from "./helpers/create.js";
 import { isFolderEmpty } from "./utils/is-folder-empty.js";
+import { downloadAndExtractExample, listExamples } from "./helpers/examples.js";
 
 checkNodeVersion();
 
@@ -30,6 +31,8 @@ const program = new Command()
   )
   .argument("[directory]")
   .usage("[directory] [options]")
+  .option("--example <example>", "Download and extract an example/template")
+  .option("--list-examples", "List all available examples/templates")
   .helpOption("-h, --help", "Display help message.")
   .option("-y, --yes", "Skip confirmation prompt", false)
   .option("--use-npm", "Use npm as package manager (default: use npm)")
@@ -51,6 +54,16 @@ const program = new Command()
 
     if (options.tailwind && !options.gpt && !options.ui) {
       options.ui = true;
+    }
+
+    if (options.listExamples) {
+      await listExamples();
+      process.exit(0);
+    }
+
+    if (options.example) {
+      await downloadAndExtractExample(process.cwd(), options.example);
+      process.exit(0);
     }
 
     // If project directory wasn't specified, ask for it
