@@ -214,23 +214,6 @@ The authentication flow involves three parties:
 2. **AuthKit** (WorkOS) - The authorization server that handles login
 3. **MCP Server** (Your server) - The resource server that validates tokens
 
-```
-MCP Client          AuthKit              MCP Server
-    │                  │                     │
-    │  1. Discovery    │                     │
-    │─────────────────────────────────────────>│
-    │                  │  "use AuthKit"      │
-    │<─────────────────────────────────────────│
-    │                  │                     │
-    │  2. Login        │                     │
-    │─────────────────>│                     │
-    │<─────────────────│                     │
-    │     tokens       │                     │
-    │                  │                     │
-    │  3. API Call with Bearer token         │
-    │─────────────────────────────────────────>│
-    │<─────────────────────────────────────────│
-```
 
 <Callout variant="info">
   Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.

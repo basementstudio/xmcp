@@ -7,23 +7,14 @@ export type JWTVerifyResult =
   | { readonly ok: true; readonly claims: WorkOSJWTClaims }
   | { readonly ok: false; readonly error: "expired" | "invalid" };
 
-const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
-
-function getJWKS(authkitDomain: string): ReturnType<typeof createRemoteJWKSet> {
-  if (!jwksCache.has(authkitDomain)) {
-    const jwksUri = new URL(`${getAuthKitBaseUrl(authkitDomain)}/oauth2/jwks`);
-    jwksCache.set(authkitDomain, createRemoteJWKSet(jwksUri));
-  }
-  return jwksCache.get(authkitDomain)!;
-}
-
 export async function verifyWorkOSToken(
   token: string,
   authkitDomain: string
 ): Promise<JWTVerifyResult> {
   try {
-    const JWKS = getJWKS(authkitDomain);
     const issuer = getAuthKitBaseUrl(authkitDomain);
+    const jwksUri = new URL(`${issuer}/oauth2/jwks`);
+    const JWKS = createRemoteJWKSet(jwksUri);
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer,
