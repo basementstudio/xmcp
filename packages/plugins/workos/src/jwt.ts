@@ -1,12 +1,12 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { WorkOSJWTClaims, WorkOSSession } from "./types.js";
-import { getJwksUrl, getAuthKitBaseUrl } from "./utils.js";
+import { getAuthKitBaseUrl } from "./utils.js";
 
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 function getJWKS(authkitDomain: string) {
   if (!jwksCache.has(authkitDomain)) {
-    const jwksUri = new URL(getJwksUrl(authkitDomain));
+    const jwksUri = new URL(`${getAuthKitBaseUrl(authkitDomain)}/oauth2/jwks`);
     jwksCache.set(authkitDomain, createRemoteJWKSet(jwksUri));
   }
   return jwksCache.get(authkitDomain)!;

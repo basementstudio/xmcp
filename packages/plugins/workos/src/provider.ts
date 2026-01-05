@@ -18,14 +18,7 @@ import {
   claimsToSession,
   extractBearerToken,
 } from "./jwt.js";
-import { getWorkOSClient } from "./client.js";
-import {
-  getAuthKitBaseUrl,
-  getOpenIdConfigUrl,
-  getAuthorizeUrl,
-  getTokenUrl,
-  getJwksUrl,
-} from "./utils.js";
+import { getAuthKitBaseUrl } from "./utils.js";
 
 export function workosProvider(config: WorkOSConfig): Middleware {
   if (!config.apiKey) {
@@ -64,92 +57,65 @@ function workosRouter(config: WorkOSConfig): Router {
     );
   });
 
+  /**
+   * OAuth 2.0 Protected Resource Metadata (RFC 9728)
+   * Points MCP clients to AuthKit as the authorization server
+   */
   router.get(
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {
+      const baseUrl = config.baseURL.replace(/\/$/, "");
+      const authkitUrl = getAuthKitBaseUrl(config.authkitDomain);
+
       const metadata: OAuthProtectedResourceMetadata = {
-        resource: config.baseURL,
-        authorization_servers: [getAuthKitBaseUrl(config.authkitDomain)],
+        resource: baseUrl,
+        // Point directly to AuthKit - MCP clients handle OAuth with AuthKit
+        authorization_servers: [authkitUrl],
         bearer_methods_supported: ["header"],
-        resource_documentation: `${config.baseURL}/docs`,
+        resource_documentation: `${baseUrl}/docs`,
       };
 
       res.json(metadata);
     }
   );
 
+  /**
+   * OAuth 2.0 Authorization Server Metadata (RFC 8414)
+   * Proxies AuthKit's metadata for compatibility with some MCP clients
+   */
   router.get(
     "/.well-known/oauth-authorization-server",
     async (_req: Request, res: Response) => {
       try {
-        const authkitMetadataUrl = getOpenIdConfigUrl(config.authkitDomain);
+        // Fetch and proxy AuthKit's OAuth metadata
+        const authkitMetadataUrl = `${getAuthKitBaseUrl(config.authkitDomain)}/.well-known/openid-configuration`;
         const response = await fetch(authkitMetadataUrl);
 
-        if (!response.ok) {
-          const metadata: OAuthAuthorizationServerMetadata = {
-            issuer: getAuthKitBaseUrl(config.authkitDomain),
-            authorization_endpoint: getAuthorizeUrl(config.authkitDomain),
-            token_endpoint: getTokenUrl(config.authkitDomain),
-            jwks_uri: getJwksUrl(config.authkitDomain),
-            response_types_supported: ["code"],
-            grant_types_supported: ["authorization_code", "refresh_token"],
-            code_challenge_methods_supported: ["S256"],
-            token_endpoint_auth_methods_supported: ["client_secret_post"],
-          };
-          res.json(metadata);
+        if (response.ok) {
+          const data = await response.json();
+          res.json(data);
           return;
         }
 
-        const data = await response.json();
-        res.json(data);
+        // Fallback: return manually constructed metadata pointing to AuthKit
+        const authkitUrl = getAuthKitBaseUrl(config.authkitDomain);
+        const metadata: OAuthAuthorizationServerMetadata = {
+          issuer: authkitUrl,
+          authorization_endpoint: `${authkitUrl}/oauth2/authorize`,
+          token_endpoint: `${authkitUrl}/oauth2/token`,
+          jwks_uri: `${authkitUrl}/oauth2/jwks`,
+          response_types_supported: ["code"],
+          grant_types_supported: ["authorization_code", "refresh_token"],
+          code_challenge_methods_supported: ["S256"],
+          token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
+        };
+        res.json(metadata);
       } catch (error) {
         console.error("[WorkOS] Failed to fetch OAuth metadata:", error);
         res.status(500).json({ error: "Failed to get OAuth configuration" });
       }
     }
   );
-
-  router.get("/auth/callback", async (req: Request, res: Response) => {
-    const { code, error, error_description } = req.query;
-
-    if (error) {
-      res.status(400).json({
-        error: error as string,
-        error_description: error_description as string,
-      });
-      return;
-    }
-
-    if (!code || typeof code !== "string") {
-      res.status(400).json({
-        error: "invalid_request",
-        error_description: "Missing authorization code",
-      });
-      return;
-    }
-
-    try {
-      const workos = getWorkOSClient();
-      const authResult = await workos.userManagement.authenticateWithCode({
-        clientId: config.clientId,
-        code,
-      });
-
-      res.json({
-        success: true,
-        user: authResult.user,
-        accessToken: authResult.accessToken,
-        refreshToken: authResult.refreshToken,
-      });
-    } catch (err) {
-      console.error("[WorkOS] Code exchange failed:", err);
-      res.status(401).json({
-        error: "authentication_failed",
-        error_description:
-          err instanceof Error ? err.message : "Code exchange failed",
-      });
-    }
-  });
 
   return router;
 }
