@@ -79,8 +79,17 @@ export async function downloadAndExtractRepo(root: string, filePath: string) {
         }
 
         const prefix = `${rootPath}/${filePath ? `${filePath}/` : ""}`;
-        const filterMatch = posixPath.startsWith(prefix);
-        return filterMatch;
+        const inExamplePath = posixPath.startsWith(prefix);
+        if (!inExamplePath) return false;
+
+        const relativePath = posixPath.slice(prefix.length);
+
+        // Ignore example metadata folders
+        if (relativePath === ".config" || relativePath.startsWith(".config/")) {
+          return false;
+        }
+
+        return true;
       },
     })
   );
