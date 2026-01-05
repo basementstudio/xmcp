@@ -57,10 +57,6 @@ function workosRouter(config: WorkOSConfig): Router {
     );
   });
 
-  /**
-   * OAuth 2.0 Protected Resource Metadata (RFC 9728)
-   * Points MCP clients to AuthKit as the authorization server
-   */
   router.get(
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {
@@ -69,25 +65,19 @@ function workosRouter(config: WorkOSConfig): Router {
 
       const metadata: OAuthProtectedResourceMetadata = {
         resource: baseUrl,
-        // Point directly to AuthKit - MCP clients handle OAuth with AuthKit
         authorization_servers: [authkitUrl],
         bearer_methods_supported: ["header"],
-        resource_documentation: `${baseUrl}/docs`,
+        ...(config.docsURL && { resource_documentation: config.docsURL }),
       };
 
       res.json(metadata);
     }
   );
 
-  /**
-   * OAuth 2.0 Authorization Server Metadata (RFC 8414)
-   * Proxies AuthKit's metadata for compatibility with some MCP clients
-   */
   router.get(
     "/.well-known/oauth-authorization-server",
     async (_req: Request, res: Response) => {
       try {
-        // Fetch and proxy AuthKit's OAuth metadata
         const authkitMetadataUrl = `${getAuthKitBaseUrl(config.authkitDomain)}/.well-known/openid-configuration`;
         const response = await fetch(authkitMetadataUrl);
 
@@ -97,7 +87,7 @@ function workosRouter(config: WorkOSConfig): Router {
           return;
         }
 
-        // Fallback: return manually constructed metadata pointing to AuthKit
+        // Fallback
         const authkitUrl = getAuthKitBaseUrl(config.authkitDomain);
         const metadata: OAuthAuthorizationServerMetadata = {
           issuer: authkitUrl,
@@ -108,6 +98,7 @@ function workosRouter(config: WorkOSConfig): Router {
           grant_types_supported: ["authorization_code", "refresh_token"],
           code_challenge_methods_supported: ["S256"],
           token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
+          scopes_supported: ["openid", "profile", "email", "offline_access"],
         };
         res.json(metadata);
       } catch (error) {
@@ -142,21 +133,33 @@ function workosMiddleware(config: WorkOSConfig): RequestHandler {
         return;
       }
 
-      const claims = await verifyWorkOSToken(token, config.authkitDomain);
+      const result = await verifyWorkOSToken(token, config.authkitDomain);
 
-      if (!claims) {
-        res.setHeader(
-          "WWW-Authenticate",
-          `Bearer resource_metadata="/.well-known/oauth-protected-resource", error="invalid_token"`
-        );
-        res.status(401).json({
-          error: "invalid_token",
-          error_description: "Token verification failed",
-        });
+      if (!result.ok) {
+        if (result.error === "expired") {
+          res.setHeader(
+            "WWW-Authenticate",
+            `Bearer resource_metadata="/.well-known/oauth-protected-resource", error="invalid_token", error_description="Token has expired"`
+          );
+          res.status(401).json({
+            error: "token_expired",
+            error_description:
+              "Access token has expired. Please refresh your token.",
+          });
+        } else {
+          res.setHeader(
+            "WWW-Authenticate",
+            `Bearer resource_metadata="/.well-known/oauth-protected-resource", error="invalid_token"`
+          );
+          res.status(401).json({
+            error: "invalid_token",
+            error_description: "Token verification failed",
+          });
+        }
         return;
       }
 
-      const session = claimsToSession(claims);
+      const session = claimsToSession(result.claims);
 
       workosContextProvider(
         {

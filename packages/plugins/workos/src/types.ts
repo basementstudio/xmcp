@@ -2,11 +2,15 @@ import { IncomingHttpHeaders } from "http";
 
 export interface WorkOSConfig {
   /** WorkOS API key (sk_test_... or sk_live_...) */
-  apiKey: string;
+  readonly apiKey: string;
   /** WorkOS Client ID (client_...) */
-  clientId: string;
-  baseURL: string;
-  authkitDomain: string;
+  readonly clientId: string;
+  /** Base URL of your MCP server */
+  readonly baseURL: string;
+  /** AuthKit domain (e.g., your-subdomain.authkit.app) */
+  readonly authkitDomain: string;
+  /** Optional URL to your MCP server's API documentation */
+  readonly docsURL?: string;
 }
 
 export interface WorkOSJWTClaims {
@@ -48,6 +52,7 @@ export interface OAuthAuthorizationServerMetadata {
   grant_types_supported: string[];
   code_challenge_methods_supported?: string[];
   token_endpoint_auth_methods_supported?: string[];
+  scopes_supported?: string[];
 }
 
 export interface WorkOSContext {

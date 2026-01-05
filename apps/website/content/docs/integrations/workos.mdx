@@ -22,7 +22,8 @@ Before integrating the plugin, configure your WorkOS account:
    - **API Key** (starts with `sk_`)
    - **Client ID** (starts with `client_`)
    - **AuthKit domain** (e.g., `yourcompany.authkit.app`)
-2. Enable **Client ID Metadata Document** in Connect → Configuration
+2. Enable **Client ID Metadata Document (CIMD)** in Connect → Configuration
+3. Optionally enable **Dynamic Client Registration (DCR)** for backwards compatibility with older MCP clients
 
 
 ## Environment Variables
@@ -51,6 +52,7 @@ export default workosProvider({
   clientId: process.env.WORKOS_CLIENT_ID!,
   authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
   baseURL: process.env.BASE_URL!,
+  docsURL: "https://your-docs.example.com",
 });
 ```
 
@@ -60,6 +62,7 @@ export default workosProvider({
 - **`clientId`** - WorkOS client ID for OAuth
 - **`authkitDomain`** - Your AuthKit domain (e.g., `yourcompany.authkit.app`)
 - **`baseURL`** - Base URL of your app for OAuth callbacks
+- **`docsURL`** - (Optional) URL to your MCP server's API documentation
 
 ## Usage in Tools
 
@@ -123,6 +126,165 @@ Use `getWorkOSUser()` to fetch the full user profile from WorkOS:
 - `user.firstName` / `user.lastName` - User's name
 - `user.emailVerified` - Whether email is verified
 - `user.profilePictureUrl` - Profile picture URL
+
+## Using the WorkOS SDK
+
+The `getWorkOSClient()` function gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
+
+### Organization Memberships
+
+```typescript title="src/tools/get-memberships.ts"
+import { getWorkOSSession, getWorkOSClient } from "@xmcp-dev/workos";
+
+export default async function getMemberships() {
+  const session = getWorkOSSession();
+  const workos = getWorkOSClient();
+
+  const memberships = await workos.userManagement.listOrganizationMemberships({
+    userId: session.userId,
+  });
+
+  return {
+    content: [{
+      type: "text",
+      text: JSON.stringify(memberships.data, null, 2),
+    }],
+  };
+}
+```
+
+### Organizations
+
+```typescript
+const workos = getWorkOSClient();
+const session = getWorkOSSession();
+
+// Get organization details
+if (session.organizationId) {
+  const org = await workos.organizations.getOrganization(session.organizationId);
+  console.log(org.name, org.domains);
+}
+
+// List all organizations
+const orgs = await workos.organizations.listOrganizations();
+```
+
+### Directory Sync (SCIM)
+
+```typescript
+const workos = getWorkOSClient();
+
+// List directory users
+const users = await workos.directorySync.listUsers({
+  directory: "directory_xxx",
+});
+
+// List groups
+const groups = await workos.directorySync.listGroups({
+  directory: "directory_xxx",
+});
+```
+
+### Audit Logs
+
+```typescript
+const workos = getWorkOSClient();
+const session = getWorkOSSession();
+
+// Create an audit log event
+await workos.auditLogs.createEvent({
+  organizationId: session.organizationId,
+  event: {
+    action: "document.viewed",
+    actor: { id: session.userId, type: "user" },
+    targets: [{ id: "doc_123", type: "document" }],
+  },
+});
+```
+
+For the complete SDK documentation, see [WorkOS Node SDK Docs](https://workos.com/docs/sdks/node).
+
+## How Authentication Works
+
+### Architecture
+
+The authentication flow involves three parties:
+
+1. **MCP Client** (MCPJam, Cursor, Claude Desktop, etc.) - The application users interact with
+2. **AuthKit** (WorkOS) - The authorization server that handles login
+3. **MCP Server** (Your server) - The resource server that validates tokens
+
+```
+MCP Client          AuthKit              MCP Server
+    │                  │                     │
+    │  1. Discovery    │                     │
+    │─────────────────────────────────────────>│
+    │                  │  "use AuthKit"      │
+    │<─────────────────────────────────────────│
+    │                  │                     │
+    │  2. Login        │                     │
+    │─────────────────>│                     │
+    │<─────────────────│                     │
+    │     tokens       │                     │
+    │                  │                     │
+    │  3. API Call with Bearer token         │
+    │─────────────────────────────────────────>│
+    │<─────────────────────────────────────────│
+```
+
+<Callout variant="info">
+  Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.
+</Callout>
+
+### CIMD Auto-Registration
+
+With **Client ID Metadata Document (CIMD)** enabled in WorkOS Connect, MCP clients automatically register with AuthKit:
+
+1. MCP clients publish their metadata at a well-known URL
+2. AuthKit fetches this metadata during authentication
+3. No manual redirect URI configuration needed
+
+This means users can connect new MCP clients without any WorkOS Dashboard changes.
+
+### When to Manually Configure Redirect URIs
+
+You only need to manually add redirect URIs in WorkOS Dashboard when:
+
+| Scenario | Action |
+|----------|--------|
+| CIMD-enabled client | Nothing needed - automatic |
+| OAuth error "redirect_uri not registered" | Add the URI from the error message |
+| Custom client without CIMD support | Get callback URL from client developer |
+
+### Finding a Client's Redirect URI
+
+If you need to manually register a client:
+
+1. **Check the error message** - OAuth errors include the redirect URI that needs to be registered
+2. **Check client documentation** - Each MCP client documents its callback URL
+3. **Check your server logs** - Look for the `redirect_uri` parameter in failed OAuth requests
+
+## Troubleshooting
+
+### Token Expired Errors
+
+Access tokens are short-lived (~5 minutes). If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens
+- If errors persist, the client may have a bug or the refresh token expired
+- Users can disconnect and reconnect to get fresh tokens
+
+### Redirect URI Not Registered
+
+If you see this error during OAuth:
+
+1. Copy the redirect URI from the error message
+2. Go to WorkOS Dashboard → Connect → Applications
+3. Add the redirect URI to the application
+
+<Callout variant="warning">
+  Only add redirect URIs for clients you trust. Each URI allows that endpoint to receive OAuth callbacks.
+</Callout>
 
 ## Next Steps
 

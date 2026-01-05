@@ -1,10 +1,15 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { createRemoteJWKSet, jwtVerify, errors } from "jose";
 import type { WorkOSJWTClaims, WorkOSSession } from "./types.js";
 import { getAuthKitBaseUrl } from "./utils.js";
 
+/** Result of JWT verification */
+export type JWTVerifyResult =
+  | { readonly ok: true; readonly claims: WorkOSJWTClaims }
+  | { readonly ok: false; readonly error: "expired" | "invalid" };
+
 const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
-function getJWKS(authkitDomain: string) {
+function getJWKS(authkitDomain: string): ReturnType<typeof createRemoteJWKSet> {
   if (!jwksCache.has(authkitDomain)) {
     const jwksUri = new URL(`${getAuthKitBaseUrl(authkitDomain)}/oauth2/jwks`);
     jwksCache.set(authkitDomain, createRemoteJWKSet(jwksUri));
@@ -15,24 +20,31 @@ function getJWKS(authkitDomain: string) {
 export async function verifyWorkOSToken(
   token: string,
   authkitDomain: string
-): Promise<WorkOSJWTClaims | null> {
+): Promise<JWTVerifyResult> {
   try {
     const JWKS = getJWKS(authkitDomain);
     const issuer = getAuthKitBaseUrl(authkitDomain);
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer,
+      clockTolerance: 30, // Allow 30 seconds of clock skew
     });
 
     if (!payload.sub || !payload.sid) {
       console.error("[WorkOS] Missing required JWT claims (sub or sid)");
-      return null;
+      return { ok: false, error: "invalid" };
     }
 
-    return payload as unknown as WorkOSJWTClaims;
+    return { ok: true, claims: payload as unknown as WorkOSJWTClaims };
   } catch (error) {
+    // Check if the error is specifically a JWT expired error
+    if (error instanceof errors.JWTExpired) {
+      console.warn("[WorkOS] JWT has expired");
+      return { ok: false, error: "expired" };
+    }
+
     console.error("[WorkOS] JWT verification failed:", error);
-    return null;
+    return { ok: false, error: "invalid" };
   }
 }
 
