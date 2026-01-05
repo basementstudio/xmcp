@@ -62,13 +62,19 @@ const program = new Command()
     }
 
     if (options.example) {
-      const targetPath = process.cwd();
+      const targetPath = projectDir
+        ? path.resolve(process.cwd(), projectDir)
+        : process.cwd();
+      fs.ensureDirSync(targetPath);
       await downloadAndExtractExample(targetPath, options.example);
 
       console.log();
       console.log("Next steps:");
-      console.log(`  ${chalk.cyan("npm install")}`);
-      console.log(`  ${chalk.cyan("npm run dev")}`);
+      if (projectDir) {
+        console.log(`  cd ${chalk.cyan(projectDir)}`);
+      }
+      console.log(`  ${chalk.cyan("pnpm install")}`);
+      console.log(`  ${chalk.cyan("pnpm run dev")}`);
       console.log();
       console.log("To learn more about xmcp:");
       console.log(`  - Read the documentation at https://xmcp.dev/docs\n`);
