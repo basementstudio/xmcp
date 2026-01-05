@@ -8,12 +8,11 @@ import chalk from "chalk";
 const DEFAULT_REPO = {
   username: "xmcp-dev",
   name: "templates",
-  directory: "apps",
   branch: "main",
 };
 
 const EXAMPLES_URL = `https://api.github.com/repos/${DEFAULT_REPO.username}/${DEFAULT_REPO.name}`;
-const EXAMPLES_CONTENTS_URL = `${EXAMPLES_URL}/contents/${DEFAULT_REPO.directory}`;
+const EXAMPLES_CONTENTS_URL = `${EXAMPLES_URL}/contents`;
 
 function normalizeExampleName(name: string): string {
   return name.replace(/^\/+/, "").replace(/\/+$/, "");
@@ -32,7 +31,7 @@ export function existsInRepo(nameOrUrl: string): Promise<boolean> {
   const filePath = normalizeExampleName(nameOrUrl);
   if (!filePath) return Promise.resolve(false);
 
-  const contentsUrl = `${EXAMPLES_URL}/contents/${DEFAULT_REPO.directory}/${encodeURIComponent(
+  const contentsUrl = `${EXAMPLES_URL}/contents/${encodeURIComponent(
     filePath
   )}?ref=${DEFAULT_REPO.branch}`;
 
@@ -40,7 +39,7 @@ export function existsInRepo(nameOrUrl: string): Promise<boolean> {
 }
 
 export function hasRepo(filePath: string): Promise<boolean> {
-  const contentsUrl = `https://api.github.com/repos/${DEFAULT_REPO.username}/${DEFAULT_REPO.name}/contents/${DEFAULT_REPO.directory}`;
+  const contentsUrl = `https://api.github.com/repos/${DEFAULT_REPO.username}/${DEFAULT_REPO.name}/contents`;
   const packagePath = `${filePath ? `/${filePath}` : ""}/package.json`;
   const fullUrl = contentsUrl + packagePath + `?ref=${DEFAULT_REPO.branch}`;
 
@@ -67,7 +66,6 @@ export async function downloadAndExtractRepo(root: string, filePath: string) {
       cwd: root,
       strip:
         1 + // tarball root
-        DEFAULT_REPO.directory.split("/").length +
         (filePath ? filePath.split("/").length : 0),
       filter: (p: string) => {
         // Convert Windows path separators to POSIX style
@@ -80,9 +78,7 @@ export async function downloadAndExtractRepo(root: string, filePath: string) {
           rootPath = pathSegments.length ? pathSegments[0] : null;
         }
 
-        const prefix = `${rootPath}/${DEFAULT_REPO.directory}/${
-          filePath ? `${filePath}/` : ""
-        }`;
+        const prefix = `${rootPath}/${filePath ? `${filePath}/` : ""}`;
         const filterMatch = posixPath.startsWith(prefix);
         return filterMatch;
       },
@@ -106,7 +102,7 @@ export async function downloadAndExtractExample(root: string, name: string) {
   if (!exists) {
     throw new Error(
       `Example "${name}" not found in ${DEFAULT_REPO.username}/${DEFAULT_REPO.name}.` +
-        ` Check the template name (folder under /${DEFAULT_REPO.directory}) or list available examples.`
+        ` Check the template name (folder under /) or list available examples.`
     );
   }
 

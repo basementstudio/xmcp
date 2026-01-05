@@ -21,6 +21,13 @@ const packageJson = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../package.json"), "utf8")
 );
 
+function detectPackageManager(projectPath: string): string {
+  if (fs.existsSync(path.join(projectPath, "pnpm-lock.yaml"))) return "pnpm";
+  if (fs.existsSync(path.join(projectPath, "yarn.lock"))) return "yarn";
+  if (fs.existsSync(path.join(projectPath, "bun.lockb"))) return "bun";
+  return "npm";
+}
+
 const program = new Command()
   .name("create-xmcp-app")
   .description("Create a new xmcp application")
@@ -62,7 +69,17 @@ const program = new Command()
     }
 
     if (options.example) {
-      await downloadAndExtractExample(process.cwd(), options.example);
+      const targetPath = process.cwd();
+      await downloadAndExtractExample(targetPath, options.example);
+
+      const pkgManager = detectPackageManager(targetPath);
+      console.log();
+      console.log("Next steps:");
+      console.log(`  ${chalk.cyan(`${pkgManager} install`)}`);
+      console.log(`  ${chalk.cyan(`${pkgManager} run dev`)}`);
+      console.log();
+      console.log("To learn more about xmcp:");
+      console.log(`  - Read the documentation at https://xmcp.dev/docs\n`);
       process.exit(0);
     }
 
