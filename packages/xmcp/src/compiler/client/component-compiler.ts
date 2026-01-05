@@ -1,7 +1,7 @@
 import path from "path";
 import { rspack } from "@rspack/core";
 import type { RspackOptions } from "@rspack/core";
-import { hasPostCSSConfig } from "../utils/config-detection";
+import { findGlobalsCss, hasPostCSSConfig } from "../utils/config-detection";
 
 interface CompileOptions {
   entries: Map<string, string>;
@@ -103,9 +103,15 @@ export class ClientComponentCompiler {
   }
 
   private createEntryModule(componentPath: string): string {
+    const globalsCssPath = findGlobalsCss();
+    const globalsCssImport = globalsCssPath
+      ? `import ${JSON.stringify(globalsCssPath)};`
+      : "";
+
     return `
   import React from "react";
   import { createRoot } from "react-dom/client";
+  ${globalsCssImport}
   import Component from ${JSON.stringify(componentPath)};
 
   const el = document.getElementById("root");

@@ -9,6 +9,10 @@ If you're using [ChatGPT widgets](/docs/core-concepts/tools#openai-metadata) or 
 - [CSS](#css)
 - [CSS Modules](#css-modules)
 
+<Callout type="info">
+xmcp automatically detects and imports a `globals.css` file if it exists in `globals.css`, `src/globals.css`, or `src/tools/globals.css` (in priority order). You don't need to manually import it in every tool.
+</Callout>
+
 ## Tailwind CSS
 
 A CSS framework that provides utility classes like `flex`, `pt-4`, `text-center`, and `rotate-90`. You use these classes directly in your component to build layouts and designs.
@@ -51,17 +55,16 @@ export default {
 }
 ```
 
-Create a global CSS file (e.g., `globals.css`) and import Tailwind:
+Create a `globals.css` file in your project root (or `src/globals.css`) and import Tailwind:
 
 ```css
 @import 'tailwindcss';
 ```
 
-Import the CSS file in your tool file:
+Now you can use Tailwind classes in your tools:
 
 ```tsx
 import type { ToolMetadata } from "xmcp";
-import "./globals.css";
 
 export const metadata: ToolMetadata = {
   name: "greet",
@@ -81,6 +84,8 @@ export default function handler() {
 
 Write standard CSS to style your components without any framework or tooling.
 
+Create a `globals.css` file:
+
 ```css
 .title {
   font-size: 2rem;
@@ -88,9 +93,10 @@ Write standard CSS to style your components without any framework or tooling.
 }
 ```
 
+Use the styles in your tool:
+
 ```tsx
 import type { ToolMetadata } from "xmcp";
-import "./globals.css";
 
 export const metadata: ToolMetadata = {
   name: "greet",

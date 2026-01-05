@@ -1,9 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync,
+  writeFileSync,
+  rmSync,
+  mkdirSync,
+  realpathSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { hasPostCSSConfig } from "../config-detection";
+import { hasPostCSSConfig, findGlobalsCss } from "../config-detection";
 
 test("hasPostCSSConfig - returns false when no config files exist", () => {
   const testDir = mkdtempSync(join(tmpdir(), "xmcp-test-"));
@@ -153,6 +159,147 @@ test("hasPostCSSConfig - returns false with similar but incorrect filenames", ()
     writeFileSync(join(testDir, ".postcss"), "{}");
     const result = hasPostCSSConfig();
     assert.strictEqual(result, false);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - returns null when no globals.css exists", () => {
+  const testDir = mkdtempSync(join(tmpdir(), "xmcp-test-"));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const result = findGlobalsCss();
+    assert.strictEqual(result, null);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - finds globals.css in root directory", () => {
+  const testDir = realpathSync(mkdtempSync(join(tmpdir(), "xmcp-test-")));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const globalsPath = join(testDir, "globals.css");
+    writeFileSync(globalsPath, "body { margin: 0; }");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, globalsPath);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - finds globals.css in src directory", () => {
+  const testDir = realpathSync(mkdtempSync(join(tmpdir(), "xmcp-test-")));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const srcDir = join(testDir, "src");
+    mkdirSync(srcDir);
+    const globalsPath = join(srcDir, "globals.css");
+    writeFileSync(globalsPath, "body { margin: 0; }");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, globalsPath);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - finds globals.css in src/tools directory", () => {
+  const testDir = realpathSync(mkdtempSync(join(tmpdir(), "xmcp-test-")));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const toolsDir = join(testDir, "src", "tools");
+    mkdirSync(toolsDir, { recursive: true });
+    const globalsPath = join(toolsDir, "globals.css");
+    writeFileSync(globalsPath, "body { margin: 0; }");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, globalsPath);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - prioritizes root over src directory", () => {
+  const testDir = realpathSync(mkdtempSync(join(tmpdir(), "xmcp-test-")));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const srcDir = join(testDir, "src");
+    mkdirSync(srcDir);
+    const rootGlobals = join(testDir, "globals.css");
+    const srcGlobals = join(srcDir, "globals.css");
+    writeFileSync(rootGlobals, "/* root */");
+    writeFileSync(srcGlobals, "/* src */");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, rootGlobals);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - prioritizes src over src/tools directory", () => {
+  const testDir = realpathSync(mkdtempSync(join(tmpdir(), "xmcp-test-")));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const toolsDir = join(testDir, "src", "tools");
+    mkdirSync(toolsDir, { recursive: true });
+    const srcGlobals = join(testDir, "src", "globals.css");
+    const toolsGlobals = join(toolsDir, "globals.css");
+    writeFileSync(srcGlobals, "/* src */");
+    writeFileSync(toolsGlobals, "/* tools */");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, srcGlobals);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - returns null with similar but incorrect filenames", () => {
+  const testDir = mkdtempSync(join(tmpdir(), "xmcp-test-"));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    writeFileSync(join(testDir, "global.css"), "");
+    writeFileSync(join(testDir, "globals.scss"), "");
+    writeFileSync(join(testDir, "globals-css.css"), "");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, null);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(testDir, { recursive: true, force: true });
+  }
+});
+
+test("findGlobalsCss - returns null when only other CSS files exist", () => {
+  const testDir = mkdtempSync(join(tmpdir(), "xmcp-test-"));
+  const originalCwd = process.cwd();
+
+  try {
+    process.chdir(testDir);
+    const srcDir = join(testDir, "src");
+    mkdirSync(srcDir);
+    writeFileSync(join(testDir, "styles.css"), "");
+    writeFileSync(join(srcDir, "app.css"), "");
+    const result = findGlobalsCss();
+    assert.strictEqual(result, null);
   } finally {
     process.chdir(originalCwd);
     rmSync(testDir, { recursive: true, force: true });
