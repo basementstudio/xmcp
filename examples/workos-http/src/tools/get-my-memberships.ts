@@ -13,9 +13,7 @@ export const metadata: ToolMetadata = {
   },
 };
 
-export default async function getMyMemberships(): Promise<{
-  content: Array<{ type: "text"; text: string }>;
-}> {
+export default async function getMyMemberships(): Promise<string> {
   const session = getWorkOSSession();
   const workos = getWorkOSClient();
 
@@ -25,14 +23,7 @@ export default async function getMyMemberships(): Promise<{
   });
 
   if (memberships.data.length === 0) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: "You are not a member of any organizations.",
-        },
-      ],
-    };
+    return "You are not a member of any organizations.";
   }
 
   const formattedMemberships = memberships.data.map((membership) => ({
@@ -43,11 +34,7 @@ export default async function getMyMemberships(): Promise<{
     createdAt: membership.createdAt,
   }));
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify(
+  return JSON.stringify(
           {
             userId: session.userId,
             membershipCount: memberships.data.length,
@@ -55,9 +42,6 @@ export default async function getMyMemberships(): Promise<{
           },
           null,
           2
-        ),
-      },
-    ],
-  };
+        );
 }
 

@@ -38,12 +38,5 @@ export default async function whoami() {
     },
   };
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: `${JSON.stringify(userInfo, null, 2)}`,
-      },
-    ],
-  };
+  return JSON.stringify(userInfo, null, 2);
 }

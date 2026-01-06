@@ -23,9 +23,5 @@ export const metadata: ToolMetadata = {
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const session = getWorkOSSession();
 
-  const result = `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
 }
