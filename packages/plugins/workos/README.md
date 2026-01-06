@@ -37,7 +37,7 @@ export default workosProvider({
   baseURL: process.env.BASE_URL || "http://127.0.0.1:3002",
   authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN || "",
   // Optional: Link to your API documentation
-  docsURL: "https://your-docs.example.com",
+  docsURL: "https://yourserver.com/docs/mcp",
 });
 ```
 
@@ -46,8 +46,8 @@ export default workosProvider({
 ```bash
 WORKOS_API_KEY=sk_test_...
 WORKOS_CLIENT_ID=client_...
+WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
 BASE_URL=http://127.0.0.1:3002
-WORKOS_AUTHKIT_DOMAIN=your-subdomain.authkit.app
 ```
 
 ### 3. Access Session in Tools
@@ -83,8 +83,8 @@ Creates the WorkOS middleware and router for xmcp.
 - `apiKey` - WorkOS API key
 - `clientId` - WorkOS Client ID
 - `baseURL` - Base URL of your MCP server
-- `authkitDomain` - AuthKit domain (e.g., `your-subdomain.authkit.app`)
-- `docsURL` - (Optional) URL to your MCP server's API documentation
+- `authkitDomain` - AuthKit domain
+- `docsURL` - (Optional) URL for your MCP server documentation
 
 ### `getWorkOSSession()`
 
