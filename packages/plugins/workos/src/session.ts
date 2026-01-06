@@ -1,10 +1,9 @@
-import { getWorkOSContext } from "./context.js";
-import { getWorkOSClient } from "./client.js";
+import { getWorkOSSessionContext, getWorkOSClientContext } from "./context.js";
 import type { WorkOSSession } from "./types.js";
 import type { User } from "@workos-inc/node";
 
 export function getWorkOSSession(): WorkOSSession {
-  const context = getWorkOSContext();
+  const context = getWorkOSSessionContext();
 
   if (!context.session) {
     throw new Error(
@@ -18,6 +17,6 @@ export function getWorkOSSession(): WorkOSSession {
 
 export async function getWorkOSUser(): Promise<User> {
   const session = getWorkOSSession();
-  const workos = getWorkOSClient();
+  const { workos } = getWorkOSClientContext();
   return await workos.userManagement.getUser(session.userId);
 }

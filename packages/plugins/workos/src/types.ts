@@ -1,3 +1,4 @@
+import { WorkOS } from "@workos-inc/node";
 import { IncomingHttpHeaders } from "http";
 
 export interface WorkOSConfig {
@@ -55,7 +56,10 @@ export interface OAuthAuthorizationServerMetadata {
   scopes_supported?: string[];
 }
 
-export interface WorkOSContext {
+export interface WorkOSContextClient {
+  workos: WorkOS;
+}
+
+export interface WorkOSContextSession {
   session: WorkOSSession | null;
-  headers: IncomingHttpHeaders;
 }

@@ -6,19 +6,11 @@ import {
   type RequestHandler,
 } from "express";
 import { Middleware } from "xmcp";
-import { workosContextProvider } from "./context.js";
-import { initWorkOS } from "./client.js";
-import type {
-  WorkOSConfig,
-  OAuthProtectedResourceMetadata,
-  OAuthAuthorizationServerMetadata,
-} from "./types.js";
-import {
-  verifyWorkOSToken,
-  claimsToSession,
-  extractBearerToken,
-} from "./jwt.js";
+import { workosSessionContextProvider, workosClientContextProvider, setWorkOSSessionContext, setWorkOSClientContext, workosSessionContext } from "./context.js";
+import type { WorkOSConfig, OAuthProtectedResourceMetadata, OAuthAuthorizationServerMetadata } from "./types.js";
+import { verifyWorkOSToken, claimsToSession, extractBearerToken } from "./jwt.js";
 import { getAuthKitBaseUrl } from "./utils.js";
+import { WorkOS } from "@workos-inc/node";
 
 export function workosProvider(config: WorkOSConfig): Middleware {
   if (!config.apiKey) {
@@ -34,7 +26,21 @@ export function workosProvider(config: WorkOSConfig): Middleware {
     throw new Error("[WorkOS] Missing required config: authkitDomain");
   }
 
-  initWorkOS(config.apiKey, config.clientId);
+
+  workosClientContextProvider({
+    workos: new WorkOS(config.apiKey, { clientId: config.clientId }),
+  }, () => {
+
+  });
+
+  workosSessionContextProvider(
+    {
+      session: null
+    },
+    () => {}
+  );
+
+  
 
   return {
     middleware: workosMiddleware(config),
@@ -44,18 +50,6 @@ export function workosProvider(config: WorkOSConfig): Middleware {
 
 function workosRouter(config: WorkOSConfig): Router {
   const router = Router();
-
-  router.use((req: Request, _res: Response, next: NextFunction) => {
-    workosContextProvider(
-      {
-        session: null,
-        headers: req.headers,
-      },
-      () => {
-        next();
-      }
-    );
-  });
 
   router.get(
     "/.well-known/oauth-protected-resource",
@@ -161,15 +155,10 @@ function workosMiddleware(config: WorkOSConfig): RequestHandler {
 
       const session = claimsToSession(result.claims);
 
-      workosContextProvider(
-        {
-          session,
-          headers: req.headers,
-        },
-        () => {
-          next();
-        }
-      );
+      setWorkOSSessionContext({
+        session,
+      });
+      next();
     } catch (error) {
       console.error("[WorkOS] Authentication error:", error);
       res.setHeader(
@@ -180,6 +169,7 @@ function workosMiddleware(config: WorkOSConfig): RequestHandler {
         error: "server_error",
         error_description: "Authentication processing failed",
       });
+      next();
     }
   };
 }

@@ -14,8 +14,12 @@ export { getWorkOSSession, getWorkOSUser } from "./session.js";
 export { getWorkOSClient } from "./client.js";
 
 export {
-  workosContext,
-  getWorkOSContext,
-  setWorkOSContext,
-  workosContextProvider,
+  workosSessionContext,
+  getWorkOSSessionContext,
+  setWorkOSSessionContext,
+  workosSessionContextProvider,
+  workosClientContext,
+  getWorkOSClientContext,
+  setWorkOSClientContext,
+  workosClientContextProvider,
 } from "./context.js";
