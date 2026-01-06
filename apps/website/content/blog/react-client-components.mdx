@@ -10,8 +10,8 @@ authors:
   - fveiras_
 ---
 
-In recent years, modern frameworks have brought backend and frontend together. The client and server environments have different capabilities, 
-but the developer experience feels monolithic. 
+In recent years, modern frameworks have brought backend and frontend together. The client and server environments have different capabilities,
+but the developer experience feels monolithic.
 
 xmcp started on the server side, that's where MCP began, connecting AI apps like Claude and ChatGPT to data sources. But things are evolving fast. We're not a backend framework, we're a TypeScript MCP framework. Our mission: build MCP servers without thinking about protocol details, metadata config, or transports.
 
@@ -21,7 +21,7 @@ Now, with the [MCP apps](https://modelcontextprotocol.github.io/ext-apps/api/) p
 
 Our mission remains the same: you shouldn't need to think about complex config, you can use [template literals](/docs/core-concepts/tools#2-template-literal-handlers) or JSX using [React Client Components](/docs/core-concepts/tools#3-react-component-handlers) directly, and it just works.
 
-## Why React?
+## Always bet on React
 
 It's the most popular JavaScript UI framework out there, massive community, extensive ecosystem,
 and widespread adoption by major companies. When you already know React, you shouldn't have to learn something new just to return UI from your tools.
@@ -35,18 +35,18 @@ Currently, supporting client-side components only.
 
 ## Simplicity over complexity
 
-If you need to manage complex interactions between client and server components, like hydration or caching, you can use a framework 
-like Next.js with our [adapter](/docs/adapters/nextjs) that would also allow you to convert Next.js pages into MCP UI tools. 
+If you need to manage complex interactions between client and server components, like hydration or caching, you can use a framework
+like Next.js with our [adapter](/docs/adapters/nextjs) that would also allow you to convert Next.js pages into MCP UI tools.
 
 We even built a [ChatGPT App with Next.js](/blog/doom-with-xmcp) that runs DOOM. But sometimes that approach is overkill.
-If you only need a piece of UI, you probably don't need all the extra features and complexity that comes with a full framework. 
+If you only need a piece of UI, you probably don't need all the extra features and complexity that comes with a full framework.
 Plain React is enough.
 
 ## Styling that just works
 
-Under the hood, xmcp compiles using [rspack](https://rspack.rs/), a fast Rust-based web bundler. 
-When the framework detects JSX, it bundles CSS alongside your JavaScript into the dist directory. 
-And we also include [postcss](https://postcss.org/) by default, so Tailwind, CSS Modules, and standard CSS imports work out of the box. 
+Under the hood, xmcp compiles using [rspack](https://rspack.rs/), a fast Rust-based web bundler.
+When the framework detects JSX, it bundles CSS alongside your JavaScript into the dist directory.
+And we also include [postcss](https://postcss.org/) by default, so Tailwind, CSS Modules, and standard CSS imports work out of the box.
 
 ![Styling Diagram - CSS, CSS Modules, and Tailwind](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-2-169.svg)
 
@@ -54,13 +54,12 @@ If you want to learn more, you can take a deep dive [here](/docs/core-concepts/c
 
 ## Looking forward
 
-MCP (Model Context Protocol) is now part of the 
-[Linux Foundation](https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation), 
+MCP (Model Context Protocol) is now part of the
+[Linux Foundation](https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation),
 with major companies like Anthropic and OpenAI contributing as members of the [Agentic AI Foundation](https://aaif.io/members/).
 
-The protocol and ext-apps specification will continue evolving, and sometimes this natural progression brings additional complexity. 
-Our commitment is to reduce that complexity as much as we can, by actively contributing to the protocol development, carefully following all the latest updates, 
+The protocol and ext-apps specification will continue evolving, and sometimes this natural progression brings additional complexity.
+Our commitment is to reduce that complexity as much as we can, by actively contributing to the protocol development, carefully following all the latest updates,
 and ensuring our framework abstracts away unnecessary complications while maintaining full compatibility with the standard.
-
 
 If you're building your MCP server using our [Next.js adapter](/docs/adapters/nextjs) or [React Client Components](/docs/core-concepts/tools#3-react-component-handlers), we'd love to hear about your experience. Join us on [Discord](https://discord.gg/d9a7JBBxV9).
