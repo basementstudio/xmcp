@@ -1,7 +1,6 @@
 import { InferSchema, type ToolMetadata } from "xmcp";
 import { useState } from "react";
 import { z } from "zod";
-import "../../globals.css";
 
 export const metadata: ToolMetadata = {
   name: "counter",

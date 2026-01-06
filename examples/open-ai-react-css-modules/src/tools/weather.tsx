@@ -1,5 +1,6 @@
 import { type ToolMetadata } from "xmcp";
 import { useState, useEffect } from "react";
+import styles from "./weather.module.css";
 
 export const metadata: ToolMetadata = {
   name: "weather",
@@ -56,25 +57,21 @@ export default function handler() {
   }, [selectedCity]);
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <div className="text-sm font-mono text-zinc-500 uppercase tracking-wider mb-2">
-            Weather
-          </div>
-          <h1 className="text-5xl font-light tracking-tight">{selectedCity}</h1>
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        <div className={styles.header}>
+          <div className={styles.label}>Weather</div>
+          <h1 className={styles.title}>{selectedCity}</h1>
         </div>
 
-        <div className="mb-16">
-          <div className="flex flex-wrap justify-center gap-3">
+        <div className={styles.citySelector}>
+          <div className={styles.buttonContainer}>
             {Object.keys(cities).map((city) => (
               <button
                 key={city}
                 onClick={() => setSelectedCity(city)}
-                className={`px-6 py-3 text-sm font-mono uppercase tracking-wider transition-all duration-200 ${
-                  selectedCity === city
-                    ? "bg-white text-black"
-                    : "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20"
+                className={`${styles.cityButton} ${
+                  selectedCity === city ? styles.cityButtonActive : ""
                 }`}
               >
                 {city}
@@ -83,45 +80,31 @@ export default function handler() {
           </div>
         </div>
 
-        {loading && (
-          <div className="text-center text-zinc-500 font-mono text-sm">
-            Loading...
-          </div>
-        )}
+        {loading && <div className={styles.loading}>Loading...</div>}
 
-        {error && (
-          <div className="text-center text-red-400 font-mono text-sm border border-red-400/20 bg-red-400/5 py-4">
-            Error: {error}
-          </div>
-        )}
+        {error && <div className={styles.error}>Error: {error}</div>}
 
         {weatherData && !loading && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="border border-white/10 bg-white/5 p-8 hover:border-white/20 transition-all duration-200">
-              <div className="text-sm font-mono text-zinc-500 uppercase tracking-wider mb-4">
-                Temperature
-              </div>
-              <div className="text-5xl font-light tracking-tight">
+          <div className={styles.grid}>
+            <div className={styles.card}>
+              <div className={styles.cardLabel}>Temperature</div>
+              <div className={styles.cardValue}>
                 {weatherData.current.temperature_2m}°
               </div>
             </div>
 
-            <div className="border border-white/10 bg-white/5 p-8 hover:border-white/20 transition-all duration-200">
-              <div className="text-sm font-mono text-zinc-500 uppercase tracking-wider mb-4">
-                Humidity
-              </div>
-              <div className="text-5xl font-light tracking-tight">
+            <div className={styles.card}>
+              <div className={styles.cardLabel}>Humidity</div>
+              <div className={styles.cardValue}>
                 {weatherData.current.relative_humidity_2m}%
               </div>
             </div>
 
-            <div className="border border-white/10 bg-white/5 p-8 hover:border-white/20 transition-all duration-200">
-              <div className="text-sm font-mono text-zinc-500 uppercase tracking-wider mb-4">
-                Wind Speed
-              </div>
-              <div className="text-5xl font-light tracking-tight">
+            <div className={styles.card}>
+              <div className={styles.cardLabel}>Wind Speed</div>
+              <div className={styles.cardValue}>
                 {weatherData.current.wind_speed_10m}
-                <span className="text-2xl text-zinc-500 ml-2">km/h</span>
+                <span className={styles.unit}>km/h</span>
               </div>
             </div>
           </div>

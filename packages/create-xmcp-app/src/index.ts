@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import { checkNodeVersion } from "./utils/check-node.js";
 import { createProject } from "./helpers/create.js";
 import { isFolderEmpty } from "./utils/is-folder-empty.js";
+import { downloadAndExtractExample, listExamples } from "./helpers/examples.js";
 
 checkNodeVersion();
 
@@ -30,6 +31,8 @@ const program = new Command()
   )
   .argument("[directory]")
   .usage("[directory] [options]")
+  .option("--example <example>", "Download and extract an example/template")
+  .option("--list-examples", "List all available examples/templates")
   .helpOption("-h, --help", "Display help message.")
   .option("-y, --yes", "Skip confirmation prompt", false)
   .option("--use-npm", "Use npm as package manager (default: use npm)")
@@ -51,6 +54,49 @@ const program = new Command()
 
     if (options.tailwind && !options.gpt && !options.ui) {
       options.ui = true;
+    }
+
+    if (options.listExamples) {
+      await listExamples();
+      process.exit(0);
+    }
+
+    if (options.example) {
+      const targetPath = projectDir
+        ? path.resolve(process.cwd(), projectDir)
+        : process.cwd();
+      const targetName = path.basename(targetPath);
+
+      if (fs.existsSync(targetPath)) {
+        const stats = fs.statSync(targetPath);
+        if (!stats.isDirectory()) {
+          console.error(
+            chalk.red(`Error: ${targetName} exists but is not a directory.`)
+          );
+          process.exit(1);
+        }
+
+        if (!isFolderEmpty(targetPath, targetName)) {
+          console.error(chalk.red(`The directory ${targetPath} is not empty.`));
+          process.exit(1);
+        }
+      } else {
+        fs.ensureDirSync(targetPath);
+      }
+
+      await downloadAndExtractExample(targetPath, options.example);
+
+      console.log();
+      console.log("Next steps:");
+      if (projectDir) {
+        console.log(`  cd ${chalk.cyan(projectDir)}`);
+      }
+      console.log(`  ${chalk.cyan("pnpm install")}`);
+      console.log(`  ${chalk.cyan("pnpm run dev")}`);
+      console.log();
+      console.log("To learn more about xmcp:");
+      console.log(`  - Read the documentation at https://xmcp.dev/docs\n`);
+      process.exit(0);
     }
 
     // If project directory wasn't specified, ask for it

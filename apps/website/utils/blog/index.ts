@@ -1,7 +1,7 @@
 import fs from "fs";
 import matter from "gray-matter";
 
-export type BlogCategory = "changelog" | "guides";
+export type BlogCategory = "changelog" | "guides" | "engineering";
 
 export interface BlogAuthor {
   readonly id: string;
@@ -131,7 +131,10 @@ export function getAllBlogPosts(): BlogPost[] {
       const title = data.title || generateTitleFromFilename(item);
 
       let category: BlogCategory = "guides";
-      if (data.category && ["changelog", "guides"].includes(data.category)) {
+      if (
+        data.category &&
+        ["changelog", "guides", "engineering"].includes(data.category)
+      ) {
         category = data.category as BlogCategory;
       }
 

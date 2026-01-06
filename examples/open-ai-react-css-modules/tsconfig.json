@@ -8,5 +8,9 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["xmcp-env.d.ts", "src/**/*.ts", "src/**/*.tsx"]
+  "include": [
+    "xmcp-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
 }

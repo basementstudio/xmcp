@@ -1,0 +1,60 @@
+---
+title: "When tools need UIs"
+description: "Our philosophy on bringing UI components to MCP tools."
+summary: "Our philosophy on bringing UI components to MCP tools."
+category: "engineering"
+date: "2026-01-06"
+order: 2
+previewImage: "/blog/react-client-components.png"
+authors:
+  - fveiras_
+---
+
+In recent years, modern frameworks have brought backend and frontend together. The client and server environments have different capabilities,
+but the developer experience feels monolithic.
+
+xmcp started on the server side: that's where MCP began. But things are evolving fast. Our mission is to lower the barrier to entry for developers to build and ship MCP servers without thinking about all the complexity and friction that comes with it.
+
+With the latest [MCP apps](https://modelcontextprotocol.github.io/ext-apps/api/) proposal, we're getting closer to a more unified experience for developers: a standard inspired by [MCP-UI](https://mcpui.dev/) and [OpenAI's Apps SDK](https://developers.openai.com/apps-sdk/) to allow MCP Servers to display interactive UI elements in conversational MCP clients and chatbots.
+
+You shouldn't need to think about complex config or set up. Instead, you can use [template literals](/docs/core-concepts/tools#2-template-literal-handlers) or [React Client Components](/docs/core-concepts/tools#3-react-component-handlers) directly, and it just works.
+
+## Always bet on React
+
+It's the most popular JavaScript UI framework out there, massive community, extensive ecosystem,
+and widespread adoption by major companies. When you already know React, you shouldn't have to learn something new just to return UI from your tools.
+
+We aimed to make it as easy as possible to return React Client components. You only need to convert your handlers from `.ts` to `.tsx`.
+We prioritize speed and keeping the framework lightweight, so for this reason React is an optional peer dependency. You only install it if you need it.
+
+![File Extension Diagram - converting .ts to .tsx](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-1-169%20%281%29.svg)
+
+## Simplicity over complexity
+
+For client-side components, React is all you need to get up and running quickly and efficiently.
+
+For cases where you need to manage complex interactions between client and server components, like hydration or caching, you can use a framework
+like Next.js with our [adapter](/docs/adapters/nextjs) that would also allow you to convert Next.js application into compatible MCP apps.
+
+<Callout variant="info">
+  Check out our [ChatGPT App with Next.js](/blog/doom-with-xmcp) that runs DOOM
+  for an example of how to use Next.js with xmcp.
+</Callout>
+
+## Styling that just works
+
+Under the hood, xmcp compiles using [rspack](https://rspack.rs/), a fast Rust-based web bundler.
+When the framework detects JSX, it bundles CSS alongside your JavaScript into the dist directory.
+Tailwind, CSS Modules, and standard CSS imports work out of the box.
+
+![Styling Diagram - CSS, CSS Modules, and Tailwind](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-2-169.svg)
+
+If you want to learn more, you can find additional details and how to get started [here](/docs/core-concepts/css).
+
+## Looking forward
+
+The protocol and ext-apps specification will continue evolving, and sometimes this natural progression brings additional complexity.
+Our commitment is to reduce that complexity as much as we can, by actively contributing to the protocol development, carefully following all the latest updates,
+and ensuring our framework abstracts away unnecessary complications while maintaining full compatibility with the standard.
+
+If you're building your MCP server using our [Next.js adapter](/docs/adapters/nextjs) or [React Client Components](/docs/core-concepts/tools#3-react-component-handlers), we'd love to hear about your experience. Join us on [Discord](https://discord.gg/d9a7JBBxV9).

@@ -46,13 +46,15 @@
     "commander": "^11.1.0",
     "fs-extra": "^11.3.2",
     "inquirer": "^9.3.8",
-    "ora": "^7.0.1"
+    "ora": "^7.0.1",
+    "tar": "^6.2.1"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.9",
     "@types/node": "^22.19.2",
     "@types/ora": "^3.2.0",
+    "@types/tar": "^6.1.13",
     "typescript": "^5.9.3"
   }
 }

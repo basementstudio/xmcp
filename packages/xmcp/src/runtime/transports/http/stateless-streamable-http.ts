@@ -346,6 +346,13 @@ export class StatelessStreamableHTTPTransport {
     });
 
     this.app.get("/", (_req: Request, res: Response) => {
+      const customHomePage = this.options.template?.homePage;
+
+      if (customHomePage) {
+        res.send(customHomePage);
+        return;
+      }
+
       res.send(
         homeTemplate(
           this.endpoint,
