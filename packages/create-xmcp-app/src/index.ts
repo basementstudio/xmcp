@@ -65,7 +65,25 @@ const program = new Command()
       const targetPath = projectDir
         ? path.resolve(process.cwd(), projectDir)
         : process.cwd();
-      fs.ensureDirSync(targetPath);
+      const targetName = path.basename(targetPath);
+
+      if (fs.existsSync(targetPath)) {
+        const stats = fs.statSync(targetPath);
+        if (!stats.isDirectory()) {
+          console.error(
+            chalk.red(`Error: ${targetName} exists but is not a directory.`)
+          );
+          process.exit(1);
+        }
+
+        if (!isFolderEmpty(targetPath, targetName)) {
+          console.error(chalk.red(`The directory ${targetPath} is not empty.`));
+          process.exit(1);
+        }
+      } else {
+        fs.ensureDirSync(targetPath);
+      }
+
       await downloadAndExtractExample(targetPath, options.example);
 
       console.log();
