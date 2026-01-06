@@ -41,9 +41,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
-    "xmcp": "latest"
+    "xmcp": "^0.5.7"
   },
   "peerDependencies": {
-    "xmcp": "latest"
+    "xmcp": "^0.5.7"
   }
 }
