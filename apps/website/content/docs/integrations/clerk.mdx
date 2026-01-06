@@ -1,0 +1,286 @@
+---
+title: "Clerk"
+metadataTitle: "Usage with Clerk | xmcp Documentation"
+publishedAt: "2025-01-06"
+summary: "Add secure authentication to your MCP server using Clerk"
+description: "The Clerk plugin provides authentication for your MCP server using Clerk's OAuth system."
+---
+
+## Installation
+
+Install the Clerk plugin:
+
+```bash
+npm install @xmcp-dev/clerk
+```
+
+## Clerk Setup
+
+Before integrating the plugin, configure your Clerk account:
+
+1. Navigate to your [Clerk Dashboard](https://dashboard.clerk.com) and note your:
+   - **Secret Key** (starts with `sk_test_` or `sk_live_`)
+   - **Frontend API** URL (e.g., `your-app.clerk.accounts.dev`)
+2. Go to **OAuth Applications** and enable **Dynamic Client Registration**
+   - This allows MCP clients like Cursor and Claude to automatically register themselves
+
+## Environment Variables
+
+Configure the following environment variables in your `.env` file:
+
+```bash
+# Clerk credentials
+CLERK_SECRET_KEY=sk_test_...
+CLERK_DOMAIN=your-app.clerk.accounts.dev
+
+# App configuration
+BASE_URL=http://127.0.0.1:3002
+```
+
+## Configuration
+
+Create a `middleware.ts` file in your xmcp app's `src` directory:
+
+```typescript title="src/middleware.ts"
+import { clerkProvider } from "@xmcp-dev/clerk";
+
+export default clerkProvider({
+  secretKey: process.env.CLERK_SECRET_KEY!,
+  clerkDomain: process.env.CLERK_DOMAIN!,
+  baseURL: process.env.BASE_URL!,
+  scopes: ["profile", "email"],
+  docsURL: "https://your-docs.example.com", // Optional
+});
+```
+
+### Configuration Options
+
+- **`secretKey`** - Clerk Secret Key from your dashboard (required)
+- **`clerkDomain`** - Clerk Frontend API domain, e.g. `your-app.clerk.accounts.dev` (required)
+- **`baseURL`** - Base URL of your MCP server for OAuth callbacks (required)
+- **`scopes`** - OAuth scopes to request (default: `['profile', 'email']`)
+- **`docsURL`** - URL to your MCP server's API documentation (optional)
+
+## Usage in Tools
+
+Access the authenticated user in your xmcp tools using `getClerkSession` and `getClerkUser`:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getClerkSession } from "@xmcp-dev/clerk";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their Clerk identity",
+  annotations: {
+    title: "Greet User",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+// Tool implementation
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  const session = getClerkSession();
+
+  const result = `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
+
+  return {
+    content: [{ type: "text", text: result }],
+  };
+}
+```
+
+<Callout variant="warning">
+  `getClerkSession` will throw an error if called outside of a
+  `clerkProvider` middleware context.
+</Callout>
+
+### Session Properties
+
+The session contains data from the JWT token:
+
+- `session.userId` - Unique user identifier
+- `session.sessionId` - Current session ID
+- `session.organizationId` - Organization ID (if user is in an org)
+- `session.organizationRole` - User's role in the organization
+- `session.organizationPermissions` - Array of organization permissions
+- `session.expiresAt` - Token expiration date
+- `session.issuedAt` - Token issue date
+- `session.claims` - Raw JWT claims
+
+### User Properties
+
+Use `getClerkUser()` to fetch the full user profile from Clerk:
+
+```typescript title="src/tools/get-profile.ts"
+import { getClerkUser } from "@xmcp-dev/clerk";
+
+export default async function getProfile() {
+  const user = await getClerkUser();
+
+  return {
+    content: [{
+      type: "text",
+      text: JSON.stringify({
+        id: user.id,
+        email: user.emailAddresses[0]?.emailAddress,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        imageUrl: user.imageUrl,
+      }, null, 2),
+    }],
+  };
+}
+```
+
+## Using the Clerk Client
+
+The `getClerkClient()` function gives you access to the full [Clerk Backend SDK](https://clerk.com/docs/references/backend/overview), allowing you to leverage all Clerk features in your MCP tools.
+
+### Organization Operations
+
+```typescript title="src/tools/get-org.ts"
+import { getClerkSession, getClerkClient } from "@xmcp-dev/clerk";
+
+export default async function getOrganization() {
+  const session = getClerkSession();
+  const clerk = getClerkClient();
+
+  if (!session.organizationId) {
+    return {
+      content: [{
+        type: "text",
+        text: "User is not in an organization",
+      }],
+    };
+  }
+
+  const org = await clerk.organizations.getOrganization({
+    organizationId: session.organizationId,
+  });
+
+  return {
+    content: [{
+      type: "text",
+      text: JSON.stringify(org, null, 2),
+    }],
+  };
+}
+```
+
+### List Organization Members
+
+```typescript
+const clerk = getClerkClient();
+const session = getClerkSession();
+
+if (session.organizationId) {
+  const members = await clerk.organizations.getOrganizationMembershipList({
+    organizationId: session.organizationId,
+  });
+  console.log(members);
+}
+```
+
+For the complete SDK documentation, see [Clerk Backend SDK Docs](https://clerk.com/docs/references/backend/overview).
+
+## How Authentication Works
+
+### Architecture
+
+The authentication flow involves three parties:
+
+1. **MCP Client** (Cursor, Claude Desktop, etc.) - The application users interact with
+2. **Clerk** - The authorization server that handles login and token issuance
+3. **MCP Server** (Your server) - The resource server that validates tokens
+
+```
+MCP Client          Clerk                MCP Server
+    │                  │                     │
+    │  1. Discovery    │                     │
+    │─────────────────────────────────────────>│
+    │                  │  "use Clerk"        │
+    │<─────────────────────────────────────────│
+    │                  │                     │
+    │  2. Login        │                     │
+    │─────────────────>│                     │
+    │<─────────────────│                     │
+    │     tokens       │                     │
+    │                  │                     │
+    │  3. API Call with Bearer token         │
+    │─────────────────────────────────────────>│
+    │<─────────────────────────────────────────│
+```
+
+<Callout variant="info">
+  Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.
+</Callout>
+
+### Dynamic Client Registration
+
+With **Dynamic Client Registration** enabled in Clerk, MCP clients automatically register themselves:
+
+1. MCP clients request registration during the OAuth flow
+2. Clerk handles the registration automatically
+3. No manual redirect URI configuration needed
+
+This means users can connect new MCP clients without any Clerk Dashboard changes.
+
+### When to Manually Configure Redirect URIs
+
+You only need to manually add redirect URIs in Clerk Dashboard when:
+
+| Scenario | Action |
+|----------|--------|
+| Dynamic registration enabled | Nothing needed - automatic |
+| OAuth error "redirect_uri not registered" | Add the URI from the error message |
+| Custom client without DCR support | Get callback URL from client developer |
+
+## Troubleshooting
+
+### Token Expired Errors
+
+Access tokens are short-lived (~5 minutes). If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens
+- If errors persist, the client may have a bug or the refresh token expired
+- Users can disconnect and reconnect to get fresh tokens
+
+### Redirect URI Not Registered
+
+If you see this error during OAuth:
+
+1. Copy the redirect URI from the error message
+2. Go to Clerk Dashboard → OAuth Applications
+3. Add the redirect URI to the allowed list
+
+### Missing Session
+
+If `getClerkSession()` throws "no session exists":
+
+- Ensure the route is under `/mcp` (only `/mcp/*` routes are protected)
+- Check that the client is sending a valid Bearer token
+- Verify your `CLERK_SECRET_KEY` is correct
+
+### Invalid Token Errors
+
+If tokens are consistently invalid:
+
+- Verify your `CLERK_SECRET_KEY` matches your Clerk application
+- Verify your `CLERK_DOMAIN` matches your Clerk Frontend API URL
+- Check that you're using the correct environment (test vs production)
+- Ensure the token hasn't been tampered with
+
+## Next Steps
+
+After authentication is configured, users will be redirected to Clerk's hosted UI when establishing a connection to your MCP server. The OAuth flow is handled entirely by Clerk, and your server only needs to validate the resulting tokens.
+
