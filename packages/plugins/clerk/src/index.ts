@@ -1,29 +1,29 @@
 export { clerkProvider } from "./provider.js";
 
 export type {
-  ClerkConfig,
-  ClerkSession,
-  ClerkJWTClaims,
-  ClerkSessionContext,
-  ClerkClientContext,
+  config,
+  Session,
+  JWTClaims,
+  SessionContext,
+  ClientContext,
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
   TokenVerifyResult,
-  ClerkVerifyResponse,
+  VerifyResponse,
 } from "./types.js";
 
-export { getClerkSession, getClerkUser } from "./session.js";
+export { getSession, getUser } from "./session.js";
 
-export { getClerkClient } from "./client.js";
+export { getClient } from "./client.js";
 
 export {
-  clerkContextSession,
-  getClerkContextSession,
-  setClerkContextSession,
-  clerkContextProviderSession,
-  clerkContextClient,
-  getClerkContextClient,
-  setClerkContextClient,
-  clerkContextProviderClient,
+  contextSession,
+  getContextSession,
+  setContextSession,
+  contextProviderSession,
+  contextClient,
+  getContextClient,
+  setContextClient,
+  contextProviderClient,
 } from "./context.js";
 

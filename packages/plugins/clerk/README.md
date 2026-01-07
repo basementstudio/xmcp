@@ -33,11 +33,11 @@ export default clerkProvider({
 3. **Use in tools:**
 
 ```typescript
-import { getClerkSession, getClerkUser } from "@xmcp-dev/clerk";
+import { getSession, getUser } from "@xmcp-dev/clerk";
 
 export default async function myTool() {
-  const session = getClerkSession();
-  const user = await getClerkUser();
+  const session = getSession();
+  const user = await getUser();
   
   return `Hello ${user.firstName}! Your ID is ${session.userId}`
 }
@@ -68,15 +68,15 @@ This allows MCP clients (Cursor, Claude, etc.) to automatically register themsel
 
 Creates the middleware and router for Clerk authentication.
 
-### `getClerkSession()`
+### `getSession()`
 
 Returns the current user's session data.
 
-### `getClerkUser()`
+### `getUser()`
 
 Fetches the full user profile from Clerk's API.
 
-### `getClerkClient()`
+### `getClient()`
 
 Returns the Clerk Backend SDK client for advanced operations.
 

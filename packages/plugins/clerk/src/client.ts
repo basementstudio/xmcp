@@ -1,8 +1,8 @@
 import { ClerkClient } from "@clerk/express";
-import { getClerkContextClient } from "./context.js";
+import { getContextClient } from "./context.js";
 
-export function getClerkClient(): ClerkClient {
-  const { client } = getClerkContextClient();
+export function getClient(): ClerkClient {
+  const { client } = getContextClient();
   if (!client) {
     throw new Error(
       "[Clerk] Clerk client not initialized. " +

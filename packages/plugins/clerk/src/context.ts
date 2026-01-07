@@ -1,19 +1,19 @@
 import { createContext } from "xmcp";
-import type { ClerkClientContext } from "./types.js";
-import type { ClerkSessionContext } from "./types.js";
+import type { ClientContext } from "./types.js";
+import type { SessionContext } from "./types.js";
 
-export const clerkContextSession = createContext<ClerkSessionContext>({
+export const contextSession = createContext<SessionContext>({
   name: "clerk-context-session",
 });
 
-export const clerkContextClient = createContext<ClerkClientContext>({
+export const contextClient = createContext<ClientContext>({
   name: "clerk-context-client",
 });
 
-export const setClerkContextSession = clerkContextSession.setContext;
-export const getClerkContextSession = clerkContextSession.getContext;
-export const clerkContextProviderSession = clerkContextSession.provider;
+export const setContextSession = contextSession.setContext;
+export const getContextSession = contextSession.getContext;
+export const contextProviderSession = contextSession.provider;
 
-export const setClerkContextClient = clerkContextClient.setContext;
-export const getClerkContextClient = clerkContextClient.getContext;
-export const clerkContextProviderClient = clerkContextClient.provider;
+export const setContextClient = contextClient.setContext;
+export const getContextClient = contextClient.getContext;
+export const contextProviderClient = contextClient.provider;

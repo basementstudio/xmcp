@@ -75,16 +75,16 @@ pnpm start
 Access the authenticated user's session in your tools:
 
 ```typescript
-import { getClerkSession, getClerkUser } from "@xmcp-dev/clerk";
+import { getSession, getUser } from "@xmcp-dev/clerk";
 
 export default async function myTool() {
   // Get session data
-  const session = getClerkSession();
+  const session = getSession();
   console.log(session.userId);
   console.log(session.organizationId);
 
   // Get full user profile
-  const user = await getClerkUser();
+  const user = await getUser();
   console.log(user.firstName);
   console.log(user.emailAddresses[0]?.emailAddress);
 }

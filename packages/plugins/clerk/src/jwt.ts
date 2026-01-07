@@ -1,14 +1,14 @@
-import type { ClerkJWTClaims, ClerkSession, TokenVerifyResult } from "./types.js";
+import type { JWTClaims, Session, TokenVerifyResult } from "./types.js";
 
 const CLERK_VERIFY_ENDPOINT = "https://api.clerk.com/oauth_applications/access_tokens/verify";
 const ONE_HOUR_IN_SECONDS = 3600;
 
-export function getClerkIssuer(clerkDomain: string): string {
+export function getIssuer(clerkDomain: string): string {
   const domain = clerkDomain.replace(/^https?:\/\//, "");
   return `https://${domain}`;
 }
 
-export async function verifyClerkToken(
+export async function verifyToken(
   token: string,
   secretKey: string
 ): Promise<TokenVerifyResult> {
@@ -46,7 +46,7 @@ export async function verifyClerkToken(
 
     const now = Math.floor(Date.now() / 1000);
 
-    const claims: ClerkJWTClaims = {
+    const claims: JWTClaims = {
       sub: userId,
       sid: data.sid || data.session_id,
       org_id: data.org_id || data.organization_id,
@@ -65,7 +65,7 @@ export async function verifyClerkToken(
   }
 }
 
-export function claimsToSession(claims: ClerkJWTClaims): ClerkSession {
+export function claimsToSession(claims: JWTClaims): Session {
   return {
     userId: claims.sub,
     sessionId: claims.sid,

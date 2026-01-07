@@ -6,21 +6,21 @@ import {
   type RequestHandler,
 } from "express";
 import type { Middleware } from "xmcp";
-import { clerkContextProviderClient, clerkContextProviderSession, setClerkContextSession } from "./context.js";
+import { contextProviderClient, contextProviderSession } from "./context.js";
 import { createClerkClient } from "@clerk/express";
-import type { ClerkConfig } from "./types.js";
+import type { config } from "./types.js";
 import {
-  verifyClerkToken,
+  verifyToken,
   claimsToSession,
   extractBearerToken,
-  getClerkIssuer,
+  getIssuer,
 } from "./jwt.js";
 import type {
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 
-export function clerkProvider(config: ClerkConfig): Middleware {
+export function clerkProvider(config: config): Middleware {
   if (!config.secretKey) {
     throw new Error("[Clerk] Missing required config: secretKey");
   }
@@ -31,13 +31,8 @@ export function clerkProvider(config: ClerkConfig): Middleware {
     throw new Error("[Clerk] Missing required config: baseURL");
   }
 
-  clerkContextProviderClient({
+  contextProviderClient({
     client: createClerkClient({ secretKey: config.secretKey }),
-  }, () => {
-  });
-
-  clerkContextProviderSession({
-    session: null,
   }, () => {});
 
   return {
@@ -46,9 +41,9 @@ export function clerkProvider(config: ClerkConfig): Middleware {
   };
 }
 
-function clerkRouter(config: ClerkConfig): Router {
+function clerkRouter(config: config): Router {
   const router = Router();
-  const clerkIssuer = getClerkIssuer(config.clerkDomain);
+  const clerkIssuer = getIssuer(config.clerkDomain);
 
   // RFC 9728
   router.get(
@@ -104,7 +99,7 @@ function clerkRouter(config: ClerkConfig): Router {
   return router;
 }
 
-function clerkMiddleware(config: ClerkConfig): RequestHandler {
+function clerkMiddleware(config: config): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith("/mcp")) {
       next();
@@ -126,7 +121,7 @@ function clerkMiddleware(config: ClerkConfig): RequestHandler {
         return;
       }
 
-      const result = await verifyClerkToken(token, config.secretKey);
+      const result = await verifyToken(token, config.secretKey);
 
       if (!result.ok) {
         if (result.error === "expired") {
@@ -154,12 +149,9 @@ function clerkMiddleware(config: ClerkConfig): RequestHandler {
 
       const session = claimsToSession(result.claims);
 
-      setClerkContextSession(
-        {
-          session,
-        }
-      );
-      next();
+      contextProviderSession({ session }, () => {
+        next();
+      });
     } catch (error) {
       console.error("[Clerk] Authentication error:", error);
       res.setHeader(

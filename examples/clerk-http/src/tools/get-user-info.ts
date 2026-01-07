@@ -1,5 +1,5 @@
 import type { ToolMetadata } from "xmcp";
-import { getClerkSession, getClerkUser } from "@xmcp-dev/clerk";
+import { getSession, getUser } from "@xmcp-dev/clerk";
 
 export const metadata: ToolMetadata = {
   name: "get-user-info",
@@ -14,8 +14,8 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function getUserInfo(): Promise<string> {
-  const session = getClerkSession();
-  const user = await getClerkUser();
+  const session = getSession();
+  const user = await getUser();
 
   const userInfo = {
     userId: session.userId,

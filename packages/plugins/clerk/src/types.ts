@@ -1,6 +1,6 @@
 import { ClerkClient } from "@clerk/express";
 
-export interface ClerkConfig {
+export interface config {
   readonly secretKey: string;
   readonly clerkDomain: string;
   readonly baseURL: string;
@@ -8,7 +8,7 @@ export interface ClerkConfig {
   readonly docsURL?: string;
 }
 
-export interface ClerkJWTClaims {
+export interface JWTClaims {
   readonly sub: string;
   readonly sid?: string;
   readonly org_id?: string;
@@ -21,7 +21,7 @@ export interface ClerkJWTClaims {
   readonly iat: number;
 }
 
-export interface ClerkSession {
+export interface Session {
   readonly userId: string;
   readonly sessionId: string | undefined;
   readonly organizationId: string | undefined;
@@ -29,7 +29,7 @@ export interface ClerkSession {
   readonly organizationPermissions: string[] | undefined;
   readonly expiresAt: Date;
   readonly issuedAt: Date;
-  readonly claims: ClerkJWTClaims;
+  readonly claims: JWTClaims;
 }
 
 export interface OAuthProtectedResourceMetadata {
@@ -53,19 +53,19 @@ export interface OAuthAuthorizationServerMetadata {
   readonly registration_endpoint?: string;
 }
 
-export interface ClerkClientContext {
+export interface ClientContext {
   readonly client: ClerkClient;
 }
 
-export interface ClerkSessionContext {
-  readonly session: ClerkSession | null;
+export interface SessionContext {
+  readonly session: Session | null;
 }
 
 export type TokenVerifyResult =
-  | { readonly ok: true; readonly claims: ClerkJWTClaims }
+  | { readonly ok: true; readonly claims: JWTClaims }
   | { readonly ok: false; readonly error: "expired" | "invalid" };
 
-export interface ClerkVerifyResponse {
+export interface VerifyResponse {
   readonly object: string;
   readonly token: string;
   readonly status: string;

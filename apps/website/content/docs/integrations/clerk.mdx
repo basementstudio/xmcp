@@ -61,12 +61,12 @@ export default clerkProvider({
 
 ## Usage in Tools
 
-Access the authenticated user in your xmcp tools using `getClerkSession` and `getClerkUser`:
+Access the authenticated user in your xmcp tools using `getSession` and `getUser`:
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
 import type { InferSchema, ToolMetadata } from "xmcp";
-import { getClerkSession } from "@xmcp-dev/clerk";
+import { getSession } from "@xmcp-dev/clerk";
 
 // Define the schema for tool parameters
 export const schema = {
@@ -87,14 +87,14 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const session = getClerkSession();
+  const session = getSession();
 
   return `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
 }
 ```
 
 <Callout variant="warning">
-  `getClerkSession` will throw an error if called outside of a
+  `getSession` will throw an error if called outside of a
   `clerkProvider` middleware context.
 </Callout>
 
@@ -109,13 +109,13 @@ The session contains data from the verified token:
 
 ### User Properties
 
-Use `getClerkUser()` to fetch the full user profile from Clerk:
+Use `getUser()` to fetch the full user profile from Clerk:
 
 ```typescript title="src/tools/get-profile.ts"
-import { getClerkUser } from "@xmcp-dev/clerk";
+import { getUser } from "@xmcp-dev/clerk";
 
 export default async function getProfile() {
-  const user = await getClerkUser();
+  const user = await getUser();
 
   return JSON.stringify(user, null, 2);
 }
@@ -123,16 +123,16 @@ export default async function getProfile() {
 
 ## Using the Clerk Client
 
-The `getClerkClient()` function gives you access to the full [Clerk Backend SDK](https://clerk.com/docs/references/backend/overview), allowing you to leverage all Clerk features in your MCP tools.
+The `getClient()` function gives you access to the full [Clerk Backend SDK](https://clerk.com/docs/references/backend/overview), allowing you to leverage all Clerk features in your MCP tools.
 
 ### Organization Operations
 
 ```typescript title="src/tools/get-org.ts"
-import { getClerkSession, getClerkClient } from "@xmcp-dev/clerk";
+import { getSession, getClient } from "@xmcp-dev/clerk";
 
 export default async function getOrganization() {
-  const session = getClerkSession();
-  const clerk = getClerkClient();
+  const session = getSession();
+  const clerk = getClient();
 
   if (!session.organizationId) {
     return "User is not in an organization";
@@ -149,8 +149,8 @@ export default async function getOrganization() {
 ### List Organization Members
 
 ```typescript
-const clerk = getClerkClient();
-const session = getClerkSession();
+const clerk = getClient();
+const session = getSession();
 
 if (session.organizationId) {
   const members = await clerk.organizations.getOrganizationMembershipList({
@@ -212,7 +212,7 @@ Access tokens are short-lived (~5 minutes). If you see `token_expired` errors:
 
 ### Missing Session
 
-If `getClerkSession()` throws "no session exists":
+If `getSession()` throws "no session exists":
 
 - Ensure the route is under `/mcp` (only `/mcp/*` routes are protected)
 - Check that the client is sending a valid Bearer token
