@@ -48,17 +48,16 @@ export default clerkProvider({
   secretKey: process.env.CLERK_SECRET_KEY!,
   clerkDomain: process.env.CLERK_DOMAIN!,
   baseURL: process.env.BASE_URL!,
-  scopes: ["profile", "email"],
-  docsURL: "https://your-docs.example.com", // Optional
+  docsURL: "https://your-docs.example.com"
 });
 ```
 
 ### Configuration Options
 
-- **`secretKey`** - Clerk Secret Key from your dashboard (required)
-- **`clerkDomain`** - Clerk Frontend API domain, e.g. `your-app.clerk.accounts.dev` (required)
-- **`baseURL`** - Base URL of your MCP server for OAuth callbacks (required)
-- **`scopes`** - OAuth scopes to request (default: `['profile', 'email']`)
+- **`secretKey`** - Clerk Secret Key
+- **`clerkDomain`** - Clerk Frontend domain
+- **`baseURL`** - Base URL of your MCP server for OAuth callbacks
+- **`scopes`** - OAuth scopes to request (optional)
 - **`docsURL`** - URL to your MCP server's API documentation (optional)
 
 ## Usage in Tools
@@ -106,12 +105,8 @@ The session contains data from the verified token:
 
 - `session.userId` - Unique user identifier
 - `session.sessionId` - Current session ID
-- `session.organizationId` - Organization ID (if user is in an org)
+- `session.organizationId` - Organization ID
 - `session.organizationRole` - User's role in the organization
-- `session.organizationPermissions` - Array of organization permissions
-- `session.expiresAt` - Token expiration date
-- `session.issuedAt` - Token issue date
-- `session.claims` - Raw JWT claims
 
 ### User Properties
 
@@ -176,7 +171,7 @@ The authentication flow involves three parties:
 
 1. **MCP Client** (Cursor, Claude Desktop, etc.) - The application users interact with
 2. **Clerk** - The authorization server that handles login and token issuance
-3. **MCP Server** (Your server) - The resource server that validates tokens
+3. **MCP Server** - The resource server that validates tokens
 
 ```
 MCP Client          Clerk                MCP Server
@@ -191,8 +186,14 @@ MCP Client          Clerk                MCP Server
     │<─────────────────│                     │
     │     tokens       │                     │
     │                  │                     │
-    │  3. API Call with Bearer token         │
+    │  3. Tool execution + token             │
     │─────────────────────────────────────────>│
+    │                  │     Verify token    │
+    │                  │<────────────────────│
+    │                  │        Valid        │
+    │                  │────────────────────>│
+    │                  │                     │
+    │               Tool Response            │
     │<─────────────────────────────────────────│
 ```
 
@@ -210,16 +211,6 @@ With **Dynamic Client Registration** enabled in Clerk, MCP clients automatically
 
 This means users can connect new MCP clients without any Clerk Dashboard changes.
 
-### When to Manually Configure Redirect URIs
-
-You only need to manually add redirect URIs in Clerk Dashboard when:
-
-| Scenario | Action |
-|----------|--------|
-| Dynamic registration enabled | Nothing needed - automatic |
-| OAuth error "redirect_uri not registered" | Add the URI from the error message |
-| Custom client without DCR support | Get callback URL from client developer |
-
 ## Troubleshooting
 
 ### Token Expired Errors
@@ -229,14 +220,6 @@ Access tokens are short-lived (~5 minutes). If you see `token_expired` errors:
 - MCP clients should automatically refresh tokens
 - If errors persist, the client may have a bug or the refresh token expired
 - Users can disconnect and reconnect to get fresh tokens
-
-### Redirect URI Not Registered
-
-If you see this error during OAuth:
-
-1. Copy the redirect URI from the error message
-2. Go to Clerk Dashboard → OAuth Applications
-3. Add the redirect URI to the allowed list
 
 ### Missing Session
 
@@ -253,4 +236,3 @@ If tokens are consistently invalid:
 - Verify your `CLERK_SECRET_KEY` matches your Clerk application
 - Verify your `CLERK_DOMAIN` matches your Clerk Frontend API URL
 - Check that you're using the correct environment (test vs production)
-- Ensure the token hasn't been tampered with
