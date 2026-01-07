@@ -35,12 +35,6 @@ CLERK_DOMAIN=your-app.clerk.accounts.dev
 BASE_URL=http://127.0.0.1:3002
 ```
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `CLERK_SECRET_KEY` | Your Clerk secret key from the dashboard | Yes |
-| `CLERK_DOMAIN` | Your Clerk Frontend API domain (e.g., `your-app.clerk.accounts.dev`) | Yes |
-| `BASE_URL` | The public URL where your MCP server runs | Yes |
-
 ### 4. Create the middleware
 
 Create `src/middleware.ts`:
@@ -84,12 +78,12 @@ Access the authenticated user's session in your tools:
 import { getClerkSession, getClerkUser } from "@xmcp-dev/clerk";
 
 export default async function myTool() {
-  // Get session data (fast, no API call)
+  // Get session data
   const session = getClerkSession();
   console.log(session.userId);
   console.log(session.organizationId);
 
-  // Get full user profile (API call to Clerk)
+  // Get full user profile
   const user = await getClerkUser();
   console.log(user.firstName);
   console.log(user.emailAddresses[0]?.emailAddress);
@@ -139,6 +133,5 @@ Access tokens are short-lived (~5 minutes). The client should automatically refr
 
 ## Learn More
 
-- [Clerk Documentation](https://clerk.com/docs)
 - [xmcp Clerk Plugin Docs](https://xmcp.dev/docs/integrations/clerk)
-
+- [Clerk Documentation](https://clerk.com/docs)
