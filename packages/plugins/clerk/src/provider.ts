@@ -6,7 +6,7 @@ import {
   type RequestHandler,
 } from "express";
 import type { Middleware } from "xmcp";
-import { contextProviderClient, contextProviderSession } from "./context.js";
+import { providerClientContext, providerSessionContext } from "./context.js";
 import { createClerkClient } from "@clerk/express";
 import type { config } from "./types.js";
 import {
@@ -31,7 +31,7 @@ export function clerkProvider(config: config): Middleware {
     throw new Error("[Clerk] Missing required config: baseURL");
   }
 
-  contextProviderClient({
+  providerClientContext({
     client: createClerkClient({ secretKey: config.secretKey }),
   }, () => {});
 
@@ -149,7 +149,7 @@ function clerkMiddleware(config: config): RequestHandler {
 
       const session = claimsToSession(result.claims);
 
-      contextProviderSession({ session }, () => {
+      providerSessionContext({ session }, () => {
         next();
       });
     } catch (error) {

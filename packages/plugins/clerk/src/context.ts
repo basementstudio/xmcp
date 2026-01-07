@@ -10,10 +10,10 @@ export const contextClient = createContext<ClientContext>({
   name: "clerk-context-client",
 });
 
-export const setContextSession = contextSession.setContext;
-export const getContextSession = contextSession.getContext;
-export const contextProviderSession = contextSession.provider;
+export const setSessionContext = contextSession.setContext;
+export const getSessionContext = contextSession.getContext;
+export const providerSessionContext = contextSession.provider;
 
-export const setContextClient = contextClient.setContext;
-export const getContextClient = contextClient.getContext;
-export const contextProviderClient = contextClient.provider;
+export const setClientContext = contextClient.setContext;
+export const getClientContext = contextClient.getContext;
+export const providerClientContext = contextClient.provider;

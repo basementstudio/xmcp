@@ -15,15 +15,3 @@ export type {
 export { getSession, getUser } from "./session.js";
 
 export { getClient } from "./client.js";
-
-export {
-  contextSession,
-  getContextSession,
-  setContextSession,
-  contextProviderSession,
-  contextClient,
-  getContextClient,
-  setContextClient,
-  contextProviderClient,
-} from "./context.js";
-
