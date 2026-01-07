@@ -170,7 +170,6 @@ function clerkMiddleware(config: ClerkConfig): RequestHandler {
         error: "server_error",
         error_description: "Authentication processing failed",
       });
-      next();
     }
   };
 }

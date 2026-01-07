@@ -48,6 +48,10 @@ export async function verifyClerkToken(
 
     const claims: ClerkJWTClaims = {
       sub: userId,
+      sid: data.sid || data.session_id,
+      org_id: data.org_id || data.organization_id,
+      org_role: data.org_role || data.organization_role,
+      org_permissions: data.org_permissions || data.organization_permissions,
       azp: data.client_id,
       iss: "https://clerk.com",
       exp: data.expires_at ?? now + ONE_HOUR_IN_SECONDS,
