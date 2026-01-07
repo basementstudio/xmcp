@@ -7,7 +7,6 @@ export const metadata: ToolMetadata = {
   annotations: {
     title: "Who Am I",
     readOnlyHint: true,
-    destructiveHint: false,
     idempotentHint: true,
   },
 };
