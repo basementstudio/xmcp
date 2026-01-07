@@ -47,8 +47,7 @@ import { clerkProvider } from "@xmcp-dev/clerk";
 export default clerkProvider({
   secretKey: process.env.CLERK_SECRET_KEY!,
   clerkDomain: process.env.CLERK_DOMAIN!,
-  baseURL: process.env.BASE_URL!,
-  docsURL: "https://your-docs.example.com"
+  baseURL: process.env.BASE_URL!
 });
 ```
 
@@ -200,16 +199,6 @@ MCP Client          Clerk                MCP Server
 <Callout variant="info">
   Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.
 </Callout>
-
-### Dynamic Client Registration
-
-With **Dynamic Client Registration** enabled in Clerk, MCP clients automatically register themselves:
-
-1. MCP clients request registration during the OAuth flow
-2. Clerk handles the registration automatically
-3. No manual redirect URI configuration needed
-
-This means users can connect new MCP clients without any Clerk Dashboard changes.
 
 ## Troubleshooting
 
