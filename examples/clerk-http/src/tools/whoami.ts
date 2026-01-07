@@ -12,9 +12,7 @@ export const metadata: ToolMetadata = {
   },
 };
 
-export default async function whoami(): Promise<{
-  content: Array<{ type: "text"; text: string }>;
-}> {
+export default async function whoami(): Promise<string> {
   const session = getClerkSession();
 
   const identity = {
@@ -26,13 +24,6 @@ export default async function whoami(): Promise<{
     tokenExpiresAt: session.expiresAt.toISOString(),
   };
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify(identity, null, 2),
-      },
-    ],
-  };
+  return JSON.stringify(identity, null, 2)
 }
 

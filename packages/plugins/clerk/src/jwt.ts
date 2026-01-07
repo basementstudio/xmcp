@@ -1,44 +1,17 @@
-import type { ClerkJWTClaims, ClerkSession } from "./types.js";
+import type { ClerkJWTClaims, ClerkSession, TokenVerifyResult } from "./types.js";
 
-/** Clerk's OAuth token verification endpoint */
-const CLERK_VERIFY_ENDPOINT =
-  "https://api.clerk.com/oauth_applications/access_tokens/verify";
+const CLERK_VERIFY_ENDPOINT = "https://api.clerk.com/oauth_applications/access_tokens/verify";
+const ONE_HOUR_IN_SECONDS = 3600;
 
-/** Result of JWT verification */
-export type JWTVerifyResult =
-  | { readonly ok: true; readonly claims: ClerkJWTClaims }
-  | { readonly ok: false; readonly error: "expired" | "invalid" };
-
-/** Response from Clerk's token verification API */
-interface ClerkVerifyResponse {
-  readonly object: string;
-  readonly token: string;
-  readonly status: string;
-  readonly scopes: string[];
-  readonly user_id: string;
-  readonly client_id?: string;
-  readonly created_at?: number;
-  readonly expires_at?: number;
-}
-
-/**
- * Get the Clerk Frontend API URL from the configured domain.
- * @param clerkDomain - The Clerk Frontend API domain (e.g., your-app.clerk.accounts.dev)
- */
 export function getClerkIssuer(clerkDomain: string): string {
-  // Remove any protocol prefix if provided
   const domain = clerkDomain.replace(/^https?:\/\//, "");
   return `https://${domain}`;
 }
 
-/**
- * Verify a Clerk OAuth token using Clerk's REST API.
- * MCP OAuth tokens are opaque and cannot be verified via JWKS.
- */
 export async function verifyClerkToken(
   token: string,
   secretKey: string
-): Promise<JWTVerifyResult> {
+): Promise<TokenVerifyResult> {
   try {
     const response = await fetch(CLERK_VERIFY_ENDPOINT, {
       method: "POST",
@@ -53,7 +26,6 @@ export async function verifyClerkToken(
       const errorData = await response.json().catch(() => ({}));
       console.error("[Clerk] Token verification failed:", response.status, errorData);
 
-      // Check for expired token
       if (
         response.status === 401 ||
         (errorData as any)?.errors?.[0]?.code === "token_expired"
@@ -66,20 +38,20 @@ export async function verifyClerkToken(
 
     const data = (await response.json()) as any;
 
-    // Try different possible field names for user ID
     const userId: string | undefined = data.user_id || data.sub || data.subject;
     if (!userId) {
       console.error("[Clerk] Missing user_id in verification response");
       return { ok: false, error: "invalid" };
     }
 
-    // Map the API response to ClerkJWTClaims
+    const now = Math.floor(Date.now() / 1000);
+
     const claims: ClerkJWTClaims = {
       sub: userId,
       azp: data.client_id,
       iss: "https://clerk.com",
-      exp: data.expires_at ?? Math.floor(Date.now() / 1000) + 3600,
-      iat: data.created_at ?? Math.floor(Date.now() / 1000),
+      exp: data.expires_at ?? now + ONE_HOUR_IN_SECONDS,
+      iat: data.created_at ?? now,
     };
 
     return { ok: true, claims };

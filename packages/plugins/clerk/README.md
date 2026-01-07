@@ -39,12 +39,7 @@ export default async function myTool() {
   const session = getClerkSession();
   const user = await getClerkUser();
   
-  return {
-    content: [{
-      type: "text",
-      text: `Hello ${user.firstName}! Your ID is ${session.userId}`,
-    }],
-  };
+  return `Hello ${user.firstName}! Your ID is ${session.userId}`
 }
 ```
 
@@ -75,7 +70,7 @@ Creates the middleware and router for Clerk authentication.
 
 ### `getClerkSession()`
 
-Returns the current user's session data from the JWT token.
+Returns the current user's session data.
 
 ### `getClerkUser()`
 
@@ -89,7 +84,11 @@ Returns the Clerk Backend SDK client for advanced operations.
 
 For full documentation, visit [xmcp.dev/docs/integrations/clerk](https://xmcp.dev/docs/integrations/clerk).
 
-## License
+## Contributing
 
-MIT
+See the main [xmcp repository](https://github.com/basementstudio/xmcp) for contribution guidelines.
+
+## Questions
+
+For help, use [Discord](https://discord.gg/d9a7JBBxV9). For security issues, email [security@xmcp.dev](mailto:security@xmcp.dev).
 

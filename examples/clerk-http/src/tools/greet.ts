@@ -19,24 +19,9 @@ export const metadata: ToolMetadata = {
 
 export default async function greet({
   name,
-}: InferSchema<typeof schema>): Promise<{
-  content: Array<{ type: "text"; text: string }>;
-}> {
+}: InferSchema<typeof schema>): Promise<string> {
   const session = getClerkSession();
 
-  const greeting = `Hello, ${name}! 👋
-
-I'm authenticated as user: ${session.userId}
-${session.organizationId ? `Organization: ${session.organizationId}` : "Not in an organization"}
-${session.organizationRole ? `Role: ${session.organizationRole}` : ""}`;
-
-  return {
-    content: [
-      {
-        type: "text",
-        text: greeting.trim(),
-      },
-    ],
-  };
+  return `Hello, ${name}! I'm authenticated as user: ${session.userId}`;
 }
 

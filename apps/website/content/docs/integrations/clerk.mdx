@@ -91,11 +91,7 @@ export const metadata: ToolMetadata = {
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const session = getClerkSession();
 
-  const result = `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
 }
 ```
 
@@ -106,7 +102,7 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 
 ### Session Properties
 
-The session contains data from the JWT token:
+The session contains data from the verified token:
 
 - `session.userId` - Unique user identifier
 - `session.sessionId` - Current session ID
@@ -127,18 +123,7 @@ import { getClerkUser } from "@xmcp-dev/clerk";
 export default async function getProfile() {
   const user = await getClerkUser();
 
-  return {
-    content: [{
-      type: "text",
-      text: JSON.stringify({
-        id: user.id,
-        email: user.emailAddresses[0]?.emailAddress,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        imageUrl: user.imageUrl,
-      }, null, 2),
-    }],
-  };
+  return JSON.stringify(user, null, 2);
 }
 ```
 
@@ -156,24 +141,14 @@ export default async function getOrganization() {
   const clerk = getClerkClient();
 
   if (!session.organizationId) {
-    return {
-      content: [{
-        type: "text",
-        text: "User is not in an organization",
-      }],
-    };
+    return "User is not in an organization";
   }
 
   const org = await clerk.organizations.getOrganization({
     organizationId: session.organizationId,
   });
 
-  return {
-    content: [{
-      type: "text",
-      text: JSON.stringify(org, null, 2),
-    }],
-  };
+  return JSON.stringify(org, null, 2);
 }
 ```
 
@@ -279,8 +254,3 @@ If tokens are consistently invalid:
 - Verify your `CLERK_DOMAIN` matches your Clerk Frontend API URL
 - Check that you're using the correct environment (test vs production)
 - Ensure the token hasn't been tampered with
-
-## Next Steps
-
-After authentication is configured, users will be redirected to Clerk's hosted UI when establishing a connection to your MCP server. The OAuth flow is handled entirely by Clerk, and your server only needs to validate the resulting tokens.
-

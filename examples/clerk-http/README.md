@@ -21,7 +21,7 @@ npm install @xmcp-dev/clerk
 
 ### 3. Create environment variables
 
-Create a `.env` file in your project root (see `.env.example`):
+Create a `.env` file in your project root with the following vars:
 
 ```bash
 # Clerk Secret Key (required)
@@ -51,7 +51,7 @@ import { clerkProvider } from "@xmcp-dev/clerk";
 export default clerkProvider({
   secretKey: process.env.CLERK_SECRET_KEY!,
   clerkDomain: process.env.CLERK_DOMAIN!,
-  baseURL: process.env.BASE_URL || "http://127.0.0.1:3002",
+  baseURL: process.env.BASE_URL!,
   scopes: ["profile", "email"],
 });
 ```
@@ -85,7 +85,7 @@ Access the authenticated user's session in your tools:
 import { getClerkSession, getClerkUser } from "@xmcp-dev/clerk";
 
 export default async function myTool() {
-  // Get session data (from JWT token - fast, no API call)
+  // Get session data (fast, no API call)
   const session = getClerkSession();
   console.log(session.userId);
   console.log(session.organizationId);
@@ -117,27 +117,6 @@ This example includes three tools:
 2. **greet** - Greets a person by name and shows your identity
 3. **get-user-info** - Fetches full user profile from Clerk API
 
-## Connecting MCP Clients
-
-### Cursor
-
-1. Open Cursor Settings → MCP
-2. Add your server URL: `http://127.0.0.1:3002/mcp`
-3. Cursor will redirect you to Clerk to authenticate
-
-### Claude Desktop
-
-Add to your Claude config file:
-
-```json
-{
-  "mcpServers": {
-    "clerk-example": {
-      "url": "http://127.0.0.1:3002/mcp"
-    }
-  }
-}
-```
 
 ## Troubleshooting
 

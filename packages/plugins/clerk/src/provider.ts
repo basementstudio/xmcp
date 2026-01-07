@@ -6,8 +6,8 @@ import {
   type RequestHandler,
 } from "express";
 import type { Middleware } from "xmcp";
-import { clerkContextProvider } from "./context.js";
-import { initClerkClient } from "./client.js";
+import { clerkContextProviderClient, clerkContextProviderSession, setClerkContextSession } from "./context.js";
+import { createClerkClient } from "@clerk/express";
 import type { ClerkConfig } from "./types.js";
 import {
   verifyClerkToken,
@@ -31,7 +31,14 @@ export function clerkProvider(config: ClerkConfig): Middleware {
     throw new Error("[Clerk] Missing required config: baseURL");
   }
 
-  initClerkClient(config.secretKey);
+  clerkContextProviderClient({
+    client: createClerkClient({ secretKey: config.secretKey }),
+  }, () => {
+  });
+
+  clerkContextProviderSession({
+    session: null,
+  }, () => {});
 
   return {
     middleware: clerkMiddleware(config),
@@ -43,20 +50,7 @@ function clerkRouter(config: ClerkConfig): Router {
   const router = Router();
   const clerkIssuer = getClerkIssuer(config.clerkDomain);
 
-  // Set up initial context for non-MCP routes
-  router.use((req: Request, _res: Response, next: NextFunction) => {
-    clerkContextProvider(
-      {
-        session: null,
-        headers: req.headers,
-      },
-      () => {
-        next();
-      }
-    );
-  });
-
-  // OAuth Protected Resource Metadata endpoint (RFC 9728)
+  // RFC 9728
   router.get(
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {
@@ -74,8 +68,7 @@ function clerkRouter(config: ClerkConfig): Router {
     }
   );
 
-  // OAuth Authorization Server Metadata endpoint (RFC 8414)
-  // Fetches from Clerk's OpenID configuration
+  // RFC 8414
   router.get(
     "/.well-known/oauth-authorization-server",
     async (_req: Request, res: Response) => {
@@ -89,7 +82,6 @@ function clerkRouter(config: ClerkConfig): Router {
           return;
         }
 
-        // Fallback: construct metadata manually
         const metadata: OAuthAuthorizationServerMetadata = {
           issuer: clerkIssuer,
           authorization_endpoint: `${clerkIssuer}/oauth/authorize`,
@@ -114,7 +106,6 @@ function clerkRouter(config: ClerkConfig): Router {
 
 function clerkMiddleware(config: ClerkConfig): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    // Only protect /mcp routes
     if (!req.path.startsWith("/mcp")) {
       next();
       return;
@@ -163,15 +154,12 @@ function clerkMiddleware(config: ClerkConfig): RequestHandler {
 
       const session = claimsToSession(result.claims);
 
-      clerkContextProvider(
+      setClerkContextSession(
         {
           session,
-          headers: req.headers,
-        },
-        () => {
-          next();
         }
       );
+      next();
     } catch (error) {
       console.error("[Clerk] Authentication error:", error);
       res.setHeader(
@@ -182,7 +170,7 @@ function clerkMiddleware(config: ClerkConfig): RequestHandler {
         error: "server_error",
         error_description: "Authentication processing failed",
       });
+      next();
     }
   };
 }
-

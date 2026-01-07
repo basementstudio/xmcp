@@ -1,38 +1,23 @@
-import type { IncomingHttpHeaders } from "http";
+import { ClerkClient } from "@clerk/express";
 
 export interface ClerkConfig {
-  /** Clerk Secret Key (sk_test_... or sk_live_...) */
   readonly secretKey: string;
-  /** Clerk Frontend API domain (e.g., your-app.clerk.accounts.dev) */
   readonly clerkDomain: string;
-  /** Base URL of your MCP server */
   readonly baseURL: string;
-  /** OAuth scopes to request (default: ['profile', 'email']) */
   readonly scopes?: string[];
-  /** Optional URL to your MCP server's API documentation */
   readonly docsURL?: string;
 }
 
 export interface ClerkJWTClaims {
-  /** User ID */
   readonly sub: string;
-  /** Session ID */
   readonly sid?: string;
-  /** Organization ID */
   readonly org_id?: string;
-  /** Role in organization */
   readonly org_role?: string;
-  /** Permissions in organization */
   readonly org_permissions?: string[];
-  /** Authorized party (client ID) */
   readonly azp?: string;
-  /** Issuer */
   readonly iss: string;
-  /** Audience */
   readonly aud?: string | string[];
-  /** Expiration time */
   readonly exp: number;
-  /** Issued at */
   readonly iat: number;
 }
 
@@ -68,8 +53,25 @@ export interface OAuthAuthorizationServerMetadata {
   readonly registration_endpoint?: string;
 }
 
-export interface ClerkContext {
-  readonly session: ClerkSession | null;
-  readonly headers: IncomingHttpHeaders;
+export interface ClerkClientContext {
+  readonly client: ClerkClient;
 }
 
+export interface ClerkSessionContext {
+  readonly session: ClerkSession | null;
+}
+
+export type TokenVerifyResult =
+  | { readonly ok: true; readonly claims: ClerkJWTClaims }
+  | { readonly ok: false; readonly error: "expired" | "invalid" };
+
+export interface ClerkVerifyResponse {
+  readonly object: string;
+  readonly token: string;
+  readonly status: string;
+  readonly scopes: string[];
+  readonly user_id: string;
+  readonly client_id?: string;
+  readonly created_at?: number;
+  readonly expires_at?: number;
+}
