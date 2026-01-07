@@ -172,29 +172,7 @@ The authentication flow involves three parties:
 2. **Clerk** - The authorization server that handles login and token issuance
 3. **MCP Server** - The resource server that validates tokens
 
-```
-MCP Client          Clerk                MCP Server
-    │                  │                     │
-    │  1. Discovery    │                     │
-    │─────────────────────────────────────────>│
-    │                  │  "use Clerk"        │
-    │<─────────────────────────────────────────│
-    │                  │                     │
-    │  2. Login        │                     │
-    │─────────────────>│                     │
-    │<─────────────────│                     │
-    │     tokens       │                     │
-    │                  │                     │
-    │  3. Tool execution + token             │
-    │─────────────────────────────────────────>│
-    │                  │     Verify token    │
-    │                  │<────────────────────│
-    │                  │        Valid        │
-    │                  │────────────────────>│
-    │                  │                     │
-    │               Tool Response            │
-    │<─────────────────────────────────────────│
-```
+![sequence-diagram](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-clerk.svg)
 
 <Callout variant="info">
   Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.
