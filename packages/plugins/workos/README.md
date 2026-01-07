@@ -53,18 +53,18 @@ BASE_URL=http://127.0.0.1:3002
 ### 3. Access Session in Tools
 
 ```typescript
-import { getWorkOSSession, getWorkOSUser } from "@xmcp-dev/workos";
+import { getSession, getUser } from "@xmcp-dev/workos";
 
 export default async function myTool() {
   // Get session data from JWT (fast, no API call)
-  const session = getWorkOSSession();
+  const session = getSession();
   console.log(session.userId);
   console.log(session.organizationId);
   console.log(session.role);
   console.log(session.permissions);
 
   // Get full user data from WorkOS API
-  const user = await getWorkOSUser();
+  const user = await getUser();
   console.log(user.email);
   console.log(user.firstName);
   console.log(user.lastName);
@@ -86,11 +86,11 @@ Creates the WorkOS middleware and router for xmcp.
 - `authkitDomain` - AuthKit domain
 - `docsURL` - (Optional) URL for your MCP server documentation
 
-### `getWorkOSSession()`
+### `getSession()`
 
 Returns the current session from JWT claims. Throws if not authenticated.
 
-**Returns:** `WorkOSSession`
+**Returns:** `Session`
 - `userId` - WorkOS user ID
 - `sessionId` - Session ID
 - `organizationId` - Organization ID (optional)
@@ -100,28 +100,28 @@ Returns the current session from JWT claims. Throws if not authenticated.
 - `issuedAt` - Token issued date
 - `claims` - Raw JWT claims
 
-### `getWorkOSUser()`
+### `getUser()`
 
 Fetches full user data from WorkOS API using the SDK.
 
 **Returns:** WorkOS `User` object with email, name, profile picture, etc.
 
-### `getWorkOSClient()`
+### `getClient()`
 
 Returns the initialized WorkOS SDK client for advanced use cases.
 
 ## Using the WorkOS SDK
 
-The `getWorkOSClient()` function gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
+The `getClient()` function gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
 
 ### User Management
 
 ```typescript
-import { getWorkOSSession, getWorkOSClient } from "@xmcp-dev/workos";
+import { getSession, getClient } from "@xmcp-dev/workos";
 
 export default async function myTool() {
-  const session = getWorkOSSession();
-  const workos = getWorkOSClient();
+  const session = getSession();
+  const workos = getClient();
 
   // List organization memberships
   const memberships = await workos.userManagement.listOrganizationMemberships({
@@ -140,8 +140,8 @@ export default async function myTool() {
 ### Organizations
 
 ```typescript
-const workos = getWorkOSClient();
-const session = getWorkOSSession();
+const workos = getClient();
+const session = getSession();
 
 // Get organization details
 if (session.organizationId) {
@@ -156,7 +156,7 @@ const orgs = await workos.organizations.listOrganizations();
 ### Directory Sync (SCIM)
 
 ```typescript
-const workos = getWorkOSClient();
+const workos = getClient();
 
 // List directory users
 const users = await workos.directorySync.listUsers({
@@ -172,8 +172,8 @@ const groups = await workos.directorySync.listGroups({
 ### Audit Logs
 
 ```typescript
-const workos = getWorkOSClient();
-const session = getWorkOSSession();
+const workos = getClient();
+const session = getSession();
 
 // Create an audit log event
 await workos.auditLogs.createEvent({
@@ -189,8 +189,8 @@ await workos.auditLogs.createEvent({
 ### SSO Connections
 
 ```typescript
-const workos = getWorkOSClient();
-const session = getWorkOSSession();
+const workos = getClient();
+const session = getSession();
 
 // List SSO connections for an organization
 const connections = await workos.sso.listConnections({
@@ -335,5 +335,5 @@ If you need to manually register a client:
 1. MCP clients send requests with `Authorization: Bearer <token>` header
 2. The middleware verifies the JWT using WorkOS AuthKit's JWKS endpoint
 3. Valid sessions are stored in AsyncLocalStorage context
-4. Tools can access session data via `getWorkOSSession()`
-5. Full user data can be fetched via `getWorkOSUser()` (uses WorkOS SDK)
+4. Tools can access session data via `getSession()`
+5. Full user data can be fetched via `getUser()` (uses WorkOS SDK)

@@ -1,12 +1,13 @@
 import { WorkOS } from "@workos-inc/node";
-import { getWorkOSClientContext } from "./context.js";
+import { getClientContext } from "./context.js";
 
-export function getWorkOSClient(): WorkOS {
-  const { workos } = getWorkOSClientContext();
-  if (!workos) {
+export function getClient(): WorkOS {
+  const { client } = getClientContext();
+  if (!client) {
     throw new Error(
-      "WorkOS client not initialized. Ensure workosProvider() is configured correctly."
+      "[WorkOS] Client not initialized. " +
+        "Make sure workosProvider() is configured in your middleware."
     );
   }
-  return workos;
+  return client;
 }

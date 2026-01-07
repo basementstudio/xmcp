@@ -6,13 +6,13 @@ import {
   type RequestHandler,
 } from "express";
 import { Middleware } from "xmcp";
-import { workosSessionContextProvider, workosClientContextProvider, setWorkOSSessionContext, setWorkOSClientContext, workosSessionContext } from "./context.js";
-import type { WorkOSConfig, OAuthProtectedResourceMetadata, OAuthAuthorizationServerMetadata } from "./types.js";
+import { contextProviderSession, contextProviderClient } from "./context.js";
+import type { config, OAuthProtectedResourceMetadata, OAuthAuthorizationServerMetadata } from "./types.js";
 import { verifyWorkOSToken, claimsToSession, extractBearerToken } from "./jwt.js";
 import { getAuthKitBaseUrl } from "./utils.js";
 import { WorkOS } from "@workos-inc/node";
 
-export function workosProvider(config: WorkOSConfig): Middleware {
+export function workosProvider(config: config): Middleware {
   if (!config.apiKey) {
     throw new Error("[WorkOS] Missing required config: apiKey");
   }
@@ -26,21 +26,16 @@ export function workosProvider(config: WorkOSConfig): Middleware {
     throw new Error("[WorkOS] Missing required config: authkitDomain");
   }
 
+  contextProviderClient({
+    client: new WorkOS(config.apiKey, { clientId: config.clientId }),
+  }, () => {});
 
-  workosClientContextProvider({
-    workos: new WorkOS(config.apiKey, { clientId: config.clientId }),
-  }, () => {
-
-  });
-
-  workosSessionContextProvider(
+  contextProviderSession(
     {
       session: null
     },
     () => {}
   );
-
-  
 
   return {
     middleware: workosMiddleware(config),
@@ -48,7 +43,7 @@ export function workosProvider(config: WorkOSConfig): Middleware {
   };
 }
 
-function workosRouter(config: WorkOSConfig): Router {
+function workosRouter(config: config): Router {
   const router = Router();
 
   router.get(
@@ -105,7 +100,7 @@ function workosRouter(config: WorkOSConfig): Router {
   return router;
 }
 
-function workosMiddleware(config: WorkOSConfig): RequestHandler {
+function workosMiddleware(config: config): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith("/mcp")) {
       next();
@@ -155,10 +150,14 @@ function workosMiddleware(config: WorkOSConfig): RequestHandler {
 
       const session = claimsToSession(result.claims);
 
-      setWorkOSSessionContext({
-        session,
-      });
-      next();
+      contextProviderSession(
+        {
+          session,
+        },
+        () => {
+          next();
+        }
+      );
     } catch (error) {
       console.error("[WorkOS] Authentication error:", error);
       res.setHeader(
@@ -169,7 +168,6 @@ function workosMiddleware(config: WorkOSConfig): RequestHandler {
         error: "server_error",
         error_description: "Authentication processing failed",
       });
-      next();
     }
   };
 }

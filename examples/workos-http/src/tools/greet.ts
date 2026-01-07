@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type InferSchema, type ToolMetadata } from "xmcp";
-import { getWorkOSSession } from "@xmcp-dev/workos";
+import { getSession } from "@xmcp-dev/workos";
 
 // Define the schema for tool parameters
 export const schema = {
@@ -14,14 +14,13 @@ export const metadata: ToolMetadata = {
   annotations: {
     title: "Greet User",
     readOnlyHint: true,
-    destructiveHint: false,
     idempotentHint: true,
   },
 };
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const session = getWorkOSSession();
+  const session = getSession();
 
   return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
 }

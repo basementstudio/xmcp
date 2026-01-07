@@ -1,5 +1,5 @@
 import { type ToolMetadata } from "xmcp";
-import { getWorkOSSession, getWorkOSUser } from "@xmcp-dev/workos";
+import { getSession, getUser } from "@xmcp-dev/workos";
 
 export const metadata: ToolMetadata = {
   name: "whoami",
@@ -7,14 +7,13 @@ export const metadata: ToolMetadata = {
   annotations: {
     title: "Who Am I",
     readOnlyHint: true,
-    destructiveHint: false,
     idempotentHint: true,
   },
 };
 
 export default async function whoami() {
-  const session = getWorkOSSession();
-  const user = await getWorkOSUser();
+  const session = getSession();
+  const user = await getUser();
 
   const userInfo = {
     session: {

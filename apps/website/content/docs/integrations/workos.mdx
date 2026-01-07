@@ -66,12 +66,12 @@ export default workosProvider({
 
 ## Usage in Tools
 
-Access the authenticated user in your xmcp tools using `getWorkOSSession()` and `getWorkOSUser()`:
+Access the authenticated user in your xmcp tools using `getSession()` and `getUser()`:
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
 import { type InferSchema, type ToolMetadata } from "xmcp";
-import { getWorkOSSession } from "@xmcp-dev/workos";
+import { getSession } from "@xmcp-dev/workos";
 
 // Define the schema for tool parameters
 export const schema = {
@@ -92,14 +92,14 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const session = getWorkOSSession();
+  const session = getSession();
 
   return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
 }
 ```
 
 <Callout variant="warning">
-  `getWorkOSSession` will throw an error if called outside of a
+  `getSession` will throw an error if called outside of a
   `workosProvider` middleware context.
 </Callout>
 
@@ -115,7 +115,7 @@ The session contains data from the JWT token:
 
 ### User Properties
 
-Use `getWorkOSUser()` to fetch the full user profile from WorkOS:
+Use `getUser()` to fetch the full user profile from WorkOS:
 
 - `user.id` - User ID
 - `user.email` - User's email address
@@ -124,16 +124,16 @@ Use `getWorkOSUser()` to fetch the full user profile from WorkOS:
 
 ## Using the WorkOS SDK
 
-`getWorkOSClient()` gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
+`getClient()` gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
 
 ### Organization Memberships
 
 ```typescript title="src/tools/get-memberships.ts"
-import { getWorkOSSession, getWorkOSClient } from "@xmcp-dev/workos";
+import { getSession, getClient } from "@xmcp-dev/workos";
 
 export default async function getMemberships() {
-  const session = getWorkOSSession();
-  const workos = getWorkOSClient();
+  const session = getSession();
+  const workos = getClient();
 
   const memberships = await workos.userManagement.listOrganizationMemberships({
     userId: session.userId,
@@ -146,8 +146,8 @@ export default async function getMemberships() {
 ### Organizations
 
 ```typescript
-const workos = getWorkOSClient();
-const session = getWorkOSSession();
+const workos = getClient();
+const session = getSession();
 
 // Get organization details
 if (session.organizationId) {
@@ -162,7 +162,7 @@ const orgs = await workos.organizations.listOrganizations();
 ### Directory Sync (SCIM)
 
 ```typescript
-const workos = getWorkOSClient();
+const workos = getClient();
 
 // List directory users
 const users = await workos.directorySync.listUsers({
@@ -178,8 +178,8 @@ const groups = await workos.directorySync.listGroups({
 ### Audit Logs
 
 ```typescript
-const workos = getWorkOSClient();
-const session = getWorkOSSession();
+const workos = getClient();
+const session = getSession();
 
 // Create an audit log event
 await workos.auditLogs.createEvent({

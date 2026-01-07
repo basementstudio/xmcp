@@ -2,24 +2,13 @@
 export { workosProvider } from "./provider.js";
 
 export type {
-  WorkOSConfig,
-  WorkOSSession,
-  WorkOSJWTClaims,
+  config,
+  Session,
+  JWTClaims,
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 
-export { getWorkOSSession, getWorkOSUser } from "./session.js";
+export { getSession, getUser } from "./session.js";
 
-export { getWorkOSClient } from "./client.js";
-
-export {
-  workosSessionContext,
-  getWorkOSSessionContext,
-  setWorkOSSessionContext,
-  workosSessionContextProvider,
-  workosClientContext,
-  getWorkOSClientContext,
-  setWorkOSClientContext,
-  workosClientContextProvider,
-} from "./context.js";
+export { getClient } from "./client.js";

@@ -1,16 +1,15 @@
 import { createRemoteJWKSet, jwtVerify, errors } from "jose";
-import type { WorkOSJWTClaims, WorkOSSession } from "./types.js";
+import type { JWTClaims, Session } from "./types.js";
 import { getAuthKitBaseUrl } from "./utils.js";
 
-/** Result of JWT verification */
-export type JWTVerifyResult =
-  | { readonly ok: true; readonly claims: WorkOSJWTClaims }
+export type TokenVerifyResult =
+  | { readonly ok: true; readonly claims: JWTClaims }
   | { readonly ok: false; readonly error: "expired" | "invalid" };
 
 export async function verifyWorkOSToken(
   token: string,
   authkitDomain: string
-): Promise<JWTVerifyResult> {
+): Promise<TokenVerifyResult> {
   try {
     const issuer = getAuthKitBaseUrl(authkitDomain);
     const jwksUri = new URL(`${issuer}/oauth2/jwks`);
@@ -18,7 +17,7 @@ export async function verifyWorkOSToken(
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer,
-      clockTolerance: 30, // Allow 30 seconds of clock skew
+      clockTolerance: 30,
     });
 
     if (!payload.sub || !payload.sid) {
@@ -26,9 +25,8 @@ export async function verifyWorkOSToken(
       return { ok: false, error: "invalid" };
     }
 
-    return { ok: true, claims: payload as unknown as WorkOSJWTClaims };
+    return { ok: true, claims: payload as unknown as JWTClaims };
   } catch (error) {
-    // Check if the error is specifically a JWT expired error
     if (error instanceof errors.JWTExpired) {
       console.warn("[WorkOS] JWT has expired");
       return { ok: false, error: "expired" };
@@ -39,7 +37,7 @@ export async function verifyWorkOSToken(
   }
 }
 
-export function claimsToSession(claims: WorkOSJWTClaims): WorkOSSession {
+export function claimsToSession(claims: JWTClaims): Session {
   return {
     userId: claims.sub,
     sessionId: claims.sid,

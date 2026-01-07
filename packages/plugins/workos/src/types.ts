@@ -1,20 +1,14 @@
 import { WorkOS } from "@workos-inc/node";
-import { IncomingHttpHeaders } from "http";
 
-export interface WorkOSConfig {
-  /** WorkOS API key (sk_test_... or sk_live_...) */
+export interface config {
   readonly apiKey: string;
-  /** WorkOS Client ID (client_...) */
   readonly clientId: string;
-  /** Base URL of your MCP server */
   readonly baseURL: string;
-  /** AuthKit domain (e.g., your-subdomain.authkit.app) */
   readonly authkitDomain: string;
-  /** Optional URL to your MCP server's API documentation */
   readonly docsURL?: string;
 }
 
-export interface WorkOSJWTClaims {
+export interface JWTClaims {
   sub: string;
   sid: string;
   iss: string;
@@ -26,7 +20,7 @@ export interface WorkOSJWTClaims {
   aud?: string | string[];
 }
 
-export interface WorkOSSession {
+export interface Session {
   userId: string;
   sessionId: string;
   organizationId?: string;
@@ -34,7 +28,7 @@ export interface WorkOSSession {
   permissions?: string[];
   expiresAt: Date;
   issuedAt: Date;
-  claims: WorkOSJWTClaims;
+  claims: JWTClaims;
 }
 
 export interface OAuthProtectedResourceMetadata {
@@ -56,10 +50,10 @@ export interface OAuthAuthorizationServerMetadata {
   scopes_supported?: string[];
 }
 
-export interface WorkOSContextClient {
-  workos: WorkOS;
+export interface ClientContext {
+  client: WorkOS;
 }
 
-export interface WorkOSContextSession {
-  session: WorkOSSession | null;
+export interface SessionContext {
+  session: Session | null;
 }

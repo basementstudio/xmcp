@@ -1,5 +1,5 @@
 import { type ToolMetadata } from "xmcp";
-import { getWorkOSSession, getWorkOSClient } from "@xmcp-dev/workos";
+import { getSession, getClient } from "@xmcp-dev/workos";
 
 export const metadata: ToolMetadata = {
   name: "get-my-memberships",
@@ -8,17 +8,16 @@ export const metadata: ToolMetadata = {
   annotations: {
     title: "Get My Memberships",
     readOnlyHint: true,
-    destructiveHint: false,
     idempotentHint: true,
   },
 };
 
 export default async function getMyMemberships(): Promise<string> {
-  const session = getWorkOSSession();
-  const workos = getWorkOSClient();
+  const session = getSession();
+  const client = getClient();
 
   // Use the WorkOS SDK to fetch organization memberships
-  const memberships = await workos.userManagement.listOrganizationMemberships({
+  const memberships = await client.userManagement.listOrganizationMemberships({
     userId: session.userId,
   });
 

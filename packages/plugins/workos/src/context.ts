@@ -1,18 +1,18 @@
 import { createContext } from "xmcp";
-import type { WorkOSContextSession, WorkOSContextClient } from "./types.js";
+import type { SessionContext, ClientContext } from "./types.js";
 
 
-export const workosSessionContext = createContext<WorkOSContextSession>({
-  name: "workos-context",
+export const sessionContext = createContext<SessionContext>({
+  name: "workos-context-session",
 });
 
-export const workosClientContext = createContext<WorkOSContextClient>({
+export const clientContext = createContext<ClientContext>({
   name: "workos-context-client",
 });
 
-export const setWorkOSSessionContext = workosSessionContext.setContext;
-export const getWorkOSSessionContext = workosSessionContext.getContext;
-export const workosSessionContextProvider = workosSessionContext.provider;
-export const setWorkOSClientContext = workosClientContext.setContext;
-export const getWorkOSClientContext = workosClientContext.getContext;
-export const workosClientContextProvider = workosClientContext.provider;
+export const setSessionContext = sessionContext.setContext;
+export const getSessionContext = sessionContext.getContext;
+export const contextProviderSession = sessionContext.provider;
+export const setClientContext = clientContext.setContext;
+export const getClientContext = clientContext.getContext;
+export const contextProviderClient = clientContext.provider;
