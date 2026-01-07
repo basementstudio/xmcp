@@ -69,7 +69,7 @@ export default async function myTool() {
   console.log(user.firstName);
   console.log(user.lastName);
 
-  return `Hello ${user.firstName}! Your user ID is ${session.userID}`;
+  return `Hello ${user.firstName}! Your user ID is ${session.userId}`;
 }
 ```
 
@@ -99,10 +99,6 @@ Returns the current session from JWT claims. Throws if not authenticated.
 - `expiresAt` - Token expiration date
 - `issuedAt` - Token issued date
 - `claims` - Raw JWT claims
-
-### `getWorkOSSessionOrNull()`
-
-Safe version that returns `null` instead of throwing.
 
 ### `getWorkOSUser()`
 
