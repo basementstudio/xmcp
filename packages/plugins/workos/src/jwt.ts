@@ -8,7 +8,8 @@ export type TokenVerifyResult =
 
 export async function verifyWorkOSToken(
   token: string,
-  authkitDomain: string
+  authkitDomain: string,
+  clientId: string
 ): Promise<TokenVerifyResult> {
   try {
     const issuer = getAuthKitBaseUrl(authkitDomain);
@@ -17,6 +18,7 @@ export async function verifyWorkOSToken(
 
     const { payload } = await jwtVerify(token, JWKS, {
       issuer,
+      audience: clientId,
       clockTolerance: 30,
     });
 
