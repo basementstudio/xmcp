@@ -18,5 +18,13 @@ export function getSession(): Session {
 export async function getUser(): Promise<User> {
   const session = getSession();
   const { client } = getClientContext();
+
+  if (!client) {
+    throw new Error(
+      "[WorkOS] Client not initialized. " +
+        "Make sure workosProvider() is configured in your middleware."
+    );
+  }
+
   return await client.userManagement.getUser(session.userId);
 }
