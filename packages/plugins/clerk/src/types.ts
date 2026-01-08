@@ -63,7 +63,7 @@ export interface SessionContext {
 
 export type TokenVerifyResult =
   | { readonly ok: true; readonly claims: JWTClaims }
-  | { readonly ok: false; readonly error: "expired" | "invalid" };
+  | { readonly ok: false; readonly error: "expired" | "invalid" | "config_error" };
 
 export interface VerifyResponse {
   readonly object: string;

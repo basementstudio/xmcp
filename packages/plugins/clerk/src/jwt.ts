@@ -1,6 +1,8 @@
 import type { JWTClaims, Session, TokenVerifyResult } from "./types.js";
 
 const CLERK_VERIFY_ENDPOINT = "https://api.clerk.com/oauth_applications/access_tokens/verify";
+const FETCH_TIMEOUT_MS = 10000;
+const MAX_TOKEN_LENGTH = 4096;
 const ONE_HOUR_IN_SECONDS = 3600;
 
 export function getIssuer(clerkDomain: string): string {
@@ -12,6 +14,10 @@ export async function verifyToken(
   token: string,
   secretKey: string
 ): Promise<TokenVerifyResult> {
+  if (!token || token.length > MAX_TOKEN_LENGTH) {
+    return { ok: false, error: "invalid" };
+  }
+
   try {
     const response = await fetch(CLERK_VERIFY_ENDPOINT, {
       method: "POST",
@@ -20,17 +26,27 @@ export async function verifyToken(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ access_token: token }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error("[Clerk] Token verification failed:", response.status, errorData);
+      const errorCode = (errorData as { errors?: Array<{ code?: string }> })?.errors?.[0]?.code;
+      const errorMessage = (errorData as { errors?: Array<{ message?: string }> })?.errors?.[0]?.message;
 
-      if (
-        response.status === 401 ||
-        (errorData as any)?.errors?.[0]?.code === "token_expired"
-      ) {
+      console.error("[Clerk] Token verification failed:", {
+        status: response.status,
+        code: errorCode,
+        message: errorMessage,
+      });
+
+      if (errorCode === "token_expired") {
         return { ok: false, error: "expired" };
+      }
+
+      if (response.status === 401) {
+        console.error("[Clerk] API authentication failed - check CLERK_SECRET_KEY configuration");
+        return { ok: false, error: "config_error" };
       }
 
       return { ok: false, error: "invalid" };
@@ -53,7 +69,7 @@ export async function verifyToken(
       org_role: data.org_role || data.organization_role,
       org_permissions: data.org_permissions || data.organization_permissions,
       azp: data.client_id,
-      iss: "https://clerk.com",
+      iss: data.iss || data.issuer || "https://clerk.com",
       exp: data.expires_at ?? now + ONE_HOUR_IN_SECONDS,
       iat: data.created_at ?? now,
     };

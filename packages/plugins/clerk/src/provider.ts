@@ -6,7 +6,7 @@ import {
   type RequestHandler,
 } from "express";
 import type { Middleware } from "xmcp";
-import { providerClientContext, providerSessionContext } from "./context.js";
+import { providerSessionContext, providerClientContext } from "./context.js";
 import { createClerkClient } from "@clerk/express";
 import type { config } from "./types.js";
 import {
@@ -19,6 +19,8 @@ import type {
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
+
+const FETCH_TIMEOUT_MS = 10000;
 
 export function clerkProvider(config: config): Middleware {
   if (!config.secretKey) {
@@ -33,7 +35,8 @@ export function clerkProvider(config: config): Middleware {
 
   providerClientContext({
     client: createClerkClient({ secretKey: config.secretKey }),
-  }, () => {});
+  }, () => {
+  });
 
   return {
     middleware: clerkMiddleware(config),
@@ -69,7 +72,9 @@ function clerkRouter(config: config): Router {
     async (_req: Request, res: Response) => {
       try {
         const openIdConfigUrl = `${clerkIssuer}/.well-known/openid-configuration`;
-        const response = await fetch(openIdConfigUrl);
+        const response = await fetch(openIdConfigUrl, {
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        });
 
         if (response.ok) {
           const data = await response.json();
@@ -124,7 +129,13 @@ function clerkMiddleware(config: config): RequestHandler {
       const result = await verifyToken(token, config.secretKey);
 
       if (!result.ok) {
-        if (result.error === "expired") {
+        if (result.error === "config_error") {
+          console.error("[Clerk] Server configuration error - invalid secretKey");
+          res.status(500).json({
+            error: "server_error",
+            error_description: "Authentication service misconfigured",
+          });
+        } else if (result.error === "expired") {
           res.setHeader(
             "WWW-Authenticate",
             `Bearer resource_metadata="/.well-known/oauth-protected-resource", error="invalid_token", error_description="Token has expired"`
