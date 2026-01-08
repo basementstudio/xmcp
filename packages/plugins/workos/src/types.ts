@@ -9,45 +9,45 @@ export interface config {
 }
 
 export interface JWTClaims {
-  sub: string;
-  sid: string;
-  iss: string;
-  org_id?: string;
-  role?: string;
-  permissions?: string[];
-  exp: number;
-  iat: number;
-  aud?: string | string[];
+  readonly sub: string;
+  readonly sid: string;
+  readonly iss: string;
+  readonly org_id?: string;
+  readonly role?: string;
+  readonly permissions?: readonly string[];
+  readonly exp: number;
+  readonly iat: number;
+  readonly aud?: string | readonly string[];
 }
 
 export interface Session {
-  userId: string;
-  sessionId: string;
-  organizationId?: string;
-  role?: string;
-  permissions?: string[];
-  expiresAt: Date;
-  issuedAt: Date;
-  claims: JWTClaims;
+  readonly userId: string;
+  readonly sessionId: string;
+  readonly organizationId?: string;
+  readonly role?: string;
+  readonly permissions?: readonly string[];
+  readonly expiresAt: Date;
+  readonly issuedAt: Date;
+  readonly claims: JWTClaims;
 }
 
 export interface OAuthProtectedResourceMetadata {
-  resource: string;
-  authorization_servers: string[];
-  bearer_methods_supported?: string[];
-  resource_documentation?: string;
+  readonly resource: string;
+  readonly authorization_servers: readonly string[];
+  readonly bearer_methods_supported?: readonly string[];
+  readonly resource_documentation?: string;
 }
 
 export interface OAuthAuthorizationServerMetadata {
-  issuer: string;
-  authorization_endpoint: string;
-  token_endpoint: string;
-  jwks_uri: string;
-  response_types_supported: string[];
-  grant_types_supported: string[];
-  code_challenge_methods_supported?: string[];
-  token_endpoint_auth_methods_supported?: string[];
-  scopes_supported?: string[];
+  readonly issuer: string;
+  readonly authorization_endpoint: string;
+  readonly token_endpoint: string;
+  readonly jwks_uri: string;
+  readonly response_types_supported: readonly string[];
+  readonly grant_types_supported: readonly string[];
+  readonly code_challenge_methods_supported?: readonly string[];
+  readonly token_endpoint_auth_methods_supported?: readonly string[];
+  readonly scopes_supported?: readonly string[];
 }
 
 export interface ClientContext {

@@ -122,7 +122,7 @@ function workosMiddleware(config: config): RequestHandler {
         return;
       }
 
-      const result = await verifyWorkOSToken(token, config.authkitDomain);
+      const result = await verifyWorkOSToken(token, config.authkitDomain, config.clientId);
 
       if (!result.ok) {
         if (result.error === "expired") {
