@@ -7,8 +7,6 @@ export const metadata: ToolMetadata = {
     "Returns the user's organization memberships using the WorkOS SDK directly",
   annotations: {
     title: "Get My Memberships",
-    readOnlyHint: true,
-    idempotentHint: true,
   },
 };
 

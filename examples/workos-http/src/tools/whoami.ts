@@ -6,8 +6,6 @@ export const metadata: ToolMetadata = {
   description: "Returns the full WorkOS user session and account information",
   annotations: {
     title: "Who Am I",
-    readOnlyHint: true,
-    idempotentHint: true,
   },
 };
 

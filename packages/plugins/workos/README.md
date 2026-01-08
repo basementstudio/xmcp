@@ -211,7 +211,7 @@ The plugin automatically registers these endpoints:
 
 ### Architecture Overview
 
-<svg width="746" height="420" viewBox="0 0 746 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+![diagram-workos](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-workos.svg)
 <rect width="746" height="420" fill="black"/>
 <g filter="url(#filter0_i_6343_889)">
 <rect x="87" y="32" width="93" height="37" rx="4" fill="#080808"/>
@@ -326,7 +326,7 @@ If you need to manually register a client:
 
 ### Token Lifecycle
 
-- Access tokens are short-lived (~5 minutes)
+- Access tokens are short-lived
 - MCP clients automatically refresh tokens using refresh tokens
 - If you see "token_expired" errors, the client should handle refresh automatically
 

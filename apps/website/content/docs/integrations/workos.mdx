@@ -52,7 +52,6 @@ export default workosProvider({
   clientId: process.env.WORKOS_CLIENT_ID!,
   authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
   baseURL: process.env.BASE_URL!,
-  docsURL: "https://yourserver.com/docs/mcp",
 });
 ```
 
@@ -83,9 +82,7 @@ export const metadata: ToolMetadata = {
   name: "greet",
   description: "Greet the user with their WorkOS identity",
   annotations: {
-    title: "Greet User",
-    readOnlyHint: true,
-    idempotentHint: true,
+    title: "Greet User"
   },
 };
 
@@ -241,7 +238,7 @@ If you need to manually register a client:
 
 ### Token Expired Errors
 
-Access tokens are short-lived (~5 minutes). If you see `token_expired` errors:
+Access tokens are short-lived. If you see `token_expired` errors:
 
 - MCP clients should automatically refresh tokens
 - If errors persist, the client may have a bug or the refresh token expired
