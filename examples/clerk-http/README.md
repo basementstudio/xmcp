@@ -24,15 +24,11 @@ npm install @xmcp-dev/clerk
 Create a `.env` file in your project root with the following vars:
 
 ```bash
-# Clerk Secret Key (required)
 CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
-# Clerk Frontend API Domain (required)
-# Found in Clerk Dashboard -> API Keys
 CLERK_DOMAIN=your-app.clerk.accounts.dev
 
-# Base URL of your MCP server (required)
-BASE_URL=http://127.0.0.1:3002
+BASE_URL=http://127.0.0.1:3001
 ```
 
 ### 4. Create the middleware

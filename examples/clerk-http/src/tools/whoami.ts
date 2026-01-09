@@ -5,9 +5,7 @@ export const metadata: ToolMetadata = {
   name: "whoami",
   description: "Returns basic identity information from the authenticated session",
   annotations: {
-    title: "Who Am I",
-    readOnlyHint: true,
-    idempotentHint: true,
+    title: "Who Am I"
   },
 };
 

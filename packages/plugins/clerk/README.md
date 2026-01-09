@@ -15,7 +15,7 @@ npm install @xmcp-dev/clerk
 ```bash
 CLERK_SECRET_KEY=sk_test_...
 CLERK_DOMAIN=your-app.clerk.accounts.dev
-BASE_URL=http://127.0.0.1:3002
+BASE_URL=http://127.0.0.1:3001
 ```
 
 2. **Create middleware.ts:**

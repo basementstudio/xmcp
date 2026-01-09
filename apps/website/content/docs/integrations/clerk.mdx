@@ -29,12 +29,10 @@ Before integrating the plugin, configure your Clerk account:
 Configure the following environment variables in your `.env` file:
 
 ```bash
-# Clerk credentials
 CLERK_SECRET_KEY=sk_test_...
 CLERK_DOMAIN=your-app.clerk.accounts.dev
 
-# App configuration
-BASE_URL=http://127.0.0.1:3002
+BASE_URL=http://127.0.0.1:1
 ```
 
 ## Configuration
@@ -78,9 +76,7 @@ export const metadata: ToolMetadata = {
   name: "greet",
   description: "Greet the user with their Clerk identity",
   annotations: {
-    title: "Greet User",
-    readOnlyHint: true,
-    idempotentHint: true,
+    title: "Greet User"
   },
 };
 

@@ -10,9 +10,7 @@ export const metadata: ToolMetadata = {
   name: "greet",
   description: "Greet a person with their name and show your Clerk identity",
   annotations: {
-    title: "Greet",
-    readOnlyHint: true,
-    idempotentHint: true,
+    title: "Greet"
   },
 };
 

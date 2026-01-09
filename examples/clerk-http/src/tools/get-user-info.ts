@@ -6,9 +6,7 @@ export const metadata: ToolMetadata = {
   description:
     "Returns information about the authenticated Clerk user",
   annotations: {
-    title: "Get User Info",
-    readOnlyHint: true,
-    idempotentHint: true,
+    title: "Get User Info"
   },
 };
 
