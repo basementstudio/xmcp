@@ -75,8 +75,8 @@ Create a `.env` file:
 
 ```bash
 AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=https://your-api-identifier
-BASE_URL=http://localhost:3000
+AUTH0_AUDIENCE=http://localhost:3001/   # Must match API identifier exactly
+BASE_URL=http://localhost:3001
 ```
 
 ## API Reference
