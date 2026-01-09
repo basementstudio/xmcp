@@ -15,8 +15,10 @@ npm install @xmcp-dev/clerk
 ```bash
 CLERK_SECRET_KEY=sk_test_...
 CLERK_DOMAIN=your-app.clerk.accounts.dev
-BASE_URL=http://127.0.0.1:3001
+BASE_URL=http://127.0.0.1:3001  # Use your production URL in production
 ```
+
+The `BASE_URL` in production should be replaced with your deployed server URL.
 
 2. **Create middleware.ts:**
 
@@ -49,18 +51,18 @@ export default async function myTool() {
 |--------|------|----------|-------------|
 | `secretKey` | `string` | Yes | Clerk Secret Key |
 | `clerkDomain` | `string` | Yes | Clerk Frontend API domain |
-| `baseURL` | `string` | Yes | Base URL of your MCP server |
+| `baseURL` | `string` | Yes | Base URL of your MCP server (development: `http://127.0.0.1:3001`, production: your deployed URL) |
 | `scopes` | `string[]` | No | OAuth scopes (default: `['profile', 'email']`) |
 | `docsURL` | `string` | No | URL to your API documentation |
 
 ## Clerk Setup
 
 1. Go to [Clerk Dashboard](https://dashboard.clerk.com)
-2. Copy your **Secret Key** and **Frontend API** URL from API Keys
-3. Navigate to **OAuth Applications**
-4. Enable **Dynamic Client Registration**
-
-This allows MCP clients (Cursor, Claude, etc.) to automatically register themselves.
+2. Create a new application or select an existing one
+3. Navigate to **Configure** and go to **API Keys**, note your :
+   1. **Secret Key** (`sk_test_` for development / `sk_live_` for production)
+   2. **Frontend API** URL (`your-app.clerk.accounts.dev`)
+4. Click on **Development**, enter to OAuth Applications and enable **Dynamic Client Registration**
 
 ## API
 
@@ -74,15 +76,15 @@ Returns the current user's session data.
 
 ### `getUser()`
 
-Fetches the full user profile from Clerk's API.
+Fetches the full user profile from Clerk's.
 
 ### `getClient()`
 
-Returns the Clerk Backend SDK client for advanced operations.
+Returns the Clerk Backend SDK client.
 
 ## Documentation
 
-For full documentation, visit [xmcp.dev/docs/integrations/clerk](https://xmcp.dev/docs/integrations/clerk).
+For full documentation, visit [xmcp Clerk Plugin](https://xmcp.dev/docs/integrations/clerk).
 
 ## Contributing
 

@@ -3,11 +3,7 @@ import { getSession, getUser } from "@xmcp-dev/clerk";
 
 export const metadata: ToolMetadata = {
   name: "get-user-info",
-  description:
-    "Returns information about the authenticated Clerk user",
-  annotations: {
-    title: "Get User Info"
-  },
+  description: "Get user details",
 };
 
 export default async function getUserInfo(): Promise<string> {

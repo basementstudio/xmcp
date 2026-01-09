@@ -3,10 +3,7 @@ import { getSession } from "@xmcp-dev/clerk";
 
 export const metadata: ToolMetadata = {
   name: "whoami",
-  description: "Returns basic identity information from the authenticated session",
-  annotations: {
-    title: "Who Am I"
-  },
+  description: "Returns basic identity information from the authenticated session"
 };
 
 export default async function whoami(): Promise<string> {

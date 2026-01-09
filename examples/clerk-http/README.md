@@ -1,10 +1,5 @@
 # Get started with Clerk on xmcp
 
-> [!IMPORTANT]
-> This example shows how to add authentication to your xmcp app using [Clerk](https://clerk.com). Clerk handles all the OAuth complexity, so your MCP server only needs to validate tokens.
-
-## Quick Start
-
 ### 1. Install the plugin
 
 ```bash
@@ -13,27 +8,30 @@ npm install @xmcp-dev/clerk
 
 ### 2. Set up your Clerk account
 
-1. Go to [Clerk Dashboard](https://dashboard.clerk.com) and create an application (or use an existing one)
-2. Copy your **Secret Key** (starts with `sk_test_` or `sk_live_`)
-3. Copy your **Frontend API** URL (e.g., `your-app.clerk.accounts.dev`)
-4. Navigate to **OAuth Applications** and enable **Dynamic Client Registration**
-   - This allows MCP clients like Cursor and Claude to automatically connect
+1. Navigate to your [Clerk Dashboard](https://dashboard.clerk.com)
+2. Enter to an existing application or create a new one
+3. Go to **Configure** and access to **API Keys** and note:
+   - **Secret Key** (`sk_test_` for development / `sk_live_` for production)
+   - **Frontend API** URL (`your-app.clerk.accounts.dev`)
+4. Click on **Development**, enter to OAuth Applications and enable **Dynamic Client Registration**
 
 ### 3. Create environment variables
 
-Create a `.env` file in your project root with the following vars:
+Create a `.env` file in the root of your project and configure the following environment variables:
 
 ```bash
 CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 CLERK_DOMAIN=your-app.clerk.accounts.dev
 
-BASE_URL=http://127.0.0.1:3001
+BASE_URL=http://127.0.0.1:3001 
 ```
+
+The `BASE_URL` shown above is for local development. In production, replace it with your deployed server URL.
 
 ### 4. Create the middleware
 
-Create `src/middleware.ts`:
+Create a `middleware.ts` file in your xmcp app's `src` directory and import the provider from the package:
 
 ```typescript
 import { clerkProvider } from "@xmcp-dev/clerk";
@@ -62,7 +60,7 @@ pnpm start
 |--------|------|-------------|----------|
 | `secretKey` | `string` | Clerk Secret Key from dashboard | Yes |
 | `clerkDomain` | `string` | Clerk Frontend API domain | Yes |
-| `baseURL` | `string` | Base URL of your MCP server | Yes |
+| `baseURL` | `string` | Base URL of your MCP server (use `http://127.0.0.1:3001` for development, your production URL in production) | Yes |
 | `scopes` | `string[]` | OAuth scopes to request (default: `['profile', 'email']`) | No |
 | `docsURL` | `string` | URL to your API documentation | No |
 
@@ -117,7 +115,7 @@ The client isn't sending a token. Make sure:
 
 ### "Token has expired"
 
-Access tokens are short-lived (~5 minutes). The client should automatically refresh. If it persists:
+Access tokens are short-lived. The client should automatically refresh. If it persists:
 - Disconnect and reconnect in the MCP client
 - Check that your system clock is accurate
 

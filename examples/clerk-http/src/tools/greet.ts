@@ -9,9 +9,6 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "greet",
   description: "Greet a person with their name and show your Clerk identity",
-  annotations: {
-    title: "Greet"
-  },
 };
 
 export default async function greet({
