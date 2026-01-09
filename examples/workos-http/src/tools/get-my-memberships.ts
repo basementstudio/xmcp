@@ -3,11 +3,7 @@ import { getSession, getClient } from "@xmcp-dev/workos";
 
 export const metadata: ToolMetadata = {
   name: "get-my-memberships",
-  description:
-    "Returns the user's organization memberships using the WorkOS SDK directly",
-  annotations: {
-    title: "Get My Memberships",
-  },
+  description: "Returns the user's organization memberships using the WorkOS SDK directly"
 };
 
 export default async function getMyMemberships(): Promise<string> {
@@ -23,22 +19,6 @@ export default async function getMyMemberships(): Promise<string> {
     return "You are not a member of any organizations.";
   }
 
-  const formattedMemberships = memberships.data.map((membership) => ({
-    id: membership.id,
-    organizationId: membership.organizationId,
-    role: membership.role?.slug || "member",
-    status: membership.status,
-    createdAt: membership.createdAt,
-  }));
-
-  return JSON.stringify(
-          {
-            userId: session.userId,
-            membershipCount: memberships.data.length,
-            memberships: formattedMemberships,
-          },
-          null,
-          2
-        );
+  return JSON.stringify(memberships.data, null, 2);
 }
 
