@@ -1,0 +1,291 @@
+---
+title: "Auth0"
+metadataTitle: "Usage with Auth0 | xmcp Documentation"
+publishedAt: "2026-01-08"
+summary: "Add secure authentication to your MCP server using Auth0"
+description: "The Auth0 plugin provides authentication for your MCP server using Auth0 with scope-based authorization."
+---
+
+## Installation
+
+Install the Auth0 plugin:
+
+```bash
+npm install @xmcp-dev/auth0
+```
+
+## Auth0 Tenant Setup
+
+MCP clients use Dynamic Client Registration (DCR) and the OAuth 2.0 Resource Parameter to authenticate. Your Auth0 tenant requires specific configuration for this to work.
+
+<Callout variant="info">
+  This setup is based on [Auth0's official MCP sample](https://github.com/auth0-samples/auth0-ai-samples/blob/main/auth-for-mcp/fastmcp-mcp-js/README.md#auth0-tenant-setup). You can use the Auth0 Dashboard or the [Auth0 CLI](https://auth0.github.io/auth0-cli/).
+</Callout>
+
+### Step 1: Enable Dynamic Client Registration
+
+MCP clients register themselves automatically with your Auth0 tenant.
+
+1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
+2. Enable **"OIDC Dynamic Application Registration"**
+3. Save changes
+
+### Step 2: Enable Resource Parameter Compatibility Profile
+
+The MCP specification requires the `resource` parameter ([RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707)). Auth0 needs this compatibility profile enabled.
+
+1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
+2. Enable **"Resource Parameter Compatibility Profile"**
+3. Save changes
+
+### Step 3: Promote Connection to Domain Level
+
+DCR-registered clients are third-party by default and can only use domain-level connections.
+
+1. Go to **Auth0 Dashboard** → **Authentication** → **Database**
+2. Select your connection (e.g., `Username-Password-Authentication`)
+3. Enable **"Enable for third-party clients"** (or "Promote to domain level")
+4. Save changes
+
+### Step 4: Create the API
+
+<Callout variant="warning">
+  **Critical**: The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience. Any mismatch causes "Service not found" errors.
+</Callout>
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs**
+2. Click **Create API**
+3. Set:
+   - **Name**: e.g., `MCP Server API`
+   - **Identifier**: Your server URL **with trailing slash** (e.g., `http://localhost:3001/`)
+   - **Signing Algorithm**: `RS256`
+4. Go to **Permissions** tab and add your scopes:
+   - `tool:greet` - Access the greeting tool
+   - `tool:whoami` - Access the whoami tool
+
+### Step 5: Set Default Audience
+
+1. Go to **Auth0 Dashboard** → **Settings** → **General**
+2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (e.g., `http://localhost:3001/`)
+3. Save changes
+
+## Environment Variables
+
+Configure the following environment variables in your `.env` file:
+
+```bash
+# Auth0 credentials
+AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_AUDIENCE=http://localhost:3001/  # Must match API identifier exactly (with trailing slash)
+
+# App configuration
+BASE_URL=http://localhost:3001
+```
+
+<Callout variant="warning">
+  `AUTH0_AUDIENCE` must match your Auth0 API identifier exactly. If your API identifier has a trailing slash, include it here too.
+</Callout>
+
+## Configuration
+
+Create a `middleware.ts` file in your xmcp app root directory:
+
+```typescript title="src/middleware.ts"
+import { auth0Provider } from "@xmcp-dev/auth0";
+
+export default auth0Provider({
+  domain: process.env.AUTH0_DOMAIN!,
+  audience: process.env.AUTH0_AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  scopesSupported: ["tool:greet", "tool:whoami"],
+});
+```
+
+### Configuration Options
+
+- **`domain`** - Your Auth0 domain (e.g., `your-tenant.auth0.com`)
+- **`audience`** - The API identifier configured in Auth0
+- **`baseURL`** - Base URL of your MCP server
+- **`scopesSupported`** – (Optional) List of custom scopes for OAuth metadata
+
+## Usage in Tools
+
+Auth0 uses a `requireScopes` pattern for fine-grained scope-based authorization at the tool level.
+
+### Basic Usage
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { requireScopes } from "@xmcp-dev/auth0";
+
+export const schema = {
+  name: z.string().optional().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their Auth0 identity",
+};
+
+export default requireScopes(
+  ["tool:greet"],
+  async ({ name }: InferSchema<typeof schema>, { authInfo }) => {
+    const displayName = authInfo.extra.name ?? name ?? "there";
+    return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.extra.sub}`;
+  }
+);
+```
+
+### Authentication Only (No Scopes)
+
+To require authentication without specific scopes:
+
+```typescript
+export default requireScopes(
+  [], // Empty array = authentication only
+  async (params, { authInfo }) => {
+    return `Authenticated as ${authInfo.extra.email}`;
+  }
+);
+```
+
+### Alternative: `getAuthInfo()`
+
+If you prefer not to use the wrapper pattern:
+
+```typescript
+import { getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function myTool() {
+  const authInfo = getAuthInfo();
+  return `Hello ${authInfo.extra.name}!`;
+}
+```
+
+<Callout variant="warning">
+  `getAuthInfo` will throw an error if called outside of an authenticated request context.
+</Callout>
+
+## Auth Info Properties
+
+The `authInfo` object contains data from the validated JWT token:
+
+### Token Properties
+
+- `authInfo.token` - The raw access token
+- `authInfo.clientId` - OAuth client ID
+- `authInfo.scopes` - Array of granted scopes
+- `authInfo.expiresAt` - Token expiration (Unix timestamp)
+
+### User Properties (`authInfo.extra`)
+
+- `extra.sub` - User ID (subject claim)
+- `extra.email` - User's email address
+- `extra.name` - User's full name
+- `extra.client_id` - OAuth client_id claim
+- `extra.azp` - Authorized party claim
+
+## How Authentication Works
+
+### Architecture
+
+The authentication flow involves three parties:
+
+1. **MCP Client** (Claude Desktop, Cursor, etc.) - The application users interact with
+2. **Auth0** - The authorization server that handles login and issues tokens
+3. **MCP Server** - The resource server that validates tokens and enforces scopes
+
+### Flow
+
+1. MCP client discovers your server's OAuth metadata at `/.well-known/oauth-protected-resource`
+2. Client redirects user to Auth0 for authentication
+3. User logs in and grants requested scopes
+4. Auth0 issues an access token to the client
+5. Client sends requests to your MCP server with `Authorization: Bearer <token>`
+6. Your server validates the token and checks scopes per tool
+
+<Callout variant="info">
+  Your MCP server never handles OAuth callbacks. It only validates access tokens on API requests.
+</Callout>
+
+## OAuth Metadata
+
+The plugin automatically serves OAuth Protected Resource Metadata at:
+
+```
+GET /.well-known/oauth-protected-resource
+```
+
+This endpoint tells MCP clients:
+- Which authorization server to use (Auth0)
+- Where to find the JWKS for token verification
+- Which scopes are supported
+
+## Error Handling
+
+The plugin provides specific error classes:
+
+```typescript
+import { InvalidTokenError, InsufficientScopeError } from "@xmcp-dev/auth0";
+
+// InvalidTokenError - Token is missing, malformed, or expired
+// InsufficientScopeError - Token doesn't have required scopes
+```
+
+### Common Errors
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `unauthorized` | Missing Authorization header | Client needs to authenticate |
+| `token_expired` | Access token expired | Client should refresh the token |
+| `invalid_token` | Token verification failed | Check Auth0 configuration |
+| `InsufficientScopeError` | Missing required scopes | Request scopes during login |
+
+## Troubleshooting
+
+### OAuth Init Failed
+
+If you see "OAuth init failed" when connecting:
+
+1. **Enable DCR**: Ensure Dynamic Client Registration is enabled in Auth0 Settings → Advanced
+2. **Enable Resource Parameter**: Enable the Resource Parameter Compatibility Profile in Auth0 Settings → Advanced
+
+### Access Denied / Service Not Found
+
+If you see "access denied" or "Service not found" errors:
+
+1. **API identifier mismatch**: Your Auth0 API identifier must match `BASE_URL` exactly. If the MCP client sends `http://localhost:3001/` (with trailing slash), your API identifier must be `http://localhost:3001/`
+2. **Connection not promoted**: Promote your database connection to domain level (Authentication → Database → Enable for third-party clients)
+3. **Default audience not set**: Set the Default Audience in Settings → General → API Authorization Settings
+
+### No Connections Enabled
+
+If you see "no connections enabled for the client":
+
+- DCR-registered clients can only use domain-level connections
+- Go to Authentication → Database → your connection → Enable "Enable for third-party clients"
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens
+- If errors persist, the refresh token may have expired
+- Users can disconnect and reconnect to get fresh tokens
+
+### Missing Scopes
+
+If tools fail with `InsufficientScopeError`:
+
+1. Check that the scope is defined in your Auth0 API Permissions
+2. Ensure the client requests the scope during authentication
+3. Verify the scope is listed in `scopesSupported` config
+
+### Invalid Token Errors
+
+If token verification fails:
+
+1. Verify `AUTH0_DOMAIN` matches your Auth0 tenant
+2. Verify `AUTH0_AUDIENCE` matches your API identifier exactly (including trailing slash)
+3. Check that the token was issued for your API audience
