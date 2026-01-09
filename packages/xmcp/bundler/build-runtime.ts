@@ -25,12 +25,21 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "http", path: "transports/http" },
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
+  { name: "x402", path: "x402" },
 ];
+
+// Non-runtime modules that need to be bundled separately
+const standaloneModules: RuntimeRoot[] = [];
 const entry: EntryObject = {};
 
 // add dynamic entries
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
+}
+
+// add standalone modules
+for (const mod of standaloneModules) {
+  entry[mod.name] = path.join(srcPath, "runtime", mod.path);
 }
 
 const config: RspackOptions = {
@@ -42,6 +51,13 @@ const config: RspackOptions = {
   externalsPresets: { node: true },
   externals: {
     "@rspack/core": "@rspack/core",
+    "@coinbase/x402": "commonjs @coinbase/x402",
+    "@x402/core": "commonjs @x402/core",
+    "@x402/core/server": "commonjs @x402/core/server",
+    "@x402/core/http": "commonjs @x402/core/http",
+    "@x402/evm": "commonjs @x402/evm",
+    "@x402/express": "commonjs @x402/express",
+    "@x402/svm": "commonjs @x402/svm",
   },
   output: {
     filename: "[name].js",

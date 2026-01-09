@@ -18,6 +18,7 @@ import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
+import { x402Interceptor } from "@/x402/interceptor";
 
 // Global type declarations for tool name context
 declare global {
@@ -303,6 +304,8 @@ export class StatelessStreamableHTTPTransport {
     this.setupInitialMiddleware();
 
     this.setupProviders();
+
+    this.app.use(this.endpoint, x402Interceptor);
 
     this.setupEndpointRoute();
   }

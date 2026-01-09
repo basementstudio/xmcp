@@ -31,6 +31,9 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
     } else {
       neededFiles.push("http.js");
     }
+
+    // x402 is always included with HTTP transport
+    neededFiles.push("x402.js");
   }
 
   return neededFiles;

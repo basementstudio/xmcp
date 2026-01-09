@@ -34,6 +34,20 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./headers": {
+      "types": "./dist/runtime/headers.d.ts",
+      "default": "./dist/runtime/headers.js"
+    },
+    "./x402": {
+      "types": "./dist/runtime/x402.d.ts",
+      "default": "./dist/runtime/x402.js"
+    }
+  },
   "bin": {
     "xmcp": "dist/cli.js"
   },
@@ -49,6 +63,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
     "@rspack/core": "^1.6.7",
+    "@coinbase/x402": "^0.5.1",
+    "@x402/core": "^2.1.0",
+    "@x402/evm": "^2.1.0",
+    "@x402/express": "^2.1.0",
+    "@x402/svm": "^2.1.0",
     "postcss-loader": "^8.2.0",
     "ts-checker-rspack-plugin": "^1.2.1",
     "typescript": "^5.9.3"
