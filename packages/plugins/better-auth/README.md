@@ -78,16 +78,17 @@ export default betterAuthProvider({
 
 This config object is used to configure the Better Auth instance through the provider function.
 
-| Parameter                       | Type               | Description                                                                                            | Required                 |
-| ------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------ |
-| `database`                      | `Pool` (from `pg`) | Must be a valid instance of `Pool` for PostgreSQL connection                                           | Yes                      |
-| `baseURL`                       | `string`           | The base URL of your xmcp app. Used to generate OAuth callback URLs. Should match your app's host/port | Yes                      |
-| `secret`                        | `string`           | Secret used to sign JWT tokens. Generate a random secret for security                                  | Yes                      |
-| `providers`                     | `object`           | Configuration object for authentication providers                                                      | Yes                      |
-| `providers.emailAndPassword`    | `boolean`          | Set to `true` to enable email/password authentication                                                  | No                       |
-| `providers.google`              | `object`           | Google OAuth configuration object                                                                      | No                       |
-| `providers.google.clientId`     | `string`           | Google OAuth client ID from Google Cloud Console                                                       | Required if using Google |
-| `providers.google.clientSecret` | `string`           | Google OAuth client secret from Google Cloud Console                                                   | Required if using Google |
+| Parameter                       | Type                   | Description                                                                                            | Required                 |
+| ------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| `database`                      | `Pool` (from `pg`)     | Must be a valid instance of `Pool` for PostgreSQL connection                                           | Yes                      |
+| `baseURL`                       | `string`               | The base URL of your xmcp app. Used to generate OAuth callback URLs. Should match your app's host/port | Yes                      |
+| `secret`                        | `string`               | Secret used to sign JWT tokens. Generate a random secret for security                                  | Yes                      |
+| `providers`                     | `object`               | Configuration object for authentication providers                                                      | No                       |
+| `providers.emailAndPassword`    | `boolean`              | Set to `true` to enable email/password authentication                                                  | No                       |
+| `providers.google`              | `object`               | Google OAuth configuration object                                                                      | No                       |
+| `providers.google.clientId`     | `string`               | Google OAuth client ID from Google Cloud Console                                                       | Required if using Google |
+| `providers.google.clientSecret` | `string`               | Google OAuth client secret from Google Cloud Console                                                   | Required if using Google |
+| `plugins`                       | `BetterAuthPlugin[]`   | Custom Better Auth plugins (e.g., genericOAuth). See [Custom OAuth Providers](#custom-oauth-providers-advanced) | No                       |
 
 #### Email and Password
 
@@ -136,6 +137,70 @@ const config: BetterAuthConfig = {
   },
 };
 ```
+
+## Custom OAuth Providers (Advanced)
+
+For advanced use cases like custom authorization URLs (e.g., SSO proxy) or unsupported OAuth providers, you can pass your own Better Auth plugins using the `plugins` option.
+
+This lets you have full control over OAuth configuration while keeping all the conveniences of this wrapper (sign-in UI, middleware, session management).
+
+```ts
+import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { genericOAuth } from "better-auth/plugins/generic-oauth";
+import { Pool } from "pg";
+
+// Create your custom OAuth provider with full control
+const googleOAuth = genericOAuth({
+  config: [
+    {
+      providerId: "google",
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      // Custom authorization URL (e.g., through SSO proxy)
+      authorizationUrl:
+        "https://sso-proxy.example.com/proxy/https://accounts.google.com/o/oauth2/v2/auth",
+      // Token and userinfo go directly to Google
+      tokenUrl: "https://oauth2.googleapis.com/token",
+      userInfoUrl: "https://openidconnect.googleapis.com/v1/userinfo",
+      scopes: ["openid", "email", "profile"],
+      pkce: true,
+      mapProfileToUser: (profile) => ({
+        id: profile.sub as string,
+        email: profile.email as string,
+        name: profile.name as string,
+        image: profile.picture as string,
+        emailVerified: profile.email_verified as boolean,
+      }),
+    },
+  ],
+});
+
+export default betterAuthProvider({
+  database: new Pool({
+    connectionString: process.env.DATABASE_URL,
+  }),
+  baseURL: process.env.BETTER_AUTH_BASE_URL || "http://127.0.0.1:3002",
+  secret: process.env.BETTER_AUTH_SECRET || "super-secret-key",
+  // Pass your custom plugin - the MCP plugin is always included automatically
+  plugins: [googleOAuth],
+});
+```
+
+### Use Cases for Custom Plugins
+
+- **SSO Proxy**: Route OAuth through a central proxy that handles `redirect_uri` rewriting for multiple environments
+- **Custom OAuth Providers**: Add support for OAuth providers not built into Better Auth
+- **Advanced Configuration**: Full control over scopes, PKCE, profile mapping, etc.
+
+### How It Works
+
+When you provide the `plugins` option:
+
+1. The MCP plugin is always included automatically (for MCP client authentication)
+2. Your custom plugins are added alongside the MCP plugin
+3. The built-in `providers.google` configuration is ignored (your plugin handles OAuth)
+4. The sign-in UI, middleware, and session management continue to work normally
+5. OAuth callbacks are handled for any provider ID (e.g., `/auth/callback/google`, `/auth/callback/github`)
 
 ## Access the session in your tools
 

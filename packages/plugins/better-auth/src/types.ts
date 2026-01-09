@@ -1,3 +1,4 @@
+import type { BetterAuthPlugin } from "better-auth";
 import { Database } from "./databases.js";
 
 // Extracted from better-auth types
@@ -102,10 +103,46 @@ export type BetterAuthConfig = {
   baseURL: string;
   secret: string;
   providers?: {
-    emailAndPassword: EmailAndPassword;
+    emailAndPassword?: EmailAndPassword;
     google?: {
       clientId: string;
       clientSecret: string;
     };
   };
+  /**
+   * Custom Better Auth plugins to include.
+   *
+   * Use this to add your own OAuth providers (via genericOAuth) or other
+   * Better Auth plugins while keeping the sign-in UI, middleware, and
+   * session management provided by this wrapper.
+   *
+   * The MCP plugin is always included automatically.
+   *
+   * @example
+   * ```typescript
+   * import { genericOAuth } from 'better-auth/plugins/generic-oauth';
+   *
+   * // Create custom OAuth provider with full control
+   * const googleOAuth = genericOAuth({
+   *   config: [{
+   *     providerId: 'google',
+   *     clientId: process.env.GOOGLE_CLIENT_ID,
+   *     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+   *     authorizationUrl: 'https://sso-proxy.example.com/proxy/https://accounts.google.com/o/oauth2/v2/auth',
+   *     tokenUrl: 'https://oauth2.googleapis.com/token',
+   *     userInfoUrl: 'https://openidconnect.googleapis.com/v1/userinfo',
+   *     scopes: ['openid', 'email', 'profile'],
+   *     pkce: true,
+   *   }],
+   * });
+   *
+   * betterAuthProvider({
+   *   database: pool,
+   *   baseURL: '...',
+   *   secret: '...',
+   *   plugins: [googleOAuth],
+   * });
+   * ```
+   */
+  plugins?: BetterAuthPlugin[];
 };

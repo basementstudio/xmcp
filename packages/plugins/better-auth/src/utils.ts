@@ -6,6 +6,10 @@ export interface ResponseConfig {
     google?: {
       enabled: boolean;
     };
+    /** Indicates custom plugins are configured (e.g., genericOAuth) */
+    customPlugins?: {
+      enabled: boolean;
+    };
   };
 }
 

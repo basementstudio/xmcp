@@ -22,6 +22,12 @@ const __dirname = path.dirname(__filename);
 const authUiPath = path.join(__dirname, "auth-ui");
 
 function getBetterAuthInstance(auth: BetterAuthConfig): any {
+  // Build plugins array: MCP plugin is always included, plus any custom plugins
+  const plugins = [
+    mcp({ loginPage: "/auth/sign-in" }),
+    ...(auth.plugins || []),
+  ];
+
   const betterAuthInstance = betterAuth({
     database: auth.database,
     baseURL: auth.baseURL,
@@ -29,16 +35,19 @@ function getBetterAuthInstance(auth: BetterAuthConfig): any {
     ...(auth.providers?.emailAndPassword?.enabled && {
       emailAndPassword: auth.providers.emailAndPassword,
     }),
-    ...(auth.providers?.google && {
-      socialProviders: {
-        google: {
-          clientId: auth.providers.google.clientId,
-          clientSecret: auth.providers.google.clientSecret,
-          redirectURI: `${auth.baseURL}/auth/callback/google`,
+    // Only use built-in socialProviders if no custom plugins are provided
+    // (custom plugins likely include their own OAuth configuration)
+    ...(!auth.plugins?.length &&
+      auth.providers?.google && {
+        socialProviders: {
+          google: {
+            clientId: auth.providers.google.clientId,
+            clientSecret: auth.providers.google.clientSecret,
+            redirectURI: `${auth.baseURL}/auth/callback/google`,
+          },
         },
-      },
-    }),
-    plugins: [mcp({ loginPage: "/auth/sign-in" })],
+      }),
+    plugins,
   });
 
   return betterAuthInstance;
@@ -79,12 +88,20 @@ export function betterAuthRouter(
   router.get("/auth/config", (_req, res) => {
     const config = processProvidersResponse(authConfig.providers);
 
-    if (
-      !config.providers.emailAndPassword?.enabled &&
-      !config.providers.google?.enabled
-    ) {
+    // Check if any provider is configured (built-in or custom plugins)
+    const hasBuiltInProviders =
+      config.providers.emailAndPassword?.enabled ||
+      config.providers.google?.enabled;
+    const hasCustomPlugins = authConfig.plugins && authConfig.plugins.length > 0;
+
+    if (!hasBuiltInProviders && !hasCustomPlugins) {
       res.status(500).json({ error: "No providers configured" });
       return;
+    }
+
+    // If using custom plugins, indicate that custom providers are available
+    if (hasCustomPlugins) {
+      config.providers.customPlugins = { enabled: true };
     }
 
     res.json(config);
@@ -104,10 +121,9 @@ export function betterAuthRouter(
     router.get("/auth/callback/email", serveAuthHtml);
   }
  */
-  // google callback custom to handle redirect
-  if (authConfig.providers?.google) {
-    router.get("/auth/callback/google", serveAuthHtml);
-  }
+  // OAuth callback handler - handles callbacks for any provider (google, github, custom, etc.)
+  // This is a catch-all for /auth/callback/:provider routes
+  router.get("/auth/callback/:provider", serveAuthHtml);
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
