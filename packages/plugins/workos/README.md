@@ -10,17 +10,19 @@ npm install @xmcp-dev/workos
 pnpm add @xmcp-dev/workos
 ```
 
-## WorkOS Connect Setup
+## WorkOS Setup
 
-Before using this plugin, you need to enable WorkOS Connect in your WorkOS Dashboard:
+Before using this plugin, we need to configure our WorkOS application:
 
 1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
-2. Navigate to **Connect** → **Configuration**
-3. Enable **MCP Auth** settings:
-   - **Client ID Metadata Document (CIMD)** - Required for MCP clients to authenticate
-   - **Dynamic Client Registration (DCR)** - Optional, for backwards compatibility with older MCP clients
-
-These settings allow MCP clients (like Claude Desktop, Cursor, MCPJam, etc.) to register themselves and authenticate users through AuthKit.
+2. Set-up SSO:
+   1. Save the `WORKOS_API_KEY` and `WORKOS_API_KEY`
+   2. Add a Redirect URL, for development we will use `http://127.0.0.1:6274/oauth/callback` for production replace it with the deployed URL
+3. Set-up AuthKit:
+   1. In this process, we will need to save the Auth Kit Domain, it looks like this `https://xxx.authkit.app`
+4. Navigate to **Connect** and then **Configuration** to enable the following options that are inside **MCP Auth** settings:
+   - **Client ID Metadata Document (CIMD)**
+   - **Dynamic Client Registration (DCR)**
 
 ## Usage
 
@@ -32,10 +34,10 @@ Create a `middleware.ts` file in your xmcp project:
 import { workosProvider } from "@xmcp-dev/workos";
 
 export default workosProvider({
-  apiKey: process.env.WORKOS_API_KEY || "",
-  clientId: process.env.WORKOS_CLIENT_ID || "",
-  baseURL: process.env.BASE_URL || "http://127.0.0.1:3002",
-  authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN || "",
+  apiKey: process.env.WORKOS_API_KEY!,
+  clientId: process.env.WORKOS_CLIENT_ID!,
+  baseURL: process.env.BASE_URL!,
+  authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
   // Optional: Link to your API documentation
   docsURL: "https://yourserver.com/docs/mcp",
 });
@@ -47,7 +49,7 @@ export default workosProvider({
 WORKOS_API_KEY=sk_test_...
 WORKOS_CLIENT_ID=client_...
 WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
-BASE_URL=http://127.0.0.1:3002
+BASE_URL=http://127.0.0.1:3001
 ```
 
 ### 3. Access Session in Tools
@@ -93,9 +95,6 @@ Returns the current session from JWT claims. Throws if not authenticated.
 **Returns:** `Session`
 - `userId` - WorkOS user ID
 - `sessionId` - Session ID
-- `organizationId` - Organization ID (optional)
-- `role` - User role (optional)
-- `permissions` - Array of permissions (optional)
 - `expiresAt` - Token expiration date
 - `issuedAt` - Token issued date
 - `claims` - Raw JWT claims
@@ -186,81 +185,10 @@ await workos.auditLogs.createEvent({
 });
 ```
 
-### SSO Connections
-
-```typescript
-const workos = getClient();
-const session = getSession();
-
-// List SSO connections for an organization
-const connections = await workos.sso.listConnections({
-  organizationId: session.organizationId,
-});
-```
-
 For the complete SDK documentation, see [WorkOS Node SDK Docs](https://workos.com/docs/sdks/node).
-
-## OAuth Endpoints
-
-The plugin automatically registers these endpoints:
-
-- `GET /.well-known/oauth-protected-resource` - Resource server metadata
-- `GET /.well-known/oauth-authorization-server` - Authorization server metadata
-
-## How Authentication Works
-
-### Architecture Overview
-
-![diagram-workos](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/diagram-workos.svg)
-
-### The Flow
-
-1. **Discovery**: MCP client calls your server's `/.well-known/oauth-protected-resource` to find the authorization server (AuthKit)
-2. **Authentication**: MCP client redirects user to AuthKit for login
-3. **Token Exchange**: After login, AuthKit redirects back to the MCP client with tokens
-4. **API Calls**: MCP client calls your MCP server with the access token
-
-**Important**: Your MCP server never handles OAuth callbacks. It only validates tokens.
-
-### CIMD Auto-Registration
-
-With **Client ID Metadata Document (CIMD)** enabled, MCP clients automatically register with AuthKit:
-
-1. MCP clients publish metadata at `{client_url}/.well-known/oauth-client`
-2. AuthKit fetches this metadata during authentication
-3. No manual redirect URI configuration needed!
-
-This means users can connect new MCP clients without any WorkOS Dashboard changes.
-
-### When to Manually Configure Redirect URIs
-
-You only need to add redirect URIs in WorkOS Dashboard when:
-
-| Scenario | Action |
-|----------|--------|
-| CIMD-enabled client (MCPJam, Cursor, etc.) | Auto |
-| OAuth error "redirect_uri not registered" | Add the URI from the error message |
-| Custom/legacy client without CIMD | Ask client developer for callback URL |
-| Your own app | Define your own callback route |
-
-### Finding the Redirect URI
-
-If you need to manually register a client:
-
-1. **Check the error message** - OAuth errors usually include the redirect URI
-2. **Check client documentation** - Each client documents its callback URL
-3. **Check server logs** - Look for the `redirect_uri` parameter in OAuth requests
 
 ### Token Lifecycle
 
 - Access tokens are short-lived
 - MCP clients automatically refresh tokens using refresh tokens
 - If you see "token_expired" errors, the client should handle refresh automatically
-
-## How It Works (Internal)
-
-1. MCP clients send requests with `Authorization: Bearer <token>` header
-2. The middleware verifies the JWT using WorkOS AuthKit's JWKS endpoint
-3. Valid sessions are stored in AsyncLocalStorage context
-4. Tools can access session data via `getSession()`
-5. Full user data can be fetched via `getUser()` (uses WorkOS SDK)
