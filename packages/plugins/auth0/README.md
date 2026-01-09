@@ -237,7 +237,3 @@ AUTH0_DOMAIN=your-tenant.auth0.com
 AUTH0_AUDIENCE=http://localhost:3001/   # Must match API identifier exactly
 BASE_URL=http://localhost:3001
 ```
-
-## License
-
-MIT
