@@ -1,0 +1,47 @@
+{
+  "name": "@xmcp-dev/auth0",
+  "description": "Auth0 authentication integration for xmcp",
+  "version": "0.0.1",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "auth0",
+    "authentication",
+    "mcp",
+    "oauth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/auth0"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@auth0/auth0-api-js": "^1.2.1",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "xmcp": "workspace:*"
+  }
+}
