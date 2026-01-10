@@ -1,9 +1,11 @@
 import type { RequestHandler } from "express";
-import { X402Config } from "@/types/x402";
+import type { X402Config } from "./types.js";
+import { x402Interceptor } from "./interceptor.js";
 
-// Use global to share config between bundles (http.js and x402.js)
+// Use global to share config between bundles
 declare global {
   var __XMCP_X402_CONFIG: X402Config | null | undefined;
+  var __XMCP_X402_INTERCEPTOR: typeof x402Interceptor | undefined;
 }
 
 // Initialize global if not set
@@ -22,6 +24,9 @@ export function x402Middleware(config: X402Config): RequestHandler {
       maxPaymentAge: config.defaults?.maxPaymentAge ?? 300,
     },
   };
+
+  // Register interceptor globally for xmcp to pick up
+  global.__XMCP_X402_INTERCEPTOR = x402Interceptor;
 
   return (_req, _res, next) => {
     next();

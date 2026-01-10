@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type InferSchema, type ToolMetadata } from "xmcp";
-import { paid } from "xmcp/x402";
+import { paid } from "@xmcp-dev/x402";
 
 export const schema = {
   input: z

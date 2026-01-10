@@ -1,5 +1,5 @@
-import { getPaymentContext } from "./interceptor";
-import type { X402PaymentContext } from "@/types/x402";
+import { getPaymentContext } from "./interceptor.js";
+import type { X402PaymentContext } from "./types.js";
 
 export function payment(): X402PaymentContext {
   const ctx = getPaymentContext();
@@ -12,4 +12,4 @@ export function payment(): X402PaymentContext {
   return ctx;
 }
 
-export type { X402PaymentContext, PaidHandlerExtra } from "@/types/x402";
+export type { X402PaymentContext, PaidHandlerExtra } from "./types.js";

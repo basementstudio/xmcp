@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import type {
   X402Config,
   X402ToolOptions,
   X402PaymentContext,
-} from "@/types/x402";
+} from "./types.js";
 
 // USDC contract addresses by network
 const USDC_ADDRESSES: Record<string, string> = {
@@ -78,21 +77,20 @@ export function createPaymentRequiredResponse(
 // Default facilitator URL (testnet)
 const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 
-// Lazy-loaded x402 modules (to work around TypeScript module resolution)
+// Lazy-loaded x402 modules
 let _x402Server: any = null;
 let _x402Http: any = null;
 
 async function getX402Server() {
   if (!_x402Server) {
-    // Dynamic import works at runtime even if TypeScript complains
-    _x402Server = await import("@x402/core/server" as any);
+    _x402Server = await import("@x402/core/server");
   }
   return _x402Server;
 }
 
 async function getX402Http() {
   if (!_x402Http) {
-    _x402Http = await import("@x402/core/http" as any);
+    _x402Http = await import("@x402/core/http");
   }
   return _x402Http;
 }

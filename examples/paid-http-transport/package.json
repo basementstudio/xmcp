@@ -12,8 +12,7 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "@coinbase/x402": "^0.5.1",
-    "@x402/core": "^2.1.0",
+    "@xmcp-dev/x402": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
   }

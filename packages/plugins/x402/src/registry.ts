@@ -1,6 +1,6 @@
-import type { X402ToolOptions } from "@/types/x402";
+import type { X402ToolOptions } from "./types.js";
 
-// Declare global to share registry between bundles (http.js and x402.js)
+// Declare global to share registry between bundles
 declare global {
   var __XMCP_X402_REGISTRY: Map<string, X402ToolOptions> | undefined;
 }

@@ -10,8 +10,37 @@ import { splitOpenAIMetaNested } from "./openai/split-meta";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
-import { isPaidHandler } from "@/x402/paid";
-import { x402Registry } from "@/x402/registry";
+
+interface X402ToolOptions {
+  price?: string;
+  currency?: string;
+  network?: string;
+  receipt?: boolean;
+  maxPaymentAge?: number;
+  description?: string;
+}
+
+interface PaidHandler {
+  __x402: X402ToolOptions;
+}
+
+declare global {
+  var __XMCP_X402_REGISTRY: Map<string, X402ToolOptions> | undefined;
+}
+
+/**
+ * Check if a handler is wrapped with paid() from @xmcp-dev/x402 plugin
+ */
+function isPaidHandler(handler: unknown): handler is PaidHandler {
+  return typeof handler === "function" && "__x402" in handler;
+}
+
+/**
+ * Get the x402 registry if the plugin is installed
+ */
+function getX402Registry(): Map<string, X402ToolOptions> | undefined {
+  return global.__XMCP_X402_REGISTRY;
+}
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -52,9 +81,12 @@ export function addToolsToServer(
       Object.assign(toolConfig, metadata);
     }
 
-    // Register paid tools in x402 registry (after metadata is applied)
+    // Register paid tools in x402 registry if plugin is installed
     if (isPaidHandler(handler)) {
-      x402Registry.register(toolConfig.name, handler.__x402);
+      const registry = getX402Registry();
+      if (registry) {
+        registry.set(toolConfig.name, handler.__x402);
+      }
     }
 
     // Determine the actual schema to use

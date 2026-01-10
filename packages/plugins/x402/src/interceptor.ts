@@ -1,12 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
-import { x402Registry } from "./registry";
-import { getX402Config } from "./middleware";
+import { x402Registry } from "./registry.js";
+import { getX402Config } from "./middleware.js";
 import {
   verifyPayment,
   settlePayment,
   createPaymentRequiredResponse,
-} from "./verify";
-import type { X402PaymentContext } from "@/types/x402";
+} from "./verify.js";
+import type { X402PaymentContext } from "./types.js";
 
 declare global {
   var __XMCP_X402_PAYMENT_CONTEXT: X402PaymentContext | null | undefined;

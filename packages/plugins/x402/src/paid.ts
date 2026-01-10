@@ -2,7 +2,7 @@ import type {
   X402ToolOptions,
   UserToolHandler,
   PaidHandler,
-} from "@/types/x402";
+} from "./types.js";
 
 /**
  * Mark a tool handler as requiring payment

@@ -1,5 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, {
+  Express,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
@@ -18,11 +24,11 @@ import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
-import { x402Interceptor } from "@/x402/interceptor";
 
-// Global type declarations for tool name context
+// Global type declarations for tool name context and x402 interceptor
 declare global {
   var __XMCP_CURRENT_TOOL_NAME: string | undefined;
+  var __XMCP_X402_INTERCEPTOR: RequestHandler | undefined;
 }
 
 // no session management, POST only
@@ -305,7 +311,10 @@ export class StatelessStreamableHTTPTransport {
 
     this.setupProviders();
 
-    this.app.use(this.endpoint, x402Interceptor);
+    const x402Interceptor = global.__XMCP_X402_INTERCEPTOR;
+    if (x402Interceptor) {
+      this.app.use(this.endpoint, x402Interceptor);
+    }
 
     this.setupEndpointRoute();
   }
