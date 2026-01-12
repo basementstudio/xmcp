@@ -1,0 +1,191 @@
+---
+title: "WorkOS"
+metadataTitle: "Usage with WorkOS | xmcp Documentation"
+publishedAt: "2026-01-12"
+summary: "Add secure authentication to your MCP server using WorkOS AuthKit"
+description: "The WorkOS plugin provides authentication for your mcp server using WorkOS AuthKit."
+---
+
+## Installation
+
+Install the WorkOS plugin:
+
+```bash
+npm install @xmcp-dev/workos
+```
+
+## WorkOS Setup
+
+Before getting started, we need to configure our WorkOS application:
+
+1. Go to your [WorkOS Dashboard](https://dashboard.workos.com).
+2. In the **Overview** page, under **Quickstart**, find and save your `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`.
+3. Go to **Domains** and save the AuthKit domain, it looks like this `https://xxx.authkit.app`. 
+4. Navigate to **Connect** and go to **Configuration** and enable the following options inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**.
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and configure the following environment variables:
+
+```bash
+WORKOS_API_KEY=sk_...
+WORKOS_CLIENT_ID=client_...
+WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
+
+BASE_URL=http://127.0.0.1:3001
+```
+
+<Callout variant="info">
+  For production, the `BASE_URL` should be replaced with your deployed server URL.
+</Callout>
+
+## Set up the Provider
+
+Create a `middleware.ts` and import the provider from the package:
+
+```typescript title="src/middleware.ts"
+import { workosProvider } from "@xmcp-dev/workos";
+
+export default workosProvider({
+  apiKey: process.env.WORKOS_API_KEY!,
+  clientId: process.env.WORKOS_CLIENT_ID!,
+  authkitDomain: process.env.WORKOS_AUTHKIT_DOMAIN!,
+  baseURL: process.env.BASE_URL!,
+});
+```
+
+### Configuration Options
+
+- **`apiKey`**: WorkOS API key from your dashboard.
+- **`clientId`**: WorkOS client ID for OAuth.
+- **`authkitDomain`**: Your AuthKit domain.
+- **`baseURL`**: Base URL of your app for OAuth callbacks.
+- **`docsURL`**: (Optional) URL for your MCP server documentation.
+
+## Get a user session
+
+Access the authenticated user in your xmcp tools using `getSession`.
+
+### Example: Greet the user with their WorkOS identity
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/workos";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their WorkOS identity"
+};
+
+// Tool implementation
+export default function greet({ name }: InferSchema<typeof schema>): string {
+  const session = getSession();
+
+  return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
+}
+```
+
+## Get user details
+
+Access the authenticated user in your xmcp tools using `getUser`.
+
+### Example: Get user details
+
+```typescript title="src/tools/get-user-info.ts"
+import type { ToolMetadata } from "xmcp";
+import { getUser } from "@xmcp-dev/workos";
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "get-user-info",
+  description: "Get user details"
+};
+
+// Tool implementation
+export default async function getUserInfo(): Promise<string> {
+  const user = await getUser();
+  return JSON.stringify(user, null, 2);
+}
+```
+
+## Access the client 
+
+The `getClient()` function gives you access to the full [WorkOS Node SDK](https://workos.com/docs/sdks/node), allowing you to leverage all WorkOS features in your MCP tools.
+
+### Example: Get organization memberships
+
+```typescript title="src/tools/get-memberships.ts"
+import { type ToolMetadata } from "xmcp";
+import { getSession, getClient } from "@xmcp-dev/workos";
+
+export const metadata: ToolMetadata = {
+  name: "get-my-memberships",
+  description: "Returns the user's organization memberships using the WorkOS SDK directly"
+};
+
+export default async function getMyMemberships(): Promise<string> {
+  const session = getSession();
+  const client = getClient();
+
+  // Use the WorkOS SDK to fetch organization memberships
+  const memberships = await client.userManagement.listOrganizationMemberships({
+    userId: session.userId,
+  });
+
+  if (memberships.data.length === 0) {
+    return "You are not a member of any organizations.";
+  }
+
+  return JSON.stringify(memberships.data, null, 2);
+}
+```
+
+## Troubleshooting
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens.
+- If errors persist, the client may have a bug or the refresh token expired.
+- Users can disconnect and reconnect to get fresh tokens.
+
+### Redirect URI Not Registered
+
+If you see this error during OAuth:
+
+1. Copy the redirect URI from the error message.
+2. Go to WorkOS Dashboard → Connect → Applications
+3. Add the redirect URI to the application.
+
+### Finding a Client's Redirect URI
+
+If you need to manually register a client:
+
+- Check the error message: OAuth errors include the redirect URI that needs to be registered.
+- Check client documentation: Each MCP client documents its callback URL.
+- Check your server logs: Look for the `redirect_uri` parameter in failed OAuth requests.
+
+### Session Not Initialized
+
+If you see `Session not initialized` or `can only be used within the workos-context-session context` errors:
+
+- Ensure `getSession` is called within a tool or handler that runs through the middleware pipeline.
+- Verify the `workosProvider` middleware is properly configured in your `middleware.ts`.
+- Make sure the route is under the `/mcp` path.
+- Check that the request includes a valid bearer token.
+
+### Wrong Redirect URI
+
+If you see that the redirect URI is not registered or not working, you can manually register it in the WorkOS Dashboard:
+
+- Check the error message: OAuth errors usually include the redirect URI.
+- Check client documentation: Each client documents its callback URL.
+- Check server logs: Look for the `redirect_uri` parameter in OAuth requests.
