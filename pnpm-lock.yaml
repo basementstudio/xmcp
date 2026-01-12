@@ -786,11 +786,11 @@ importers:
   examples/workos-http:
     dependencies:
       '@xmcp-dev/workos':
-        specifier: latest
-        version: 0.0.1(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))
+        specifier: workspace:*
+        version: link:../../packages/plugins/workos
       xmcp:
-        specifier: latest
-        version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13)
+        specifier: workspace:*
+        version: link:../../packages/xmcp
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -3934,12 +3934,6 @@ packages:
 
   '@x402/core@2.2.0':
     resolution: {integrity: sha512-UyPX7UVrqCyFTMeDWAx9cn9LvcaRlUoAknSehuxJ07vXLVhC7Wx5R1h2CV12YkdB+hE6K48Qvfd4qrvbpqqYfw==}
-
-  '@xmcp-dev/workos@0.0.1':
-    resolution: {integrity: sha512-zzwR50UMOvDa8pVhMA8GseWKx9yBXsf2vXxIiaN+RFZzeoOSmmf12YA4pPCk+PQ3O6NGVumbZWF0RbRdIKpSbw==}
-    peerDependencies:
-      xmcp: ^0.5.7
-
   '@xmldom/xmldom@0.9.8':
     resolution: {integrity: sha512-p96FSY54r+WJ50FIOsCOjyj/wavs8921hG5+kVMmZgKcvIKxMXHTrjNJvRgWa/zuX3B6t2lijLNFaOyuxUH+2A==}
     engines: {node: '>=14.6'}
@@ -10780,16 +10774,7 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@xmcp-dev/workos@0.0.1(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))':
-    dependencies:
-      '@workos-inc/node': 7.79.3(express@4.22.1)(next@15.5.9(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
-      express: 4.22.1
-      jose: 5.6.3
-      xmcp: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13)
-    transitivePeerDependencies:
-      - koa
-      - next
-      - supports-color
+
 
   '@xmldom/xmldom@0.9.8': {}
 
