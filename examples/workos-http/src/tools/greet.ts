@@ -10,14 +10,11 @@ export const schema = {
 // Define tool metadata
 export const metadata: ToolMetadata = {
   name: "greet",
-  description: "Greet the user with their WorkOS identity",
-  annotations: {
-    title: "Greet User"
-  },
+  description: "Greet the user with their WorkOS identity"
 };
 
 // Tool implementation
-export default async function greet({ name }: InferSchema<typeof schema>) {
+export default function greet({ name }: InferSchema<typeof schema>): string {
   const session = getSession();
 
   return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
