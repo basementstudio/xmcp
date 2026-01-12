@@ -925,8 +925,8 @@ importers:
         version: 4.22.1
     devDependencies:
       '@types/express':
-        specifier: ^5.0.6
-        version: 5.0.6
+        specifier: ^4.17.25
+        version: 4.17.25
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2

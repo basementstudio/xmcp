@@ -68,10 +68,14 @@ pnpm dev
 - **`requireScopes` HOF**: Wrap tools with scope validation
 - **Auth Info Access**: Get user identity in tool handlers
 
-## Tools
+## Tools and scopes
 
-- `greet` - Greets the user (requires `tool:greet` scope)
-- `whoami` - Returns user info (requires `tool:whoami` scope)
+Tool scopes are inferred from file names (`tool:<fileName>`). Keep your Auth0 permissions aligned with the tool files:
+
+- `greet` (`src/tools/greet.ts`) → scope `tool:greet`
+- `whoami` (`src/tools/whoami.ts`) → scope `tool:whoami`
+
+If you need a different scope name than the file, pass it explicitly to `requireScopes(["tool:custom"], handler)` and add that scope in Auth0.
 
 ## OAuth Metadata
 

@@ -5,8 +5,6 @@ export {
   InvalidTokenError,
 } from "./provider.js";
 
-export type { AuthToolContext } from "./provider.js";
-
 export { getAuthInfo } from "./session.js";
 
 export type {

@@ -31,11 +31,11 @@ export default auth0Provider({
 
 ### 2. Protect Your Tools
 
-#### Option A: Using `requireScopes` (Recommended for scope-based authorization)
+#### Using `requireScopes` (auto scope inference)
 
 ```typescript
 // src/tools/greet.ts
-import { requireScopes } from "@xmcp-dev/auth0";
+import { getAuthInfo, requireScopes } from "@xmcp-dev/auth0";
 import type { ToolMetadata } from "xmcp";
 
 export const metadata: ToolMetadata = {
@@ -43,15 +43,24 @@ export const metadata: ToolMetadata = {
   description: "Greet the authenticated user",
 };
 
-export default requireScopes(
-  ["tool:greet"],
-  async ({ name }, { authInfo }) => {
-    return `Hello, ${authInfo.extra.name ?? name}!`;
-  }
-);
+export default requireScopes(async ({ name }) => {
+  const authInfo = getAuthInfo();
+  return `Hello, ${authInfo.extra.name ?? name}!`;
+});
 ```
 
-#### Option B: Using `getAuthInfo` (Like WorkOS pattern)
+Scopes are inferred from the file name (e.g., `greet.ts` → `tool:greet`). The scope configured in Auth0 must match the tool name you expose. Pass scopes explicitly only if you need custom naming:
+
+```typescript
+export default requireScopes(["tool:custom"], async ({ name }) => {
+  const authInfo = getAuthInfo();
+  return `Hello, ${authInfo.extra.name ?? name}!`;
+});
+```
+
+#### Using `getAuthInfo` directly
+
+Use this when you don't need scope checks. The middleware still ensures the request is authenticated.
 
 ```typescript
 // src/tools/whoami.ts
@@ -92,18 +101,24 @@ Creates the Auth0 authentication provider for xmcp.
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
 | `scopesSupported` | `string[]` | No | List of custom scopes |
 
-### `requireScopes(scopes, handler)`
+### `requireScopes(scopes?, handler)`
 
 Higher-order function that wraps a tool handler with scope-based authorization.
 
 ```typescript
-export default requireScopes(
-  ["tool:read", "tool:write"],  // Required scopes
-  async (params, { authInfo }) => {
-    // authInfo is available here
-    return "Success!";
-  }
-);
+import { getAuthInfo, requireScopes } from "@xmcp-dev/auth0";
+
+// Auto-inferred scope: tool:my-tool-file
+export default requireScopes(async (params) => {
+  const authInfo = getAuthInfo(); // Retrieved from request context
+  return `Hello ${authInfo.extra.name ?? "friend"}`;
+});
+
+// Or pass explicit scopes if you need a custom name
+export const withCustomScope = requireScopes(["tool:custom"], async (params) => {
+  const authInfo = getAuthInfo();
+  return `Custom scoped hello ${authInfo.extra.name ?? "friend"}`;
+});
 ```
 
 ### `getAuthInfo()`

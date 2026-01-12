@@ -5,8 +5,9 @@ import {
   NextFunction,
   type RequestHandler,
 } from "express";
-import type { Middleware, ToolExtraArguments } from "xmcp";
+import type { Middleware } from "xmcp";
 import { contextProviderAuth, contextProviderConfig, getAuthContext } from "./context.js";
+import { getAuthInfo } from "./session.js";
 import type { Auth0Config, AuthInfo, OAuthProtectedResourceMetadata, OAuthAuthorizationServerMetadata } from "./types.js";
 import { createVerifier, extractBearerToken } from "./jwt.js";
 
@@ -192,28 +193,44 @@ function hasAllScopes(
   return requiredScopes.every((scope) => userScopes.includes(scope));
 }
 
-export interface AuthToolContext {
-  readonly authInfo: AuthInfo;
-}
-
 /**
  * Wraps a tool handler to enforce required OAuth scopes.
  *
  * @example
  * ```typescript
- * export default requireScopes(["tool:greet"], async (params, { authInfo }) => {
+ * export default requireScopes(async (params) => {
+ *   const authInfo = getAuthInfo();
  *   return `Hello ${authInfo.extra.name}!`;
  * });
  * ```
  */
 export function requireScopes<TParams, TReturn>(
+  toolFunction: (params: TParams) => Promise<TReturn>
+): (params: TParams) => Promise<TReturn>;
+export function requireScopes<TParams, TReturn>(
   requiredScopes: readonly string[],
-  toolFunction: (
-    params: TParams,
-    context: AuthToolContext
-  ) => Promise<TReturn>
-): (params: TParams, context: ToolExtraArguments) => Promise<TReturn> {
-  return async (params: TParams, _context: ToolExtraArguments): Promise<TReturn> => {
+  toolFunction: (params: TParams) => Promise<TReturn>
+): (params: TParams) => Promise<TReturn>;
+export function requireScopes<TParams, TReturn>(
+  requiredScopesOrHandler: readonly string[] | ((params: TParams) => Promise<TReturn>),
+  maybeHandler?: (params: TParams) => Promise<TReturn>
+): (params: TParams) => Promise<TReturn> {
+  const requiredScopes =
+    Array.isArray(requiredScopesOrHandler) ? requiredScopesOrHandler : inferScopeFromCaller();
+  const toolFunction =
+    typeof requiredScopesOrHandler === "function" ? requiredScopesOrHandler : maybeHandler;
+
+  if (!toolFunction) {
+    throw new Error("[Auth0] requireScopes: tool handler is missing");
+  }
+
+  if (!requiredScopes || requiredScopes.length === 0) {
+    throw new Error(
+      "[Auth0] requireScopes: could not infer scope. Pass explicit scopes or ensure this helper is called directly from a tool module."
+    );
+  }
+
+  return async (params: TParams): Promise<TReturn> => {
     const authCtx = getAuthContext();
 
     if (!authCtx.authInfo) {
@@ -222,16 +239,32 @@ export function requireScopes<TParams, TReturn>(
       );
     }
 
-    const userScopes = authCtx.authInfo.scopes;
+    const authInfo = getAuthInfo();
+    const userScopes = authInfo.scopes;
     if (!hasAllScopes(requiredScopes, userScopes)) {
-      const missing = requiredScopes.filter(
-        (scope) => !userScopes.includes(scope)
-      );
-      throw new InsufficientScopeError(
-        `Missing required scopes: ${missing.join(", ")}`
-      );
+      const missing = requiredScopes.filter((scope) => !userScopes.includes(scope));
+      throw new InsufficientScopeError(`Missing required scopes: ${missing.join(", ")}`);
     }
 
-    return toolFunction(params, { authInfo: authCtx.authInfo });
+    return toolFunction(params);
   };
+}
+
+function inferScopeFromCaller(): readonly string[] | null {
+  const stack = new Error().stack;
+  if (!stack) return null;
+
+  const lines = stack.split("\n").slice(2);
+  for (const line of lines) {
+    const match = line.match(/(?:file:\/\/)?(\/[^):]+):\d+:\d+/);
+    if (!match || !match[1]) continue;
+    const filePath = match[1];
+    const base = filePath.split("/").pop();
+    if (!base) continue;
+    const withoutExt = base.replace(/\.[^.]+$/, "");
+    if (!withoutExt) continue;
+    return [`tool:${withoutExt}`];
+  }
+
+  return null;
 }
