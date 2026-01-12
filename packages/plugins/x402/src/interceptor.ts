@@ -6,157 +6,76 @@ import {
   settlePayment,
   createPaymentRequiredResponse,
 } from "./verify.js";
-import type { X402PaymentContext } from "./types.js";
-
-declare global {
-  var __XMCP_X402_PAYMENT_CONTEXT: X402PaymentContext | null | undefined;
-  var __XMCP_X402_PENDING_SETTLEMENT:
-    | {
-        payload: unknown;
-        requirements: unknown;
-        config: unknown;
-      }
-    | null
-    | undefined;
-}
-
-// Initialize globals if not set
-if (global.__XMCP_X402_PAYMENT_CONTEXT === undefined) {
-  global.__XMCP_X402_PAYMENT_CONTEXT = null;
-}
-if (global.__XMCP_X402_PENDING_SETTLEMENT === undefined) {
-  global.__XMCP_X402_PENDING_SETTLEMENT = null;
-}
+import type { X402Config } from "./types.js";
+import { log, logError } from "./logger.js";
+import { x402ContextProvider } from "./context.js";
 
 /**
- * Get the current payment context (called from tool handlers)
+ * Symbol key to store pending settlement on the response object
  */
-export function getPaymentContext(): X402PaymentContext | null {
-  return global.__XMCP_X402_PAYMENT_CONTEXT ?? null;
+const PENDING_SETTLEMENT = Symbol("x402PendingSettlement");
+
+interface PendingSettlement {
+  payload: unknown;
+  requirements: unknown;
+  config: X402Config;
 }
 
-/**
- * Set the current payment context (called by interceptor)
- */
-export function setPaymentContext(context: X402PaymentContext | null): void {
-  global.__XMCP_X402_PAYMENT_CONTEXT = context;
+interface X402Response extends Response {
+  [PENDING_SETTLEMENT]?: PendingSettlement | null;
 }
 
-/**
- * Get pending settlement data
- */
-export function getPendingSettlement() {
-  return global.__XMCP_X402_PENDING_SETTLEMENT ?? null;
+function getPendingSettlement(res: X402Response): PendingSettlement | null {
+  return res[PENDING_SETTLEMENT] ?? null;
 }
 
-/**
- * Set pending settlement data
- */
-export function setPendingSettlement(
-  data: {
-    payload: unknown;
-    requirements: unknown;
-    config: unknown;
-  } | null
+function setPendingSettlement(
+  res: X402Response,
+  data: PendingSettlement | null
 ): void {
-  global.__XMCP_X402_PENDING_SETTLEMENT = data;
+  res[PENDING_SETTLEMENT] = data;
 }
 
-/**
- * Extract tool name from JSON-RPC request body
- */
 function extractToolName(req: Request): string | undefined {
-  try {
-    if (!req.body) return undefined;
+  if (!req.body) return undefined;
 
-    const messages = Array.isArray(req.body) ? req.body : [req.body];
+  const messages = Array.isArray(req.body) ? req.body : [req.body];
 
-    for (const message of messages) {
-      if (
-        message &&
-        typeof message === "object" &&
-        message.method === "tools/call" &&
-        message.params &&
-        typeof message.params === "object" &&
-        "name" in message.params &&
-        typeof message.params.name === "string"
-      ) {
-        return message.params.name;
-      }
+  for (const message of messages) {
+    if (message?.method === "tools/call") {
+      return message.params?.name;
     }
-  } catch {
-    // ignore parsing errors
   }
+
   return undefined;
 }
 
 function extractPaymentFromMeta(req: Request): string | undefined {
-  try {
-    if (!req.body) return undefined;
+  if (!req.body) return undefined;
 
-    const messages = Array.isArray(req.body) ? req.body : [req.body];
+  const messages = Array.isArray(req.body) ? req.body : [req.body];
 
-    for (const message of messages) {
-      if (
-        message &&
-        typeof message === "object" &&
-        message.method === "tools/call" &&
-        message.params &&
-        typeof message.params === "object"
-      ) {
-        console.log(
-          "[x402] Message params:",
-          JSON.stringify(message.params, null, 2)
-        );
-
-        if (
-          "_meta" in message.params &&
-          message.params._meta &&
-          typeof message.params._meta === "object"
-        ) {
-          // Support both "x402/payment" and "x402.payment" formats
-          if ("x402/payment" in message.params._meta) {
-            console.log("[x402] Found payment in _meta['x402/payment']");
-            return message.params._meta["x402/payment"] as string;
-          }
-          if ("x402.payment" in message.params._meta) {
-            console.log("[x402] Found payment in _meta['x402.payment']");
-            return message.params._meta["x402.payment"] as string;
-          }
-        }
-
-        // Check arguments.paymentAuthorization (withPayment client style)
-        if (
-          "arguments" in message.params &&
-          message.params.arguments &&
-          typeof message.params.arguments === "object" &&
-          "paymentAuthorization" in message.params.arguments
-        ) {
-          console.log("[x402] Found payment in arguments.paymentAuthorization");
-          return message.params.arguments.paymentAuthorization as string;
-        }
-
-        console.log("[x402] No payment found in request");
+  for (const message of messages) {
+    if (message?.method === "tools/call") {
+      const meta = message.params?._meta;
+      if (meta) {
+        const payment = meta["x402/payment"] ?? meta["x402.payment"];
+        if (payment) return payment;
       }
+
+      const authPayment = message.params?.arguments?.paymentAuthorization;
+      if (authPayment) return authPayment;
     }
-  } catch (e) {
-    console.log("[x402] Error extracting payment:", e);
   }
+
   return undefined;
 }
 
 function extractRequestId(req: Request): string | number | null {
-  try {
-    if (req.body && typeof req.body === "object") {
-      if (Array.isArray(req.body)) {
-        return req.body[0]?.id ?? null;
-      }
-      return req.body.id ?? null;
-    }
-  } catch {
-    // ignore
+  if (Array.isArray(req.body)) {
+    return req.body[0]?.id ?? null;
   }
-  return null;
+  return req.body?.id ?? null;
 }
 
 function createPaymentRequiredJsonRpcResponse(
@@ -179,17 +98,12 @@ export async function x402Interceptor(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  console.log("[x402] Interceptor called");
+  const x402Res = res as X402Response;
 
-  // Reset payment context and pending settlement
-  setPaymentContext(null);
-  setPendingSettlement(null);
+  setPendingSettlement(x402Res, null);
 
-  // Extract tool name from request body
   const toolName = extractToolName(req);
-  console.log("[x402] Tool name:", toolName);
 
-  // If no tool name or tool is not paid, continue
   if (!toolName || !x402Registry.has(toolName)) {
     next();
     return;
@@ -197,23 +111,15 @@ export async function x402Interceptor(
 
   const config = getX402Config();
   if (!config) {
-    // x402 middleware not configured, skip payment check
     next();
     return;
   }
 
   const toolOptions = x402Registry.get(toolName)!;
 
-  // x402-mcp style: payment comes in _meta["x402/payment"]
   const paymentFromMeta = extractPaymentFromMeta(req);
-  console.log(
-    "[x402] Payment from meta:",
-    paymentFromMeta ? "present" : "missing"
-  );
 
-  // No payment - return requirements in structuredContent (HTTP 200)
   if (!paymentFromMeta) {
-    console.log("[x402] No payment, returning requirements");
     const paymentRequired = createPaymentRequiredResponse(
       toolName,
       toolOptions,
@@ -231,7 +137,6 @@ export async function x402Interceptor(
     return;
   }
 
-  // Verify payment
   const verification = await verifyPayment(
     paymentFromMeta,
     toolName,
@@ -258,59 +163,94 @@ export async function x402Interceptor(
     return;
   }
 
-  // Set payment context for tool handler
-  setPaymentContext(verification.context!);
-
-  // Store verification data for settlement (will be processed after tool execution)
-  setPendingSettlement({
+  setPendingSettlement(x402Res, {
     payload: verification.payload,
     requirements: verification.requirements,
     config,
   });
 
-  // Override res.json to intercept the response and settle payment
-  const originalJson = res.json.bind(res);
-  res.json = function (body: unknown) {
-    const pendingSettlement = getPendingSettlement();
+  // Override res.end to intercept the response and settle payment
+  // xmcp uses res.writeHead().end() instead of res.json()
+  const originalEnd = res.end.bind(res);
+  (res as any).end = function (
+    chunk?: any,
+    encoding?: BufferEncoding | (() => void),
+    callback?: () => void
+  ) {
+    const pendingSettlement = getPendingSettlement(x402Res);
 
-    // Check if response is successful (not an error in result)
-    const isSuccess = !isToolError(body);
+    if (pendingSettlement && chunk) {
+      let body: unknown;
+      try {
+        const str = typeof chunk === "string" ? chunk : chunk.toString("utf-8");
+        body = JSON.parse(str);
+      } catch {
+        setPendingSettlement(x402Res, null);
+        return originalEnd(
+          chunk,
+          encoding as BufferEncoding,
+          callback as () => void
+        );
+      }
 
-    if (isSuccess && pendingSettlement) {
-      // Settle payment after successful tool execution
-      settlePayment(
-        pendingSettlement.payload,
-        pendingSettlement.requirements as any,
-        pendingSettlement.config as any
-      )
-        .then((settlement) => {
-          // Add settlement info to _meta in response
-          const modifiedBody = addPaymentResponseToMeta(body, settlement);
-          setPendingSettlement(null);
-          return originalJson(modifiedBody);
-        })
-        .catch((err) => {
-          console.error("[x402] Settlement failed:", err);
-          // Return error if settlement fails
-          const errorBody = createSettlementErrorResponse(
-            body,
-            err,
-            toolName,
-            toolOptions,
-            config
-          );
-          setPendingSettlement(null);
-          return originalJson(errorBody);
-        });
+      const isSuccess = !isToolError(body);
 
-      return res;
+      if (isSuccess) {
+        settlePayment(
+          pendingSettlement.payload,
+          pendingSettlement.requirements as any,
+          pendingSettlement.config
+        )
+          .then((settlement) => {
+            log("Settlement result:", settlement);
+            if (settlement.success && settlement.transaction) {
+              const baseUrl =
+                settlement.network === "base"
+                  ? "https://basescan.org"
+                  : "https://sepolia.basescan.org";
+              log(`Transaction: ${baseUrl}/tx/${settlement.transaction}`);
+            }
+
+            const modifiedBody = addPaymentResponseToMeta(body, settlement);
+            setPendingSettlement(x402Res, null);
+            return originalEnd(
+              JSON.stringify(modifiedBody),
+              encoding as BufferEncoding,
+              callback as () => void
+            );
+          })
+          .catch((err) => {
+            logError("Settlement failed:", err);
+            const errorBody = createSettlementErrorResponse(
+              body,
+              err,
+              toolName,
+              toolOptions,
+              config
+            );
+            setPendingSettlement(x402Res, null);
+            return originalEnd(
+              JSON.stringify(errorBody),
+              encoding as BufferEncoding,
+              callback as () => void
+            );
+          });
+
+        return res;
+      }
     }
 
-    setPendingSettlement(null);
-    return originalJson(body);
+    setPendingSettlement(x402Res, null);
+    return originalEnd(
+      chunk,
+      encoding as BufferEncoding,
+      callback as () => void
+    );
   };
 
-  next();
+  x402ContextProvider(verification.context!, () => {
+    next();
+  });
 }
 
 /**
@@ -319,10 +259,8 @@ export async function x402Interceptor(
 function isToolError(body: unknown): boolean {
   if (!body || typeof body !== "object") return false;
 
-  // Check JSON-RPC error
   if ("error" in body) return true;
 
-  // Check tool result error (x402-mcp style)
   if ("result" in body) {
     const result = (body as any).result;
     if (result && typeof result === "object" && result.isError) return true;
@@ -331,9 +269,6 @@ function isToolError(body: unknown): boolean {
   return false;
 }
 
-/**
- * Add payment response to _meta in JSON-RPC response
- */
 function addPaymentResponseToMeta(
   body: unknown,
   settlement: {
@@ -348,7 +283,6 @@ function addPaymentResponseToMeta(
   const response = body as any;
 
   if ("result" in response && response.result) {
-    // Ensure _meta exists
     if (!response.result._meta) {
       response.result._meta = {};
     }

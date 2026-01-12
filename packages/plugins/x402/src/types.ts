@@ -28,9 +28,11 @@ export interface X402Config {
   wallet: string;
   /** Facilitator URL for payment verification */
   facilitator?: string;
+  /** Enable debug logging */
+  debug?: boolean;
   /** Default payment settings for all paid tools */
   defaults?: {
-    price?: string;
+    price?: number;
     currency?: string;
     network?: string;
     maxPaymentAge?: number;
@@ -41,7 +43,7 @@ export interface X402Config {
  * Options for the paid() wrapper to override middleware defaults
  */
 export interface X402ToolOptions {
-  price?: string;
+  price?: number;
   currency?: string;
   network?: string;
   receipt?: boolean;

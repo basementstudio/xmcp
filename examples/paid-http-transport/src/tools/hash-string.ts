@@ -16,7 +16,7 @@ export const metadata: ToolMetadata = {
 
 // Paid tool with custom price
 export default paid(
-  { price: "0.05" },
+  { price: 0.05 },
   async function hashString({ input }: InferSchema<typeof schema>) {
     if (!input || typeof input !== "string")
       return {

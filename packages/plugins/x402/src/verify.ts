@@ -3,6 +3,7 @@ import type {
   X402ToolOptions,
   X402PaymentContext,
 } from "./types.js";
+import { log } from "./logger.js";
 
 // USDC contract addresses by network
 const USDC_ADDRESSES: Record<string, string> = {
@@ -14,12 +15,10 @@ const USDC_ADDRESSES: Record<string, string> = {
 const USDC_EXTRA = { name: "USDC", version: "2" };
 
 /**
- * Parse price string to atomic units (6 decimals for USDC)
+ * Convert price to atomic units (6 decimals for USDC)
  */
-function priceToAtomicUnits(price: string): string {
-  const numericPrice = price.replace(/[^0-9.]/g, "");
-  const amount = parseFloat(numericPrice);
-  return Math.floor(amount * 1_000_000).toString();
+function priceToAtomicUnits(price: number): string {
+  return Math.round(price * 1_000_000).toString();
 }
 
 /**
@@ -32,7 +31,7 @@ export function createPaymentRequirements(
   config: X402Config
 ) {
   const network = toolOptions.network ?? config.defaults?.network ?? "base";
-  const price = toolOptions.price ?? config.defaults?.price ?? "0.01";
+  const price = toolOptions.price ?? config.defaults?.price ?? 0.01;
   const asset = USDC_ADDRESSES[network];
 
   if (!asset) {
@@ -129,13 +128,13 @@ export async function verifyPayment(
       config
     );
 
-    console.log("[x402] Verifying payment...");
-    console.log("[x402] Payload:", JSON.stringify(payload, null, 2));
-    console.log("[x402] Requirements:", JSON.stringify(requirements, null, 2));
+    log("Verifying payment...");
+    log("Payload:", payload);
+    log("Requirements:", requirements);
 
     // Use Coinbase's facilitator URL or custom one from config
     const facilitatorUrl = config.facilitator || DEFAULT_FACILITATOR_URL;
-    console.log("[x402] Facilitator URL:", facilitatorUrl);
+    log("Facilitator URL:", facilitatorUrl);
 
     const facilitator = new server.HTTPFacilitatorClient({
       url: facilitatorUrl,
@@ -143,20 +142,17 @@ export async function verifyPayment(
 
     const result = await facilitator.verify(payload, requirements);
 
-    console.log("[x402] Verification result:", JSON.stringify(result, null, 2));
+    log("Verification result:", result);
 
     if (!result.isValid) {
-      console.log("[x402] Payment invalid:", result.invalidReason);
+      log("Payment invalid:", result.invalidReason);
       return {
         valid: false,
         error: result.invalidReason ?? "Payment verification failed",
       };
     }
 
-    console.log(
-      "[x402] Payment verified successfully for payer:",
-      result.payer
-    );
+    log("Payment verified successfully for payer:", result.payer);
 
     return {
       valid: true,
@@ -171,7 +167,6 @@ export async function verifyPayment(
       requirements,
     };
   } catch (error) {
-    console.log("[x402] Verification error:", error);
     return {
       valid: false,
       error:
