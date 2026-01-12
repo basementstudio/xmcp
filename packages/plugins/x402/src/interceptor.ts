@@ -10,30 +10,10 @@ import type { X402Config } from "./types.js";
 import { log, logError } from "./logger.js";
 import { x402ContextProvider } from "./context.js";
 
-/**
- * Symbol key to store pending settlement on the response object
- */
-const PENDING_SETTLEMENT = Symbol("x402PendingSettlement");
-
 interface PendingSettlement {
   payload: unknown;
   requirements: unknown;
   config: X402Config;
-}
-
-interface X402Response extends Response {
-  [PENDING_SETTLEMENT]?: PendingSettlement | null;
-}
-
-function getPendingSettlement(res: X402Response): PendingSettlement | null {
-  return res[PENDING_SETTLEMENT] ?? null;
-}
-
-function setPendingSettlement(
-  res: X402Response,
-  data: PendingSettlement | null
-): void {
-  res[PENDING_SETTLEMENT] = data;
 }
 
 /**
@@ -120,10 +100,6 @@ export async function x402Interceptor(
   res: Response,
   next: NextFunction
 ): Promise<void> {
-  const x402Res = res as X402Response;
-
-  setPendingSettlement(x402Res, null);
-
   let toolName: string | undefined;
   try {
     toolName = findPaidTool(req);
@@ -198,29 +174,25 @@ export async function x402Interceptor(
     return;
   }
 
-  setPendingSettlement(x402Res, {
+  const pendingSettlement: PendingSettlement = {
     payload: verification.payload,
     requirements: verification.requirements,
     config,
-  });
+  };
 
   // Override res.end to intercept the response and settle payment
-  // xmcp uses res.writeHead().end() instead of res.json()
   const originalEnd = res.end.bind(res);
   (res as any).end = function (
     chunk?: any,
     encoding?: BufferEncoding | (() => void),
     callback?: () => void
   ) {
-    const pendingSettlement = getPendingSettlement(x402Res);
-
-    if (pendingSettlement && chunk) {
+    if (chunk) {
       let body: unknown;
       try {
         const str = typeof chunk === "string" ? chunk : chunk.toString("utf-8");
         body = JSON.parse(str);
       } catch {
-        setPendingSettlement(x402Res, null);
         return originalEnd(
           chunk,
           encoding as BufferEncoding,
@@ -247,7 +219,6 @@ export async function x402Interceptor(
             }
 
             const modifiedBody = addPaymentResponseToMeta(body, settlement);
-            setPendingSettlement(x402Res, null);
             return originalEnd(
               JSON.stringify(modifiedBody),
               encoding as BufferEncoding,
@@ -263,7 +234,6 @@ export async function x402Interceptor(
               toolOptions,
               config
             );
-            setPendingSettlement(x402Res, null);
             return originalEnd(
               JSON.stringify(errorBody),
               encoding as BufferEncoding,
@@ -275,7 +245,6 @@ export async function x402Interceptor(
       }
     }
 
-    setPendingSettlement(x402Res, null);
     return originalEnd(
       chunk,
       encoding as BufferEncoding,
