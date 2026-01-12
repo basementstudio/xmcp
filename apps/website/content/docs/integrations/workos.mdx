@@ -19,21 +19,19 @@ npm install @xmcp-dev/workos
 Before using this plugin, we need to configure our WorkOS application:
 
 1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
-2. Set-up SSO: save the `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` and add a Redirect URL (for development we will use `http://127.0.0.1:6274/oauth/callback` the default URL for MCP clients, for production replace it with the deployed URL)
-3. Set-up AuthKit: in this process, we will need to save the Auth Kit Domain, it looks like this `https://xxx.authkit.app`
-4. Navigate to **Connect** and then **Configuration** to enable the following options that are inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**
+2. Set-up SSO: save the `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` and add a Redirect URL (for development we will use `http://127.0.0.1:6274/oauth/callback`, which is the default URL for most MCP clients, for production replace it with your deployed URL)
+3. Set-up AuthKit: in this step, save the Auth Kit Domain, it looks like this `https://xxx.authkit.app`
+4. Navigate to **Connect** and go to **Configuration** and enable the following options inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**
 
 ### Environment Variables
 
 Create a `.env` file in the root of your project and configure the following environment variables:
 
 ```bash
-# WorkOS credentials
-WORKOS_API_KEY=sk_test_...
+WORKOS_API_KEY=sk_...
 WORKOS_CLIENT_ID=client_...
 WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
 
-# App configuration
 BASE_URL=http://127.0.0.1:3001
 ```
 
@@ -62,11 +60,14 @@ export default workosProvider({
 - **`clientId`** - WorkOS client ID for OAuth
 - **`authkitDomain`** - Your AuthKit domain
 - **`baseURL`** - Base URL of your app for OAuth callbacks
-- **`docsURL`** – (Optional) URL for your MCP server documentation
+
+Some optional configurations are:
+
+- **`docsURL`** - URL to your MCP server's API documentation
 
 ## Get a user session and data
 
-Access the authenticated user in your xmcp tools using `getSession()` and `getUser()`.
+Access the authenticated user in your xmcp tools using `getSession` and `getUser`.
 
 ### Example: Greet the user with their WorkOS identity
 
@@ -173,14 +174,14 @@ If you need to manually register a client:
 
 If you see `Session not initialized` or `can only be used within the workos-context-session context` errors:
 
-- Ensure `getSession()` is called within a tool or handler that runs through the middleware pipeline
+- Ensure `getSession` is called within a tool or handler that runs through the middleware pipeline
 - Verify the `workosProvider` middleware is properly configured in your `middleware.ts`
 - Make sure the route is under the `/mcp` path (which the middleware protects)
 - Check that the request includes a valid bearer token
 
 ### Wrong Redirect URI
 
-If you see that the redirect URI is not registered or not working, you can manually register it in the WorkOS Dashboard.
+If you see that the redirect URI is not registered or not working, you can manually register it in the WorkOS Dashboard:
 
 - **Check the error message** - OAuth errors usually include the redirect URI
 - **Check client documentation** - Each client documents its callback URL

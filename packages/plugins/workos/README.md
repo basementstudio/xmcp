@@ -16,7 +16,7 @@ Before using this plugin, we need to configure our WorkOS application:
 
 1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
 2. Set-up SSO:
-   1. Save the `WORKOS_API_KEY` and `WORKOS_API_KEY`
+   1. Save the `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`
    2. Add a Redirect URL, for development we will use `http://127.0.0.1:6274/oauth/callback` for production replace it with the deployed URL
 3. Set-up AuthKit:
    1. In this process, we will need to save the Auth Kit Domain, it looks like this `https://xxx.authkit.app`
@@ -46,9 +46,10 @@ export default workosProvider({
 ### 2. Environment Variables
 
 ```bash
-WORKOS_API_KEY=sk_test_...
+WORKOS_API_KEY=sk_...
 WORKOS_CLIENT_ID=client_...
 WORKOS_AUTHKIT_DOMAIN=yourcompany.authkit.app
+
 BASE_URL=http://127.0.0.1:3001
 ```
 
@@ -184,8 +185,6 @@ await workos.auditLogs.createEvent({
   },
 });
 ```
-
-For the complete SDK documentation, see [WorkOS Node SDK Docs](https://workos.com/docs/sdks/node).
 
 ### Token Lifecycle
 
