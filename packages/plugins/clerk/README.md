@@ -13,9 +13,10 @@ npm install @xmcp-dev/clerk
 1. **Set up environment variables:**
 
 ```bash
-CLERK_SECRET_KEY=sk_test_...
+CLERK_SECRET_KEY=sk_...
 CLERK_DOMAIN=your-app.clerk.accounts.dev
-BASE_URL=http://127.0.0.1:3001  # Use your production URL in production
+
+BASE_URL=http://127.0.0.1:3001 
 ```
 
 The `BASE_URL` in production should be replaced with your deployed server URL.

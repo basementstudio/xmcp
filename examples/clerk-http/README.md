@@ -20,8 +20,7 @@ npm install @xmcp-dev/clerk
 Create a `.env` file in the root of your project and configure the following environment variables:
 
 ```bash
-CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
+CLERK_SECRET_KEY=sk_...
 CLERK_DOMAIN=your-app.clerk.accounts.dev
 
 BASE_URL=http://127.0.0.1:3001 
