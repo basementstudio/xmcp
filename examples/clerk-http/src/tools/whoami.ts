@@ -6,7 +6,7 @@ export const metadata: ToolMetadata = {
   description: "Returns basic identity information from the authenticated session"
 };
 
-export default async function whoami(): Promise<string> {
+export default function whoami(): string {
   const session = getSession();
 
   const identity = {
@@ -18,6 +18,6 @@ export default async function whoami(): Promise<string> {
     tokenExpiresAt: session.expiresAt.toISOString(),
   };
 
-  return JSON.stringify(identity, null, 2)
+  return JSON.stringify(identity, null, 2);
 }
 

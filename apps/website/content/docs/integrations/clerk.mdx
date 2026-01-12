@@ -16,14 +16,14 @@ npm install @xmcp-dev/clerk
 
 ## Clerk Setup
 
-Before integrating the plugin, configure your Clerk account:
+Before integrating the plugin, configure your Clerk application:
 
 1. Navigate to your [Clerk Dashboard](https://dashboard.clerk.com)
 2. Enter to an existing application or create a new one
 3. Go to **Configure** and access to **API Keys** to get the following values:
    - **Secret Key** (`sk_...`)
    - **Frontend API** URL (`your-app.clerk.accounts.dev`)
-4. Click on **Development**, enter to OAuth Applications and enable **Dynamic Client Registration**
+4. Click on **Development**, enter to **OAuth Applications** and enable **Dynamic Client Registration**
 
 ### Environment Variables
 
@@ -56,18 +56,15 @@ export default clerkProvider({
 
 ### Configuration Options
 
-- **`secretKey`** - Clerk Secret Key
-- **`clerkDomain`** - Clerk Frontend domain
-- **`baseURL`** - Base URL of your MCP server
+- **`secretKey`**: Clerk Secret Key
+- **`clerkDomain`**: Clerk Frontend domain
+- **`baseURL`**: Base URL of your MCP server
+- **`scopes`**: (Optional) OAuth scopes to request (default: `['profile', 'email']`)
+- **`docsURL`**: (Optional) URL to your MCP server's API documentation
 
-Some optional configurations are:
+## Get a user session
 
-- **`scopes`** - OAuth scopes to request (default: `['profile', 'email']`)
-- **`docsURL`** - URL to your MCP server's API documentation
-
-## Get a user session and data
-
-Access the authenticated user in your xmcp tools using `getSession` and `getUser`:
+Access the authenticated user in your xmcp tools using `getSession`:
 
 ### Example: Greet the user with their Clerk identity
 
@@ -88,12 +85,16 @@ export const metadata: ToolMetadata = {
 };
 
 // Tool implementation
-export default async function greet({ name }: InferSchema<typeof schema>): Promise<string> {
+export default function greet({ name }: InferSchema<typeof schema>): string {
   const session = getSession();
 
   return `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
 }
 ```
+
+## Get user details
+
+Access the authenticated user in your xmcp tools using `getUser`:
 
 ### Example:  Get user details
 ```typescript title="src/tools/get-user-info.ts"
