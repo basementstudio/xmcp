@@ -10,10 +10,10 @@ npm install @xmcp-dev/clerk
 
 1. Navigate to your [Clerk Dashboard](https://dashboard.clerk.com)
 2. Enter to an existing application or create a new one
-3. Go to **Configure** and access to **API Keys** and note:
-   - **Secret Key** (`sk_test_` for development / `sk_live_` for production)
+3. Go to **Configure** and access to **API Keys** to get the following values:
+   - **Secret Key** (`sk_...`)
    - **Frontend API** URL (`your-app.clerk.accounts.dev`)
-4. Click on **Development**, enter to OAuth Applications and enable **Dynamic Client Registration**
+4. Click on **Development**, enter to **OAuth Applications** and enable **Dynamic Client Registration**
 
 ### 3. Create environment variables
 
