@@ -16,11 +16,11 @@ npm install @xmcp-dev/workos
 
 ## WorkOS Setup
 
-Before using this plugin, we need to configure our WorkOS application:
+Before using this plugin, we need to get some values and enable some options in our WorkOS application:
 
 1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
-2. Set-up SSO: save the `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` and add a Redirect URL (for development we will use `http://127.0.0.1:6274/oauth/callback`, which is the default URL for most MCP clients, for production replace it with your deployed URL)
-3. Set-up AuthKit: in this step, save the Auth Kit Domain, it looks like this `https://xxx.authkit.app`
+2. In the overview page, under Quickstart, you will find `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`, save these values.
+3. Go to **Domains** and save the AuthKit domain, it looks like this `https://xxx.authkit.app`. 
 4. Navigate to **Connect** and go to **Configuration** and enable the following options inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**
 
 ### Environment Variables
