@@ -146,7 +146,12 @@ async function getExamples(): Promise<string[]> {
 
     const items: GitHubContentItem[] = await res.json();
     const names = items
-      .filter((item) => item.type === "dir")
+      .filter(
+        (item) =>
+          item.type === "dir" &&
+          item.name !== ".config" &&
+          item.name !== ".vscode"
+      )
       .map((item) => item.name)
       .filter(Boolean);
 

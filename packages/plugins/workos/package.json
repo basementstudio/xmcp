@@ -1,0 +1,49 @@
+{
+  "name": "@xmcp-dev/workos",
+  "description": "WorkOS AuthKit integration for xmcp",
+  "version": "0.0.2",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "workos",
+    "authkit",
+    "authentication",
+    "mcp",
+    "oauth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/workos"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@workos-inc/node": "^7.79.3",
+    "jose": "^5.2.0",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "^0.5.7"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.5.7"
+  }
+}
