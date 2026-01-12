@@ -36,18 +36,40 @@ function setPendingSettlement(
   res[PENDING_SETTLEMENT] = data;
 }
 
-function extractToolName(req: Request): string | undefined {
-  if (!req.body) return undefined;
+/**
+ * Extract all tool names from request (handles batch requests)
+ */
+function extractToolNames(req: Request): string[] {
+  if (!req.body) return [];
 
   const messages = Array.isArray(req.body) ? req.body : [req.body];
+  const names: string[] = [];
 
   for (const message of messages) {
-    if (message?.method === "tools/call") {
-      return message.params?.name;
+    if (message?.method === "tools/call" && message.params?.name) {
+      names.push(message.params.name);
     }
   }
 
-  return undefined;
+  return names;
+}
+
+/**
+ * Find paid tools in the request
+ * Returns the tool name if exactly one paid tool, throws if multiple
+ */
+function findPaidTool(req: Request): string | undefined {
+  const toolNames = extractToolNames(req);
+  const paidTools = toolNames.filter((name) => x402Registry.has(name));
+
+  if (paidTools.length > 1) {
+    throw new Error(
+      `Batch requests with multiple paid tools are not supported. ` +
+        `Found: ${paidTools.join(", ")}. Please make separate requests.`
+    );
+  }
+
+  return paidTools[0];
 }
 
 function extractPaymentFromMeta(req: Request): string | undefined {
@@ -102,9 +124,22 @@ export async function x402Interceptor(
 
   setPendingSettlement(x402Res, null);
 
-  const toolName = extractToolName(req);
+  let toolName: string | undefined;
+  try {
+    toolName = findPaidTool(req);
+  } catch (err) {
+    res.status(400).json({
+      jsonrpc: "2.0",
+      id: extractRequestId(req),
+      error: {
+        code: -32600,
+        message: err instanceof Error ? err.message : "Invalid request",
+      },
+    });
+    return;
+  }
 
-  if (!toolName || !x402Registry.has(toolName)) {
+  if (!toolName) {
     next();
     return;
   }
