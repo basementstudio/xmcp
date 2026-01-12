@@ -50,11 +50,7 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "@coinbase/x402": "^0.5.1",
-    "@x402/core": "^2.1.0",
-    "@x402/evm": "^2.1.0",
-    "@x402/express": "^2.1.0",
-    "@x402/svm": "^2.1.0"
+    "@x402/core": "^2.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
