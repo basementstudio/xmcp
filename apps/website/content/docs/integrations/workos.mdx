@@ -16,12 +16,12 @@ npm install @xmcp-dev/workos
 
 ## WorkOS Setup
 
-Before using this plugin, we need to get some values and enable some options in our WorkOS application:
+Before getting started, we need to configure our WorkOS application:
 
-1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
-2. In the overview page, under Quickstart, you will find `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`, save these values.
+1. Go to your [WorkOS Dashboard](https://dashboard.workos.com).
+2. In the **Overview** page, under **Quickstart**, find and save your `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`.
 3. Go to **Domains** and save the AuthKit domain, it looks like this `https://xxx.authkit.app`. 
-4. Navigate to **Connect** and go to **Configuration** and enable the following options inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**
+4. Navigate to **Connect** and go to **Configuration** and enable the following options inside **MCP Auth** settings: **Client ID Metadata Document (CIMD)** and **Dynamic Client Registration (DCR)**.
 
 ### Environment Variables
 
@@ -56,18 +56,15 @@ export default workosProvider({
 
 ### Configuration Options
 
-- **`apiKey`** - WorkOS API key from your dashboard
-- **`clientId`** - WorkOS client ID for OAuth
-- **`authkitDomain`** - Your AuthKit domain
-- **`baseURL`** - Base URL of your app for OAuth callbacks
+- **`apiKey`** - WorkOS API key from your dashboard.
+- **`clientId`** - WorkOS client ID for OAuth.
+- **`authkitDomain`** - Your AuthKit domain.
+- **`baseURL`** - Base URL of your app for OAuth callbacks.
+- **`docsURL`** - (Optional) URL for your MCP server documentation.
 
-Some optional configurations are:
+## Get a user session
 
-- **`docsURL`** - URL to your MCP server's API documentation
-
-## Get a user session and data
-
-Access the authenticated user in your xmcp tools using `getSession` and `getUser`.
+Access the authenticated user in your xmcp tools using `getSession`.
 
 ### Example: Greet the user with their WorkOS identity
 
@@ -88,12 +85,16 @@ export const metadata: ToolMetadata = {
 };
 
 // Tool implementation
-export default async function greet({ name }: InferSchema<typeof schema>): Promise<string> {
+export default function greet({ name }: InferSchema<typeof schema>): string {
   const session = getSession();
 
   return `Hello, ${name}! Your WorkOS user ID is ${session.userId}`;
 }
 ```
+
+## Get user details
+
+Access the authenticated user in your xmcp tools using `getUser`.
 
 ### Example: Get user details
 
@@ -146,43 +147,45 @@ export default async function getMyMemberships(): Promise<string> {
 }
 ```
 
+## Troubleshooting
+
 ### Token Expired Errors
 
 Access tokens are short-lived. If you see `token_expired` errors:
 
-- MCP clients should automatically refresh tokens
-- If errors persist, the client may have a bug or the refresh token expired
-- Users can disconnect and reconnect to get fresh tokens
+- MCP clients should automatically refresh tokens.
+- If errors persist, the client may have a bug or the refresh token expired.
+- Users can disconnect and reconnect to get fresh tokens.
 
 ### Redirect URI Not Registered
 
 If you see this error during OAuth:
 
-1. Copy the redirect URI from the error message
+1. Copy the redirect URI from the error message.
 2. Go to WorkOS Dashboard → Connect → Applications
-3. Add the redirect URI to the application
+3. Add the redirect URI to the application.
 
 ### Finding a Client's Redirect URI
 
 If you need to manually register a client:
 
-1. **Check the error message** - OAuth errors include the redirect URI that needs to be registered
-2. **Check client documentation** - Each MCP client documents its callback URL
-3. **Check your server logs** - Look for the `redirect_uri` parameter in failed OAuth requests
+- Check the error message: OAuth errors include the redirect URI that needs to be registered.
+- Check client documentation: Each MCP client documents its callback URL.
+- Check your server logs: Look for the `redirect_uri` parameter in failed OAuth requests.
 
 ### Session Not Initialized
 
 If you see `Session not initialized` or `can only be used within the workos-context-session context` errors:
 
-- Ensure `getSession` is called within a tool or handler that runs through the middleware pipeline
-- Verify the `workosProvider` middleware is properly configured in your `middleware.ts`
-- Make sure the route is under the `/mcp` path (which the middleware protects)
-- Check that the request includes a valid bearer token
+- Ensure `getSession` is called within a tool or handler that runs through the middleware pipeline.
+- Verify the `workosProvider` middleware is properly configured in your `middleware.ts`.
+- Make sure the route is under the `/mcp` path.
+- Check that the request includes a valid bearer token.
 
 ### Wrong Redirect URI
 
 If you see that the redirect URI is not registered or not working, you can manually register it in the WorkOS Dashboard:
 
-- **Check the error message** - OAuth errors usually include the redirect URI
-- **Check client documentation** - Each client documents its callback URL
-- **Check server logs** - Look for the `redirect_uri` parameter in OAuth requests
+- Check the error message: OAuth errors usually include the redirect URI.
+- Check client documentation: Each client documents its callback URL.
+- Check server logs: Look for the `redirect_uri` parameter in OAuth requests.

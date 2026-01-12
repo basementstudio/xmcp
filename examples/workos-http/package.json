@@ -12,8 +12,8 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "@xmcp-dev/workos": "^0.0.2",
-    "xmcp": "^0.5.7",
+    "@xmcp-dev/workos": "workspace:*",
+    "xmcp": "workspace:*",
     "zod": "^4.0.10"
   }
 }

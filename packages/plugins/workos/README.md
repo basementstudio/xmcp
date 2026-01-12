@@ -15,7 +15,7 @@ pnpm add @xmcp-dev/workos
 Before using this plugin, we need to get some values and enable some options in our WorkOS application:
 
 1. Go to your [WorkOS Dashboard](https://dashboard.workos.com)
-2. In the overview page, under Quickstart, you will find `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`, save these values.
+2. In the **Overview** page, under **Quickstart**, you will find `WORKOS_API_KEY` and `WORKOS_CLIENT_ID`, save these values.
 3. Go to **Domains** and save the AuthKit domain, it looks like this `https://xxx.authkit.app`.
 4. Navigate to **Connect** and then **Configuration** to enable the following options that are inside **MCP Auth** settings:
    - **Client ID Metadata Document (CIMD)**

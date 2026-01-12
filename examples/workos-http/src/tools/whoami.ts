@@ -6,7 +6,7 @@ export const metadata: ToolMetadata = {
   description: "Returns the full WorkOS user session and account information",
 };
 
-export default async function whoami() {
+export default async function whoami(): Promise<string> {
   const session = getSession();
   const user = await getUser();
 
