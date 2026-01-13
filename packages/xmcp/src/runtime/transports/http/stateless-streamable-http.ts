@@ -18,6 +18,7 @@ import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // Global type declarations for tool name context
 declare global {
@@ -121,7 +122,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   }
 
   async handleRequest(
-    req: IncomingMessage,
+    req: IncomingMessage & { auth?: AuthInfo },
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
@@ -144,7 +145,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   }
 
   private async handlePOST(
-    req: IncomingMessage,
+    req: IncomingMessage & { auth?: AuthInfo },
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
@@ -237,10 +238,12 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
         this._requestToCollectorMapping.set(requestId, collectorId);
       }
 
+      const authInfo: AuthInfo | undefined = req.auth;
+
       // MCP SDK transport interface mandatory
       for (const message of messages) {
         if (this.onmessage) {
-          this.onmessage(message);
+          this.onmessage(message, { authInfo });
         }
       }
     } catch (error) {
