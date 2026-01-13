@@ -62,21 +62,64 @@ DCR-registered clients are third-party by default and can only use domain-level 
 2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (e.g., `http://localhost:3001/`)
 3. Save changes
 
+### Step 6: Note your Auth0 Domain
+
+- Your domain follows `<tenant>.<region>.auth0.com` (e.g., `dev-xmcp.us.auth0.com`).
+- You can find it in **Dashboard** → **Applications** → your app → **Settings** under **Basic Information**.
+- Use this exact value for `AUTH0_DOMAIN` in your environment variables.
+
+### Step 7: Enable RBAC
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → your API
+2. Go to **Settings** tab
+3. Enable **"Enable RBAC"**
+4. Enable **"Add Permissions in the Access Token"**
+5. Save changes
+
+### Step 8: Create Roles and Assign Permissions
+
+1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
+2. Click **Create Role** (e.g., "MCP User")
+3. Go to **Permissions** tab → **Add Permissions**
+4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
+5. Go to **Users** tab → **Add Users** to assign the role to users
+
+### Step 9: Set Up Management API Access
+
+<Callout variant="warning">
+  **Required**: The Management API is required for permission enforcement. Without it, tools cannot verify if users have the required permissions.
+</Callout>
+
+1. Go to **Auth0 Dashboard** → **Applications** → **Applications**
+2. Click **Create Application** → **Machine to Machine Applications**
+3. Name it (e.g., "MCP Server M2M")
+4. Select **Auth0 Management API** as the authorized API
+5. Grant the **`read:resource_servers`** permission
+6. Save and note the **Client ID** and **Client Secret**
+
 ## Environment Variables
 
 Configure the following environment variables in your `.env` file:
 
 ```bash
 # Auth0 credentials
-AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_DOMAIN=your-tenant.auth0.com  # Format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
 AUTH0_AUDIENCE=http://127.0.0.1:3001/  # Must match API identifier exactly (with trailing slash)
 
 # App configuration
 BASE_URL=http://127.0.0.1:3001/
+
+# Management API credentials (required for permission enforcement)
+AUTH0_MGMT_CLIENT_ID=your-m2m-client-id
+AUTH0_MGMT_CLIENT_SECRET=your-m2m-client-secret
 ```
 
 <Callout variant="warning">
   `AUTH0_AUDIENCE` must match your Auth0 API identifier exactly. If your API identifier has a trailing slash, include it here too.
+</Callout>
+
+<Callout variant="info">
+  The Management API credentials come from the M2M application you created in Step 9. These are required for the server to verify which permissions exist in Auth0.
 </Callout>
 
 ## Configuration
@@ -90,7 +133,10 @@ export default auth0Provider({
   domain: process.env.AUTH0_DOMAIN!,
   audience: process.env.AUTH0_AUDIENCE!,
   baseURL: process.env.BASE_URL!,
-  scopesSupported: ["tool:greet", "tool:whoami"],
+  management: {
+    clientId: process.env.AUTH0_MGMT_CLIENT_ID!,
+    clientSecret: process.env.AUTH0_MGMT_CLIENT_SECRET!,
+  },
 });
 ```
 
@@ -99,7 +145,12 @@ export default auth0Provider({
 - **`domain`** - Your Auth0 domain (e.g., `your-tenant.auth0.com`)
 - **`audience`** - The API identifier configured in Auth0
 - **`baseURL`** - Base URL of your MCP server
-- **`scopesSupported`** – (Optional) List of custom scopes for OAuth metadata
+- **`management`** - Management API configuration for permission enforcement
+  - **`clientId`** - M2M application client ID
+  - **`clientSecret`** - M2M application client secret
+  - **`audience`** - (Optional) Management API audience, defaults to `https://<domain>/api/v2/`
+  - **`resourceServerIdentifier`** - (Optional) API identifier to check permissions against
+- **`scopesSupported`** - (Optional) List of custom scopes for OAuth metadata
 
 ## Usage in Tools
 
@@ -110,7 +161,7 @@ Auth0 uses a `requireScopes` pattern for fine-grained scope-based authorization 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
 import type { InferSchema, ToolMetadata } from "xmcp";
-import { getAuthInfo, requireScopes } from "@xmcp-dev/auth0";
+import { getAuthInfo } from "@xmcp-dev/auth0";
 
 export const schema = {
   name: z.string().optional().describe("The name of the user to greet"),
@@ -121,15 +172,15 @@ export const metadata: ToolMetadata = {
   description: "Greet the user with their Auth0 identity",
 };
 
-export default requireScopes(async ({ name }: InferSchema<typeof schema>) => {
+export default async function greet({ name }: InferSchema<typeof schema>) {
   const authInfo = getAuthInfo();
   const displayName = authInfo.extra.name ?? name ?? "there";
   return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.extra.sub}`;
-});
+}
 ```
 
 <Callout variant="info">
-  Scope inference: the tool scope defaults to `tool:<fileName>` (e.g., `greet.ts` -> `tool:greet`). If you need a different scope name than the file, pass it explicitly: `requireScopes(["tool:custom"], handler)`. The scope you configure in Auth0 must match the tool name you expose.
+  Scope inference: the tool scope defaults to `tool:<metadata.name>` (e.g., `metadata.name = "greet"` -> `tool:greet`). The scope you configure in Auth0 should match the tool name. If the scope exists in Auth0, the token must include it. If it does not exist in Auth0 and the token also lacks it, the tool is treated as public.
 </Callout>
 
 ### Authentication Only (No Scopes)
@@ -162,6 +213,50 @@ export default async function myTool() {
   `getAuthInfo` will throw an error if called outside of an authenticated request context.
 </Callout>
 
+## Public vs Protected Tools
+
+The Auth0 plugin supports two types of tools:
+
+### Protected Tools
+
+A **protected tool** requires a specific permission to access. To protect a tool:
+
+1. Add the permission `tool:<tool-name>` to your Auth0 API (e.g., `tool:whoami`)
+2. Assign this permission to roles/users who should have access
+3. Users without the permission will see: "You don't have permission to use the 'tool-name' tool."
+
+### Public Tools
+
+A **public tool** is accessible to any authenticated user without specific permissions. To create a public tool:
+
+1. Simply **don't add** the tool's permission to your Auth0 API
+2. Any authenticated user can call the tool
+
+<Callout variant="info">
+  A tool is automatically treated as public when its scope (e.g., `tool:my-tool`) is not registered as a permission in Auth0.
+</Callout>
+
+### Permission Decision Matrix
+
+| Permission in Auth0? | User has Permission? | Result |
+|---------------------|---------------------|--------|
+| Yes | Yes | **ALLOWED** (protected tool) |
+| Yes | No | **DENIED** |
+| No | Yes | **ALLOWED** |
+| No | No | **ALLOWED** (public tool) |
+
+### Example: Mixed Public and Protected Tools
+
+```bash title="Auth0 API Permissions"
+# Only add permissions for tools you want to protect:
+tool:admin-panel    # Protected - only admins can access
+tool:user-settings  # Protected - users need this permission
+
+# Don't add permissions for public tools:
+# tool:help         # Public - any authenticated user can access
+# tool:status       # Public - any authenticated user can access
+```
+
 ## Auth Info Properties
 
 The `authInfo` object contains data from the validated JWT token:
@@ -171,6 +266,7 @@ The `authInfo` object contains data from the validated JWT token:
 - `authInfo.token` - The raw access token
 - `authInfo.clientId` - OAuth client ID
 - `authInfo.scopes` - Array of granted scopes
+- `authInfo.permissions` - Array of RBAC permissions granted to this token
 - `authInfo.expiresAt` - Token expiration (Unix timestamp)
 
 ### User Properties (`authInfo.extra`)
@@ -180,6 +276,168 @@ The `authInfo` object contains data from the validated JWT token:
 - `extra.name` - User's full name
 - `extra.client_id` - OAuth client_id claim
 - `extra.azp` - Authorized party claim
+
+## SDK Access
+
+The Auth0 plugin provides access to both the Auth0 API client and Management API for advanced operations.
+
+### Getting User Profile
+
+The simplest way to get the current user's full profile:
+
+```typescript
+import { getUser } from "@xmcp-dev/auth0";
+
+export default async function myTool() {
+  const user = await getUser();
+  return `Hello ${user.name}! Your metadata: ${JSON.stringify(user.user_metadata)}`;
+}
+```
+
+### Auth0 API Client
+
+Access the underlying `@auth0/auth0-api-js` ApiClient for token operations:
+
+```typescript
+import { getAuth0Client } from "@xmcp-dev/auth0";
+
+export default async function myTool() {
+  const client = getAuth0Client();
+  // Use client for token operations
+  return "Done";
+}
+```
+
+The `ApiClient` provides the following methods:
+
+- **`verifyAccessToken(options)`** - Verify JWT tokens (used internally)
+- **`getAccessTokenForConnection(options)`** - Token Vault - get external provider tokens
+- **`getTokenByExchangeProfile(token, options)`** - Custom Token Exchange (RFC 8693)
+
+#### Token Vault (External Provider Tokens)
+
+Use Token Vault to get access tokens for external providers like Google, GitHub, or LinkedIn. This allows your MCP tools to call external APIs on behalf of the authenticated user.
+
+```typescript
+import { getAuth0Client, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function getGoogleCalendar() {
+  const client = getAuth0Client();
+  const authInfo = getAuthInfo();
+
+  // Get Google access token from Token Vault
+  const result = await client.getAccessTokenForConnection({
+    connection: "google-oauth2",
+    accessToken: authInfo.token,
+  });
+
+  // Use the token to call Google APIs
+  const response = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    {
+      headers: { Authorization: `Bearer ${result.accessToken}` },
+    }
+  );
+
+  return await response.json();
+}
+```
+
+<Callout variant="warning">
+  Token Vault requires the `management` configuration to be set (clientId and clientSecret). These credentials are used for both the Management API and Token Vault operations.
+</Callout>
+
+<Callout variant="info">
+  Token Vault also requires additional Auth0 setup. See [Token Vault Setup](#token-vault-setup) below.
+</Callout>
+
+#### Custom Token Exchange (RFC 8693)
+
+Exchange tokens for different API audiences while preserving user identity:
+
+```typescript
+import { getAuth0Client, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function callBackendApi() {
+  const client = getAuth0Client();
+  const authInfo = getAuthInfo();
+
+  // Exchange token for a different API audience
+  const result = await client.getTokenByExchangeProfile(authInfo.token, {
+    subjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+    audience: "https://api.backend.com",
+    scope: "read:data write:data",
+  });
+
+  // Use the exchanged token
+  const response = await fetch("https://api.backend.com/data", {
+    headers: { Authorization: `Bearer ${result.accessToken}` },
+  });
+
+  return await response.json();
+}
+```
+
+<Callout variant="warning">
+  Custom Token Exchange requires the `management` configuration and a Token Exchange Profile configured in Auth0.
+</Callout>
+
+### Management API Client
+
+Access the official Auth0 Node.js SDK's `ManagementClient` for user/role operations:
+
+```typescript
+import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function myTool() {
+  const authInfo = getAuthInfo();
+  const client = getManagementClient();
+
+  // Get user with typed SDK methods
+  const { data: user } = await client.users.get(authInfo.extra.sub);
+
+  // Update user metadata
+  await client.users.update(authInfo.extra.sub, {
+    user_metadata: { preference: "dark" },
+  });
+
+  return `User: ${user.name}`;
+}
+```
+
+The `ManagementClient` provides typed methods for all Auth0 Management API operations:
+
+- **`users.get(id)`** - Get a user by ID
+- **`users.update(id, body)`** - Update a user
+- **`users.delete(id)`** - Delete a user
+- **`resourceServers.getAll()`** - List all resource servers (APIs)
+- **`roles.getAll()`** - List all roles
+- And many more... See the [official SDK documentation](https://auth0.github.io/node-auth0/)
+
+<Callout variant="warning">
+  The management client and `getUser()` are only available when the `management` configuration is provided.
+</Callout>
+
+### Error Handling
+
+Use standard try/catch for error handling with the Management API:
+
+```typescript
+import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function myTool() {
+  const authInfo = getAuthInfo();
+  const client = getManagementClient();
+
+  try {
+    const { data: user } = await client.users.get(authInfo.extra.sub);
+    return `User: ${user.name}`;
+  } catch (error) {
+    // Return error message as tool response (not thrown)
+    return error instanceof Error ? error.message : "Failed to get user";
+  }
+}
+```
 
 ## How Authentication Works
 
@@ -284,3 +542,93 @@ If token verification fails:
 1. Verify `AUTH0_DOMAIN` matches your Auth0 tenant
 2. Verify `AUTH0_AUDIENCE` matches your API identifier exactly (including trailing slash)
 3. Check that the token was issued for your API audience
+
+### Management API 401 Unauthorized
+
+If you see "Management API returned 401 Unauthorized":
+
+1. Your M2M application needs the `read:resource_servers` permission
+2. Go to **Auth0 Dashboard** → **Applications** → **APIs** → **Auth0 Management API**
+3. Go to **Machine to Machine Applications** tab
+4. Find your M2M app and grant the `read:resource_servers` permission
+
+### Management API Not Configured
+
+If you see "Management API configuration is required":
+
+1. Add the `management` configuration to your middleware
+2. Ensure `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET` environment variables are set
+3. These credentials come from the M2M application created in Step 9
+
+## Token Vault Setup
+
+Token Vault allows your MCP tools to access external provider APIs (Google, GitHub, etc.) on behalf of authenticated users. This requires additional Auth0 configuration.
+
+### Step 1: Enable Token Vault for a Connection
+
+1. Go to **Auth0 Dashboard** → **Authentication** → **Social**
+2. Select the connection (e.g., Google, GitHub, LinkedIn)
+3. Go to **Advanced Settings** → **Token Vault**
+4. Enable **"Store Identity Provider Access Token"**
+5. Save changes
+
+### Step 2: Configure Required Scopes
+
+When users authenticate via the social connection, Auth0 needs to request the appropriate scopes from the provider:
+
+1. In the connection settings, go to **Permissions**
+2. Add the scopes your tools need (e.g., `https://www.googleapis.com/auth/calendar.readonly` for Google Calendar)
+3. Save changes
+
+### Step 3: Use Token Vault in Tools
+
+```typescript title="src/tools/get_connection_token.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getAuth0Client, getAuthInfo } from "@xmcp-dev/auth0";
+
+export const schema = {
+  connection: z.string().describe("Connection name (e.g., 'google-oauth2')"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get_connection_token",
+  description: "Get an access token for an external provider",
+};
+
+export default async function getConnectionToken({
+  connection,
+}: InferSchema<typeof schema>) {
+  const client = getAuth0Client();
+  const authInfo = getAuthInfo();
+
+  try {
+    const result = await client.getAccessTokenForConnection({
+      connection,
+      accessToken: authInfo.token,
+    });
+
+    return JSON.stringify({
+      connection: result.connection,
+      scope: result.scope,
+      expiresAt: new Date(result.expiresAt * 1000).toISOString(),
+    }, null, 2);
+  } catch (error) {
+    return error instanceof Error ? error.message : "Failed to get token";
+  }
+}
+```
+
+### Supported Connections
+
+Token Vault works with social connections that support OAuth 2.0:
+
+- **Google** (`google-oauth2`) - Google APIs (Calendar, Drive, Gmail, etc.)
+- **GitHub** (`github`) - GitHub API
+- **LinkedIn** (`linkedin`) - LinkedIn API
+- **Microsoft** (`windowslive`) - Microsoft Graph API
+- **Facebook** (`facebook`) - Facebook Graph API
+
+<Callout variant="info">
+  Users must authenticate through the social connection at least once before Token Vault can return tokens. If a user signed up with email/password, they won't have social provider tokens available.
+</Callout>

@@ -41,13 +41,21 @@ export function createVerifier(
         };
       }
 
+      const scopes =
+        typeof decoded.scope === "string" ? decoded.scope.split(" ").filter(Boolean) : [];
+
+      const permissions = Array.isArray((decoded as Record<string, unknown>).permissions)
+        ? ((decoded as Record<string, unknown>).permissions as unknown[])
+            .filter((p): p is string => typeof p === "string" && p.length > 0)
+        : [];
+
+      const uniqueScopes = Array.from(new Set([...scopes, ...permissions]));
+
       const authInfo: AuthInfo = {
         token,
         clientId,
-        scopes:
-          typeof decoded.scope === "string"
-            ? decoded.scope.split(" ").filter(Boolean)
-            : [],
+        scopes: uniqueScopes,
+        ...(permissions.length > 0 && { permissions }),
         ...(decoded.exp && { expiresAt: decoded.exp }),
         extra: {
           sub: decoded.sub,

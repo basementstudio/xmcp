@@ -193,7 +193,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-        version: 0.5.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13)
+        version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -787,7 +787,7 @@ importers:
     dependencies:
       '@xmcp-dev/workos':
         specifier: latest
-        version: 0.0.1(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))
+        version: 0.0.2(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))
       xmcp:
         specifier: latest
         version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13)
@@ -802,7 +802,7 @@ importers:
         version: 5.1.0(esbuild@0.27.1)
       xmcp:
         specifier: latest
-        version: 0.5.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1(esbuild@0.27.1))(zod@4.1.13)
+        version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1(esbuild@0.27.1))(zod@4.1.13)
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -920,13 +920,16 @@ importers:
       '@auth0/auth0-api-js':
         specifier: ^1.2.1
         version: 1.3.0
+      auth0:
+        specifier: ^5
+        version: 5.2.0
       express:
         specifier: ^4.22.1
         version: 4.22.1
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.1
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -3941,8 +3944,8 @@ packages:
     resolution: {integrity: sha512-gqkq8LB6mwZqkzvC0ciIN6pJNxtFf76ztZoVFi3wMwn+lyzfW9M8n6jm1sk5NN0PhQGF2K1+oYs4JIlATP4Tzw==}
     engines: {node: '>=16'}
 
-  '@xmcp-dev/workos@0.0.1':
-    resolution: {integrity: sha512-zzwR50UMOvDa8pVhMA8GseWKx9yBXsf2vXxIiaN+RFZzeoOSmmf12YA4pPCk+PQ3O6NGVumbZWF0RbRdIKpSbw==}
+  '@xmcp-dev/workos@0.0.2':
+    resolution: {integrity: sha512-lIyEjQGQSi9Ie3dXhDMxa4PpwALmCuzs50I8GPlAuNhdU4U60Cy0sD515pvBlpaF/ipS2XxoJSTHxbctdxQVew==}
     peerDependencies:
       xmcp: ^0.5.7
 
@@ -4140,6 +4143,14 @@ packages:
   attr-accept@2.2.5:
     resolution: {integrity: sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==}
     engines: {node: '>=4'}
+
+  auth0@4.37.0:
+    resolution: {integrity: sha512-+TqJRxh4QvbD4TQIYx1ak2vanykQkG/nIZLuR6o8LoQj425gjVG3tFuUbbOeh/nCpP1rnvU0CCV1ChZHYXLU/A==}
+    engines: {node: '>=18'}
+
+  auth0@5.2.0:
+    resolution: {integrity: sha512-eRtzyldEhXC1g9quWI8daG/j2OcXFsjgkT+zi3gqpe3SOwVNkWyvzaDAHAYWD2Z1ARTNXxezoXJiWNxwfHRMhw==}
+    engines: {node: ^20.19.0 || ^22.12.0 || ^24.0.0}
 
   autoprefixer@10.4.22:
     resolution: {integrity: sha512-ARe0v/t9gO28Bznv6GgqARmVqcWOV3mfgUPn9becPHMiD3o9BwlRgaeccZnwTpZ7Zwqrm+c1sUSsMxIzQzc8Xg==}
@@ -5853,6 +5864,9 @@ packages:
   jiti@2.6.1:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
+
+  jose@4.15.9:
+    resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
   jose@5.6.3:
     resolution: {integrity: sha512-1Jh//hEEwMhNYPDDLwXHa2ePWgWiFNNUadVmguAAw2IJ6sj9mNxV5tGXJNqlMkJAybF6Lgw1mISDxTePP/187g==}
@@ -7893,6 +7907,14 @@ packages:
   utrie@1.0.2:
     resolution: {integrity: sha512-1MLa5ouZiOmQzUbjbu9VmjLzn1QLXBhwpUa7kdLUQK+KQ5KA9I1vk5U4YHe/X2Ch7PYnJfWuWT+VbuxbGwljhw==}
 
+  uuid@11.1.0:
+    resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
+    hasBin: true
+
+  uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    hasBin: true
+
   v8n@1.5.1:
     resolution: {integrity: sha512-LdabyT4OffkyXFCe9UT+uMkxNBs5rcTVuZClvxQr08D5TUgo1OFKkoT65qYRCsiKBl/usHjpXvP4hHMzzDRj3A==}
 
@@ -8019,19 +8041,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  xmcp@0.5.6:
-    resolution: {integrity: sha512-ydj93vF6dPimf+byIV7AUMvIW2IhbV1HMJd+NP6V3D3GMkXDMbRqXXP8KD1QRD7DG/b+3duH1uKplfwy9B5KFQ==}
-    hasBin: true
-    peerDependencies:
-      react: '>=19.0.0'
-      react-dom: '>=19.0.0'
-      zod: ^3.25.76 || ^4.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
 
   xmcp@0.5.7:
     resolution: {integrity: sha512-NnBx+1P7v6Apah5lgtxZxojhp/lP1qLjTTS/0AVear60akULVYL5f54n9w7XjHvxm59JqNBppOVYdm8zemehYw==}
@@ -10796,7 +10805,7 @@ snapshots:
       - koa
       - next
 
-  '@xmcp-dev/workos@0.0.1(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))':
+  '@xmcp-dev/workos@0.0.2(xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13))':
     dependencies:
       '@workos-inc/node': 7.79.3(express@4.22.1)(next@15.5.9(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       express: 4.22.1
@@ -11010,6 +11019,18 @@ snapshots:
   asynckit@0.4.0: {}
 
   attr-accept@2.2.5: {}
+
+  auth0@4.37.0:
+    dependencies:
+      jose: 4.15.9
+      undici-types: 6.21.0
+      uuid: 9.0.1
+
+  auth0@5.2.0:
+    dependencies:
+      auth0-legacy: auth0@4.37.0
+      jose: 4.15.9
+      uuid: 11.1.0
 
   autoprefixer@10.4.22(postcss@8.5.6):
     dependencies:
@@ -13077,6 +13098,8 @@ snapshots:
   jiti@1.21.7: {}
 
   jiti@2.6.1: {}
+
+  jose@4.15.9: {}
 
   jose@5.6.3: {}
 
@@ -15735,6 +15758,10 @@ snapshots:
     dependencies:
       base64-arraybuffer: 1.0.2
 
+  uuid@11.1.0: {}
+
+  uuid@9.0.1: {}
+
   v8n@1.5.1: {}
 
   vary@1.1.2: {}
@@ -15933,30 +15960,11 @@ snapshots:
 
   wrappy@1.0.2: {}
 
-  xmcp@0.5.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1(esbuild@0.27.1))(zod@4.1.13):
+  xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1(esbuild@0.27.1))(zod@4.1.13):
     dependencies:
       '@modelcontextprotocol/sdk': 1.25.1(hono@4.11.1)(zod@4.1.13)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.6)(typescript@5.9.3)(webpack@5.102.1(esbuild@0.27.1))
-      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
-      typescript: 5.9.3
-      zod: 4.1.13
-    optionalDependencies:
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@swc/helpers'
-      - hono
-      - postcss
-      - supports-color
-      - webpack
-
-  xmcp@0.5.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(webpack@5.102.1)(zod@4.1.13):
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.25.1(hono@4.11.1)(zod@4.1.13)
-      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.6)(typescript@5.9.3)(webpack@5.102.1)
       ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
       typescript: 5.9.3
       zod: 4.1.13

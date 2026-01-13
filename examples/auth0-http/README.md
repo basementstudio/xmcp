@@ -54,6 +54,15 @@ Create a `.env` file:
 AUTH0_DOMAIN=your-tenant.auth0.com
 AUTH0_AUDIENCE=http://localhost:3001/
 BASE_URL=http://localhost:3001
+
+# Auth0 domain format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
+
+# Optional: Management API (read-only) for permission validation each request
+AUTH0_MGMT_CLIENT_ID=...
+AUTH0_MGMT_CLIENT_SECRET=...
+# Optional overrides (defaults shown)
+# AUTH0_MGMT_AUDIENCE=https://your-tenant.auth0.com/api/v2/
+# AUTH0_MGMT_RESOURCE_SERVER_IDENTIFIER=$AUTH0_AUDIENCE
 ```
 
 ### 3. Run
@@ -62,20 +71,11 @@ BASE_URL=http://localhost:3001
 pnpm dev
 ```
 
-## Features
-
-- **Scope-based Authorization**: Each tool can require specific scopes
-- **`requireScopes` HOF**: Wrap tools with scope validation
-- **Auth Info Access**: Get user identity in tool handlers
-
 ## Tools and scopes
 
-Tool scopes are inferred from file names (`tool:<fileName>`). Keep your Auth0 permissions aligned with the tool files:
-
-- `greet` (`src/tools/greet.ts`) → scope `tool:greet`
-- `whoami` (`src/tools/whoami.ts`) → scope `tool:whoami`
-
-If you need a different scope name than the file, pass it explicitly to `requireScopes(["tool:custom"], handler)` and add that scope in Auth0.
+- Scope name is inferred from tool metadata: `tool:<metadata.name>`.
+- If the scope exists in Auth0, the caller token must include it (via `permissions` or `scope` claims).
+- If the scope does not exist in Auth0 and the token also lacks it, the tool is treated as public (no scope required).
 
 ## OAuth Metadata
 

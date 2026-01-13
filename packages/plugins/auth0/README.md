@@ -25,17 +25,20 @@ export default auth0Provider({
   domain: process.env.AUTH0_DOMAIN!,
   audience: process.env.AUTH0_AUDIENCE!,
   baseURL: process.env.BASE_URL!,
-  scopesSupported: ["tool:greet", "tool:whoami"],
+  management: {
+    clientId: process.env.AUTH0_MGMT_CLIENT_ID!,
+    clientSecret: process.env.AUTH0_MGMT_CLIENT_SECRET!,
+  },
 });
 ```
 
 ### 2. Protect Your Tools
 
-#### Using `requireScopes` (auto scope inference)
+#### Using inferred scopes (no wrapper required)
 
 ```typescript
 // src/tools/greet.ts
-import { getAuthInfo, requireScopes } from "@xmcp-dev/auth0";
+import { getAuthInfo } from "@xmcp-dev/auth0";
 import type { ToolMetadata } from "xmcp";
 
 export const metadata: ToolMetadata = {
@@ -43,20 +46,13 @@ export const metadata: ToolMetadata = {
   description: "Greet the authenticated user",
 };
 
-export default requireScopes(async ({ name }) => {
+export default async function greet({ name }: { name?: string }) {
   const authInfo = getAuthInfo();
   return `Hello, ${authInfo.extra.name ?? name}!`;
-});
+}
 ```
 
-Scopes are inferred from the file name (e.g., `greet.ts` → `tool:greet`). The scope configured in Auth0 must match the tool name you expose. Pass scopes explicitly only if you need custom naming:
-
-```typescript
-export default requireScopes(["tool:custom"], async ({ name }) => {
-  const authInfo = getAuthInfo();
-  return `Hello, ${authInfo.extra.name ?? name}!`;
-});
-```
+Scopes are inferred from the tool metadata name as `tool:<metadata.name>` (e.g., `metadata.name = "greet"` → `tool:greet`). The scope configured in Auth0 should match the tool name you expose. If a scope does not exist in Auth0 **and** is not present in the caller token, the tool is treated as public.
 
 #### Using `getAuthInfo` directly
 
@@ -83,10 +79,16 @@ export default async function whoami() {
 Create a `.env` file:
 
 ```bash
-AUTH0_DOMAIN=your-tenant.auth0.com
+AUTH0_DOMAIN=your-tenant.auth0.com  # Format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
 AUTH0_AUDIENCE=http://localhost:3001/   # Must match API identifier exactly
 BASE_URL=http://localhost:3001
+
+# Management API credentials (required for permission enforcement)
+AUTH0_MGMT_CLIENT_ID=your-m2m-client-id
+AUTH0_MGMT_CLIENT_SECRET=your-m2m-client-secret
 ```
+
+> **Note**: The Management API credentials come from a Machine-to-Machine application in Auth0 with `read:resource_servers` permission on the Auth0 Management API.
 
 ## API Reference
 
@@ -99,27 +101,37 @@ Creates the Auth0 authentication provider for xmcp.
 | `domain` | `string` | Yes | Your Auth0 domain |
 | `audience` | `string` | Yes | The API identifier configured in Auth0 |
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
-| `scopesSupported` | `string[]` | No | List of custom scopes |
+| `management` | `object` | Yes | Management API configuration (see below) |
+| `scopesSupported` | `string[]` | No | List of custom scopes for OAuth metadata |
+| `debug` | `boolean` | No | Enable debug logging for scope enforcement |
 
-### `requireScopes(scopes?, handler)`
+#### `management` options
 
-Higher-order function that wraps a tool handler with scope-based authorization.
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `clientId` | `string` | Yes | M2M application client ID |
+| `clientSecret` | `string` | Yes | M2M application client secret |
+| `audience` | `string` | No | Management API audience (default: `https://<domain>/api/v2/`) |
+| `resourceServerIdentifier` | `string` | No | API identifier to check permissions against |
 
-```typescript
-import { getAuthInfo, requireScopes } from "@xmcp-dev/auth0";
+### Scope enforcement behavior
 
-// Auto-inferred scope: tool:my-tool-file
-export default requireScopes(async (params) => {
-  const authInfo = getAuthInfo(); // Retrieved from request context
-  return `Hello ${authInfo.extra.name ?? "friend"}`;
-});
+- Scope name: `tool:<metadata.name>` from each tool definition.
+- The plugin fetches the API permission list from Auth0 Management API on every request.
 
-// Or pass explicit scopes if you need a custom name
-export const withCustomScope = requireScopes(["tool:custom"], async (params) => {
-  const authInfo = getAuthInfo();
-  return `Custom scoped hello ${authInfo.extra.name ?? "friend"}`;
-});
-```
+#### Permission Decision Matrix
+
+| Permission in Auth0? | User has Permission? | Result |
+|---------------------|---------------------|--------|
+| Yes | Yes | **ALLOWED** (protected tool) |
+| Yes | No | **DENIED** |
+| No | Yes | **ALLOWED** |
+| No | No | **ALLOWED** (public tool) |
+
+#### Public vs Protected Tools
+
+- **Protected tool**: Add the permission `tool:<tool-name>` to your Auth0 API. Users must have this permission.
+- **Public tool**: Don't add the permission to Auth0. Any authenticated user can access it.
 
 ### `getAuthInfo()`
 
@@ -139,6 +151,7 @@ interface AuthInfo {
   token: string;           // Raw access token
   clientId: string;        // OAuth client ID
   scopes: string[];        // Granted scopes
+  permissions?: string[];  // RBAC permissions granted to this token
   expiresAt?: number;      // Expiration timestamp
   extra: {
     sub: string;           // User ID
