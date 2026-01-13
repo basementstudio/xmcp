@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type * as PageTree from "fumadocs-core/page-tree";
+import { usePathname } from "fumadocs-core/framework";
 
 type SeparatorNode = Extract<PageTree.Node, { type: "separator" }>;
 
@@ -19,19 +20,85 @@ function getFirstSeparatorId(items: PageTree.Node[]) {
   return getSeparatorId(items[idx] as SeparatorNode, idx);
 }
 
-function getInitialOpenState(root: PageTree.Root) {
-  const firstFolderId = getFirstFolderId(root.children);
-  const firstSeparatorId = getFirstSeparatorId(root.children);
+function findSeparatorForPath(
+  items: PageTree.Node[],
+  pathname: string
+): string | null {
+  let currentSeparatorId: string | null = null;
+  let separatorIndex = 0;
+
+  for (const item of items) {
+    if (item.type === "separator") {
+      currentSeparatorId = getSeparatorId(item, separatorIndex);
+      separatorIndex++;
+      continue;
+    }
+
+    if (item.type === "page" && item.url === pathname) {
+      return currentSeparatorId;
+    }
+
+    if (item.type === "folder") {
+      // Check folder index page
+      if (item.index?.url === pathname) {
+        return currentSeparatorId;
+      }
+      // Check folder children recursively
+      const found = findInFolderChildren(item.children, pathname);
+      if (found) {
+        return currentSeparatorId;
+      }
+    }
+  }
+
+  return null;
+}
+
+function findInFolderChildren(
+  items: PageTree.Node[],
+  pathname: string
+): boolean {
+  for (const item of items) {
+    if (item.type === "page" && item.url === pathname) {
+      return true;
+    }
+    if (item.type === "folder") {
+      if (item.index?.url === pathname) {
+        return true;
+      }
+      if (findInFolderChildren(item.children, pathname)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getInitialOpenState(root: PageTree.Root, pathname: string) {
   const initial: Record<string, boolean> = {};
 
-  if (firstFolderId) initial[firstFolderId] = true;
-  if (firstSeparatorId) initial[firstSeparatorId] = true;
+  // Find the separator that contains the current page
+  const activeSeparatorId = findSeparatorForPath(root.children, pathname);
+
+  if (activeSeparatorId) {
+    initial[activeSeparatorId] = true;
+  } else {
+    // Fallback to first separator/folder if no match found
+    const firstFolderId = getFirstFolderId(root.children);
+    const firstSeparatorId = getFirstSeparatorId(root.children);
+    if (firstFolderId) initial[firstFolderId] = true;
+    if (firstSeparatorId) initial[firstSeparatorId] = true;
+  }
 
   return initial;
 }
 
 export function useSidebarOpenState(root: PageTree.Root) {
-  const initialState = useMemo(() => getInitialOpenState(root), [root]);
+  const pathname = usePathname();
+  const initialState = useMemo(
+    () => getInitialOpenState(root, pathname),
+    [root, pathname]
+  );
   const initialOpenRef = useRef<Record<string, boolean>>(initialState);
   const [openState, setOpenState] =
     useState<Record<string, boolean>>(initialState);
