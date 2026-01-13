@@ -14,7 +14,7 @@ import type { AuthInfo, Auth0User } from "./types.js";
  *
  * export default async function myTool() {
  *   const authInfo = getAuthInfo();
- *   return `Hello ${authInfo.extra.name}! Your user ID is ${authInfo.extra.sub}`;
+ *   return `Hello ${authInfo.user.name}! Your user ID is ${authInfo.user.sub}`;
  * }
  * ```
  */
@@ -59,6 +59,18 @@ export async function getUser(): Promise<Auth0User> {
     );
   }
 
-  const { data } = await managementClient.users.get(authInfo.extra.sub);
-  return data as Auth0User;
+  try {
+    const { data } = await managementClient.users.get(authInfo.user.sub);
+    return data as Auth0User;
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("403") || error.message.includes("Forbidden")) {
+        throw new Error("You don't have permission to access user profile data.");
+      }
+      if (error.message.includes("401")) {
+        throw new Error("You don't have permission to access user profile data.");
+      }
+    }
+    throw error;
+  }
 }

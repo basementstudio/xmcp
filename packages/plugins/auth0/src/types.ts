@@ -53,14 +53,14 @@ export interface AuthInfo {
   readonly permissions?: readonly string[];
   /** Token expiration timestamp (Unix epoch) */
   readonly expiresAt?: number;
-  /** Additional user identity claims */
-  readonly extra: AuthInfoExtra;
+  /** User identity claims from the token */
+  readonly user: UserClaims;
 }
 
 /**
- * Additional identity claims from the Auth0 token
+ * User identity claims from the Auth0 token
  */
-export interface AuthInfoExtra {
+export interface UserClaims {
   /** User identifier from Auth0 (subject claim) */
   readonly sub: string;
   /** Standard OAuth 2.0 client_id claim, if available */

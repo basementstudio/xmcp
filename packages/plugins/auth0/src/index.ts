@@ -1,6 +1,5 @@
 export {
   auth0Provider,
-  requireScopes,
   InsufficientScopeError,
   InvalidTokenError,
 } from "./provider.js";
@@ -14,7 +13,7 @@ export type {
   Auth0ManagementConfig,
   Auth0User,
   AuthInfo,
-  AuthInfoExtra,
+  UserClaims,
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
 } from "./types.js";

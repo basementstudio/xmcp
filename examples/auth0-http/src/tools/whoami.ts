@@ -11,9 +11,9 @@ export default function whoami(): string {
 
   const userInfo = {
     user: {
-      id: authInfo.extra.sub,
-      email: authInfo.extra.email ?? "N/A",
-      name: authInfo.extra.name ?? "N/A",
+      id: authInfo.user.sub,
+      email: authInfo.user.email ?? "N/A",
+      name: authInfo.user.name ?? "N/A",
       clientId: authInfo.clientId,
     },
     token: {

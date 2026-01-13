@@ -57,7 +57,7 @@ export function createVerifier(
         scopes: uniqueScopes,
         ...(permissions.length > 0 && { permissions }),
         ...(decoded.exp && { expiresAt: decoded.exp }),
-        extra: {
+        user: {
           sub: decoded.sub,
           ...(isNonEmptyString(decoded.client_id) && {
             client_id: decoded.client_id,

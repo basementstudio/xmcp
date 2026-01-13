@@ -14,6 +14,7 @@ import {
   contextProviderApiClient,
   contextProviderManagementClient,
   getAuthContext,
+  getManagementClientContext,
 } from "./context.js";
 import { getAuthInfo } from "./session.js";
 import { fetchApiPermissions } from "./permissions.js";
@@ -295,9 +296,12 @@ async function enforceToolPermissions(
     );
   }
 
+  // Get management client from context
+  const { managementClient } = getManagementClientContext();
+
   let managementPermissions: readonly string[] = [];
   try {
-    managementPermissions = await fetchApiPermissions(config);
+    managementPermissions = await fetchApiPermissions(config, managementClient);
   } catch (error) {
     console.error(
       "[Auth0] Failed to fetch permissions from Management API:",
@@ -341,87 +345,3 @@ export class InvalidTokenError extends Error {
   }
 }
 
-function hasAllScopes(
-  requiredScopes: readonly string[],
-  userScopes: readonly string[]
-): boolean {
-  return requiredScopes.every((scope) => userScopes.includes(scope));
-}
-
-/**
- * Wraps a tool handler to enforce required OAuth scopes.
- *
- * @example
- * ```typescript
- * export default requireScopes(async (params) => {
- *   const authInfo = getAuthInfo();
- *   return `Hello ${authInfo.extra.name}!`;
- * });
- * ```
- */
-export function requireScopes<TParams, TReturn>(
-  requiredScopesOrHandler:
-    | readonly string[]
-    | ((params: TParams) => Promise<TReturn>),
-  maybeHandler?: (params: TParams) => Promise<TReturn>
-): (params: TParams) => Promise<TReturn> {
-  const requiredScopes = Array.isArray(requiredScopesOrHandler)
-    ? requiredScopesOrHandler
-    : inferScopeFromCaller();
-  const toolFunction =
-    typeof requiredScopesOrHandler === "function"
-      ? requiredScopesOrHandler
-      : maybeHandler;
-
-  if (!toolFunction) {
-    throw new Error("[Auth0] requireScopes: tool handler is missing");
-  }
-
-  if (!requiredScopes || requiredScopes.length === 0) {
-    throw new Error(
-      "[Auth0] requireScopes: could not infer scope. Pass explicit scopes or ensure this helper is called directly from a tool module."
-    );
-  }
-
-  return async (params: TParams): Promise<TReturn> => {
-    const authCtx = getAuthContext();
-
-    if (!authCtx.authInfo) {
-      throw new InvalidTokenError(
-        "Auth info not available. Ensure this is called within a protected route."
-      );
-    }
-
-    const authInfo = getAuthInfo();
-    const userScopes = authInfo.scopes;
-    if (!hasAllScopes(requiredScopes, userScopes)) {
-      const missing = requiredScopes.filter(
-        (scope) => !userScopes.includes(scope)
-      );
-      throw new InsufficientScopeError(
-        `Missing required scopes: ${missing.join(", ")}`
-      );
-    }
-
-    return toolFunction(params);
-  };
-}
-
-function inferScopeFromCaller(): readonly string[] | null {
-  const stack = new Error().stack;
-  if (!stack) return null;
-
-  const lines = stack.split("\n").slice(2);
-  for (const line of lines) {
-    const match = line.match(/(?:file:\/\/)?(\/[^):]+):\d+:\d+/);
-    if (!match || !match[1]) continue;
-    const filePath = match[1];
-    const base = filePath.split("/").pop();
-    if (!base) continue;
-    const withoutExt = base.replace(/\.[^.]+$/, "");
-    if (!withoutExt) continue;
-    return [`tool:${withoutExt}`];
-  }
-
-  return null;
-}

@@ -48,7 +48,7 @@ export const metadata: ToolMetadata = {
 
 export default async function greet({ name }: { name?: string }) {
   const authInfo = getAuthInfo();
-  return `Hello, ${authInfo.extra.name ?? name}!`;
+  return `Hello, ${authInfo.user.name ?? name}!`;
 }
 ```
 
@@ -70,7 +70,7 @@ export const metadata: ToolMetadata = {
 
 export default async function whoami() {
   const authInfo = getAuthInfo();
-  return `User ID: ${authInfo.extra.sub}, Email: ${authInfo.extra.email}`;
+  return `User ID: ${authInfo.user.sub}, Email: ${authInfo.user.email}`;
 }
 ```
 
@@ -103,7 +103,6 @@ Creates the Auth0 authentication provider for xmcp.
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
 | `management` | `object` | Yes | Management API configuration (see below) |
 | `scopesSupported` | `string[]` | No | List of custom scopes for OAuth metadata |
-| `debug` | `boolean` | No | Enable debug logging for scope enforcement |
 
 #### `management` options
 
@@ -139,9 +138,60 @@ Gets the current user's authentication info from context.
 
 ```typescript
 const authInfo = getAuthInfo();
-console.log(authInfo.extra.sub);   // User ID
-console.log(authInfo.extra.email); // Email
+console.log(authInfo.user.sub);   // User ID
+console.log(authInfo.user.email); // Email
 console.log(authInfo.scopes);      // Granted scopes
+```
+
+### `getUser()`
+
+Gets the full user profile from Auth0 Management API. Requires management config.
+
+```typescript
+import { getUser } from "@xmcp-dev/auth0";
+
+export default async function userProfile() {
+  const user = await getUser();
+  return `Name: ${user.name}, Email: ${user.email}`;
+}
+```
+
+**Throws:** Error if user lacks permission to access profile data.
+
+### `getManagementClient()`
+
+Gets the Auth0 Management API client for advanced operations.
+
+```typescript
+import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function updateMetadata({ key, value }) {
+  const authInfo = getAuthInfo();
+  const client = getManagementClient();
+  await client.users.update(authInfo.user.sub, {
+    user_metadata: { [key]: value }
+  });
+  return "Metadata updated";
+}
+```
+
+### Error Classes
+
+The plugin exports two error classes for handling authentication failures:
+
+- **`InsufficientScopeError`** - Thrown when user lacks required scopes for a tool
+- **`InvalidTokenError`** - Thrown when the access token is invalid or missing
+
+```typescript
+import { InsufficientScopeError, InvalidTokenError } from "@xmcp-dev/auth0";
+
+try {
+  // ... tool logic
+} catch (error) {
+  if (error instanceof InsufficientScopeError) {
+    return "You don't have permission to perform this action.";
+  }
+}
 ```
 
 ## Auth Info Structure
@@ -153,7 +203,7 @@ interface AuthInfo {
   scopes: string[];        // Granted scopes
   permissions?: string[];  // RBAC permissions granted to this token
   expiresAt?: number;      // Expiration timestamp
-  extra: {
+  user: {
     sub: string;           // User ID
     client_id?: string;    // Client ID claim
     azp?: string;          // Authorized party

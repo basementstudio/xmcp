@@ -16,6 +16,6 @@ export const metadata: ToolMetadata = {
 // Tool implementation with scope-based authorization
 export default function greet({ name }: InferSchema<typeof schema>): string {
   const authInfo = getAuthInfo();
-  const displayName = authInfo.extra.name ?? name ?? "there";
-  return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.extra.sub}`;
+  const displayName = authInfo.user.name ?? name ?? "there";
+  return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.user.sub}`;
 }

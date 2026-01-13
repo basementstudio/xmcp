@@ -20,7 +20,7 @@ export default async function updateUserMetadata({
   const client = getManagementClient();
 
   try {
-    await client.users.update(authInfo.extra.sub, {
+    await client.users.update(authInfo.user.sub, {
       user_metadata: { [key]: value },
     });
     return `Successfully updated user_metadata.${key} to "${value}"`;
