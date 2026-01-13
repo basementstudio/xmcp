@@ -8,14 +8,12 @@ import type { X402PaymentContext } from "./types.js";
  * Uses AsyncLocalStorage to safely handle concurrent requests.
  */
 export function payment(): X402PaymentContext {
-  const ctx = getX402PaymentContext();
-  if (!ctx) {
+  try {
+    return getX402PaymentContext();
+  } catch {
     throw new Error(
       "payment() must be called inside a paid tool handler. " +
         "Ensure the tool is wrapped with paid() and has received a valid payment."
     );
   }
-  return ctx;
 }
-
-export type { X402PaymentContext, PaidHandlerExtra } from "./types.js";

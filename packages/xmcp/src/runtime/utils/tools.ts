@@ -11,8 +11,9 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 
+// TO DO: remove duplicated
 interface X402ToolOptions {
-  price?: string;
+  price?: number;
   currency?: string;
   network?: string;
   receipt?: boolean;

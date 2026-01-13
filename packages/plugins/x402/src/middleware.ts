@@ -1,6 +1,7 @@
-import type { RequestHandler } from "express";
 import type { X402Config } from "./types.js";
 import { x402Interceptor } from "./interceptor.js";
+import { Middleware } from "xmcp";
+import { DEFAULT_FACILITATOR_URL } from "./constants.js";
 
 declare global {
   var __XMCP_X402_CONFIG: X402Config | null | undefined;
@@ -11,10 +12,10 @@ if (global.__XMCP_X402_CONFIG === undefined) {
   global.__XMCP_X402_CONFIG = null;
 }
 
-export function x402Middleware(config: X402Config): RequestHandler {
+export function x402Middleware(config: X402Config): Middleware {
   global.__XMCP_X402_CONFIG = {
     wallet: config.wallet,
-    facilitator: config.facilitator ?? "https://x402.org/facilitator",
+    facilitator: config.facilitator ?? DEFAULT_FACILITATOR_URL,
     debug: config.debug ?? false,
     defaults: {
       price: config.defaults?.price ?? 0.01,

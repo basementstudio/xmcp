@@ -4,15 +4,10 @@ import type {
   X402PaymentContext,
 } from "./types.js";
 import { log } from "./logger.js";
-
-// USDC contract addresses by network
-const USDC_ADDRESSES: Record<string, string> = {
-  base: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-  "base-sepolia": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-};
-
-// Default EIP-712 domain for USDC
-const USDC_EXTRA = { name: "USDC", version: "2" };
+import { HTTPFacilitatorClient } from "@x402/core/server";
+import { decodePaymentSignatureHeader } from "@x402/core/http";
+import type { PaymentRequirements } from "@x402/core/types";
+import { NETWORKS, USDC_EXTRA, DEFAULT_FACILITATOR_URL } from "./constants.js";
 
 /**
  * Convert price to atomic units (6 decimals for USDC)
@@ -23,34 +18,30 @@ function priceToAtomicUnits(price: number): string {
 
 /**
  * Create payment requirements for a paid tool
- * Compatible with x402-mcp client expectations
  */
 export function createPaymentRequirements(
   toolName: string,
   toolOptions: X402ToolOptions,
   config: X402Config
-) {
-  const network = toolOptions.network ?? config.defaults?.network ?? "base";
+): PaymentRequirements {
+  const networkName = toolOptions.network ?? config.defaults?.network ?? "base";
+  const networkConfig = NETWORKS[networkName];
   const price = toolOptions.price ?? config.defaults?.price ?? 0.01;
-  const asset = USDC_ADDRESSES[network];
 
-  if (!asset) {
+  if (!networkConfig) {
     throw new Error(
-      `Unsupported network: ${network}. Supported: ${Object.keys(USDC_ADDRESSES).join(", ")}`
+      `Unsupported network: ${networkName}. Supported: ${Object.keys(NETWORKS).join(", ")}`
     );
   }
 
   return {
     scheme: "exact",
-    network,
-    maxAmountRequired: priceToAtomicUnits(price),
+    network: networkConfig.id,
+    amount: priceToAtomicUnits(price),
     payTo: config.wallet,
-    asset,
+    asset: networkConfig.usdc,
     maxTimeoutSeconds:
       toolOptions.maxPaymentAge ?? config.defaults?.maxPaymentAge ?? 300,
-    resource: `mcp://tool/${toolName}`,
-    mimeType: "application/json",
-    description: toolOptions.description ?? `Access to ${toolName} tool`,
     extra: USDC_EXTRA,
   };
 }
@@ -73,33 +64,11 @@ export function createPaymentRequiredResponse(
   };
 }
 
-// Default facilitator URL (testnet)
-const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
-
-// Lazy-loaded x402 modules
-let _x402Server: any = null;
-let _x402Http: any = null;
-
-async function getX402Server() {
-  if (!_x402Server) {
-    _x402Server = await import("@x402/core/server");
-  }
-  return _x402Server;
-}
-
-async function getX402Http() {
-  if (!_x402Http) {
-    _x402Http = await import("@x402/core/http");
-  }
-  return _x402Http;
-}
-
 /**
  * Decode the X-PAYMENT header
  */
-export async function decodePaymentHeader(header: string): Promise<any> {
-  const http = await getX402Http();
-  return http.decodePaymentSignatureHeader(header);
+export function decodePaymentHeader(header: string) {
+  return decodePaymentSignatureHeader(header);
 }
 
 /**
@@ -114,14 +83,11 @@ export async function verifyPayment(
   valid: boolean;
   context?: X402PaymentContext;
   error?: string;
-  payload?: any;
-  requirements?: ReturnType<typeof createPaymentRequirements>;
+  payload?: unknown;
+  requirements?: PaymentRequirements;
 }> {
   try {
-    const server = await getX402Server();
-    const http = await getX402Http();
-
-    const payload = http.decodePaymentSignatureHeader(paymentHeader);
+    const payload = decodePaymentSignatureHeader(paymentHeader);
     const requirements = createPaymentRequirements(
       toolName,
       toolOptions,
@@ -132,11 +98,10 @@ export async function verifyPayment(
     log("Payload:", payload);
     log("Requirements:", requirements);
 
-    // Use Coinbase's facilitator URL or custom one from config
     const facilitatorUrl = config.facilitator || DEFAULT_FACILITATOR_URL;
     log("Facilitator URL:", facilitatorUrl);
 
-    const facilitator = new server.HTTPFacilitatorClient({
+    const facilitator = new HTTPFacilitatorClient({
       url: facilitatorUrl,
     });
 
@@ -158,7 +123,7 @@ export async function verifyPayment(
       valid: true,
       context: {
         payer: result.payer ?? "",
-        amount: requirements.maxAmountRequired,
+        amount: requirements.amount,
         network: requirements.network,
         asset: requirements.asset,
         toolName,
@@ -179,8 +144,8 @@ export async function verifyPayment(
  * Settle payment after successful tool execution
  */
 export async function settlePayment(
-  payload: any,
-  requirements: ReturnType<typeof createPaymentRequirements>,
+  payload: unknown,
+  requirements: PaymentRequirements,
   config: X402Config
 ): Promise<{
   success: boolean;
@@ -189,16 +154,14 @@ export async function settlePayment(
   payer?: string;
   errorReason?: string;
 }> {
-  const server = await getX402Server();
-
   // Use Coinbase's facilitator URL or custom one from config
   const facilitatorUrl = config.facilitator || DEFAULT_FACILITATOR_URL;
 
-  const facilitator = new server.HTTPFacilitatorClient({
+  const facilitator = new HTTPFacilitatorClient({
     url: facilitatorUrl,
   });
 
-  return facilitator.settle(payload, requirements);
+  return facilitator.settle(payload as any, requirements);
 }
 
 /**
@@ -211,7 +174,7 @@ export function encodeSettlementHeader(
     network?: string;
     payer?: string;
   },
-  requirements: ReturnType<typeof createPaymentRequirements>
+  requirements: PaymentRequirements
 ): string {
   const response = {
     ...settlement,

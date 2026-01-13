@@ -9,6 +9,7 @@ import {
 import type { X402Config } from "./types.js";
 import { log, logError } from "./logger.js";
 import { x402ContextProvider } from "./context.js";
+import { NETWORKS } from "./constants.js";
 
 interface PendingSettlement {
   payload: unknown;
@@ -211,11 +212,10 @@ export async function x402Interceptor(
           .then((settlement) => {
             log("Settlement result:", settlement);
             if (settlement.success && settlement.transaction) {
-              const baseUrl =
-                settlement.network === "base"
-                  ? "https://basescan.org"
-                  : "https://sepolia.basescan.org";
-              log(`Transaction: ${baseUrl}/tx/${settlement.transaction}`);
+              const networkName =
+                settlement.network === "eip155:8453" ? "base" : "base-sepolia";
+              const explorer = NETWORKS[networkName].explorer;
+              log(`Transaction: ${explorer}/tx/${settlement.transaction}`);
             }
 
             const modifiedBody = addPaymentResponseToMeta(body, settlement);
