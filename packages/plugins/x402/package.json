@@ -7,23 +7,6 @@
     "email": "support@xmcp.dev",
     "url": "https://xmcp.dev"
   },
-  "contributors": [
-    {
-      "name": "Valentina Bearzotti",
-      "email": "valebearzotti1@gmail.com",
-      "url": "https://github.com/valebearzotti"
-    },
-    {
-      "name": "Jose Rago",
-      "email": "jose@basement.studio",
-      "url": "https://github.com/ragojose"
-    },
-    {
-      "name": "Francisco Veiras",
-      "email": "franciscover99@gmail.com",
-      "url": "https://github.com/fveiraswww"
-    }
-  ],
   "license": "MIT",
   "keywords": [
     "xmcp",

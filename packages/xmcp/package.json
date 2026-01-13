@@ -34,16 +34,6 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./headers": {
-      "types": "./dist/runtime/headers.d.ts",
-      "default": "./dist/runtime/headers.js"
-    }
-  },
   "bin": {
     "xmcp": "dist/cli.js"
   },

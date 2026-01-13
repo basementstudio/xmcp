@@ -3,15 +3,6 @@ import { builtinModules } from "module";
 import { runtimeFiles } from "./plugins";
 import { RspackOptions } from "@rspack/core";
 
-// Packages that should always be externalized (not bundled)
-const externalPackages = [
-  "@coinbase/x402",
-  "@x402/core",
-  "@x402/evm",
-  "@x402/express",
-  "@x402/svm",
-];
-
 /**
  * This function will decide if a file is bundled by xmcp compiler or not.
  * We want to avoid building node modules.
@@ -40,13 +31,8 @@ export function getExternals(): RspackOptions["externals"] {
         return callback(undefined, `commonjs ${request}`);
       }
 
-      /**
-       * Externalize x402 packages - they have complex dependencies that don't bundle well
-       */
-      for (const pkg of externalPackages) {
-        if (request === pkg || request.startsWith(`${pkg}/`)) {
-          return callback(undefined, `commonjs ${request}`);
-        }
+      if (request === "@x402/core" || request.startsWith("@x402/core/")) {
+        return callback(undefined, `commonjs ${request}`);
       }
 
       // Check if request is inside .xmcp folder - if so, bundle it

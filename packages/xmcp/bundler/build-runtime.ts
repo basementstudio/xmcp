@@ -27,18 +27,10 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "adapter-nextjs", path: "adapters/nextjs" },
 ];
 
-// Non-runtime modules that need to be bundled separately
-const standaloneModules: RuntimeRoot[] = [];
 const entry: EntryObject = {};
 
-// add dynamic entries
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
-}
-
-// add standalone modules
-for (const mod of standaloneModules) {
-  entry[mod.name] = path.join(srcPath, "runtime", mod.path);
 }
 
 const config: RspackOptions = {
