@@ -88,6 +88,7 @@ const config: RspackOptions = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     alias: {
       "@": srcPath,
+      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
     },
   },
   watchOptions: {

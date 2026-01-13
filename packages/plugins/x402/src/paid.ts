@@ -1,8 +1,5 @@
-import type {
-  X402ToolOptions,
-  UserToolHandler,
-  PaidHandler,
-} from "./types.js";
+import { X402ToolOptions } from "xmcp/plugins/x402";
+import type { UserToolHandler, PaidHandler } from "./types.js";
 
 /**
  * Mark a tool handler as requiring payment

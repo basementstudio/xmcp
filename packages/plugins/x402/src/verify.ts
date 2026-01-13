@@ -1,13 +1,10 @@
-import type {
-  X402Config,
-  X402ToolOptions,
-  X402PaymentContext,
-} from "./types.js";
+import type { X402Config, X402PaymentContext } from "./types.js";
 import { log } from "./logger.js";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { decodePaymentSignatureHeader } from "@x402/core/http";
 import type { PaymentRequirements } from "@x402/core/types";
 import { NETWORKS, USDC_EXTRA, DEFAULT_FACILITATOR_URL } from "./constants.js";
+import { X402ToolOptions } from "xmcp/plugins/x402";
 
 /**
  * Convert price to atomic units (6 decimals for USDC)

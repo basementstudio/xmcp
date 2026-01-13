@@ -1,3 +1,5 @@
+import type { X402ToolOptions } from "xmcp/plugins/x402";
+
 /**
  * Payment context available inside paid tool handlers
  */
@@ -37,18 +39,6 @@ export interface X402Config {
     network?: string;
     maxPaymentAge?: number;
   };
-}
-
-/**
- * Options for the paid() wrapper to override middleware defaults
- */
-export interface X402ToolOptions {
-  price?: number;
-  currency?: string;
-  network?: string;
-  receipt?: boolean;
-  maxPaymentAge?: number;
-  description?: string;
 }
 
 /**

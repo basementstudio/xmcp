@@ -1,4 +1,4 @@
-import type { X402ToolOptions } from "./types.js";
+import { X402ToolOptions } from "xmcp/plugins/x402";
 
 // Declare global to share registry between bundles
 declare global {
