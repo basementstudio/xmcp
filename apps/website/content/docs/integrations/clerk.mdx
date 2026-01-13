@@ -1,0 +1,180 @@
+---
+title: "Clerk"
+metadataTitle: "Usage with Clerk | xmcp Documentation"
+publishedAt: "2026-01-14"
+summary: "Add secure authentication to your MCP server using Clerk"
+description: "The Clerk plugin provides authentication for your MCP server using Clerk's OAuth system."
+---
+
+## Installation
+
+Install the Clerk plugin:
+
+```bash
+npm install @xmcp-dev/clerk
+```
+
+## Clerk Setup
+
+Before integrating the plugin, configure your Clerk application:
+
+1. Navigate to your [Clerk Dashboard](https://dashboard.clerk.com)
+2. Create a new application (or use an existing one)
+3. Go to **Configure** and access to **API Keys** to get the following values:
+   - **Secret Key** (`sk_...`)
+   - **Frontend API** URL (`your-app.clerk.accounts.dev`)
+4. Click on **Development**, enter to **OAuth Applications** and enable **Dynamic Client Registration**
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and configure the following environment variables:
+
+```bash
+CLERK_SECRET_KEY=sk_...
+CLERK_DOMAIN=your-app.clerk.accounts.dev
+
+BASE_URL=http://127.0.0.1:3001 
+```
+
+<Callout variant="info">
+  For production, the `BASE_URL` should be replaced with your deployed server URL.
+</Callout>
+
+## Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory and import the provider from the package:
+
+```typescript title="src/middleware.ts"
+import { clerkProvider } from "@xmcp-dev/clerk";
+
+export default clerkProvider({
+  secretKey: process.env.CLERK_SECRET_KEY!,
+  clerkDomain: process.env.CLERK_DOMAIN!,
+  baseURL: process.env.BASE_URL!
+});
+```
+
+### Configuration Options
+
+- **`secretKey`**: Clerk Secret Key
+- **`clerkDomain`**: Clerk Frontend domain
+- **`baseURL`**: Base URL of your MCP server
+- **`scopes`**: (Optional) OAuth scopes to request (default: `['profile', 'email']`)
+- **`docsURL`**: (Optional) URL to your MCP server's API documentation
+
+## Get a user session
+
+Access the authenticated user in your xmcp tools using `getSession`:
+
+### Example: Greet the user with their Clerk identity
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/clerk";
+
+// Define the schema for tool parameters
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their Clerk identity",
+};
+
+// Tool implementation
+export default function greet({ name }: InferSchema<typeof schema>): string {
+  const session = getSession();
+
+  return `Hello, ${name}! Your Clerk user ID is ${session.userId}`;
+}
+```
+
+## Get user details
+
+Access the authenticated user in your xmcp tools using `getUser`:
+
+### Example:  Get user details
+```typescript title="src/tools/get-user-info.ts"
+import type { ToolMetadata } from "xmcp";
+import { getUser } from "@xmcp-dev/clerk";
+
+// Define tool metadata
+export const metadata: ToolMetadata = {
+  name: "get-user-info",
+  description: "Get user details",
+};
+
+// Tool implementation
+export default async function getUserInfo(): Promise<string>  {
+  const user = await getUser();
+
+  return JSON.stringify(user, null, 2);
+}
+```
+
+## Access the client 
+
+The `getClient()` function gives you access to the full [Clerk Backend SDK](https://clerk.com/docs/references/backend/overview), allowing you to leverage all Clerk features in your MCP tools.
+
+### Example: Retrieve an Organization
+
+```typescript title="src/tools/get-org.ts"
+import { getSession, getClient } from "@xmcp-dev/clerk";
+
+export default async function getOrganization() {
+  const session = getSession();
+  const clerk = getClient();
+
+  if (!session.organizationId) {
+    return "User is not in an organization";
+  }
+
+  const org = await clerk.organizations.getOrganization({
+    organizationId: session.organizationId,
+  });
+
+  return JSON.stringify(org, null, 2);
+}
+```
+
+## Troubleshooting
+
+### Missing Configuration Errors
+
+If you see `"[Clerk] Missing required config: ..."` at startup:
+
+- Ensure all required environment variables are set (`CLERK_SECRET_KEY`, `CLERK_DOMAIN`, `BASE_URL`)
+- Check your `.env` file is being loaded correctly
+
+### Session or Client Not Initialized
+
+If `getSession()`, `getUser()`, or `getClient()` throws `"... not initialized"`:
+
+- Ensure `clerkProvider` is exported as default from `middleware.ts`
+- Ensure the tool is called on a route under `/mcp/*`
+- Don't call these functions at module load time only inside tool handlers
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens
+- Users can disconnect and reconnect to get fresh tokens
+
+### Invalid Token Errors
+
+If tokens are consistently invalid:
+
+- Verify your `CLERK_SECRET_KEY` matches your Clerk application
+- Verify your `CLERK_DOMAIN` matches your Clerk Frontend API URL
+- Check that you're using the correct environment (development vs production)
+
+### Authentication Service Misconfigured
+
+If you see a `500` error with `"Authentication service misconfigured"`:
+
+- Your `CLERK_SECRET_KEY` is invalid or doesn't match your Clerk application
+- Double-check you're using the correct key for your environment (development vs production)

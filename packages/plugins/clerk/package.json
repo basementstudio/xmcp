@@ -1,0 +1,48 @@
+{
+  "name": "@xmcp-dev/clerk",
+  "description": "Clerk authentication integration for xmcp",
+  "version": "0.0.2",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "clerk",
+    "authentication",
+    "mcp",
+    "oauth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/clerk"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@clerk/express": "^1.7.60",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "^0.5.7"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.5.7"
+  }
+}
+

@@ -4,12 +4,9 @@ import { getSession, getUser } from "@xmcp-dev/workos";
 export const metadata: ToolMetadata = {
   name: "whoami",
   description: "Returns the full WorkOS user session and account information",
-  annotations: {
-    title: "Who Am I",
-  },
 };
 
-export default async function whoami() {
+export default async function whoami(): Promise<string> {
   const session = getSession();
   const user = await getUser();
 

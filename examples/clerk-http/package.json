@@ -1,10 +1,10 @@
 {
-  "name": "workos-http-example",
-  "description": "HTTP-based xmcp server with WorkOS AuthKit integration",
+  "name": "HTTP with Clerk",
+  "description": "HTTP-based xmcp server with Clerk authentication",
   "keywords": [
     "http",
     "authentication",
-    "workos"
+    "clerk"
   ],
   "scripts": {
     "build": "xmcp build",
@@ -12,8 +12,9 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "@xmcp-dev/workos": "workspace:*",
+    "@xmcp-dev/clerk": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
   }
 }
+

@@ -9,3 +9,4 @@ const config: XmcpConfig = {
 };
 
 export default config;
+
