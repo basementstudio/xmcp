@@ -22,8 +22,9 @@ function priceToAtomicUnits(price: number): string {
 export function createPaymentRequirements(
   toolName: string,
   toolOptions: X402ToolOptions,
-  config: X402Config
-): PaymentRequirements {
+  config: X402Config,
+  useV2Format: boolean = false
+) {
   const networkName = toolOptions.network ?? config.defaults?.network ?? "base";
   const networkConfig = NETWORKS[networkName];
   const price = toolOptions.price ?? config.defaults?.price ?? 0.01;
@@ -34,14 +35,31 @@ export function createPaymentRequirements(
     );
   }
 
+  if (useV2Format) {
+    return {
+      scheme: "exact",
+      network: networkConfig.id,
+      amount: priceToAtomicUnits(price),
+      payTo: config.wallet,
+      asset: networkConfig.usdc,
+      maxTimeoutSeconds:
+        toolOptions.maxPaymentAge ?? config.defaults?.maxPaymentAge ?? 300,
+      extra: USDC_EXTRA,
+    };
+  }
+
+  // V1 format: network name, "maxAmountRequired" field
   return {
     scheme: "exact",
-    network: networkConfig.id,
-    amount: priceToAtomicUnits(price),
+    network: networkName,
+    maxAmountRequired: priceToAtomicUnits(price),
     payTo: config.wallet,
     asset: networkConfig.usdc,
     maxTimeoutSeconds:
       toolOptions.maxPaymentAge ?? config.defaults?.maxPaymentAge ?? 300,
+    resource: `mcp://tool/${toolName}`,
+    mimeType: "application/json",
+    description: toolOptions.description ?? `Access to ${toolName} tool`,
     extra: USDC_EXTRA,
   };
 }
@@ -84,14 +102,18 @@ export async function verifyPayment(
   context?: X402PaymentContext;
   error?: string;
   payload?: unknown;
-  requirements?: PaymentRequirements;
+  requirements?: PaymentRequirements | any;
 }> {
   try {
-    const payload = decodePaymentSignatureHeader(paymentHeader);
+    const payload = decodePaymentSignatureHeader(paymentHeader) as any;
+
+    const isV2 = payload.network?.includes(":");
+
     const requirements = createPaymentRequirements(
       toolName,
       toolOptions,
-      config
+      config,
+      isV2
     );
 
     log("Verifying payment...");
@@ -105,7 +127,7 @@ export async function verifyPayment(
       url: facilitatorUrl,
     });
 
-    const result = await facilitator.verify(payload, requirements);
+    const result = await facilitator.verify(payload, requirements as any);
 
     log("Verification result:", result);
 
@@ -123,7 +145,7 @@ export async function verifyPayment(
       valid: true,
       context: {
         payer: result.payer ?? "",
-        amount: requirements.amount,
+        amount: requirements.amount ?? requirements.maxAmountRequired,
         network: requirements.network,
         asset: requirements.asset,
         toolName,
