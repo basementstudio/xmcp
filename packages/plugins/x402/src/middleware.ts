@@ -13,6 +13,10 @@ if (global.__XMCP_X402_CONFIG === undefined) {
 }
 
 export function x402Middleware(config: X402Config): Middleware {
+  if (!config.wallet) {
+    throw new Error("x402Middleware requires a valid wallet address");
+  }
+
   global.__XMCP_X402_CONFIG = {
     wallet: config.wallet,
     facilitator: config.facilitator ?? DEFAULT_FACILITATOR_URL,
