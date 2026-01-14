@@ -41,7 +41,3 @@ export function paid<TArgs, TResult>(
 
   return paidHandler;
 }
-
-export function isPaidHandler(handler: unknown): handler is PaidHandler {
-  return typeof handler === "function" && "__x402" in handler;
-}

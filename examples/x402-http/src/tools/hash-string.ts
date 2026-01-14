@@ -19,9 +19,7 @@ export default paid(
   { price: 0.05 },
   async function hashString({ input }: InferSchema<typeof schema>) {
     if (!input || typeof input !== "string")
-      return {
-        content: [{ type: "text", text: "Invalid input: string required" }],
-      };
+      return "Invalid input: string required";
 
     // Use Web Crypto API for SHA-256 hashing
     async function sha256(str: string) {
@@ -34,8 +32,6 @@ export default paid(
 
     const hash = await sha256(input);
 
-    return {
-      content: [{ type: "text", text: hash }],
-    };
+    return hash;
   }
 );

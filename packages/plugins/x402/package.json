@@ -33,7 +33,8 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "@x402/core": "^2.1.0"
+    "@x402/core": "^2.1.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
