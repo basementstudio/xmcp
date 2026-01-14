@@ -110,7 +110,7 @@ function auth0Router(config: Config): Router {
         }
 
         const metadata: OAuthAuthorizationServerMetadata = {
-          issuer: `${auth0Url}/`,
+          issuer: `${auth0Url}`,
           authorization_endpoint: `${auth0Url}/authorize`,
           token_endpoint: `${auth0Url}/oauth/token`,
           jwks_uri: `${auth0Url}/.well-known/jwks.json`,
