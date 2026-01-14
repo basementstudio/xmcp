@@ -4,7 +4,7 @@ import Link from "next/link";
 import { cn } from "@/utils/cn";
 import { Icons } from "@/components/icons";
 
-type AuthIconKey = "betterAuth" | "clerk" | "workos";
+type AuthIconKey = "betterAuth" | "clerk" | "workos" | "auth0";
 
 interface AuthOption {
   label: string;
@@ -16,7 +16,7 @@ interface AuthOption {
 const AUTH_OPTIONS: AuthOption[] = [
   {
     label: "Better Auth",
-    icon: "betterAuth",
+    icon: "auth0",
     description: "Self-hosted auth with email/password and OAuth",
     href: "/docs/integrations/better-auth",
   },
