@@ -23,12 +23,16 @@ import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  extractToolNamesFromRequest,
+  storeToolNamesOnRequestHeaders,
+} from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
+import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // Global type declarations for tool name context and x402 interceptor
 declare global {
-  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
-  var __XMCP_X402_INTERCEPTOR: RequestHandler | undefined;
+  var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
 
 // no session management, POST only
@@ -128,7 +132,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   }
 
   async handleRequest(
-    req: IncomingMessage,
+    req: IncomingMessage & { auth?: AuthInfo },
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
@@ -151,7 +155,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   }
 
   private async handlePOST(
-    req: IncomingMessage,
+    req: IncomingMessage & { auth?: AuthInfo },
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
@@ -244,10 +248,12 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
         this._requestToCollectorMapping.set(requestId, collectorId);
       }
 
+      const authInfo: AuthInfo | undefined = req.auth;
+
       // MCP SDK transport interface mandatory
       for (const message of messages) {
         if (this.onmessage) {
-          this.onmessage(message);
+          this.onmessage(message, { authInfo });
         }
       }
     } catch (error) {
@@ -433,24 +439,11 @@ export class StatelessStreamableHTTPTransport {
 
   private extractAndStoreToolName(req: Request): void {
     try {
-      if (!req.body) return;
+      const toolNames = extractToolNamesFromRequest(req);
 
-      const messages: JsonRpcMessage[] = Array.isArray(req.body)
-        ? req.body
-        : [req.body];
-
-      for (const message of messages) {
-        if (
-          message.method === "tools/call" &&
-          message.params &&
-          typeof message.params === "object" &&
-          "name" in message.params &&
-          typeof message.params.name === "string"
-        ) {
-          req.headers["x-mcp-tool-name"] = message.params.name;
-          global.__XMCP_CURRENT_TOOL_NAME = message.params.name;
-          break;
-        }
+      if (toolNames.length > 0) {
+        storeToolNamesOnRequestHeaders(req, toolNames);
+        global.__XMCP_CURRENT_TOOL_NAME = toolNames[0];
       }
     } catch (error) {
       // no op
