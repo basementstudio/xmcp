@@ -1,16 +1,13 @@
-import { getX402Config } from "./middleware.js";
+export function log(debug: boolean, message: string, data?: unknown): void {
+  if (!debug) return;
 
-export function log(message: string, data?: unknown): void {
-  const config = getX402Config();
-  if (config?.debug) {
-    if (data !== undefined) {
-      console.log(
-        `[x402] ${message}`,
-        typeof data === "string" ? data : JSON.stringify(data, null, 2)
-      );
-    } else {
-      console.log(`[x402] ${message}`);
-    }
+  if (data !== undefined) {
+    console.log(
+      `[x402] ${message}`,
+      typeof data === "string" ? data : JSON.stringify(data, null, 2)
+    );
+  } else {
+    console.log(`[x402] ${message}`);
   }
 }
 

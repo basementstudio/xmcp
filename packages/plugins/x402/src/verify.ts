@@ -9,7 +9,7 @@ import { log } from "./logger.js";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { decodePaymentSignatureHeader } from "@x402/core/http";
 import { NETWORKS, USDC_EXTRA, DEFAULT_FACILITATOR_URL } from "./constants.js";
-import { X402ToolOptions } from "xmcp/plugins/x402";
+import { getToolContext } from "./context.js";
 
 /**
  * Convert price to atomic units (6 decimals for USDC)
@@ -21,12 +21,9 @@ function priceToAtomicUnits(price: number): string {
 /**
  * Create payment requirements for a paid tool
  */
-export function createPaymentRequirements(
-  toolName: string,
-  toolOptions: X402ToolOptions,
-  config: X402Config,
-  useV2Format: boolean = false
-) {
+export function createPaymentRequirements(useV2Format: boolean = false) {
+  const { toolName, toolOptions, config } = getToolContext();
+
   const networkName = toolOptions.network ?? config.defaults?.network ?? "base";
   const networkConfig = NETWORKS[networkName];
   const price = toolOptions.price ?? config.defaults?.price ?? 0.01;
@@ -70,60 +67,45 @@ export function createPaymentRequirements(
  * Create the 402 Payment Required response body
  */
 export function createPaymentRequiredResponse(
-  toolName: string,
-  toolOptions: X402ToolOptions,
-  config: X402Config,
-  error?: string
+  error?: string,
+  useV2Format: boolean = false
 ) {
-  const requirements = createPaymentRequirements(toolName, toolOptions, config);
+  const requirements = createPaymentRequirements(useV2Format);
 
   return {
-    x402Version: 1,
+    x402Version: useV2Format ? 2 : 1,
     error: error ?? "Payment required",
     accepts: [requirements],
   };
 }
 
 /**
- * Decode the X-PAYMENT header
- */
-export function decodePaymentHeader(header: string) {
-  return decodePaymentSignatureHeader(header);
-}
-
-/**
  * Verify payment with facilitator
  */
-export async function verifyPayment(
-  paymentHeader: string,
-  toolName: string,
-  toolOptions: X402ToolOptions,
-  config: X402Config
-): Promise<{
+export async function verifyPayment(paymentHeader: string): Promise<{
   valid: boolean;
   context?: X402PaymentContext;
   error?: string;
   payload?: PaymentPayload;
   requirements?: PaymentRequirements;
+  isV2Format?: boolean;
 }> {
+  const { toolName, config } = getToolContext();
+
   try {
-    const payload = decodePaymentSignatureHeader(paymentHeader) as any;
+    const payload = decodePaymentSignatureHeader(paymentHeader);
 
-    const isV2 = payload.network?.includes(":");
+    const isV2Format = payload.x402Version !== 1;
 
-    const requirements = createPaymentRequirements(
-      toolName,
-      toolOptions,
-      config,
-      isV2
-    );
+    const requirements = createPaymentRequirements(isV2Format);
 
-    log("Verifying payment...");
-    log("Payload:", payload);
-    log("Requirements:", requirements);
+    const debug = config.debug ?? false;
+    log(debug, "Verifying payment...");
+    log(debug, "Payload:", payload);
+    log(debug, "Requirements:", requirements);
 
     const facilitatorUrl = config.facilitator || DEFAULT_FACILITATOR_URL;
-    log("Facilitator URL:", facilitatorUrl);
+    log(debug, "Facilitator URL:", facilitatorUrl);
 
     const facilitator = new HTTPFacilitatorClient({
       url: facilitatorUrl,
@@ -131,17 +113,18 @@ export async function verifyPayment(
 
     const result = await facilitator.verify(payload, requirements as any);
 
-    log("Verification result:", result);
+    log(debug, "Verification result:", result);
 
     if (!result.isValid) {
-      log("Payment invalid:", result.invalidReason);
+      log(debug, "Payment invalid:", result.invalidReason);
       return {
         valid: false,
         error: result.invalidReason ?? "Payment verification failed",
+        isV2Format,
       };
     }
 
-    log("Payment verified successfully for payer:", result.payer);
+    log(debug, "Payment verified successfully for payer:", result.payer);
 
     return {
       valid: true,
@@ -154,6 +137,7 @@ export async function verifyPayment(
       },
       payload,
       requirements: requirements as PaymentRequirements,
+      isV2Format,
     };
   } catch (error) {
     return {
@@ -169,8 +153,7 @@ export async function verifyPayment(
  */
 export async function settlePayment(
   payload: PaymentPayload,
-  requirements: PaymentRequirements,
-  config: X402Config
+  requirements: PaymentRequirements
 ): Promise<{
   success: boolean;
   transaction?: string;
@@ -178,7 +161,7 @@ export async function settlePayment(
   payer?: string;
   errorReason?: string;
 }> {
-  // Use Coinbase's facilitator URL or custom one from config
+  const { config } = getToolContext();
   const facilitatorUrl = config.facilitator || DEFAULT_FACILITATOR_URL;
 
   const facilitator = new HTTPFacilitatorClient({

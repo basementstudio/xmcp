@@ -3,11 +3,14 @@ import type {
   PaymentRequirements as PaymentRequirementsV2,
   PaymentRequirementsV1,
   PaymentPayload,
+  PaymentPayloadV1,
 } from "@x402/core/types";
+import { z } from "zod";
+import { DEFAULT_FACILITATOR_URL } from "./constants.js";
 
 export type PaymentRequirements = PaymentRequirementsV2 | PaymentRequirementsV1;
 
-export type { PaymentPayload };
+export type { PaymentPayload, PaymentPayloadV1 };
 
 /**
  * Payment context available inside paid tool handlers
@@ -34,20 +37,26 @@ export interface PaidHandlerExtra {
   payment: X402PaymentContext;
 }
 
-export interface X402Config {
-  /** Wallet address to receive payments */
-  wallet: string;
-  /** Facilitator URL for payment verification */
-  facilitator?: string;
-  /** Enable debug logging */
-  debug?: boolean;
-  /** Default payment settings for all paid tools */
-  defaults?: {
-    price?: number;
-    currency?: string;
-    network?: string;
-    maxPaymentAge?: number;
-  };
+export const x402ConfigSchema = z.object({
+  wallet: z.string(),
+  facilitator: z.string().url().optional().default(DEFAULT_FACILITATOR_URL),
+  debug: z.boolean().optional().default(false),
+  defaults: z
+    .object({
+      price: z.number().min(0).optional().default(0.01),
+      currency: z.string().min(1).max(4).optional().default("USDC"),
+      network: z.string().optional().default("base"),
+      maxPaymentAge: z.number().min(0).optional().default(300),
+    })
+    .optional(),
+});
+
+export type X402Config = z.input<typeof x402ConfigSchema>;
+
+export interface X402ToolContext {
+  toolName: string;
+  toolOptions: X402ToolOptions;
+  config: X402Config;
 }
 
 /**

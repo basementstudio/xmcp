@@ -30,7 +30,7 @@ import {
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
-// Global type declarations for tool name context and x402 interceptor
+// Global type declarations for tool name context
 declare global {
   var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
@@ -316,11 +316,6 @@ export class StatelessStreamableHTTPTransport {
     this.setupInitialMiddleware();
 
     this.setupProviders();
-
-    const x402Interceptor = global.__XMCP_X402_INTERCEPTOR;
-    if (x402Interceptor) {
-      this.app.use(this.endpoint, x402Interceptor);
-    }
 
     this.setupEndpointRoute();
   }

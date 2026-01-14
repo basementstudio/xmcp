@@ -1,6 +1,6 @@
-import { x402Middleware } from "@xmcp-dev/x402";
+import { x402Provider } from "@xmcp-dev/x402";
 
-export default x402Middleware({
+export default x402Provider({
   wallet: process.env.X402_WALLET!,
   facilitator: process.env.X402_FACILITATOR ?? "https://x402.org/facilitator",
   debug: true,

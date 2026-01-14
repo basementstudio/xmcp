@@ -1,7 +1,9 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import type { Middleware } from "xmcp";
+import { extractToolNamesFromRequest } from "xmcp";
 import {
   type X402Config,
+  type X402ToolContext,
   type PaymentPayload,
   type PaymentRequirements,
   x402ConfigSchema,
@@ -13,14 +15,16 @@ import {
   createPaymentRequiredResponse,
 } from "./verify.js";
 import { log, logError } from "./logger.js";
-import { x402ContextProvider } from "./context.js";
+import {
+  x402ContextProvider,
+  toolContextProvider,
+  getToolContext,
+} from "./context.js";
 import { NETWORKS } from "./constants.js";
-import type { X402ToolOptions } from "xmcp/plugins/x402";
 
 interface PendingSettlement {
   payload: PaymentPayload;
   requirements: PaymentRequirements;
-  config: X402Config;
 }
 
 export function x402Provider(config: X402Config): Middleware {
@@ -37,9 +41,6 @@ export function x402Provider(config: X402Config): Middleware {
   return x402Middleware(parsedConfig.data);
 }
 
-/**
- * Create x402 middleware
- */
 function x402Middleware(config: X402Config): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
     const paidToolResult = findPaidToolInRequest(req);
@@ -59,46 +60,55 @@ function x402Middleware(config: X402Config): RequestHandler {
       return;
     }
 
-    const toolOptions = x402Registry.get(toolName)!;
+    const toolOptions = x402Registry.get(toolName);
 
-    const paymentHeader = extractPaymentFromMeta(req);
-    if (!paymentHeader) {
-      sendPaymentRequired(res, req, toolName, toolOptions, config);
-      return;
-    }
-
-    const verification = await verifyPayment(
-      paymentHeader,
-      toolName,
-      toolOptions,
-      config
-    );
-
-    if (!verification.valid) {
-      sendPaymentRequired(
+    if (!toolOptions) {
+      sendJsonRpcError(
         res,
-        req,
-        toolName,
-        toolOptions,
-        config,
-        verification.error
+        extractRequestId(req),
+        -32600,
+        `Tool ${toolName} not found`
       );
       return;
     }
 
-    setupSettlementInterceptor(
-      res,
-      {
-        payload: verification.payload!,
-        requirements: verification.requirements!,
-        config,
-      },
+    const toolCtx: X402ToolContext = {
       toolName,
-      toolOptions
-    );
+      toolOptions,
+      config,
+    };
 
-    x402ContextProvider(verification.context!, () => {
-      next();
+    toolContextProvider(toolCtx, async () => {
+      const paymentHeader = extractPaymentFromMeta(req);
+      if (!paymentHeader) {
+        sendPaymentRequired(res, req);
+        return;
+      }
+
+      const verification = await verifyPayment(paymentHeader);
+
+      if (!verification.valid) {
+        sendPaymentRequired(
+          res,
+          req,
+          verification.error,
+          verification.isV2Format
+        );
+        return;
+      }
+
+      setupSettlementInterceptor(
+        res,
+        {
+          payload: verification.payload!,
+          requirements: verification.requirements!,
+        },
+        verification.isV2Format ?? false
+      );
+
+      x402ContextProvider(verification.context!, () => {
+        next();
+      });
     });
   };
 }
@@ -107,13 +117,8 @@ function findPaidToolInRequest(req: Request): {
   toolName?: string;
   error?: string;
 } {
-  const name = req.headers["x-mcp-tool-name"];
-
-  if (!name) {
-    return {
-      error: "No tool name provided in the request header.",
-    };
-  }
+  const toolNames = extractToolNamesFromRequest(req);
+  const paidTools = toolNames.filter((name) => x402Registry.has(name));
 
   if (paidTools.length > 1) {
     return {
@@ -170,17 +175,10 @@ function sendJsonRpcError(
 function sendPaymentRequired(
   res: Response,
   req: Request,
-  toolName: string,
-  toolOptions: X402ToolOptions,
-  config: X402Config,
-  error?: string
+  error?: string,
+  isV2Format: boolean = false
 ): void {
-  const paymentRequired = createPaymentRequiredResponse(
-    toolName,
-    toolOptions,
-    config,
-    error
-  );
+  const paymentRequired = createPaymentRequiredResponse(error, isV2Format);
 
   res.status(200).json({
     jsonrpc: "2.0",
@@ -193,13 +191,10 @@ function sendPaymentRequired(
   });
 }
 
-// --- Settlement ---
-
 function setupSettlementInterceptor(
   res: Response,
   pendingSettlement: PendingSettlement,
-  toolName: string,
-  toolOptions: X402ToolOptions
+  isV2Format: boolean
 ): void {
   const originalEnd = res.end.bind(res);
 
@@ -225,8 +220,7 @@ function setupSettlementInterceptor(
       );
     }
 
-    // Settle payment after successful tool execution
-    handleSettlement(pendingSettlement, body, toolName, toolOptions)
+    handleSettlement(pendingSettlement, body)
       .then((finalBody) => {
         return originalEnd(
           JSON.stringify(finalBody),
@@ -236,13 +230,7 @@ function setupSettlementInterceptor(
       })
       .catch((err) => {
         logError("Settlement failed:", err);
-        const errorBody = createSettlementErrorResponse(
-          body,
-          err,
-          toolName,
-          toolOptions,
-          pendingSettlement.config
-        );
+        const errorBody = createSettlementErrorResponse(err, isV2Format);
         return originalEnd(
           JSON.stringify(errorBody),
           encoding as BufferEncoding,
@@ -267,14 +255,13 @@ function parseResponseBody(chunk: any): unknown | null {
 
 async function handleSettlement(
   pendingSettlement: PendingSettlement,
-  body: unknown,
-  _toolName: string,
-  _toolOptions: X402ToolOptions
+  body: unknown
 ): Promise<unknown> {
-  const { payload, requirements, config } = pendingSettlement;
+  const { payload, requirements } = pendingSettlement;
+  const { config } = getToolContext();
   const debug = config.debug ?? false;
 
-  const settlement = await settlePayment(payload, requirements, config);
+  const settlement = await settlePayment(payload, requirements);
 
   log(debug, "Settlement result:", settlement);
 
@@ -330,17 +317,12 @@ function addPaymentResponseToMeta(
 }
 
 function createSettlementErrorResponse(
-  _originalBody: unknown,
   error: unknown,
-  toolName: string,
-  toolOptions: X402ToolOptions,
-  config: X402Config
+  isV2Format: boolean = false
 ): unknown {
   const paymentRequired = createPaymentRequiredResponse(
-    toolName,
-    toolOptions,
-    config,
-    `Settlement failed: ${error}`
+    `Settlement failed: ${error}`,
+    isV2Format
   );
 
   return {
