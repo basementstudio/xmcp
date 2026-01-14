@@ -72,8 +72,11 @@ function createManagementClient(config: Auth0Config): ManagementClient {
 
 function auth0Router(config: Auth0Config): Router {
   const router = Router();
-  const baseUrl = config.baseURL.replace(/\/$/, "");
-  const auth0Url = `https://${config.domain}`;
+  const baseUrl = config.baseURL.replace(/\/+$/, "");
+  const domainClean = config.domain
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
+  const auth0Url = new URL(`https://${domainClean}`).href;
 
   const scopes = config.scopesSupported
     ? [...DEFAULT_SCOPES, ...config.scopesSupported]
@@ -286,19 +289,10 @@ async function enforceToolPermissions(
 
   if (scopeExistsInAuth0) {
     if (!tokenHasScope) {
-      throw new InsufficientScopeError(
+      throw new Error(
         `You don't have permission to use the '${toolName}' tool.`
       );
     }
     return;
   }
-
 }
-
-export class InsufficientScopeError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "InsufficientScopeError";
-  }
-}
-

@@ -47,10 +47,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 2. Click **Create API**
 3. Set:
    - **Name**: e.g., `MCP Server API`
-   - **Identifier**: Your server URL **with trailing slash** (e.g., `http://localhost:3001/`)
-4. Go to **Permissions** tab and add your scopes for the tools you want to protect:
-   - **`tool:greet`**: Access the greeting tool
-   - **`tool:whoami`**: Access the whoami tool
+   - **Identifier**: Your server URL **with trailing slash** (for development we will use `http://localhost:3001/`)
 
 ### 5. Set Default Audience
 
@@ -60,27 +57,11 @@ DCR-registered clients are third-party by default and can only use domain-level 
 
 ### 6. Note your Auth0 Domain
 
-- Your domain follows `<tenant>.<region>.auth0.com` (e.g., `dev-xmcp.us.auth0.com`).
-- You can find it in **Dashboard** → **Applications** → your app → **Settings** under **Basic Information**.
-- Use this exact value for `AUTH0_DOMAIN` in your environment variables.
+- In your **Dashboard** go to **Applications** and enter to your app.
+- Go to **Settings** and under **Basic Information**, you will find your **Domain** that follows `<tenant>.<region>.auth0.com`.
+- Save this value in your environment variables under `AUTH0_DOMAIN`.
 
-### 7. Enable RBAC
-
-1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → your API
-2. Go to **Settings** tab
-3. Enable **"Enable RBAC"**
-4. Enable **"Add Permissions in the Access Token"**
-5. Save changes
-
-### 8. Create Roles and Assign Permissions
-
-1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
-2. Click **Create Role** (e.g., "MCP User")
-3. Go to **Permissions** tab → **Add Permissions**
-4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
-5. Go to **Users** tab → **Add Users** to assign the role to users
-
-### 9. Set Up Management API Access
+### 7. Set Up Management API Access
 
 1. Go to **Auth0 Dashboard** → **Applications** → **Applications**
 2. Click **Create Application** → **Machine to Machine Applications**
@@ -140,7 +121,6 @@ export default auth0Provider({
   - **`resourceServerIdentifier`** - (Optional) API identifier to check permissions against
 - **`scopesSupported`** - (Optional) List of custom scopes for OAuth metadata
 
-
 ## Public vs Protected Tools
 
 The Auth0 plugin supports two types of tools:
@@ -151,13 +131,34 @@ By default, all tools are public and accessible by any user that is authenticate
 
 ### Protected Tools
 
-Auth0 enables protecting specific tools by requiring a specific permission to access. To protect a tool follow these steps:
+Auth0 supports protecting tools by requiring a permission to access. Follow these steps:
 
-1. Add the permission `tool:<tool-name>` to your Auth0 API (e.g., `tool:whoami`)
+1. In your Auth0 API, created in step 4, add the permission with the following syntext `tool:<tool-name>` (e.g., `tool:whoami`)
 2. Assign this permission to roles/users who should have access
-3. Users without the permission will see: "You don't have permission to use the 'tool-name' tool."
+
+Now when users without the permission will see: "You don't have permission to use the 'tool-name' tool."
 
 xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
+
+## Configure roles and RBAC for protected tools
+
+If you want to use protected tools with permission-based access control, you need to enable RBAC in your Auth0 tenant. Skip this section if you only need public tools.
+
+### Enable RBAC
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → your API
+2. Go to **Settings** tab
+3. Enable **"Enable RBAC"**
+4. Enable **"Add Permissions in the Access Token"**
+5. Save changes
+
+### Create Roles and Assign Permissions
+
+1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
+2. Click **Create Role** (e.g., "MCP User")
+3. Go to **Permissions** tab → **Add Permissions**
+4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
+5. Go to **Users** tab → **Add Users** to assign the role to users
 
 ## Get a user session
 
@@ -239,25 +240,80 @@ export default async function updatePreferences(): Promise<string> {
   const authInfo = getAuthInfo();
   const client = getManagementClient();
 
-  await client.users.update(authInfo.user.sub, {
-    user_metadata: { theme: "dark" },
-  });
-
-  return "Preferences updated!";
+  try {
+    await client.users.update(authInfo.user.sub, {
+      user_metadata: { theme: "dark" },
+    });
+    return "Preferences updated!";
+  } catch (error) {
+    return error instanceof Error ? error.message : "Failed to update preferences";
+  }
 }
 ```
 
-The `ManagementClient` provides typed methods for all Auth0 Management API operations and is only available when the `management` configuration is provided. See the [official SDK](https://auth0.github.io/node-auth0/) for more details.
+The `getManagementClient` provides typed methods for all Auth0 Management API operations and is only available when the `management` configuration is provided. See the [official SDK](https://auth0.github.io/node-auth0/) for more details.
+
+## Access Token Vault
+
+Token Vault allows your MCP tools to access external APIs (Google, GitHub, Slack, etc.) on behalf of authenticated users. Use `getAuth0Client()` to get access tokens for federated connections.
+
+### Example: Get a Google access token
+
+```typescript title="src/tools/list-calendar-events.ts"
+import type { ToolMetadata } from "xmcp";
+import { getAuth0Client, getAuthInfo } from "@xmcp-dev/auth0";
+
+export const metadata: ToolMetadata = {
+  name: "list-calendar-events",
+  description: "List the user's Google Calendar events",
+};
+
+export default async function listCalendarEvents(): Promise<string> {
+  const authInfo = getAuthInfo();
+  const client = getAuth0Client();
+
+  // Get a Google access token from Token Vault
+  const { accessToken } = await client.getAccessTokenForConnection({
+    connection: "google-oauth2",
+    subject_token: authInfo.token,
+  });
+
+  // Use the token to call Google Calendar API
+  const response = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
+  const events = await response.json();
+  return JSON.stringify(events, null, 2);
+}
+```
+
+<Callout variant="info">
+  Token Vault requires the `management` configuration in your middleware. Auth0 handles token refresh automatically—you never need to manage external provider refresh tokens.
+</Callout>
+
+### Supported Connections
+
+Token Vault works with social and enterprise connections configured in your Auth0 tenant, including:
+
+- `google-oauth2` - Google APIs
+- `github` - GitHub API
+- `slack` - Slack API
+- `microsoft` - Microsoft Graph API
+- Any OIDC-compliant provider
 
 ## Troubleshooting
 
 These are the most common errors you may encounter when using the Auth0 plugin:
 
-- **`unauthorized`** - The request is missing the Authorization header. The client needs to authenticate before accessing protected resources.
-- **`token_expired`** - The access token has expired. MCP clients should automatically refresh tokens; users can disconnect and reconnect to get fresh tokens.
-- **`invalid_token`** - Token verification failed. Check that your Auth0 configuration matches your tenant settings.
-- **`InsufficientScopeError`** - The token doesn't have the required scopes for the tool. Ensure the scope is defined in your Auth0 API and requested during login.
-- **`Service not found`** - The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience, and any mismatch causes this error.
+- `unauthorized`: The request is missing the Authorization header. The client needs to authenticate before accessing protected resources.
+- `token_expired`: The access token has expired. MCP clients should automatically refresh tokens; users can disconnect and reconnect to get fresh tokens.
+- `invalid_token`: Token verification failed. Check that your Auth0 configuration matches your tenant settings.
+- `InsufficientScopeError`: The token doesn't have the required scopes for the tool. Ensure the scope is defined in your Auth0 API and requested during login.
+- `Service not found`: The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience, and any mismatch causes this error.
 
 ### OAuth Init Failed
 

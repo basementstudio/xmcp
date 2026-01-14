@@ -186,22 +186,6 @@ const client = getAuth0Client();
 // Use for token-related operations
 ```
 
-### Error Classes
-
-- **`InsufficientScopeError`** - Thrown when user lacks required scopes for a tool
-
-```typescript
-import { InsufficientScopeError } from "@xmcp-dev/auth0";
-
-try {
-  // ... tool logic
-} catch (error) {
-  if (error instanceof InsufficientScopeError) {
-    return "You don't have permission to perform this action.";
-  }
-}
-```
-
 ## Architecture
 
 The plugin uses two internal contexts with different lifecycles:
