@@ -145,22 +145,19 @@ export default auth0Provider({
 
 The Auth0 plugin supports two types of tools:
 
+### Public Tools
+
+By default, all tools are public and accessible by any user that is authenticated.
+
 ### Protected Tools
 
-A **protected tool** requires a specific permission to access. To protect a tool:
+Auth0 enables protecting specific tools by requiring a specific permission to access. To protect a tool follow these steps:
 
 1. Add the permission `tool:<tool-name>` to your Auth0 API (e.g., `tool:whoami`)
 2. Assign this permission to roles/users who should have access
 3. Users without the permission will see: "You don't have permission to use the 'tool-name' tool."
 
-xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`. The Auth0 permission should match the tool name.
-
-### Public Tools
-
-A **public tool** is accessible to any authenticated user without specific permissions. To create a public tool:
-
-1. Simply **don't add** the tool's permission to your Auth0 API
-2. Any authenticated user can call the tool
+xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
 
 ## Get a user session
 
