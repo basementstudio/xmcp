@@ -5,7 +5,7 @@ import {
   NextFunction,
   type RequestHandler,
 } from "express";
-import type { Middleware } from "xmcp";
+import { extractToolNamesFromRequest, type Middleware } from "xmcp";
 import { ApiClient } from "@auth0/auth0-api-js";
 import { ManagementClient } from "auth0";
 import {
@@ -15,7 +15,7 @@ import {
 } from "./context.js";
 import { fetchApiPermissions } from "./permissions.js";
 import type {
-  Auth0Config,
+  Config,
   AuthInfo,
   OAuthProtectedResourceMetadata,
   OAuthAuthorizationServerMetadata,
@@ -24,7 +24,7 @@ import { createVerifier, extractBearerToken } from "./jwt.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
 
-export function auth0Provider(config: Auth0Config): Middleware {
+export function auth0Provider(config: Config): Middleware {
   if (!config.domain) {
     throw new Error("[Auth0] Missing required config: domain");
   }
@@ -59,7 +59,7 @@ export function auth0Provider(config: Auth0Config): Middleware {
   };
 }
 
-function createManagementClient(config: Auth0Config): ManagementClient {
+function createManagementClient(config: Config): ManagementClient {
   return new ManagementClient({
     domain: config.domain,
     clientId: config.management!.clientId,
@@ -70,7 +70,7 @@ function createManagementClient(config: Auth0Config): ManagementClient {
   });
 }
 
-function auth0Router(config: Auth0Config): Router {
+function auth0Router(config: Config): Router {
   const router = Router();
   const baseUrl = config.baseURL.replace(/\/+$/, "");
   const domainClean = config.domain
@@ -131,7 +131,7 @@ function auth0Router(config: Auth0Config): Router {
   return router;
 }
 
-function auth0Middleware(config: Auth0Config): RequestHandler {
+function auth0Middleware(config: Config): RequestHandler {
   const verify = createVerifier(config);
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -223,36 +223,11 @@ function auth0Middleware(config: Auth0Config): RequestHandler {
 
 async function enforceToolPermissions(
   req: Request,
-  config: Auth0Config,
+  config: Config,
   authInfo: AuthInfo
 ): Promise<void> {
-  let toolName: string | undefined;
-
-  if (req.body && typeof req.body === "object") {
-    const messages = Array.isArray(req.body) ? req.body : [req.body];
-    for (const message of messages) {
-      if (
-        message?.method === "tools/call" &&
-        message?.params &&
-        typeof message.params === "object" &&
-        "name" in message.params &&
-        typeof message.params.name === "string"
-      ) {
-        toolName = message.params.name;
-        break;
-      }
-    }
-  }
-
-  if (!toolName) {
-    const toolNameHeader = req.headers["x-mcp-tool-name"];
-    toolName =
-      typeof toolNameHeader === "string"
-        ? toolNameHeader
-        : Array.isArray(toolNameHeader)
-          ? toolNameHeader[0]
-          : (global as any).__XMCP_CURRENT_TOOL_NAME;
-  }
+  const toolNames = extractToolNamesFromRequest(req);
+  const toolName = toolNames[0];
 
   if (!toolName || typeof toolName !== "string" || toolName.length === 0) {
     return;

@@ -1,7 +1,7 @@
 import { createContext } from "xmcp";
-import type { AuthContext, Auth0Context } from "./types.js";
+import type { SessionContext, ClientContext } from "./types.js";
 
-export const contextSession = createContext<AuthContext>({
+export const contextSession = createContext<SessionContext>({
   name: "auth0-context-session",
 });
 
@@ -9,7 +9,7 @@ export const setSessionContext = contextSession.setContext;
 export const getSessionContext = contextSession.getContext;
 export const providerSessionContext = contextSession.provider;
 
-export const contextClient = createContext<Auth0Context>({
+export const contextClient = createContext<ClientContext>({
   name: "auth0-context-client",
 });
 

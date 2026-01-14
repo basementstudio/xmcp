@@ -2,11 +2,11 @@ export { auth0Provider } from "./provider.js";
 
 export { getAuthInfo, getUser } from "./session.js";
 
-export { getAuth0Client, getManagementClient } from "./client.js";
+export { getClient, getManagement } from "./client.js";
 
 export type {
-  Auth0Config,
-  Auth0ManagementConfig,
+  Config,
+  ManagementConfig,
   Auth0User,
   AuthInfo,
   UserClaims,

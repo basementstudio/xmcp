@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { InferSchema, ToolMetadata } from "xmcp";
-import { getAuthInfo, getManagementClient } from "@xmcp-dev/auth0";
+import { getAuthInfo, getManagement } from "@xmcp-dev/auth0";
 
 export const schema = {
   key: z.string().describe("The metadata key to update"),
@@ -17,7 +17,7 @@ export default async function updateUserMetadata({
   value,
 }: InferSchema<typeof schema>) {
   const authInfo = getAuthInfo();
-  const client = getManagementClient();
+  const client = getManagement();
 
   try {
     await client.users.update(authInfo.user.sub, {
@@ -25,6 +25,8 @@ export default async function updateUserMetadata({
     });
     return `Successfully updated user_metadata.${key} to "${value}"`;
   } catch (error) {
-    return error instanceof Error ? error.message : "Failed to update user metadata";
+    return error instanceof Error
+      ? error.message
+      : "Failed to update user metadata";
   }
 }

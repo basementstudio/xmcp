@@ -1,5 +1,5 @@
 import type { ManagementClient } from "auth0";
-import type { Auth0Config } from "./types.js";
+import type { Config } from "./types.js";
 
 interface ResourceServer {
   readonly identifier?: string;
@@ -7,7 +7,7 @@ interface ResourceServer {
 }
 
 export async function fetchApiPermissions(
-  config: Auth0Config,
+  config: Config,
   managementClient: ManagementClient | null
 ): Promise<readonly string[]> {
   if (!config.management || !managementClient) {

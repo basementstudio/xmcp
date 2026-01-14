@@ -1,5 +1,5 @@
 import type { ToolMetadata } from "xmcp";
-import { getManagementClient } from "@xmcp-dev/auth0";
+import { getManagement } from "@xmcp-dev/auth0";
 
 export const metadata: ToolMetadata = {
   name: "list_api_scopes",
@@ -17,7 +17,7 @@ interface ResourceServer {
 }
 
 export default async function listApiScopes() {
-  const client = getManagementClient();
+  const client = getManagement();
 
   try {
     const { data: servers } = await client.resourceServers.list();
@@ -34,7 +34,10 @@ export default async function listApiScopes() {
     }
 
     const scopeList = apiServer.scopes
-      .map((s: ResourceServerScope) => `- ${s.value}${s.description ? `: ${s.description}` : ""}`)
+      .map(
+        (s: ResourceServerScope) =>
+          `- ${s.value}${s.description ? `: ${s.description}` : ""}`
+      )
       .join("\n");
 
     return `Available scopes:\n${scopeList}`;

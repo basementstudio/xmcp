@@ -2,7 +2,7 @@ import type { ApiClient } from "@auth0/auth0-api-js";
 import type { ManagementClient } from "auth0";
 import { getClientContext } from "./context.js";
 
-export function getAuth0Client(): ApiClient {
+export function getClient(): ApiClient {
   const { apiClient } = getClientContext();
   if (!apiClient) {
     throw new Error(
@@ -13,7 +13,7 @@ export function getAuth0Client(): ApiClient {
   return apiClient;
 }
 
-export function getManagementClient(): ManagementClient {
+export function getManagement(): ManagementClient {
   const { managementClient } = getClientContext();
   if (!managementClient) {
     throw new Error(

@@ -1,15 +1,15 @@
 import type { ApiClient } from "@auth0/auth0-api-js";
 import type { ManagementClient } from "auth0";
 
-export interface Auth0Config {
+export interface Config {
   domain: string;
   audience: string;
   baseURL: string;
   scopesSupported?: readonly string[];
-  management?: Auth0ManagementConfig;
+  management?: ManagementConfig;
 }
 
-export interface Auth0ManagementConfig {
+export interface ManagementConfig {
   clientId: string;
   clientSecret: string;
   audience?: string;
@@ -41,12 +41,12 @@ export type TokenVerifyResult =
       message: string;
     };
 
-export interface AuthContext {
+export interface SessionContext {
   authInfo: AuthInfo | null;
 }
 
-export interface Auth0Context {
-  config: Auth0Config;
+export interface ClientContext {
+  config: Config;
   apiClient: ApiClient | null;
   managementClient: ManagementClient | null;
 }

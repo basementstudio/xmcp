@@ -1,8 +1,8 @@
 import { ApiClient, VerifyAccessTokenError } from "@auth0/auth0-api-js";
-import type { AuthInfo, Auth0Config, TokenVerifyResult } from "./types.js";
+import type { AuthInfo, Config, TokenVerifyResult } from "./types.js";
 
 export function createVerifier(
-  config: Auth0Config
+  config: Config
 ): (token: string) => Promise<TokenVerifyResult> {
   const apiClient = new ApiClient({
     domain: config.domain,

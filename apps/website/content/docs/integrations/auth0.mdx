@@ -52,7 +52,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 ### 5. Set Default Audience
 
 1. Go to **Auth0 Dashboard** → **Settings** → **General**
-2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (e.g., `http://localhost:3001/`)
+2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (for development we will use `http://localhost:3001/`)
 3. Save changes
 
 ### 6. Note your Auth0 Domain
@@ -63,12 +63,12 @@ DCR-registered clients are third-party by default and can only use domain-level 
 
 ### 7. Set Up Management API Access
 
-1. Go to **Auth0 Dashboard** → **Applications** → **Applications**
-2. Click **Create Application** → **Machine to Machine Applications**
-3. Name it (e.g., "MCP Server M2M")
-4. Select **Auth0 Management API** as the authorized API
-5. Grant the **`read:resource_servers`** permission
-6. Save and note the **Client ID** and **Client Secret**
+1. Go to **Auth0 Dashboard** → **Applications** → **Applications**.
+2. Click **Create Application** → **Machine to Machine Applications**.
+3. Name it (e.g., "MCP Server M2M").
+4. Select **Auth0 Management API** as the authorized API.
+5. Grant the **`read:resource_servers`** permission.
+6. Save the **Client ID** and **Client Secret** in your environment variables under `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET`.
 
 ## Environment Variables
 
@@ -127,16 +127,33 @@ The Auth0 plugin supports two types of tools:
 
 ### Public Tools
 
-By default, all tools are public and accessible by any user that is authenticated.
+By default, all tools are public and accessible by any user that is authenticated. This means any user with a valid Auth0 token can access the tool, regardless of their roles or permissions.
+
+Use public tools for:
+
+- General-purpose utilities that all users need
+- Non-sensitive operations like greeting users or displaying public information
+- Tools that don't access or modify restricted resources
+
+No additional Auth0 configuration is required for public tools.
 
 ### Protected Tools
 
-Auth0 supports protecting tools by requiring a permission to access. Follow these steps:
+Protected tools require specific permissions to access. Use them to restrict sensitive operations to authorized users only.
 
-1. In your Auth0 API, created in step 4, add the permission with the following syntext `tool:<tool-name>` (e.g., `tool:whoami`)
+Use protected tools for:
+
+- Administrative operations (e.g., managing users, changing settings)
+- Accessing sensitive data (e.g., billing information, private documents)
+- Operations that modify critical resources
+- Features limited to specific user tiers or roles
+
+To protect a tool, follow these steps:
+
+1. In your Auth0 API, created in step 4, add the permission with the following syntax `tool:<tool-name>` (e.g., `tool:whoami`)
 2. Assign this permission to roles/users who should have access
 
-Now when users without the permission will see: "You don't have permission to use the 'tool-name' tool."
+Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
 
 xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
 
@@ -255,7 +272,7 @@ The `getManagementClient` provides typed methods for all Auth0 Management API op
 
 ## Access Token Vault
 
-Token Vault allows your MCP tools to access external APIs (Google, GitHub, Slack, etc.) on behalf of authenticated users. Use `getAuth0Client()` to get access tokens for federated connections.
+Token Vault allows your MCP tools to access external APIs (Google, GitHub, Slack, etc.) on behalf of authenticated users. Use `getAPIClient()` to get access tokens for federated connections.
 
 ### Example: Get a Google access token
 
@@ -292,18 +309,8 @@ export default async function listCalendarEvents(): Promise<string> {
 ```
 
 <Callout variant="info">
-  Token Vault requires the `management` configuration in your middleware. Auth0 handles token refresh automatically—you never need to manage external provider refresh tokens.
+  Token Vault requires the `management` configuration in your middleware.
 </Callout>
-
-### Supported Connections
-
-Token Vault works with social and enterprise connections configured in your Auth0 tenant, including:
-
-- `google-oauth2` - Google APIs
-- `github` - GitHub API
-- `slack` - Slack API
-- `microsoft` - Microsoft Graph API
-- Any OIDC-compliant provider
 
 ## Troubleshooting
 
