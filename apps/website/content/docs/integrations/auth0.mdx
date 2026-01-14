@@ -18,7 +18,7 @@ npm install @xmcp-dev/auth0
 
 MCP clients use Dynamic Client Registration (DCR) and the OAuth 2.0 Resource Parameter to authenticate. Your Auth0 tenant requires specific configuration for this to work.
 
-### Step 1: Enable Dynamic Client Registration
+### 1. Enable Dynamic Client Registration
 
 MCP clients register themselves automatically with your Auth0 tenant.
 
@@ -26,13 +26,13 @@ MCP clients register themselves automatically with your Auth0 tenant.
 2. Enable **"OIDC Dynamic Application Registration"**
 3. Save changes
 
-### Step 2: Enable Resource Parameter Compatibility Profile
+### 2. Enable Resource Parameter Compatibility Profile
 
 1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
 2. Enable **"Resource Parameter Compatibility Profile"**
 3. Save changes
 
-### Step 3: Promote Connection to Domain Level
+### 3. Promote Connection to Domain Level
 
 DCR-registered clients are third-party by default and can only use domain-level connections.
 
@@ -41,11 +41,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 3. Enable **"Enable for third-party clients"** (or "Promote to domain level")
 4. Save changes
 
-### Step 4: Create the API
-
-<Callout variant="warning">
-  **Critical**: The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience. Any mismatch causes "Service not found" errors.
-</Callout>
+### 4. Create the API
 
 1. Go to **Auth0 Dashboard** → **Applications** → **APIs**
 2. Click **Create API**
@@ -56,19 +52,19 @@ DCR-registered clients are third-party by default and can only use domain-level 
    - **`tool:greet`**: Access the greeting tool
    - **`tool:whoami`**: Access the whoami tool
 
-### Step 5: Set Default Audience
+### 5. Set Default Audience
 
 1. Go to **Auth0 Dashboard** → **Settings** → **General**
 2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (e.g., `http://localhost:3001/`)
 3. Save changes
 
-### Step 6: Note your Auth0 Domain
+### 6. Note your Auth0 Domain
 
 - Your domain follows `<tenant>.<region>.auth0.com` (e.g., `dev-xmcp.us.auth0.com`).
 - You can find it in **Dashboard** → **Applications** → your app → **Settings** under **Basic Information**.
 - Use this exact value for `AUTH0_DOMAIN` in your environment variables.
 
-### Step 7: Enable RBAC
+### 7. Enable RBAC
 
 1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → your API
 2. Go to **Settings** tab
@@ -76,7 +72,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 4. Enable **"Add Permissions in the Access Token"**
 5. Save changes
 
-### Step 8: Create Roles and Assign Permissions
+### 8. Create Roles and Assign Permissions
 
 1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
 2. Click **Create Role** (e.g., "MCP User")
@@ -84,11 +80,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
 5. Go to **Users** tab → **Add Users** to assign the role to users
 
-### Step 9: Set Up Management API Access
-
-<Callout variant="warning">
-  **Required**: The Management API is required for permission enforcement. Without it, tools cannot verify if users have the required permissions.
-</Callout>
+### 9. Set Up Management API Access
 
 1. Go to **Auth0 Dashboard** → **Applications** → **Applications**
 2. Click **Create Application** → **Machine to Machine Applications**
@@ -102,29 +94,25 @@ DCR-registered clients are third-party by default and can only use domain-level 
 Configure the following environment variables in your `.env` file:
 
 ```bash
-# Auth0 credentials
-AUTH0_DOMAIN=your-tenant.auth0.com  # Format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
-AUTH0_AUDIENCE=http://127.0.0.1:3001/  # Must match API identifier exactly (with trailing slash)
+# Credentials
+AUTH0_DOMAIN=your-tenant.auth0.com  # <tenant>.<region>.auth0.com
+AUTH0_AUDIENCE=http://127.0.0.1:3001/
 
 # App configuration
 BASE_URL=http://127.0.0.1:3001/
 
-# Management API credentials (required for permission enforcement)
+# Management API credentials
 AUTH0_MGMT_CLIENT_ID=your-m2m-client-id
 AUTH0_MGMT_CLIENT_SECRET=your-m2m-client-secret
 ```
 
 <Callout variant="warning">
-  `AUTH0_AUDIENCE` must match your Auth0 API identifier exactly. If your API identifier has a trailing slash, include it here too.
+  `AUTH0_AUDIENCE` must match your Auth0 API identifier exactly.
 </Callout>
 
-<Callout variant="info">
-  The Management API credentials come from the M2M application you created in Step 9. These are required for the server to verify which permissions exist in Auth0.
-</Callout>
+## Set up the Provider
 
-## Configuration
-
-Create a `middleware.ts` file in your xmcp app root directory:
+Create a `middleware.ts` file in your xmcp app's `src` directory:
 
 ```typescript title="src/middleware.ts"
 import { auth0Provider } from "@xmcp-dev/auth0";
@@ -152,11 +140,33 @@ export default auth0Provider({
   - **`resourceServerIdentifier`** - (Optional) API identifier to check permissions against
 - **`scopesSupported`** - (Optional) List of custom scopes for OAuth metadata
 
-## Usage in Tools
 
-Use `getAuthInfo()` to access the authenticated user's information in your tools.
+## Public vs Protected Tools
 
-### Basic Usage
+The Auth0 plugin supports two types of tools:
+
+### Protected Tools
+
+A **protected tool** requires a specific permission to access. To protect a tool:
+
+1. Add the permission `tool:<tool-name>` to your Auth0 API (e.g., `tool:whoami`)
+2. Assign this permission to roles/users who should have access
+3. Users without the permission will see: "You don't have permission to use the 'tool-name' tool."
+
+xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`. The Auth0 permission should match the tool name.
+
+### Public Tools
+
+A **public tool** is accessible to any authenticated user without specific permissions. To create a public tool:
+
+1. Simply **don't add** the tool's permission to your Auth0 API
+2. Any authenticated user can call the tool
+
+## Get a user session
+
+Access the authenticated user's session in your xmcp tools using `getAuthInfo()`.
+
+### Example: Greet the user with their Auth0 identity
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
@@ -172,254 +182,127 @@ export const metadata: ToolMetadata = {
   description: "Greet the user with their Auth0 identity",
 };
 
-export default async function greet({ name }: InferSchema<typeof schema>) {
+export default function greet({ name }: InferSchema<typeof schema>): string {
   const authInfo = getAuthInfo();
   const displayName = authInfo.user.name ?? name ?? "there";
   return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.user.sub}`;
 }
 ```
 
-<Callout variant="info">
-  Scope inference: the tool scope defaults to `tool:<metadata.name>` (e.g., `metadata.name = "greet"` -> `tool:greet`). The scope you configure in Auth0 should match the tool name. If the scope exists in Auth0, the token must include it. If it does not exist in Auth0 and the token also lacks it, the tool is treated as public.
-</Callout>
-
-<Callout variant="warning">
-  `getAuthInfo()` will throw an error if called outside of an authenticated request context.
-</Callout>
-
-## Public vs Protected Tools
-
-The Auth0 plugin supports two types of tools:
-
-### Protected Tools
-
-A **protected tool** requires a specific permission to access. To protect a tool:
-
-1. Add the permission `tool:<tool-name>` to your Auth0 API (e.g., `tool:whoami`)
-2. Assign this permission to roles/users who should have access
-3. Users without the permission will see: "You don't have permission to use the 'tool-name' tool."
-
-### Public Tools
-
-A **public tool** is accessible to any authenticated user without specific permissions. To create a public tool:
-
-1. Simply **don't add** the tool's permission to your Auth0 API
-2. Any authenticated user can call the tool
-
-<Callout variant="info">
-  A tool is automatically treated as public when its scope (e.g., `tool:my-tool`) is not registered as a permission in Auth0.
-</Callout>
-
-### Permission Decision Matrix
-
-| Permission in Auth0? | User has Permission? | Result |
-|---------------------|---------------------|--------|
-| Yes | Yes | **ALLOWED** (protected tool) |
-| Yes | No | **DENIED** |
-| No | Yes | **ALLOWED** |
-| No | No | **ALLOWED** (public tool) |
-
-### Example: Mixed Public and Protected Tools
-
-```bash title="Auth0 API Permissions"
-# Only add permissions for tools you want to protect:
-tool:admin-panel    # Protected - only admins can access
-tool:user-settings  # Protected - users need this permission
-
-# Don't add permissions for public tools:
-# tool:help         # Public - any authenticated user can access
-# tool:status       # Public - any authenticated user can access
-```
-
-## Auth Info Properties
-
-The `authInfo` object contains data from the validated JWT token:
-
-### Token Properties
+The `authInfo` object contains token data and user claims:
 
 - `authInfo.token` - The raw access token
 - `authInfo.clientId` - OAuth client ID
 - `authInfo.scopes` - Array of granted scopes
-- `authInfo.permissions` - Array of RBAC permissions granted to this token
-- `authInfo.expiresAt` - Token expiration (Unix timestamp)
+- `authInfo.user.sub` - User ID (subject claim)
+- `authInfo.user.email` - User's email address
+- `authInfo.user.name` - User's full name
 
-### User Properties (`authInfo.user`)
+## Get user details
 
-- `user.sub` - User ID (subject claim)
-- `user.email` - User's email address
-- `user.name` - User's full name
-- `user.client_id` - OAuth client_id claim
-- `user.azp` - Authorized party claim
+Access the authenticated user's full profile using `getUser()`.
 
-## SDK Access
+### Example: Get user details
 
-The Auth0 plugin provides access to both the Auth0 API client and Management API for advanced operations.
-
-### Getting User Profile
-
-The simplest way to get the current user's full profile:
-
-```typescript
+```typescript title="src/tools/get-user-info.ts"
+import type { ToolMetadata } from "xmcp";
 import { getUser } from "@xmcp-dev/auth0";
 
-export default async function myTool() {
+export const metadata: ToolMetadata = {
+  name: "get-user-info",
+  description: "Get user details",
+};
+
+export default async function getUserInfo(): Promise<string> {
   const user = await getUser();
-  return `Hello ${user.name}! Your metadata: ${JSON.stringify(user.user_metadata)}`;
+  return JSON.stringify(user, null, 2);
 }
 ```
-
-### Auth0 API Client
-
-Access the underlying `@auth0/auth0-api-js` ApiClient for token operations:
-
-```typescript
-import { getAuth0Client } from "@xmcp-dev/auth0";
-
-export default async function myTool() {
-  const client = getAuth0Client();
-  // Use client for token verification, etc.
-  return "Done";
-}
-```
-
-### Management API Client
-
-Access the official Auth0 Node.js SDK's `ManagementClient` for user/role operations:
-
-```typescript
-import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
-
-export default async function myTool() {
-  const authInfo = getAuthInfo();
-  const client = getManagementClient();
-
-  // Get user with typed SDK methods
-  const { data: user } = await client.users.get(authInfo.user.sub);
-
-  // Update user metadata
-  await client.users.update(authInfo.user.sub, {
-    user_metadata: { preference: "dark" },
-  });
-
-  return `User: ${user.name}`;
-}
-```
-
-The `ManagementClient` provides typed methods for all Auth0 Management API operations:
-
-- **`users.get(id)`** - Get a user by ID
-- **`users.update(id, body)`** - Update a user
-- **`users.delete(id)`** - Delete a user
-- **`resourceServers.getAll()`** - List all resource servers (APIs)
-- **`roles.getAll()`** - List all roles
-- And many more... See the [official SDK documentation](https://auth0.github.io/node-auth0/)
 
 <Callout variant="warning">
-  The management client and `getUser()` are only available when the `management` configuration is provided.
+  `getUser()` is only available when the `management` configuration is provided.
 </Callout>
 
-### Error Handling
+## Access the client
 
-Use standard try/catch for error handling with the Management API:
+The `getAuth0Client()` and `getManagementClient()` functions give you access to the full Auth0 SDKs, allowing you to leverage all Auth0 features in your MCP tools.
 
-```typescript
+### Example: Update user metadata
+
+```typescript title="src/tools/update-preferences.ts"
+import type { ToolMetadata } from "xmcp";
 import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
 
-export default async function myTool() {
+export const metadata: ToolMetadata = {
+  name: "update-preferences",
+  description: "Update user preferences using the Management API",
+};
+
+export default async function updatePreferences(): Promise<string> {
   const authInfo = getAuthInfo();
   const client = getManagementClient();
 
-  try {
-    const { data: user } = await client.users.get(authInfo.user.sub);
-    return `User: ${user.name}`;
-  } catch (error) {
-    // Return error message as tool response (not thrown)
-    return error instanceof Error ? error.message : "Failed to get user";
-  }
+  await client.users.update(authInfo.user.sub, {
+    user_metadata: { theme: "dark" },
+  });
+
+  return "Preferences updated!";
 }
 ```
 
-## Error Handling
-
-The plugin provides specific error classes:
-
-```typescript
-import { InvalidTokenError, InsufficientScopeError } from "@xmcp-dev/auth0";
-
-// InvalidTokenError - Token is missing, malformed, or expired
-// InsufficientScopeError - Token doesn't have required scopes
-```
-
-### Common Errors
-
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `unauthorized` | Missing Authorization header | Client needs to authenticate |
-| `token_expired` | Access token expired | Client should refresh the token |
-| `invalid_token` | Token verification failed | Check Auth0 configuration |
-| `InsufficientScopeError` | Missing required scopes | Request scopes during login |
+The `ManagementClient` provides typed methods for all Auth0 Management API operations and is only available when the `management` configuration is provided. See the [official SDK](https://auth0.github.io/node-auth0/) for more details.
 
 ## Troubleshooting
+
+These are the most common errors you may encounter when using the Auth0 plugin:
+
+- **`unauthorized`** - The request is missing the Authorization header. The client needs to authenticate before accessing protected resources.
+- **`token_expired`** - The access token has expired. MCP clients should automatically refresh tokens; users can disconnect and reconnect to get fresh tokens.
+- **`invalid_token`** - Token verification failed. Check that your Auth0 configuration matches your tenant settings.
+- **`InsufficientScopeError`** - The token doesn't have the required scopes for the tool. Ensure the scope is defined in your Auth0 API and requested during login.
+- **`Service not found`** - The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience, and any mismatch causes this error.
 
 ### OAuth Init Failed
 
 If you see "OAuth init failed" when connecting:
 
-1. **Enable DCR**: Ensure Dynamic Client Registration is enabled in Auth0 Settings → Advanced
-2. **Enable Resource Parameter**: Enable the Resource Parameter Compatibility Profile in Auth0 Settings → Advanced
+- Ensure Dynamic Client Registration is enabled in Auth0 Settings → Advanced
+- Enable the Resource Parameter Compatibility Profile in Auth0 Settings → Advanced
 
 ### Access Denied / Service Not Found
 
 If you see "access denied" or "Service not found" errors:
 
-1. **API identifier mismatch**: Your Auth0 API identifier must match `BASE_URL` exactly. If the MCP client sends `http://localhost:3001/` (with trailing slash), your API identifier must be `http://localhost:3001/`
-2. **Connection not promoted**: Promote your database connection to domain level (Authentication → Database → Enable for third-party clients)
-3. **Default audience not set**: Set the Default Audience in Settings → General → API Authorization Settings
-
-### No Connections Enabled
-
-If you see "no connections enabled for the client":
-
-- DCR-registered clients can only use domain-level connections
-- Go to Authentication → Database → your connection → Enable "Enable for third-party clients"
+- Your Auth0 API identifier must match `BASE_URL` exactly (including trailing slash)
+- Promote your database connection to domain level (Authentication → Database → Enable for third-party clients)
+- Set the Default Audience in Settings → General → API Authorization Settings
 
 ### Token Expired Errors
 
 Access tokens are short-lived. If you see `token_expired` errors:
 
 - MCP clients should automatically refresh tokens
-- If errors persist, the refresh token may have expired
 - Users can disconnect and reconnect to get fresh tokens
-
-### Missing Scopes
-
-If tools fail with `InsufficientScopeError`:
-
-1. Check that the scope is defined in your Auth0 API Permissions
-2. Ensure the client requests the scope during authentication
-3. Verify the scope is listed in `scopesSupported` config
 
 ### Invalid Token Errors
 
 If token verification fails:
 
-1. Verify `AUTH0_DOMAIN` matches your Auth0 tenant
-2. Verify `AUTH0_AUDIENCE` matches your API identifier exactly (including trailing slash)
-3. Check that the token was issued for your API audience
-
-### Management API 401 Unauthorized
-
-If you see "Management API returned 401 Unauthorized":
-
-1. Your M2M application needs the `read:resource_servers` permission
-2. Go to **Auth0 Dashboard** → **Applications** → **APIs** → **Auth0 Management API**
-3. Go to **Machine to Machine Applications** tab
-4. Find your M2M app and grant the `read:resource_servers` permission
+- Verify `AUTH0_DOMAIN` matches your Auth0 tenant
+- Verify `AUTH0_AUDIENCE` matches your API identifier exactly (including trailing slash)
 
 ### Management API Not Configured
 
-If you see "Management API configuration is required":
+If you see "Management API configuration is required" or "401 Unauthorized":
 
-1. Add the `management` configuration to your middleware
-2. Ensure `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET` environment variables are set
-3. These credentials come from the M2M application created in Step 9
+- Add the `management` configuration to your middleware
+- Ensure `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET` are set
+- Your M2M app needs the `read:resource_servers` permission on the Auth0 Management API
+
+### Session Not Initialized
+
+If `getAuthInfo()` throws an error:
+
+- Ensure `auth0Provider` is exported as default from `middleware.ts`
+- Ensure the tool is called on a route under `/mcp/*`
+- Don't call `getAuthInfo()` at module load time—only inside tool handlers

@@ -64,6 +64,9 @@ function createManagementClient(config: Auth0Config): ManagementClient {
     domain: config.domain,
     clientId: config.management!.clientId,
     clientSecret: config.management!.clientSecret,
+    ...(config.management!.audience && {
+      audience: config.management!.audience,
+    }),
   });
 }
 
