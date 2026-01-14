@@ -520,4 +520,49 @@ export const Icons = {
       />
     </svg>
   ),
+  betterAuth: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M10 1L3 4V9C3 13.42 5.97 17.53 10 18.5C14.03 17.53 17 13.42 17 9V4L10 1ZM10 9.99H15C14.47 13.11 12.54 15.92 10 16.93V10H5V5.3L10 3.19V9.99Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  clerk: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M16.3636 6.81818L13.1818 10L16.3636 13.1818L13.1818 16.3636L10 13.1818L6.81818 16.3636L3.63636 13.1818L6.81818 10L3.63636 6.81818L6.81818 3.63636L10 6.81818L13.1818 3.63636L16.3636 6.81818Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  workos: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M2 5L5.5 15H7.5L10 8L12.5 15H14.5L18 5H16L13.5 12.5L11 5H9L6.5 12.5L4 5H2Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
 };

@@ -1,0 +1,204 @@
+---
+title: "Authentication"
+metadataTitle: "MCP Server Authentication Guide | xmcp Documentation"
+publishedAt: "2026-01-16"
+summary: "Learn how authentication works on MCP servers with human-based interaction."
+description: "Understand the OAuth 2.1 flow for MCP servers based on the official specification and explore available authentication plugins for xmcp."
+displayTitle: "Authentication guide for MCP servers"
+---
+
+## Overview
+
+MCP provides optional authorization capabilities at the transport level, enabling clients to make requests to restricted servers on behalf of resource owners. The authorization mechanism is based on [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13) and implements several related standards.
+
+<Callout variant="info">
+  This guide is based on the [official MCP authorization specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization).
+</Callout>
+
+## When do you need authentication?
+
+Whether you need authentication depends on your transport type:
+
+| Transport | Authentication |
+|-----------|----------------|
+| **HTTP** | SHOULD use OAuth 2.1 as described in this guide |
+| **STDIO** | SHOULD NOT use OAuth. Retrieve credentials from environment variables instead |
+| **Other** | Follow security best practices for your specific protocol |
+
+If your MCP server runs over HTTP and exposes sensitive tools or user-specific data, you should implement authentication. For local STDIO-based servers, authentication is typically unnecessary since the server runs in the user's own environment.
+
+## How MCP authentication works
+
+MCP authentication follows the OAuth 2.1 authorization code flow with PKCE. Here's the complete flow:
+
+### 1. Unauthenticated request
+
+When a client first connects to your MCP server without credentials, the server responds with a `401 Unauthorized` status and includes information about how to authenticate:
+
+```http
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource"
+```
+
+### 2. Protected resource metadata discovery
+
+The client fetches the protected resource metadata to learn about the authorization server:
+
+```http
+GET /.well-known/oauth-protected-resource HTTP/1.1
+Host: mcp.example.com
+```
+
+This returns information including the authorization server URL and supported scopes.
+
+### 3. Authorization server metadata discovery
+
+The client then fetches the authorization server metadata:
+
+```http
+GET /.well-known/oauth-authorization-server HTTP/1.1
+Host: auth.example.com
+```
+
+This provides the endpoints needed for authorization: `authorization_endpoint`, `token_endpoint`, and optionally `registration_endpoint`.
+
+### 4. Client registration
+
+MCP supports three client registration approaches:
+
+1. **Client ID Metadata Documents** (Recommended) - Clients use HTTPS URLs as their `client_id`, pointing to a JSON metadata document
+2. **Dynamic Client Registration** - Clients register automatically via RFC 7591
+3. **Pre-registration** - Clients use hardcoded or user-provided credentials
+
+### 5. Authorization with PKCE
+
+The client redirects the user to the authorization endpoint. PKCE (Proof Key for Code Exchange) is mandatory:
+
+```
+https://auth.example.com/authorize
+  ?response_type=code
+  &client_id=https://client.example.com/metadata.json
+  &redirect_uri=http://127.0.0.1:3000/callback
+  &code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
+  &code_challenge_method=S256
+  &resource=https://mcp.example.com
+```
+
+The user authenticates and grants permission to the client.
+
+### 6. Token exchange
+
+After authorization, the client exchanges the code for tokens. The `resource` parameter binds the token to your specific MCP server:
+
+```http
+POST /token HTTP/1.1
+Host: auth.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=SplxlOBeZQQYbYS6WxSbIA
+&redirect_uri=http://127.0.0.1:3000/callback
+&client_id=https://client.example.com/metadata.json
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+&resource=https://mcp.example.com
+```
+
+### 7. Accessing protected resources
+
+The client includes the access token in every request to your MCP server:
+
+```http
+GET /mcp HTTP/1.1
+Host: mcp.example.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+Your server validates the token and extracts user information to authorize the request.
+
+## Security requirements
+
+The MCP specification mandates several security measures:
+
+### PKCE is mandatory
+
+All clients must implement PKCE with the `S256` code challenge method. This prevents authorization code interception attacks.
+
+### Resource binding
+
+Clients must include the `resource` parameter in authorization and token requests. Servers must validate that tokens were issued specifically for them by checking the audience claim.
+
+### HTTPS everywhere
+
+All authorization server endpoints must use HTTPS. Redirect URIs must be either `localhost` or HTTPS.
+
+### Token handling
+
+- Access tokens must be sent via the `Authorization: Bearer` header
+- Tokens must never be included in query strings
+- Servers should issue short-lived access tokens
+- Servers must not pass client tokens through to upstream APIs
+
+## Error responses
+
+| Status | Description |
+|--------|-------------|
+| `401` | Authorization required or token invalid/expired |
+| `403` | Insufficient scopes for the requested operation |
+| `400` | Malformed authorization request |
+
+When a client has insufficient permissions, the server responds with:
+
+```http
+HTTP/1.1 403 Forbidden
+WWW-Authenticate: Bearer error="insufficient_scope",
+                         scope="files:read files:write"
+```
+
+## Available auth plugins
+
+xmcp provides official plugins that handle all the OAuth complexity for you. Click any card to view the full integration guide.
+
+<AuthProviders />
+
+## Choosing an auth plugin
+
+| Feature | Better Auth | Clerk | WorkOS |
+|---------|-------------|-------|--------|
+| **Hosting** | Self-hosted | Third-party | Third-party |
+| **Database** | PostgreSQL | Managed | Managed |
+| **Email/Password** | Yes | Yes | Yes |
+| **Social OAuth** | Yes | Yes | Yes |
+| **Organizations** | No | Yes | Yes |
+| **SSO/SAML** | No | Yes | Yes |
+| **Directory Sync** | No | No | Yes |
+| **Built-in UI** | Yes | No | No |
+
+### Better Auth
+
+Best for developers who want full control over their authentication infrastructure. Requires PostgreSQL and self-hosting, but gives you complete ownership of user data.
+
+### Clerk
+
+Best for quick setup with minimal configuration. Provides organization support out of the box and handles all infrastructure for you.
+
+### WorkOS
+
+Best for enterprise applications requiring SSO, SAML, and directory synchronization. Ideal for B2B SaaS products.
+
+## Standards reference
+
+MCP authorization implements these standards:
+
+- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13) - Core authorization framework
+- [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) - Authorization Server Metadata
+- [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) - Dynamic Client Registration
+- [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) - Protected Resource Metadata
+- [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) - Resource Indicators
+
+## Next steps
+
+Choose an auth plugin and follow its integration guide to add authentication to your MCP server:
+
+- [Better Auth integration](/docs/integrations/better-auth)
+- [Clerk integration](/docs/integrations/clerk)
+- [WorkOS integration](/docs/integrations/workos)
