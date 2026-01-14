@@ -47,3 +47,5 @@ export type {
   EnvHeader,
 } from "./client/headers";
 export { isEnvHeader, headersToRecord } from "./client/headers";
+
+export { extractToolNamesFromRequest } from "./runtime/utils/request-tool-names";
