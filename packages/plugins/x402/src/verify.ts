@@ -1,8 +1,13 @@
-import type { X402Config, X402PaymentContext } from "./types.js";
+import type {
+  X402Config,
+  X402PaymentContext,
+  PaymentRequirements,
+  PaymentPayload,
+} from "./types.js";
+import type { PaymentRequirements as PaymentRequirementsV2 } from "@x402/core/types";
 import { log } from "./logger.js";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { decodePaymentSignatureHeader } from "@x402/core/http";
-import type { PaymentRequirements } from "@x402/core/types";
 import { NETWORKS, USDC_EXTRA, DEFAULT_FACILITATOR_URL } from "./constants.js";
 import { X402ToolOptions } from "xmcp/plugins/x402";
 
@@ -98,8 +103,8 @@ export async function verifyPayment(
   valid: boolean;
   context?: X402PaymentContext;
   error?: string;
-  payload?: unknown;
-  requirements?: PaymentRequirements | any;
+  payload?: PaymentPayload;
+  requirements?: PaymentRequirements;
 }> {
   try {
     const payload = decodePaymentSignatureHeader(paymentHeader) as any;
@@ -148,7 +153,7 @@ export async function verifyPayment(
         toolName,
       },
       payload,
-      requirements,
+      requirements: requirements as PaymentRequirements,
     };
   } catch (error) {
     return {
@@ -163,7 +168,7 @@ export async function verifyPayment(
  * Settle payment after successful tool execution
  */
 export async function settlePayment(
-  payload: unknown,
+  payload: PaymentPayload,
   requirements: PaymentRequirements,
   config: X402Config
 ): Promise<{
@@ -180,7 +185,7 @@ export async function settlePayment(
     url: facilitatorUrl,
   });
 
-  return facilitator.settle(payload as any, requirements);
+  return facilitator.settle(payload, requirements as PaymentRequirementsV2);
 }
 
 /**

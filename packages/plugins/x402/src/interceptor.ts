@@ -6,14 +6,18 @@ import {
   settlePayment,
   createPaymentRequiredResponse,
 } from "./verify.js";
-import type { X402Config } from "./types.js";
+import type {
+  X402Config,
+  PaymentPayload,
+  PaymentRequirements,
+} from "./types.js";
 import { log, logError } from "./logger.js";
 import { x402ContextProvider } from "./context.js";
 import { NETWORKS } from "./constants.js";
 
 interface PendingSettlement {
-  payload: unknown;
-  requirements: unknown;
+  payload: PaymentPayload;
+  requirements: PaymentRequirements;
   config: X402Config;
 }
 
@@ -176,8 +180,8 @@ export async function x402Interceptor(
   }
 
   const pendingSettlement: PendingSettlement = {
-    payload: verification.payload,
-    requirements: verification.requirements,
+    payload: verification.payload!,
+    requirements: verification.requirements!,
     config,
   };
 
@@ -206,7 +210,7 @@ export async function x402Interceptor(
       if (isSuccess) {
         settlePayment(
           pendingSettlement.payload,
-          pendingSettlement.requirements as any,
+          pendingSettlement.requirements,
           pendingSettlement.config
         )
           .then((settlement) => {

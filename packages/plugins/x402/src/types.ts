@@ -1,4 +1,13 @@
 import type { X402ToolOptions } from "xmcp/plugins/x402";
+import type {
+  PaymentRequirements as PaymentRequirementsV2,
+  PaymentRequirementsV1,
+  PaymentPayload,
+} from "@x402/core/types";
+
+export type PaymentRequirements = PaymentRequirementsV2 | PaymentRequirementsV1;
+
+export type { PaymentPayload };
 
 /**
  * Payment context available inside paid tool handlers
