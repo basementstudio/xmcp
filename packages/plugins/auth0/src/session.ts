@@ -1,25 +1,8 @@
-import { getAuthContext, getManagementClientContext } from "./context.js";
+import { getClientContext, getSessionContext } from "./context.js";
 import type { AuthInfo, Auth0User } from "./types.js";
 
-/**
- * Gets the current authentication information from the request context.
- *
- * Use this in your tools to access the authenticated user's information.
- *
- * @throws Error if called outside of an authenticated request context
- *
- * @example
- * ```typescript
- * import { getAuthInfo } from "@xmcp-dev/auth0";
- *
- * export default async function myTool() {
- *   const authInfo = getAuthInfo();
- *   return `Hello ${authInfo.user.name}! Your user ID is ${authInfo.user.sub}`;
- * }
- * ```
- */
 export function getAuthInfo(): AuthInfo {
-  const context = getAuthContext();
+  const context = getSessionContext();
 
   if (!context.authInfo) {
     throw new Error(
@@ -31,26 +14,9 @@ export function getAuthInfo(): AuthInfo {
   return context.authInfo;
 }
 
-/**
- * Get the full user profile from Auth0 Management API.
- *
- * Requires management config to be provided to the auth0Provider.
- *
- * @throws Error if management client is not configured or called outside auth context
- *
- * @example
- * ```typescript
- * import { getUser } from "@xmcp-dev/auth0";
- *
- * export default async function myTool() {
- *   const user = await getUser();
- *   return `Hello ${user.name}! Your metadata: ${JSON.stringify(user.user_metadata)}`;
- * }
- * ```
- */
 export async function getUser(): Promise<Auth0User> {
   const authInfo = getAuthInfo();
-  const { managementClient } = getManagementClientContext();
+  const { managementClient } = getClientContext();
 
   if (!managementClient) {
     throw new Error(
@@ -64,11 +30,18 @@ export async function getUser(): Promise<Auth0User> {
     return data as Auth0User;
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message.includes("403") || error.message.includes("Forbidden")) {
-        throw new Error("You don't have permission to access user profile data.");
+      if (
+        error.message.includes("403") ||
+        error.message.includes("Forbidden")
+      ) {
+        throw new Error(
+          "You don't have permission to access user profile data."
+        );
       }
       if (error.message.includes("401")) {
-        throw new Error("You don't have permission to access user profile data.");
+        throw new Error(
+          "You don't have permission to access user profile data."
+        );
       }
     }
     throw error;

@@ -175,15 +175,23 @@ export default async function updateMetadata({ key, value }) {
 }
 ```
 
-### Error Classes
+### `getAuth0Client()`
 
-The plugin exports two error classes for handling authentication failures:
-
-- **`InsufficientScopeError`** - Thrown when user lacks required scopes for a tool
-- **`InvalidTokenError`** - Thrown when the access token is invalid or missing
+Gets the Auth0 API client for token operations. This is the `@auth0/auth0-api-js` ApiClient instance.
 
 ```typescript
-import { InsufficientScopeError, InvalidTokenError } from "@xmcp-dev/auth0";
+import { getAuth0Client } from "@xmcp-dev/auth0";
+
+const client = getAuth0Client();
+// Use for token-related operations
+```
+
+### Error Classes
+
+- **`InsufficientScopeError`** - Thrown when user lacks required scopes for a tool
+
+```typescript
+import { InsufficientScopeError } from "@xmcp-dev/auth0";
 
 try {
   // ... tool logic
@@ -193,6 +201,26 @@ try {
   }
 }
 ```
+
+## Architecture
+
+The plugin uses two internal contexts with different lifecycles:
+
+### Client Context (Static)
+
+Set once when `auth0Provider()` is called at startup. Contains:
+- `config` - Auth0 configuration
+- `apiClient` - Auth0 API client for token verification
+- `managementClient` - Auth0 Management API client (if configured)
+
+This context is shared across all requests and never changes after initialization.
+
+### Session Context (Per-Request)
+
+Updated on every authenticated request. Contains:
+- `authInfo` - The authenticated user's token info, scopes, and claims
+
+This context is set after token verification in the middleware and is unique to each request.
 
 ## Auth Info Structure
 

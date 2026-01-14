@@ -15,7 +15,6 @@ export async function fetchApiPermissions(
   }
 
   try {
-    // Use SDK instead of manual fetch - handles tokens automatically
     const { data: resourceServers } =
       await managementClient.resourceServers.list();
 
@@ -36,7 +35,6 @@ export async function fetchApiPermissions(
 
     return match.scopes?.map((s) => s.value) ?? [];
   } catch (error) {
-    // Preserve helpful error messages
     if (error instanceof Error) {
       if (error.message.includes("401")) {
         throw new Error(

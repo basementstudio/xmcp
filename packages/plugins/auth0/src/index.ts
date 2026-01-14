@@ -1,8 +1,4 @@
-export {
-  auth0Provider,
-  InsufficientScopeError,
-  InvalidTokenError,
-} from "./provider.js";
+export { auth0Provider, InsufficientScopeError } from "./provider.js";
 
 export { getAuthInfo, getUser } from "./session.js";
 

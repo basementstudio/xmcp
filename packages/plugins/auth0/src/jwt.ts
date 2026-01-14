@@ -1,9 +1,6 @@
 import { ApiClient, VerifyAccessTokenError } from "@auth0/auth0-api-js";
 import type { AuthInfo, Auth0Config, TokenVerifyResult } from "./types.js";
 
-/**
- * Creates a JWT token verifier for Auth0-issued access tokens.
- */
 export function createVerifier(
   config: Auth0Config
 ): (token: string) => Promise<TokenVerifyResult> {
@@ -37,16 +34,22 @@ export function createVerifier(
         return {
           ok: false,
           error: "invalid",
-          message: "Token is missing required client identification (client_id or azp claim)",
+          message:
+            "Token is missing required client identification (client_id or azp claim)",
         };
       }
 
       const scopes =
-        typeof decoded.scope === "string" ? decoded.scope.split(" ").filter(Boolean) : [];
+        typeof decoded.scope === "string"
+          ? decoded.scope.split(" ").filter(Boolean)
+          : [];
 
-      const permissions = Array.isArray((decoded as Record<string, unknown>).permissions)
-        ? ((decoded as Record<string, unknown>).permissions as unknown[])
-            .filter((p): p is string => typeof p === "string" && p.length > 0)
+      const permissions = Array.isArray(
+        (decoded as Record<string, unknown>).permissions
+      )
+        ? (
+            (decoded as Record<string, unknown>).permissions as unknown[]
+          ).filter((p): p is string => typeof p === "string" && p.length > 0)
         : [];
 
       const uniqueScopes = Array.from(new Set([...scopes, ...permissions]));
@@ -82,23 +85,20 @@ export function createVerifier(
       return {
         ok: false,
         error: "invalid",
-        message: error instanceof Error ? error.message : "Unknown verification error",
+        message:
+          error instanceof Error ? error.message : "Unknown verification error",
       };
     }
   };
 }
 
-/**
- * Type guard to check if a value is a non-empty string
- */
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
-/**
- * Extracts a Bearer token from the Authorization header
- */
-export function extractBearerToken(authHeader: string | undefined): string | null {
+export function extractBearerToken(
+  authHeader: string | undefined
+): string | null {
   if (!authHeader) return null;
 
   const parts = authHeader.split(" ");
