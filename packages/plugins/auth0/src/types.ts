@@ -5,13 +5,14 @@ export interface Config {
   domain: string;
   audience: string;
   baseURL: string;
+  clientId: string;
+  clientSecret: string;
   scopesSupported?: readonly string[];
   management?: ManagementConfig;
 }
 
 export interface ManagementConfig {
-  clientId: string;
-  clientSecret: string;
+  enable: boolean;
   audience?: string;
   resourceServerIdentifier?: string;
 }
@@ -70,17 +71,4 @@ export interface OAuthAuthorizationServerMetadata {
   code_challenge_methods_supported?: readonly string[];
   token_endpoint_auth_methods_supported?: readonly string[];
   scopes_supported?: readonly string[];
-}
-
-export interface Auth0User {
-  user_id: string;
-  email?: string;
-  email_verified?: boolean;
-  name?: string;
-  nickname?: string;
-  picture?: string;
-  created_at?: string;
-  updated_at?: string;
-  user_metadata?: Record<string, unknown>;
-  app_metadata?: Record<string, unknown>;
 }

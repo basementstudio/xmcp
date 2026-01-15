@@ -8,12 +8,7 @@ import {
 import { extractToolNamesFromRequest, type Middleware } from "xmcp";
 import { ApiClient } from "@auth0/auth0-api-js";
 import { ManagementClient } from "auth0";
-import {
-  providerClientContext,
-  providerSessionContext,
-  getClientContext,
-} from "./context.js";
-import { fetchApiPermissions } from "./permissions.js";
+import { providerClientContext, providerSessionContext } from "./context.js";
 import type {
   Config,
   AuthInfo,
@@ -39,14 +34,11 @@ export function auth0Provider(config: Config): Middleware {
   const apiClient = new ApiClient({
     domain: config.domain,
     audience: config.audience,
-    // Pass client credentials if management config exists (required for Token Vault)
-    ...(config.management && {
-      clientId: config.management.clientId,
-      clientSecret: config.management.clientSecret,
-    }),
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
   });
 
-  const managementClient = config.management
+  const managementClient = config.management?.enable
     ? createManagementClient(config)
     : null;
 
@@ -62,10 +54,13 @@ export function auth0Provider(config: Config): Middleware {
 function createManagementClient(config: Config): ManagementClient {
   return new ManagementClient({
     domain: config.domain,
-    clientId: config.management!.clientId,
-    clientSecret: config.management!.clientSecret,
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
     ...(config.management!.audience && {
       audience: config.management!.audience,
+    }),
+    ...(config.management!.resourceServerIdentifier && {
+      resourceServerIdentifier: config.management!.resourceServerIdentifier,
     }),
   });
 }
@@ -182,7 +177,7 @@ function auth0Middleware(config: Config): RequestHandler {
       }
 
       try {
-        await enforceToolPermissions(req, config, result.authInfo);
+        enforceToolPermissions(req, config, result.authInfo);
       } catch (error) {
         if (!res.headersSent) {
           const message = error instanceof Error ? error.message : "Forbidden";
@@ -221,11 +216,11 @@ function auth0Middleware(config: Config): RequestHandler {
   };
 }
 
-async function enforceToolPermissions(
+function enforceToolPermissions(
   req: Request,
-  config: Config,
+  _config: Config,
   authInfo: AuthInfo
-): Promise<void> {
+): void {
   const toolNames = extractToolNamesFromRequest(req);
   const toolName = toolNames[0];
 
@@ -239,35 +234,7 @@ async function enforceToolPermissions(
     ...(authInfo.permissions ?? []),
   ]);
 
-  if (!config.management) {
-    throw new Error(
-      "[Auth0] Management API configuration is required for tool permission enforcement. " +
-        "Please configure the 'management' option with clientId and clientSecret."
-    );
-  }
-
-  const { managementClient } = getClientContext();
-
-  let managementPermissions: readonly string[] = [];
-  try {
-    managementPermissions = await fetchApiPermissions(config, managementClient);
-  } catch (error) {
-    console.error(
-      "[Auth0] Failed to fetch permissions from Management API:",
-      error
-    );
-    throw error;
-  }
-
-  const scopeExistsInAuth0 = managementPermissions.includes(requiredScope);
-  const tokenHasScope = userScopes.has(requiredScope);
-
-  if (scopeExistsInAuth0) {
-    if (!tokenHasScope) {
-      throw new Error(
-        `You don't have permission to use the '${toolName}' tool.`
-      );
-    }
-    return;
+  if (!userScopes.has(requiredScope)) {
+    throw new Error(`You don't have permission to use the '${toolName}' tool.`);
   }
 }

@@ -22,19 +22,17 @@ Create a `src/middleware.ts` file:
 import { auth0Provider } from "@xmcp-dev/auth0";
 
 export default auth0Provider({
-  domain: process.env.AUTH0_DOMAIN!,
-  audience: process.env.AUTH0_AUDIENCE!,
+  domain: process.env.DOMAIN!,
+  audience: process.env.AUDIENCE!,
   baseURL: process.env.BASE_URL!,
-  management: {
-    clientId: process.env.AUTH0_MGMT_CLIENT_ID!,
-    clientSecret: process.env.AUTH0_MGMT_CLIENT_SECRET!,
-  },
+  clientId: process.env.CLIENT_ID!,
+  clientSecret: process.env.CLIENT_SECRET!,
 });
 ```
 
 ### 2. Protect Your Tools
 
-#### Using inferred scopes (no wrapper required)
+#### Using inferred scopes
 
 ```typescript
 // src/tools/greet.ts
@@ -52,7 +50,7 @@ export default async function greet({ name }: { name?: string }) {
 }
 ```
 
-Scopes are inferred from the tool metadata name as `tool:<metadata.name>` (e.g., `metadata.name = "greet"` → `tool:greet`). The scope configured in Auth0 should match the tool name you expose. If a scope does not exist in Auth0 **and** is not present in the caller token, the tool is treated as public.
+Tools require the `tool:<tool-name>` permission. Users must have this permission in their access token (via RBAC) to access the tool.
 
 #### Using `getAuthInfo` directly
 
@@ -79,16 +77,12 @@ export default async function whoami() {
 Create a `.env` file:
 
 ```bash
-AUTH0_DOMAIN=your-tenant.auth0.com  # Format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
-AUTH0_AUDIENCE=http://localhost:3001/   # Must match API identifier exactly
-BASE_URL=http://localhost:3001
-
-# Management API credentials (required for permission enforcement)
-AUTH0_MGMT_CLIENT_ID=your-m2m-client-id
-AUTH0_MGMT_CLIENT_SECRET=your-m2m-client-secret
+DOMAIN=your-tenant.auth0.com
+AUDIENCE=http://127.0.0.1:3001/
+BASE_URL=http://127.0.0.1:3001
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
 ```
-
-> **Note**: The Management API credentials come from a Machine-to-Machine application in Auth0 with `read:resource_servers` permission on the Auth0 Management API.
 
 ## API Reference
 
@@ -101,36 +95,26 @@ Creates the Auth0 authentication provider for xmcp.
 | `domain` | `string` | Yes | Your Auth0 domain |
 | `audience` | `string` | Yes | The API identifier configured in Auth0 |
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
-| `management` | `object` | Yes | Management API configuration (see below) |
+| `clientId` | `string` | Yes | OAuth client ID |
+| `clientSecret` | `string` | Yes | OAuth client secret |
 | `scopesSupported` | `string[]` | No | List of custom scopes for OAuth metadata |
+| `management` | `object` | No | Management API configuration (for admin operations) |
 
-#### `management` options
+#### `management` options (optional)
+
+Only needed for admin operations like updating user metadata.
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `clientId` | `string` | Yes | M2M application client ID |
-| `clientSecret` | `string` | Yes | M2M application client secret |
+| `enable` | `boolean` | Yes | Enable the Management API client |
 | `audience` | `string` | No | Management API audience (default: `https://<domain>/api/v2/`) |
-| `resourceServerIdentifier` | `string` | No | API identifier to check permissions against |
+| `resourceServerIdentifier` | `string` | No | API identifier to use for Management operations |
 
-### Scope enforcement behavior
+### Permission Enforcement
 
-- Scope name: `tool:<metadata.name>` from each tool definition.
-- The plugin fetches the API permission list from Auth0 Management API on every request.
+Tools require the `tool:<tool-name>` permission in the user's access token. Configure RBAC in Auth0 and assign the appropriate permissions to users/roles.
 
-#### Permission Decision Matrix
-
-| Permission in Auth0? | User has Permission? | Result |
-|---------------------|---------------------|--------|
-| Yes | Yes | **ALLOWED** (protected tool) |
-| Yes | No | **DENIED** |
-| No | Yes | **ALLOWED** |
-| No | No | **ALLOWED** (public tool) |
-
-#### Public vs Protected Tools
-
-- **Protected tool**: Add the permission `tool:<tool-name>` to your Auth0 API. Users must have this permission.
-- **Public tool**: Don't add the permission to Auth0. Any authenticated user can access it.
+Example: For a tool with `metadata.name = "greet"`, users need the `tool:greet` permission.
 
 ### `getAuthInfo()`
 
@@ -138,52 +122,31 @@ Gets the current user's authentication info from context.
 
 ```typescript
 const authInfo = getAuthInfo();
-console.log(authInfo.user.sub);   // User ID
-console.log(authInfo.user.email); // Email
+console.log(authInfo.user.sub);    // User ID
+console.log(authInfo.user.email);  // Email
 console.log(authInfo.scopes);      // Granted scopes
+console.log(authInfo.permissions); // RBAC permissions
 ```
 
-### `getUser()`
+### Getting User Info
 
-Gets the full user profile from Auth0 Management API. Requires management config.
+**From token claims (recommended):**
 
 ```typescript
-import { getUser } from "@xmcp-dev/auth0";
-
-export default async function userProfile() {
-  const user = await getUser();
-  return `Name: ${user.name}, Email: ${user.email}`;
-}
+const authInfo = getAuthInfo();
+console.log(authInfo.user.sub);   // User ID
+console.log(authInfo.user.email); // Email (if in token)
+console.log(authInfo.user.name);  // Name (if in token)
 ```
 
-**Throws:** Error if user lacks permission to access profile data.
-
-### `getManagementClient()`
-
-Gets the Auth0 Management API client for advanced operations.
+**From /userinfo endpoint:**
 
 ```typescript
-import { getManagementClient, getAuthInfo } from "@xmcp-dev/auth0";
-
-export default async function updateMetadata({ key, value }) {
-  const authInfo = getAuthInfo();
-  const client = getManagementClient();
-  await client.users.update(authInfo.user.sub, {
-    user_metadata: { [key]: value }
-  });
-  return "Metadata updated";
-}
-```
-
-### `getAuth0Client()`
-
-Gets the Auth0 API client for token operations. This is the `@auth0/auth0-api-js` ApiClient instance.
-
-```typescript
-import { getAuth0Client } from "@xmcp-dev/auth0";
-
-const client = getAuth0Client();
-// Use for token-related operations
+const authInfo = getAuthInfo();
+const response = await fetch(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
+  headers: { Authorization: `Bearer ${authInfo.token}` }
+});
+const userInfo = await response.json();
 ```
 
 ## Architecture
@@ -195,7 +158,7 @@ The plugin uses two internal contexts with different lifecycles:
 Set once when `auth0Provider()` is called at startup. Contains:
 - `config` - Auth0 configuration
 - `apiClient` - Auth0 API client for token verification
-- `managementClient` - Auth0 Management API client (if configured)
+- `managementClient` - Auth0 Management API client (if `management.enable: true`)
 
 This context is shared across all requests and never changes after initialization.
 
@@ -289,7 +252,8 @@ auth0 api patch connections/YOUR_CONNECTION_ID --data '{"is_domain_connection":t
    - **Name**: e.g., `MCP Server API`
    - **Identifier**: Your server URL with trailing slash (e.g., `http://localhost:3001/`)
    - **Signing Algorithm**: `RS256`
-4. Go to **Permissions** tab and add your scopes:
+4. Enable **RBAC** and **Add Permissions in the Access Token**
+5. Go to **Permissions** tab and add your tool permissions:
    - `tool:greet` - Access the greeting tool
    - `tool:whoami` - Access the whoami tool
 
@@ -312,11 +276,42 @@ auth0 api post resource-servers --data '{
 2. Under **API Authorization Settings**, set **Default Audience** to your API identifier (e.g., `http://localhost:3001/`)
 3. Save changes
 
+### Step 6: Create an Application
+
+1. Go to **Auth0 Dashboard** → **Applications** → **Applications**
+2. Click **Create Application** → **Machine to Machine Applications**
+3. Name it (e.g., `MCP Server`)
+4. Select your API (e.g., `MCP Server API`)
+5. Copy the **Client ID** and **Client Secret** to your `.env`
+
+### Step 7 (Optional): Enable Management API
+
+Only needed if you want to use `getManagement()` for admin operations.
+
+1. In your M2M application, go to **APIs** tab
+2. Enable **Auth0 Management API**
+3. Grant the permissions you need (e.g., `read:users`, `update:users`)
+4. Update your middleware:
+
+```typescript
+export default auth0Provider({
+  domain: process.env.AUTH0_DOMAIN!,
+  audience: process.env.AUTH0_AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  clientId: process.env.AUTH0_CLIENT_ID!,
+  clientSecret: process.env.AUTH0_CLIENT_SECRET!,
+  management: {
+    enable: true,
+  },
+});
+```
+
 ### Important Notes
 
 - **API Identifier must match BASE_URL**: MCP clients send a `resource` parameter that Auth0 uses as the audience. If there's a mismatch (even a missing trailing slash), you'll get "Service not found" errors.
 - **Trailing slash matters**: If your `BASE_URL` is `http://localhost:3001`, the MCP client may send `http://localhost:3001/` as the resource. Create your API with the trailing slash to match.
 - **DCR clients are third-party**: They require domain-level connections to authenticate users.
+- **RBAC must be enabled**: Enable "Add Permissions in the Access Token" in your API settings for permission enforcement to work.
 
 ### Environment Variables
 
@@ -324,6 +319,8 @@ After setup, configure your `.env`:
 
 ```bash
 AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=http://localhost:3001/   # Must match API identifier exactly
+AUTH0_AUDIENCE=http://localhost:3001/
 BASE_URL=http://localhost:3001
+AUTH0_CLIENT_ID=your-client-id
+AUTH0_CLIENT_SECRET=your-client-secret
 ```
