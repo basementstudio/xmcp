@@ -27,7 +27,7 @@ interface PendingSettlement {
   requirements: PaymentRequirements;
 }
 
-export function x402Provider(config: X402Config): Middleware {
+export function x402Provider(config: X402Config): RequestHandler {
   const parsedConfig = x402ConfigSchema.safeParse(config);
 
   if (!parsedConfig.success) {
