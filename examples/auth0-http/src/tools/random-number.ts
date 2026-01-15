@@ -1,7 +1,7 @@
 import type { ToolMetadata } from "xmcp";
 
 export const metadata: ToolMetadata = {
-  name: "random_number",
+  name: "random-number",
   description: "Generate a random number",
 };
 

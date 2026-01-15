@@ -98,6 +98,7 @@ Creates the Auth0 authentication provider for xmcp.
 | `clientId` | `string` | Yes | OAuth client ID |
 | `clientSecret` | `string` | Yes | OAuth client secret |
 | `scopesSupported` | `string[]` | No | List of custom scopes for OAuth metadata |
+| `publicTools` | `string[]` | No | Tool names accessible to any authenticated user without `tool:<name>` permission |
 | `management` | `object` | No | Management API configuration (for admin operations) |
 
 #### `management` options (optional)

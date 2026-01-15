@@ -104,6 +104,7 @@ export default auth0Provider({
 - **`clientId`**: Application client ID.
 - **`clientSecret`**: Application client secret.
 - **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
+- **`publicTools`**: (Optional) Array of tool names that don't require `tool:<name>` permission. These tools are accessible to any authenticated user.
 - **`management`**: (Optional) Configuration for the Management API client.
     - `enable`: Set to `true` to enable the Management API client.
     - `audience`: (Optional) Custom audience for the Management API.
@@ -111,19 +112,18 @@ export default auth0Provider({
 
 ## Public vs Protected Tools
 
-### Public Tools
+### Protected Tools (Default)
 
-By default, all tools are public and accessible by any user that is authenticated. This means any user with a valid Auth0 token can access the tool, regardless of their roles or permissions.
+By default, all tools require a `tool:<tool-name>` permission to access. This ensures fine-grained access control where each tool must be explicitly granted to users.
 
-Use public tools for:
+To use protected tools:
 
-- General-purpose utilities that all users need.
-- Non-sensitive operations like greeting users or displaying public information.
-- Tools that don't access or modify restricted resources.
+1. In your Auth0 API, add the permission with the following syntax `tool:<tool-name>` (e.g., `tool:whoami`)
+2. Assign this permission to roles/users who should have access.
 
-### Protected Tools
+xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
 
-Protected tools require specific permissions to access. Use them to restrict sensitive operations to authorized users only.
+Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
 
 Use protected tools for:
 
@@ -133,14 +133,32 @@ Use protected tools for:
 - Features limited to specific user tiers or roles.
 - Access to Token Vault.
 
-To protect a tool, follow these steps:
+### Public Tools
 
-1. In your Auth0 API, add the permission with the following syntax `tool:<tool-name>` (e.g., `tool:whoami`)
-2. Assign this permission to roles/users who should have access.
+Public tools are accessible by any authenticated user without requiring specific `tool:<name>` permissions. To make tools public, add them to the `publicTools` array in your middleware configuration:
 
-xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
+```typescript title="src/middleware.ts"
+import { auth0Provider } from "@xmcp-dev/auth0";
 
-Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
+export default auth0Provider({
+  domain: process.env.DOMAIN!,
+  audience: process.env.AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  clientId: process.env.CLIENT_ID!,
+  clientSecret: process.env.CLIENT_SECRET!,
+  publicTools: ["greet", "ping"],  // These tools are accessible to any authenticated user
+});
+```
+
+Use public tools for:
+
+- General-purpose utilities that all users need.
+- Non-sensitive operations like greeting users or displaying public information.
+- Tools that don't access or modify restricted resources.
+
+<Callout variant="info">
+  Public tools still require authentication. Users must have a valid Auth0 token to access them, but they don't need specific `tool:<name>` permissions.
+</Callout>
 
 ## Configure roles and RBAC for protected tools
 

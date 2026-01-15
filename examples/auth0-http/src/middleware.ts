@@ -6,4 +6,5 @@ export default auth0Provider({
   baseURL: process.env.BASE_URL!,
   clientId: process.env.CLIENT_ID!,
   clientSecret: process.env.CLIENT_SECRET!,
+  publicTools: ["random-number"],
 });

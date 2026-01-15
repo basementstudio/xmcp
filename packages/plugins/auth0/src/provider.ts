@@ -218,13 +218,17 @@ function auth0Middleware(config: Config): RequestHandler {
 
 function enforceToolPermissions(
   req: Request,
-  _config: Config,
+  config: Config,
   authInfo: AuthInfo
 ): void {
   const toolNames = extractToolNamesFromRequest(req);
   const toolName = toolNames[0];
 
   if (!toolName || typeof toolName !== "string" || toolName.length === 0) {
+    return;
+  }
+
+  if (config.publicTools?.includes(toolName)) {
     return;
   }
 
