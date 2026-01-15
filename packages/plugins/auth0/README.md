@@ -149,6 +149,53 @@ const response = await fetch(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
 const userInfo = await response.json();
 ```
 
+### `getClient()`
+
+Returns the Auth0 API client for advanced operations like token exchange.
+
+```typescript
+import { getClient, getAuthInfo } from "@xmcp-dev/auth0";
+
+// Exchange tokens to call external APIs on user's behalf
+async function exchangeCustomToken(subjectToken: string) {
+  const client = getClient();
+  return await client.getTokenByExchangeProfile(subjectToken, {
+    subjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+    audience: process.env.EXTERNAL_API_AUDIENCE!,
+    ...(process.env.EXCHANGE_SCOPE && { scope: process.env.EXCHANGE_SCOPE }),
+  });
+}
+
+export default async function callExternalApi() {
+  const authInfo = getAuthInfo();
+  const { access_token } = await exchangeCustomToken(authInfo.token);
+
+  // Use the exchanged token to call your external API
+  const response = await fetch(process.env.EXTERNAL_API_URL!, {
+    headers: { Authorization: `Bearer ${access_token}` },
+  });
+  return await response.text();
+}
+```
+
+### `getManagement()`
+
+Returns the Auth0 Management API client for admin operations. Requires `management.enable: true` in the provider config.
+
+```typescript
+import { getManagement, getAuthInfo } from "@xmcp-dev/auth0";
+
+export default async function updateUserMetadata() {
+  const authInfo = getAuthInfo();
+  const client = getManagement();
+
+  await client.users.update(authInfo.user.sub, {
+    user_metadata: { theme: "dark" },
+  });
+  return "Preferences updated!";
+}
+```
+
 ## Architecture
 
 The plugin uses two internal contexts with different lifecycles:
