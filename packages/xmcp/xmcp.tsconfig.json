@@ -28,6 +28,7 @@
   "include": [
     "src/types/declarations.d.ts",
     "src/types/adapter.d.ts",
-    "src/index.ts"
-  ],
+    "src/index.ts",
+    "src/runtime/headers.ts"
+  ]
 }
