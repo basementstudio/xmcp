@@ -57,7 +57,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 
 ### 6. Note your Domain, Client ID and Client Secret
 
-- In your **Dashboard** go to **Applications** and create a M2M applicatino
+- In your **Dashboard** go to **Applications** and create a M2M application
 - Go to **Settings** and under **Basic Information**, you will find your **Domain** (that follows `<tenant>.<region>.auth0.com`.), **Client ID** and **Client Secret**.
 - Save these values in your environment variables under `DOMAIN`, `CLIENT_ID` and `CLIENT_SECRET`.
 
@@ -69,12 +69,11 @@ Configure the following environment variables in your `.env` file:
 # Credentials
 DOMAIN=your-tenant.auth0.com
 AUDIENCE=http://127.0.0.1:3001/
+CLIENT_ID=your-m2m-client-id
+CLIENT_SECRET=your-m2m-client-secret
 
 # App configuration
 BASE_URL=http://127.0.0.1:3001
-
-CLIENT_ID=your-m2m-client-id
-CLIENT_SECRET=your-m2m-client-secret
 ```
 
 <Callout variant="warning">
@@ -111,8 +110,6 @@ export default auth0Provider({
     - `resourceServerIdentifier` - (Optional) Resource server identifier
 
 ## Public vs Protected Tools
-
-The Auth0 plugin supports two types of tools:
 
 ### Public Tools
 
@@ -167,7 +164,7 @@ If you want to use protected tools with permission-based access control, you nee
 
 ## Get a user session
 
-Access the authenticated user's session in your xmcp tools using `getAuthInfo()`.
+Access the authenticated user's session in your tools using `getAuthInfo()`.
 
 ### Example: Greet the user with their Auth0 identity
 
@@ -203,7 +200,7 @@ The `authInfo` object contains token data and user claims:
 - `authInfo.user.email` - User's email address
 - `authInfo.user.name` - User's full name
 
-## Access the client
+## Access the clients
 
 The `getClient()` and `getManagement()` functions give you access to the full Auth0 SDKs, allowing you to leverage all Auth0 features in your MCP tools.
 
@@ -275,7 +272,7 @@ export default async function updatePreferences(): Promise<string> {
 }
 ```
 
-The `getManagement()` function provides typed methods for all Auth0 Management operations and is only available when the `management` configuration is provided. See the [official SDK](https://www.npmjs.com/package/auth0) for more details.
+The `getManagement()` function provides typed methods for all Auth0 Management operations and is only available when the `management` configuration is provided.
 
 ## Troubleshooting
 

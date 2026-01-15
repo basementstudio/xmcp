@@ -51,18 +51,14 @@ MCP clients use Dynamic Client Registration (DCR) and the OAuth 2.0 Resource Par
 Create a `.env` file:
 
 ```bash
-AUTH0_DOMAIN=your-tenant.auth0.com
-AUTH0_AUDIENCE=http://localhost:3001/
-BASE_URL=http://localhost:3001
+# Credentials
+DOMAIN=your-tenant.auth0.com
+AUDIENCE=http://127.0.0.1:3001/
+CLIENT_ID=your-m2m-client-id
+CLIENT_SECRET=your-m2m-client-secret
 
-# Auth0 domain format: <tenant>.<region>.auth0.com (e.g., dev-xmcp.us.auth0.com)
-
-# Optional: Management API (read-only) for permission validation each request
-AUTH0_MGMT_CLIENT_ID=...
-AUTH0_MGMT_CLIENT_SECRET=...
-# Optional overrides (defaults shown)
-# AUTH0_MGMT_AUDIENCE=https://your-tenant.auth0.com/api/v2/
-# AUTH0_MGMT_RESOURCE_SERVER_IDENTIFIER=$AUTH0_AUDIENCE
+# App configuration
+BASE_URL=http://127.0.0.1:3001
 ```
 
 ### 3. Run
