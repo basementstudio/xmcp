@@ -23,7 +23,7 @@ The key distinction is trust and exposure. A local STDIO server inherits trust f
 
 ## How MCP authentication works
 
-MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow this makes authentication secure even for public clients like desktop apps and CLI tools that cannot safely store long-term secrets.
+MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow. This makes authentication secure even for public clients like desktop apps and CLI tools that cannot safely store long-term secrets.
 
 ![MCP Authentication Flow](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/auth-diagram.svg)
 
@@ -33,11 +33,49 @@ When an MCP client first connects to an authenticated server, it needs to discov
 
 The server exposes its authentication requirements at `/.well-known/oauth-protected-resource`, which tells clients where to find the authorization server. The authorization server then provides its endpoints at `/.well-known/oauth-authorization-server`, including where to send users for login and where to exchange tokens.
 
+Servers can also indicate authentication requirements dynamically by returning a `401 Unauthorized` response with the metadata URL in the header:
+
+```http
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource"
+```
+
+This approach is useful when the same server handles both authenticated and unauthenticated requests on different endpoints.
+
+<Callout variant="info">
+When discovering authorization server metadata, clients try multiple well-known paths in order. For a server at `https://auth.example.com/tenant1`:
+
+1. `https://auth.example.com/.well-known/oauth-authorization-server/tenant1`
+2. `https://auth.example.com/.well-known/openid-configuration/tenant1`
+3. `https://auth.example.com/tenant1/.well-known/openid-configuration`
+
+This fallback mechanism ensures compatibility with different authorization server configurations.
+</Callout>
+
 ### Client registration
 
 Before a client can authenticate users, it needs to identify itself to the authorization server. MCP supports three approaches:
 
 **Client ID Metadata Documents** are the recommended approach. Clients host a JSON document at an HTTPS URL that describes their identity, name, and allowed redirect URIs. The URL itself becomes the client ID, eliminating the need for pre-registration.
+
+A Client ID Metadata Document looks like this:
+
+```json
+{
+  "client_id": "https://app.example.com/oauth/client-metadata.json",
+  "client_name": "My MCP Client",
+  "client_uri": "https://app.example.com",
+  "redirect_uris": [
+    "http://127.0.0.1:3000/callback",
+    "http://localhost:3000/callback"
+  ],
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none"
+}
+```
+
+The URL where this document is hosted becomes the client ID. Authorization servers that support this approach advertise `client_id_metadata_document_supported: true` in their metadata.
 
 **Dynamic Client Registration** allows clients to register automatically by making a request to the authorization server. This creates a unique client ID for each installation.
 
@@ -70,6 +108,14 @@ The MCP server advertises its supported scopes in the protected resource metadat
 
 For example, a token with only the `read` scope could access tools that fetch data but would be rejected when trying to use tools that modify data. This provides fine-grained access control beyond simple authentication.
 
+When initiating authentication, clients determine which scopes to request using this priority order:
+
+1. Use the `scope` parameter from the `WWW-Authenticate` header if the server provided one
+2. Request all scopes listed in `scopes_supported` from the Protected Resource Metadata
+3. Omit the scope parameter entirely if `scopes_supported` is not defined
+
+This strategy ensures clients request appropriate permissions based on what the server advertises.
+
 ## Security requirements
 
 The MCP specification mandates several security measures:
@@ -80,7 +126,19 @@ All clients must implement PKCE with the `S256` code challenge method.
 
 ### Resource binding
 
-Clients must include the `resource` parameter in authorization and token requests. Servers must validate that tokens were issued specifically for them by checking the audience claim.
+Clients must include the `resource` parameter in authorization and token requests. This parameter identifies the MCP server the token is intended for.
+
+The resource must be a valid canonical URI. Valid examples include:
+- `https://mcp.example.com`
+- `https://mcp.example.com/mcp`
+- `https://mcp.example.com:8443`
+
+Invalid examples include:
+- `mcp.example.com` (missing scheme)
+- `https://mcp.example.com#section` (contains fragment)
+- `https://mcp.example.com?query=1` (contains query)
+
+Servers must validate that tokens were issued specifically for them by checking the audience claim matches their canonical URI.
 
 ### HTTPS everywhere
 
@@ -93,6 +151,26 @@ All authorization server endpoints must use HTTPS.
 - Servers should issue short-lived access tokens
 - Servers must not pass client tokens through to upstream APIs
 
+## Security best practices
+
+Beyond the mandatory requirements, these practices help protect your MCP server:
+
+### Token storage
+
+Store access tokens securely and never expose them in logs or error messages. Use short-lived tokens and implement token refresh to limit the impact of token theft.
+
+### Redirect URI validation
+
+Validate redirect URIs exactly as registered. Do not allow partial matches or wildcards. Support the OAuth `state` parameter to prevent CSRF attacks during the authorization flow.
+
+### Token isolation
+
+Never forward access tokens received from clients to upstream APIs or third-party services. Each service should issue and validate its own tokens.
+
+### Client metadata validation
+
+If your server fetches Client ID Metadata Documents, implement SSRF protections. Validate URLs before fetching and consider maintaining allowlists for trusted client domains.
+
 ## Error responses
 
 - **401**: Authorization required or token invalid/expired
@@ -100,6 +178,27 @@ All authorization server endpoints must use HTTPS.
 - **400**: Malformed authorization request
 
 When a client has insufficient permissions, the server responds with:
+
+```http
+HTTP/1.1 403 Forbidden
+WWW-Authenticate: Bearer error="insufficient_scope",
+                         scope="files:read files:write",
+                         resource_metadata="https://example.com/.well-known/oauth-protected-resource",
+                         error_description="Additional permissions required"
+```
+
+### Step-up authorization
+
+When a client receives an `insufficient_scope` error, it can request additional permissions without requiring the user to fully re-authenticate. This is called step-up authorization.
+
+The flow works as follows:
+
+1. **Parse the error** - Extract scope requirements from the `WWW-Authenticate` header
+2. **Determine required scopes** - Combine existing scopes with the newly required ones
+3. **Re-authorize** - Redirect the user to grant the additional permissions
+4. **Retry the request** - Use the new token with expanded scopes
+
+Clients should limit retry attempts to prevent infinite authorization loops when scopes cannot be granted.
 
 ## Available auth plugins
 
@@ -139,22 +238,6 @@ Best for enterprise applications and B2B SaaS products.
 ## FAQ
 
 <FAQ>
-  <FAQItem question="What is MCP authentication?">
-    MCP authentication is the process of verifying user identity before granting access to an MCP server's tools and resources. It uses OAuth 2.1, the same modern authentication standard used by major platforms, to securely authenticate users through their preferred identity provider.
-  </FAQItem>
-
-  <FAQItem question="Do I need authentication for my MCP server?">
-    It depends on your deployment. If your MCP server runs over HTTP and is accessible over a network, you should implement authentication to protect sensitive tools and user data. If your server uses STDIO and runs locally on the user's machine, authentication is typically unnecessary since the user is implicitly trusted.
-  </FAQItem>
-
-  <FAQItem question="How do MCP clients authenticate with servers?">
-    MCP clients use the OAuth 2.1 authorization code flow with PKCE. The client discovers the server's authentication requirements, redirects the user to log in, receives an authorization code, exchanges it for an access token, and includes that token in subsequent requests to the server.
-  </FAQItem>
-
-  <FAQItem question="What is Dynamic Client Registration in MCP?">
-    Dynamic Client Registration allows MCP clients to automatically register with authorization servers without manual configuration. Instead of pre-registering each client, the server accepts new clients on the fly. MCP also supports Client ID Metadata Documents, where the client hosts its identity information at a URL that becomes its client ID.
-  </FAQItem>
-
   <FAQItem question="Can I use my existing OAuth provider with MCP?">
     Yes. MCP's authentication is based on standard OAuth 2.1 and can work with any compliant authorization server. xmcp provides official plugins for Better Auth (self-hosted), Clerk, and WorkOS, but the protocol is compatible with other OAuth providers that support the required specifications.
   </FAQItem>
@@ -180,10 +263,34 @@ Best for enterprise applications and B2B SaaS products.
   </FAQItem>
 
   <FAQItem question="How do I test MCP authentication locally?">
-    During development, you can test authentication by running your MCP server locally and connecting with a client that supports OAuth. Most auth plugins support localhost redirect URIs for development. You can also use tools like Postman or curl to manually test the OAuth flow and verify token handling before deploying.
+    During development, you can test authentication by running your MCP server locally and connecting with a client that supports OAuth. Most auth plugins support localhost redirect URIs for development. You can also use tools like MCPJam or Postman MCP Client to test the OAuth flow and verify token handling before deploying.
   </FAQItem>
 
   <FAQItem question="How do I debug MCP authentication issues?">
     Common debugging steps include: checking server logs for token validation errors, verifying your environment variables are set correctly, ensuring redirect URIs match exactly between your client and auth provider configuration, and confirming your auth provider's dashboard shows the OAuth application is properly configured. Most auth plugins provide detailed error messages that indicate the specific issue.
+  </FAQItem>
+
+  <FAQItem question="How do I implement role-based access control (RBAC) in MCP?">
+    MCP authentication provides the user's identity, but authorization logic lives in your tool handlers. After validating the access token, extract the user's role from your database or the token claims. Then check permissions before executing sensitive operations. For example, you might allow all authenticated users to read data but restrict write operations to admin roles. Consider using scopes for coarse-grained permissions and roles for fine-grained access within your application.
+  </FAQItem>
+
+  <FAQItem question="How do I revoke access tokens?">
+    Token revocation depends on your authorization server. Most OAuth providers support a revocation endpoint where you can invalidate tokens before they expire. For immediate revocation, maintain a blocklist of revoked tokens and check it during validation. Short-lived access tokens (15-60 minutes) with longer-lived refresh tokens provide a balance—even if you can't immediately revoke an access token, it will expire soon, and you can revoke the refresh token to prevent new access tokens from being issued.
+  </FAQItem>
+
+  <FAQItem question="Can I implement multi-tenant authentication?">
+    Yes. Multi-tenant MCP servers can authenticate users from different organizations. Your authorization server should include tenant information in the token claims. During token validation, extract the tenant ID and use it to scope data access and tool permissions. Each tenant can have its own user directory while sharing the same MCP server infrastructure. The discovery mechanism supports tenant-specific authorization server paths like `/.well-known/oauth-authorization-server/tenant-id`.
+  </FAQItem>
+
+  <FAQItem question="How do I audit authentication events?">
+    Implement logging at key points in the authentication flow: token validation (success and failure), scope checks, and sensitive tool executions. Include the user ID, timestamp, action performed, and result in each log entry. For compliance requirements like GDPR, ensure logs capture consent events and data access. Store audit logs separately from application logs and implement retention policies. Most auth plugins emit events you can hook into for centralized logging.
+  </FAQItem>
+
+  <FAQItem question="Can I use SSO or SAML with MCP?">
+    Yes. MCP's OAuth 2.1 foundation is compatible with enterprise identity providers that support SSO. Providers like WorkOS and Clerk offer built-in SSO/SAML support, allowing users to authenticate through their corporate identity provider. The MCP client handles the OAuth flow normally—it doesn't need to know whether the authorization server uses SAML federation behind the scenes. This enables seamless integration with enterprise identity systems like Okta, Azure AD, or Google Workspace.
+  </FAQItem>
+
+  <FAQItem question="How do refresh tokens work in MCP?">
+    Refresh tokens allow clients to obtain new access tokens without user interaction. When the access token expires, the client sends the refresh token to the authorization server's token endpoint to get a fresh access token. This enables long-running sessions without repeated login prompts. Request the `offline_access` scope during authentication to receive a refresh token. Store refresh tokens securely—they're long-lived credentials that can generate new access tokens.
   </FAQItem>
 </FAQ>
