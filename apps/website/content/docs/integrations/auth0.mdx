@@ -24,13 +24,13 @@ MCP clients register themselves automatically with your Auth0 tenant.
 
 1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
 2. Enable **"OIDC Dynamic Application Registration"**
-3. Save changes
+3. Save changes.
 
 ### 2. Enable Resource Parameter Compatibility Profile
 
 1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
 2. Enable **"Resource Parameter Compatibility Profile"**
-3. Save changes
+3. Save changes.
 
 ### 3. Promote Connection to Domain Level
 
@@ -39,7 +39,7 @@ DCR-registered clients are third-party by default and can only use domain-level 
 1. Go to **Auth0 Dashboard** → **Authentication** → **Database**
 2. Select your connection (e.g., `Username-Password-Authentication`)
 3. Enable **"Enable for third-party clients"** (or "Promote to domain level")
-4. Save changes
+4. Save changes.
 
 ### 4. Create the API
 
@@ -52,14 +52,14 @@ DCR-registered clients are third-party by default and can only use domain-level 
 ### 5. Set Default Audience
 
 1. Go to **Auth0 Dashboard** → **Settings** → **General**
-2. Under **API Authorization Settings**, set **Default Audience** to your API identifier
-3. Save changes
+2. Under **API Authorization Settings**, set **Default Audience** to your API identifier.
+3. Save changes.
 
-### 6. Note your Domain, Client ID and Client Secret
+### 6. Note your Domain, Client ID, and Client Secret
 
-- In your **Dashboard** go to **Applications** and create a M2M application
-- Go to **Settings** and under **Basic Information**, you will find your **Domain** (that follows `<tenant>.<region>.auth0.com`.), **Client ID** and **Client Secret**.
-- Save these values in your environment variables under `DOMAIN`, `CLIENT_ID` and `CLIENT_SECRET`.
+- In your **Dashboard**, go to **Applications** and create an M2M application.
+- Go to **Settings** and under **Basic Information**, you will find your **Domain** (following the format `<tenant>.<region>.auth0.com`), **Client ID**, and **Client Secret**.
+- Save these values in your environment variables under `DOMAIN`, `CLIENT_ID`, and `CLIENT_SECRET`.
 
 ## Environment Variables
 
@@ -98,16 +98,16 @@ export default auth0Provider({
 
 ### Configuration Options
 
-- **`domain`** - Your Auth0 domain (e.g., `your-tenant.auth0.com`)
-- **`audience`** - The API identifier configured in Auth0
-- **`baseURL`** - Base URL of your MCP server
-- **`clientId`** - Application client ID
-- **`clientSecret`** - Application client secret
-- **`scopesSupported`** - (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
-- **`management`** - (Optional) Configuration for the Management API client
-    - `enable` - Set to `true` to enable the Management API client
-    - `audience` - (Optional) Custom audience for the Management API
-    - `resourceServerIdentifier` - (Optional) Resource server identifier
+- **`domain`**: Your Auth0 domain (e.g., `your-tenant.auth0.com`)
+- **`audience`**: The API identifier configured in Auth0.
+- **`baseURL`**: Base URL of your MCP server.
+- **`clientId`**: Application client ID.
+- **`clientSecret`**: Application client secret.
+- **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
+- **`management`**: (Optional) Configuration for the Management API client.
+    - `enable`: Set to `true` to enable the Management API client.
+    - `audience`: (Optional) Custom audience for the Management API.
+    - `resourceServerIdentifier`: (Optional) Resource server identifier.
 
 ## Public vs Protected Tools
 
@@ -117,9 +117,9 @@ By default, all tools are public and accessible by any user that is authenticate
 
 Use public tools for:
 
-- General-purpose utilities that all users need
-- Non-sensitive operations like greeting users or displaying public information
-- Tools that don't access or modify restricted resources
+- General-purpose utilities that all users need.
+- Non-sensitive operations like greeting users or displaying public information.
+- Tools that don't access or modify restricted resources.
 
 ### Protected Tools
 
@@ -129,14 +129,14 @@ Use protected tools for:
 
 - Administrative operations (e.g., managing users, changing settings)
 - Accessing sensitive data (e.g., billing information, private documents)
-- Operations that modify critical resources
-- Features limited to specific user tiers or roles
-- Access to Token Vault
+- Operations that modify critical resources.
+- Features limited to specific user tiers or roles.
+- Access to Token Vault.
 
 To protect a tool, follow these steps:
 
 1. In your Auth0 API, add the permission with the following syntax `tool:<tool-name>` (e.g., `tool:whoami`)
-2. Assign this permission to roles/users who should have access
+2. Assign this permission to roles/users who should have access.
 
 xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
 
@@ -160,7 +160,7 @@ If you want to use protected tools with permission-based access control, you nee
 2. Click **Create Role** (e.g., "MCP User")
 3. Go to **Permissions** tab → **Add Permissions**
 4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
-5. Go to **Users** tab → **Add Users** to assign the role to users
+5. Go to **Users** tab → **Add Users** to assign the role to users.
 
 ## Get a user session
 
@@ -191,14 +191,14 @@ export default function greet({ name }: InferSchema<typeof schema>): string {
 
 The `authInfo` object contains token data and user claims:
 
-- `authInfo.token` - The raw access token
-- `authInfo.clientId` - OAuth client ID
-- `authInfo.scopes` - Array of granted scopes
-- `authInfo.permissions` - Array of additional permissions from the token
-- `authInfo.expiresAt` - Token expiration timestamp
-- `authInfo.user.sub` - User ID (subject claim)
-- `authInfo.user.email` - User's email address
-- `authInfo.user.name` - User's full name
+- `authInfo.token`: The raw access token
+- `authInfo.clientId`: OAuth client ID.
+- `authInfo.scopes`: Array of granted scopes.
+- `authInfo.permissions`: Array of additional permissions from the token.
+- `authInfo.expiresAt`: Token expiration timestamp.
+- `authInfo.user.sub`: User ID (subject claim).
+- `authInfo.user.email`: User's email address.
+- `authInfo.user.name`: User's full name.
 
 ## Access the clients
 
@@ -310,15 +310,15 @@ Access tokens are short-lived. If you see `token_expired` errors:
 
 If token verification fails:
 
-- Verify `AUTH0_DOMAIN` matches your Auth0 tenant
-- Verify `AUTH0_AUDIENCE` matches your API identifier exactly (including trailing slash)
+- Verify `DOMAIN` matches your Auth0 tenant
+- Verify `AUDIENCE` matches your API identifier exactly (including trailing slash)
 
 ### Management API Not Configured
 
 If you see "Management API configuration is required" or "401 Unauthorized":
 
 - Add the `management` configuration to your middleware
-- Ensure `AUTH0_MGMT_CLIENT_ID` and `AUTH0_MGMT_CLIENT_SECRET` are set
+- Ensure `CLIENT_ID` and `CLIENT_SECRET` are set
 - Your M2M app needs the `read:resource_servers` permission on the Auth0 Management API
 
 ### Session Not Initialized
