@@ -221,18 +221,27 @@ function setupSettlementInterceptor(
     }
 
     handleSettlement(pendingSettlement, body)
-      .then((finalBody) => {
+      .then((body) => {
+        const finalBody = JSON.stringify(body);
+        res.removeHeader("Content-Length");
+        res.setHeader("Content-Length", Buffer.byteLength(finalBody));
+
         return originalEnd(
-          JSON.stringify(finalBody),
+          finalBody,
           encoding as BufferEncoding,
           callback as () => void
         );
       })
       .catch((err) => {
         logError("Settlement failed:", err);
-        const errorBody = createSettlementErrorResponse(err, isV2Format);
+        const errorBody = JSON.stringify(
+          createSettlementErrorResponse(err, isV2Format)
+        );
+        res.removeHeader("Content-Length");
+        res.setHeader("Content-Length", Buffer.byteLength(errorBody));
+
         return originalEnd(
-          JSON.stringify(errorBody),
+          errorBody,
           encoding as BufferEncoding,
           callback as () => void
         );
