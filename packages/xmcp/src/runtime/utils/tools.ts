@@ -10,6 +10,7 @@ import { splitOpenAIMetaNested } from "./openai/split-meta";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
+import { isPaidHandler, getX402Registry } from "xmcp/plugins/x402";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -48,6 +49,14 @@ export function addToolsToServer(
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
+    }
+
+    // Register paid tools in x402 registry if plugin is installed
+    if (isPaidHandler(handler)) {
+      const registry = getX402Registry();
+      if (registry) {
+        registry.set(toolConfig.name, handler.__x402);
+      }
     }
 
     // Determine the actual schema to use
