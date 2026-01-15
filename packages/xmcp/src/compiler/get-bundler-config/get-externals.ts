@@ -31,6 +31,10 @@ export function getExternals(): RspackOptions["externals"] {
         return callback(undefined, `commonjs ${request}`);
       }
 
+      if (request === "@x402/core" || request.startsWith("@x402/core/")) {
+        return callback(undefined, `commonjs ${request}`);
+      }
+
       // Check if request is inside .xmcp folder - if so, bundle it
       if (request.includes(".xmcp")) {
         return callback();

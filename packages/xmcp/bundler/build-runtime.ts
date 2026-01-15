@@ -26,9 +26,9 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
 ];
+
 const entry: EntryObject = {};
 
-// add dynamic entries
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
@@ -80,6 +80,7 @@ const config: RspackOptions = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     alias: {
       "@": srcPath,
+      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
     },
   },
   watchOptions: {
