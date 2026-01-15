@@ -1,5 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, {
+  Express,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
@@ -17,12 +23,16 @@ import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  extractToolNamesFromRequest,
+  storeToolNamesOnRequestHeaders,
+} from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // Global type declarations for tool name context
 declare global {
-  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
+  var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
 
 // no session management, POST only
@@ -424,24 +434,11 @@ export class StatelessStreamableHTTPTransport {
 
   private extractAndStoreToolName(req: Request): void {
     try {
-      if (!req.body) return;
+      const toolNames = extractToolNamesFromRequest(req);
 
-      const messages: JsonRpcMessage[] = Array.isArray(req.body)
-        ? req.body
-        : [req.body];
-
-      for (const message of messages) {
-        if (
-          message.method === "tools/call" &&
-          message.params &&
-          typeof message.params === "object" &&
-          "name" in message.params &&
-          typeof message.params.name === "string"
-        ) {
-          req.headers["x-mcp-tool-name"] = message.params.name;
-          global.__XMCP_CURRENT_TOOL_NAME = message.params.name;
-          break;
-        }
+      if (toolNames.length > 0) {
+        storeToolNamesOnRequestHeaders(req, toolNames);
+        global.__XMCP_CURRENT_TOOL_NAME = toolNames[0];
       }
     } catch (error) {
       // no op
