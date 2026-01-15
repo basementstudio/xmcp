@@ -54,7 +54,6 @@ export function getRspackConfig(
         "node:process": "process",
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
-        "xmcp/plugins/x402": path.resolve(processFolder, ".xmcp/x402.js"),
         ...resolveTsconfigPathsToAlias(),
       },
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
