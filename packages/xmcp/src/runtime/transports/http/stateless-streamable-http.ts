@@ -1,5 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, {
+  Express,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
