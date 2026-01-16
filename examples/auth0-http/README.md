@@ -71,7 +71,6 @@ pnpm dev
 
 - Scope name is inferred from tool metadata: `tool:<metadata.name>`.
 - If the scope exists in Auth0, the caller token must include it (via `permissions` or `scope` claims).
-- If the scope does not exist in Auth0 and the token also lacks it, the tool is treated as public (no scope required).
 
 ## OAuth Metadata
 

@@ -103,8 +103,8 @@ export default auth0Provider({
 - **`baseURL`**: Base URL of your MCP server.
 - **`clientId`**: Application client ID.
 - **`clientSecret`**: Application client secret.
-- **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
 - **`publicTools`**: (Optional) Array of tool names that don't require `tool:<name>` permission. These tools are accessible to any authenticated user.
+- **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
 - **`management`**: (Optional) Configuration for the Management API client.
     - `enable`: Set to `true` to enable the Management API client.
     - `audience`: (Optional) Custom audience for the Management API.
@@ -112,7 +112,30 @@ export default auth0Provider({
 
 ## Public vs Protected Tools
 
-### Protected Tools (Default)
+### Public Tools
+
+Public tools are accessible by any authenticated user without requiring specific permissions. To make tools public, add them to the `publicTools` array in your middleware configuration:
+
+```typescript title="src/middleware.ts"
+import { auth0Provider } from "@xmcp-dev/auth0";
+
+export default auth0Provider({
+  domain: process.env.DOMAIN!,
+  audience: process.env.AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  clientId: process.env.CLIENT_ID!,
+  clientSecret: process.env.CLIENT_SECRET!,
+  publicTools: ["random-number"],
+});
+```
+
+Use public tools for:
+
+- General-purpose utilities that all users need.
+- Non-sensitive operations like greeting users or displaying public information.
+- Tools that don't access or modify restricted resources.
+
+### Protected Tools
 
 By default, all tools require a `tool:<tool-name>` permission to access. This ensures fine-grained access control where each tool must be explicitly granted to users.
 
@@ -132,33 +155,6 @@ Use protected tools for:
 - Operations that modify critical resources.
 - Features limited to specific user tiers or roles.
 - Access to Token Vault.
-
-### Public Tools
-
-Public tools are accessible by any authenticated user without requiring specific `tool:<name>` permissions. To make tools public, add them to the `publicTools` array in your middleware configuration:
-
-```typescript title="src/middleware.ts"
-import { auth0Provider } from "@xmcp-dev/auth0";
-
-export default auth0Provider({
-  domain: process.env.DOMAIN!,
-  audience: process.env.AUDIENCE!,
-  baseURL: process.env.BASE_URL!,
-  clientId: process.env.CLIENT_ID!,
-  clientSecret: process.env.CLIENT_SECRET!,
-  publicTools: ["greet", "ping"],  // These tools are accessible to any authenticated user
-});
-```
-
-Use public tools for:
-
-- General-purpose utilities that all users need.
-- Non-sensitive operations like greeting users or displaying public information.
-- Tools that don't access or modify restricted resources.
-
-<Callout variant="info">
-  Public tools still require authentication. Users must have a valid Auth0 token to access them, but they don't need specific `tool:<name>` permissions.
-</Callout>
 
 ## Configure roles and RBAC for protected tools
 
