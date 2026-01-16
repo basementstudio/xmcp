@@ -16,6 +16,7 @@ import type {
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 import { createVerifier, extractBearerToken } from "./jwt.js";
+import { isToolPermissionDefined, userHasToolPermission } from "./permissions.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
 
@@ -38,15 +39,14 @@ export function auth0Provider(config: Config): Middleware {
     clientSecret: config.clientSecret,
   });
 
-  const managementClient = config.management?.enable
-    ? createManagementClient(config)
-    : null;
+  // Always create ManagementClient for permission checking
+  const managementClient = createManagementClient(config);
 
   providerClientContext({ config, apiClient, managementClient }, () => {});
   providerSessionContext({ authInfo: null }, () => {});
 
   return {
-    middleware: auth0Middleware(config),
+    middleware: auth0Middleware(config, managementClient),
     router: auth0Router(config),
   };
 }
@@ -56,11 +56,11 @@ function createManagementClient(config: Config): ManagementClient {
     domain: config.domain,
     clientId: config.clientId,
     clientSecret: config.clientSecret,
-    ...(config.management!.audience && {
-      audience: config.management!.audience,
+    ...(config.management?.audience && {
+      audience: config.management.audience,
     }),
-    ...(config.management!.resourceServerIdentifier && {
-      resourceServerIdentifier: config.management!.resourceServerIdentifier,
+    ...(config.management?.resourceServerIdentifier && {
+      resourceServerIdentifier: config.management.resourceServerIdentifier,
     }),
   });
 }
@@ -126,7 +126,10 @@ function auth0Router(config: Config): Router {
   return router;
 }
 
-function auth0Middleware(config: Config): RequestHandler {
+function auth0Middleware(
+  config: Config,
+  managementClient: ManagementClient
+): RequestHandler {
   const verify = createVerifier(config);
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -177,7 +180,7 @@ function auth0Middleware(config: Config): RequestHandler {
       }
 
       try {
-        enforceToolPermissions(req, config, result.authInfo);
+        await enforceToolPermissions(req, config, result.authInfo, managementClient);
       } catch (error) {
         if (!res.headersSent) {
           const message = error instanceof Error ? error.message : "Forbidden";
@@ -216,11 +219,12 @@ function auth0Middleware(config: Config): RequestHandler {
   };
 }
 
-function enforceToolPermissions(
+async function enforceToolPermissions(
   req: Request,
   config: Config,
-  authInfo: AuthInfo
-): void {
+  authInfo: AuthInfo,
+  managementClient: ManagementClient
+): Promise<void> {
   const toolNames = extractToolNamesFromRequest(req);
   const toolName = toolNames[0];
 
@@ -228,17 +232,33 @@ function enforceToolPermissions(
     return;
   }
 
-  if (config.publicTools?.includes(toolName)) {
+  // Check if tool permission is defined in Auth0
+  const isDefined = await isToolPermissionDefined(
+    managementClient,
+    config.audience,
+    toolName
+  );
+
+  // Management API failed → deny (secure default)
+  if (isDefined === null) {
+    throw new Error(`You don't have permission to use the '${toolName}' tool.`);
+  }
+
+  // Permission NOT defined in Auth0 → public tool, allow
+  if (!isDefined) {
     return;
   }
 
-  const requiredScope = `tool:${toolName}`;
-  const userScopes = new Set([
-    ...authInfo.scopes,
-    ...(authInfo.permissions ?? []),
-  ]);
+  // Permission IS defined in Auth0 → check user has it via Management API
+  const userId = authInfo.user.sub;
+  const hasPermission = await userHasToolPermission(
+    managementClient,
+    userId,
+    config.audience,
+    toolName
+  );
 
-  if (!userScopes.has(requiredScope)) {
+  if (hasPermission === null || !hasPermission) {
     throw new Error(`You don't have permission to use the '${toolName}' tool.`);
   }
 }

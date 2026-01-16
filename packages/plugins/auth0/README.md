@@ -30,31 +30,13 @@ export default auth0Provider({
 });
 ```
 
-### 2. Protect Your Tools
+### 2. Access User Info in Tools
 
-#### Using inferred scopes
+Tools are **public by default** - any authenticated user can access them. To make a tool private, add a `tool:<tool-name>` permission in your Auth0 API settings (see [Permission Enforcement](#permission-enforcement)).
 
-```typescript
-// src/tools/greet.ts
-import { getAuthInfo } from "@xmcp-dev/auth0";
-import type { ToolMetadata } from "xmcp";
+#### Using `getAuthInfo`
 
-export const metadata: ToolMetadata = {
-  name: "greet",
-  description: "Greet the authenticated user",
-};
-
-export default async function greet({ name }: { name?: string }) {
-  const authInfo = getAuthInfo();
-  return `Hello, ${authInfo.user.name ?? name}!`;
-}
-```
-
-Tools require the `tool:<tool-name>` permission. Users must have this permission in their access token (via RBAC) to access the tool.
-
-#### Using `getAuthInfo` directly
-
-Use this when you don't need scope checks. The middleware still ensures the request is authenticated.
+Use this to access the authenticated user's info in your tools.
 
 ```typescript
 // src/tools/whoami.ts
@@ -98,24 +80,36 @@ Creates the Auth0 authentication provider for xmcp.
 | `clientId` | `string` | Yes | OAuth client ID |
 | `clientSecret` | `string` | Yes | OAuth client secret |
 | `scopesSupported` | `string[]` | No | List of custom scopes for OAuth metadata |
-| `publicTools` | `string[]` | No | Tool names accessible to any authenticated user without `tool:<name>` permission |
-| `management` | `object` | No | Management API configuration (for admin operations) |
+| `management` | `object` | No | Management API configuration (optional overrides) |
 
 #### `management` options (optional)
 
-Only needed for admin operations like updating user metadata.
+Optional overrides for Management API configuration. The Management API is always enabled for permission checking.
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `enable` | `boolean` | Yes | Enable the Management API client |
 | `audience` | `string` | No | Management API audience (default: `https://<domain>/api/v2/`) |
 | `resourceServerIdentifier` | `string` | No | API identifier to use for Management operations |
 
+> **Note**: Your M2M application needs `read:resource_servers` and `read:users` permissions on the Auth0 Management API to check defined permissions and verify user access.
+
 ### Permission Enforcement
 
-Tools require the `tool:<tool-name>` permission in the user's access token. Configure RBAC in Auth0 and assign the appropriate permissions to users/roles.
+Tools are **public by default**. Any authenticated user can access them.
 
-Example: For a tool with `metadata.name = "greet"`, users need the `tool:greet` permission.
+To make a tool private, add a `tool:<tool-name>` permission in your Auth0 API settings:
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → Your API
+2. Go to **Permissions** tab
+3. Add permission: `tool:greet` (for a tool named "greet")
+4. Assign the permission to users who should have access
+
+The plugin queries Auth0 Management API on each request:
+1. **Check if permission exists** → queries `read:resource_servers` to see if `tool:<name>` is defined
+2. **If permission exists** → queries `read:users` to verify the user has it assigned
+3. **If permission does not exist** → tool is public, any authenticated user can access
+
+> **Note**: If Management API calls fail, the secure default is to deny access. This ensures real-time permission verification rather than relying on potentially stale token claims.
 
 ### `getAuthInfo()`
 
@@ -181,7 +175,7 @@ export default async function callExternalApi() {
 
 ### `getManagement()`
 
-Returns the Auth0 Management API client for admin operations. Requires `management.enable: true` in the provider config.
+Returns the Auth0 Management API client for admin operations.
 
 ```typescript
 import { getManagement, getAuthInfo } from "@xmcp-dev/auth0";
@@ -206,7 +200,7 @@ The plugin uses two internal contexts with different lifecycles:
 Set once when `auth0Provider()` is called at startup. Contains:
 - `config` - Auth0 configuration
 - `apiClient` - Auth0 API client for token verification
-- `managementClient` - Auth0 Management API client (if `management.enable: true`)
+- `managementClient` - Auth0 Management API client (always enabled for permission checking)
 
 This context is shared across all requests and never changes after initialization.
 
@@ -332,27 +326,16 @@ auth0 api post resource-servers --data '{
 4. Select your API (e.g., `MCP Server API`)
 5. Copy the **Client ID** and **Client Secret** to your `.env`
 
-### Step 7 (Optional): Enable Management API
+### Step 7: Enable Management API
 
-Only needed if you want to use `getManagement()` for admin operations.
+Required for dynamic permission checking. The plugin queries Auth0 to determine which tools require permissions and verify user access.
 
 1. In your M2M application, go to **APIs** tab
 2. Enable **Auth0 Management API**
-3. Grant the permissions you need (e.g., `read:users`, `update:users`)
-4. Update your middleware:
-
-```typescript
-export default auth0Provider({
-  domain: process.env.AUTH0_DOMAIN!,
-  audience: process.env.AUTH0_AUDIENCE!,
-  baseURL: process.env.BASE_URL!,
-  clientId: process.env.AUTH0_CLIENT_ID!,
-  clientSecret: process.env.AUTH0_CLIENT_SECRET!,
-  management: {
-    enable: true,
-  },
-});
-```
+3. Grant the following permissions:
+   - `read:resource_servers` - Check which tool permissions are defined
+   - `read:users` - Verify user has the required permissions
+4. Optionally grant additional permissions for admin operations (e.g., `update:users`)
 
 ### Important Notes
 

@@ -8,12 +8,10 @@ export interface Config {
   clientId: string;
   clientSecret: string;
   scopesSupported?: readonly string[];
-  publicTools?: readonly string[];
   management?: ManagementConfig;
 }
 
 export interface ManagementConfig {
-  enable: boolean;
   audience?: string;
   resourceServerIdentifier?: string;
 }

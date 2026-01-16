@@ -61,6 +61,16 @@ DCR-registered clients are third-party by default and can only use domain-level 
 - Go to **Settings** and under **Basic Information**, you will find your **Domain** (following the format `<tenant>.<region>.auth0.com`), **Client ID**, and **Client Secret**.
 - Save these values in your environment variables under `DOMAIN`, `CLIENT_ID`, and `CLIENT_SECRET`.
 
+### 7. Enable Management API
+
+Required for permission checking. The plugin queries Auth0 to determine which tools require permissions.
+
+1. In your M2M application, go to **APIs** tab
+2. Enable **Auth0 Management API**
+3. Grant the following permissions:
+   - `read:resource_servers`: Check which tool permissions are defined
+   - `read:users`: Verify user has the required permissions
+
 ## Environment Variables
 
 Configure the following environment variables in your `.env` file:
@@ -103,31 +113,14 @@ export default auth0Provider({
 - **`baseURL`**: Base URL of your MCP server.
 - **`clientId`**: Application client ID.
 - **`clientSecret`**: Application client secret.
-- **`publicTools`**: (Optional) Array of tool names that don't require `tool:<name>` permission. These tools are accessible to any authenticated user.
 - **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
-- **`management`**: (Optional) Configuration for the Management API client.
-    - `enable`: Set to `true` to enable the Management API client.
+- **`management`**: (Optional) Override configuration for the Management API.
     - `audience`: (Optional) Custom audience for the Management API.
     - `resourceServerIdentifier`: (Optional) Resource server identifier.
 
-## Public vs Protected Tools
+## Public vs Protected tools
 
-### Public Tools
-
-Public tools are accessible by any authenticated user without requiring specific permissions. To make tools public, add them to the `publicTools` array in your middleware configuration:
-
-```typescript title="src/middleware.ts"
-import { auth0Provider } from "@xmcp-dev/auth0";
-
-export default auth0Provider({
-  domain: process.env.DOMAIN!,
-  audience: process.env.AUDIENCE!,
-  baseURL: process.env.BASE_URL!,
-  clientId: process.env.CLIENT_ID!,
-  clientSecret: process.env.CLIENT_SECRET!,
-  publicTools: ["random-number"],
-});
-```
+By default, all tools are public and accessible by any user that is authenticated. This means any user with a valid Auth0 token can access the tool, regardless of their roles or permissions.
 
 Use public tools for:
 
@@ -137,28 +130,30 @@ Use public tools for:
 
 ### Protected Tools
 
-By default, all tools require a `tool:<tool-name>` permission to access. This ensures fine-grained access control where each tool must be explicitly granted to users.
-
-To use protected tools:
-
-1. In your Auth0 API, add the permission with the following syntax `tool:<tool-name>` (e.g., `tool:whoami`)
-2. Assign this permission to roles/users who should have access.
-
-xmcp automatically infers the tool's scope from its name in the metadata, resulting in `tool:<metadata.name>`.
-
-Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
+Protected tools require specific permissions to access. Use them to restrict sensitive operations to authorized users only.
 
 Use protected tools for:
 
-- Administrative operations (e.g., managing users, changing settings)
-- Accessing sensitive data (e.g., billing information, private documents)
 - Operations that modify critical resources.
 - Features limited to specific user tiers or roles.
 - Access to Token Vault.
 
+### How It Works
+
+The plugin queries Auth0 Management API on each request:
+1. **Check if permission exists** → queries `read:resource_servers` to see if `tool:<name>` is defined
+2. **If permission exists** → queries `read:users` to verify the user has it assigned
+3. **If permission does not exist** → tool is public, any authenticated user can access
+
+Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
+
+<Callout variant="info">
+  If Management API calls fail, the secure default is to deny access.
+</Callout>
+
 ## Configure roles and RBAC for protected tools
 
-If you want to use protected tools with permission-based access control, you need to enable RBAC in your Auth0 tenant.
+This section is optional, only needed when you want to use permission-protected tools.
 
 ### Enable RBAC
 
@@ -171,10 +166,10 @@ If you want to use protected tools with permission-based access control, you nee
 ### Create Roles and Assign Permissions
 
 1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
-2. Click **Create Role** (e.g., "MCP User")
+2. Click **Create Role** (e.g., "MCP Admin")
 3. Go to **Permissions** tab → **Add Permissions**
 4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
-5. Go to **Users** tab → **Add Users** to assign the role to users.
+5. Go to **Users** tab → **Add Users** to assign the role to users
 
 ## Get a user session
 
@@ -211,8 +206,6 @@ The `authInfo` object contains token data and user claims:
 - `authInfo.permissions`: Array of additional permissions from the token.
 - `authInfo.expiresAt`: Token expiration timestamp.
 - `authInfo.user.sub`: User ID (subject claim).
-- `authInfo.user.email`: User's email address.
-- `authInfo.user.name`: User's full name.
 
 ## Access the clients
 
@@ -327,13 +320,13 @@ If token verification fails:
 - Verify `DOMAIN` matches your Auth0 tenant
 - Verify `AUDIENCE` matches your API identifier exactly (including trailing slash)
 
-### Management API Not Configured
+### Permission Check Failed
 
-If you see "Management API configuration is required" or "401 Unauthorized":
+If you see "You don't have permission..." errors for tools that should be public:
 
-- Add the `management` configuration to your middleware
-- Ensure `CLIENT_ID` and `CLIENT_SECRET` are set
-- Your M2M app needs the `read:resource_servers` permission on the Auth0 Management API
+- Your M2M app needs `read:resource_servers` and `read:users` permissions on the Auth0 Management API
+- Ensure `CLIENT_ID` and `CLIENT_SECRET` are set correctly
+- Verify the permissions are granted in the M2M app's **APIs** tab
 
 ### Session Not Initialized
 

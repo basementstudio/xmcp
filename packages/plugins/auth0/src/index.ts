@@ -4,6 +4,13 @@ export { getAuthInfo } from "./session.js";
 
 export { getClient, getManagement } from "./client.js";
 
+export {
+  isToolPermissionDefined,
+  fetchResourceServerScopes,
+  fetchUserPermissions,
+  userHasToolPermission,
+} from "./permissions.js";
+
 export type {
   Config,
   ManagementConfig,
