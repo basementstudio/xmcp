@@ -10,11 +10,21 @@ description: "Secure your MCP server with OAuth 2.1 authentication. Learn about 
 
 MCP provides authorization capabilities at the transport level, enabling clients to make requests to restricted servers on behalf of resource owners. The authorization mechanism is based on OAuth 2.1 and implements several related standards.
 
+## Standards compliance
+
+MCP authorization implements a subset of these standards:
+
+- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13) - Core authorization framework
+- [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) - OAuth 2.0 Authorization Server Metadata
+- [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) - OAuth 2.0 Dynamic Client Registration Protocol
+- [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) - OAuth 2.0 Protected Resource Metadata
+- [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) - Resource Indicators for OAuth 2.0
+
 ## Available auth plugins
 
 xmcp provides plugins that handle all the OAuth complexity for you.
 
-<AuthProviders />
+<OAuthPlugins />
 
 ## When do you need authentication?
 
@@ -98,6 +108,41 @@ After successful authentication, the client receives an access token. This token
 
 Tokens are bound to the specific MCP server using the `resource` parameter during authentication. This prevents tokens issued for one server from being used to access another, protecting against token confusion attacks.
 
+### Resource indicators
+
+MCP clients must include the `resource` parameter (RFC 8707) in authorization and token requests. This parameter identifies the specific MCP server the token is intended for:
+
+```
+&resource=https%3A%2F%2Fmcp.example.com
+```
+
+The resource parameter provides critical security benefits:
+
+- **Audience binding**: Tokens are bound to a specific MCP server and cannot be used elsewhere
+- **Token confusion prevention**: Prevents attackers from using tokens issued for one server to access another
+- **Server validation**: MCP servers must validate that tokens were specifically issued for them
+
+When making authorization requests, clients include the MCP server's canonical URI as the resource parameter. The authorization server embeds this in the token, and the MCP server validates it before processing requests.
+
+#### Canonical server URI format
+
+The resource parameter must be a valid URI following these rules:
+
+**Valid formats:**
+- `https://mcp.example.com`
+- `https://mcp.example.com/mcp`
+- `https://mcp.example.com:8443`
+- `https://mcp.example.com/server/mcp`
+
+**Invalid formats:**
+- `mcp.example.com` (missing scheme)
+- `https://mcp.example.com#fragment` (contains fragment)
+- `https://mcp.example.com/` (trailing slash, unless semantically significant)
+
+<Callout variant="info">
+Use the URI form without a trailing slash unless the trailing slash is semantically significant for your server's routing.
+</Callout>
+
 ### Scopes
 
 Scopes define what an access token is allowed to do. They act as permissions that limit the capabilities of a token, even for an authenticated user.
@@ -123,4 +168,8 @@ This strategy ensures clients request appropriate permissions based on what the 
 
 ## References
 
-- [MCP Specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [MCP Specification - Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13)
+- [RFC 8707 - Resource Indicators](https://datatracker.ietf.org/doc/html/rfc8707)
+- [RFC 8414 - Authorization Server Metadata](https://datatracker.ietf.org/doc/html/rfc8414)
+- [RFC 9728 - Protected Resource Metadata](https://datatracker.ietf.org/doc/html/rfc9728)
