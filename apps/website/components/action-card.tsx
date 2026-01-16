@@ -4,11 +4,11 @@ import Link from "next/link";
 import { cn } from "@/utils/cn";
 import { Icons } from "@/components/icons";
 
-type ClientIconKey = "cursor" | "claude" | "windsurf" | "gemini" | "codex";
+type IconKey = keyof typeof Icons;
 
 export interface ActionCardProps {
   label: string;
-  icon: ClientIconKey;
+  icon: IconKey;
   onClick?: () => void;
   href?: string;
 }
