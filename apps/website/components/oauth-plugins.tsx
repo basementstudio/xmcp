@@ -5,9 +5,9 @@ import { ActionCardGrid } from "@/components/action-card-grid";
 
 const OAUTH_PLUGINS = [
   {
-    label: "WorkOS",
-    icon: "workos" as const,
-    href: "/docs/integrations/workos",
+    label: "Better Auth",
+    icon: "betterAuth" as const,
+    href: "/docs/integrations/better-auth",
   },
   {
     label: "Clerk",
@@ -15,9 +15,14 @@ const OAUTH_PLUGINS = [
     href: "/docs/integrations/clerk",
   },
   {
-    label: "Better Auth",
-    icon: "betterAuth" as const,
-    href: "/docs/integrations/better-auth",
+    label: "WorkOS",
+    icon: "workos" as const,
+    href: "/docs/integrations/workos",
+  },
+  {
+    label: "Auth0",
+    icon: "auth0" as const,
+    href: "/docs/integrations/auth0",
   },
 ];
 
