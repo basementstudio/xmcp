@@ -4,12 +4,17 @@ metadataTitle: "MCP Server Authentication Guide | xmcp Documentation"
 publishedAt: "2026-01-16"
 summary: "Learn how authentication works on MCP servers with human-based interaction."
 description: "Secure your MCP server with OAuth 2.1 authentication. Learn about PKCE, JWT tokens, scopes, and token-based access control. Integrate with Better Auth, Clerk, or WorkOS."
-displayTitle: "Authentication guide for MCP servers"
 ---
 
 ## Overview
 
 MCP provides authorization capabilities at the transport level, enabling clients to make requests to restricted servers on behalf of resource owners. The authorization mechanism is based on OAuth 2.1 and implements several related standards.
+
+## Available auth plugins
+
+xmcp provides plugins that handle all the OAuth complexity for you.
+
+<AuthProviders />
 
 ## When do you need authentication?
 
@@ -116,121 +121,6 @@ When initiating authentication, clients determine which scopes to request using 
 
 This strategy ensures clients request appropriate permissions based on what the server advertises.
 
-## Security requirements
+## References
 
-The MCP specification mandates several security measures:
-
-### PKCE is mandatory
-
-All clients must implement PKCE with the `S256` code challenge method.
-
-### Resource binding
-
-Clients must include the `resource` parameter in authorization and token requests. This parameter identifies the MCP server the token is intended for.
-
-The resource must be a valid canonical URI. Valid examples include:
-- `https://mcp.example.com`
-- `https://mcp.example.com/mcp`
-- `https://mcp.example.com:8443`
-
-Invalid examples include:
-- `mcp.example.com` (missing scheme)
-- `https://mcp.example.com#section` (contains fragment)
-- `https://mcp.example.com?query=1` (contains query)
-
-Servers must validate that tokens were issued specifically for them by checking the audience claim matches their canonical URI.
-
-### HTTPS everywhere
-
-All authorization server endpoints must use HTTPS.
-
-### Token handling
-
-- Access tokens must be sent via the `Authorization: Bearer` header
-- Tokens must never be included in query strings
-- Servers should issue short-lived access tokens
-- Servers must not pass client tokens through to upstream APIs
-
-## Security best practices
-
-Beyond the mandatory requirements, these practices help protect your MCP server:
-
-### Token storage
-
-Store access tokens securely and never expose them in logs or error messages. Use short-lived tokens and implement token refresh to limit the impact of token theft.
-
-### Redirect URI validation
-
-Validate redirect URIs exactly as registered. Do not allow partial matches or wildcards. Support the OAuth `state` parameter to prevent CSRF attacks during the authorization flow.
-
-### Token isolation
-
-Never forward access tokens received from clients to upstream APIs or third-party services. Each service should issue and validate its own tokens.
-
-### Client metadata validation
-
-If your server fetches Client ID Metadata Documents, implement SSRF protections. Validate URLs before fetching and consider maintaining allowlists for trusted client domains.
-
-## Error responses
-
-- **401**: Authorization required or token invalid/expired
-- **403**: Insufficient scopes for the requested operation
-- **400**: Malformed authorization request
-
-When a client has insufficient permissions, the server responds with:
-
-```http
-HTTP/1.1 403 Forbidden
-WWW-Authenticate: Bearer error="insufficient_scope",
-                         scope="files:read files:write",
-                         resource_metadata="https://example.com/.well-known/oauth-protected-resource",
-                         error_description="Additional permissions required"
-```
-
-### Step-up authorization
-
-When a client receives an `insufficient_scope` error, it can request additional permissions without requiring the user to fully re-authenticate. This is called step-up authorization.
-
-The flow works as follows:
-
-1. **Parse the error** - Extract scope requirements from the `WWW-Authenticate` header
-2. **Determine required scopes** - Combine existing scopes with the newly required ones
-3. **Re-authorize** - Redirect the user to grant the additional permissions
-4. **Retry the request** - Use the new token with expanded scopes
-
-Clients should limit retry attempts to prevent infinite authorization loops when scopes cannot be granted.
-
-## Available auth plugins
-
-xmcp provides plugins that handle all the OAuth complexity for you.
-
-<AuthProviders />
-
-## Choosing an auth plugin
-
-### Better Auth
-
-Best for developers who want full control over their authentication infrastructure.
-
-- Self-hosted with PostgreSQL database
-- Built-in authentication UI included
-- Email/password and social OAuth support
-- Complete ownership of user data
-
-### Clerk
-
-Best for quick setup with minimal configuration.
-
-- Hosted authentication UI
-- Organization and team support
-- SSO/SAML capabilities
-- Managed infrastructure, no database needed
-
-### WorkOS
-
-Best for enterprise applications and B2B SaaS products.
-
-- Hosted authentication UI via AuthKit
-- Enterprise SSO and SAML
-- Directory sync (SCIM) for user provisioning
-- Organization and role management
+- [MCP Specification](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)

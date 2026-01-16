@@ -16,7 +16,7 @@ interface AuthOption {
 const AUTH_OPTIONS: AuthOption[] = [
   {
     label: "Better Auth",
-    icon: "auth0",
+    icon: "betterAuth",
     description: "Self-hosted auth with email/password and OAuth",
     href: "/docs/integrations/better-auth",
   },
@@ -48,20 +48,18 @@ export function AuthProviders() {
                 "relative flex flex-col gap-2 px-3 py-3",
                 "border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
                 "hover:border-brand-neutral-400 hover:bg-[rgba(15,15,15,0.85)]",
-                "transition-all duration-200 cursor-pointer text-left overflow-hidden no-underline"
+                "transition-all duration-200 cursor-pointer text-left overflow-hidden",
+                "!no-underline hover:!no-underline [&_*]:!no-underline"
               )}
             >
               <div className="flex items-center gap-3">
                 <span className="w-8 h-8 border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
                   <IconComponent className="w-4 h-4 text-brand-w1" />
                 </span>
-                <span className="text-brand-w1 font-medium text-sm relative z-10">
+                <span className="text-brand-w1 font-medium text-sm relative z-10 no-underline">
                   {option.label}
                 </span>
               </div>
-              <span className="text-brand-neutral-100 text-xs leading-relaxed relative z-10">
-                {option.description}
-              </span>
               <span className="absolute -right-2 top-1/2 -translate-y-1/2 text-brand-neutral-600 pointer-events-none">
                 <IconComponent className="size-12" />
               </span>

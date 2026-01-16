@@ -524,14 +524,14 @@ export const Icons = {
     <svg
       width="20"
       height="20"
-      viewBox="0 0 60 45"
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
         d="M0 3.39014V20.6101H5.783V15.0601H12.217V8.93914H5.783V3.39014H0ZM12.217 8.93914L17.855 8.94014V15.0621H12.217V20.6101H24V3.39114H12.217V8.93914Z"
-        fill="black"
+        fill="currentColor"
       />
     </svg>
   ),
