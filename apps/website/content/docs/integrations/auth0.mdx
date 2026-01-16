@@ -141,9 +141,10 @@ Use protected tools for:
 ### How It Works
 
 The plugin queries Auth0 Management API on each request:
-1. **Check if permission exists** → queries `read:resource_servers` to see if `tool:<name>` is defined
-2. **If permission exists** → queries `read:users` to verify the user has it assigned
-3. **If permission does not exist** → tool is public, any authenticated user can access
+1. xmcp constructs the permission name as `tool:<name>` using the tool's `metadata.name`
+2. **Check if permission exists** → queries `read:resource_servers` to see if `tool:<name>` is defined
+3. **If permission exists** → queries `read:users` to verify the user has it assigned
+4. **If permission does not exist** → tool is public, any authenticated user can access
 
 Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
 
