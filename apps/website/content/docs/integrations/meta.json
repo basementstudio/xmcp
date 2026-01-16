@@ -1,6 +1,14 @@
 {
   "title": "Integrations",
-  "pages": ["better-auth", "mcp-ui", "openai", "polar", "workos", "clerk"],
+  "pages": [
+    "better-auth",
+    "mcp-ui",
+    "openai",
+    "polar",
+    "workos",
+    "clerk",
+    "auth0"
+  ],
   "defaultOpen": true,
   "root": true
 }

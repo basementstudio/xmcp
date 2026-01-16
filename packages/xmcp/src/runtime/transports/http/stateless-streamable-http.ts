@@ -1,5 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, {
+  Express,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
 import getRawBody from "raw-body";
@@ -10,19 +16,21 @@ import {
   HttpTransportOptions,
 } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
-import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
-import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  extractToolNamesFromRequest,
+  storeToolNamesOnRequestHeaders,
+} from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // Global type declarations for tool name context
 declare global {
-  var __XMCP_CURRENT_TOOL_NAME: string | undefined;
+  var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
 
 // no session management, POST only
@@ -272,14 +280,12 @@ export class StatelessStreamableHTTPTransport {
   private options: HttpTransportOptions;
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
-  private oauthProxy: OAuthProxy | undefined;
   private providers: Provider[] | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
-    oauthConfig?: OAuthProxyConfig | null,
     providers?: Provider[]
   ) {
     this.options = {
@@ -293,11 +299,6 @@ export class StatelessStreamableHTTPTransport {
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
     this.providers = providers;
-
-    // setup oauth proxy if configuration is provided
-    if (oauthConfig) {
-      this.oauthProxy = createOAuthProxy(oauthConfig);
-    }
 
     // Setup JSON parsing middleware FIRST
     this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
@@ -367,11 +368,6 @@ export class StatelessStreamableHTTPTransport {
 
     this.setupOpenAIAppsChallengeRoute();
 
-    // to do move this to a separate provider with the same approach as better auth
-    if (this.oauthProxy) {
-      this.app.use(this.oauthProxy.router);
-    }
-
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
@@ -379,13 +375,6 @@ export class StatelessStreamableHTTPTransport {
         next();
       });
     });
-
-    // --------------- oauth proxy ---------------
-    // TO DO validate theyoauth and better auth are not both present
-    // move this to a separate provider with the same approach as better auth
-    if (this.oauthProxy) {
-      this.app.use(this.oauthProxy.middleware);
-    }
   }
 
   /**
@@ -424,24 +413,11 @@ export class StatelessStreamableHTTPTransport {
 
   private extractAndStoreToolName(req: Request): void {
     try {
-      if (!req.body) return;
+      const toolNames = extractToolNamesFromRequest(req);
 
-      const messages: JsonRpcMessage[] = Array.isArray(req.body)
-        ? req.body
-        : [req.body];
-
-      for (const message of messages) {
-        if (
-          message.method === "tools/call" &&
-          message.params &&
-          typeof message.params === "object" &&
-          "name" in message.params &&
-          typeof message.params.name === "string"
-        ) {
-          req.headers["x-mcp-tool-name"] = message.params.name;
-          global.__XMCP_CURRENT_TOOL_NAME = message.params.name;
-          break;
-        }
+      if (toolNames.length > 0) {
+        storeToolNamesOnRequestHeaders(req, toolNames);
+        global.__XMCP_CURRENT_TOOL_NAME = toolNames[0];
       }
     } catch (error) {
       // no op
@@ -497,17 +473,6 @@ export class StatelessStreamableHTTPTransport {
       console.log(
         `${greenCheck} MCP Server running on http://${host}:${port}${this.endpoint}`
       );
-
-      if (this.oauthProxy && this.debug) {
-        console.log(`🔐 OAuth endpoints available:`);
-        console.log(
-          `   Discovery: http://${host}:${port}/.well-known/oauth-authorization-server`
-        );
-        console.log(`   Authorize: http://${host}:${port}/oauth2/authorize`);
-        console.log(`   Token: http://${host}:${port}/oauth2/token`);
-        console.log(`   Revoke: http://${host}:${port}/oauth2/revoke`);
-        console.log(`   Introspect: http://${host}:${port}/oauth2/introspect`);
-      }
 
       this.setupShutdownHandlers();
     });
