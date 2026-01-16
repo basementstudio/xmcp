@@ -5,7 +5,6 @@ import {
   templateConfigSchema,
   typescriptConfigSchema,
   corsConfigSchema,
-  oauthConfigSchema,
   experimentalConfigSchema,
   DEFAULT_PATHS,
 } from "./schemas";
@@ -101,12 +100,6 @@ export function getResolvedPathsConfig(
   }
 
   return resolvedPaths;
-}
-
-export function getResolvedOAuthConfig(
-  userConfig: XmcpConfigOutputSchema
-): z.output<typeof oauthConfigSchema> | null {
-  return userConfig?.experimental?.oauth || null;
 }
 
 export type ResolvedStdioConfig = Extract<

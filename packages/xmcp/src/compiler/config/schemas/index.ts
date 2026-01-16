@@ -9,7 +9,6 @@ export {
   stdioTransportConfigSchema,
   type StdioTransportConfig,
 } from "./transport/stdio";
-export { oauthConfigSchema, type OAuthConfig } from "./experimental/oauth";
 export {
   experimentalConfigSchema,
   type ExperimentalConfig,
