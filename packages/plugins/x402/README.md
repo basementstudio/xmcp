@@ -14,9 +14,9 @@ pnpm add @xmcp-dev/x402
 
 ```typescript
 // src/middleware.ts
-import { x402Middleware } from "@xmcp-dev/x402";
+import { x402Provider } from "@xmcp-dev/x402";
 
-export default x402Middleware({
+export default x402Provider({
   wallet: process.env.X402_WALLET!,
   defaults: {
     price: 0.01,
@@ -28,37 +28,90 @@ export default x402Middleware({
 ### Paid tools
 
 ```typescript
-// src/tools/my-tool.ts
+// src/tools/greet.ts
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
 import { paid } from "@xmcp-dev/x402";
 
-export default paid(async ({ input }) => {
-  return { content: [{ type: "text", text: `Result: ${input}` }] };
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user (paid tool - $0.01)",
+};
+
+export default paid(async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
 });
 ```
 
 ```typescript
-// src/tools/premium-tool.ts
+// src/tools/hash-string.ts
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
 import { paid } from "@xmcp-dev/x402";
 
-export default paid({ price: 0.10 }, async ({ input }) => {
-  return { content: [{ type: "text", text: `Premium: ${input}` }] };
-});
+export const schema = {
+  input: z.string().min(1).describe("The string to hash"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "hash-string",
+  description: "Hash a string using SHA-256 (paid tool - $0.05)",
+};
+
+export default paid(
+  { price: 0.05 },
+  async function hashString({ input }: InferSchema<typeof schema>) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+);
 ```
 
 ### Payment context
 
 ```typescript
+// src/tools/premium-analysis.ts
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
 import { paid, payment } from "@xmcp-dev/x402";
 
-export default paid(async ({ input }) => {
-  const { payer, amount, network } = payment();
-  return { content: [{ type: "text", text: `Paid by ${payer}` }] };
-});
+export const schema = {
+  data: z.string().describe("Data to analyze"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "premium-analysis",
+  description: "Premium data analysis tool",
+};
+
+export default paid(
+  { price: 0.10 },
+  async function premiumAnalysis({ data }: InferSchema<typeof schema>) {
+    const { payer, amount, network, transactionHash } = payment();
+
+    return {
+      analysis: `Analyzed: ${data}`,
+      payment: {
+        paidBy: payer,
+        amount: amount,
+        network: network,
+        txHash: transactionHash,
+      },
+    };
+  }
+);
 ```
 
 ## API
 
-### `x402Middleware(config)`
+### `x402Provider(config)`
 
 ```typescript
 interface X402Config {

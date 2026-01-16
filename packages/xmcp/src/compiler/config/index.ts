@@ -48,14 +48,12 @@ export type {
 
 // Template, TypeScript, and CORS configs don't need resolved types
 // They can use Zod's output types directly: z.output<typeof templateConfigSchema>
-// OAuth config is just OAuthConfig | null, can be used inline
 
 // Re-export all types from schemas
 export type {
   HttpTransportConfig,
   StdioTransportConfig,
   CorsConfig,
-  OAuthConfig,
   ExperimentalConfig,
   PathsConfig,
   BundlerConfig,

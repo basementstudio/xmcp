@@ -16,8 +16,6 @@ import {
   HttpTransportOptions,
 } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
-import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
-import { OAuthProxy } from "../../../auth/oauth/factory";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
@@ -282,14 +280,12 @@ export class StatelessStreamableHTTPTransport {
   private options: HttpTransportOptions;
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
-  private oauthProxy: OAuthProxy | undefined;
   private providers: Provider[] | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
-    oauthConfig?: OAuthProxyConfig | null,
     providers?: Provider[]
   ) {
     this.options = {
@@ -303,11 +299,6 @@ export class StatelessStreamableHTTPTransport {
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
     this.providers = providers;
-
-    // setup oauth proxy if configuration is provided
-    if (oauthConfig) {
-      this.oauthProxy = createOAuthProxy(oauthConfig);
-    }
 
     // Setup JSON parsing middleware FIRST
     this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
@@ -377,11 +368,6 @@ export class StatelessStreamableHTTPTransport {
 
     this.setupOpenAIAppsChallengeRoute();
 
-    // to do move this to a separate provider with the same approach as better auth
-    if (this.oauthProxy) {
-      this.app.use(this.oauthProxy.router);
-    }
-
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
@@ -389,13 +375,6 @@ export class StatelessStreamableHTTPTransport {
         next();
       });
     });
-
-    // --------------- oauth proxy ---------------
-    // TO DO validate theyoauth and better auth are not both present
-    // move this to a separate provider with the same approach as better auth
-    if (this.oauthProxy) {
-      this.app.use(this.oauthProxy.middleware);
-    }
   }
 
   /**
@@ -494,17 +473,6 @@ export class StatelessStreamableHTTPTransport {
       console.log(
         `${greenCheck} MCP Server running on http://${host}:${port}${this.endpoint}`
       );
-
-      if (this.oauthProxy && this.debug) {
-        console.log(`🔐 OAuth endpoints available:`);
-        console.log(
-          `   Discovery: http://${host}:${port}/.well-known/oauth-authorization-server`
-        );
-        console.log(`   Authorize: http://${host}:${port}/oauth2/authorize`);
-        console.log(`   Token: http://${host}:${port}/oauth2/token`);
-        console.log(`   Revoke: http://${host}:${port}/oauth2/revoke`);
-        console.log(`   Introspect: http://${host}:${port}/oauth2/introspect`);
-      }
 
       this.setupShutdownHandlers();
     });

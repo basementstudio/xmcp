@@ -1,8 +1,10 @@
 {
-  "name": "OAuth Provider",
-  "description": "Complete OAuth provider implementation with xmcp [experimental]",
+  "name": "auth0-http-example",
+  "description": "HTTP-based xmcp server with Auth0 authentication",
   "keywords": [
-    "authentication"
+    "http",
+    "authentication",
+    "auth0"
   ],
   "scripts": {
     "build": "xmcp build",
@@ -10,6 +12,7 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
+    "@xmcp-dev/auth0": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
   }
