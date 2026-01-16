@@ -1,5 +1,4 @@
 import { z } from "zod/v3";
-import { oauthConfigSchema } from "./oauth";
 
 // ------------------------------------------------------------
 // Adapter config schema (perhaps a separate file but it's small yet)
@@ -12,7 +11,6 @@ export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 // Experimental features schema
 // ------------------------------------------------------------
 export const experimentalConfigSchema = z.object({
-  oauth: oauthConfigSchema.optional(),
   adapter: adapterConfigSchema.optional(),
 });
 
