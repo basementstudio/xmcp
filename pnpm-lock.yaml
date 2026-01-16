@@ -519,15 +519,6 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
-  examples/oauth-provider:
-    dependencies:
-      xmcp:
-        specifier: workspace:*
-        version: link:../../packages/xmcp
-      zod:
-        specifier: ^4.0.10
-        version: 4.1.13
-
   examples/open-ai:
     dependencies:
       xmcp:
