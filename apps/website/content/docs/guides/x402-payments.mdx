@@ -1,0 +1,327 @@
+---
+title: "x402 Payments"
+metadataTitle: "Monetize Tools with x402 Payments | xmcp Documentation"
+publishedAt: "2026-01-16"
+summary: "Add cryptocurrency payments to your MCP tools using the x402 protocol."
+description: "Learn how to monetize your MCP server tools by requiring USDC payments on Base using the x402 payment protocol."
+displayTitle: "Monetize your MCP tools with x402 payments"
+---
+
+## Installation
+
+Install the x402 plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm add @xmcp-dev/x402",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm install @xmcp-dev/x402",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/x402",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/x402",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## How it works
+
+The [x402](https://www.x402.org/) protocol enables tool monetization through USDC payments on [Base](https://www.base.org/) blockchain. When a client calls a paid tool:
+
+1. The middleware intercepts the request and checks for payment
+2. If no payment is provided, it returns a `402 Payment Required` response with payment details
+3. The client submits payment through the x402 facilitator
+4. Once verified, the tool executes and payment is settled on-chain
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with your wallet address to receive payments:
+
+```bash
+# Required: Your wallet address to receive USDC payments
+X402_WALLET=0xYOUR_WALLET_ADDRESS_HERE
+
+# Optional: Custom facilitator URL (defaults to https://x402.org/facilitator)
+X402_FACILITATOR=https://x402.org/facilitator
+```
+
+### Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory:
+
+```typescript title="src/middleware.ts"
+import { x402Provider } from "@xmcp-dev/x402";
+
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  facilitator: process.env.X402_FACILITATOR,
+  debug: true,
+  defaults: {
+    price: 0.01,
+    currency: "USDC",
+    network: "base-sepolia",
+  },
+});
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wallet` | `string` | Required | Your wallet address to receive payments |
+| `facilitator` | `string` | `https://x402.org/facilitator` | Payment facilitator URL |
+| `debug` | `boolean` | `false` | Enable debug logging |
+| `defaults.price` | `number` | `0.01` | Default price per tool call in USDC |
+| `defaults.currency` | `string` | `USDC` | Payment currency |
+| `defaults.network` | `string` | `base` | Blockchain network (`base` or `base-sepolia`) |
+| `defaults.maxPaymentAge` | `number` | `300` | Maximum payment age in seconds |
+
+<Callout variant="info">
+  Use `base-sepolia` for testing and development. Switch to `base` for production deployments.
+</Callout>
+
+## Creating Paid Tools
+
+Wrap your tool handler with the `paid()` function to require payment:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { paid } from "@xmcp-dev/x402";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user (paid tool - $0.01)",
+};
+
+export default paid(async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+});
+```
+
+### Custom Pricing
+
+Override the default price for specific tools by passing options to `paid()`:
+
+```typescript title="src/tools/hash-string.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { paid } from "@xmcp-dev/x402";
+
+export const schema = {
+  input: z.string().min(1).describe("The string to hash"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "hash-string",
+  description: "Hash a string using SHA-256 (paid tool - $0.05)",
+};
+
+export default paid(
+  { price: 0.05 },
+  async function hashString({ input }: InferSchema<typeof schema>) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+);
+```
+
+### Mixing Free and Paid Tools
+
+Tools without the `paid()` wrapper remain free:
+
+```typescript title="src/tools/random-number.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "random-number",
+  description: "Generate a random number (free tool)",
+};
+
+export default async function randomNumber() {
+  return Math.random().toString();
+}
+```
+
+## Accessing Payment Context
+
+Use the `payment()` function inside paid tool handlers to access payment details:
+
+```typescript title="src/tools/premium-analysis.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { paid, payment } from "@xmcp-dev/x402";
+
+export const schema = {
+  data: z.string().describe("Data to analyze"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "premium-analysis",
+  description: "Premium data analysis tool",
+};
+
+export default paid(
+  { price: 0.10 },
+  async function premiumAnalysis({ data }: InferSchema<typeof schema>) {
+    const { payer, amount, network, transactionHash } = payment();
+
+    // Use payment context in your logic
+    return {
+      analysis: `Analyzed: ${data}`,
+      payment: {
+        paidBy: payer,
+        amount: amount,
+        network: network,
+        txHash: transactionHash,
+      },
+    };
+  }
+);
+```
+
+### Payment Context Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `payer` | `string` | Wallet address that made the payment |
+| `amount` | `string` | Amount paid in atomic units (6 decimals for USDC) |
+| `network` | `string` | Blockchain network identifier |
+| `asset` | `string` | Token contract address |
+| `toolName` | `string` | Name of the paid tool |
+| `transactionHash` | `string` | Transaction hash after settlement |
+
+## Supported Networks
+
+| Network | Network ID | Description |
+|---------|-----------|-------------|
+| `base` | `eip155:8453` | [Base](https://www.base.org/) Mainnet (production) |
+| `base-sepolia` | `eip155:84532` | [Base](https://www.base.org/) Sepolia (testnet) |
+
+## Enable HTTP Transport
+
+x402 payments require HTTP transport. Update your `xmcp.config.ts`:
+
+```typescript title="xmcp.config.ts"
+import { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+## Running the Server
+
+Start your server in development mode:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm xmcp dev",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npx xmcp dev",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn xmcp dev",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun xmcp dev",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+For production, build and start:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm xmcp build && node dist/http.js",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npx xmcp build && node dist/http.js",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn xmcp build && node dist/http.js",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun xmcp build && bun dist/http.js",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Troubleshooting
+
+### Payment Not Received
+
+If payments are not being received:
+
+- Verify your `X402_WALLET` environment variable is set correctly
+- Ensure the wallet address is a valid Ethereum address
+- Check that you're using the correct network (`base` vs `base-sepolia`)
+
+### 402 Payment Required Errors
+
+This is expected behavior when a client calls a paid tool without providing payment. The response includes payment requirements that clients use to submit payment.
+
+### Payment Context Not Available
+
+If `payment()` throws an error:
+
+- Ensure the tool is wrapped with `paid()`
+- Only call `payment()` inside the tool handler function, not at module load time
+- Verify the `x402Provider` middleware is exported as default from `middleware.ts`
+
+### Debug Mode
+
+Enable debug logging to troubleshoot payment issues:
+
+```typescript title="src/middleware.ts"
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  debug: true,
+  // ...
+});
+```

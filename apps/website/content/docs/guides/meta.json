@@ -1,6 +1,6 @@
 {
   "title": "Guides",
-  "pages": ["xmcp-mcp-server"],
+  "pages": ["xmcp-mcp-server", "x402-payments"],
   "defaultOpen": true,
   "root": true
 }
