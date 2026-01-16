@@ -10,16 +10,6 @@ description: "Secure your MCP server with OAuth 2.1 authentication. Learn about 
 
 MCP provides authorization capabilities at the transport level, enabling clients to make requests to restricted servers on behalf of resource owners. The authorization mechanism is based on OAuth 2.1 and implements several related standards.
 
-## Standards compliance
-
-MCP authorization implements a subset of these standards:
-
-- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13) - Core authorization framework
-- [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) - OAuth 2.0 Authorization Server Metadata
-- [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) - OAuth 2.0 Dynamic Client Registration Protocol
-- [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) - OAuth 2.0 Protected Resource Metadata
-- [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) - Resource Indicators for OAuth 2.0
-
 ## Available auth plugins
 
 xmcp provides plugins that handle all the OAuth complexity for you.
@@ -110,7 +100,7 @@ Tokens are bound to the specific MCP server using the `resource` parameter durin
 
 ### Resource indicators
 
-MCP clients must include the `resource` parameter (RFC 8707) in authorization and token requests. This parameter identifies the specific MCP server the token is intended for:
+MCP clients must include the `resource` parameter [(RFC 8707)](https://datatracker.ietf.org/doc/html/rfc8707) in authorization and token requests. This parameter identifies the specific MCP server the token is intended for:
 
 ```
 &resource=https%3A%2F%2Fmcp.example.com
