@@ -13,7 +13,6 @@ export type { ResourceMetadata } from "./types/resource";
 export type { OpenAIMetadata, OpenAIToolInvocation } from "./types/openai-meta";
 
 export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
-export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
