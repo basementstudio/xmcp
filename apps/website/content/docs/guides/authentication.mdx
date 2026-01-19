@@ -26,6 +26,18 @@ Some MCP servers can operate without authentication. The decision depends on how
 
 The key distinction is trust and exposure. A local STDIO server inherits trust from the user's operating system. A remote HTTP server is exposed to the network and must establish trust through authentication before processing requests.
 
+### Authentication vs authorization
+
+Authentication confirms a user's identity. Authorization controls what that user can access. Every request to your MCP server raises two questions: who is making this request, and what are they allowed to do?
+
+Not every server needs complex authorization. Sometimes verifying a valid credential is enough — if you have the key, you have access. Other servers need fine-grained control: read versus write permissions, admin versus regular users, or access restricted to specific tools. The right level of authorization depends on your use case.
+
+OAuth handles both authentication and authorization through tokens and scopes. For simpler needs, xmcp provides alternatives like API keys and JWTs.
+
+[API Keys](/docs/authentication/api-key) are static credentials shared between client and server. The client includes the key in a header with each request, and the server validates it before processing. API keys work well for server-to-server communication, internal services, or trusted clients where you control both ends. They provide authentication but not user-level authorization since all requests with the same key share the same identity.
+
+[JSON Web Tokens](/docs/authentication/jwt) are self-contained tokens that carry claims about the user, such as their identity, roles, or permissions. The server validates the token's signature without needing to call an external service. JWTs are useful when you manage authentication externally and want to pass verified user information directly to your MCP server.
+
 ## How MCP authentication works
 
 MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow. This makes authentication secure even for public clients like desktop apps and CLI tools that are not designed for persistent secret storage.
@@ -36,7 +48,12 @@ MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code
 
 When an MCP client first connects to an authenticated server, it needs to discover where and how to authenticate. This happens through a two-step process: first finding the authorization server, then retrieving its configuration.
 
+#### Resource Discovery
+
 The client starts by fetching the Protected Resource Metadata from `/.well-known/oauth-protected-resource`. This document tells the client which authorization server handles authentication for this MCP server.
+
+
+#### Authorization Server Discovery
 
 Next, the client retrieves the authorization server's configuration. For a server at `https://auth.example.com/tenant1`, the client tries these endpoints in order:
 
@@ -78,8 +95,6 @@ The URL where this document is hosted becomes the client ID. Authorization serve
 
 **Dynamic Client Registration** allows clients to register automatically by making a request to the authorization server. This creates a unique client ID for each installation.
 
-**Pre-registration** is the traditional approach where client credentials are configured in advance, either hardcoded by the developer or entered by the user.
-
 ### User authentication
 
 Once the client knows where to authenticate, it redirects the user to the authorization server's login page. The user signs in with their credentials and grants the client permission to access the MCP server on their behalf.
@@ -107,25 +122,6 @@ The resource parameter provides critical security benefits:
 - **Server validation**: MCP servers must validate that tokens were specifically issued for them
 
 When making authorization requests, clients include the MCP server's canonical URI as the resource parameter. The authorization server embeds this in the token, and the MCP server validates it before processing requests.
-
-#### Canonical server URI format
-
-The resource parameter must be a valid URI following these rules:
-
-**Valid formats:**
-- `https://mcp.example.com`
-- `https://mcp.example.com/mcp`
-- `https://mcp.example.com:8443`
-- `https://mcp.example.com/server/mcp`
-
-**Unsupported formats:**
-- `mcp.example.com` (requires scheme)
-- `https://mcp.example.com#fragment` (fragments not supported)
-- `https://mcp.example.com/` (trailing slash, unless semantically significant)
-
-<Callout variant="info">
-Use the URI form without a trailing slash unless the trailing slash is semantically significant for your server's routing.
-</Callout>
 
 ### Scopes
 
