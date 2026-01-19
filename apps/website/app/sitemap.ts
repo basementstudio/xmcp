@@ -23,6 +23,8 @@ export default async function sitemap() {
     lastModified: post.date
       ? new Date(post.date).toISOString().split("T")[0]
       : new Date().toISOString().split("T")[0],
+    changeFrequency: "weekly",
+    priority: 0.8,
   }));
 
   const docRoutes = source.getPages().flatMap((page) => {
