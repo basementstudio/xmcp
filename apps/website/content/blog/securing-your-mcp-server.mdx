@@ -1,0 +1,184 @@
+---
+title: "Securing Your MCP Server"
+description: "A practical guide to authentication for MCP servers - when you need it, how it works, and which approach fits your use case."
+summary: "A practical guide to authentication for MCP servers - when you need it, how it works, and which approach fits your use case."
+category: "guides"
+date: "2026-01-19"
+order: 9
+textureImage: "/textures/text1.png"
+authors:
+  - 0xkoller
+---
+
+You've built your MCP server. The tools work, the deployment went smoothly, and you can connect from Claude and Cursor. Then a thought hits you: anyone with this URL can access your tools, just wait until it's crawled by search engines or malicious actors. Your tools, prompts, resources, wide open.
+
+This is the moment authentication stops being theoretical. Let's talk about when you actually need it, how it works under the hood, and which approach makes sense for your situation.
+
+## A real-world example
+
+Let's make this concrete. Your company's sales team wants to query the CRM database through Claude. You're building an MCP server to make that happen.
+
+The server will run on Vercel and it needs to be accessible from anywhere since the team works remotely. That means authentication is non-negotiable. Anyone who finds the URL shouldn't be able to query your customer data.
+
+You choose Auth0 because it has built-in RBAC. Team members sign in with their existing credentials, and Auth0 handles the OAuth flow. No custom permission logic to write.
+
+Here's the twist: sales reps should only read data, while sales managers need to update deal stages. This is where Auth0's RBAC shines. You create two roles in Auth0, "Sales Rep" and "Sales Manager", and define permissions for sensitive tools.
+
+The Auth0 plugin uses a convention: if a permission named `tool:<tool-name>` exists in Auth0, only users with that permission can access the tool. No permission defined means the tool is public to all authenticated users.
+
+You create a `tool:update-deal` permission and assign it to the Sales Manager role. The tool itself needs no permission-checking code:
+
+```typescript title="tools/update-deal.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  dealId: z.string().describe("The deal ID to update"),
+  stage: z.string().describe("The new stage"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "update-deal",
+  description: "Update a deal's stage in the CRM",
+};
+
+export default async function updateDeal({ dealId, stage }: InferSchema<typeof schema>) {
+  // Auth0 RBAC handles permission checking automatically
+  // Only users with 'tool:update-deal' permission reach this code
+  
+  // Update the deal...
+  return `Deal ${dealId} updated to ${stage}`;
+}
+```
+
+Sales reps connect, authenticate, and can run queries. Those tools have no permission defined, so they're accessible to everyone. When a rep tries to update a deal, Auth0 checks for `tool:update-deal`, doesn't find it in their token, and returns "You don't have permission to use the 'update-deal' tool." Managers have the permission through their role, so they get through.
+
+This example shows authentication (signing into Auth0), authorization (the `tool:update-deal` permission that only managers have), and the decision process (why Auth0 for a remote team needing role-based access). Let's break down each concept.
+
+## When authentication matters
+
+Not every MCP server needs authentication. The deciding factor isn't complexity, it's exposure.
+
+Consider a server that runs locally on your machine via STDIO. It launches when you need it, runs with your user permissions, and dies when you're done. There's no network involved. The operating system already verified your identity when you logged in. Adding OAuth here would be pointless friction.
+
+Now consider a server deployed to Vercel. It's accessible from anywhere on the internet. Anyone who discovers the URL can invoke your tools. If those tools read from a database, call paid APIs, or modify files, you have a problem. The server has no idea who's making requests, and it treats everyone equally, which means it trusts everyone equally.
+
+The rule is simple: if your server is reachable over a network, you need to verify who's connecting before letting them do anything.
+
+## Authentication vs authorization
+
+These terms get used interchangeably, but they answer different questions.
+
+Authentication asks: *who are you?* It's the login screen, the password check, the OAuth redirect. In our sales team example, authentication is what happens when a team member signs into Auth0. After that, the server knows it's dealing with Sarah from sales, not some anonymous request.
+
+Authorization asks: *what can you do?* Just because Sarah authenticated doesn't mean she can do everything. She can query the CRM, but can she update deals? That depends on her role. Authorization happens after authentication and controls what the verified user is allowed to access.
+
+Not every server needs complex authorization. If your MCP server is for a small team and everyone should have the same access, authentication alone might be enough. But when you need sales reps to query data while only managers can modify it—like in our example—you're thinking about authorization. That's where Auth0's RBAC and the `tool:<name>` permission convention come in.
+
+## How MCP authentication works
+
+MCP uses OAuth 2.1, but with a twist that matters for how clients work.
+
+Think about the clients that connect to MCP servers: Claude Desktop, Cursor, command-line tools, custom applications. These are desktop apps and CLIs running on user machines. Unlike a backend server that can safely store a client secret, these apps can be decompiled, inspected, and reverse-engineered. Any secret embedded in them isn't really secret.
+
+This is why MCP mandates PKCE (Proof Key for Code Exchange). When a client starts the authentication flow, it generates a random string called a code verifier. It hashes this string and sends the hash to the authorization server. Later, when exchanging the authorization code for tokens, the client proves it was the one that started the flow by presenting the original verifier. Even if someone intercepts the authorization code, they can't use it without the verifier that only the legitimate client possesses.
+
+There's another layer of protection: resource indicators. When a client requests a token, it specifies which MCP server the token is for. The token gets bound to that specific server. If an attacker somehow obtains a token meant for your server and tries to use it against a different server, it won't work. This prevents a whole class of token confusion attacks.
+
+The result is an authentication system designed for the reality of how MCP clients actually work—not how we wish they worked.
+
+## Choosing your approach
+
+xmcp gives you three paths depending on what you're building.
+
+### OAuth plugins
+
+This is the full solution for servers that need to identify individual users. You get login flows, session management, and the ability to control what each user can access. xmcp provides plugins that handle the OAuth complexity so you can focus on your tools.
+
+Four providers are available, each with a different sweet spot:
+
+- **Better Auth** when you want full control and self-hosting with PostgreSQL
+- **Clerk** when you want fast setup with excellent developer experience
+- **Auth0** when you need enterprise features like RBAC or machine-to-machine apps
+- **WorkOS** when enterprise SSO and organization management are priorities
+
+All four handle the OAuth flow, token management, and session handling. You configure the provider, and your tools can access the authenticated user's identity.
+
+### API keys
+
+Sometimes you don't need user identity. You just need to verify that the request comes from an authorized source. API keys work well for server-to-server communication, internal tools, or any situation where you control both ends of the connection.
+
+```typescript title="middleware.ts"
+import { apiKeyAuthMiddleware } from "xmcp";
+
+export default apiKeyAuthMiddleware({
+  headerName: "x-api-key",
+  validateApiKey: async (apiKey) => {
+    return apiKey === process.env.API_KEY!;
+  },
+});
+```
+
+The client includes the key in each request. The server validates it. Simple, effective, no redirects or token exchanges.
+
+### JWT validation
+
+If you already have an authentication system that issues JWTs, you might not need xmcp to handle login flows. Instead, your MCP server can validate tokens that your existing system issued.
+
+```typescript title="middleware.ts"
+import { jwtAuthMiddleware } from "xmcp";
+
+export default jwtAuthMiddleware({
+  secret: process.env.JWT_SECRET!,
+  algorithms: ["HS256"],
+});
+```
+
+The JWT carries claims about the user—their identity, roles, permissions. Your tools can read these claims and make authorization decisions. The authentication happened elsewhere; your MCP server just enforces it.
+
+## Getting started
+
+If you need full OAuth authentication, start with the plugins:
+
+<OAuthPlugins />
+
+Each plugin has detailed setup instructions in the documentation. For API keys and JWT validation, the middleware configuration above is most of what you need.
+
+For a deeper dive into how OAuth discovery, client registration, and token binding work, see the [Authentication Guide](/docs/guides/authentication).
+
+## FAQ
+
+**Do I need scopes?**
+
+Not always. Scopes let you limit what a token can do—a token with `read` scope can fetch data but not modify it. This matters when different clients need different permission levels, or when users should grant partial access. If every authenticated user gets the same access, you can skip scopes entirely.
+
+**Can I test authentication locally?**
+
+Yes. OAuth plugins work with local redirect URIs during development. You'll authenticate through your browser and get redirected back to your local server. The flow is identical to production, just with local URLs.
+
+**What if I need to switch providers later?**
+
+The plugins have similar APIs for accessing user information. Switching providers means updating your middleware configuration and potentially migrating user data, but your tool code that reads user identity should need minimal changes.
+
+**Can I combine approaches?**
+
+You could use OAuth for user-facing access and API keys for internal service calls. This typically means different endpoints or middleware configurations rather than mixing them on the same route.
+
+**Is authentication really necessary for my MCP server?**
+
+If it's exposed to the internet, yes. Research in 2025 found nearly 2,000 MCP servers publicly accessible without any authentication—anyone could access their tool listings and potentially exfiltrate data. Authentication was optional in the early MCP spec, and many developers skipped it. Don't be one of them. If your server is reachable over a network, lock it down.
+
+**Why PKCE instead of a client secret?**
+
+MCP clients—Claude Desktop, Cursor, CLI tools, serverless functions—run in environments where storing secrets securely is difficult or impossible. Apps can be decompiled, containers inspected, environment variables leaked. PKCE lets these "public clients" use OAuth securely without relying on a secret that isn't actually secret.
+
+**Should I build my own OAuth implementation?**
+
+Probably not. Building a compliant OAuth server means implementing `/authorize`, `/token`, and optionally `/register` endpoints, plus login screens, consent flows, PKCE validation, JWKS rotation, scope checks, and CSRF protection. Many developers attempt this and struggle. Use a hosted identity provider like Auth0, Clerk, WorkOS, or Better Auth—they handle the complexity so you can focus on your tools.
+
+## References
+
+- [MCP Specification - Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13)
+- [RFC 7636 - PKCE](https://datatracker.ietf.org/doc/html/rfc7636)
+- [RFC 8707 - Resource Indicators](https://datatracker.ietf.org/doc/html/rfc8707)
