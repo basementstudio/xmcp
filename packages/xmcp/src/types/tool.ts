@@ -25,8 +25,13 @@ export interface ToolMetadata {
   annotations?: ToolAnnotations;
   /** Metadata for the tool. Supports nested OpenAI metadata and other vendor extensions. */
   _meta?: {
-    openai?: OpenAIMetadata;
+    /**
+     * Unified UI metadata for both MCP Apps and OpenAI widgets.
+     * Prefer configuring this object for all visual tools.
+     */
     ui?: OpenAIMetadata;
+    /** @deprecated Configure `ui` instead. Preserved for backward compatibility. */
+    openai?: OpenAIMetadata;
     [key: string]: unknown;
   };
 }

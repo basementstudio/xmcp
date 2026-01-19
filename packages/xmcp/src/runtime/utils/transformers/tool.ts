@@ -59,14 +59,16 @@ export function transformToolHandler(
     }
 
     if (typeof response === "string" || typeof response === "number") {
-      // Check if we have OpenAI metadata to attach
-      const hasOpenAIMeta =
+      // Check if we have UI/OpenAI metadata to attach
+      const hasWidgetMeta =
         meta &&
         typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"));
+        Object.keys(meta).some(
+          (key) => key.startsWith("openai/") || key.startsWith("ui/")
+        );
 
-      if (hasOpenAIMeta) {
-        // For OpenAI widgets, return empty text content with metadata
+      if (hasWidgetMeta) {
+        // For UI widgets, return empty text content with metadata
         // The actual HTML is served by the auto-generated resource
         return {
           content: [
@@ -103,11 +105,13 @@ export function transformToolHandler(
     ) {
       const meta = (response as any)._meta;
 
-      // Check if _meta contains OpenAI-specific keys (keys starting with "openai/")
+      // Check if _meta contains widget-specific keys (keys starting with "openai/" or "ui/")
       if (
         meta &&
         typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"))
+        Object.keys(meta).some(
+          (key) => key.startsWith("openai/") || key.startsWith("ui/")
+        )
       ) {
         // Transform to include empty text content with the _meta
         return {
@@ -156,16 +160,16 @@ export function transformToolHandler(
           `  content: [{ type: "text", text: "fallback" }],\n` +
           `  structuredContent: { your: "data" }\n` +
           `}\n\n` +
-          `Or for OpenAI metadata only:\n` +
+          `Or for UI metadata only:\n` +
           `{\n` +
           `  _meta: {\n` +
-          `    "openai/...": ...\n` +
+          `    "ui/...": ...\n` +
           `  }\n` +
           `}`
       );
     }
 
-    // Check if response has at least one of: content, structuredContent, or valid OpenAI _meta
+    // Check if response has at least one of: content, structuredContent, or valid widget _meta
     const hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
 
