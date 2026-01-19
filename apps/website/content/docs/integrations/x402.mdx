@@ -40,7 +40,7 @@ Install the x402 plugin:
   defaultTab="pnpm"
 />
 
-## Wallet Setup
+## Set up your wallet
 
 Before integrating the plugin, you need a wallet address to receive payments:
 
@@ -49,7 +49,7 @@ Before integrating the plugin, you need a wallet address to receive payments:
 3. For testing, use Base Sepolia testnet and get test USDC from a faucet
 
 <Callout variant="info">
-  The x402 protocol uses USDC stablecoin for payments. On Base mainnet, 1 USDC = $1 USD.
+  The x402 protocol uses USDC stablecoin for payments. On Base mainnet, 1 USDC = 1 USD.
 </Callout>
 
 ### Environment Variables
@@ -90,26 +90,30 @@ export default x402Provider({
   - **`network`**: Blockchain network - `"base"` or `"base-sepolia"` (default: `"base"`)
   - **`maxPaymentAge`**: Maximum payment age in seconds (default: `300`)
 
-## Mark Tools as Paid
+## Monetize a Tool
 
 Wrap your tool functions with `paid()` to require payment:
 
 ```typescript title="src/tools/analyze.ts"
 import { paid } from "@xmcp-dev/x402";
 
-export default paid(async function analyze({ data }) {
-  // Tool logic here
-  return `Analysis complete for: ${data}`;
-});
+export default paid(
+  { price: 0.05 },
+  async function analyze({ data }) {
+    // Tool logic here
+    return `Analysis complete for: ${data}`;
+  }
+);
 ```
 
-### Custom Pricing
+### Pricing
 
-Override default pricing for specific tools:
+You can set a custom price for each tool by passing a `price` option to `paid()`. If not specified, the tool will use the default price from your provider configuration. If the provider doesn't specify a default price either, the tool will cost **0.01 USDC** per call.
 
 ```typescript title="src/tools/premium-analysis.ts"
 import { paid } from "@xmcp-dev/x402";
 
+// This tool costs 0.10 USDC per call
 export default paid(
   { price: 0.10 },
   async function premiumAnalysis({ data }) {
@@ -119,14 +123,24 @@ export default paid(
 );
 ```
 
+```typescript title="src/tools/basic-tool.ts"
+import { paid } from "@xmcp-dev/x402";
+
+// This tool uses the provider's default price,
+// or 0.01 USDC if no default is configured
+export default paid(async function basicTool({ input }) {
+  return `Processed: ${input}`;
+});
+```
+
 ### Tool Options
 
-- **`price`**: Override default price for this tool
+- **`price`**: Price in USDC for this tool (falls back to provider default, then 0.01 USDC)
 - **`network`**: Override default network
 - **`maxPaymentAge`**: Override maximum payment age
 - **`description`**: Description used in payment requirements
 
-## Access Payment Context
+## Get Payment Details
 
 Access payment details inside your tool using the `payment()` function:
 
@@ -138,19 +152,6 @@ export default paid(async function paidGreet({ name }) {
 
   return `Hello, ${name}! Payment received from ${payer}. Transaction: ${transactionHash}`;
 });
-```
-
-### Payment Context Object
-
-```typescript
-{
-  payer: string;           // Payer's wallet address
-  amount: string;          // Amount paid in atomic units
-  network: string;         // EIP155 chain ID (e.g., "eip155:8453")
-  asset: string;           // USDC token address
-  toolName: string;        // Name of the paid tool
-  transactionHash?: string; // Blockchain transaction hash
-}
 ```
 
 ## How Payment Flow Works
@@ -175,29 +176,6 @@ The plugin supports two networks:
 |---------|----------|----------|
 | `base` | 8453 | Production with real USDC |
 | `base-sepolia` | 84532 | Testing with testnet USDC |
-
-## Example
-
-Here's a complete example with free and paid tools:
-
-```typescript title="src/tools/hash-string.ts"
-import { paid } from "@xmcp-dev/x402";
-import { createHash } from "crypto";
-
-export default paid(
-  { price: 0.05 },
-  async function hashString({ input }) {
-    const hash = createHash("sha256").update(input).digest("hex");
-    return hash;
-  }
-);
-```
-
-```typescript title="src/tools/random-number.ts"
-export default async function randomNumber() {
-  return Math.random().toString();
-}
-```
 
 ## Troubleshooting
 
