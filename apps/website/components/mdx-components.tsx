@@ -6,7 +6,6 @@ import { ConceptBoxes, ConceptBox } from "./concept-boxes";
 import { Callout } from "./ui/callout";
 import { Video } from "./video";
 import { McpConnect } from "./mcp-connect";
-
 import { OAuthPlugins } from "./oauth-plugins";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
