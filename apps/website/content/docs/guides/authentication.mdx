@@ -30,13 +30,13 @@ The key distinction is trust and exposure. A local STDIO server inherits trust f
 
 Authentication confirms a user's identity. Authorization controls what that user can access. Every request to your MCP server raises two questions: who is making this request, and what are they allowed to do?
 
-Not every server needs complex authorization. Sometimes verifying a valid credential is enough, if you have the key, you have access. Other servers need fine-grained control: read versus write permissions, admin versus regular users, or access restricted to specific tools. The right level of authorization depends on your use case.
+Not every server needs complex authorization. Sometimes a valid credential is enough to grant access. Other servers require fine-grained control: different permissions for different users, or access restricted to specific tools.
 
 OAuth handles both authentication and authorization through tokens and scopes. For simpler needs, xmcp provides alternatives like API keys and JWTs.
 
-[API Keys](/docs/authentication/api-key) are static credentials shared between client and server. The client includes the key in a header with each request, and the server validates it before processing. API keys work well for server-to-server communication, internal services, or trusted clients where you control both ends. They provide authentication but not user-level authorization since all requests with the same key share the same identity.
+[API Keys](/docs/authentication/api-key) are static credentials included in each request. They work well for server-to-server communication or internal services where you control both ends.
 
-[JSON Web Tokens](/docs/authentication/jwt) are self-contained tokens that carry claims about the user, such as their identity, roles, or permissions. The server validates the token's signature without needing to call an external service. JWTs are useful when you manage authentication externally and want to pass verified user information directly to your MCP server.
+[JSON Web Tokens](/docs/authentication/jwt) are self-contained tokens that carry user claims like identity and roles. They're useful when you manage authentication externally and want to pass verified user information to your MCP server.
 
 ## How MCP authentication works
 
