@@ -3,7 +3,7 @@ title: "Authentication"
 metadataTitle: "MCP Server Authentication Guide | xmcp Documentation"
 publishedAt: "2026-01-19"
 summary: "Learn how authentication works on MCP servers with human-based interaction."
-description: "Secure your MCP server with OAuth 2.1, API keys, or JWT tokens. Understand authentication vs authorization, PKCE, scopes, and token-based access control. Integrate with Better Auth, Clerk,Auth0, or WorkOS."
+description: "Secure your MCP server with OAuth 2.1, API keys, or JWT tokens. Understand authentication vs authorization, PKCE, scopes, and token-based access control. Integrate with Better Auth, Clerk, Auth0, or WorkOS."
 ---
 
 ## Overview
@@ -26,11 +26,11 @@ Some MCP servers can operate without authentication. The decision depends on how
 
 The key distinction is trust and exposure. A local STDIO server inherits trust from the user's operating system. A remote HTTP server is exposed to the network and must establish trust through authentication before processing requests.
 
-### Authentication vs authorization
+## Authentication vs authorization
 
 Authentication confirms a user's identity. Authorization controls what that user can access. Every request to your MCP server raises two questions: who is making this request, and what are they allowed to do?
 
-Not every server needs complex authorization. Sometimes verifying a valid credential is enough — if you have the key, you have access. Other servers need fine-grained control: read versus write permissions, admin versus regular users, or access restricted to specific tools. The right level of authorization depends on your use case.
+Not every server needs complex authorization. Sometimes verifying a valid credential is enough, if you have the key, you have access. Other servers need fine-grained control: read versus write permissions, admin versus regular users, or access restricted to specific tools. The right level of authorization depends on your use case.
 
 OAuth handles both authentication and authorization through tokens and scopes. For simpler needs, xmcp provides alternatives like API keys and JWTs.
 
