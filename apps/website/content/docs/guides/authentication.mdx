@@ -10,52 +10,46 @@ description: "Secure your MCP server with OAuth 2.1 authentication. Learn about 
 
 MCP provides authorization capabilities at the transport level, enabling clients to make requests to restricted servers on behalf of resource owners. The authorization mechanism is based on OAuth 2.1 and implements several related standards.
 
-## Available auth plugins
+## Quickstart
 
-xmcp provides plugins that handle all the OAuth complexity for you.
+xmcp provides authentication plugins that handle the entire OAuth flow, enabling login requirements and role-based access control for your tools.
 
 <OAuthPlugins />
 
 ## When do you need authentication?
 
-Not every MCP server needs authentication. The decision depends on how your server is deployed and what it exposes.
+Some MCP servers can operate without authentication. The decision depends on how your server is deployed and what it exposes.
 
 **HTTP-based MCP servers** that are deployed remotely should implement authentication. When your server is accessible over the network, you need to verify who is making requests before granting access to tools and resources. This applies to servers deployed on platforms like Vercel, AWS, or any cloud provider, as well as self-hosted servers exposed to the internet.
 
-**STDIO-based MCP servers** running locally on a user's machine typically don't need authentication. Since the server runs in the user's own environment with their permissions, the user is implicitly trusted. Instead of OAuth, these servers should retrieve any needed credentials from environment variables or local configuration files.
+**STDIO-based MCP servers** running locally on a user's machine can typically skip authentication. Since the server runs in the user's own environment with their permissions, the user is implicitly trusted. Instead of OAuth, these servers should retrieve any needed credentials from environment variables or local configuration files.
 
 The key distinction is trust and exposure. A local STDIO server inherits trust from the user's operating system. A remote HTTP server is exposed to the network and must establish trust through authentication before processing requests.
 
 ## How MCP authentication works
 
-MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow. This makes authentication secure even for public clients like desktop apps and CLI tools that cannot safely store long-term secrets.
+MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow. This makes authentication secure even for public clients like desktop apps and CLI tools that are not designed for persistent secret storage.
 
 ![MCP Authentication Flow](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/auth-diagram.svg)
 
 ### Discovery
 
-When an MCP client first connects to an authenticated server, it needs to discover where and how to authenticate. The client fetches metadata from well-known URLs that describe the authorization server and its capabilities.
+When an MCP client first connects to an authenticated server, it needs to discover where and how to authenticate. This happens through a two-step process: first finding the authorization server, then retrieving its configuration.
 
-The server exposes its authentication requirements at `/.well-known/oauth-protected-resource`, which tells clients where to find the authorization server. The authorization server then provides its endpoints at `/.well-known/oauth-authorization-server`, including where to send users for login and where to exchange tokens.
+The client starts by fetching the Protected Resource Metadata from `/.well-known/oauth-protected-resource`. This document tells the client which authorization server handles authentication for this MCP server.
 
-Servers can also indicate authentication requirements dynamically by returning a `401 Unauthorized` response with the metadata URL in the header:
-
-```http
-HTTP/1.1 401 Unauthorized
-WWW-Authenticate: Bearer resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource"
-```
-
-This approach is useful when the same server handles both authenticated and unauthenticated requests on different endpoints.
-
-<Callout variant="info">
-When discovering authorization server metadata, clients try multiple well-known paths in order. For a server at `https://auth.example.com/tenant1`:
+Next, the client retrieves the authorization server's configuration. For a server at `https://auth.example.com/tenant1`, the client tries these endpoints in order:
 
 1. `https://auth.example.com/.well-known/oauth-authorization-server/tenant1`
 2. `https://auth.example.com/.well-known/openid-configuration/tenant1`
 3. `https://auth.example.com/tenant1/.well-known/openid-configuration`
 
-This fallback mechanism ensures compatibility with different authorization server configurations.
-</Callout>
+For servers without a path component (like `https://auth.example.com`), the client tries:
+
+1. `https://auth.example.com/.well-known/oauth-authorization-server`
+2. `https://auth.example.com/.well-known/openid-configuration`
+
+The authorization server metadata includes the `authorization_endpoint` where users sign in and the `token_endpoint` where clients exchange authorization codes for access tokens.
 
 ### Client registration
 
@@ -90,13 +84,13 @@ The URL where this document is hosted becomes the client ID. Authorization serve
 
 Once the client knows where to authenticate, it redirects the user to the authorization server's login page. The user signs in with their credentials and grants the client permission to access the MCP server on their behalf.
 
-PKCE protects this flow by generating a unique code verifier for each authentication attempt. The client sends a hashed version of this verifier with the authorization request and proves possession of the original when exchanging the authorization code for tokens. This prevents attackers from intercepting and using authorization codes.
+PKCE protects this flow by generating a unique code verifier for each authentication attempt. The client sends a hashed version of this verifier with the authorization request and proves possession of the original when exchanging the authorization code for tokens. This ensures authorization codes remain secure even if intercepted.
 
 ### Token-based access
 
 After successful authentication, the client receives an access token. This token is included in every request to the MCP server via the `Authorization: Bearer` header. The server validates the token and extracts user information to authorize the request.
 
-Tokens are bound to the specific MCP server using the `resource` parameter during authentication. This prevents tokens issued for one server from being used to access another, protecting against token confusion attacks.
+Tokens are bound to the specific MCP server using the `resource` parameter during authentication. This ensures tokens issued for one server remain valid only for that server, protecting against token confusion attacks.
 
 ### Resource indicators
 
@@ -108,8 +102,8 @@ MCP clients must include the `resource` parameter [(RFC 8707)](https://datatrack
 
 The resource parameter provides critical security benefits:
 
-- **Audience binding**: Tokens are bound to a specific MCP server and cannot be used elsewhere
-- **Token confusion prevention**: Prevents attackers from using tokens issued for one server to access another
+- **Audience binding**: Tokens are bound to a specific MCP server and are valid only for the intended server
+- **Token confusion prevention**: Ensures tokens issued for one server remain valid only for that server
 - **Server validation**: MCP servers must validate that tokens were specifically issued for them
 
 When making authorization requests, clients include the MCP server's canonical URI as the resource parameter. The authorization server embeds this in the token, and the MCP server validates it before processing requests.
@@ -124,9 +118,9 @@ The resource parameter must be a valid URI following these rules:
 - `https://mcp.example.com:8443`
 - `https://mcp.example.com/server/mcp`
 
-**Invalid formats:**
-- `mcp.example.com` (missing scheme)
-- `https://mcp.example.com#fragment` (contains fragment)
+**Unsupported formats:**
+- `mcp.example.com` (requires scheme)
+- `https://mcp.example.com#fragment` (fragments not supported)
 - `https://mcp.example.com/` (trailing slash, unless semantically significant)
 
 <Callout variant="info">
@@ -146,7 +140,7 @@ Scopes are particularly useful when:
 
 The MCP server advertises its supported scopes in the protected resource metadata, and clients can request specific scopes during the authorization flow.
 
-For example, a token with only the `read` scope could access tools that fetch data but would be rejected when trying to use tools that modify data. This provides fine-grained access control beyond simple authentication.
+For example, a token with only the `read` scope could access tools that fetch data but would require additional scopes to use tools that modify data. This provides fine-grained access control beyond simple authentication.
 
 When initiating authentication, clients determine which scopes to request using this priority order:
 
