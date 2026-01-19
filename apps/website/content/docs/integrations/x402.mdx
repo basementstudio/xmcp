@@ -46,7 +46,7 @@ Before integrating the plugin, you need a wallet address to receive payments:
 
 1. Create or use an existing Ethereum-compatible wallet (e.g., Coinbase Wallet, MetaMask)
 2. Get your wallet's public address (starts with `0x`)
-3. For testing, use Base Sepolia testnet and get test USDC from a faucet
+3. For testing, use Base Sepolia testnet and get test USDC from the [Coinbase Developer Platform](https://portal.cdp.coinbase.com/) under **Wallets > Faucet**
 
 <Callout variant="info">
   The x402 protocol uses USDC stablecoin for payments. On Base mainnet, 1 USDC = 1 USD.
@@ -153,20 +153,6 @@ export default paid(async function paidGreet({ name }) {
   return `Hello, ${name}! Payment received from ${payer}. Transaction: ${transactionHash}`;
 });
 ```
-
-## How Payment Flow Works
-
-1. Client calls a paid tool
-2. Server responds with `402 Payment Required` and payment requirements
-3. Client signs a payment authorization
-4. Client retries the request with payment in the `_meta` field
-5. Server verifies payment with the facilitator
-6. Tool executes and server settles the payment on-chain
-7. Response includes transaction hash in `_meta["x402/payment-response"]`
-
-<Callout variant="warning">
-  Tools without the `paid()` wrapper remain free. Only wrapped tools require payment.
-</Callout>
 
 ## Networks
 
