@@ -1,0 +1,112 @@
+---
+title: "HTTP 402 Payment Not Found"
+description: "Pay-per-use monetization for MCP tools with x402."
+summary: "Pay-per-use monetization for MCP tools with x402."
+category: "engineering"
+date: "2026-01-20"
+order: 2
+featured: true
+authors:
+  - fveiras_
+---
+
+HTTP 402 Payment Required has been in the spec since 1999. Reserved for future use. 25 years later, [Coinbase built x402](https://docs.cdp.coinbase.com/x402/docs/welcome): a protocol that finally gives it a purpose.
+
+MCP tools can now charge per request using crypto micropayments. No subscriptions, no license keys, no accounts. Just pay and use.
+
+## Why crypto for payments
+
+Traditional monetization requires setup. Users create accounts, enter payment methods, manage subscriptions. That friction makes sense for SaaS products, but not for API calls that cost fractions of a cent.
+
+With x402, a client sends a signed payment, the server verifies it, the tool executes. No accounts, no payment processors, no recurring billing.
+
+## How x402 works
+
+[x402](https://www.x402.org/) implements HTTP 402 using USDC on Base. When a client calls a paid tool:
+
+1. The server responds with payment requirements
+2. The client signs a payment authorization
+3. The request continues with proof of payment
+4. Payment settles on-chain after execution
+
+![x402 payment flow](https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/images/x402-diagram.svg)
+
+The payment requirements include everything the client needs to construct a valid payment:
+
+```json
+{
+  "error": "Payment required",
+  "accepts": [{
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "amount": "50000",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x..."
+  }]
+}
+```
+
+The `amount` is in atomic units (6 decimals for USDC), so `50000` equals $0.05. The client signs an authorization, attaches it to the retry request, and the server verifies it with a facilitator before executing the tool.
+
+No accounts. No API keys. No subscriptions. Just pay-per-use.
+
+## Enabling agentic commerce
+
+It's not crazy to think that in the near future, agents will have their own wallets and budgets. They'll discover tools at runtime, decide if the price is worth it, and pay on the spot.
+
+One agent needs a capability it doesn't have. It finds another that does, pays for the call, and moves on. No human approving each transaction. That future needs payment infrastructure that works at machine speed. x402 is a step in that direction.
+
+## Making it work with xmcp
+
+We built an [x402 plugin](/docs/integrations/x402) that handles all of this at the transport layer. You don't need to think about payment verification, signature validation, or settlement. Just wrap your tools.
+
+```typescript title="src/middleware.ts"
+import { x402Provider } from "@xmcp-dev/x402";
+
+export default x402Provider({
+  wallet: process.env.X402_WALLET,
+  defaults: {
+    price: 0.01,
+    currency: "USDC",
+    network: "base",
+  },
+});
+```
+
+```typescript title="src/tools/paid-tool.ts"
+import { paid } from "@xmcp-dev/x402";
+
+export default paid(async function paidTool({ input }) {
+  return `Processed: ${input}`;
+});
+```
+
+That's it. The middleware intercepts requests, validates payments, and settles transactions. Your tool code stays clean.
+
+## Per-tool pricing
+
+Not every tool costs the same. Some are simple lookups, others call expensive APIs or run heavy compute.
+
+```typescript
+export default paid(
+  { price: 0.05 },
+  async function expensiveTool({ input }) {
+    // This one costs 5 cents
+    return result;
+  }
+);
+```
+
+Tools without `paid()` stay free. Mix and match as needed.
+
+## Why stablecoins
+
+Micropayments need stable value. Charging $0.01 for a tool call doesn't work if the currency swings 10% overnight. USDC is pegged to USD, so prices stay predictable for both sides.
+
+Base keeps fees low enough that charging fractions of a cent makes sense. For testing, use `base-sepolia`. For production, use `base`.
+
+## Looking forward
+
+Micropayments have been "almost here" for decades. High fees and slow settlement made them impractical. Low-cost L2s finally changed that. x402 provides the protocol. xmcp makes it easy to implement.
+
+If you're building MCP servers that charge per request, check out our [monetization guide](/docs/guides/monetization) or join us on [Discord](https://discord.gg/d9a7JBBxV9).
