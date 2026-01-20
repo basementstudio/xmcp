@@ -20,14 +20,19 @@ export function injectHttpVariables(
     return {};
   }
 
+  const debug = mode === "development";
+
   return {
     HTTP_CONFIG: JSON.stringify({
       port: resolvedConfig.port,
       host: resolvedConfig.host,
       bodySizeLimit: resolvedConfig.bodySizeLimit,
       endpoint: resolvedConfig.endpoint,
-      debug: mode === "development",
+      debug,
     }),
+    // Individual variables for adapter runtime files
+    HTTP_DEBUG: debug,
+    HTTP_BODY_SIZE_LIMIT: JSON.stringify(resolvedConfig.bodySizeLimit ?? "10mb"),
   };
 }
 
@@ -36,6 +41,7 @@ export type HttpVariables = ReturnType<typeof injectHttpVariables>;
 export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
   const corsConfig = getResolvedCorsConfig(httpConfig);
 
+  // Provide both consolidated config and individual variables for adapter compatibility
   return {
     HTTP_CORS_CONFIG: JSON.stringify({
       origin: corsConfig.origin ?? "",
@@ -45,6 +51,25 @@ export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
       credentials: corsConfig.credentials ?? false,
       maxAge: corsConfig.maxAge ?? 0,
     }),
+    // Individual variables for adapter runtime files
+    HTTP_CORS_ORIGIN: JSON.stringify(corsConfig.origin ?? "*"),
+    HTTP_CORS_METHODS: JSON.stringify(
+      Array.isArray(corsConfig.methods)
+        ? corsConfig.methods.join(",")
+        : corsConfig.methods ?? ""
+    ),
+    HTTP_CORS_ALLOWED_HEADERS: JSON.stringify(
+      Array.isArray(corsConfig.allowedHeaders)
+        ? corsConfig.allowedHeaders.join(",")
+        : corsConfig.allowedHeaders ?? ""
+    ),
+    HTTP_CORS_EXPOSED_HEADERS: JSON.stringify(
+      Array.isArray(corsConfig.exposedHeaders)
+        ? corsConfig.exposedHeaders.join(",")
+        : corsConfig.exposedHeaders ?? ""
+    ),
+    HTTP_CORS_CREDENTIALS: corsConfig.credentials ?? false,
+    HTTP_CORS_MAX_AGE: corsConfig.maxAge ?? 86400,
   };
 }
 

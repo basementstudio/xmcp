@@ -28,6 +28,8 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-express.js");
     } else if (xmcpConfig.experimental?.adapter === "nextjs") {
       neededFiles.push("adapter-nextjs.js");
+    } else if (xmcpConfig.experimental?.adapter === "nestjs") {
+      neededFiles.push("adapter-nestjs.js");
     } else {
       neededFiles.push("http.js");
     }
@@ -118,6 +120,92 @@ const expressTypeDefinition = `
 export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
+const nestJsTypeDefinition = `
+import { Request } from "express";
+import { CanActivate, ExecutionContext, DynamicModule } from "@nestjs/common";
+
+// Module options
+export interface XmcpModuleOptions {
+  /**
+   * If true, the default /mcp controller will not be registered.
+   * Use this when you want to create your own custom MCP controller.
+   * @default false
+   */
+  disableController?: boolean;
+}
+
+// Module exports
+export declare class XmcpModule {
+  static forRoot(options?: XmcpModuleOptions): DynamicModule;
+}
+
+/**
+ * Core NestJS module for xmcp that provides only the XmcpService.
+ * Use this module when you want to create your own custom MCP controller.
+ */
+export declare class XmcpCoreModule {}
+
+export { XmcpService } from './xmcp.service';
+export { XmcpController } from './xmcp.controller';
+
+// Auth exports
+export declare class XmcpAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): Promise<boolean>;
+}
+
+export declare function XmcpAuth(config: AuthConfig): MethodDecorator & ClassDecorator;
+
+/**
+ * Parameter decorator to extract the authenticated user's AuthInfo from the request.
+ */
+export declare const Auth: () => ParameterDecorator;
+
+/**
+ * Combined decorator that applies both the XmcpAuthGuard and XmcpAuth configuration.
+ */
+export declare function McpAuth(config: AuthConfig): MethodDecorator & ClassDecorator;
+
+export declare const AUTH_CONFIG_KEY: string;
+
+export declare class ResourceMetadataController {
+  constructor(authorizationServers?: string[]);
+  getMetadata(req: Request, res: Response): void;
+  handleOptions(res: Response): void;
+}
+
+export declare const AUTHORIZATION_SERVERS: string;
+
+export type AuthInfo = {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  resource?: URL;
+  extra?: Record<string, unknown>;
+};
+
+export type VerifyToken = (
+  req: Request,
+  bearerToken?: string
+) => Promise<AuthInfo | undefined>;
+
+export type AuthConfig = {
+  verifyToken: VerifyToken;
+  required?: boolean;
+  requiredScopes?: string[];
+};
+
+export type OAuthProtectedResourceMetadata = {
+  resource: string;
+  authorization_servers: string[];
+  bearer_methods_supported?: string[];
+  resource_documentation?: string;
+  introspection_endpoint?: string;
+  revocation_endpoint?: string;
+  [key: string]: unknown;
+};
+`;
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -136,6 +224,8 @@ export class CreateTypeDefinitionPlugin {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "express") {
             typeDefinitionContent = expressTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter == "nestjs") {
+            typeDefinitionContent = nestJsTypeDefinition;
           }
           fs.writeFileSync(
             path.join(adapterOutputPath, "index.d.ts"),
