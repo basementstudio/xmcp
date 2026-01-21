@@ -14,20 +14,15 @@ MCP servers can monetize tools through payment verification. xmcp supports two a
 
 xmcp provides monetization plugins that handle payment verification and access control for your tools.
 
-| Plugin | Payment Model | Best For |
-|--------|---------------|----------|
-| [Polar](/docs/integrations/polar) | License keys | Subscriptions, usage metering |
-| [x402](/docs/integrations/x402) | USDC on Base | Pay-per-use, micropayments |
+<MonetizationPlugins />
 
 ## When do you need monetization?
 
 Not every MCP server needs monetization. The decision depends on how your tools are deployed and what value they provide.
 
-**Monetization makes sense when** your tools provide significant value that justifies payment. This includes tools that access proprietary data, perform expensive computations, call paid external APIs, or provide unique capabilities users are willing to pay for.
+**Monetize your tools when** they provide significant value that justifies payment. This includes tools that access proprietary data, perform expensive computations, call paid external APIs, or provide unique capabilities users are willing to pay for.
 
-**Monetization may not be necessary when** your tools are simple utilities, when you're building for internal use, or when your business model relies on other revenue streams like consulting or support contracts.
-
-The key consideration is value exchange. Users pay when they receive value that exceeds the cost. Tools that save time, provide unique insights, or enable capabilities users couldn't otherwise access are good candidates for monetization.
+**Monetization may not be necessary** for simple utilities, internal tools, or when your business model relies on other revenue streams like consulting or support contracts.
 
 ## Human vs agent monetization
 
@@ -37,15 +32,9 @@ The two monetization approaches serve fundamentally different use cases based on
 
 **Agent-based monetization** with [x402](/docs/integrations/x402) enables agents to pay autonomously. When an agent encounters a paid tool, it can sign a crypto payment from its wallet without human intervention. The agent receives payment requirements, authorizes the transaction, and continues. This enables true agent-to-agent commerce where AI agents can purchase services from other AI agents.
 
-Choose Polar when humans control the billing relationship. Choose x402 when agents need to operate autonomously and pay for services on-demand.
-
-## How MCP monetization works
-
-When a client calls a monetized tool, the server checks for valid payment before executing. The exact flow depends on the monetization approach.
-
 ### License key validation
 
-With Polar, the client includes a license key in the request headers. The server validates this key against Polar's API, checking that the license is active and hasn't exceeded its usage limits.
+With Polar, the client includes a license key in the request headers. The server validates this key against Polar's API, checking that the license is active and within usage limits.
 
 ```typescript title="src/tools/premium-tool.ts"
 import { PolarProvider } from "@xmcp-dev/polar";
@@ -82,18 +71,19 @@ const response = await polar.validateLicenseKey(licenseKey, {
 });
 ```
 
-If the user has exhausted their meter credits, validation fails with a message prompting them to purchase more.
+If the user has exhausted their meter credits, validation fails with a message and a checkout URL to purchase more. For more details, check the [Polar integration guide](/docs/integrations/polar).
 
 ### Crypto payment flow
 
-With x402, the payment flow follows the HTTP 402 Payment Required standard:
+With x402, the payment flow follows the [HTTP 402 Payment Required standard](https://www.x402.org/):
 
 1. Client calls a paid tool without payment
 2. Server responds with payment requirements (price, wallet, network)
 3. Client signs a payment authorization from their wallet
 4. Client retries the request with the signed payment in headers
 5. Server verifies the payment signature with a facilitator
-6. Tool executes and payment settles on-chain
+6. Tool executes and client receives the response
+7. Payment settles on-chain
 
 ```typescript title="src/middleware.ts"
 import { x402Provider } from "@xmcp-dev/x402";
