@@ -10,7 +10,7 @@ authors:
   - 0xkoller
 ---
 
-You've built your MCP server. The tools work, you've deployed it, and clients can connect. But if it's publicly accessible, anyone who finds the URL can invoke your tools—no verification, no restrictions.
+You've built your MCP server. The tools work, you've deployed it, and clients can connect. But if it's publicly accessible, anyone who finds the URL can invoke your tools, no verification, no restrictions.
 
 This guide covers when authentication matters, how it works in MCP, and which approach fits your use case.
 
@@ -67,13 +67,13 @@ These terms are often used interchangeably, but they address different concerns.
 
 **Authorization** determines permissions. A verified identity does not imply unrestricted access. Whether a user can query the CRM or update deal records depends on their assigned role. Authorization occurs after authentication and governs which resources and operations the user may access.
 
-Not every server requires complex authorization. For small teams where all users need identical access, authentication alone may suffice. However, when different roles require different permissions—such as sales reps reading data while managers modify it—authorization becomes necessary.
+Not every server requires complex authorization. For small teams where all users need identical access, authentication alone may suffice. However, when different roles require different permissions, such as sales reps reading data while managers modify it, authorization becomes necessary.
 
 ## How MCP authentication works
 
 MCP uses OAuth 2.1 with specific requirements suited to client environments.
 
-MCP clients—Claude Desktop, Cursor, command-line tools, and custom applications—are desktop applications and CLIs running on user machines. Unlike backend servers that can securely store client secrets, these applications can be decompiled, inspected, and reverse-engineered. Embedded secrets cannot be considered confidential.
+MCP clients — Claude Desktop, Cursor, command-line tools, and custom applications — are desktop applications and CLIs running on user machines. Unlike backend servers that can securely store client secrets, these applications can be decompiled, inspected, and reverse-engineered. Embedded secrets cannot be considered confidential.
 
 MCP also supports resource indicators. When requesting a token, the client specifies the target MCP server. The token becomes bound to that server. Tokens obtained for one server cannot be used against another, preventing token confusion attacks.
 
@@ -98,7 +98,7 @@ All providers handle OAuth flows, token management, and session handling. After 
 
 ### API keys
 
-API keys are appropriate when user identity is not required—only verification that requests originate from an authorized source. This approach suits server-to-server communication, internal tools, and scenarios where both endpoints are controlled.
+API keys are appropriate when user identity is not required, only verification that requests originate from an authorized source. This approach suits server-to-server communication, internal tools, and scenarios where both endpoints are controlled.
 
 ```typescript title="middleware.ts"
 import { apiKeyAuthMiddleware } from "xmcp";
@@ -126,7 +126,7 @@ export default jwtAuthMiddleware({
 });
 ```
 
-JWTs contain claims about the user—identity, roles, and permissions. Tools can read these claims for authorization decisions. Authentication occurs externally; the MCP server enforces access based on the validated token.
+JWTs contain claims about the user identity, roles, and permissions. Tools can read these claims for authorization decisions. Authentication occurs externally; the MCP server enforces access based on the validated token.
 
 ## Getting started
 
