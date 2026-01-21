@@ -1,7 +1,7 @@
 ---
 title: "Securing Your MCP Server"
-description: "A practical guide to authentication for MCP servers - when you need it, how it works, and which approach fits your use case."
-summary: "A practical guide to authentication for MCP servers - when you need it, how it works, and which approach fits your use case."
+description: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
+summary: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
 category: "guides"
 date: "2026-01-21"
 order: 9
@@ -87,12 +87,9 @@ xmcp provides three authentication methods depending on the requirements of your
 
 OAuth plugins provide the complete solution for servers that require user identification. They include login flows, session management, and per-user access control. xmcp provides plugins that manage OAuth complexity, allowing development to focus on tool implementation.
 
-Four providers are supported, each suited to different use cases:
+xmcp supports four providers, each suited to different use cases:
 
-- **Better Auth**: Full control and self-hosting with PostgreSQL
-- **Clerk**: Rapid setup with streamlined developer experience
-- **Auth0**: Enterprise features including RBAC and machine-to-machine authentication
-- **WorkOS**: Enterprise SSO and organization management
+<OAuthPlugins />
 
 All providers handle OAuth flows, token management, and session handling. After configuration, tools can access the authenticated user's identity.
 
@@ -127,14 +124,6 @@ export default jwtAuthMiddleware({
 ```
 
 JWTs contain claims about the user identity, roles, and permissions. Tools can read these claims for authorization decisions. Authentication occurs externally; the MCP server enforces access based on the validated token.
-
-## Getting started
-
-If you need full OAuth authentication, start with the plugins:
-
-<OAuthPlugins />
-
-Each plugin has detailed setup instructions in the documentation. For API keys and JWT validation, the middleware configuration above is most of what you need.
 
 ## References
 
