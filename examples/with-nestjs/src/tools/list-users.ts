@@ -1,5 +1,5 @@
 import { type ToolMetadata } from "xmcp";
-import { getUsersService } from "../users/users.service";
+import { getUsersStore } from "../users/users.store";
 
 export const schema = {};
 
@@ -15,8 +15,8 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function listUsers() {
-  const usersService = getUsersService();
-  const users = usersService.findAll();
+  const usersStore = getUsersStore();
+  const users = usersStore.findAll();
 
   if (users.length === 0) {
     return {

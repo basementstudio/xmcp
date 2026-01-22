@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type InferSchema, type ToolMetadata } from "xmcp";
-import { getUsersService } from "../users/users.service";
+import { getUsersStore } from "../users/users.store";
 
 export const schema = {
   userId: z.string().describe("The ID of the user to retrieve"),
@@ -18,10 +18,10 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function getUser({ userId }: InferSchema<typeof schema>) {
-  const usersService = getUsersService();
+  const usersStore = getUsersStore();
 
   try {
-    const user = usersService.findOne(userId);
+    const user = usersStore.findOne(userId);
 
     return {
       content: [

@@ -1,5 +1,5 @@
 import { type ResourceMetadata } from "xmcp";
-import { getUsersService } from "../../../users/users.service";
+import { getUsersStore } from "../../../users/users.store";
 
 export const metadata: ResourceMetadata = {
   name: "user-profile",
@@ -12,10 +12,10 @@ interface ResourceParams {
 }
 
 export default function handler({ userId }: ResourceParams) {
-  const usersService = getUsersService();
+  const usersStore = getUsersStore();
 
   try {
-    const user = usersService.findOne(userId);
+    const user = usersStore.findOne(userId);
     return JSON.stringify(
       {
         id: user.id,

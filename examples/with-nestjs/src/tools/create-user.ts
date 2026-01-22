@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { type InferSchema, type ToolMetadata } from "xmcp";
-import { getUsersService } from "../users/users.service";
+import { getUsersStore } from "../users/users.store";
 
 export const schema = {
   name: z.string().min(2).describe("The name of the user (minimum 2 characters)"),
@@ -19,10 +19,10 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function createUser({ name, email }: InferSchema<typeof schema>) {
-  const usersService = getUsersService();
+  const usersStore = getUsersStore();
 
   // Check if user with this email already exists
-  const existingUser = usersService.findByEmail(email);
+  const existingUser = usersStore.findByEmail(email);
   if (existingUser) {
     return {
       content: [
@@ -32,7 +32,7 @@ export default async function createUser({ name, email }: InferSchema<typeof sch
     };
   }
 
-  const user = usersService.create({ name, email });
+  const user = usersStore.create({ name, email });
 
   return {
     content: [
