@@ -5,7 +5,8 @@ summary: "Pay-per-use monetization for MCP tools with x402."
 category: "engineering"
 date: "2026-01-20"
 order: 2
-featured: true
+featured: false
+previewImage: "/textures/text6.png"
 authors:
   - fveiras_
 ---
@@ -104,6 +105,22 @@ Tools without `paid()` stay free. Mix and match as needed.
 Micropayments need stable value. Charging $0.01 for a tool call doesn't work if the currency swings 10% overnight. USDC is pegged to USD, so prices stay predictable for both sides.
 
 Base keeps fees low enough that charging fractions of a cent makes sense. For testing, use `base-sepolia`. For production, use `base`.
+
+## Testing the integration
+
+You can test your paid tools using the [x402 AI Starter](https://github.com/vercel-labs/x402-ai-starter), a Next.js client that consumes paid tools.
+
+1. Clone the repo
+2. Sign into the [Coinbase CDP portal](https://portal.cdp.coinbase.com/)
+3. Following `.env.example`, set the following environment variables in `.env.local`:
+   - `CDP_API_KEY_ID`
+   - `CDP_API_KEY_SECRET`
+   - `CDP_WALLET_SECRET`
+4. Get an OIDC token by running `vc link` then `vc env pull`. An API key can be obtained from the AI Gateway dashboard.
+5. Connect your MCP server in `api/chat/route`
+6. Run `pnpm dev`
+
+The template runs on `base-sepolia` by default, so you can test with fake currency before going to production.
 
 ## Looking forward
 
