@@ -41,35 +41,8 @@ export type HttpVariables = ReturnType<typeof injectHttpVariables>;
 export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
   const corsConfig = getResolvedCorsConfig(httpConfig);
 
-  // Provide both consolidated config and individual variables for adapter compatibility
   return {
-    HTTP_CORS_CONFIG: JSON.stringify({
-      origin: corsConfig.origin ?? "",
-      methods: corsConfig.methods ?? "",
-      allowedHeaders: corsConfig.allowedHeaders ?? "",
-      exposedHeaders: corsConfig.exposedHeaders ?? "",
-      credentials: corsConfig.credentials ?? false,
-      maxAge: corsConfig.maxAge ?? 0,
-    }),
-    // Individual variables for adapter runtime files
-    HTTP_CORS_ORIGIN: JSON.stringify(corsConfig.origin ?? "*"),
-    HTTP_CORS_METHODS: JSON.stringify(
-      Array.isArray(corsConfig.methods)
-        ? corsConfig.methods.join(",")
-        : corsConfig.methods ?? ""
-    ),
-    HTTP_CORS_ALLOWED_HEADERS: JSON.stringify(
-      Array.isArray(corsConfig.allowedHeaders)
-        ? corsConfig.allowedHeaders.join(",")
-        : corsConfig.allowedHeaders ?? ""
-    ),
-    HTTP_CORS_EXPOSED_HEADERS: JSON.stringify(
-      Array.isArray(corsConfig.exposedHeaders)
-        ? corsConfig.exposedHeaders.join(",")
-        : corsConfig.exposedHeaders ?? ""
-    ),
-    HTTP_CORS_CREDENTIALS: corsConfig.credentials ?? false,
-    HTTP_CORS_MAX_AGE: corsConfig.maxAge ?? 86400,
+    HTTP_CORS_CONFIG: JSON.stringify(corsConfig),
   };
 }
 
