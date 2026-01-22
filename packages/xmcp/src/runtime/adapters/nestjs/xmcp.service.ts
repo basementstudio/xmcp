@@ -11,9 +11,13 @@ import type { CorsConfig } from "@/compiler/config";
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
 // @ts-expect-error: injected by compiler
-const debug = HTTP_DEBUG as boolean;
-// @ts-expect-error: injected by compiler
-const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
+const httpConfig = HTTP_CONFIG as {
+  port: number;
+  host: string;
+  bodySizeLimit: number;
+  endpoint: string;
+  debug: boolean;
+};
 
 @Injectable()
 export class XmcpService {
@@ -26,8 +30,8 @@ export class XmcpService {
 
           const server = await createServer();
           const transport = new StatelessHttpServerTransport(
-            debug,
-            bodySizeLimit || "10mb"
+            httpConfig.debug,
+            String(httpConfig.bodySizeLimit) || "10mb"
           );
 
           // cleanup when request/connection closes

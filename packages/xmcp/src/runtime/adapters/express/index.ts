@@ -18,6 +18,7 @@ const corsExposedHeaders = HTTP_CORS_EXPOSED_HEADERS as string;
 const corsCredentials = HTTP_CORS_CREDENTIALS as boolean;
 // @ts-expect-error: injected by compiler
 const corsMaxAge = HTTP_CORS_MAX_AGE as number;
+
 // @ts-expect-error: injected by compiler
 const debug = HTTP_DEBUG as boolean;
 // @ts-expect-error: injected by compiler

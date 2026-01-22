@@ -20,7 +20,6 @@ export function injectHttpVariables(
     return {};
   }
 
-
   return {
     HTTP_CONFIG: JSON.stringify({
       port: resolvedConfig.port,
@@ -38,14 +37,15 @@ export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
   const corsConfig = getResolvedCorsConfig(httpConfig);
 
   return {
-      HTTP_CORS_CONFIG: JSON.stringify({
-        origin: corsConfig.origin ?? "",
-        methods: corsConfig.methods ?? "",
-        allowedHeaders: corsConfig.allowedHeaders ?? "",
-        exposedHeaders: corsConfig.exposedHeaders ?? "",
-        credentials: corsConfig.credentials ?? false,
-        maxAge: corsConfig.maxAge ?? 0,
-      }),
+    HTTP_CORS_CONFIG: JSON.stringify({
+      origin: corsConfig.origin ?? "",
+      methods: corsConfig.methods ?? "",
+      allowedHeaders: corsConfig.allowedHeaders ?? "",
+      exposedHeaders: corsConfig.exposedHeaders ?? "",
+      credentials: corsConfig.credentials ?? false,
+      maxAge: corsConfig.maxAge ?? 0,
+    }),
+  };
 }
 
 export type CorsVariables = ReturnType<typeof injectCorsVariables>;

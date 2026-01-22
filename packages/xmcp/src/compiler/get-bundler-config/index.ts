@@ -82,11 +82,8 @@ export function getRspackConfig(
                 parser: {
                   syntax: "typescript",
                   tsx: true,
-                  decorators: true,
                 },
                 transform: {
-                  legacyDecorator: true,
-                  decoratorMetadata: true,
                   react: {
                     runtime: "automatic",
                   },
