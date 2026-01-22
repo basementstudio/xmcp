@@ -18,10 +18,31 @@ The Better Auth plugin provides comprehensive authentication for your xmcp serve
 
 Install the Better Auth plugin and PostgreSQL dependencies:
 
-```bash
-npm install @xmcp-dev/better-auth pg
-npm install -D @types/pg
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/better-auth pg\npnpm i -D @types/pg",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/better-auth pg\nnpm i -D @types/pg",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/better-auth pg\nyarn add -D @types/pg",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/better-auth pg\nbun add -D @types/pg",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 ## Database Setup
 
