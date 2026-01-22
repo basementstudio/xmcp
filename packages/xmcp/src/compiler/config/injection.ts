@@ -20,7 +20,6 @@ export function injectHttpVariables(
     return {};
   }
 
-  const debug = mode === "development";
 
   return {
     HTTP_CONFIG: JSON.stringify({
@@ -28,11 +27,8 @@ export function injectHttpVariables(
       host: resolvedConfig.host,
       bodySizeLimit: resolvedConfig.bodySizeLimit,
       endpoint: resolvedConfig.endpoint,
-      debug,
+      debug: mode === "development",
     }),
-    // Individual variables for adapter runtime files
-    HTTP_DEBUG: debug,
-    HTTP_BODY_SIZE_LIMIT: JSON.stringify(resolvedConfig.bodySizeLimit ?? "10mb"),
   };
 }
 
