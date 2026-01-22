@@ -68,10 +68,6 @@ const config: RspackOptions = {
                 tsx: false,
                 decorators: true,
               },
-              transform: {
-                legacyDecorator: true,
-                decoratorMetadata: true,
-              },
               target: "es2020",
             },
             module: {
