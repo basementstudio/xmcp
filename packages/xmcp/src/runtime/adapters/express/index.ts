@@ -4,11 +4,20 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
-import type { CorsConfig } from "@/compiler/config";
 
+// cors config
 // @ts-expect-error: injected by compiler
-const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
-
+const corsOrigin = HTTP_CORS_ORIGIN as string;
+// @ts-expect-error: injected by compiler
+const corsMethods = HTTP_CORS_METHODS as string;
+// @ts-expect-error: injected by compiler
+const corsAllowedHeaders = HTTP_CORS_ALLOWED_HEADERS as string;
+// @ts-expect-error: injected by compiler
+const corsExposedHeaders = HTTP_CORS_EXPOSED_HEADERS as string;
+// @ts-expect-error: injected by compiler
+const corsCredentials = HTTP_CORS_CREDENTIALS as boolean;
+// @ts-expect-error: injected by compiler
+const corsMaxAge = HTTP_CORS_MAX_AGE as number;
 // @ts-expect-error: injected by compiler
 const debug = HTTP_DEBUG as boolean;
 // @ts-expect-error: injected by compiler
@@ -19,7 +28,18 @@ export async function xmcpHandler(req: Request, res: Response) {
     const id = randomUUID();
     httpRequestContextProvider({ id, headers: req.headers }, async () => {
       try {
-        setHeaders(res, corsConfig, req.headers.origin);
+        setHeaders(
+          res,
+          {
+            origin: corsOrigin,
+            methods: corsMethods,
+            allowedHeaders: corsAllowedHeaders,
+            exposedHeaders: corsExposedHeaders,
+            credentials: corsCredentials,
+            maxAge: corsMaxAge,
+          },
+          req.headers.origin
+        );
 
         const server = await createServer();
         const transport = new StatelessHttpServerTransport(
