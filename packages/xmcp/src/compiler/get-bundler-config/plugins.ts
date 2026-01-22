@@ -145,8 +145,30 @@ export declare class XmcpModule {
  */
 export declare class XmcpCoreModule {}
 
-export { XmcpService } from './xmcp.service';
-export { XmcpController } from './xmcp.controller';
+/**
+ * Injectable service that handles MCP requests.
+ */
+export declare class XmcpService {
+  handleRequest(req: Request, res: Response): Promise<void>;
+}
+
+/**
+ * Default MCP controller at /mcp endpoint.
+ * Extend this class and apply @XmcpControllerDecorator to create custom routes.
+ */
+export declare class XmcpController {
+  constructor(xmcpService: XmcpService);
+  handleMcp(req: Request, res: Response): Promise<void>;
+  handleGet(res: Response): void;
+  handleOptions(res: Response): void;
+}
+
+/**
+ * Decorator to create a custom MCP controller with a custom route path.
+ * Apply this decorator to a class that extends XmcpController.
+ * @param route - The route path for the MCP endpoint (default: "mcp")
+ */
+export declare function XmcpControllerDecorator(route?: string): ClassDecorator;
 
 // Auth exports
 export declare class XmcpAuthGuard implements CanActivate {

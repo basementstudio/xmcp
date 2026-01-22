@@ -35,7 +35,7 @@ async function bootstrap() {
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Health check endpoint: http://localhost:${port}/health`);
   logger.log(`Users REST API: http://localhost:${port}/users`);
-  logger.log(`MCP endpoint: http://localhost:${port}/mcp`);
+  logger.log(`MCP endpoint (custom route): http://localhost:${port}/api/v1/mcp`);
 }
 
 bootstrap();

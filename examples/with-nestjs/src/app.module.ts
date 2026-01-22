@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { XmcpModule } from "@xmcp/adapter";
 import { HealthModule } from "./health/health.module";
 import { UsersModule } from "./users/users.module";
+import { CustomRouteModule } from "./custom-route";
 import configuration from "./config/configuration";
+import { XmcpModule } from "@xmcp/adapter";
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import configuration from "./config/configuration";
     // Users domain module
     UsersModule,
 
-    // XMCP MCP integration
+    // Custom MCP route - exposes MCP endpoint at POST /api/v1/mcp
+    // See src/custom-route/ for implementation details
     XmcpModule,
   ],
 })
