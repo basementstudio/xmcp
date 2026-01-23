@@ -25,8 +25,8 @@ const httpConfig = HTTP_CONFIG as {
 };
 
 @Injectable()
-export class xmcpService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(xmcpService.name);
+export class XmcpService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(XmcpService.name);
 
   onModuleInit() {
     this.logger.log("xmcp service initialized");

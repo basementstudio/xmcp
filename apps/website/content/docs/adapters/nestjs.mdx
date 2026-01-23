@@ -259,6 +259,150 @@ When you run `xmcp dev` or `xmcp build`, xmcp automatically discovers this file 
   For more details on creating tools, schemas, and metadata, see the [Tools documentation](/docs/core-concepts/tools).
 </Callout>
 
+## Authentication
+
+The NestJS adapter provides a `createMcpAuthGuard` factory function for JWT authentication. You provide the verification logic, and the adapter handles token extraction, error responses, and attaching auth info to requests.
+
+### Setup
+
+First, install the JWT library:
+
+```bash
+npm install jsonwebtoken
+npm install -D @types/jsonwebtoken
+```
+
+Create an auth guard configuration file:
+
+```typescript title="src/xmcp/xmcp.auth.ts"
+import { createMcpAuthGuard } from "@xmcp/adapter";
+import * as jwt from "jsonwebtoken";
+
+export const McpAuthGuard = createMcpAuthGuard({
+  verifyToken: async (token) => {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    ) as jwt.JwtPayload;
+
+    return {
+      clientId: decoded.sub || "unknown",
+      scopes: decoded.scope?.split(" ") || [],
+      expiresAt: decoded.exp,
+    };
+  },
+  required: false, // Set to true to require authentication
+});
+```
+
+### Enable Authentication
+
+To enable authentication, add the guard to your controller:
+
+```typescript title="src/xmcp/xmcp.controller.ts"
+import { Controller, UseFilters, UseGuards } from "@nestjs/common";
+import { xmcpController } from "@xmcp/adapter";
+import { McpExceptionFilter } from "./xmcp.filter";
+import { McpAuthGuard } from "./xmcp.auth";
+
+@Controller("mcp")
+@UseFilters(McpExceptionFilter)
+@UseGuards(McpAuthGuard)
+export class McpController extends xmcpController {}
+```
+
+And add it to your module providers:
+
+```typescript title="src/xmcp/xmcp.module.ts"
+import { Module } from "@nestjs/common";
+import { xmcpService } from "@xmcp/adapter";
+import { McpController } from "./xmcp.controller";
+import { McpExceptionFilter } from "./xmcp.filter";
+import { McpAuthGuard } from "./xmcp.auth";
+
+@Module({
+  controllers: [McpController],
+  providers: [xmcpService, McpExceptionFilter, McpAuthGuard],
+  exports: [xmcpService],
+})
+export class XmcpModule {}
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `verifyToken` | `(token: string) => Promise<AuthInfo> \| AuthInfo` | Required | Verify the token and return auth info |
+| `required` | `boolean` | `false` | If true, requests without tokens are rejected |
+
+The `verifyToken` function receives the Bearer token (without the "Bearer " prefix) and should return:
+
+```typescript
+interface AuthInfo {
+  clientId: string;      // User/client identifier
+  scopes: string[];      // Permissions/scopes
+  expiresAt?: number;    // Token expiration (Unix timestamp)
+  extra?: Record<string, unknown>; // Additional custom data
+}
+```
+
+If verification fails, throw an error with a descriptive message.
+
+### Accessing Auth Info in Tools
+
+Auth info is available in tools via the `extra` argument:
+
+```typescript title="src/tools/whoami.ts"
+import { type ToolMetadata, type ToolExtraArguments } from "xmcp";
+
+export const schema = {};
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Returns information about the authenticated user",
+};
+
+export default async function whoami(
+  _args: unknown,
+  extra: ToolExtraArguments
+) {
+  const authInfo = extra.authInfo;
+
+  if (!authInfo) {
+    return {
+      content: [{ type: "text", text: "Not authenticated" }],
+    };
+  }
+
+  return {
+    content: [
+      {
+        type: "text",
+        text: JSON.stringify({
+          clientId: authInfo.clientId,
+          scopes: authInfo.scopes,
+        }, null, 2),
+      },
+    ],
+  };
+}
+```
+
+### Testing with curl
+
+```bash
+# Without authentication (if required: false)
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+
+# With authentication
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
 ## Troubleshooting
 
 ### Cannot find module '@xmcp/adapter'

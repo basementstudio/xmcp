@@ -1,9 +1,9 @@
-import { Post, Get, Req, Res } from "@nestjs/common";
+import { Post, Get, Options, Req, Res, Header } from "@nestjs/common";
 import { Request, Response } from "express";
-import { xmcpService } from "./xmcp.service";
+import { XmcpService } from "./xmcp.service";
 
-export class xmcpController {
-  constructor(private readonly xmcpService: xmcpService) {}
+export class XmcpController {
+  constructor(private readonly xmcpService: XmcpService) {}
 
   @Post()
   async handleMcp(@Req() req: Request, @Res() res: Response): Promise<void> {
@@ -20,5 +20,14 @@ export class xmcpController {
       },
       id: null,
     });
+  }
+
+  @Options()
+  @Header("Access-Control-Allow-Origin", "*")
+  @Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+  @Header("Access-Control-Allow-Headers", "*")
+  @Header("Access-Control-Max-Age", "86400")
+  handleOptions(@Res() res: Response): void {
+    res.status(204).send();
   }
 }
