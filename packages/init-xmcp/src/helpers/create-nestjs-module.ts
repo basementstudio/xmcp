@@ -31,6 +31,11 @@ export function createNestJsModule(projectRoot: string): void {
     const moduleFilePath = path.join(xmcpDirPath, "xmcp.module.ts");
     fs.writeFileSync(moduleFilePath, moduleTemplate);
     console.log(chalk.green(`Created module: ${xmcpPath}/xmcp.module.ts`));
+
+    // Create xmcp.auth.ts
+    const authFilePath = path.join(xmcpDirPath, "xmcp.auth.ts");
+    fs.writeFileSync(authFilePath, authTemplate);
+    console.log(chalk.green(`Created auth guard: ${xmcpPath}/xmcp.auth.ts`));
   } catch (error) {
     console.error(chalk.red(`Failed to create NestJS module: ${error}`));
     process.exit(1);
@@ -92,5 +97,31 @@ import { McpExceptionFilter } from "./xmcp.filter";
   exports: [XmcpService],
 })
 export class XmcpModule {}
+`;
+
+const authTemplate = `import { createMcpAuthGuard } from "@xmcp/adapter";
+
+/**
+ * MCP Auth Guard configuration.
+ *
+ * To enable authentication:
+ * 1. Add McpAuthGuard to providers in xmcp.module.ts
+ * 2. Add @UseGuards(McpAuthGuard) to xmcp.controller.ts
+ */
+export const McpAuthGuard = createMcpAuthGuard({
+  verifyToken: async (token) => {
+    // TODO: Implement your token verification logic
+    // Example with JWT:
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET!) as jwt.JwtPayload;
+    // return {
+    //   clientId: decoded.sub || "unknown",
+    //   scopes: decoded.scope?.split(" ") || [],
+    //   expiresAt: decoded.exp,
+    // };
+
+    throw new Error("Token verification not implemented");
+  },
+  required: false, // Set to true to require authentication
+});
 `;
 
