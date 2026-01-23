@@ -68,23 +68,28 @@ export class McpExceptionFilter implements ExceptionFilter {
 `;
 
 const controllerTemplate = `import { Controller, UseFilters } from "@nestjs/common";
-import { xmcpController } from "@xmcp/adapter";
+import { XmcpController } from "@xmcp/adapter";
 import { McpExceptionFilter } from "./xmcp.filter";
 
 @Controller("mcp")
 @UseFilters(McpExceptionFilter)
-export class McpController extends xmcpController {}
+export class McpController extends XmcpController {}
 `;
 
 const moduleTemplate = `import { Module } from "@nestjs/common";
-import { xmcpService } from "@xmcp/adapter";
+import { XmcpService, OAuthModule } from "@xmcp/adapter";
 import { McpController } from "./xmcp.controller";
 import { McpExceptionFilter } from "./xmcp.filter";
 
 @Module({
+  imports: [
+    OAuthModule.forRoot({
+      authorizationServers: [process.env.OAUTH_ISSUER || "https://auth.example.com"],
+    }),
+  ],
   controllers: [McpController],
-  providers: [xmcpService, McpExceptionFilter],
-  exports: [xmcpService],
+  providers: [XmcpService, McpExceptionFilter],
+  exports: [XmcpService],
 })
 export class XmcpModule {}
 `;

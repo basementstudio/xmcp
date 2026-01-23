@@ -12,4 +12,5 @@ export {
   type OAuthProtectedResourceMetadata,
 } from "./xmcp.oauth.service";
 export { OAuthController } from "./xmcp.oauth.controller";
+export { OAuthModule } from "./xmcp.oauth.module";
 export { buildBaseUrl, buildResourceMetadataUrl } from "./xmcp.utils";

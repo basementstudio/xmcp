@@ -122,7 +122,7 @@ export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 
 const nestJsTypeDefinition = `
 import { Request, Response } from "express";
-import { Type, CanActivate } from "@nestjs/common";
+import { Type, CanActivate, DynamicModule } from "@nestjs/common";
 
 // Auth types
 export interface AuthInfo {
@@ -142,8 +142,6 @@ export interface McpAuthConfig {
 export declare function createMcpAuthGuard(config: McpAuthConfig): Type<CanActivate>;
 
 // OAuth types
-export declare const OAUTH_CONFIG: unique symbol;
-
 export interface OAuthConfig {
   authorizationServers: string[];
   scopesSupported?: string[];
@@ -157,8 +155,11 @@ export interface OAuthProtectedResourceMetadata {
   bearer_methods_supported?: string[];
 }
 
+export declare class OAuthModule {
+  static forRoot(config: OAuthConfig): DynamicModule;
+}
+
 export declare class OAuthService {
-  constructor(config: OAuthConfig);
   getResourceMetadata(req: Request): OAuthProtectedResourceMetadata;
 }
 
@@ -166,8 +167,6 @@ export declare class OAuthController {
   constructor(oauthService: OAuthService);
   getResourceMetadata(req: Request): OAuthProtectedResourceMetadata;
   handleOptions(res: Response): void;
-  getResourceMetadataWithPath(req: Request): OAuthProtectedResourceMetadata;
-  handleOptionsWithPath(res: Response): void;
 }
 
 // Utility functions
