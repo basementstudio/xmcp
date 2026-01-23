@@ -1,4 +1,9 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from "@nestjs/common";
 import { Request, Response } from "express";
 import { createServer } from "@/runtime/utils/server";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
@@ -20,15 +25,15 @@ const httpConfig = HTTP_CONFIG as {
 };
 
 @Injectable()
-export class XmcpService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(XmcpService.name);
+export class xmcpService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(xmcpService.name);
 
   onModuleInit() {
-    this.logger.log("XMCP service initialized");
+    this.logger.log("xmcp service initialized");
   }
 
   onModuleDestroy() {
-    this.logger.log("XMCP service shutting down");
+    this.logger.log("xmcp service shutting down");
   }
 
   async handleRequest(req: Request, res: Response): Promise<void> {
@@ -38,48 +43,53 @@ export class XmcpService implements OnModuleInit, OnModuleDestroy {
     this.logger.debug(`Request ${requestId} started`);
 
     return new Promise((resolve) => {
-      httpRequestContextProvider({ id: requestId, headers: req.headers }, async () => {
-        try {
-          setHeaders(res, corsConfig, req.headers.origin);
+      httpRequestContextProvider(
+        { id: requestId, headers: req.headers },
+        async () => {
+          try {
+            setHeaders(res, corsConfig, req.headers.origin);
 
-          const server = await createServer();
-          const transport = new StatelessHttpServerTransport(
-            httpConfig.debug,
-            String(httpConfig.bodySizeLimit) || "10mb"
-          );
+            const server = await createServer();
+            const transport = new StatelessHttpServerTransport(
+              httpConfig.debug,
+              String(httpConfig.bodySizeLimit) || "10mb"
+            );
 
-          // cleanup when request/connection closes
-          res.on("close", () => {
-            transport.close();
-            server.close();
-          });
-
-          await server.connect(transport);
-
-          await transport.handleRequest(req, res, req.body).then(() => {
-            const duration = Date.now() - startTime;
-            this.logger.debug(`Request ${requestId} completed in ${duration}ms`);
-            resolve();
-          });
-        } catch (error) {
-          const duration = Date.now() - startTime;
-          this.logger.error(
-            `Request ${requestId} failed after ${duration}ms`,
-            error instanceof Error ? error.stack : String(error)
-          );
-          if (!res.headersSent) {
-            res.status(500).json({
-              jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: "Internal server error",
-              },
-              id: null,
+            // cleanup when request/connection closes
+            res.on("close", () => {
+              transport.close();
+              server.close();
             });
+
+            await server.connect(transport);
+
+            await transport.handleRequest(req, res, req.body).then(() => {
+              const duration = Date.now() - startTime;
+              this.logger.debug(
+                `Request ${requestId} completed in ${duration}ms`
+              );
+              resolve();
+            });
+          } catch (error) {
+            const duration = Date.now() - startTime;
+            this.logger.error(
+              `Request ${requestId} failed after ${duration}ms`,
+              error instanceof Error ? error.stack : String(error)
+            );
+            if (!res.headersSent) {
+              res.status(500).json({
+                jsonrpc: "2.0",
+                error: {
+                  code: -32603,
+                  message: "Internal server error",
+                },
+                id: null,
+              });
+            }
+            resolve();
           }
-          resolve();
         }
-      });
+      );
     });
   }
 }

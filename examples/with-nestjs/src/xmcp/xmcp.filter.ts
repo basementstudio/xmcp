@@ -1,14 +1,9 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  Logger,
-} from "@nestjs/common";
+import { ExceptionFilter, Catch, ArgumentsHost, Logger } from "@nestjs/common";
 import { Response } from "express";
 
 @Catch()
-export class XmcpExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(XmcpExceptionFilter.name);
+export class McpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(McpExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

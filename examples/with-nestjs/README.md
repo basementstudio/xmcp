@@ -9,7 +9,6 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 - **Validation Pipeline** - Global `ValidationPipe` with `class-validator`
 - **Exception Handling** - Custom `HttpExceptionFilter` for consistent error responses
 - **Logging** - `LoggingInterceptor` for request/response logging with timing
-- **Health Checks** - `@nestjs/terminus` for readiness endpoints
 - **Module Architecture** - Feature module pattern with the Users domain
 
 ### XMCP Features
@@ -21,23 +20,21 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 
 ### XMCP NestJS Integration
 - **Lifecycle Hooks** - `XmcpService` implements `OnModuleInit` and `OnModuleDestroy` for proper initialization/shutdown logging
-- **Exception Filter** - `XmcpExceptionFilter` is exported for consistent JSON-RPC error handling
+- **Exception Filter** - `McpExceptionFilter` is scaffolded locally for customizable JSON-RPC error handling
 - **Structured Logging** - All XMCP internal logs use NestJS `Logger`, automatically inheriting your app's logging configuration
-- **Health Checks** - `XmcpHealthIndicator` for `@nestjs/terminus` integration
 
 #### Using the Exception Filter on Custom Routes
 
 If you create a custom MCP route, apply the filter:
 
 ```typescript
-import { XmcpController, XmcpExceptionFilter, XmcpService } from "xmcp/nestjs";
+import { Controller, UseFilters } from "@nestjs/common";
+import { xmcpController } from "@xmcp/adapter";
+import { McpExceptionFilter } from "./xmcp/xmcp.filter";
 
-@XmcpController("custom/mcp")
-@UseFilters(XmcpExceptionFilter)
-export class CustomMcpController {
-  constructor(private readonly xmcpService: XmcpService) {}
-  // ...
-}
+@Controller("custom/mcp")
+@UseFilters(McpExceptionFilter)
+export class CustomMcpController extends xmcpController {}
 ```
 
 ## Project Structure
@@ -446,4 +443,3 @@ This allows AI assistants using MCP to interact with the same user data that's a
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [class-validator](https://github.com/typestack/class-validator)
 - [@nestjs/config](https://docs.nestjs.com/techniques/configuration)
-- [@nestjs/terminus](https://docs.nestjs.com/recipes/terminus)

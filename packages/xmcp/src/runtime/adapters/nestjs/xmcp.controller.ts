@@ -1,12 +1,9 @@
-import { Controller, Post, Get, Options, Req, Res, UseFilters } from "@nestjs/common";
+import { Post, Get, Req, Res } from "@nestjs/common";
 import { Request, Response } from "express";
-import { XmcpService } from "./xmcp.service";
-import { XmcpExceptionFilter } from "./xmcp.filter";
+import { xmcpService } from "./xmcp.service";
 
-@Controller("mcp")
-@UseFilters(XmcpExceptionFilter)
-export class XmcpController {
-  constructor(private readonly xmcpService: XmcpService) {}
+export class xmcpController {
+  constructor(private readonly xmcpService: xmcpService) {}
 
   @Post()
   async handleMcp(@Req() req: Request, @Res() res: Response): Promise<void> {

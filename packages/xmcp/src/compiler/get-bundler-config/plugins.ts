@@ -122,30 +122,16 @@ export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 
 const nestJsTypeDefinition = `
 import { Request, Response } from "express";
-import { DynamicModule } from "@nestjs/common";
 
-export interface XmcpModuleOptions {
-  disableController?: boolean;
-}
-
-export declare class XmcpModule {
-  static forRoot(options?: XmcpModuleOptions): DynamicModule;
-}
-
-export declare class XmcpCoreModule {}
-
-export declare class XmcpService {
+export declare class xmcpService {
   handleRequest(req: Request, res: Response): Promise<void>;
 }
 
-export declare class XmcpController {
-  constructor(xmcpService: XmcpService);
+export declare class xmcpController {
+  constructor(xmcpService: xmcpService);
   handleMcp(req: Request, res: Response): Promise<void>;
   handleGet(res: Response): void;
-  handleOptions(res: Response): void;
 }
-
-export declare function XmcpControllerDecorator(route?: string): ClassDecorator;
 `;
 
 export class CreateTypeDefinitionPlugin {
