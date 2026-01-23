@@ -23,6 +23,7 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 - **Lifecycle Hooks** - `XmcpService` implements `OnModuleInit` and `OnModuleDestroy` for proper initialization/shutdown logging
 - **Exception Filter** - `XmcpExceptionFilter` is exported for consistent JSON-RPC error handling
 - **Structured Logging** - All XMCP internal logs use NestJS `Logger`, automatically inheriting your app's logging configuration
+- **Health Checks** - `XmcpHealthIndicator` for `@nestjs/terminus` integration
 
 #### Using the Exception Filter on Custom Routes
 

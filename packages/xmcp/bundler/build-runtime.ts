@@ -44,6 +44,7 @@ const config: RspackOptions = {
   externals: {
     "@rspack/core": "@rspack/core",
     "@nestjs/common": "@nestjs/common",
+    "@nestjs/terminus": "@nestjs/terminus",
   },
   output: {
     filename: "[name].js",

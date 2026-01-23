@@ -157,6 +157,43 @@ export class CustomMcpController extends XmcpController {}
 
 All XMCP internal logs use the NestJS `Logger` class, automatically inheriting your application's logging configuration.
 
+### Health Checks
+
+`XmcpHealthIndicator` integrates with `@nestjs/terminus` for production health monitoring:
+
+```typescript
+// health.controller.ts
+import { Controller, Get } from "@nestjs/common";
+import { HealthCheck, HealthCheckService } from "@nestjs/terminus";
+import { XmcpHealthIndicator } from "@xmcp/adapter";
+
+@Controller("health")
+export class HealthController {
+  constructor(
+    private health: HealthCheckService,
+    private xmcpHealth: XmcpHealthIndicator,
+  ) {}
+
+  @Get()
+  @HealthCheck()
+  check() {
+    return this.health.check([
+      () => this.xmcpHealth.isHealthy(),
+    ]);
+  }
+}
+```
+
+Response example:
+```json
+{
+  "status": "ok",
+  "info": {
+    "xmcp": { "status": "initialized" }
+  }
+}
+```
+
 ## Adding Tools
 
 Tools are automatically discovered from your `src/tools/` directory. Create a new file and export a default handler function:
