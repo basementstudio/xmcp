@@ -16,10 +16,7 @@ import type {
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 import { createVerifier, extractBearerToken } from "./jwt.js";
-import {
-  isToolPermissionDefined,
-  userHasToolPermission,
-} from "./permissions.js";
+import { isToolPermissionDefined, userHasToolPermission } from "./permissions.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
 
@@ -70,7 +67,6 @@ function createManagementClient(config: Config): ManagementClient {
 
 function auth0Router(config: Config): Router {
   const router = Router();
-  // const baseUrl = config.baseURL.replace(/\/+$/, "");
   const audience = config.audience.replace(/\/+$/, "");
   const domainClean = config.domain
     .replace(/^https?:\/\//, "")
@@ -184,12 +180,7 @@ function auth0Middleware(
       }
 
       try {
-        await enforceToolPermissions(
-          req,
-          config,
-          result.authInfo,
-          managementClient
-        );
+        await enforceToolPermissions(req, config, result.authInfo, managementClient);
       } catch (error) {
         if (!res.headersSent) {
           const message = error instanceof Error ? error.message : "Forbidden";
