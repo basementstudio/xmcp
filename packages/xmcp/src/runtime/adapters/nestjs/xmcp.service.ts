@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { Request, Response } from "express";
 import { createServer } from "@/runtime/utils/server";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
@@ -20,8 +20,16 @@ const httpConfig = HTTP_CONFIG as {
 };
 
 @Injectable()
-export class XmcpService {
+export class XmcpService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(XmcpService.name);
+
+  onModuleInit() {
+    this.logger.log("XMCP service initialized");
+  }
+
+  onModuleDestroy() {
+    this.logger.log("XMCP service shutting down");
+  }
 
   async handleRequest(req: Request, res: Response): Promise<void> {
     const requestId = randomUUID();

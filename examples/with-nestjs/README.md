@@ -19,6 +19,26 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 - Dynamic resources with path parameters
 - Hot reload in development mode
 
+### XMCP NestJS Integration
+- **Lifecycle Hooks** - `XmcpService` implements `OnModuleInit` and `OnModuleDestroy` for proper initialization/shutdown logging
+- **Exception Filter** - `XmcpExceptionFilter` is exported for consistent JSON-RPC error handling
+- **Structured Logging** - All XMCP internal logs use NestJS `Logger`, automatically inheriting your app's logging configuration
+
+#### Using the Exception Filter on Custom Routes
+
+If you create a custom MCP route, apply the filter:
+
+```typescript
+import { XmcpController, XmcpExceptionFilter, XmcpService } from "xmcp/nestjs";
+
+@XmcpController("custom/mcp")
+@UseFilters(XmcpExceptionFilter)
+export class CustomMcpController {
+  constructor(private readonly xmcpService: XmcpService) {}
+  // ...
+}
+```
+
 ## Project Structure
 
 ```

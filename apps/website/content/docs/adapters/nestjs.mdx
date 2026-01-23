@@ -123,6 +123,40 @@ export default config;
 
 The NestJS adapter uses HTTP transport and integrates with NestJS's module system, allowing you to use the `XmcpService` in your custom controllers.
 
+## NestJS Integration Features
+
+The adapter provides full NestJS integration with proper lifecycle management and error handling:
+
+### Lifecycle Hooks
+
+`XmcpService` implements `OnModuleInit` and `OnModuleDestroy` for proper initialization and shutdown logging:
+
+- **Startup**: Logs `[XmcpService] XMCP service initialized` when the module initializes
+- **Shutdown**: Logs `[XmcpService] XMCP service shutting down` when the application stops
+
+### Exception Filter
+
+`XmcpExceptionFilter` provides consistent JSON-RPC error handling for MCP endpoints. It automatically:
+
+- Logs errors with stack traces using NestJS `Logger`
+- Returns properly formatted JSON-RPC error responses
+- Handles cases where headers have already been sent
+
+The filter is automatically applied to the default `XmcpController`. For custom controllers, apply it manually:
+
+```typescript title="src/mcp/custom-mcp.controller.ts"
+import { UseFilters } from "@nestjs/common";
+import { XmcpController, XmcpControllerDecorator, XmcpExceptionFilter } from "@xmcp/adapter";
+
+@XmcpControllerDecorator("api/v1/mcp")
+@UseFilters(XmcpExceptionFilter)
+export class CustomMcpController extends XmcpController {}
+```
+
+### Structured Logging
+
+All XMCP internal logs use the NestJS `Logger` class, automatically inheriting your application's logging configuration.
+
 ## Adding Tools
 
 Tools are automatically discovered from your `src/tools/` directory. Create a new file and export a default handler function:
@@ -157,27 +191,29 @@ By default, `XmcpModule` automatically registers a `/mcp` POST endpoint with a b
 
 ### Creating a Custom Controller
 
-Extend `XmcpController` and apply `XmcpControllerDecorator` with your desired path:
+Extend `XmcpController` and apply `XmcpControllerDecorator` with your desired path. Include `XmcpExceptionFilter` to maintain consistent error handling:
 
 ```typescript title="src/mcp/custom-mcp.controller.ts"
-import { XmcpController, XmcpControllerDecorator } from "@xmcp/adapter";
+import { UseFilters } from "@nestjs/common";
+import { XmcpController, XmcpControllerDecorator, XmcpExceptionFilter } from "@xmcp/adapter";
 
 @XmcpControllerDecorator("api/v1/mcp")
+@UseFilters(XmcpExceptionFilter)
 export class CustomMcpController extends XmcpController {}
 ```
 
 ### Using a Custom Module
 
-Create a separate module that provides `XmcpService` and registers your custom controller:
+Create a separate module that provides `XmcpService`, `XmcpExceptionFilter`, and registers your custom controller:
 
 ```typescript title="src/mcp/custom-route.module.ts"
 import { Module } from "@nestjs/common";
-import { XmcpService } from "@xmcp/adapter";
+import { XmcpService, XmcpExceptionFilter } from "@xmcp/adapter";
 import { CustomMcpController } from "./custom-mcp.controller";
 
 @Module({
   controllers: [CustomMcpController],
-  providers: [XmcpService],
+  providers: [XmcpService, XmcpExceptionFilter],
 })
 export class CustomRouteModule {}
 ```

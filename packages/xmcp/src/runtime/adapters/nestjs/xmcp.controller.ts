@@ -1,8 +1,10 @@
-import { Controller, Post, Get, Options, Req, Res } from "@nestjs/common";
+import { Controller, Post, Get, Options, Req, Res, UseFilters } from "@nestjs/common";
 import { Request, Response } from "express";
 import { XmcpService } from "./xmcp.service";
+import { XmcpExceptionFilter } from "./xmcp.filter";
 
 @Controller("mcp")
+@UseFilters(XmcpExceptionFilter)
 export class XmcpController {
   constructor(private readonly xmcpService: XmcpService) {}
 
