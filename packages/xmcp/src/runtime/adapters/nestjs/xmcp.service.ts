@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Request, Response } from "express";
 import { createServer } from "@/runtime/utils/server";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
@@ -21,10 +21,16 @@ const httpConfig = HTTP_CONFIG as {
 
 @Injectable()
 export class XmcpService {
+  private readonly logger = new Logger(XmcpService.name);
+
   async handleRequest(req: Request, res: Response): Promise<void> {
+    const requestId = randomUUID();
+    const startTime = Date.now();
+
+    this.logger.debug(`Request ${requestId} started`);
+
     return new Promise((resolve) => {
-      const id = randomUUID();
-      httpRequestContextProvider({ id, headers: req.headers }, async () => {
+      httpRequestContextProvider({ id: requestId, headers: req.headers }, async () => {
         try {
           setHeaders(res, corsConfig, req.headers.origin);
 
@@ -43,10 +49,16 @@ export class XmcpService {
           await server.connect(transport);
 
           await transport.handleRequest(req, res, req.body).then(() => {
+            const duration = Date.now() - startTime;
+            this.logger.debug(`Request ${requestId} completed in ${duration}ms`);
             resolve();
           });
         } catch (error) {
-          console.error("[XMCP-NestJS] Error handling MCP request:", error);
+          const duration = Date.now() - startTime;
+          this.logger.error(
+            `Request ${requestId} failed after ${duration}ms`,
+            error instanceof Error ? error.stack : String(error)
+          );
           if (!res.headersSent) {
             res.status(500).json({
               jsonrpc: "2.0",

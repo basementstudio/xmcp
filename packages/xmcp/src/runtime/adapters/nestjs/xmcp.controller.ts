@@ -22,9 +22,4 @@ export class XmcpController {
       id: null,
     });
   }
-
-  @Options()
-  handleOptions(@Res() res: Response): void {
-    res.status(204).send();
-  }
 }

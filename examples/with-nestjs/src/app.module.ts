@@ -7,8 +7,7 @@ import { XmcpModule } from "@xmcp/adapter";
     // Users domain module - demonstrates integration with existing NestJS services
     UsersModule,
 
-    // xMCP module - exposes MCP endpoint at POST /api/v1/mcp
-    // See src/custom-route/ for implementation details
+    // xmcp module exposes /mcp route - if you want to implement custom routes, check /custom-route
     XmcpModule,
   ],
 })
