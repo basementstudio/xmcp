@@ -121,41 +121,23 @@ export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
 const nestJsTypeDefinition = `
-import { Request } from "express";
-import { CanActivate, ExecutionContext, DynamicModule } from "@nestjs/common";
+import { Request, Response } from "express";
+import { DynamicModule } from "@nestjs/common";
 
-// Module options
 export interface XmcpModuleOptions {
-  /**
-   * If true, the default /mcp controller will not be registered.
-   * Use this when you want to create your own custom MCP controller.
-   * @default false
-   */
   disableController?: boolean;
 }
 
-// Module exports
 export declare class XmcpModule {
   static forRoot(options?: XmcpModuleOptions): DynamicModule;
 }
 
-/**
- * Core NestJS module for xmcp that provides only the XmcpService.
- * Use this module when you want to create your own custom MCP controller.
- */
 export declare class XmcpCoreModule {}
 
-/**
- * Injectable service that handles MCP requests.
- */
 export declare class XmcpService {
   handleRequest(req: Request, res: Response): Promise<void>;
 }
 
-/**
- * Default MCP controller at /mcp endpoint.
- * Extend this class and apply @XmcpControllerDecorator to create custom routes.
- */
 export declare class XmcpController {
   constructor(xmcpService: XmcpService);
   handleMcp(req: Request, res: Response): Promise<void>;
@@ -163,69 +145,7 @@ export declare class XmcpController {
   handleOptions(res: Response): void;
 }
 
-/**
- * Decorator to create a custom MCP controller with a custom route path.
- * Apply this decorator to a class that extends XmcpController.
- * @param route - The route path for the MCP endpoint (default: "mcp")
- */
 export declare function XmcpControllerDecorator(route?: string): ClassDecorator;
-
-// Auth exports
-export declare class XmcpAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): Promise<boolean>;
-}
-
-export declare function XmcpAuth(config: AuthConfig): MethodDecorator & ClassDecorator;
-
-/**
- * Parameter decorator to extract the authenticated user's AuthInfo from the request.
- */
-export declare const Auth: () => ParameterDecorator;
-
-/**
- * Combined decorator that applies both the XmcpAuthGuard and XmcpAuth configuration.
- */
-export declare function McpAuth(config: AuthConfig): MethodDecorator & ClassDecorator;
-
-export declare const AUTH_CONFIG_KEY: string;
-
-export declare class ResourceMetadataController {
-  constructor(authorizationServers?: string[]);
-  getMetadata(req: Request, res: Response): void;
-  handleOptions(res: Response): void;
-}
-
-export declare const AUTHORIZATION_SERVERS: string;
-
-export type AuthInfo = {
-  token: string;
-  clientId: string;
-  scopes: string[];
-  expiresAt?: number;
-  resource?: URL;
-  extra?: Record<string, unknown>;
-};
-
-export type VerifyToken = (
-  req: Request,
-  bearerToken?: string
-) => Promise<AuthInfo | undefined>;
-
-export type AuthConfig = {
-  verifyToken: VerifyToken;
-  required?: boolean;
-  requiredScopes?: string[];
-};
-
-export type OAuthProtectedResourceMetadata = {
-  resource: string;
-  authorization_servers: string[];
-  bearer_methods_supported?: string[];
-  resource_documentation?: string;
-  introspection_endpoint?: string;
-  revocation_endpoint?: string;
-  [key: string]: unknown;
-};
 `;
 
 export class CreateTypeDefinitionPlugin {
