@@ -8,12 +8,6 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "greet",
   description: "Greet the user with a friendly message",
-  annotations: {
-    title: "Greet User",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
 };
 
 export default async function greet({ name }: InferSchema<typeof schema>) {

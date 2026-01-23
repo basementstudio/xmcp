@@ -9,12 +9,6 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "get-user",
   description: "Get details of a specific user by their ID",
-  annotations: {
-    title: "Get User",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
 };
 
 export default async function getUser({ userId }: InferSchema<typeof schema>) {

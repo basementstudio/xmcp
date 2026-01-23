@@ -6,12 +6,6 @@ export const schema = {};
 export const metadata: ToolMetadata = {
   name: "list-users",
   description: "List all users in the system",
-  annotations: {
-    title: "List Users",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
 };
 
 export default async function listUsers() {
@@ -25,7 +19,10 @@ export default async function listUsers() {
   }
 
   const userList = users
-    .map((user, index) => `${index + 1}. ${user.name} (${user.email}) - ID: ${user.id}`)
+    .map(
+      (user, index) =>
+        `${index + 1}. ${user.name} (${user.email}) - ID: ${user.id}`
+    )
     .join("\n");
 
   return {

@@ -11,15 +11,11 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "get-time",
   description: "Get the current time, optionally in a specific timezone",
-  annotations: {
-    title: "Get Current Time",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: false,
-  },
 };
 
-export default async function getTime({ timezone }: InferSchema<typeof schema>) {
+export default async function getTime({
+  timezone,
+}: InferSchema<typeof schema>) {
   const now = new Date();
 
   let timeString: string;
