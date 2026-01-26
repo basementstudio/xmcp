@@ -150,9 +150,9 @@ export interface OAuthConfig {
 
 export interface OAuthProtectedResourceMetadata {
   resource: string;
-  authorization_servers: string[];
-  scopes_supported?: string[];
-  bearer_methods_supported?: string[];
+  authorizationServers: string[];
+  scopesSupported?: string[];
+  bearerMethodsSupported?: string[];
 }
 
 export declare class OAuthModule {
