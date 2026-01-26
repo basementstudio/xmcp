@@ -387,25 +387,9 @@ myApp.get("/mcp", xmcpHandler);`;
 
       // code integration for NestJS projects
       if (detectedFramework === "nestjs") {
-        const integrationCode = `import { XmcpModule } from "./xmcp/xmcp.module";
-
-@Module({
-  imports: [XmcpModule],
-})
-export class AppModule {}`;
-
-        const lines = integrationCode.split("\n");
-        const maxLength = Math.max(...lines.map((line) => line.length)) + 2;
-
         console.log(
-          "\nTo get started with xmcp in your NestJS application, add this to your app.module.ts:\n"
+          chalk.cyan("\n   Add the XmcpModule to your AppModule to complete setup.")
         );
-        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
-        lines.forEach((line) => {
-          const padding = " ".repeat(maxLength - line.length);
-          console.log(chalk.green(chalk.bgBlack(`  ${line}${padding}`)));
-        });
-        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
       }
 
       console.log(
