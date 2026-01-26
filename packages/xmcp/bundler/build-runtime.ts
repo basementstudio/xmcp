@@ -25,6 +25,7 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "http", path: "transports/http" },
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
+  { name: "adapter-nestjs", path: "adapters/nestjs" },
 ];
 
 const entry: EntryObject = {};
@@ -42,6 +43,7 @@ const config: RspackOptions = {
   externalsPresets: { node: true },
   externals: {
     "@rspack/core": "@rspack/core",
+    "@nestjs/common": "@nestjs/common",
   },
   output: {
     filename: "[name].js",
@@ -65,6 +67,10 @@ const config: RspackOptions = {
                 syntax: "typescript",
                 tsx: false,
                 decorators: true,
+              },
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
               },
               target: "es2020",
             },

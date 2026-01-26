@@ -4,7 +4,10 @@ import { compile } from "./compiler";
 import { buildVercelOutput } from "./platforms/build-vercel-output";
 import chalk from "chalk";
 import { xmcpLogo } from "./utils/cli-icons";
-import { compilerContextProvider } from "./compiler/compiler-context";
+import {
+  compilerContext,
+  compilerContextProvider,
+} from "./compiler/compiler-context";
 
 const program = new Command();
 
@@ -45,7 +48,10 @@ program
       async () => {
         await compile({
           onBuild: async () => {
-            if (isVercelBuild) {
+            const { xmcpConfig } = compilerContext.getContext();
+            const isUsingAdapter = !!xmcpConfig?.experimental?.adapter;
+
+            if (isVercelBuild && !isUsingAdapter) {
               console.log(`${xmcpLogo} Building for Vercel...`);
               try {
                 await buildVercelOutput();

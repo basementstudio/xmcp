@@ -54,6 +54,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@nestjs/common": "^11.1.12",
     "@types/async-retry": "^1.4.9",
     "@types/content-type": "^1.1.9",
     "@types/express": "^5.0.6",
@@ -80,6 +81,8 @@
     "jsonwebtoken": "^9.0.3",
     "memfs": "^4.51.1",
     "raw-body": "^3.0.2",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
     "tsx": "^4.21.0"
   },
   "peerDependencies": {

@@ -3,19 +3,25 @@ import fs from "fs-extra";
 import path from "path";
 import { readTsConfigFile } from "../utils/read-config-file.js";
 
-export type Framework = "nextjs" | "express";
+export type Framework = "nextjs" | "nestjs" | "express";
 
 export function detectFramework(projectRoot: string): Framework {
-  // check if project has been initialized with nextjs or default to express
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8")
   );
 
-  if (!packageJson.dependencies?.next && !packageJson.devDependencies?.next) {
-    return "express";
+  // Check for NestJS
+  if (packageJson.dependencies?.["@nestjs/core"] || packageJson.devDependencies?.["@nestjs/core"]) {
+    return "nestjs";
   }
 
-  return "nextjs";
+  // Check for Next.js
+  if (packageJson.dependencies?.next || packageJson.devDependencies?.next) {
+    return "nextjs";
+  }
+
+  // Default to express
+  return "express";
 }
 
 export function detectTypeScript(projectRoot: string): boolean {
