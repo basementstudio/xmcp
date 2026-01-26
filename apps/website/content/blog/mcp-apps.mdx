@@ -1,0 +1,128 @@
+---
+title: "How to build an MCP App"
+description: "Learn how to build an MCP app using xmcp out-of-the-box support."
+category: "guides"
+date: "2026-01-26"
+order: 1
+previewImage: "/blog/mcp-apps.png"
+featured: true
+---
+
+MCP Apps is an extension to the Model Context Protocol that enables MCP servers to deliver interactive user interfaces to clients.
+
+xmcp supports building MCP apps natively. Get started by running:
+
+```bash
+npx create-xmcp-app@latest
+```
+
+And select the template:
+
+<TerminalPrompt>
+  {
+    "? Select a template: (Use arrow keys)\n Default \n GPT App \n❯ MCP App \n"
+  }
+</TerminalPrompt>
+
+This will kickstart your MCP server with the configuration for building an MCP app. You can optionally choose to include Tailwind CSS. By default, widgets are scaffolded using React.
+
+<Callout type="info">
+    You can also scaffold this template by running `npx create-xmcp-app@latest --example mcp-app`.
+</Callout>
+
+## Project Structure
+
+The final project structure will be as follows:
+
+```
+my-mcp-app/
+├── src/
+│   └── tools/          # Widgets live here
+│       └── weather.ts
+├── dist/               # Built output (generated)
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts       # Configuration file for xmcp
+```
+
+All your widgets will be placed in the `src/tools` directory. You can scaffold new widgets by running:
+
+<TerminalPrompt>
+  {
+    "npx xmcp create widget <widget-name>"
+  }
+</TerminalPrompt>
+
+## Creating a widget
+
+### Handler
+
+Compared to the [ext-apps](https://modelcontextprotocol.github.io/ext-apps/api/documents/Overview.html) approach, xmcp handles resource creation for you. That means you can focus entirely on writing the tool logic that returns a UI to the client, without worrying about any additional setup.
+
+This implies a custom syntax for the tool that will behave as a widget:
+
+```ts
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "widget-tool",
+  description: "Widget Tool",
+  _meta: {
+    ui: {
+      csp: {
+        connectDomains: [],
+      },
+    },
+  },
+};
+
+export default function widgetHandler() {
+  const [state, setState] = useState<string | null>(null);
+
+  return (
+    <div>
+      <h1>Widget Tool</h1>
+      <p>TODO: Implement your widget UI here</p>
+    </div>
+  );
+}
+```
+
+### Metadata
+
+There are small differences between usual tools and widgets. You’ll notice the metadata now includes a `ui` property, which guides xmcp to detect it as an MCP app–compatible component.
+
+```ts
+export const metadata: ToolMetadata = {
+  name: "show-analytics",
+  description: "Display analytics dashboard",
+  _meta: {
+    ui: {
+      csp: {
+        connectDomains: ["https://api.analytics.com"],
+        resourceDomains: ["https://cdn.analytics.com"],
+      },
+      domain: "https://analytics-widget.example.com",
+      prefersBorder: true,
+    },
+  },
+};
+```
+
+Resource-specific properties:
+
+* `csp.connectDomains` – Origins for fetch/XHR/WebSocket connections
+* `csp.resourceDomains` – Origins for images, scripts, stylesheets, fonts, and media
+* `domain` – Optional dedicated subdomain for the widget's sandbox origin
+
+For more information on widget metadata, see the [MCP Apps Widget Metadata](/docs/core-concepts/tools#mcp-apps-metadata) documentation.
+
+The handler function is responsible for rendering the widget UI. By default, it uses React, but you can also use template literals to generate HTML markup.
+
+Read more about the different Tool Handlers [here](/docs/core-concepts/tools#handler-types).
+
+## Next Steps
+
+- Test your MCP app with [MCPJam](https://www.mcpjam.com)
+- [Deploy with Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fxmcp-dev%2Ftemplates%2Ftree%2Fmain%2Fmcp-apps)
