@@ -4,7 +4,8 @@ description: "Learn how to build an MCP app using xmcp out-of-the-box support."
 category: "guides"
 date: "2026-01-26"
 order: 1
-previewImage: "/blog/apps-sdk.png"
+previewImage: "/blog/mcp-apps.png"
+featured: true
 ---
 
 MCP Apps is an extension to the Model Context Protocol that enables MCP servers to deliver interactive user interfaces to hosts.
@@ -52,7 +53,9 @@ All your widgets will be placed in the `src/tools` directory. You can scaffold n
   }
 </TerminalPrompt>
 
-## Widget Handler
+## Creating a widget
+
+### Handler
 
 Compared to the [ext-apps](https://modelcontextprotocol.github.io/ext-apps/api/documents/Overview.html) approach, xmcp handles resource creation for you. That means you can focus entirely on writing the tool logic that returns a UI to the host, without worrying about any additional setup.
 
@@ -86,9 +89,9 @@ export default function widgetHandler() {
 }
 ```
 
-There are small differences between usual tools and widgets. You’ll notice the metadata now includes a `ui` property, which guides xmcp to detect it as an MCP app–compatible component.
+### Metadata
 
-## Widget Metadata
+There are small differences between usual tools and widgets. You’ll notice the metadata now includes a `ui` property, which guides xmcp to detect it as an MCP app–compatible component.
 
 ```ts
 export const metadata: ToolMetadata = {
