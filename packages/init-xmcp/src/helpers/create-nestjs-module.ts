@@ -25,7 +25,9 @@ export function createNestJsModule(projectRoot: string): void {
     // Create xmcp.controller.ts
     const controllerFilePath = path.join(xmcpDirPath, "xmcp.controller.ts");
     fs.writeFileSync(controllerFilePath, controllerTemplate);
-    console.log(chalk.green(`Created controller: ${xmcpPath}/xmcp.controller.ts`));
+    console.log(
+      chalk.green(`Created controller: ${xmcpPath}/xmcp.controller.ts`)
+    );
 
     // Create xmcp.module.ts
     const moduleFilePath = path.join(xmcpDirPath, "xmcp.module.ts");
@@ -85,16 +87,17 @@ const moduleTemplate = `import { Module } from "@nestjs/common";
 import { XmcpService, OAuthModule } from "@xmcp/adapter";
 import { McpController } from "./xmcp.controller";
 import { McpExceptionFilter } from "./xmcp.filter";
+import { McpAuthGuard } from "./xmcp.auth";
+
+const config = {
+    authorizationServers: [process.env.OAUTH_ISSUER!],
+};
 
 @Module({
-  imports: [
-    OAuthModule.forRoot({
-      authorizationServers: [process.env.OAUTH_ISSUER || "https://auth.example.com"],
-    }),
-  ],
-  controllers: [McpController],
-  providers: [XmcpService, McpExceptionFilter],
-  exports: [XmcpService],
+      imports: [OAuthModule.forRoot(config)],
+      controllers: [McpController],
+      providers: [XmcpService, McpExceptionFilter, McpAuthGuard],
+      exports: [XmcpService],
 })
 export class XmcpModule {}
 `;
@@ -124,4 +127,3 @@ export const McpAuthGuard = createMcpAuthGuard({
   required: false, // Set to true to require authentication
 });
 `;
-
