@@ -67,7 +67,7 @@ function createManagementClient(config: Config): ManagementClient {
 
 function auth0Router(config: Config): Router {
   const router = Router();
-  const baseUrl = config.baseURL.replace(/\/+$/, "");
+  const audience = config.audience.replace(/\/+$/, "");
   const domainClean = config.domain
     .replace(/^https?:\/\//, "")
     .replace(/\/+$/, "");
@@ -81,7 +81,7 @@ function auth0Router(config: Config): Router {
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {
       const metadata: OAuthProtectedResourceMetadata = {
-        resource: baseUrl,
+        resource: audience,
         authorization_servers: [auth0Url],
         bearer_methods_supported: ["header"],
         scopes_supported: scopes,

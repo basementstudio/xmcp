@@ -22,27 +22,12 @@ const config: XmcpConfig = {
     adapter: "${frameworkAdapter}",
   },`;
 
-  if (toolsPath || promptsPath || resourcesPath) {
-    configContent += `
-  paths: {`;
-
-    if (toolsPath) {
-      configContent += `
-    tools: "${toolsPath}",`;
-    }
-
-    if (promptsPath) {
-      configContent += `
-    prompts: "${promptsPath}",`;
-    }
-
-    if (resourcesPath) {
-      configContent += `
-    resources: "${resourcesPath}",`;
-    }
-    configContent += `
+  configContent += `
+  paths: {
+    tools: ${toolsPath ? `"${toolsPath}"` : "false"},
+    prompts: ${promptsPath ? `"${promptsPath}"` : "false"},
+    resources: ${resourcesPath ? `"${resourcesPath}"` : "false"},
   },`;
-  }
 
   if (frameworkAdapter === "nextjs") {
     configContent += `

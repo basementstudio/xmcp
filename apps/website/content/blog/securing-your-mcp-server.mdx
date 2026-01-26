@@ -1,0 +1,131 @@
+---
+title: "Securing Your MCP Server"
+description: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
+summary: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
+category: "guides"
+date: "2026-01-22"
+order: 9
+previewImage: "/blog/secure-your-mcp-server.png"
+authors:
+  - 0xkoller
+---
+
+You've built your MCP server. The tools work, you've deployed it, and clients can connect. But if it's publicly accessible, anyone who finds the URL can invoke your tools, no verification, no restrictions.
+
+This guide covers when authentication matters, how it works in MCP, and which approach fits your use case.
+
+## A real-world example
+
+Consider a sales team that needs to query a CRM database through Claude. The MCP server will be deployed to Vercel and must be accessible remotely. This requires authentication, and unauthenticated users should not be able to access customer data.
+
+Auth0 is a reasonable choice here because it provides built-in RBAC. Team members authenticate with existing credentials, and Auth0 manages the OAuth flow.
+
+The requirements also include authorization: sales reps should only read data, while sales managers need write access to update deal stages. Two roles are created, "Sales Rep" and "Sales Manager", with permissions assigned to sensitive tools.
+
+If a permission for a tool exists, only users with that permission can access the tool. Tools without a defined permission are accessible to all authenticated users, public tools.
+
+You create a `tool:update-deal` permission and assign it to the Sales Manager role. The tool itself needs no permission checking code, the plugin handles it:
+
+```typescript title="tools/update-deal.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  dealId: z.string().describe("The deal ID to update"),
+  stage: z.string().describe("The new stage"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "update-deal",
+  description: "Update a deal's stage in the CRM",
+};
+
+export default async function updateDeal({ dealId, stage }: InferSchema<typeof schema>) {
+  // RBAC handles permission checking automatically
+  // Only users with 'tool:update-deal' permission reach this code
+  
+  // Update the deal...
+  return `Deal ${dealId} updated to ${stage}`;
+}
+```
+
+Sales reps authenticate and gain access to query tools, which have no permission restrictions. When a rep attempts to use `update-deal`, the server checks for the permission, finds it missing from their token, and returns an error. Managers have the permission assigned through their role and can access the tool.
+
+This example demonstrates authentication (signing in), authorization (the tool permission restricted to managers), and the rationale for choosing this setup for a remote team requiring role-based access.
+
+## When authentication matters
+
+A server running locally via STDIO may still require authentication depending on its configuration. If exposed on a local network or if certain tools require role-based permissions, authentication remains necessary. The transport method alone does not determine security requirements.
+
+The determining factor is the scope of the tools. A tool that creates customers, updates records, or modifies data requires authentication to verify who is making the request, and potentially authorization to control which users can perform those operations. Read-only tools with non-sensitive data may not require the same level of protection.
+
+## Authentication vs authorization
+
+These terms are often used interchangeably, but they address different concerns.
+
+**Authentication** verifies identity. It encompasses the login screen, credential validation, and OAuth redirects. In the sales team example, authentication occurs when a team member connects to the server. The server then knows the request originates from a specific user rather than an anonymous source.
+
+**Authorization** determines permissions. A verified identity does not imply unrestricted access. Whether a user can query the CRM or update deal records depends on their assigned role. Authorization occurs after authentication and governs which resources and operations the user may access.
+
+Not every server requires complex authorization. For small teams where all users need identical access, authentication alone may suffice. However, when different roles require different permissions, such as sales reps reading data while managers modify it, authorization becomes necessary.
+
+## How MCP authentication works
+
+MCP uses OAuth 2.1 with specific requirements suited to client environments.
+
+MCP clients — Claude Desktop, Cursor, command-line tools, and custom applications — are desktop applications and CLIs running on user machines. Unlike backend servers that can securely store client secrets, these applications can be decompiled, inspected, and reverse-engineered. Embedded secrets cannot be considered confidential.
+
+MCP also supports resource indicators. When requesting a token, the client specifies the target MCP server. The token becomes bound to that server. Tokens obtained for one server cannot be used against another, preventing token confusion attacks.
+
+This design accommodates the operational constraints of MCP client environments. For a deeper understanding of OAuth discovery, client registration, and token binding, see the [Authentication Guide](/docs/guides/authentication).
+
+## Choosing your approach
+
+xmcp provides three authentication methods depending on the requirements of your server.
+
+### OAuth plugins
+
+OAuth plugins provide the complete solution for servers that require user identification. They include login flows, session management, and per-user access control. xmcp provides plugins that manage OAuth complexity, allowing development to focus on tool implementation.
+
+xmcp supports four providers, each suited to different use cases:
+
+<OAuthPlugins />
+
+All providers handle OAuth flows, token management, and session handling. After configuration, tools can access the authenticated user's identity.
+
+### API keys
+
+API keys are appropriate when user identity is not required, only verification that requests originate from an authorized source. This approach suits server-to-server communication, internal tools, and scenarios where both endpoints are controlled.
+
+```typescript title="middleware.ts"
+import { apiKeyAuthMiddleware } from "xmcp";
+
+export default apiKeyAuthMiddleware({
+  headerName: "x-api-key",
+  validateApiKey: async (apiKey) => {
+    return apiKey === process.env.API_KEY!;
+  },
+});
+```
+
+The client includes the key with each request, and the server validates it. No redirects or token exchanges are required.
+
+### JWT validation
+
+For systems that already issue JWTs, xmcp can validate tokens without managing login flows. The MCP server validates tokens issued by the existing authentication system.
+
+```typescript title="middleware.ts"
+import { jwtAuthMiddleware } from "xmcp";
+
+export default jwtAuthMiddleware({
+  secret: process.env.JWT_SECRET!,
+  algorithms: ["HS256"],
+});
+```
+
+JWTs contain claims about the user identity, roles, and permissions. Tools can read these claims for authorization decisions. Authentication occurs externally; the MCP server enforces access based on the validated token.
+
+## References
+
+- [MCP Specification - Authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
+- [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-13)
