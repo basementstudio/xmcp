@@ -1,8 +1,17 @@
-import { Controller, Get, Options, Req, Res, Header } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Options,
+  Req,
+  Res,
+  Header,
+  Injectable,
+} from "@nestjs/common";
 import { Request, Response } from "express";
 import { OAuthService } from "./xmcp.oauth.service";
 
 @Controller(".well-known")
+@Injectable()
 export class OAuthController {
   constructor(private readonly oauthService: OAuthService) {}
 

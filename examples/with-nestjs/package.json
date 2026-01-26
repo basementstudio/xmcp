@@ -1,6 +1,6 @@
 {
   "name": "with-nestjs",
-  "description": "Build a NestJS server with xmcp's adapter - Enhanced example with full NestJS patterns",
+  "description": "Basic NestJS server with xmcp's adapter - No authentication",
   "version": "1.0.0",
   "main": "dist/main.js",
   "scripts": {
@@ -25,9 +25,7 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
     "@types/express": "^4.17.25",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.26",
-    "jsonwebtoken": "catalog:",
     "typescript": "^5.9.3",
     "xmcp": "workspace:*"
   },

@@ -1,7 +1,8 @@
-import { Post, Get, Options, Req, Res, Header } from "@nestjs/common";
+import { Post, Get, Options, Req, Res, Header, Injectable } from "@nestjs/common";
 import { Request, Response } from "express";
 import { XmcpService } from "./xmcp.service";
 
+@Injectable()
 export class XmcpController {
   constructor(private readonly xmcpService: XmcpService) {}
 

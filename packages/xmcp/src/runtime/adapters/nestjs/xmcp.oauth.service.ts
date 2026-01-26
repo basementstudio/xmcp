@@ -12,9 +12,9 @@ export interface OAuthConfig {
 
 export interface OAuthProtectedResourceMetadata {
   resource: string;
-  authorization_servers: string[];
-  scopes_supported?: string[];
-  bearer_methods_supported?: string[];
+  authorizationServers: string[];
+  scopesSupported?: string[];
+  bearerMethodsSupported?: string[];
 }
 
 @Injectable()
@@ -26,12 +26,11 @@ export class OAuthService {
 
     return {
       resource,
-      authorization_servers: this.config.authorizationServers,
+      authorizationServers: this.config.authorizationServers,
       ...(this.config.scopesSupported && {
-        scopes_supported: this.config.scopesSupported,
+        scopesSupported: this.config.scopesSupported,
       }),
-      bearer_methods_supported:
-        this.config.bearerMethodsSupported || ["header"],
+      bearerMethodsSupported: this.config.bearerMethodsSupported || ["header"],
     };
   }
 }
