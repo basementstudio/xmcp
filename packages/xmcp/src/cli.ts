@@ -8,6 +8,7 @@ import {
   compilerContext,
   compilerContextProvider,
 } from "./compiler/compiler-context";
+import { runCreate, type CreateType } from "./cli/commands/create";
 
 const program = new Command();
 
@@ -66,6 +67,39 @@ program
         });
       }
     );
+  });
+
+const VALID_CREATE_TYPES: CreateType[] = [
+  "tool",
+  "resource",
+  "prompt",
+  "widget",
+];
+
+program
+  .command("create <type> <name>")
+  .description("Scaffold a new tool, resource, prompt, or widget")
+  .option("-d, --dir <path>", "Custom output directory")
+  .action(async (type: string, name: string, options: { dir?: string }) => {
+    if (!VALID_CREATE_TYPES.includes(type as CreateType)) {
+      console.error(chalk.red(`Invalid type "${type}".`));
+      console.error(`Valid types: ${VALID_CREATE_TYPES.join(", ")}`);
+      process.exit(1);
+    }
+
+    try {
+      const outputPath = await runCreate({
+        type: type as CreateType,
+        name,
+        directory: options.dir,
+      });
+      console.log(`${xmcpLogo} Created ${type} "${name}" -> ${outputPath}`);
+    } catch (error) {
+      console.error(
+        chalk.red(error instanceof Error ? error.message : String(error))
+      );
+      process.exit(1);
+    }
   });
 
 program.parse();
