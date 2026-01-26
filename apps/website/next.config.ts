@@ -32,12 +32,7 @@ const nextConfig: NextConfig = {
       {
         hostname: "assets.basehub.com",
       },
-      {
-        hostname: "vercel.com",
-      },
     ],
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "script-src 'none'; frame-src 'none';",
   },
   async redirects() {
     return [
