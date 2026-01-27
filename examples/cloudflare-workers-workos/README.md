@@ -194,6 +194,53 @@ The token wasn't signed by WorkOS, or the JWKS couldn't be fetched.
 
 The token's `iss` or `aud` claims don't match your configuration.
 
+## Limitations: JWT Validation Only
+
+**Important:** The Cloudflare Workers adapter only supports JWT token validation. The full WorkOS SDK (`@workos-inc/node`) is **not available** in Workers because it has Node.js dependencies that are incompatible with the Workers runtime.
+
+### What works in Cloudflare Workers:
+- JWT signature verification via `jose` library
+- Token expiration validation
+- Issuer and audience validation
+- Access to JWT claims via `authInfo.extra`
+
+### What does NOT work in Cloudflare Workers:
+- `getSession()` - Not available
+- `getUser()` - Not available (cannot call WorkOS API)
+- `getClient()` - Not available (WorkOS SDK doesn't work in Workers)
+
+### Accessing User Info in Tools
+
+In Cloudflare Workers, access JWT claims through `authInfo.extra`:
+
+```typescript
+import type { ToolExtraArguments } from "xmcp";
+
+export default function myTool(args: any, extra: ToolExtraArguments) {
+  const { authInfo } = extra;
+
+  // JWT claims are available in authInfo.extra
+  const userId = authInfo?.extra?.sub;
+  const email = authInfo?.extra?.email;
+  const orgId = authInfo?.extra?.org_id;
+
+  // ...
+}
+```
+
+### For Full SDK Support
+
+If you need `getSession()`, `getUser()`, or `getClient()`, use the Node.js adapter with the `@xmcp-dev/workos` plugin instead:
+
+```typescript
+// Works in Node.js with @xmcp-dev/workos, NOT in Cloudflare Workers
+import { getSession, getUser, getClient } from "@xmcp-dev/workos";
+
+const session = getSession();        // Full session object
+const user = await getUser();        // Fetch user from WorkOS API
+const client = getClient();          // WorkOS SDK instance
+```
+
 ## Security Notes
 
 1. **Never commit secrets** - Use `wrangler secret put` for all sensitive values
