@@ -1,14 +1,12 @@
 ---
-title: "HTTP 402 Payment Not Found"
-description: "Pay-per-use monetization for MCP tools with x402."
-summary: "Pay-per-use monetization for MCP tools with x402."
+title: "Pay-per-use MCP tools with x402"
+description: "Charge per tool call using crypto micropayments"
+summary: "Charge per tool call using crypto micropayments"
 category: "engineering"
-date: "2026-01-20"
+date: "2026-01-27"
 order: 2
 featured: false
 previewImage: "/textures/text6.png"
-authors:
-  - fveiras_
 ---
 
 HTTP 402 Payment Required has been in the spec since 1999, reserved for future use. 25 years later, [Coinbase built x402](https://docs.cdp.coinbase.com/x402/docs/welcome): a protocol that finally gives it a purpose.
@@ -57,7 +55,7 @@ It's not crazy to think that in the near future, agents will have their own wall
 
 One agent needs a capability it doesn't have. It finds another that does, pays for the call, and moves on. No human approving each transaction. That future needs payment infrastructure that works at machine speed. x402 is a step in that direction.
 
-## Making it work with xmcp
+## How xmcp handles payments
 
 We built an [x402 plugin](/docs/integrations/x402) that handles all of this at the transport layer. You don't need to think about payment verification, signature validation, or settlement. Just wrap your tools.
 
@@ -124,6 +122,6 @@ The template runs on `base-sepolia` by default, so you can test with fake curren
 
 ## Looking forward
 
-Micropayments have been "almost here" for decades. High fees and slow settlement made them impractical. Low-cost L2s finally changed that. x402 provides the protocol. xmcp makes it easy to implement.
+Micropayments don’t need new business models, they need fewer obstacles. Low-cost L2s removed the cost barrier, and x402 removes the integration barrier, making paid tools and agent-to-agent compensation easy to build and deploy.
 
 If you're building MCP servers that charge per request, check out our [monetization guide](/docs/guides/monetization) or join us on [Discord](https://discord.gg/d9a7JBBxV9).
