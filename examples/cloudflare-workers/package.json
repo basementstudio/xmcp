@@ -1,0 +1,22 @@
+{
+  "name": "cloudflare-workers-example",
+  "version": "0.0.1",
+  "description": "Example xmcp server deployed to Cloudflare Workers",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build --cf",
+    "dev": "xmcp dev",
+    "deploy": "cd .cloudflare && npx wrangler deploy",
+    "preview": "cd .cloudflare && npx wrangler dev"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241112.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^4.61.0"
+  }
+}

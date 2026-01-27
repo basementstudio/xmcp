@@ -1,6 +1,11 @@
 /**
- * This script builds the compiler. It's not the compiler itself
- * */
+ * This script builds the runtime files. It's not the compiler itself.
+ *
+ * Note: The Cloudflare adapter is NOT pre-built here. It's built from TypeScript source
+ * at user build time, which allows the webworker target to properly handle the bundle.
+ * This avoids issues with Node.js built-ins (async_hooks, etc.) that can't be resolved
+ * during pre-build with webworker target.
+ */
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -19,6 +24,8 @@ interface RuntimeRoot {
   path: string;
 }
 
+// Node.js runtime roots (express, nextjs adapters + transports)
+// Note: Cloudflare adapter is NOT included here - it's built from source at user build time
 const runtimeRoots: RuntimeRoot[] = [
   { name: "headers", path: "headers" },
   { name: "stdio", path: "transports/stdio" },
@@ -28,13 +35,46 @@ const runtimeRoots: RuntimeRoot[] = [
 ];
 
 const entry: EntryObject = {};
-
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
+// Shared module rules
+const moduleRules = [
+  {
+    test: /\.ts$/,
+    exclude: /node_modules/,
+    use: {
+      loader: "builtin:swc-loader",
+      options: {
+        jsc: {
+          parser: {
+            syntax: "typescript",
+            tsx: false,
+            decorators: true,
+          },
+          target: "es2020",
+        },
+        module: {
+          type: "es6",
+        },
+      },
+    },
+  },
+];
+
+// Shared resolve config
+const resolveConfig = {
+  extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+  alias: {
+    "@": srcPath,
+    "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
+  },
+};
+
+// Node.js config (express, nextjs, http, stdio)
 const config: RspackOptions = {
-  name: "runtime",
+  name: "runtime-node",
   entry,
   mode: "production",
   devtool: false,
@@ -53,36 +93,9 @@ const config: RspackOptions = {
     clean: true,
   },
   module: {
-    rules: [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: {
-          loader: "builtin:swc-loader",
-          options: {
-            jsc: {
-              parser: {
-                syntax: "typescript",
-                tsx: false,
-                decorators: true,
-              },
-              target: "es2020",
-            },
-            module: {
-              type: "es6",
-            },
-          },
-        },
-      },
-    ],
+    rules: moduleRules,
   },
-  resolve: {
-    extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
-    alias: {
-      "@": srcPath,
-      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
-    },
-  },
+  resolve: resolveConfig,
   watchOptions: {
     aggregateTimeout: 600,
     ignored: /node_modules/,
@@ -116,12 +129,13 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
 
   const handleStats = (err: Error | null, stats: any) => {
     if (err) {
-      console.error(err);
+      console.error("Runtime build error:", err);
       return;
     }
 
     if (stats?.hasErrors()) {
       console.error(
+        "Runtime build errors:",
         stats.toString({
           colors: true,
           chunks: false,
@@ -137,25 +151,24 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       })
     );
 
-    console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
-
-    if (process.env.GENERATE_STATS === "true" && stats) {
-      const statsJson = stats.toJson({
-        all: false,
-        assets: true,
-        chunks: true,
-        modules: true,
-        reasons: true,
-        timings: true,
-      });
-      const statsPath = path.join(__dirname, "..", "stats-runtime.json");
-      fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
-      console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
-    }
-
-    // Only call onCompiled once for the initial build
     if (!compileStarted) {
       compileStarted = true;
+      console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
+
+      if (process.env.GENERATE_STATS === "true") {
+        const statsJson = stats.toJson({
+          all: false,
+          assets: true,
+          chunks: true,
+          modules: true,
+          reasons: true,
+          timings: true,
+        });
+        const statsPath = path.join(__dirname, "..", "stats-runtime.json");
+        fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
+        console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
+      }
+
       onCompiled(stats);
     }
   };

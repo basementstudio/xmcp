@@ -5,6 +5,42 @@ import { Compiler } from "@rspack/core";
 import { getXmcpConfig } from "../compiler-context";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 
+/**
+ * Read all client bundles from disk for Cloudflare injection.
+ * Returns a record mapping bundle names to their JS and CSS contents.
+ */
+export function readClientBundlesFromDisk(): Record<
+  string,
+  { js: string; css?: string }
+> {
+  const bundles: Record<string, { js: string; css?: string }> = {};
+  const clientDir = path.join(process.cwd(), "dist", "client");
+
+  if (!fs.existsSync(clientDir)) {
+    return bundles;
+  }
+
+  const files = fs.readdirSync(clientDir);
+  const jsFiles = files.filter((f) => f.endsWith(".bundle.js"));
+
+  for (const jsFile of jsFiles) {
+    const bundleName = jsFile.replace(".bundle.js", "");
+    const jsPath = path.join(clientDir, jsFile);
+    const cssPath = path.join(clientDir, `${bundleName}.bundle.css`);
+
+    const js = fs.readFileSync(jsPath, "utf-8");
+    let css: string | undefined;
+
+    if (fs.existsSync(cssPath)) {
+      css = fs.readFileSync(cssPath, "utf-8");
+    }
+
+    bundles[bundleName] = { js, css };
+  }
+
+  return bundles;
+}
+
 // @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
 
@@ -28,6 +64,9 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-express.js");
     } else if (xmcpConfig.experimental?.adapter === "nextjs") {
       neededFiles.push("adapter-nextjs.js");
+    } else if (xmcpConfig.experimental?.adapter === "cloudflare") {
+      // Cloudflare adapter is built from source, not copied from pre-built
+      // So we don't push any file here - it's handled in get-entries.ts
     } else {
       neededFiles.push("http.js");
     }
@@ -118,6 +157,77 @@ const expressTypeDefinition = `
 export const xmcpHandler: (req: Request, res: Response) => Promise<void>;
 `;
 
+const cloudflareTypeDefinition = `
+/**
+ * OAuth configuration for Cloudflare Workers adapter.
+ * Supports Auth0, WorkOS, Clerk, and custom OAuth providers.
+ */
+export interface CloudflareOAuthConfig {
+  /** OAuth provider type */
+  provider?: "auth0" | "workos" | "clerk" | "custom";
+  /** JWT issuer URL (e.g., "https://your-domain.auth0.com/") */
+  issuer: string;
+  /** Expected audience for JWT validation */
+  audience: string;
+  /** Custom JWKS URI (optional, derived from issuer by default) */
+  jwksUri?: string;
+  /** Required scopes for MCP access */
+  requiredScopes?: string[];
+  /** Whether authentication is required (default: true) */
+  required?: boolean;
+  /** Authorization servers to advertise in metadata */
+  authorizationServers: string[];
+}
+
+/**
+ * Auth info for OAuth-authenticated requests.
+ */
+export interface OAuthAuthInfo {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  extra: {
+    sub?: string;
+    email?: string;
+    name?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * Cloudflare Workers environment bindings.
+ * Extend this interface with your own bindings (KV, D1, etc.)
+ */
+export interface Env {
+  /** Optional API key for authenticating MCP requests */
+  MCP_API_KEY?: string;
+  /** Full OAuth configuration as JSON string */
+  MCP_OAUTH_CONFIG?: string;
+  /** OAuth issuer URL */
+  MCP_OAUTH_ISSUER?: string;
+  /** Expected audience for JWT validation */
+  MCP_OAUTH_AUDIENCE?: string;
+  /** Comma-separated list of authorization servers */
+  MCP_OAUTH_AUTHORIZATION_SERVERS?: string;
+  /** Comma-separated list of required scopes */
+  MCP_OAUTH_REQUIRED_SCOPES?: string;
+  /** Custom JWKS URI */
+  MCP_OAUTH_JWKS_URI?: string;
+  [key: string]: unknown;
+}
+
+export interface ExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+}
+
+declare const _default: {
+  fetch: (request: Request, env: Env, ctx: ExecutionContext) => Promise<Response>;
+};
+export default _default;
+`;
+
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
     let hasRun = false;
@@ -136,6 +246,8 @@ export class CreateTypeDefinitionPlugin {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "express") {
             typeDefinitionContent = expressTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter == "cloudflare") {
+            typeDefinitionContent = cloudflareTypeDefinition;
           }
           fs.writeFileSync(
             path.join(adapterOutputPath, "index.d.ts"),

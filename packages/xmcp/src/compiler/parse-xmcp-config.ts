@@ -33,6 +33,12 @@ export async function getConfig(): Promise<XmcpConfigOutputSchema> {
     // Remove stdio to deploy on vercel
     delete config.stdio;
   }
+  if (platforms.cloudflare) {
+    // Remove stdio and force cloudflare adapter for Cloudflare Workers
+    delete config.stdio;
+    config.experimental = config.experimental || {};
+    config.experimental.adapter = "cloudflare";
+  }
   return config;
 }
 
