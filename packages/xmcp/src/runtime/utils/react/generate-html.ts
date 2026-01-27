@@ -50,8 +50,8 @@ export function generateUIHTML(
       id: nextId++,
       method: "ui/initialize",
       params: {
-        capabilities: {},
-        clientInfo: { name: "xmcp React Widget", version: "1.0.0" },
+        appCapabilities: {},
+        appInfo: { name: "xmcp React Widget", version: "1.0.0" },
         protocolVersion: "2025-06-18"
       }
     }, "*");

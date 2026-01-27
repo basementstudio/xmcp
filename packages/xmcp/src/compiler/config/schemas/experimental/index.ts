@@ -3,7 +3,7 @@ import { z } from "zod/v3";
 // ------------------------------------------------------------
 // Adapter config schema (perhaps a separate file but it's small yet)
 // ------------------------------------------------------------
-export const adapterConfigSchema = z.enum(["express", "nextjs", "cloudflare"]);
+export const adapterConfigSchema = z.enum(["express", "nextjs", "cloudflare", "nestjs"]);
 
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 

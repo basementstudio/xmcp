@@ -47,6 +47,9 @@ export function getEntries(
         "runtime/adapters/cloudflare/index.ts"
       );
     }
+    if (xmcpConfig.experimental?.adapter === "nestjs") {
+      entries["adapter"] = path.join(runtimeFolderPath, "adapter-nestjs.js");
+    }
   }
   return entries;
 }

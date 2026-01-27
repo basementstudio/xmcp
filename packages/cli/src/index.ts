@@ -19,6 +19,10 @@ Options:
   -o, --out <path>    Output directory (default: src/generated)
   -c, --clients <path>  Path to clients config (default: src/clients.ts)
   -h, --help          Show this help message
+
+Scaffolding:
+  Use "npx xmcp create" to scaffold new tools, resources, prompts, and widgets.
+  Example: npx xmcp create tool weather
 `;
 
 function parseArgs(argv: string[]): ParsedArgs {
