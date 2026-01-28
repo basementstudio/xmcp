@@ -74,9 +74,10 @@ npx wrangler secret put MCP_OAUTH_ISSUER
 npx wrangler secret put MCP_OAUTH_AUDIENCE
 # Enter: client_XXXXXXXXXXXXXXXXXX
 
-# Set the authorization servers
+# Set the authorization servers (your AuthKit domain, NOT api.workos.com)
 npx wrangler secret put MCP_OAUTH_AUTHORIZATION_SERVERS
-# Enter: https://api.workos.com
+# Enter: https://YOUR_AUTHKIT_DOMAIN.authkit.com
+# (Find your AuthKit domain in WorkOS Dashboard > Authentication > AuthKit)
 ```
 
 ### 4. Deploy
@@ -103,7 +104,11 @@ curl http://localhost:8787/health
 ### 3. Check OAuth Metadata
 
 ```bash
+# Protected Resource Metadata (RFC 9728)
 curl http://localhost:8787/.well-known/oauth-protected-resource
+
+# Authorization Server Metadata (for OAuth flow discovery)
+curl http://localhost:8787/.well-known/oauth-authorization-server
 ```
 
 ### 4. Get an Access Token from WorkOS
@@ -162,7 +167,7 @@ curl -X POST http://localhost:8787/mcp \
 |----------|-------------|----------|
 | `MCP_OAUTH_ISSUER` | WorkOS API endpoint (`https://api.workos.com/`) | Yes |
 | `MCP_OAUTH_AUDIENCE` | Your WorkOS Client ID | Yes |
-| `MCP_OAUTH_AUTHORIZATION_SERVERS` | Authorization server URLs | Yes |
+| `MCP_OAUTH_AUTHORIZATION_SERVERS` | Your AuthKit domain (`https://xxx.authkit.com`) | Yes |
 | `MCP_OAUTH_REQUIRED_SCOPES` | Comma-separated required scopes | No |
 | `MCP_OAUTH_JWKS_URI` | Custom JWKS URI | No |
 
@@ -173,7 +178,7 @@ Instead of individual environment variables, you can use a single JSON config:
 ```bash
 npx wrangler secret put MCP_OAUTH_CONFIG
 # Enter:
-# {"issuer":"https://api.workos.com/","audience":"client_XXX","authorizationServers":["https://api.workos.com"]}
+# {"issuer":"https://api.workos.com/","audience":"client_XXX","authorizationServers":["https://YOUR_AUTHKIT_DOMAIN.authkit.com"]}
 ```
 
 ## Troubleshooting

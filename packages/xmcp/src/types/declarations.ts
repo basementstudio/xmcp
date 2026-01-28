@@ -2,6 +2,14 @@ declare module "xmcp/headers" {
   export const headers: typeof import("../runtime/headers").headers;
 }
 
+declare module "xmcp/cloudflare" {
+  export const cloudflareAuthMiddleware: typeof import("../runtime/adapters/cloudflare/middleware/auth").cloudflareAuthMiddleware;
+  export type CloudflareMiddleware = import("../runtime/adapters/cloudflare/middleware/types").CloudflareMiddleware;
+  export type CloudflareAuthConfig = import("../runtime/adapters/cloudflare/middleware/types").CloudflareAuthConfig;
+  export type AuthInfo = import("../runtime/adapters/cloudflare/middleware/types").AuthInfo;
+  export type NextFunction = import("../runtime/adapters/cloudflare/middleware/types").NextFunction;
+}
+
 declare module "xmcp/plugins/x402" {
   export const isPaidHandler: typeof import("../plugins/x402/index").isPaidHandler;
   export const getX402Registry: typeof import("../plugins/x402/index").getX402Registry;

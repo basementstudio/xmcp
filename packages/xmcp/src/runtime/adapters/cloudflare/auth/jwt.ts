@@ -6,9 +6,40 @@
  * TypeScript types are defined inline to avoid compile-time dependency.
  */
 
+/**
+ * Minimal type definitions for jose library functions we use.
+ * Defined here to avoid compile-time dependency on jose.
+ */
+interface JoseJWTVerifyResult {
+  payload: JWTPayload;
+  protectedHeader: Record<string, unknown>;
+}
+
+interface JoseVerifyOptions {
+  issuer: string;
+  audience: string;
+}
+
+/**
+ * Type for the remote JWKS key set returned by createRemoteJWKSet.
+ * This is an opaque type that jose uses internally.
+ */
+type RemoteJWKSet = (
+  protectedHeader?: unknown,
+  token?: unknown
+) => Promise<unknown>;
+
+interface JoseModule {
+  jwtVerify: (
+    token: string,
+    keySet: RemoteJWKSet,
+    options: JoseVerifyOptions
+  ) => Promise<JoseJWTVerifyResult>;
+  createRemoteJWKSet: (url: URL) => RemoteJWKSet;
+}
+
 // Cached jose module (loaded dynamically)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let joseModule: any = null;
+let joseModule: JoseModule | null = null;
 
 /**
  * Options for JWT verification
@@ -102,8 +133,7 @@ export class JWTVerificationError extends Error {
  * This allows the library to be optional.
  * Uses a variable to prevent TypeScript from trying to resolve at compile time.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadJose(): Promise<any> {
+async function loadJose(): Promise<JoseModule> {
   if (joseModule) {
     return joseModule;
   }
@@ -111,16 +141,16 @@ async function loadJose(): Promise<any> {
   try {
     // Use variable to prevent compile-time module resolution
     const moduleName = "jose";
-    joseModule = await import(/* webpackIgnore: true */ moduleName);
-    return joseModule;
+    const loadedModule = await import(/* webpackIgnore: true */ moduleName) as JoseModule;
+    joseModule = loadedModule;
+    return loadedModule;
   } catch {
     throw new JoseNotInstalledError();
   }
 }
 
 // Cache for JWKS key sets to avoid repeated fetches
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const jwksCache = new Map<string, { keySet: any; createdAt: number }>();
+const jwksCache = new Map<string, { keySet: RemoteJWKSet; createdAt: number }>();
 
 // Cache TTL: 1 hour (keys don't change frequently)
 const JWKS_CACHE_TTL = 60 * 60 * 1000;
@@ -128,8 +158,7 @@ const JWKS_CACHE_TTL = 60 * 60 * 1000;
 /**
  * Get or create a cached JWKS key set
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getJWKS(jwksUri: string, jose: any): Promise<any> {
+async function getJWKS(jwksUri: string, jose: JoseModule): Promise<RemoteJWKSet> {
   const cached = jwksCache.get(jwksUri);
   const now = Date.now();
 

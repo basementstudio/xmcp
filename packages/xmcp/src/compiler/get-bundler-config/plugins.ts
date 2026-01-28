@@ -228,6 +228,33 @@ declare const _default: {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) => Promise<Response>;
 };
 export default _default;
+
+// Middleware types
+export interface AuthInfo {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  extra?: Record<string, unknown>;
+}
+
+export type NextFunction = (authInfo?: AuthInfo) => Promise<Response>;
+
+export type CloudflareMiddleware = (
+  request: Request,
+  env: Env,
+  ctx: ExecutionContext,
+  next: NextFunction
+) => Promise<Response> | Response;
+
+export interface CloudflareAuthConfig {
+  validateToken: (token: string, env: Env) => Promise<Omit<AuthInfo, "token"> | null> | Omit<AuthInfo, "token"> | null;
+  headerName?: string;
+  tokenPrefix?: string;
+  required?: boolean;
+}
+
+export function cloudflareAuthMiddleware(config: CloudflareAuthConfig): CloudflareMiddleware;
 `;
 
 const nestJsTypeDefinition = `

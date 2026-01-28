@@ -84,7 +84,7 @@ function generateStaticImportCode(
 
   let middlewareCode = "";
   if (hasMiddleware) {
-    staticImports.push(`import * as _middleware from "../src/middleware";`);
+    staticImports.push(`import * as _middleware from "../src/middleware.ts";`);
     middlewareCode = `export const middleware = () => Promise.resolve(_middleware);`;
   }
 
@@ -154,7 +154,7 @@ function generateDynamicImportCode(
     .join("\n");
 
   const importMiddlewareCode = hasMiddleware
-    ? `export const middleware = () => import("../src/middleware");`
+    ? `export const middleware = () => import("../src/middleware.ts");`
     : "";
 
   // Generate client bundles mapping (empty object if none)

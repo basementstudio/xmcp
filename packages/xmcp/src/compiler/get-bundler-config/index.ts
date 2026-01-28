@@ -108,7 +108,12 @@ export function getRspackConfig(
           ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
           : path.resolve(processFolder, ".xmcp/x402.js"),
         // For Cloudflare, add @ alias to resolve xmcp source paths
-        ...(isCloudflare && xmcpSrcPath ? { "@": xmcpSrcPath } : {}),
+        ...(isCloudflare && xmcpSrcPath
+          ? {
+              "@": xmcpSrcPath,
+              "xmcp/cloudflare": path.join(xmcpSrcPath, "runtime/adapters/cloudflare/index.ts"),
+            }
+          : {}),
         ...resolveTsconfigPathsToAlias(),
       },
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
