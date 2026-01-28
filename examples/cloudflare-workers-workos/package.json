@@ -1,0 +1,21 @@
+{
+  "name": "cloudflare-workers-workos-example",
+  "version": "0.0.1",
+  "private": true,
+  "description": "xmcp Cloudflare Workers example with WorkOS OAuth authentication",
+  "scripts": {
+    "dev": "xmcp dev",
+    "build": "xmcp build --cf",
+    "deploy": "cd .cloudflare && npx wrangler deploy",
+    "wrangler:dev": "cd .cloudflare && npx wrangler dev"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "jose": "^5.9.6",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.0.0"
+  }
+}

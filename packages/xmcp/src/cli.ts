@@ -2,6 +2,7 @@
 import { Command } from "commander";
 import { compile } from "./compiler";
 import { buildVercelOutput } from "./platforms/build-vercel-output";
+import { buildCloudflareOutput } from "./platforms/build-cloudflare-output";
 import chalk from "chalk";
 import { xmcpLogo } from "./utils/cli-icons";
 import {
@@ -35,15 +36,18 @@ program
   .command("build")
   .description("Build for production")
   .option("--vercel", "Build for Vercel deployment")
+  .option("--cf", "Build for Cloudflare Workers deployment")
   .action(async (options) => {
     console.log(`${xmcpLogo} Building for production...`);
     const isVercelBuild = options.vercel || process.env.VERCEL === "1";
+    const isCloudflareBuild = options.cf || process.env.CF_PAGES === "1";
 
     await compilerContextProvider(
       {
         mode: "production",
         platforms: {
           vercel: isVercelBuild,
+          cloudflare: isCloudflareBuild,
         },
       },
       async () => {
@@ -59,6 +63,19 @@ program
               } catch (error) {
                 console.error(
                   chalk.red("❌ Failed to create Vercel output structure:"),
+                  error
+                );
+              }
+            }
+            if (isCloudflareBuild) {
+              console.log(`${xmcpLogo} Building for Cloudflare Workers...`);
+              try {
+                await buildCloudflareOutput();
+              } catch (error) {
+                console.error(
+                  chalk.red(
+                    "❌ Failed to create Cloudflare output structure:"
+                  ),
                   error
                 );
               }

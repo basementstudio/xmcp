@@ -137,6 +137,9 @@ function getConfig() {
             return runtimeFiles;
           })()
         ),
+        // Inject the path to xmcp source directory at build time
+        // This is used by cloudflare adapter to find the TypeScript source files
+        XMCP_SRC_PATH: JSON.stringify(srcPath),
       }),
       // add shebang to CLI output
       new rspack.BannerPlugin({
