@@ -11,7 +11,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
     "@nestjs/common": "^11.1.0",
     "@nestjs/config": "^3.2.0",
     "@nestjs/core": "^11.1.0",
