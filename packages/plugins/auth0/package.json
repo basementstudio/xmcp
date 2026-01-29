@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/auth0",
   "description": "Auth0 authentication integration for xmcp",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -40,9 +40,9 @@
     "@types/express": "^4.17.25",
     "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
-    "xmcp": "^0.5.8"
+    "xmcp": "^0.6.2"
   },
   "peerDependencies": {
-    "xmcp": "^0.5.8"
+    "xmcp": "^0.6.2"
   }
 }
