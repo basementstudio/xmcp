@@ -149,20 +149,6 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       compileStarted = true;
       console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
 
-      if (process.env.GENERATE_STATS === "true") {
-        const statsJson = stats.toJson({
-          all: false,
-          assets: true,
-          chunks: true,
-          modules: true,
-          reasons: true,
-          timings: true,
-        });
-        const statsPath = path.join(__dirname, "..", "stats-runtime.json");
-        fs.writeFileSync(statsPath, JSON.stringify(statsJson, null, 2));
-        console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
-      }
-
       onCompiled(stats);
     }
   };
