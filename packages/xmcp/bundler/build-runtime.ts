@@ -1,10 +1,5 @@
 /**
  * This script builds the runtime files. It's not the compiler itself.
- *
- * Note: The Cloudflare adapter is NOT pre-built here. It's built from TypeScript source
- * at user build time, which allows the webworker target to properly handle the bundle.
- * This avoids issues with Node.js built-ins (async_hooks, etc.) that can't be resolved
- * during pre-build with webworker target.
  */
 
 import path from "path";
@@ -25,7 +20,6 @@ interface RuntimeRoot {
 }
 
 // Node.js runtime roots (express, nextjs adapters + transports)
-// Note: Cloudflare adapter is NOT included here - it's built from source at user build time
 const runtimeRoots: RuntimeRoot[] = [
   { name: "headers", path: "headers" },
   { name: "stdio", path: "transports/stdio" },
@@ -39,39 +33,6 @@ const entry: EntryObject = {};
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
-
-// Shared module rules
-const moduleRules = [
-  {
-    test: /\.ts$/,
-    exclude: /node_modules/,
-    use: {
-      loader: "builtin:swc-loader",
-      options: {
-        jsc: {
-          parser: {
-            syntax: "typescript",
-            tsx: false,
-            decorators: true,
-          },
-          target: "es2020",
-        },
-        module: {
-          type: "es6",
-        },
-      },
-    },
-  },
-];
-
-// Shared resolve config
-const resolveConfig = {
-  extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
-  alias: {
-    "@": srcPath,
-    "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
-  },
-};
 
 // Node.js config (express, nextjs, http, stdio)
 const config: RspackOptions = {
@@ -122,7 +83,13 @@ const config: RspackOptions = {
       },
     ],
   },
-  resolve: resolveConfig,
+  resolve: {
+    extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+    alias: {
+      "@": srcPath,
+      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
+    },
+  },
   watchOptions: {
     aggregateTimeout: 600,
     ignored: /node_modules/,
