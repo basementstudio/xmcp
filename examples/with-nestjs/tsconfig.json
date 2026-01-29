@@ -19,8 +19,8 @@
     "noFallthroughCasesInSwitch": false,
     "esModuleInterop": true,
     "paths": {
-      "@xmcp/*": ["./.xmcp/*"]
-    }
+      "@xmcp/*": ["./.xmcp/*"],
+    },
   },
-  "include": ["src/**/*", "xmcp-env.d.ts", ".xmcp/**/*"]
+  "include": ["src/**/*", "xmcp-env.d.ts", ".xmcp/**/*"],
 }

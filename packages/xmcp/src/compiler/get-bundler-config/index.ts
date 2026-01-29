@@ -5,7 +5,11 @@ import {
   BannerPlugin,
 } from "@rspack/core";
 import path from "path";
-import { distOutputPath, adapterOutputPath } from "@/utils/constants";
+import {
+  distOutputPath,
+  adapterOutputPath,
+  resolveXmcpSrcPath,
+} from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getEntries } from "./get-entries";
@@ -37,10 +41,8 @@ export function getRspackConfig(
   const isCloudflare = xmcpConfig.experimental?.adapter === "cloudflare";
 
   // For Cloudflare, we need to resolve the xmcp source path for the @ alias
-  // since the cloudflare adapter is built from TypeScript source
-  // The path is injected at build time via DefinePlugin
-  // @ts-expect-error: injected by compiler
-  const xmcpSrcPath = isCloudflare ? (typeof XMCP_SRC_PATH === "string" ? XMCP_SRC_PATH : path.resolve(__dirname, "..", "..")) : undefined;
+  // since the cloudflare adapter is built from TypeScript source.
+  const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
 
   const config: RspackOptions = {
     mode,
@@ -69,9 +71,7 @@ export function getRspackConfig(
     target: isCloudflare ? "webworker" : "node",
     // For Cloudflare, async_hooks is external (provided by nodejs_compat)
     // For Node.js, use getExternals() to externalize Node.js modules
-    externals: isCloudflare
-      ? { async_hooks: "async_hooks" }
-      : getExternals(),
+    externals: isCloudflare ? { async_hooks: "async_hooks" } : getExternals(),
     // Enable ESM experiments for Cloudflare
     experiments: isCloudflare ? { outputModule: true } : undefined,
     resolve: {
@@ -104,14 +104,18 @@ export function getRspackConfig(
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
         // For Cloudflare, point to source; for Node.js, point to pre-built
-        "xmcp/plugins/x402": isCloudflare && xmcpSrcPath
-          ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
-          : path.resolve(processFolder, ".xmcp/x402.js"),
+        "xmcp/plugins/x402":
+          isCloudflare && xmcpSrcPath
+            ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
+            : path.resolve(processFolder, ".xmcp/x402.js"),
         // For Cloudflare, add @ alias to resolve xmcp source paths
         ...(isCloudflare && xmcpSrcPath
           ? {
               "@": xmcpSrcPath,
-              "xmcp/cloudflare": path.join(xmcpSrcPath, "runtime/adapters/cloudflare/index.ts"),
+              "xmcp/cloudflare": path.join(
+                xmcpSrcPath,
+                "runtime/adapters/cloudflare/index.ts"
+              ),
             }
           : {}),
         ...resolveTsconfigPathsToAlias(),

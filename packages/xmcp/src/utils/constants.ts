@@ -7,3 +7,23 @@ export const rootFolder = path.join(process.cwd());
 export const processFolder = process.cwd();
 export const distOutputPath = path.join(processFolder, "dist");
 export const adapterOutputPath = path.join(runtimeFolderPath, "adapter");
+
+/**
+ * Resolve the absolute path to the `xmcp` package `src/` folder.
+ *
+ * Used when we need to bundle TypeScript source from xmcp itself
+ * (e.g. Cloudflare adapter builds).
+ */
+export function resolveXmcpSrcPath(): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkgJsonPath = require.resolve("xmcp/package.json");
+    return path.join(path.dirname(pkgJsonPath), "src");
+  } catch (error) {
+    throw new Error(
+      `Could not resolve xmcp source path. ` +
+        `Make sure the \"xmcp\" package is resolvable from your project.\n` +
+        `Original error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}

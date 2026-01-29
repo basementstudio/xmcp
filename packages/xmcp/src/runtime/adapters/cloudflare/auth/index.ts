@@ -10,19 +10,17 @@ export type {
 } from "./types";
 
 // JWT verification
-export {
-  verifyJWT,
-  clearJWKSCache,
-  JWTVerificationError,
-  JoseNotInstalledError,
-} from "./jwt";
+export { verifyJWT, JWTVerificationError } from "./jwt";
 export type { JWTVerifyOptions, JWTPayload } from "./jwt";
 
 // Config
 export { OAuthConfigSchema, getOAuthConfig } from "./config";
 
 // Responses
-export { createUnauthorizedResponse, createForbiddenResponse } from "./responses";
+export {
+  createUnauthorizedResponse,
+  createForbiddenResponse,
+} from "./responses";
 
 // Validators
 export { validateApiKey } from "./api-key-validator";

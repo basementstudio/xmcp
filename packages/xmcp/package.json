@@ -57,6 +57,7 @@
   "devDependencies": {
     "@nestjs/common": "^11.1.12",
     "@types/async-retry": "^1.4.9",
+    "jose": "^5.9.6",
     "@types/content-type": "^1.1.9",
     "@types/express": "^5.0.6",
     "@types/fs-extra": "^11.0.4",

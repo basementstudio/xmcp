@@ -4,9 +4,11 @@
 
 import type { Env } from "../types";
 import type { OAuthAuthInfo } from "./types";
-import { addCorsHeaders } from "../cors";
 import { getOAuthConfig } from "./config";
-import { createUnauthorizedResponse, createForbiddenResponse } from "./responses";
+import {
+  createUnauthorizedResponse,
+  createForbiddenResponse,
+} from "./responses";
 import { verifyJWT, JWTVerificationError } from "./jwt";
 
 // HTTP config - injected by compiler
@@ -89,7 +91,9 @@ export async function validateOAuth(
     // Build OAuthAuthInfo
     const authInfo: OAuthAuthInfo = {
       token,
-      clientId: ((payload.azp || payload.client_id || payload.sub) as string) || "unknown",
+      clientId:
+        ((payload.azp || payload.client_id || payload.sub) as string) ||
+        "unknown",
       scopes: tokenScopes,
       expiresAt: payload.exp,
       extra: {
@@ -110,33 +114,6 @@ export async function validateOAuth(
           requestOrigin,
           baseUrl,
           requiredScopes
-        ),
-      };
-    }
-
-    // Handle jose not installed
-    if (
-      error instanceof Error &&
-      error.name === "JoseNotInstalledError"
-    ) {
-      console.error("[Cloudflare-MCP]", error.message);
-      return {
-        error: addCorsHeaders(
-          new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: "OAuth is configured but jose library is not installed",
-              },
-              id: null,
-            }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
-          ),
-          requestOrigin
         ),
       };
     }

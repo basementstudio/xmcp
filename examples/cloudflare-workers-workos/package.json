@@ -10,11 +10,11 @@
     "wrangler:dev": "cd .cloudflare && npx wrangler dev"
   },
   "dependencies": {
+    "jose": "^5.9.6",
     "xmcp": "workspace:*",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "jose": "^5.9.6",
     "typescript": "^5.9.3",
     "wrangler": "^4.0.0"
   }

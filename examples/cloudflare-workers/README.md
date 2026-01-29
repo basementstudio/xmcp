@@ -5,20 +5,24 @@ This example demonstrates how to deploy an xmcp MCP server to Cloudflare Workers
 ## Getting Started
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Build for Cloudflare Workers:
+
 ```bash
 pnpm build
 ```
 
 This creates a `.cloudflare/` directory with:
+
 - `worker.js` - The bundled Cloudflare Worker
-- `wrangler.toml` - Wrangler configuration template
+- `wrangler.jsonc` - Wrangler configuration template
 
 3. Test locally with Wrangler:
+
 ```bash
 pnpm preview
 # or
@@ -26,6 +30,7 @@ cd .cloudflare && npx wrangler dev
 ```
 
 4. Test with curl:
+
 ```bash
 # Health check
 curl http://localhost:8787/health
@@ -44,6 +49,7 @@ curl -X POST http://localhost:8787/mcp \
 ```
 
 5. Deploy to Cloudflare:
+
 ```bash
 pnpm deploy
 # or

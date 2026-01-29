@@ -2,44 +2,12 @@
  * JWT verification module for Cloudflare Workers.
  * Uses the jose library which is compatible with Web Crypto API.
  *
- * Note: jose is dynamically imported to support optional installation.
- * TypeScript types are defined inline to avoid compile-time dependency.
+ * jose is bundled at build time when using `xmcp build --cf`.
+ * Users must have jose installed in their project.
  */
 
-/**
- * Minimal type definitions for jose library functions we use.
- * Defined here to avoid compile-time dependency on jose.
- */
-interface JoseJWTVerifyResult {
-  payload: JWTPayload;
-  protectedHeader: Record<string, unknown>;
-}
-
-interface JoseVerifyOptions {
-  issuer: string;
-  audience: string;
-}
-
-/**
- * Type for the remote JWKS key set returned by createRemoteJWKSet.
- * This is an opaque type that jose uses internally.
- */
-type RemoteJWKSet = (
-  protectedHeader?: unknown,
-  token?: unknown
-) => Promise<unknown>;
-
-interface JoseModule {
-  jwtVerify: (
-    token: string,
-    keySet: RemoteJWKSet,
-    options: JoseVerifyOptions
-  ) => Promise<JoseJWTVerifyResult>;
-  createRemoteJWKSet: (url: URL) => RemoteJWKSet;
-}
-
-// Cached jose module (loaded dynamically)
-let joseModule: JoseModule | null = null;
+import { jwtVerify, createRemoteJWKSet } from "jose";
+import type { JWTVerifyResult, KeyLike } from "jose";
 
 /**
  * Options for JWT verification
@@ -97,19 +65,6 @@ export interface JWTPayload {
 }
 
 /**
- * Error thrown when jose library is not installed
- */
-export class JoseNotInstalledError extends Error {
-  constructor() {
-    super(
-      'The "jose" package is required for OAuth/JWT authentication. ' +
-        "Please install it: npm install jose"
-    );
-    this.name = "JoseNotInstalledError";
-  }
-}
-
-/**
  * Error thrown when JWT verification fails
  */
 export class JWTVerificationError extends Error {
@@ -128,48 +83,13 @@ export class JWTVerificationError extends Error {
   }
 }
 
-/**
- * Load the jose library dynamically.
- * This allows the library to be optional.
- * Uses a variable to prevent TypeScript from trying to resolve at compile time.
- */
-async function loadJose(): Promise<JoseModule> {
-  if (joseModule) {
-    return joseModule;
-  }
+type RemoteJWKSFunction = (
+  protectedHeader?: unknown,
+  token?: unknown
+) => Promise<KeyLike>;
 
-  try {
-    // Use variable to prevent compile-time module resolution
-    const moduleName = "jose";
-    const loadedModule = await import(/* webpackIgnore: true */ moduleName) as JoseModule;
-    joseModule = loadedModule;
-    return loadedModule;
-  } catch {
-    throw new JoseNotInstalledError();
-  }
-}
-
-// Cache for JWKS key sets to avoid repeated fetches
-const jwksCache = new Map<string, { keySet: RemoteJWKSet; createdAt: number }>();
-
-// Cache TTL: 1 hour (keys don't change frequently)
-const JWKS_CACHE_TTL = 60 * 60 * 1000;
-
-/**
- * Get or create a cached JWKS key set
- */
-async function getJWKS(jwksUri: string, jose: JoseModule): Promise<RemoteJWKSet> {
-  const cached = jwksCache.get(jwksUri);
-  const now = Date.now();
-
-  if (cached && now - cached.createdAt < JWKS_CACHE_TTL) {
-    return cached.keySet;
-  }
-
-  const keySet = jose.createRemoteJWKSet(new URL(jwksUri));
-  jwksCache.set(jwksUri, { keySet, createdAt: now });
-
-  return keySet;
+function getJWKS(jwksUri: string): RemoteJWKSFunction {
+  return createRemoteJWKSet(new URL(jwksUri)) as unknown as RemoteJWKSFunction;
 }
 
 /**
@@ -179,27 +99,24 @@ async function getJWKS(jwksUri: string, jose: JoseModule): Promise<RemoteJWKSet>
  * @param token - The JWT token to verify
  * @param options - Verification options
  * @returns The verified JWT payload
- * @throws JoseNotInstalledError if jose is not installed
  * @throws JWTVerificationError if verification fails
  */
 export async function verifyJWT(
   token: string,
   options: JWTVerifyOptions
 ): Promise<JWTPayload> {
-  const jose = await loadJose();
-
   // Derive JWKS URI from issuer if not provided
   const jwksUri =
     options.jwksUri ||
     `${options.issuer.replace(/\/$/, "")}/.well-known/jwks.json`;
 
   try {
-    const JWKS = await getJWKS(jwksUri, jose);
+    const JWKS = getJWKS(jwksUri);
 
-    const { payload } = await jose.jwtVerify(token, JWKS, {
+    const { payload } = (await jwtVerify(token, JWKS, {
       issuer: options.issuer,
       audience: options.audience,
-    });
+    })) as JWTVerifyResult;
 
     return payload as JWTPayload;
   } catch (error) {
@@ -257,12 +174,4 @@ export async function verifyJWT(
       "INVALID_TOKEN"
     );
   }
-}
-
-/**
- * Clear the JWKS cache.
- * Useful for testing or when keys are rotated.
- */
-export function clearJWKSCache(): void {
-  jwksCache.clear();
 }
