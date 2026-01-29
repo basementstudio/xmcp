@@ -3,11 +3,23 @@ declare module "xmcp/headers" {
 }
 
 declare module "xmcp/cloudflare" {
-  export const cloudflareAuthMiddleware: typeof import("../runtime/adapters/cloudflare/middleware/auth").cloudflareAuthMiddleware;
-  export type CloudflareMiddleware = import("../runtime/adapters/cloudflare/middleware/types").CloudflareMiddleware;
-  export type CloudflareAuthConfig = import("../runtime/adapters/cloudflare/middleware/types").CloudflareAuthConfig;
-  export type AuthInfo = import("../runtime/adapters/cloudflare/middleware/types").AuthInfo;
-  export type NextFunction = import("../runtime/adapters/cloudflare/middleware/types").NextFunction;
+  export interface Env {
+    [key: string]: unknown;
+  }
+
+  export interface ExecutionContext {
+    waitUntil(promise: Promise<unknown>): void;
+    passThroughOnException(): void;
+  }
+
+  const _default: {
+    fetch: (
+      request: Request,
+      env: Env,
+      ctx: ExecutionContext
+    ) => Promise<Response>;
+  };
+  export default _default;
 }
 
 declare module "xmcp/plugins/x402" {

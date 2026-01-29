@@ -5,14 +5,7 @@ import homeTemplate from "../../templates/home";
 
 // Import from extracted modules
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
-import { handleProtectedResourceMetadata } from "./oauth-metadata";
-import { handleAuthorizationServerMetadata } from "./oauth-authorization-server-metadata";
-import { getOAuthConfig, runMiddleware } from "./auth";
-import type { AuthInfo } from "./middleware/types";
 import type { Env, ExecutionContext } from "./types";
-
-// Re-export shared types
-export type { Env, ExecutionContext } from "./types";
 
 // HTTP config - injected by compiler as combined object
 // @ts-expect-error: injected by compiler
@@ -50,8 +43,7 @@ function log(message: string, ...args: unknown[]): void {
  */
 async function handleMcpRequest(
   request: Request,
-  requestOrigin: string | null,
-  authInfo: AuthInfo | null
+  requestOrigin: string | null
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
 
@@ -69,11 +61,7 @@ async function handleMcpRequest(
         const transport = new WebStatelessHttpTransport(debug);
 
         await server.connect(transport);
-        // Pass auth info to transport if available
-        const response = await transport.handleRequest(
-          request,
-          authInfo || undefined
-        );
+        const response = await transport.handleRequest(request);
 
         // Cleanup
         await transport.close();
@@ -103,19 +91,6 @@ async function handleMcpRequest(
 }
 
 /**
- * Determine which auth methods are enabled
- */
-function getAuthStatus(env: Env): string {
-  const hasOAuth = !!getOAuthConfig(env);
-  const hasApiKey = !!env.MCP_API_KEY;
-
-  if (hasOAuth && hasApiKey) return "oauth+api-key";
-  if (hasOAuth) return "oauth";
-  if (hasApiKey) return "api-key";
-  return "none";
-}
-
-/**
  * Cloudflare Workers fetch handler
  */
 export default {
@@ -140,16 +115,6 @@ export default {
       ? httpEndpoint
       : `/${httpEndpoint || "mcp"}`;
 
-    // OAuth Protected Resource Metadata endpoint (RFC 9728)
-    if (pathname === "/.well-known/oauth-protected-resource") {
-      return handleProtectedResourceMetadata(request, env, requestOrigin);
-    }
-
-    // OAuth Authorization Server Metadata endpoint
-    if (pathname === "/.well-known/oauth-authorization-server") {
-      return handleAuthorizationServerMetadata(request, env, requestOrigin);
-    }
-
     // Health check endpoint (no auth required)
     if (pathname === "/health") {
       const response = new Response(
@@ -157,7 +122,7 @@ export default {
           status: "ok",
           transport: "cloudflare-workers",
           mode: "stateless",
-          auth: getAuthStatus(env),
+          auth: "none",
         }),
         {
           status: 200,
@@ -177,13 +142,9 @@ export default {
       return addCorsHeaders(response, requestOrigin);
     }
 
-    // MCP endpoint (auth required if configured)
+    // MCP endpoint
     if (pathname === mcpEndpoint) {
-      const authResult = await runMiddleware(request, env, _ctx, requestOrigin);
-      if ("error" in authResult) {
-        return authResult.error;
-      }
-      return handleMcpRequest(request, requestOrigin, authResult.authInfo);
+      return handleMcpRequest(request, requestOrigin);
     }
 
     // 404 for unknown paths
@@ -195,12 +156,4 @@ export default {
   },
 };
 
-// Re-export types for users
-export type { CloudflareOAuthConfig, OAuthAuthInfo } from "./auth/types";
-export { cloudflareAuthMiddleware } from "./middleware/auth";
-export type {
-  CloudflareMiddleware,
-  CloudflareAuthConfig,
-  AuthInfo as CloudflareAuthInfo,
-  NextFunction,
-} from "./middleware/types";
+// No public helper exports.

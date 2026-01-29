@@ -4,18 +4,15 @@
  */
 
 import type { Env, ExecutionContext } from "../types";
-import type { CloudflareMiddleware, AuthInfo } from "../middleware/types";
 import { addCorsHeaders } from "../cors";
-import { validateOAuth } from "./oauth-validator";
-import { validateApiKey } from "./api-key-validator";
+import { AuthInfo, CloudflareMiddleware } from "./types";
+import { createUnauthorizedResponse } from "./responses";
 
 // Custom middleware - injected by compiler (undefined if no src/middleware.ts)
 // @ts-expect-error: injected by compiler
 const injectedMiddleware = INJECTED_MIDDLEWARE as
   | (() => Promise<{
-      default:
-        | CloudflareMiddleware
-        | CloudflareMiddleware[];
+      default: CloudflareMiddleware | CloudflareMiddleware[];
     }>)
   | undefined;
 
@@ -37,27 +34,9 @@ const injectedMiddleware = INJECTED_MIDDLEWARE as
  * @param requestOrigin - Origin header from request (for CORS)
  * @returns AuthInfo if authenticated, null if no auth required, or error Response
  */
-export async function runBuiltinAuth(
-  request: Request,
-  env: Env,
-  requestOrigin: string | null
-): Promise<{ authInfo: AuthInfo | null } | { error: Response }> {
-  // 1. Try OAuth validation first (if configured)
-  const oauthResult = await validateOAuth(request, env, requestOrigin);
-  if ("error" in oauthResult) {
-    return oauthResult;
-  }
-  if (oauthResult.authInfo) {
-    return oauthResult;
-  }
-
-  // 2. No OAuth token provided (or OAuth not configured), try API key
-  return validateApiKey(request, env, requestOrigin);
-}
-
 /**
  * Run custom middleware chain and return final authInfo.
- * Falls back to built-in auth if no custom middleware is defined.
+ * Middleware is required for Cloudflare adapter auth.
  */
 export async function runMiddleware(
   request: Request,
@@ -65,27 +44,41 @@ export async function runMiddleware(
   ctx: ExecutionContext,
   requestOrigin: string | null
 ): Promise<{ authInfo: AuthInfo | null } | { error: Response }> {
-  // No custom middleware - fall back to built-in OAuth/API key
   if (!injectedMiddleware) {
-    return runBuiltinAuth(request, env, requestOrigin);
+    return {
+      error: addCorsHeaders(
+        createUnauthorizedResponse(
+          "Unauthorized: Missing auth middleware",
+          requestOrigin
+        ),
+        requestOrigin
+      ),
+    };
   }
 
   // Load middleware module
   const middlewareModule = await injectedMiddleware();
   if (!middlewareModule?.default) {
-    return runBuiltinAuth(request, env, requestOrigin);
+    return {
+      error: addCorsHeaders(
+        createUnauthorizedResponse(
+          "Unauthorized: Missing auth middleware",
+          requestOrigin
+        ),
+        requestOrigin
+      ),
+    };
   }
 
-  // Normalize to array
-  const middlewares: CloudflareMiddleware[] = Array.isArray(middlewareModule.default)
+  const middlewares: CloudflareMiddleware[] = Array.isArray(
+    middlewareModule.default
+  )
     ? middlewareModule.default
     : [middlewareModule.default];
 
-  // Create middleware chain
   let index = 0;
   let finalAuthInfo: AuthInfo | null = null;
 
-  // Sentinel response - checked by reference equality (not magic headers)
   const sentinelResponse = new Response(null, { status: 204 });
 
   const next = async (authInfo?: AuthInfo): Promise<Response> => {
@@ -93,20 +86,17 @@ export async function runMiddleware(
       finalAuthInfo = authInfo;
     }
 
-    // If more middleware, run next
     if (index < middlewares.length) {
       const middleware = middlewares[index++];
       return middleware(request, env, ctx, next);
     }
 
-    // All middleware done - return sentinel (checked by reference equality)
     return sentinelResponse;
   };
 
   try {
     const response = await next();
 
-    // Check if middleware chain completed (reference equality - unforgeable)
     if (response === sentinelResponse) {
       return { authInfo: finalAuthInfo };
     }

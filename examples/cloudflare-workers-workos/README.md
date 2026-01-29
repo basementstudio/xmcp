@@ -40,6 +40,7 @@ For this example, we'll use AuthKit:
 ### 3. Get Your JWKS URI
 
 WorkOS uses a standard JWKS endpoint:
+
 ```
 https://api.workos.com/.well-known/jwks.json
 ```
@@ -117,21 +118,21 @@ Using the WorkOS SDK or API, authenticate a user and get an access token:
 
 ```javascript
 // Example using WorkOS Node SDK
-import { WorkOS } from '@workos-inc/node';
+import { WorkOS } from "@workos-inc/node";
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY);
 
 // Get authorization URL
 const authorizationUrl = workos.userManagement.getAuthorizationUrl({
-  provider: 'authkit',
-  redirectUri: 'https://your-app.com/callback',
-  clientId: 'client_XXXXXXXXXX',
+  provider: "authkit",
+  redirectUri: "https://your-app.com/callback",
+  clientId: "client_XXXXXXXXXX",
 });
 
 // After user authenticates, exchange code for token
 const { accessToken } = await workos.userManagement.authenticateWithCode({
-  code: 'authorization_code_from_callback',
-  clientId: 'client_XXXXXXXXXX',
+  code: "authorization_code_from_callback",
+  clientId: "client_XXXXXXXXXX",
 });
 ```
 
@@ -155,31 +156,21 @@ curl -X POST http://localhost:8787/mcp \
 
 ## Available Tools
 
-| Tool | Description | Auth Required |
-|------|-------------|---------------|
-| `hello` | Simple greeting | No |
-| `whoami` | Returns authenticated user info | Yes (any token) |
-| `get_user_data` | Fetches user data | Yes (requires scope) |
+| Tool            | Description                     | Auth Required        |
+| --------------- | ------------------------------- | -------------------- |
+| `hello`         | Simple greeting                 | No                   |
+| `whoami`        | Returns authenticated user info | Yes (any token)      |
+| `get_user_data` | Fetches user data               | Yes (requires scope) |
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `MCP_OAUTH_ISSUER` | WorkOS API endpoint (`https://api.workos.com/`) | Yes |
-| `MCP_OAUTH_AUDIENCE` | Your WorkOS Client ID | Yes |
-| `MCP_OAUTH_AUTHORIZATION_SERVERS` | Your AuthKit domain (`https://xxx.authkit.com`) | Yes |
-| `MCP_OAUTH_REQUIRED_SCOPES` | Comma-separated required scopes | No |
-| `MCP_OAUTH_JWKS_URI` | Custom JWKS URI | No |
-
-## Alternative: JSON Config
-
-Instead of individual environment variables, you can use a single JSON config:
-
-```bash
-npx wrangler secret put MCP_OAUTH_CONFIG
-# Enter:
-# {"issuer":"https://api.workos.com/","audience":"client_XXX","authorizationServers":["https://YOUR_AUTHKIT_DOMAIN.authkit.com"]}
-```
+| Variable                          | Description                                     | Required |
+| --------------------------------- | ----------------------------------------------- | -------- |
+| `MCP_OAUTH_ISSUER`                | WorkOS API endpoint (`https://api.workos.com/`) | Yes      |
+| `MCP_OAUTH_AUDIENCE`              | Your WorkOS Client ID                           | Yes      |
+| `MCP_OAUTH_AUTHORIZATION_SERVERS` | Your AuthKit domain (`https://xxx.authkit.com`) | Yes      |
+| `MCP_OAUTH_REQUIRED_SCOPES`       | Comma-separated required scopes                 | No       |
+| `MCP_OAUTH_JWKS_URI`              | Custom JWKS URI                                 | No       |
 
 ## Troubleshooting
 
@@ -204,12 +195,14 @@ The token's `iss` or `aud` claims don't match your configuration.
 **Important:** The Cloudflare Workers adapter only supports JWT token validation. The full WorkOS SDK (`@workos-inc/node`) is **not available** in Workers because it has Node.js dependencies that are incompatible with the Workers runtime.
 
 ### What works in Cloudflare Workers:
+
 - JWT signature verification via `jose` library
 - Token expiration validation
 - Issuer and audience validation
 - Access to JWT claims via `authInfo.extra`
 
 ### What does NOT work in Cloudflare Workers:
+
 - `getSession()` - Not available
 - `getUser()` - Not available (cannot call WorkOS API)
 - `getClient()` - Not available (WorkOS SDK doesn't work in Workers)
@@ -241,9 +234,9 @@ If you need `getSession()`, `getUser()`, or `getClient()`, use the Node.js adapt
 // Works in Node.js with @xmcp-dev/workos, NOT in Cloudflare Workers
 import { getSession, getUser, getClient } from "@xmcp-dev/workos";
 
-const session = getSession();        // Full session object
-const user = await getUser();        // Fetch user from WorkOS API
-const client = getClient();          // WorkOS SDK instance
+const session = getSession(); // Full session object
+const user = await getUser(); // Fetch user from WorkOS API
+const client = getClient(); // WorkOS SDK instance
 ```
 
 ## Security Notes
