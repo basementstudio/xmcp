@@ -2,103 +2,19 @@
  * OAuth configuration parsing and validation for Cloudflare Workers adapter.
  */
 
+import { z } from "zod/v3";
 import type { CloudflareOAuthConfig } from "./types";
 import type { Env } from "../types";
 
-/**
- * Zod-like schema for OAuth configuration validation.
- * Used to provide clear error messages when config is malformed.
- */
-export const OAuthConfigSchema = {
-  validate(data: unknown): { success: true; data: CloudflareOAuthConfig } | { success: false; error: string } {
-    // Manual validation since Zod is optional
-    if (typeof data !== "object" || data === null) {
-      return { success: false, error: "Config must be an object" };
-    }
-
-    const config = data as Record<string, unknown>;
-
-    // Required: issuer (string URL)
-    if (typeof config.issuer !== "string" || !config.issuer) {
-      return { success: false, error: "Missing or invalid 'issuer' (must be a URL string)" };
-    }
-    try {
-      new URL(config.issuer);
-    } catch {
-      return { success: false, error: `Invalid 'issuer' URL: ${config.issuer}` };
-    }
-
-    // Required: audience (string)
-    if (typeof config.audience !== "string" || !config.audience) {
-      return { success: false, error: "Missing or invalid 'audience' (must be a non-empty string)" };
-    }
-
-    // Required: authorizationServers (array of URL strings)
-    if (!Array.isArray(config.authorizationServers) || config.authorizationServers.length === 0) {
-      return { success: false, error: "Missing or invalid 'authorizationServers' (must be a non-empty array of URLs)" };
-    }
-    for (const server of config.authorizationServers) {
-      if (typeof server !== "string") {
-        return { success: false, error: `Invalid authorization server: ${server} (must be a URL string)` };
-      }
-      try {
-        new URL(server);
-      } catch {
-        return { success: false, error: `Invalid authorization server URL: ${server}` };
-      }
-    }
-
-    // Optional: provider (enum)
-    if (config.provider !== undefined) {
-      const validProviders = ["auth0", "workos", "clerk", "custom"];
-      if (!validProviders.includes(config.provider as string)) {
-        return { success: false, error: `Invalid 'provider': ${config.provider} (must be one of: ${validProviders.join(", ")})` };
-      }
-    }
-
-    // Optional: requiredScopes (array of strings)
-    if (config.requiredScopes !== undefined) {
-      if (!Array.isArray(config.requiredScopes)) {
-        return { success: false, error: "'requiredScopes' must be an array of strings" };
-      }
-      for (const scope of config.requiredScopes) {
-        if (typeof scope !== "string") {
-          return { success: false, error: `Invalid scope: ${scope} (must be a string)` };
-        }
-      }
-    }
-
-    // Optional: jwksUri (URL string)
-    if (config.jwksUri !== undefined) {
-      if (typeof config.jwksUri !== "string") {
-        return { success: false, error: "'jwksUri' must be a URL string" };
-      }
-      try {
-        new URL(config.jwksUri);
-      } catch {
-        return { success: false, error: `Invalid 'jwksUri' URL: ${config.jwksUri}` };
-      }
-    }
-
-    // Optional: required (boolean)
-    if (config.required !== undefined && typeof config.required !== "boolean") {
-      return { success: false, error: "'required' must be a boolean" };
-    }
-
-    return {
-      success: true,
-      data: {
-        provider: config.provider as CloudflareOAuthConfig["provider"],
-        issuer: config.issuer,
-        audience: config.audience,
-        authorizationServers: config.authorizationServers as string[],
-        requiredScopes: config.requiredScopes as string[] | undefined,
-        jwksUri: config.jwksUri as string | undefined,
-        required: config.required as boolean | undefined,
-      },
-    };
-  },
-};
+export const OAuthConfigSchema = z.object({
+  provider: z.enum(["auth0", "workos", "clerk", "custom"]).optional(),
+  issuer: z.string().url(),
+  audience: z.string().min(1),
+  jwksUri: z.string().url().optional(),
+  requiredScopes: z.array(z.string()).optional(),
+  required: z.boolean().optional(),
+  authorizationServers: z.array(z.string().url()).min(1),
+});
 
 /**
  * Parse OAuth configuration from environment variables.
@@ -119,17 +35,15 @@ export function getOAuthConfig(env: Env): CloudflareOAuthConfig | null {
       return null;
     }
 
-    // Validate the parsed config
-    const result = OAuthConfigSchema.validate(parsed);
-    if (!result.success) {
+    try {
+      return OAuthConfigSchema.parse(parsed) as CloudflareOAuthConfig;
+    } catch (e) {
       console.error(
         "[Cloudflare-MCP] Invalid MCP_OAUTH_CONFIG:",
-        result.error
+        e instanceof Error ? e.message : String(e)
       );
       return null;
     }
-
-    return result.data;
   }
 
   // Option 2: Individual env vars
