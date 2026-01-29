@@ -39,9 +39,6 @@ export function getRspackConfig(
     : "[name].js";
 
   const isCloudflare = xmcpConfig.experimental?.adapter === "cloudflare";
-
-  // For Cloudflare, we need to resolve the xmcp source path for the @ alias
-  // since the cloudflare adapter is built from TypeScript source.
   const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
 
   const config: RspackOptions = {
@@ -51,7 +48,6 @@ export function getRspackConfig(
     output: {
       filename: outputFilename,
       path: outputPath,
-      // Use ESM output for Cloudflare, CommonJS for Node.js
       ...(isCloudflare
         ? {
             library: { type: "module" },
@@ -67,17 +63,12 @@ export function getRspackConfig(
           : path.join(outputPath, "client"),
       },
     },
-    // Use webworker target for Cloudflare, node for everything else
     target: isCloudflare ? "webworker" : "node",
-    // For Cloudflare, async_hooks is external (provided by nodejs_compat)
-    // For Node.js, use getExternals() to externalize Node.js modules
     externals: isCloudflare ? { async_hooks: "async_hooks" } : getExternals(),
-    // Enable ESM experiments for Cloudflare
     experiments: isCloudflare ? { outputModule: true } : undefined,
     resolve: {
       fallback: {
         process: false,
-        // For Cloudflare Workers, we need to handle Node.js built-ins
         ...(isCloudflare
           ? {
               fs: false,
@@ -103,12 +94,10 @@ export function getRspackConfig(
         "node:process": "process",
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
-        // For Cloudflare, point to source; for Node.js, point to pre-built
         "xmcp/plugins/x402":
           isCloudflare && xmcpSrcPath
             ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
             : path.resolve(processFolder, ".xmcp/x402.js"),
-        // For Cloudflare, add @ alias to resolve xmcp source paths
         ...(isCloudflare && xmcpSrcPath
           ? {
               "@": xmcpSrcPath,
@@ -166,8 +155,6 @@ export function getRspackConfig(
       minimize: mode === "production",
       mergeDuplicateChunks: true,
       splitChunks: false,
-      // For Cloudflare, we need to ensure everything is in a single bundle
-      // Disable runtime chunk to prevent dynamic imports
       ...(isCloudflare ? { runtimeChunk: false } : {}),
     },
   };
@@ -209,12 +196,10 @@ export function getRspackConfig(
   const definedVariables: Record<string, string | undefined> =
     getInjectedVariables(xmcpConfig);
 
-  // For Cloudflare, inject client bundles at compile time
   if (isCloudflare) {
     const clientBundles = readClientBundlesFromDisk();
     definedVariables["INJECTED_CLIENT_BUNDLES"] = JSON.stringify(clientBundles);
   } else {
-    // For Node.js, set to undefined so the runtime uses fs
     definedVariables["INJECTED_CLIENT_BUNDLES"] = "undefined";
   }
 

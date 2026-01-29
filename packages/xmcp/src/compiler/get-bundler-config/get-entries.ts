@@ -24,8 +24,6 @@ export function getEntries(
       entries["adapter"] = path.join(runtimeFolderPath, "adapter-nextjs.js");
     }
     if (xmcpConfig.experimental?.adapter === "cloudflare") {
-      // Cloudflare adapter is built from TypeScript source (not pre-built)
-      // This allows proper webworker target compilation with all dependencies bundled
       const xmcpSrcPath = resolveXmcpSrcPath();
       entries["adapter"] = path.join(
         xmcpSrcPath,
