@@ -3,11 +3,9 @@ import { WebStatelessHttpTransport } from "@/runtime/transports/http/web-statele
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import homeTemplate from "../../templates/home";
 
-// Import from extracted modules
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
 import type { Env, ExecutionContext } from "./types";
 
-// HTTP config - injected by compiler as combined object
 // @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as {
   port: number;
@@ -17,7 +15,6 @@ const httpConfig = HTTP_CONFIG as {
   debug: boolean;
 };
 
-// Template config - injected by compiler as combined object
 // @ts-expect-error: injected by compiler
 const templateConfig = TEMPLATE_CONFIG as {
   name?: string;
@@ -25,15 +22,11 @@ const templateConfig = TEMPLATE_CONFIG as {
   homePage?: string;
 };
 
-// Destructure for easier access
-const { debug, endpoint: httpEndpoint } = httpConfig;
-const { name: templateName, description: templateDescription } = templateConfig;
-
 /**
  * Log a message if debug mode is enabled
  */
 function log(message: string, ...args: unknown[]): void {
-  if (debug) {
+  if (httpConfig.debug) {
     console.log(`[Cloudflare-MCP] ${message}`, ...args);
   }
 }
@@ -58,7 +51,7 @@ async function handleMcpRequest(
     httpRequestContextProvider({ id: requestId, headers }, async () => {
       try {
         const server = await createServer();
-        const transport = new WebStatelessHttpTransport(debug);
+        const transport = new WebStatelessHttpTransport(httpConfig.debug);
 
         await server.connect(transport);
         const response = await transport.handleRequest(request);
@@ -111,9 +104,9 @@ export default {
     }
 
     // Normalize the MCP endpoint path
-    const mcpEndpoint = httpEndpoint?.startsWith("/")
-      ? httpEndpoint
-      : `/${httpEndpoint || "mcp"}`;
+    const mcpEndpoint = httpConfig.endpoint?.startsWith("/")
+      ? httpConfig.endpoint
+      : `/${httpConfig.endpoint || "mcp"}`;
 
     // Health check endpoint (no auth required)
     if (pathname === "/health") {
@@ -134,7 +127,11 @@ export default {
 
     // Home page (no auth required)
     if (pathname === "/" && request.method === "GET") {
-      const html = homeTemplate(mcpEndpoint, templateName, templateDescription);
+      const html = homeTemplate(
+        mcpEndpoint,
+        templateConfig.name,
+        templateConfig.description
+      );
       const response = new Response(html, {
         status: 200,
         headers: { "Content-Type": "text/html" },
@@ -155,5 +152,3 @@ export default {
     return addCorsHeaders(response, requestOrigin);
   },
 };
-
-// No public helper exports.

@@ -13,16 +13,6 @@ const corsConfig = HTTP_CORS_CONFIG as {
   maxAge: number;
 };
 
-// Destructure for easier access
-const {
-  origin: corsOrigin,
-  methods: corsMethods,
-  allowedHeaders: corsAllowedHeaders,
-  exposedHeaders: corsExposedHeaders,
-  credentials: corsCredentials,
-  maxAge: corsMaxAge,
-} = corsConfig;
-
 /**
  * Add CORS headers to a Response
  */
@@ -38,28 +28,29 @@ export function addCorsHeaders(
   // 3) Request origin - echoes back the requesting origin
   // 4) Wildcard fallback - allows all if nothing else configured
   const origin =
-    corsOrigin === "*" ? "*" : corsOrigin || requestOrigin || "*";
+    corsConfig.origin === "*" ? "*" : corsConfig.origin || requestOrigin || "*";
 
   headers.set("Access-Control-Allow-Origin", origin);
   headers.set(
     "Access-Control-Allow-Methods",
-    corsMethods || "GET, POST, OPTIONS"
+    corsConfig.methods || "GET, POST, OPTIONS"
   );
   headers.set(
     "Access-Control-Allow-Headers",
-    corsAllowedHeaders || "Content-Type, Authorization, Accept, mcp-session-id"
+    corsConfig.allowedHeaders ||
+      "Content-Type, Authorization, Accept, mcp-session-id"
   );
 
-  if (corsExposedHeaders) {
-    headers.set("Access-Control-Expose-Headers", corsExposedHeaders);
+  if (corsConfig.exposedHeaders) {
+    headers.set("Access-Control-Expose-Headers", corsConfig.exposedHeaders);
   }
 
-  if (corsCredentials) {
+  if (corsConfig.credentials) {
     headers.set("Access-Control-Allow-Credentials", "true");
   }
 
-  if (corsMaxAge) {
-    headers.set("Access-Control-Max-Age", String(corsMaxAge));
+  if (corsConfig.maxAge) {
+    headers.set("Access-Control-Max-Age", String(corsConfig.maxAge));
   }
 
   return new Response(response.body, {
@@ -72,32 +63,35 @@ export function addCorsHeaders(
 /**
  * Handle CORS preflight requests
  */
-export function handleCorsPreflightRequest(requestOrigin: string | null): Response {
+export function handleCorsPreflightRequest(
+  requestOrigin: string | null
+): Response {
   const headers = new Headers();
 
   const origin =
-    corsOrigin === "*" ? "*" : corsOrigin || requestOrigin || "*";
+    corsConfig.origin === "*" ? "*" : corsConfig.origin || requestOrigin || "*";
 
   headers.set("Access-Control-Allow-Origin", origin);
   headers.set(
     "Access-Control-Allow-Methods",
-    corsMethods || "GET, POST, OPTIONS"
+    corsConfig.methods || "GET, POST, OPTIONS"
   );
   headers.set(
     "Access-Control-Allow-Headers",
-    corsAllowedHeaders || "Content-Type, Authorization, Accept, mcp-session-id"
+    corsConfig.allowedHeaders ||
+      "Content-Type, Authorization, Accept, mcp-session-id"
   );
 
-  if (corsExposedHeaders) {
-    headers.set("Access-Control-Expose-Headers", corsExposedHeaders);
+  if (corsConfig.exposedHeaders) {
+    headers.set("Access-Control-Expose-Headers", corsConfig.exposedHeaders);
   }
 
-  if (corsCredentials) {
+  if (corsConfig.credentials) {
     headers.set("Access-Control-Allow-Credentials", "true");
   }
 
-  if (corsMaxAge) {
-    headers.set("Access-Control-Max-Age", String(corsMaxAge));
+  if (corsConfig.maxAge) {
+    headers.set("Access-Control-Max-Age", String(corsConfig.maxAge));
   }
 
   return new Response(null, {
