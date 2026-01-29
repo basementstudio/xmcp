@@ -15,24 +15,11 @@ export function generateImportCode(): string {
     resourcePaths,
     hasMiddleware,
     clientBundles,
-    platforms,
   } = compilerContext.getContext();
 
-  const isCloudflare = platforms?.cloudflare;
-
-  // For Cloudflare, use static imports to avoid code splitting
-  // For Node.js, use dynamic imports for lazy loading
-  if (isCloudflare) {
-    return generateStaticImportCode(
-      toolPaths,
-      promptPaths,
-      resourcePaths,
-      hasMiddleware,
-      clientBundles
-    );
-  }
-
-  return generateDynamicImportCode(
+  // Use static imports across platforms.
+  // This keeps the bundling model consistent (no code-splitting).
+  return generateStaticImportCode(
     toolPaths,
     promptPaths,
     resourcePaths,
@@ -115,73 +102,5 @@ ${clientBundlesEntries}
 };
 
 ${middlewareCode}
-`;
-}
-
-/**
- * Generate dynamic imports for Node.js environments.
- * Uses lazy loading for better startup performance.
- */
-function generateDynamicImportCode(
-  toolPaths: Set<string>,
-  promptPaths: Set<string>,
-  resourcePaths: Set<string>,
-  hasMiddleware: boolean,
-  clientBundles?: Map<string, string>
-): string {
-  const importToolsCode = Array.from(toolPaths)
-    .map((p) => {
-      const path = p.replace(/\\/g, "/");
-      const relativePath = `../${path}`;
-      return `"${path}": () => import("${relativePath}"),`;
-    })
-    .join("\n");
-
-  const importPromptsCode = Array.from(promptPaths)
-    .map((p) => {
-      const path = p.replace(/\\/g, "/");
-      const relativePath = `../${path}`;
-      return `"${path}": () => import("${relativePath}"),`;
-    })
-    .join("\n");
-
-  const importResourcesCode = Array.from(resourcePaths)
-    .map((p) => {
-      const path = p.replace(/\\/g, "/");
-      const relativePath = `../${path}`;
-      return `"${path}": () => import("${relativePath}"),`;
-    })
-    .join("\n");
-
-  const importMiddlewareCode = hasMiddleware
-    ? `export const middleware = () => import("../src/middleware.ts");`
-    : "";
-
-  // Generate client bundles mapping (empty object if none)
-  const clientBundlesEntries =
-    clientBundles && clientBundles.size > 0
-      ? Array.from(clientBundles)
-          .map(([toolName, bundlePath]) => `  "${toolName}": "${bundlePath}",`)
-          .join("\n")
-      : "";
-
-  return `
-export const tools = {
-${importToolsCode}
-};
-
-export const prompts = {
-${importPromptsCode}
-};
-
-export const resources = {
-${importResourcesCode}
-};
-
-export const clientBundles = {
-${clientBundlesEntries}
-};
-
-${importMiddlewareCode}
 `;
 }
