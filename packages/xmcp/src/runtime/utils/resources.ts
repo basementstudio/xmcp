@@ -30,7 +30,7 @@ declare const IS_CLOUDFLARE: boolean;
  */
 function pathToToolName(path: string): string {
   // Cloudflare mode: use djb2 hash (bundles were named with djb2 at compile time)
-  if (INJECTED_CLIENT_BUNDLES) {
+  if (IS_CLOUDFLARE) {
     return pathToToolNameDjb2(path);
   }
   // Node.js mode: use MD5 hash (backwards compatible)
@@ -51,36 +51,35 @@ function getClientBundle(
   }
 
   // Node.js mode: read from filesystem
-  if (IS_CLOUDFLARE) {
-    return null;
-  }
-  try {
-    // Dynamic import to avoid bundling fs in Cloudflare
-    const fs = require("fs");
-    const path = require("path");
+  if (!IS_CLOUDFLARE) {
+    try {
+      // Dynamic import to avoid bundling fs in Cloudflare
+      const fs = require("fs");
+      const path = require("path");
 
-    const searchRoots = [
-      path.join(process.cwd(), "dist", "client"),
-      path.join(process.cwd(), "client"),
-    ];
+      const searchRoots = [
+        path.join(process.cwd(), "dist", "client"),
+        path.join(process.cwd(), "client"),
+      ];
 
-    for (const root of searchRoots) {
-      const jsCandidate = path.join(root, `${bundleName}.bundle.js`);
-      const cssCandidate = path.join(root, `${bundleName}.bundle.css`);
+      for (const root of searchRoots) {
+        const jsCandidate = path.join(root, `${bundleName}.bundle.js`);
+        const cssCandidate = path.join(root, `${bundleName}.bundle.css`);
 
-      if (fs.existsSync(jsCandidate)) {
-        const js = fs.readFileSync(jsCandidate, "utf-8");
-        let css: string | undefined;
+        if (fs.existsSync(jsCandidate)) {
+          const js = fs.readFileSync(jsCandidate, "utf-8");
+          let css: string | undefined;
 
-        if (fs.existsSync(cssCandidate)) {
-          css = fs.readFileSync(cssCandidate, "utf-8");
+          if (fs.existsSync(cssCandidate)) {
+            css = fs.readFileSync(cssCandidate, "utf-8");
+          }
+
+          return { js, css };
         }
-
-        return { js, css };
       }
+    } catch {
+      // fs not available or file not found
     }
-  } catch {
-    // fs not available (Cloudflare) or file not found
   }
 
   return null;
