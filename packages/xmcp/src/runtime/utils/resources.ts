@@ -31,10 +31,7 @@ declare const INJECTED_CLIENT_BUNDLES:
  */
 function pathToToolName(path: string): string {
   // Cloudflare mode: use djb2 hash (bundles were named with djb2 at compile time)
-  if (
-    typeof INJECTED_CLIENT_BUNDLES !== "undefined" &&
-    INJECTED_CLIENT_BUNDLES
-  ) {
+  if (INJECTED_CLIENT_BUNDLES) {
     return pathToToolNameDjb2(path);
   }
   // Node.js mode: use MD5 hash (backwards compatible)
@@ -50,10 +47,7 @@ function getClientBundle(
   bundleName: string
 ): { js: string; css?: string } | null {
   // Cloudflare mode: use injected bundles
-  if (
-    typeof INJECTED_CLIENT_BUNDLES !== "undefined" &&
-    INJECTED_CLIENT_BUNDLES
-  ) {
+  if (INJECTED_CLIENT_BUNDLES) {
     return INJECTED_CLIENT_BUNDLES[bundleName] || null;
   }
 
