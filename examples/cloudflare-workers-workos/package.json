@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "xmcp dev",
     "build": "xmcp build --cf",
-    "deploy": "cd .cloudflare && npx wrangler deploy",
-    "wrangler:dev": "cd .cloudflare && npx wrangler dev"
+    "deploy": "npx wrangler deploy",
+    "wrangler:dev": "npx wrangler dev"
   },
   "dependencies": {
     "jose": "^5.9.6",

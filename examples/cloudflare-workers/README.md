@@ -16,17 +16,17 @@ pnpm install
 pnpm build
 ```
 
-This creates a `.cloudflare/` directory with:
+This writes these files into the project root:
 
 - `worker.js` - The bundled Cloudflare Worker
-- `wrangler.jsonc` - Wrangler configuration template
+- `wrangler.jsonc` - Wrangler configuration template (only if you don't already have `wrangler.toml/jsonc`)
 
 3. Test locally with Wrangler:
 
 ```bash
 pnpm preview
 # or
-cd .cloudflare && npx wrangler dev
+npx wrangler dev
 ```
 
 4. Test with curl:
@@ -53,7 +53,7 @@ curl -X POST http://localhost:8787/mcp \
 ```bash
 pnpm deploy
 # or
-cd .cloudflare && npx wrangler deploy
+npx wrangler deploy
 ```
 
 ## Notes

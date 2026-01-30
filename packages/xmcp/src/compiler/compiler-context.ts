@@ -11,7 +11,7 @@ interface CompilerContext {
   platforms: {
     /** Generates a .vercel folder to deploy on Vercel */
     vercel?: boolean;
-    /** Generates a .cloudflare folder to deploy on Cloudflare Workers */
+    /** Builds a Cloudflare Workers bundle */
     cloudflare?: boolean;
   };
   /** The paths to the tools. */

@@ -65,8 +65,6 @@ pnpm build
 Set your WorkOS OAuth configuration as Cloudflare secrets:
 
 ```bash
-cd .cloudflare
-
 # Set the OAuth issuer (WorkOS API endpoint)
 npx wrangler secret put MCP_OAUTH_ISSUER
 # Enter: https://api.workos.com/
@@ -92,7 +90,6 @@ npx wrangler deploy
 ### 1. Start the Worker
 
 ```bash
-cd .cloudflare
 npx wrangler dev
 ```
 

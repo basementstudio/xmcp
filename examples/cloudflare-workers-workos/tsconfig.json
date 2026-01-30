@@ -15,5 +15,5 @@
     "sourceMap": true
   },
   "include": ["src/**/*", "xmcp-env.d.ts"],
-  "exclude": ["node_modules", "dist", ".cloudflare"]
+  "exclude": ["node_modules", "dist"]
 }

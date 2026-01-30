@@ -5,18 +5,15 @@ const rootDir = process.cwd();
 
 /**
  * Build the Cloudflare Workers output structure.
- * Creates a .cloudflare directory with:
- * - worker.js - The bundled Cloudflare Worker
- * - wrangler.jsonc - Wrangler configuration template
+ * Writes Cloudflare Worker files to the project root:
+ * - worker.js
+ * - wrangler.jsonc (only if not already present)
  */
 async function buildCloudflareOutput() {
-  const outputDir = path.join(rootDir, ".cloudflare");
+  const outputDir = rootDir;
   const buildDir = path.join(rootDir, ".xmcp", "cloudflare");
 
   console.log("Building Cloudflare Workers output structure...");
-
-  // Create output directory
-  fs.mkdirSync(outputDir, { recursive: true });
 
   // Check if Cloudflare worker build exists
   const sourceFile = path.join(buildDir, "worker.js");
@@ -28,17 +25,20 @@ async function buildCloudflareOutput() {
   const targetFile = path.join(outputDir, "worker.js");
   fs.copyFileSync(sourceFile, targetFile);
 
-  // Generate wrangler.jsonc template
-  const projectName = getProjectName();
-  const wranglerConfig = generateWranglerConfig(projectName);
-  fs.writeFileSync(path.join(outputDir, "wrangler.jsonc"), wranglerConfig);
+  // Generate wrangler config (only if the user doesn't have one already)
+  const wranglerTomlPath = path.join(outputDir, "wrangler.toml");
+  const wranglerJsoncPath = path.join(outputDir, "wrangler.jsonc");
+  if (!fs.existsSync(wranglerTomlPath) && !fs.existsSync(wranglerJsoncPath)) {
+    const projectName = getProjectName();
+    const wranglerConfig = generateWranglerConfig(projectName);
+    fs.writeFileSync(wranglerJsoncPath, wranglerConfig);
+  }
 
   console.log("Cloudflare Workers output structure created successfully");
   console.log("");
   console.log("Next steps:");
-  console.log("  1. cd .cloudflare");
-  console.log("  2. npx wrangler dev       # Test locally");
-  console.log("  3. npx wrangler deploy    # Deploy to Cloudflare");
+  console.log("  1. npx wrangler dev       # Test locally");
+  console.log("  2. npx wrangler deploy    # Deploy to Cloudflare");
 }
 
 /**
