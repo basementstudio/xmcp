@@ -36,7 +36,8 @@ function log(message: string, ...args: unknown[]): void {
  */
 async function handleMcpRequest(
   request: Request,
-  requestOrigin: string | null
+  requestOrigin: string | null,
+  ctx: ExecutionContext
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
 
@@ -49,16 +50,15 @@ async function handleMcpRequest(
     });
 
     httpRequestContextProvider({ id: requestId, headers }, async () => {
+      let server: Awaited<ReturnType<typeof createServer>> | null = null;
+      let transport: WebStatelessHttpTransport | null = null;
+
       try {
-        const server = await createServer();
-        const transport = new WebStatelessHttpTransport(httpConfig.debug);
+        server = await createServer();
+        transport = new WebStatelessHttpTransport(httpConfig.debug);
 
         await server.connect(transport);
         const response = await transport.handleRequest(request);
-
-        // Cleanup
-        await transport.close();
-        await server.close();
 
         resolve(addCorsHeaders(response, requestOrigin));
       } catch (error) {
@@ -78,6 +78,12 @@ async function handleMcpRequest(
           }
         );
         resolve(addCorsHeaders(errorResponse, requestOrigin));
+      } finally {
+        if (server && transport) {
+          ctx.waitUntil(
+            Promise.allSettled([transport.close(), server.close()])
+          );
+        }
       }
     });
   });
@@ -141,7 +147,7 @@ export default {
 
     // MCP endpoint
     if (pathname === mcpEndpoint) {
-      return handleMcpRequest(request, requestOrigin);
+      return handleMcpRequest(request, requestOrigin, _ctx);
     }
 
     // 404 for unknown paths
