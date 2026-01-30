@@ -12,10 +12,7 @@ import { ResourceMetadata } from "@/types/resource";
 import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta } from "./openai/flatten-meta";
 import { generateOpenAIHTML, generateUIHTML } from "./react/generate-html";
-import {
-  pathToToolNameMd5,
-  pathToToolNameDjb2,
-} from "./path-to-tool-name";
+import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
 
 // Client bundles can be injected at compile time for Cloudflare Workers
@@ -23,7 +20,7 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 declare const INJECTED_CLIENT_BUNDLES:
   | Record<string, { js: string; css?: string }>
   | undefined;
-// @ts-expect-error: injected by compiler
+
 declare const IS_CLOUDFLARE: boolean;
 
 /**
