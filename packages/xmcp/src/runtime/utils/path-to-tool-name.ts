@@ -31,9 +31,7 @@ export function pathToToolNameDjb2(path: string): string {
   // djb2 hash algorithm - deterministic and works everywhere
   let hash = 5381;
   for (let i = 0; i < normalizedPath.length; i++) {
-    hash = ((hash << 5) + hash) + normalizedPath.charCodeAt(i);
-    // Keep it within 32-bit integer range
-    hash = hash >>> 0;
+    hash = (Math.imul(hash, 33) + normalizedPath.charCodeAt(i)) >>> 0;
   }
   const hashStr = hash.toString(16).slice(0, 6).padStart(6, "0");
 
