@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { z } from "zod";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
@@ -176,7 +177,9 @@ export function addToolsToServer(
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
-      inputSchema: toolSchema,
+      // Build the object schema using the project's Zod instance to avoid
+      // cross-instance v3 shape issues in tools/list JSON schema generation.
+      inputSchema: z.object(toolSchema),
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };

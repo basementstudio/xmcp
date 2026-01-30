@@ -3,6 +3,7 @@ import {
   ProvidePlugin,
   DefinePlugin,
   BannerPlugin,
+  type ResolveAlias,
 } from "@rspack/core";
 import path from "path";
 import {
@@ -23,6 +24,7 @@ import {
 } from "./plugins";
 import { getExternals } from "./get-externals";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
+import fs from "fs";
 
 /** Creates the bundler configuration that xmcp will use to bundle the user's code */
 export function getRspackConfig(
@@ -32,6 +34,14 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
+  const projectZodPath = path.join(processFolder, "node_modules", "zod");
+  const zodAliases: ResolveAlias = fs.existsSync(projectZodPath)
+    ? {
+        zod: projectZodPath,
+        "zod/v3": path.join(projectZodPath, "v3"),
+        "zod/v4-mini": path.join(projectZodPath, "v4-mini"),
+      }
+    : {};
 
   const outputPath = isCloudflare
     ? cloudflareOutputPath
@@ -110,6 +120,7 @@ export function getRspackConfig(
               "@": xmcpSrcPath,
             }
           : {}),
+        ...zodAliases,
         ...resolveTsconfigPathsToAlias(),
       },
       extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],

@@ -1,4 +1,5 @@
 import path from "path";
+import { createRequire } from "module";
 
 export const runtimeFolder = ".xmcp";
 export const runtimeFolderPath = path.join(process.cwd(), runtimeFolder);
@@ -17,8 +18,8 @@ export const cloudflareOutputPath = path.join(runtimeFolderPath, "cloudflare");
  */
 export function resolveXmcpSrcPath(): string {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pkgJsonPath = require.resolve("xmcp/package.json");
+    const req = createRequire(path.join(process.cwd(), "package.json"));
+    const pkgJsonPath = req.resolve("xmcp/package.json");
     return path.join(path.dirname(pkgJsonPath), "src");
   } catch (error) {
     throw new Error(
