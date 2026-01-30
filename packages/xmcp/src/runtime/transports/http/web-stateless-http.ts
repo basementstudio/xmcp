@@ -197,16 +197,41 @@ export class WebStatelessHttpTransport implements Transport {
       }
 
       const rawMessage = await request.json();
-      const messages: JsonRpcMessage[] = Array.isArray(rawMessage)
+      const incomingMessages: JsonRpcMessage[] = Array.isArray(rawMessage)
         ? rawMessage
         : [rawMessage];
+
+      const invalidResponses: JsonRpcMessage[] = [];
+      const messages = incomingMessages.filter((msg) => {
+        if (msg?.jsonrpc === "2.0") {
+          return true;
+        }
+        invalidResponses.push({
+          jsonrpc: "2.0",
+          error: {
+            code: -32600,
+            message: "Invalid Request",
+          },
+          id: msg && "id" in msg ? (msg as any).id ?? null : null,
+        } as JsonRpcMessage);
+        return false;
+      });
 
       const hasRequests = messages.some(
         (msg) => msg.method && msg.id !== undefined
       );
 
       if (!hasRequests) {
-        // Handle notifications (no response expected)
+        if (invalidResponses.length > 0) {
+          const payload =
+            invalidResponses.length === 1
+              ? invalidResponses[0]
+              : invalidResponses;
+          return new Response(JSON.stringify(payload), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
         return new Response(null, { status: 202 });
       }
 
@@ -224,7 +249,7 @@ export class WebStatelessHttpTransport implements Transport {
         const collectorId = crypto.randomUUID();
         this._responseResolvers.set(collectorId, {
           requestIds: new Set(requestIds),
-          responses: [],
+          responses: invalidResponses,
           resolve,
         });
 
