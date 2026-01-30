@@ -209,6 +209,7 @@ export function getRspackConfig(
   // add defined variables to config
   const definedVariables: Record<string, string | undefined> =
     getInjectedVariables(xmcpConfig);
+  definedVariables["IS_CLOUDFLARE"] = JSON.stringify(isCloudflare);
 
   if (isCloudflare) {
     const clientBundles = readClientBundlesFromDisk();

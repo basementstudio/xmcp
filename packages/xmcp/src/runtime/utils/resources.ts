@@ -23,6 +23,8 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 declare const INJECTED_CLIENT_BUNDLES:
   | Record<string, { js: string; css?: string }>
   | undefined;
+// @ts-expect-error: injected by compiler
+declare const IS_CLOUDFLARE: boolean;
 
 /**
  * Get the appropriate pathToToolName function based on runtime environment.
@@ -52,6 +54,9 @@ function getClientBundle(
   }
 
   // Node.js mode: read from filesystem
+  if (IS_CLOUDFLARE) {
+    return null;
+  }
   try {
     // Dynamic import to avoid bundling fs in Cloudflare
     const fs = require("fs");
