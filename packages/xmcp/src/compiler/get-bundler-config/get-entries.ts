@@ -1,11 +1,21 @@
-import { runtimeFolderPath } from "@/utils/constants";
+import { runtimeFolderPath, resolveXmcpSrcPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 import path from "path";
+import { compilerContext } from "@/compiler/compiler-context";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
   xmcpConfig: XmcpConfigOutputSchema
 ): Record<string, string> {
+  const { platforms } = compilerContext.getContext();
+
+  if (platforms.cloudflare) {
+    const xmcpSrcPath = resolveXmcpSrcPath();
+    return {
+      worker: path.join(xmcpSrcPath, "runtime/platforms/cloudflare/worker.ts"),
+    };
+  }
+
   const entries: Record<string, string> = {};
   if (xmcpConfig.stdio) {
     entries.stdio = path.join(runtimeFolderPath, "stdio.js");

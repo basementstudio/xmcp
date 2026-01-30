@@ -1,6 +1,6 @@
 /**
- * This script builds the compiler. It's not the compiler itself
- * */
+ * This script builds the runtime files. It's not the compiler itself.
+ */
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -19,6 +19,7 @@ interface RuntimeRoot {
   path: string;
 }
 
+// Node.js runtime roots (express, nextjs adapters + transports)
 const runtimeRoots: RuntimeRoot[] = [
   { name: "headers", path: "headers" },
   { name: "stdio", path: "transports/stdio" },
@@ -29,13 +30,13 @@ const runtimeRoots: RuntimeRoot[] = [
 ];
 
 const entry: EntryObject = {};
-
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
+// Node.js config (express, nextjs, http, stdio)
 const config: RspackOptions = {
-  name: "runtime",
+  name: "runtime-node",
   entry,
   mode: "production",
   devtool: false,
@@ -122,12 +123,13 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
 
   const handleStats = (err: Error | null, stats: any) => {
     if (err) {
-      console.error(err);
+      console.error("Runtime build error:", err);
       return;
     }
 
     if (stats?.hasErrors()) {
       console.error(
+        "Runtime build errors:",
         stats.toString({
           colors: true,
           chunks: false,
@@ -143,8 +145,6 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       })
     );
 
-    console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
-
     if (process.env.GENERATE_STATS === "true" && stats) {
       const statsJson = stats.toJson({
         all: false,
@@ -159,9 +159,10 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
     }
 
-    // Only call onCompiled once for the initial build
     if (!compileStarted) {
       compileStarted = true;
+      console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
+
       onCompiled(stats);
     }
   };

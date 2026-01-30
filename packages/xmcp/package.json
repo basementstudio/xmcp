@@ -38,7 +38,8 @@
     "xmcp": "dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
