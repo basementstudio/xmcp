@@ -12,9 +12,15 @@ export function buildCorsHeaders(
         headers["Access-Control-Allow-Origin"] = requestOrigin;
       }
     } else if (config.origin !== false) {
-      headers["Access-Control-Allow-Origin"] = Array.isArray(config.origin)
-        ? config.origin.join(",")
-        : String(config.origin);
+      if (Array.isArray(config.origin)) {
+        const matchedOrigin =
+          requestOrigin && config.origin.includes(requestOrigin)
+            ? requestOrigin
+            : config.origin[0] || "*";
+        headers["Access-Control-Allow-Origin"] = matchedOrigin;
+      } else {
+        headers["Access-Control-Allow-Origin"] = String(config.origin);
+      }
     }
   }
 
