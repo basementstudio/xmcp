@@ -13,8 +13,6 @@ async function buildCloudflareOutput() {
   const outputDir = rootDir;
   const buildDir = path.join(rootDir, ".xmcp", "cloudflare");
 
-  console.log("Building Cloudflare Workers output structure...");
-
   // Check if Cloudflare worker build exists
   const sourceFile = path.join(buildDir, "worker.js");
   if (!fs.existsSync(sourceFile)) {
