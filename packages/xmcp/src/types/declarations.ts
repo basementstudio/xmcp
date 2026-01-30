@@ -2,26 +2,6 @@ declare module "xmcp/headers" {
   export const headers: typeof import("../runtime/headers").headers;
 }
 
-declare module "xmcp/cloudflare" {
-  export interface Env {
-    [key: string]: unknown;
-  }
-
-  export interface ExecutionContext {
-    waitUntil(promise: Promise<unknown>): void;
-    passThroughOnException(): void;
-  }
-
-  const _default: {
-    fetch: (
-      request: Request,
-      env: Env,
-      ctx: ExecutionContext
-    ) => Promise<Response>;
-  };
-  export default _default;
-}
-
 declare module "xmcp/plugins/x402" {
   export const isPaidHandler: typeof import("../plugins/x402/index").isPaidHandler;
   export const getX402Registry: typeof import("../plugins/x402/index").getX402Registry;

@@ -5,7 +5,6 @@ import { Compiler } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getXmcpConfig } from "@/compiler/compiler-context";
 import {
-  cloudflareTypeDefinition,
   expressTypeDefinition,
   nestJsTypeDefinition,
   nextJsTypeDefinition,
@@ -70,9 +69,6 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-express.js");
     } else if (xmcpConfig.experimental?.adapter === "nextjs") {
       neededFiles.push("adapter-nextjs.js");
-    } else if (xmcpConfig.experimental?.adapter === "cloudflare") {
-      // Cloudflare adapter is built from source, not copied from pre-built
-      // So we don't push any file here - it's handled in get-entries.ts
     } else if (xmcpConfig.experimental?.adapter === "nestjs") {
       neededFiles.push("adapter-nestjs.js");
     } else {
@@ -126,8 +122,6 @@ export class CreateTypeDefinitionPlugin {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "express") {
             typeDefinitionContent = expressTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter == "cloudflare") {
-            typeDefinitionContent = cloudflareTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter == "nestjs") {
             typeDefinitionContent = nestJsTypeDefinition;
           }

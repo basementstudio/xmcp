@@ -34,10 +34,12 @@ export async function getConfig(): Promise<XmcpConfigOutputSchema> {
     delete config.stdio;
   }
   if (platforms.cloudflare) {
-    // Remove stdio and force cloudflare adapter for Cloudflare Workers
+    // Remove stdio for Cloudflare Workers
     delete config.stdio;
-    config.experimental = config.experimental || {};
-    config.experimental.adapter = "cloudflare";
+    // Ensure HTTP is enabled for Workers builds
+    if (!config.http) {
+      config.http = true;
+    }
   }
   return config;
 }

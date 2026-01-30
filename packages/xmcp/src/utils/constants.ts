@@ -7,6 +7,7 @@ export const rootFolder = path.join(process.cwd());
 export const processFolder = process.cwd();
 export const distOutputPath = path.join(processFolder, "dist");
 export const adapterOutputPath = path.join(runtimeFolderPath, "adapter");
+export const cloudflareOutputPath = path.join(runtimeFolderPath, "cloudflare");
 
 /**
  * Resolve the absolute path to the `xmcp` package `src/` folder.

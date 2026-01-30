@@ -11,19 +11,17 @@ const rootDir = process.cwd();
  */
 async function buildCloudflareOutput() {
   const outputDir = path.join(rootDir, ".cloudflare");
-  const adapterDir = path.join(rootDir, ".xmcp", "adapter");
+  const buildDir = path.join(rootDir, ".xmcp", "cloudflare");
 
   console.log("Building Cloudflare Workers output structure...");
 
   // Create output directory
   fs.mkdirSync(outputDir, { recursive: true });
 
-  // Check if adapter output exists
-  const sourceFile = path.join(adapterDir, "index.js");
+  // Check if Cloudflare worker build exists
+  const sourceFile = path.join(buildDir, "worker.js");
   if (!fs.existsSync(sourceFile)) {
-    throw new Error(
-      "Adapter output not found. Make sure experimental.adapter is set to 'cloudflare' in your xmcp.config.ts"
-    );
+    throw new Error("Cloudflare build output not found. Run: xmcp build --cf");
   }
 
   // Copy the bundled worker

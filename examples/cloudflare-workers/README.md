@@ -58,7 +58,7 @@ cd .cloudflare && npx wrangler deploy
 
 ## Notes
 
-- The `--cf` flag automatically sets `experimental.adapter = "cloudflare"` in your config
+- The `--cf` flag builds a Cloudflare Workers-native bundle
 - All Node.js APIs are bundled into the worker (no external dependencies)
 - React component bundles are inlined at compile time
 - The worker uses Web APIs only (no Node.js runtime dependencies)

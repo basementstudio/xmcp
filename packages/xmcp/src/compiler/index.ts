@@ -142,8 +142,8 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
-  // if adapter is not enabled or using cloudflare adapter, handle middleware
-  if (!xmcpConfig.experimental?.adapter || xmcpConfig.experimental?.adapter === "cloudflare") {
+  // if adapter is not enabled, handle middleware
+  if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
     watcher.watch("./src/middleware.ts", {
       onAdd: async () => {

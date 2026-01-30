@@ -1,11 +1,21 @@
 import { runtimeFolderPath, resolveXmcpSrcPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
 import path from "path";
+import { compilerContext } from "@/compiler/compiler-context";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
   xmcpConfig: XmcpConfigOutputSchema
 ): Record<string, string> {
+  const { platforms } = compilerContext.getContext();
+
+  if (platforms.cloudflare) {
+    const xmcpSrcPath = resolveXmcpSrcPath();
+    return {
+      worker: path.join(xmcpSrcPath, "runtime/platforms/cloudflare/worker.ts"),
+    };
+  }
+
   const entries: Record<string, string> = {};
   if (xmcpConfig.stdio) {
     entries.stdio = path.join(runtimeFolderPath, "stdio.js");
@@ -22,13 +32,6 @@ export function getEntries(
     }
     if (xmcpConfig.experimental?.adapter === "nextjs") {
       entries["adapter"] = path.join(runtimeFolderPath, "adapter-nextjs.js");
-    }
-    if (xmcpConfig.experimental?.adapter === "cloudflare") {
-      const xmcpSrcPath = resolveXmcpSrcPath();
-      entries["adapter"] = path.join(
-        xmcpSrcPath,
-        "runtime/adapters/cloudflare/index.ts"
-      );
     }
     if (xmcpConfig.experimental?.adapter === "nestjs") {
       entries["adapter"] = path.join(runtimeFolderPath, "adapter-nestjs.js");

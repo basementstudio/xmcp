@@ -8,6 +8,7 @@ import path from "path";
 import {
   distOutputPath,
   adapterOutputPath,
+  cloudflareOutputPath,
   resolveXmcpSrcPath,
 } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
@@ -28,17 +29,22 @@ export function getRspackConfig(
   xmcpConfig: XmcpConfigOutputSchema
 ): RspackOptions {
   const processFolder = process.cwd();
-  const { mode } = compilerContext.getContext();
+  const { mode, platforms } = compilerContext.getContext();
 
-  const outputPath = xmcpConfig.experimental?.adapter
-    ? adapterOutputPath
-    : distOutputPath;
+  const isCloudflare = !!platforms.cloudflare;
 
-  const outputFilename = xmcpConfig.experimental?.adapter
-    ? "index.js"
-    : "[name].js";
+  const outputPath = isCloudflare
+    ? cloudflareOutputPath
+    : xmcpConfig.experimental?.adapter
+      ? adapterOutputPath
+      : distOutputPath;
 
-  const isCloudflare = xmcpConfig.experimental?.adapter === "cloudflare";
+  const outputFilename = isCloudflare
+    ? "worker.js"
+    : xmcpConfig.experimental?.adapter
+      ? "index.js"
+      : "[name].js";
+
   const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
 
   const config: RspackOptions = {
@@ -58,9 +64,10 @@ export function getRspackConfig(
             libraryTarget: "commonjs2",
           }),
       clean: {
-        keep: xmcpConfig.experimental?.adapter
-          ? undefined
-          : path.join(outputPath, "client"),
+        keep:
+          xmcpConfig.experimental?.adapter || isCloudflare
+            ? undefined
+            : path.join(outputPath, "client"),
       },
     },
     target: isCloudflare ? "webworker" : "node",
@@ -101,10 +108,6 @@ export function getRspackConfig(
         ...(isCloudflare && xmcpSrcPath
           ? {
               "@": xmcpSrcPath,
-              "xmcp/cloudflare": path.join(
-                xmcpSrcPath,
-                "runtime/adapters/cloudflare/index.ts"
-              ),
             }
           : {}),
         ...resolveTsconfigPathsToAlias(),
