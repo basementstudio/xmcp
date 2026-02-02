@@ -56,6 +56,7 @@ function getConfig() {
     name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
+      cloudflare: path.join(srcPath, "cloudflare.ts"),
       cli: path.join(srcPath, "cli.ts"),
       "detached-flush": path.join(
         srcPath,

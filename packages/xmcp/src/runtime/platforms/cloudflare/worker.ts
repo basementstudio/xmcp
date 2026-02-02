@@ -5,6 +5,8 @@ import homeTemplate from "../../templates/home";
 
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
 import type { Env, ExecutionContext } from "./types";
+import type { WebMiddleware, WebMiddlewareContext } from "@/types/middleware";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as {
@@ -22,6 +24,88 @@ const templateConfig = TEMPLATE_CONFIG as {
   homePage?: string;
 };
 
+// @ts-expect-error: injected by compiler
+const middleware = INJECTED_MIDDLEWARE as
+  | (() => Promise<{ default?: WebMiddleware | WebMiddleware[] }>)
+  | undefined;
+
+let resolvedMiddlewarePromise: Promise<WebMiddleware[]> | null = null;
+
+async function resolveWebMiddleware(): Promise<WebMiddleware[]> {
+  if (!middleware) {
+    return [];
+  }
+
+  if (!resolvedMiddlewarePromise) {
+    resolvedMiddlewarePromise = (async () => {
+      try {
+        const module = await middleware();
+        return normalizeWebMiddleware(module?.default);
+      } catch (error) {
+        console.error("[Cloudflare-MCP] Failed to load middleware:", error);
+        return [];
+      }
+    })();
+  }
+
+  return resolvedMiddlewarePromise;
+}
+
+function normalizeWebMiddleware(
+  defaultExport: unknown
+): WebMiddleware[] {
+  if (Array.isArray(defaultExport)) {
+    return defaultExport.filter(isWebMiddleware);
+  }
+
+  if (isWebMiddleware(defaultExport)) {
+    return [defaultExport];
+  }
+
+  if (
+    defaultExport &&
+    typeof defaultExport === "object" &&
+    "middleware" in defaultExport &&
+    typeof (defaultExport as { middleware?: unknown }).middleware === "function"
+  ) {
+    return [
+      (defaultExport as { middleware: WebMiddleware }).middleware,
+    ];
+  }
+
+  return [];
+}
+
+function isWebMiddleware(value: unknown): value is WebMiddleware {
+  return typeof value === "function";
+}
+
+async function runWebMiddleware(
+  request: Request
+): Promise<{ response?: Response; authInfo?: AuthInfo }> {
+  const webMiddleware = await resolveWebMiddleware();
+
+  if (webMiddleware.length === 0) {
+    return {};
+  }
+
+  const context: WebMiddlewareContext = {
+    auth: undefined,
+    setAuth: (auth) => {
+      context.auth = auth;
+    },
+  };
+
+  for (const handler of webMiddleware) {
+    const result = await handler(request, context);
+    if (result instanceof Response) {
+      return { response: result, authInfo: context.auth };
+    }
+  }
+
+  return { authInfo: context.auth };
+}
+
 /**
  * Log a message if debug mode is enabled
  */
@@ -37,7 +121,8 @@ function log(message: string, ...args: unknown[]): void {
 async function handleMcpRequest(
   request: Request,
   requestOrigin: string | null,
-  ctx: ExecutionContext
+  ctx: ExecutionContext,
+  authInfo?: AuthInfo
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
 
@@ -58,7 +143,7 @@ async function handleMcpRequest(
         transport = new WebStatelessHttpTransport(httpConfig.debug);
 
         await server.connect(transport);
-        const response = await transport.handleRequest(request);
+        const response = await transport.handleRequest(request, authInfo);
 
         resolve(addCorsHeaders(response, requestOrigin));
       } catch (error) {
@@ -147,7 +232,30 @@ export default {
 
     // MCP endpoint
     if (pathname === mcpEndpoint) {
-      return handleMcpRequest(request, requestOrigin, _ctx);
+      try {
+        const { response, authInfo } = await runWebMiddleware(request);
+        if (response) {
+          return addCorsHeaders(response, requestOrigin);
+        }
+        return handleMcpRequest(request, requestOrigin, _ctx, authInfo);
+      } catch (error) {
+        console.error("[Cloudflare-MCP] Middleware error:", error);
+        const response = new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Internal server error",
+            },
+            id: null,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        return addCorsHeaders(response, requestOrigin);
+      }
     }
 
     // 404 for unknown paths

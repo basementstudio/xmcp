@@ -3,6 +3,8 @@ import {
   ProvidePlugin,
   DefinePlugin,
   BannerPlugin,
+  NormalModuleReplacementPlugin,
+  IgnorePlugin,
   type ResolveAlias,
 } from "@rspack/core";
 import path from "path";
@@ -56,6 +58,61 @@ export function getRspackConfig(
       : "[name].js";
 
   const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
+  const nodeBuiltins = [
+    "assert",
+    "buffer",
+    "child_process",
+    "cluster",
+    "console",
+    "constants",
+    "crypto",
+    "dgram",
+    "dns",
+    "domain",
+    "events",
+    "fs",
+    "http",
+    "https",
+    "module",
+    "net",
+    "os",
+    "path",
+    "perf_hooks",
+    "process",
+    "punycode",
+    "querystring",
+    "readline",
+    "repl",
+    "stream",
+    "string_decoder",
+    "sys",
+    "timers",
+    "tls",
+    "tty",
+    "url",
+    "util",
+    "vm",
+    "worker_threads",
+    "zlib",
+  ];
+  const nodeBuiltinAliases = nodeBuiltins.reduce<Record<string, string>>(
+    (acc, builtin) => {
+      acc[`node:${builtin}`] = builtin;
+      return acc;
+    },
+    {}
+  );
+  const nodeBuiltinFallbacks = nodeBuiltins.reduce<Record<string, false>>(
+    (acc, builtin) => {
+      acc[builtin] = false;
+      acc[`node:${builtin}`] = false;
+      return acc;
+    },
+    {}
+  );
+  const nodeBuiltinsRegex = new RegExp(
+    `^(?:node:)?(${nodeBuiltins.join("|")})$`
+  );
 
   const config: RspackOptions = {
     mode,
@@ -86,29 +143,10 @@ export function getRspackConfig(
     resolve: {
       fallback: {
         process: false,
-        ...(isCloudflare
-          ? {
-              fs: false,
-              path: false,
-              stream: false,
-              http: false,
-              https: false,
-              net: false,
-              tls: false,
-              zlib: false,
-              os: false,
-              url: false,
-              util: false,
-              events: false,
-              buffer: false,
-              querystring: false,
-              string_decoder: false,
-              crypto: false,
-            }
-          : {}),
+        ...(isCloudflare ? nodeBuiltinFallbacks : {}),
       },
       alias: {
-        "node:process": "process",
+        ...nodeBuiltinAliases,
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
         "xmcp/plugins/x402":
@@ -133,6 +171,12 @@ export function getRspackConfig(
       ],
     },
     plugins: [
+      isCloudflare ? new IgnorePlugin({ resourceRegExp: nodeBuiltinsRegex }) : null,
+      isCloudflare
+        ? new NormalModuleReplacementPlugin(/^node:/, (resource) => {
+            resource.request = resource.request.replace(/^node:/, "");
+          })
+        : null,
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),

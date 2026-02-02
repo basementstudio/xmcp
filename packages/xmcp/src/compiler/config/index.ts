@@ -8,7 +8,7 @@ import {
   typescriptConfigSchema,
   bundlerConfigSchema,
 } from "./schemas";
-import { RspackOptions } from "@rspack/core";
+import type { RspackOptions } from "@rspack/core";
 
 /**
  * xmcp Config schema
