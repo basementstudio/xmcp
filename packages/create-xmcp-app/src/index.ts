@@ -11,6 +11,7 @@ import { checkNodeVersion } from "./utils/check-node.js";
 import { createProject } from "./helpers/create.js";
 import { isFolderEmpty } from "./utils/is-folder-empty.js";
 import { downloadAndExtractExample, listExamples } from "./helpers/examples.js";
+import { applyCloudflareSettings } from "./helpers/cloudflare.js";
 
 checkNodeVersion();
 
@@ -42,6 +43,7 @@ const program = new Command()
   .option("--skip-install", "Skip installing dependencies", false)
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
+  .option("--cloudflare, --cf", "Initialize for Cloudflare Workers", false)
   .option("--gpt", "Initialize with GPT App template", false)
   .option("--ui", "Initialize with MCP App template", false)
   .option(
@@ -85,6 +87,10 @@ const program = new Command()
       }
 
       await downloadAndExtractExample(targetPath, options.example);
+
+      if (options.cloudflare) {
+        applyCloudflareSettings(targetPath);
+      }
 
       console.log();
       console.log("Next steps:");
@@ -344,6 +350,7 @@ const program = new Command()
         paths: selectedPaths,
         template,
         tailwind,
+        cloudflare: options.cloudflare,
       });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
