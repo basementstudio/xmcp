@@ -183,6 +183,32 @@ export default {
     env: Env,
     _ctx: ExecutionContext
   ): Promise<Response> {
+    // Serialize requests to keep context-safe behavior without async_hooks.
+    // Cloudflare may process concurrent requests within the same worker instance,
+    // which can otherwise cause headers() to read the wrong request.
+    return enqueueRequest(() => handleFetch(request, env, _ctx));
+  },
+};
+
+let requestQueue: Promise<unknown> = Promise.resolve();
+
+function enqueueRequest(
+  task: () => Promise<Response>
+): Promise<Response> {
+  const run = async () => task();
+  const queued = requestQueue.then(run, run);
+  requestQueue = queued.then(
+    () => undefined,
+    () => undefined
+  );
+  return queued;
+}
+
+async function handleFetch(
+  request: Request,
+  _env: Env,
+  _ctx: ExecutionContext
+): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname;
     const requestOrigin = request.headers.get("origin");
@@ -264,5 +290,4 @@ export default {
       headers: { "Content-Type": "application/json" },
     });
     return addCorsHeaders(response, requestOrigin);
-  },
-};
+}
