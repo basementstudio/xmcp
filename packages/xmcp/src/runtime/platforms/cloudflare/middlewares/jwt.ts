@@ -5,7 +5,7 @@ import type { WebMiddleware } from "@/types/middleware";
 export type CloudflareJWTAuthMiddlewareConfig = {
   secret: string;
   algorithms?: string[];
-  audience?: string | (string | RegExp)[];
+  audience?: string | string[];
   issuer?: string;
   subject?: string;
   clockTolerance?: number | string;
@@ -107,12 +107,7 @@ function mapJoseVerifyOptions(
     if (typeof verifyOptions.audience === "string") {
       joseOptions.audience = verifyOptions.audience;
     } else if (Array.isArray(verifyOptions.audience)) {
-      const audience = verifyOptions.audience.filter(
-        (value): value is string => typeof value === "string"
-      );
-      if (audience.length > 0) {
-        joseOptions.audience = audience;
-      }
+      joseOptions.audience = verifyOptions.audience;
     }
   }
   if (verifyOptions.issuer) {
