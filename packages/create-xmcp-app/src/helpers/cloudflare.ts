@@ -65,9 +65,11 @@ function ensureTsConfig(projectPath: string): void {
   const tsconfig = fs.readJsonSync(tsconfigPath);
   tsconfig.compilerOptions = tsconfig.compilerOptions ?? {};
 
-  const types: string[] = Array.isArray(tsconfig.compilerOptions.types)
-    ? tsconfig.compilerOptions.types
-    : [];
+  if (!Array.isArray(tsconfig.compilerOptions.types)) {
+    return;
+  }
+
+  const types: string[] = tsconfig.compilerOptions.types;
 
   if (!types.includes("@cloudflare/workers-types")) {
     types.push("@cloudflare/workers-types");
