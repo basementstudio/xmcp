@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "xmcp build --cf",
-    "dev": "xmcp dev --cf & npx wrangler dev",
+    "dev": "concurrently \"xmcp dev --cf\" \"npx wrangler dev\"",
     "deploy": "npx wrangler deploy",
     "preview": "npx wrangler dev"
   },
@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241112.0",
+    "concurrently": "^9.2.0",
     "typescript": "^5.7.2",
     "wrangler": "^4.62.0"
   }

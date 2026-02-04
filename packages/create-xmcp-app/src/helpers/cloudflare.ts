@@ -88,7 +88,8 @@ export function applyCloudflareSettings(projectPath: string): void {
     packageJson.scripts = packageJson.scripts ?? {};
     packageJson.scripts.build = "xmcp build --cf";
     if (!packageJson.scripts.dev || packageJson.scripts.dev === "xmcp dev") {
-      packageJson.scripts.dev = "xmcp dev --cf & npx wrangler dev";
+      packageJson.scripts.dev =
+        "concurrently \"xmcp dev --cf\" \"npx wrangler dev\"";
     }
     packageJson.scripts.deploy =
       packageJson.scripts.deploy ?? "npx wrangler deploy";
@@ -100,6 +101,8 @@ export function applyCloudflareSettings(projectPath: string): void {
     }
 
     packageJson.devDependencies = packageJson.devDependencies ?? {};
+    packageJson.devDependencies.concurrently =
+      packageJson.devDependencies.concurrently ?? "^9.2.0";
     packageJson.devDependencies.wrangler =
       packageJson.devDependencies.wrangler ?? DEFAULT_WRANGLER_VERSION;
     packageJson.devDependencies["@cloudflare/workers-types"] =
