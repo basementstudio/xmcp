@@ -16,6 +16,8 @@ export default async function hello(
 ) {
   const greeting = `Hello, ${name}! From Cloudflare Workers.`;
 
+  console.log("etc");
+
   if (extra.authInfo) {
     return `${greeting}\n(Authenticated as: ${extra.authInfo.clientId})`;
   }

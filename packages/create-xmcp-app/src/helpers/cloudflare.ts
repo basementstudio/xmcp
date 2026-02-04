@@ -87,6 +87,9 @@ export function applyCloudflareSettings(projectPath: string): void {
 
     packageJson.scripts = packageJson.scripts ?? {};
     packageJson.scripts.build = "xmcp build --cf";
+    if (!packageJson.scripts.dev || packageJson.scripts.dev === "xmcp dev") {
+      packageJson.scripts.dev = "xmcp dev --cf & npx wrangler dev";
+    }
     packageJson.scripts.deploy =
       packageJson.scripts.deploy ?? "npx wrangler deploy";
     packageJson.scripts.preview =

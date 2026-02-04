@@ -18,13 +18,16 @@ program.name("xmcp").description("The MCP framework CLI").version("0.0.1");
 program
   .command("dev")
   .description("Start development mode")
-  .action(async () => {
+  .option("--cf", "Enable Cloudflare Workers output in development")
+  .action(async (options) => {
     console.log(`${xmcpLogo} Starting development mode...`);
+    const isCloudflareDev = options.cf || process.env.CF_PAGES === "1";
     await compilerContextProvider(
       {
         mode: "development",
-        // Ignore platforms on dev mode
-        platforms: {},
+        platforms: {
+          cloudflare: isCloudflareDev,
+        },
       },
       async () => {
         await compile();

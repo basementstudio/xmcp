@@ -3,13 +3,20 @@ import fs from "fs";
 
 const rootDir = process.cwd();
 
+interface BuildCloudflareOutputOptions {
+  log?: boolean;
+}
+
 /**
  * Build the Cloudflare Workers output structure.
  * Writes Cloudflare Worker files to the project root:
  * - worker.js
  * - wrangler.jsonc (only if not already present)
  */
-async function buildCloudflareOutput() {
+async function buildCloudflareOutput(
+  options: BuildCloudflareOutputOptions = {}
+) {
+  const { log = true } = options;
   const outputDir = rootDir;
   const buildDir = path.join(rootDir, ".xmcp", "cloudflare");
 
@@ -32,11 +39,13 @@ async function buildCloudflareOutput() {
     fs.writeFileSync(wranglerJsoncPath, wranglerConfig);
   }
 
-  console.log("Cloudflare Workers output structure created successfully");
-  console.log("");
-  console.log("Next steps:");
-  console.log("  1. npx wrangler dev       # Test locally");
-  console.log("  2. npx wrangler deploy    # Deploy to Cloudflare");
+  if (log) {
+    console.log("Cloudflare Workers output structure created successfully");
+    console.log("");
+    console.log("Next steps:");
+    console.log("  1. npx wrangler dev       # Test locally");
+    console.log("  2. npx wrangler deploy    # Deploy to Cloudflare");
+  }
 }
 
 /**

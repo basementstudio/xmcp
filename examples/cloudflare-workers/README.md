@@ -21,15 +21,21 @@ This writes these files into the project root:
 - `worker.js` - The bundled Cloudflare Worker
 - `wrangler.jsonc` - Wrangler configuration template (only if you don't already have `wrangler.toml/jsonc`)
 
-3. Test locally with Wrangler:
+3. Start development mode (watch + rebuild worker output) and Wrangler:
+
+```bash
+pnpm dev
+```
+
+This runs `xmcp dev --cf` (rebuilds `worker.js`) and `wrangler dev` together.
+
+4. Test with curl:
 
 ```bash
 pnpm preview
 # or
 npx wrangler dev
 ```
-
-4. Test with curl:
 
 ```bash
 # Health check
