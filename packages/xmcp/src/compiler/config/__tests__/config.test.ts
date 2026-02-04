@@ -51,7 +51,7 @@ describe("Config System - Zod Defaults", () => {
     assert.equal(resolved.name, "xmcp server");
     assert.equal(
       resolved.description,
-      "This MCP server was bootstrapped with xmcp. Click the button below to connect to the endpoint."
+      "This MCP server was bootstrapped with xmcp."
     );
   });
 

@@ -11,11 +11,79 @@ import { composeUriFromPath } from "./utils/resource-uri-composer";
 import { ResourceMetadata } from "@/types/resource";
 import { openAIResourceRegistry } from "./openai-resource-registry";
 import { flattenMeta } from "./openai/flatten-meta";
-import fs from "fs";
-import path from "path";
 import { generateOpenAIHTML, generateUIHTML } from "./react/generate-html";
-import { pathToToolName } from "@/compiler/utils/path-utils";
+import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
+
+// Client bundles can be injected at compile time for Cloudflare Workers
+// This variable is defined by DefinePlugin at compile time
+declare const INJECTED_CLIENT_BUNDLES:
+  | Record<string, { js: string; css?: string }>
+  | undefined;
+
+declare const IS_CLOUDFLARE: boolean;
+
+/**
+ * Get the appropriate pathToToolName function based on runtime environment.
+ * - For Cloudflare (INJECTED_CLIENT_BUNDLES defined): Use djb2 hash
+ * - For Node.js: Use MD5 hash (backwards compatible)
+ */
+function pathToToolName(path: string): string {
+  // Cloudflare mode: use djb2 hash (bundles were named with djb2 at compile time)
+  if (IS_CLOUDFLARE) {
+    return pathToToolNameDjb2(path);
+  }
+  // Node.js mode: use MD5 hash (backwards compatible)
+  return pathToToolNameMd5(path);
+}
+
+/**
+ * Get a client bundle by name.
+ * For Cloudflare Workers, bundles are injected at compile time.
+ * For Node.js, bundles are read from the filesystem at runtime.
+ */
+function getClientBundle(
+  bundleName: string
+): { js: string; css?: string } | null {
+  // Cloudflare mode: use injected bundles
+  if (INJECTED_CLIENT_BUNDLES) {
+    return INJECTED_CLIENT_BUNDLES[bundleName] || null;
+  }
+
+  // Node.js mode: read from filesystem
+  if (!IS_CLOUDFLARE) {
+    try {
+      // Dynamic import to avoid bundling fs in Cloudflare
+      const fs = require("fs");
+      const path = require("path");
+
+      const searchRoots = [
+        path.join(process.cwd(), "dist", "client"),
+        path.join(process.cwd(), "client"),
+      ];
+
+      for (const root of searchRoots) {
+        const jsCandidate = path.join(root, `${bundleName}.bundle.js`);
+        const cssCandidate = path.join(root, `${bundleName}.bundle.css`);
+
+        if (fs.existsSync(jsCandidate)) {
+          const js = fs.readFileSync(jsCandidate, "utf-8");
+          let css: string | undefined;
+
+          if (fs.existsSync(cssCandidate)) {
+            css = fs.readFileSync(cssCandidate, "utf-8");
+          }
+
+          return { js, css };
+        }
+      }
+    } catch {
+      // fs not available or file not found
+    }
+  }
+
+  return null;
+}
 
 /** Loads resources and injects them into the server */
 export function addResourcesToServer(
@@ -47,43 +115,19 @@ export function addResourcesToServer(
     ): Promise<ReadResourceResult> => {
       if (autoResource.mimeType && autoResource.toolPath) {
         try {
-          let clientCode: string | undefined;
-          let clientCss: string | undefined;
-
           const bundleName = pathToToolName(autoResource.toolPath);
+          const bundle = getClientBundle(bundleName);
 
-          const searchRoots = [
-            path.join(process.cwd(), "dist", "client"),
-            path.join(process.cwd(), "client"),
-          ];
-          const attemptedPaths: string[] = [];
-
-          for (const root of searchRoots) {
-            const candidate = path.join(root, `${bundleName}.bundle.js`);
-            const cssCandidate = path.join(root, `${bundleName}.bundle.css`);
-            attemptedPaths.push(candidate);
-
-            if (fs.existsSync(candidate)) {
-              clientCode = fs.readFileSync(candidate, "utf-8");
-
-              if (fs.existsSync(cssCandidate)) {
-                clientCss = fs.readFileSync(cssCandidate, "utf-8");
-              }
-              break;
-            }
-          }
-
-          if (!clientCode) {
-            const formattedPaths = attemptedPaths
-              .map((p) => `  - ${p}`)
-              .join("\n");
+          if (!bundle) {
             throw new Error(
               `React client bundle not found for "${autoResource.name}" (bundle: "${bundleName}").\n` +
-                `Expected to find it on filesystem at one of:\n${formattedPaths}\n` +
                 `React tool bundles are generated automatically when you run "xmcp build" (or "xmcp dev").\n` +
                 `Please re-run the build so the framework can regenerate the bundle.`
             );
           }
+
+          const clientCode = bundle.js;
+          const clientCss = bundle.css;
 
           const isMCPApp =
             autoResource.mimeType === "text/html;profile=mcp-app";

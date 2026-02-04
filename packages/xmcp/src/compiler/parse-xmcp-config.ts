@@ -33,6 +33,14 @@ export async function getConfig(): Promise<XmcpConfigOutputSchema> {
     // Remove stdio to deploy on vercel
     delete config.stdio;
   }
+  if (platforms.cloudflare) {
+    // Remove stdio for Cloudflare Workers
+    delete config.stdio;
+    // Ensure HTTP is enabled for Workers builds
+    if (!config.http) {
+      config.http = true;
+    }
+  }
   return config;
 }
 
