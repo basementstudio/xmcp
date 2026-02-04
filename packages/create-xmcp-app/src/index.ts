@@ -52,6 +52,11 @@ const program = new Command()
     false
   )
   .action(async (projectDir, options) => {
+    const cloudflareFlag =
+      options.cloudflare ||
+      process.argv.includes("--cloudflare") ||
+      process.argv.includes("--cf");
+
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
     if (options.tailwind && !options.gpt && !options.ui) {
@@ -88,11 +93,19 @@ const program = new Command()
 
       await downloadAndExtractExample(targetPath, options.example);
 
-      if (options.cloudflare) {
+      if (cloudflareFlag) {
         applyCloudflareSettings(targetPath);
       }
 
       console.log();
+      if (cloudflareFlag) {
+        console.log(
+          `${chalk.bgHex("#F38020").white(" Cloudflare ")} ${chalk.dim(
+            "bootstrapped for Workers deploy."
+          )}`
+        );
+        console.log();
+      }
       console.log("Next steps:");
       if (projectDir) {
         console.log(`  cd ${chalk.cyan(projectDir)}`);
@@ -340,22 +353,30 @@ const program = new Command()
 
     const spinner = ora("Creating your xmcp app...").start();
     try {
-      createProject({
-        projectPath: resolvedProjectPath,
-        projectName,
-        packageManager,
-        transports: transports,
-        packageVersion: packageJson.version,
-        skipInstall,
-        paths: selectedPaths,
-        template,
-        tailwind,
-        cloudflare: options.cloudflare,
-      });
+        createProject({
+          projectPath: resolvedProjectPath,
+          projectName,
+          packageManager,
+          transports: transports,
+          packageVersion: packageJson.version,
+          skipInstall,
+          paths: selectedPaths,
+          template,
+          tailwind,
+          cloudflare: cloudflareFlag,
+        });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
 
       console.log();
+      if (cloudflareFlag) {
+        console.log(
+          `${chalk.bgHex("#F38020").white(" Cloudflare ")} ${chalk.dim(
+            "bootstrapped for Workers deploy."
+          )}`
+        );
+        console.log();
+      }
       console.log("Next steps:");
 
       if (resolvedProjectPath !== process.cwd()) {
