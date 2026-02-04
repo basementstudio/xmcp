@@ -33,6 +33,7 @@ import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
+import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -43,7 +44,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths, promptPaths, resourcePaths } =
+  const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
@@ -177,7 +178,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     // Generate all code (including client bundles) BEFORE bundler runs
     await generateCode();
 
-    rspack(bundlerConfig, (err, stats) => {
+    rspack(bundlerConfig, async (err, stats) => {
       // Track compilation time
       let compilationTime: number;
       if (stats?.endTime && stats?.startTime) {
@@ -277,6 +278,17 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           !xmcpConfig.experimental?.adapter
         ) {
           startHttpServer();
+        }
+      }
+
+      if (mode === "development" && platforms.cloudflare) {
+        try {
+          await buildCloudflareOutput({ log: firstBuild });
+        } catch (error) {
+          console.error(
+            chalk.red("❌ Failed to sync Cloudflare Workers output:"),
+            error
+          );
         }
       }
 
