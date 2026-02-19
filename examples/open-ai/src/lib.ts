@@ -10,11 +10,7 @@ type PizzazWidget = {
   
 export function widgetMeta(widget: PizzazWidget) {
     return {
-        "openai/outputTemplate": widget.templateUri,
-        "openai/toolInvocation/invoking": widget.invoking,
-        "openai/toolInvocation/invoked": widget.invoked,
-        "openai/widgetAccessible": true,
-        "openai/resultCanProduceWidget": true
+        "ui/resourceUri": widget.templateUri
     } as const;
 }
 
@@ -22,7 +18,7 @@ export const widgets: PizzazWidget[] = [
     {
       id: "pizza-map",
       title: "Show Pizza Map",
-      templateUri: "ui://widget/pizza-map.html",
+      templateUri: "ui://app/pizza-map.html",
       invoking: "Hand-tossing a map",
       invoked: "Served a fresh map",
       html: `
@@ -35,7 +31,7 @@ export const widgets: PizzazWidget[] = [
     {
       id: "pizza-carousel",
       title: "Show Pizza Carousel",
-      templateUri: "ui://widget/pizza-carousel.html",
+      templateUri: "ui://app/pizza-carousel.html",
       invoking: "Carousel some spots",
       invoked: "Served a fresh carousel",
       html: `
@@ -48,7 +44,7 @@ export const widgets: PizzazWidget[] = [
     {
       id: "pizza-albums",
       title: "Show Pizza Album",
-      templateUri: "ui://widget/pizza-albums.html",
+      templateUri: "ui://app/pizza-albums.html",
       invoking: "Hand-tossing an album",
       invoked: "Served a fresh album",
       html: `
@@ -61,7 +57,7 @@ export const widgets: PizzazWidget[] = [
     {
       id: "pizza-list",
       title: "Show Pizza List",
-      templateUri: "ui://widget/pizza-list.html",
+      templateUri: "ui://app/pizza-list.html",
       invoking: "Hand-tossing a list",
       invoked: "Served a fresh list",
       html: `
@@ -74,7 +70,7 @@ export const widgets: PizzazWidget[] = [
     {
       id: "pizza-video",
       title: "Show Pizza Video",
-      templateUri: "ui://widget/pizza-video.html",
+      templateUri: "ui://app/pizza-video.html",
       invoking: "Hand-tossing a video",
       invoked: "Served a fresh video",
       html: `

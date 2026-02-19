@@ -4,13 +4,10 @@ export const metadata: ToolMetadata = {
   name: "get-pizza-map",
   description: "Show Pizza Map",
   _meta: {
-    openai: {
-      toolInvocation: {
-        invoking: "Hand-tossing a map",
-        invoked: "Served a fresh map",
+    ui: {
+      csp: {
+        resourceDomains: ["https://persistent.oaistatic.com"],
       },
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
     },
   },
 };
@@ -20,8 +17,8 @@ export const metadata: ToolMetadata = {
  *
  * How it works:
  * 1. Handler returns HTML string
- * 2. Framework detects _meta.openai and wraps response with empty content + _meta
- * 3. Framework auto-generates resource at "ui://widget/get-pizza-map.html"
+ * 2. Framework detects widget metadata and wraps response with empty content + _meta
+ * 3. Framework auto-generates resource at "ui://app/get-pizza-map.html"
  * 4. Resource serves this HTML when accessed via tool callign
  */
 export default async function handler() {

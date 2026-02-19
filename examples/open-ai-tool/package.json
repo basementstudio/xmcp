@@ -1,8 +1,8 @@
 {
-  "name": "ChatGPT Tool",
-  "description": "Learn how to set up an xmcp server using ChatGPT widgets using a single tool",
+  "name": "MCP App Tool",
+  "description": "Learn how to set up an xmcp server using MCP app widgets with a single tool",
   "keywords": [
-    "chatgpt"
+    "mcp-app"
   ],
   "scripts": {
     "build": "xmcp build",

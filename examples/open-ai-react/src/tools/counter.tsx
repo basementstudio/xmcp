@@ -5,16 +5,6 @@ import { z } from "zod";
 export const metadata: ToolMetadata = {
   name: "counter",
   description: "Counter React",
-  _meta: {
-    openai: {
-      toolInvocation: {
-        invoking: "Loading counter",
-        invoked: "Counter loaded",
-      },
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
-    },
-  },
 };
 
 export const schema = {

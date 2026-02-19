@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
-import { OpenAIMetadata } from "./openai-meta";
+import { UIMetadata } from "./ui-meta";
 
 export interface ToolAnnotations {
   /** Human-readable title for the tool */
@@ -23,10 +23,9 @@ export interface ToolMetadata {
   description: string;
   /** Optional hints about tool behavior */
   annotations?: ToolAnnotations;
-  /** Metadata for the tool. Supports nested OpenAI metadata and other vendor extensions. */
+  /** Metadata for the tool. */
   _meta?: {
-    openai?: OpenAIMetadata;
-    ui?: OpenAIMetadata;
+    ui?: UIMetadata;
     [key: string]: unknown;
   };
 }

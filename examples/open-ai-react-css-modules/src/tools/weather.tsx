@@ -6,13 +6,10 @@ export const metadata: ToolMetadata = {
   name: "weather",
   description: "Weather App",
   _meta: {
-    openai: {
-      toolInvocation: {
-        invoking: "Loading weather",
-        invoked: "Weather loaded",
+    ui: {
+      csp: {
+        connectDomains: ["https://api.open-meteo.com"],
       },
-      widgetAccessible: true,
-      resultCanProduceWidget: true,
     },
   },
 };

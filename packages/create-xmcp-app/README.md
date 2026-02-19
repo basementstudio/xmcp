@@ -35,9 +35,7 @@ You will be asked for the project name and then guided through a series of promp
 - `--skip-install`: Skip installing dependencies
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
-- `--gpt`: Initialize with GPT App template (ChatGPT/OpenAI widgets)
-- `--ui`: Initialize with MCP App template (React widgets for ext-apps)
-- `--tailwind, --tw`: Use Tailwind CSS (only with --gpt or --ui, defaults to --ui if used alone)
+- `--tailwind, --tw`: Use Tailwind CSS (only with MCP App template)
 
 ## Getting Started
 

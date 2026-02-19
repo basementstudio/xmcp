@@ -3,7 +3,7 @@ import { type ResourceMetadata } from "xmcp";
 export const metadata: ResourceMetadata = {
   name: "pizza-albums",
   title: "Show Pizza Album",
-  mimeType: "text/html+skybridge",
+  mimeType: "text/html;profile=mcp-app",
 };
 
 export default async function handler() {

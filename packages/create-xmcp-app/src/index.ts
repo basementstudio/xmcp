@@ -44,13 +44,7 @@ const program = new Command()
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .option("--cloudflare, --cf", "Initialize for Cloudflare Workers", false)
-  .option("--gpt", "Initialize with GPT App template", false)
-  .option("--ui", "Initialize with MCP App template", false)
-  .option(
-    "--tailwind, --tw",
-    "Use Tailwind CSS (only with --gpt or --ui)",
-    false
-  )
+  .option("--tailwind, --tw", "Use Tailwind CSS (only with MCP App)", false)
   .action(async (projectDir, options) => {
     const cloudflareFlag =
       options.cloudflare ||
@@ -58,10 +52,6 @@ const program = new Command()
       process.argv.includes("--cf");
 
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
-
-    if (options.tailwind && !options.gpt && !options.ui) {
-      options.ui = true;
-    }
 
     if (options.listExamples) {
       await listExamples();
@@ -162,80 +152,49 @@ const program = new Command()
     let templateChoice = "default";
     let tailwind = false;
 
-    // Handle --gpt flag
-    if (options.gpt) {
-      template = "gpt-apps";
-      transports = ["http"];
-      selectedPaths = ["tools"];
-      templateChoice = "gpt-app";
-      tailwind = options.tailwind || false;
-    }
-
-    // Handle --ui flag
-    if (options.ui) {
-      template = "mcp-apps";
-      transports = ["http"];
-      selectedPaths = ["tools"];
-      templateChoice = "mcp-app";
-      tailwind = options.tailwind || false;
-    }
-
-    if (!options.gpt && !options.ui && (options.http || options.stdio)) {
+    if (options.http || options.stdio) {
       transports = [];
       if (options.http) transports.push("http");
       if (options.stdio) transports.push("stdio");
     }
 
     if (!options.yes) {
-      if (!options.gpt && !options.ui) {
-        const templateAnswers = await inquirer.prompt([
+      const templateAnswers = await inquirer.prompt([
+        {
+          type: "list",
+          name: "template",
+          message: "Select a template:",
+          choices: [
+            {
+              name: "Default (Standard MCP server)",
+              value: "default",
+            },
+            {
+              name: "MCP App (React widgets for ext-apps)",
+              value: "mcp-app",
+            },
+          ],
+          default: "default",
+        },
+      ]);
+      templateChoice = templateAnswers.template;
+
+      if (templateChoice === "mcp-app") {
+        template = "mcp-apps";
+        transports = ["http"];
+        selectedPaths = ["tools"];
+      }
+
+      if (templateChoice === "mcp-app" && !options.tailwind) {
+        const tailwindAnswers = await inquirer.prompt([
           {
-            type: "list",
-            name: "template",
-            message: "Select a template:",
-            choices: [
-              {
-                name: "Default (Standard MCP server)",
-                value: "default",
-              },
-              {
-                name: "GPT App (ChatGPT/OpenAI widgets)",
-                value: "gpt-app",
-              },
-              {
-                name: "MCP App (React widgets for ext-apps)",
-                value: "mcp-app",
-              },
-            ],
-            default: "default",
+            type: "confirm",
+            name: "tailwind",
+            message: "Would you like to use Tailwind CSS?",
+            default: true,
           },
         ]);
-        templateChoice = templateAnswers.template;
-
-        if (templateChoice === "gpt-app") {
-          template = "gpt-apps";
-          transports = ["http"];
-          selectedPaths = ["tools"];
-        } else if (templateChoice === "mcp-app") {
-          template = "mcp-apps";
-          transports = ["http"];
-          selectedPaths = ["tools"];
-        }
-
-        if (
-          (templateChoice === "gpt-app" || templateChoice === "mcp-app") &&
-          !options.tailwind
-        ) {
-          const tailwindAnswers = await inquirer.prompt([
-            {
-              type: "confirm",
-              name: "tailwind",
-              message: "Would you like to use Tailwind CSS?",
-              default: true,
-            },
-          ]);
-          tailwind = tailwindAnswers.tailwind;
-        }
+        tailwind = tailwindAnswers.tailwind;
       }
 
       if (options.useYarn) packageManager = "yarn";
@@ -345,10 +304,18 @@ const program = new Command()
         selectedPaths = ["tools", "prompts", "resources"];
       }
 
-      // Default to Tailwind for GPT and UI templates in non-interactive mode
-      if (templateChoice === "gpt-app" || templateChoice === "mcp-app") {
+      // Default to Tailwind for MCP app template in non-interactive mode
+      if (templateChoice === "mcp-app") {
         tailwind = true;
       }
+    }
+
+    if (options.tailwind && templateChoice !== "mcp-app") {
+      console.log(
+        chalk.yellow(
+          "Ignoring --tailwind because it only applies to the MCP App template."
+        )
+      );
     }
 
     const spinner = ora("Creating your xmcp app...").start();

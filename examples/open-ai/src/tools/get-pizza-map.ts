@@ -10,12 +10,10 @@ export const metadata: ToolMetadata = {
     idempotentHint: true,
   },
   _meta: {
-    openai: {
-      toolInvocation: {
-        invoking: "Hand-tossing a map...",
-        invoked: "Served a fresh map!",
+    ui: {
+      csp: {
+        resourceDomains: ["https://persistent.oaistatic.com"],
       },
-      widgetAccessible: true,
     },
   },
 };
