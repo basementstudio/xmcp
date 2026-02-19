@@ -35,6 +35,7 @@ You will be asked for the project name and then guided through a series of promp
 - `--skip-install`: Skip installing dependencies
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
+- `--ui`: Initialize with MCP App template (non-tailwind)
 - `--tailwind, --tw`: Use Tailwind CSS (only with MCP App template)
 
 ## Getting Started

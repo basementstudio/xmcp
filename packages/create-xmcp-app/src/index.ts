@@ -44,6 +44,7 @@ const program = new Command()
   .option("--http", "Enable HTTP transport", false)
   .option("--stdio", "Enable STDIO transport", false)
   .option("--cloudflare, --cf", "Initialize for Cloudflare Workers", false)
+  .option("--ui", "Initialize with MCP App template (non-tailwind)", false)
   .option("--tailwind, --tw", "Use Tailwind CSS (only with MCP App)", false)
   .action(async (projectDir, options) => {
     const cloudflareFlag =
@@ -158,34 +159,44 @@ const program = new Command()
       if (options.stdio) transports.push("stdio");
     }
 
-    if (!options.yes) {
-      const templateAnswers = await inquirer.prompt([
-        {
-          type: "list",
-          name: "template",
-          message: "Select a template:",
-          choices: [
-            {
-              name: "Default (Standard MCP server)",
-              value: "default",
-            },
-            {
-              name: "MCP App (React widgets for ext-apps)",
-              value: "mcp-app",
-            },
-          ],
-          default: "default",
-        },
-      ]);
-      templateChoice = templateAnswers.template;
+    if (options.ui) {
+      template = "mcp-apps";
+      templateChoice = "mcp-app";
+      transports = ["http"];
+      selectedPaths = ["tools"];
+      tailwind = false;
+    }
 
-      if (templateChoice === "mcp-app") {
-        template = "mcp-apps";
-        transports = ["http"];
-        selectedPaths = ["tools"];
+    if (!options.yes) {
+      if (!options.ui) {
+        const templateAnswers = await inquirer.prompt([
+          {
+            type: "list",
+            name: "template",
+            message: "Select a template:",
+            choices: [
+              {
+                name: "Default (Standard MCP server)",
+                value: "default",
+              },
+              {
+                name: "MCP App (React widgets for ext-apps)",
+                value: "mcp-app",
+              },
+            ],
+            default: "default",
+          },
+        ]);
+        templateChoice = templateAnswers.template;
+
+        if (templateChoice === "mcp-app") {
+          template = "mcp-apps";
+          transports = ["http"];
+          selectedPaths = ["tools"];
+        }
       }
 
-      if (templateChoice === "mcp-app" && !options.tailwind) {
+      if (templateChoice === "mcp-app" && !options.tailwind && !options.ui) {
         const tailwindAnswers = await inquirer.prompt([
           {
             type: "confirm",
@@ -305,12 +316,18 @@ const program = new Command()
       }
 
       // Default to Tailwind for MCP app template in non-interactive mode
-      if (templateChoice === "mcp-app") {
+      if (templateChoice === "mcp-app" && !options.ui) {
         tailwind = true;
       }
     }
 
-    if (options.tailwind && templateChoice !== "mcp-app") {
+    if (options.ui && options.tailwind) {
+      console.log(
+        chalk.yellow(
+          "Ignoring --tailwind because --ui scaffolds the non-tailwind MCP App template."
+        )
+      );
+    } else if (options.tailwind && templateChoice !== "mcp-app") {
       console.log(
         chalk.yellow(
           "Ignoring --tailwind because it only applies to the MCP App template."
