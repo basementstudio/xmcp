@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import { ExampleItem } from "../../../utils/github";
@@ -11,6 +11,16 @@ interface ExampleCardsProps {
 
 export function ExampleCards({ examples }: ExampleCardsProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim().toLowerCase());
+    }, 200);
+
+    return () => window.clearTimeout(timeout);
+  }, [searchTerm]);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -23,16 +33,25 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
   }, [examples]);
 
   const filteredExamples = useMemo(() => {
-    if (selectedTags.length === 0 || selectedTags.includes("All"))
-      return examples;
-
     return examples.filter((example) => {
-      if (!example.tags) return false;
-      return selectedTags.some((selectedTag) =>
-        example.tags!.includes(selectedTag)
-      );
+      const matchesSearch =
+        debouncedSearchTerm.length === 0 ||
+        [
+          example.name,
+          example.description,
+          ...(example.tags ?? []),
+        ].some((value) => value.toLowerCase().includes(debouncedSearchTerm));
+
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.includes("All") ||
+        selectedTags.some((selectedTag) =>
+          (example.tags ?? []).includes(selectedTag)
+        );
+
+      return matchesSearch && matchesTags;
     });
-  }, [examples, selectedTags]);
+  }, [debouncedSearchTerm, examples, selectedTags]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => {
@@ -69,6 +88,23 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
   return (
     <div className="col-span-12 flex flex-col gap-8">
       <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="examples-search"
+            className="text-sm font-medium text-brand-white uppercase tracking-wide"
+          >
+            Search
+          </label>
+          <input
+            id="examples-search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search examples and templates..."
+            className="w-full border border-brand-neutral-400 bg-transparent px-3 py-2 text-sm text-brand-white placeholder:text-brand-neutral-300 focus:outline-none focus:border-brand-neutral-200"
+          />
+        </div>
+
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-brand-white uppercase tracking-wide">
             Filter by Category
@@ -114,7 +150,8 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-brand-neutral-200 text-sm">
-                No examples found for the selected filters.
+                No examples or templates found for the current search and
+                filters.
               </p>
             </div>
           )}
@@ -130,7 +167,7 @@ export function ExampleCard({
 }: {
   className?: string;
 } & ExampleItem) {
-  const { name, description, repositoryUrl, tags } = item;
+  const { name, description, repositoryUrl, tags, kind } = item;
 
   return (
     <Link
@@ -144,9 +181,14 @@ export function ExampleCard({
     >
       <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="mb-3">
-          <h4 className="text-brand-white font-medium mt-0 uppercase">
-            {name}
-          </h4>
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-brand-white font-medium mt-0 uppercase">
+              {name}
+            </h4>
+            <span className="text-[10px] border border-brand-neutral-300 text-brand-neutral-100 px-1.5 py-0.5 uppercase tracking-wide">
+              {kind}
+            </span>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-between">

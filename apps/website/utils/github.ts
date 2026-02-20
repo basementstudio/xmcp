@@ -34,6 +34,8 @@ export type ExampleItem = {
   repositoryUrl: string;
   path: string;
   tags?: string[];
+  kind: "example" | "template";
+  sourceRepo?: string;
 };
 
 export async function fetchExamples(): Promise<ExampleItem[]> {
@@ -75,6 +77,8 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
               repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
               path: dir.path,
               tags: [],
+              kind: "example",
+              sourceRepo: "basementstudio/xmcp",
             };
           }
 
@@ -89,6 +93,8 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
             repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
             path: dir.path,
             tags: packageContent.keywords || [],
+            kind: "example",
+            sourceRepo: "basementstudio/xmcp",
           };
         } catch (error) {
           console.error(`Error fetching package.json for ${dir.name}:`, error);
@@ -98,6 +104,8 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
             repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
             path: dir.path,
             tags: [],
+            kind: "example",
+            sourceRepo: "basementstudio/xmcp",
           };
         }
       })
@@ -108,6 +116,109 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
     console.error("Error fetching examples:", error);
     return [];
   }
+}
+
+type TemplateMeta = {
+  name?: string;
+  description?: string;
+  category?: string;
+  tag?: string;
+};
+
+export async function fetchTemplates(): Promise<ExampleItem[]> {
+  const templatesRepo = "xmcp-dev/templates";
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${templatesRepo}/contents`,
+      {
+        headers: getGitHubHeaders(),
+        cache: "force-cache",
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Failed to fetch templates directory");
+      return [];
+    }
+
+    const contents = await response.json();
+    const directories = contents.filter(
+      (item: { type: string }) => item.type === "dir"
+    );
+
+    const templates = await Promise.all(
+      directories.map(async (dir: { name: string; path: string }) => {
+        const repositoryUrl = `https://github.com/${templatesRepo}/tree/main/${dir.name}`;
+
+        try {
+          const metaResponse = await fetch(
+            `https://api.github.com/repos/${templatesRepo}/contents/${dir.name}/.config/template.meta.json`,
+            {
+              headers: getGitHubHeaders(),
+              cache: "force-cache",
+            }
+          );
+
+          if (!metaResponse.ok) {
+            return {
+              name: dir.name,
+              description: `Template: ${dir.name}`,
+              repositoryUrl,
+              path: dir.path,
+              tags: [],
+              kind: "template",
+              sourceRepo: templatesRepo,
+            };
+          }
+
+          const metaData = await metaResponse.json();
+          const metaContent = JSON.parse(
+            Buffer.from(metaData.content, "base64").toString("utf-8")
+          ) as TemplateMeta;
+
+          const tags = Array.from(
+            new Set([metaContent.category, metaContent.tag].filter(Boolean))
+          ) as string[];
+
+          return {
+            name: metaContent.name || dir.name,
+            description: metaContent.description || `Template: ${dir.name}`,
+            repositoryUrl,
+            path: dir.path,
+            tags,
+            kind: "template",
+            sourceRepo: templatesRepo,
+          };
+        } catch (error) {
+          console.error(`Error fetching template metadata for ${dir.name}:`, error);
+          return {
+            name: dir.name,
+            description: `Template: ${dir.name}`,
+            repositoryUrl,
+            path: dir.path,
+            tags: [],
+            kind: "template",
+            sourceRepo: templatesRepo,
+          };
+        }
+      })
+    );
+
+    return templates;
+  } catch (error) {
+    console.error("Error fetching templates:", error);
+    return [];
+  }
+}
+
+export async function fetchExamplesAndTemplates(): Promise<ExampleItem[]> {
+  const [examples, templates] = await Promise.all([
+    fetchExamples(),
+    fetchTemplates(),
+  ]);
+
+  return [...examples, ...templates];
 }
 
 function getGitHubHeaders() {
