@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import { ExampleItem } from "../../../utils/github";
 import { Tag } from "@/components/ui/tag";
+import { Icons as UiIcons } from "@/components/ui/icons";
 interface ExampleCardsProps {
   examples: ExampleItem[];
+  searchTerm: string;
 }
 
-export function ExampleCards({ examples }: ExampleCardsProps) {
+export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -21,6 +25,20 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
 
     return () => window.clearTimeout(timeout);
   }, [searchTerm]);
+
+  const updateScrollState = useCallback(() => {
+    const container = categoryScrollRef.current;
+    if (!container) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+
+    setCanScrollLeft(container.scrollLeft > 1);
+    setCanScrollRight(
+      container.scrollLeft + container.clientWidth < container.scrollWidth - 1
+    );
+  }, []);
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -85,59 +103,120 @@ export function ExampleCards({ examples }: ExampleCardsProps) {
     setSelectedTags([]);
   };
 
+  const scrollCategories = (direction: "left" | "right") => {
+    const container = categoryScrollRef.current;
+    if (!container) return;
+
+    const amount = Math.max(container.clientWidth * 0.6, 160);
+    container.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    updateScrollState();
+
+    const container = categoryScrollRef.current;
+    if (!container) return;
+
+    const handleScroll = () => updateScrollState();
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [allTags.length, updateScrollState]);
+
   return (
     <div className="col-span-12 flex flex-col gap-8">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <label
-            htmlFor="examples-search"
-            className="text-sm font-medium text-brand-white uppercase tracking-wide"
-          >
-            Search
-          </label>
-          <input
-            id="examples-search"
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search examples and templates..."
-            className="w-full border border-brand-neutral-400 bg-transparent px-3 py-2 text-sm text-brand-white placeholder:text-brand-neutral-300 focus:outline-none focus:border-brand-neutral-200"
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-brand-white uppercase tracking-wide">
-            Filter by Category
+        <div className="flex items-center gap-4 min-w-0">
+          <h3 className="text-sm font-medium text-brand-white tracking-wide shrink-0">
+            Filter by category
           </h3>
+
+          <div className="group flex items-center gap-1 flex-1 min-w-0">
+            <button
+              type="button"
+              aria-label="Scroll categories left"
+              onClick={() => scrollCategories("left")}
+              className={cn(
+                "size-8 shrink-0 grid place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
+                canScrollLeft
+                  ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
+              )}
+              >
+              <UiIcons.arrowLeft className="size-4" />
+            </button>
+
+            <div className="relative flex-1 min-w-0">
+              <div
+                ref={categoryScrollRef}
+                className="flex-1 overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              >
+                <div className="flex min-w-max gap-2 py-0.5 pr-2">
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => toggleTag(tag)}
+                      className={cn(
+                        "text-xs px-3 py-1.5 border border-dashed transition-colors duration-200 uppercase tracking-wide cursor-pointer shrink-0",
+                        (
+                          tag === "All"
+                            ? selectedTags.length === 0
+                            : selectedTags.includes(tag)
+                        )
+                          ? "border-brand-white bg-brand-neutral-600 text-brand-white"
+                          : "border-brand-neutral-400 text-brand-white hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                      )}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-brand-black to-transparent transition-opacity duration-200",
+                  canScrollLeft ? "opacity-100" : "opacity-0"
+                )}
+              />
+              <div
+                className={cn(
+                  "pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-brand-black to-transparent transition-opacity duration-200",
+                  canScrollRight ? "opacity-100" : "opacity-0"
+                )}
+              />
+            </div>
+
+            <button
+              type="button"
+              aria-label="Scroll categories right"
+              onClick={() => scrollCategories("right")}
+              className={cn(
+                "size-8 shrink-0 grid place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
+                canScrollRight
+                  ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+                  : "opacity-0 pointer-events-none"
+              )}
+              >
+              <UiIcons.arrowLeft className="size-4 rotate-180" />
+            </button>
+          </div>
+
           {selectedTags.length > 0 && (
             <button
               onClick={clearFilters}
-              className="text-xs text-brand-neutral-200 hover:text-white transition-colors"
+              className="text-xs text-brand-neutral-200 hover:text-white transition-colors shrink-0"
             >
               Clear filters
             </button>
           )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {allTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => toggleTag(tag)}
-              className={cn(
-                "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide cursor-pointer",
-                (
-                  tag === "All"
-                    ? selectedTags.length === 0
-                    : selectedTags.includes(tag)
-                )
-                  ? "border-brand-white bg-brand-white text-brand-black"
-                  : "border-brand-neutral-400 text-brand-neutral-200 hover:border-brand-neutral-300 hover:text-brand-white"
-              )}
-            >
-              {tag}
-            </button>
-          ))}
         </div>
       </div>
 
