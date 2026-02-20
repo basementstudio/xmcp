@@ -162,11 +162,11 @@ function resolveOgContent(
       return {
         ok: true,
         content: {
-          title: "Shaping the future of MCP tooling",
+          title: "Templates & Examples",
           description:
-            "xmcp now supports building compatible UI resources and tools with the OpenAI Apps SDK, out of the box.",
+            "Quickstart with xmcp using real-world examples and best practices.",
           summary: undefined,
-          date: "2025-12-11",
+          date: undefined,
         },
       };
     }
