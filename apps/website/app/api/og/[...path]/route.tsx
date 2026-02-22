@@ -162,7 +162,7 @@ function resolveOgContent(
       return {
         ok: true,
         content: {
-          title: "Templates & Examples",
+          title: "Examples & templates",
           description:
             "Quickstart with xmcp using real-world examples and best practices.",
           summary: undefined,
