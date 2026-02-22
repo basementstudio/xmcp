@@ -1,0 +1,53 @@
+---
+title: "Cloudflare"
+metadataTitle: "Cloudflare Deployment | xmcp Documentation"
+publishedAt: "2026-02-04"
+summary: "Learn how to deploy your xmcp application to Cloudflare Workers."
+description: "Cloudflare Workers support in xmcp uses a Cloudflare-native bundle and Wrangler for local dev and deploy."
+---
+
+Cloudflare Workers support is built into xmcp with the `--cf` flag. The easiest path is to bootstrap a project that includes Wrangler and the Cloudflare build pipeline.
+
+## Create a new project
+
+Start with `create-xmcp-app` and the Cloudflare flag (you can also pass `--cloudflare` when cloning an example with `--example`):
+
+```bash
+npx create-xmcp-app@latest my-xmcp-app --cloudflare
+```
+
+This initializes a Workers-ready setup and wires the following defaults:
+
+- `xmcp build --cf` for production builds
+- `xmcp dev --cf` alongside `wrangler dev` for local development
+- `wrangler deploy` for deployment
+
+## Build and deploy with the CLI
+
+Build a Cloudflare Workers bundle and emit `worker.js` (plus `wrangler.jsonc` if you don’t already have a Wrangler config):
+
+```bash
+pnpm build
+# or
+xmcp build --cf
+```
+
+Then deploy with Wrangler:
+
+```bash
+pnpm deploy
+# or
+npx wrangler deploy
+```
+
+## Local development
+
+Run the watcher and Wrangler together:
+
+```bash
+pnpm dev
+```
+
+This runs `xmcp dev --cf` (to rebuild the Worker output) and `wrangler dev` to serve it locally.
+
+Learn more about deploying Workers in the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/).
