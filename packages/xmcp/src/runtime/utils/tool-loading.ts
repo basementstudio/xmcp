@@ -112,7 +112,8 @@ export function loadToolsFromInjected<T = unknown>(
   for (const result of results) {
     if ('skipped' in result && result.skipped) {
       toolLoadReport.skippedCount += 1;
-      toolLoadReport.skippedByPath[Object.keys(tools)[results.indexOf(result)]] = result.reason;
+      const pathKeys = Object.keys(tools);
+      toolLoadReport.skippedByPath[pathKeys[results.indexOf(result)]] = result.reason;
       if (result.reason === "missing_or_invalid_export") {
         toolLoadReport.missingOrInvalidExportCount += 1;
       } else {
