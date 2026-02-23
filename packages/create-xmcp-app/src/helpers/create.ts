@@ -55,7 +55,7 @@ export function createProject(options: ProjectOptions): void {
 
   // Get the template directory path
   let templateDir: string;
-  if (template === "gpt-apps" || template === "mcp-apps") {
+  if (template === "mcp-apps") {
     const subTemplate = tailwind ? "tailwind" : "default";
     templateDir = path.join(
       __dirname,

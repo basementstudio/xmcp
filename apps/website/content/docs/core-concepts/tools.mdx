@@ -177,55 +177,11 @@ annotations: {
   about when and how to call your tools, but they don't enforce any behavior.
 </Callout>
 
-### OpenAI Metadata
-
-For ChatGPT widget integration, add OpenAI-specific metadata under `_meta.openai`:
-
-```typescript
-export const metadata: ToolMetadata = {
-  name: "show-analytics",
-  description: "Display analytics dashboard",
-  _meta: {
-    openai: {
-      // Tool-specific
-      widgetAccessible: true,
-      toolInvocation: {
-        invoking: "Loading analytics...",
-        invoked: "Dashboard ready!",
-      },
-
-      // Resource-specific (for auto-generated widgets)
-      widgetDescription: "Real-time analytics dashboard",
-      widgetPrefersBorder: true,
-      widgetCSP: {
-        connect_domains: ["https://api.analytics.com"],
-        resource_domains: ["https://cdn.analytics.com"],
-      },
-    },
-  },
-};
-```
-
-**Tool-specific properties:**
-
-- `widgetAccessible` - Enable widget-to-tool communication (required for widgets)
-- `toolInvocation.invoking` - Message shown while executing (≤64 chars)
-- `toolInvocation.invoked` - Message shown after completion (≤64 chars)
-- `outputTemplate` - Custom widget URI (auto-generated if not provided)
-
-**Resource-specific properties:**
-
-- `widgetDescription` - Human-readable widget summary
-- `widgetPrefersBorder` - UI rendering hint for borders
-- `widgetCSP` - Content Security Policy for external resources
-- `widgetDomain` - Optional dedicated subdomain
-- `widgetState` - Initial state object passed to widget
-
 ### MCP Apps metadata
 
 <Callout variant="info">
-  Unlike OpenAI widgets, MCP Apps do not require specific metadata
-  configuration. Widgets work automatically without additional setup.
+  MCP Apps widgets work automatically for React tools. Add `ui` metadata only
+  when you need CSP or rendering hints.
 </Callout>
 
 ```typescript
@@ -300,9 +256,8 @@ export default async function calculate({
 
 ### 2. Template Literal Handlers
 
-Return HTML directly to create interactive widgets in ChatGPT. When you return HTML and include OpenAI metadata, xmcp automatically generates a widget resource.
-
-To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
+Return HTML directly to create interactive widgets. xmcp automatically generates
+the widget resource.
 
 ```typescript title="src/tools/show-chart.ts"
 import { type ToolMetadata } from "xmcp";
@@ -311,11 +266,9 @@ export const metadata: ToolMetadata = {
   name: "show-chart",
   description: "Display an interactive chart",
   _meta: {
-    openai: {
-      widgetAccessible: true,
-      toolInvocation: {
-        invoking: "Loading chart...",
-        invoked: "Chart loaded!",
+    ui: {
+      csp: {
+        resourceDomains: ["https://cdn.jsdelivr.net"],
       },
     },
   },
@@ -339,8 +292,6 @@ export default async function showChart() {
 
 Return React components for interactive, composable widgets. xmcp renders the component to HTML and generates a widget resource automatically.
 
-To enable widgets, you need to add the `_meta.openai` configuration in your metadata with `widgetAccessible: true`.
-
 ```typescript title="src/tools/interactive-todo.tsx"
 import { type ToolMetadata } from "xmcp";
 import { useState } from "react";
@@ -349,12 +300,8 @@ export const metadata: ToolMetadata = {
   name: "interactive-todo",
   description: "Interactive todo list widget",
   _meta: {
-    openai: {
-      widgetAccessible: true,
-      toolInvocation: {
-        invoking: "Loading todo list...",
-        invoked: "Todo list ready!",
-      },
+    ui: {
+      prefersBorder: true,
     },
   },
 };
