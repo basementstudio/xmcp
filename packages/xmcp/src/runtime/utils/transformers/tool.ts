@@ -141,6 +141,14 @@ export function transformToolHandler(
       !("structuredContent" in response) &&
       !("content" in response && Array.isArray((response as any).content))
     ) {
+      // Validate the response against outputSchema before wrapping
+      const outputSchemaObj = z.object(outputSchema);
+      const parseResult = outputSchemaObj.safeParse(response);
+      if (!parseResult.success) {
+        throw new Error(
+          `Tool "${toolName}" returned data that does not match outputSchema: ${parseResult.error.message}`
+        );
+      }
       response = {
         structuredContent: response,
       };
