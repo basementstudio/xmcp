@@ -80,7 +80,6 @@ export function resetToolLoadingDiagnosticsForTests(): void {
 }
 
 export function loadToolsFromInjected<T = unknown>(
-export async function loadToolsFromInjected<T = unknown>(
   tools: Record<string, () => Promise<unknown>>
 ) {
   const toolModules = new Map<string, T>();
@@ -91,38 +90,27 @@ export async function loadToolsFromInjected<T = unknown>(
     skippedByPath: {},
   };
 
-  const toolPromises = Object.keys(tools).map(async (path) => {
+  const toolPromises = Object.keys(tools).map(async (path): Promise<void> => {
     try {
       const toolModule = await tools[path]();
       const validation = validateToolModule(toolModule);
 
       if (!validation.valid) {
+        toolLoadReport.skippedCount += 1;
+        toolLoadReport.missingOrInvalidExportCount += 1;
+        toolLoadReport.skippedByPath[path] = "missing_or_invalid_export";
         logMalformedToolFile(path);
-        return { skipped: true, reason: "missing_or_invalid_export" as const };
+        return;
       }
 
-      return { skipped: false, module: toolModule as T, path };
+      toolModules.set(path, toolModule as T);
     } catch (error) {
+      toolLoadReport.skippedCount += 1;
+      toolLoadReport.importErrorCount += 1;
+      toolLoadReport.skippedByPath[path] = "import_error";
       logToolImportError(path, error);
-      return { skipped: true, reason: "import_error" as const };
     }
   });
-
-  const results = await Promise.all(toolPromises);
-  
-  for (const result of results) {
-    if ('skipped' in result && result.skipped) {
-      toolLoadReport.skippedCount += 1;
-      toolLoadReport.skippedByPath[Object.keys(tools)[results.indexOf(result)]] = result.reason;
-      if (result.reason === "missing_or_invalid_export") {
-        toolLoadReport.missingOrInvalidExportCount += 1;
-      } else {
-        toolLoadReport.importErrorCount += 1;
-      }
-    } else if ('module' in result) {
-      toolModules.set(result.path, result.module);
-    }
-  }
 
   return [toolPromises, toolModules, toolLoadReport] as const;
 }
