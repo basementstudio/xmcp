@@ -1,4 +1,7 @@
-import { createServer } from "../../utils/server";
+import {
+  createServer,
+  preloadToolLoadingDiagnostics,
+} from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { Middleware } from "@/types/middleware";
 import {
@@ -59,6 +62,9 @@ async function main() {
       providers = processProviders(defaultExport);
     }
   }
+
+  // Preload tool modules so malformed/empty tool files are reported at startup.
+  await preloadToolLoadingDiagnostics();
 
   httpTransportContextProvider(
     {
