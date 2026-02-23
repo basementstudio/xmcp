@@ -7,6 +7,23 @@ import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
 
+function validateAgainstOutputSchema(
+  data: Record<string, unknown>,
+  outputSchema: ZodRawShape,
+  toolName: string,
+  errorPrefix: string
+): void {
+  for (const [fieldName, fieldSchema] of Object.entries(outputSchema)) {
+    try {
+      fieldSchema.parse((data as any)[fieldName]);
+    } catch (error: any) {
+      throw new Error(
+        `Tool "${toolName}" ${errorPrefix}: ${error?.message ?? `invalid field "${fieldName}"`}`
+      );
+    }
+  }
+}
+
 /**
  * Type for the original tool handler that users write
  */
@@ -141,14 +158,13 @@ export function transformToolHandler(
       !("structuredContent" in response) &&
       !("content" in response && Array.isArray((response as any).content))
     ) {
-      // Validate the response against outputSchema before wrapping
-      const outputSchemaObj = z.object(outputSchema);
-      const parseResult = outputSchemaObj.safeParse(response);
-      if (!parseResult.success) {
-        throw new Error(
-          `Tool "${toolName}" returned data that does not match outputSchema: ${parseResult.error.message}`
-        );
-      }
+      // Validate the response against outputSchema before wrapping.
+      validateAgainstOutputSchema(
+        response as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned data that does not match outputSchema"
+      );
       response = {
         structuredContent: response,
       };
@@ -261,6 +277,16 @@ export function transformToolHandler(
           `  content: [{ type: "text", text: "fallback" }],\n` +
           `  structuredContent: { your: "data" }\n` +
           `}`
+      );
+    }
+
+    // Validate structuredContent against outputSchema if present.
+    if (outputSchema && hasStructuredContent) {
+      validateAgainstOutputSchema(
+        (response as any).structuredContent as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned structuredContent that does not match outputSchema"
       );
     }
 
