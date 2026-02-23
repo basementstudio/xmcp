@@ -80,6 +80,7 @@ export function resetToolLoadingDiagnosticsForTests(): void {
 }
 
 export function loadToolsFromInjected<T = unknown>(
+export async function loadToolsFromInjected<T = unknown>(
   tools: Record<string, () => Promise<unknown>>
 ) {
   const toolModules = new Map<string, T>();
@@ -112,8 +113,7 @@ export function loadToolsFromInjected<T = unknown>(
   for (const result of results) {
     if ('skipped' in result && result.skipped) {
       toolLoadReport.skippedCount += 1;
-      const pathKeys = Object.keys(tools);
-      toolLoadReport.skippedByPath[pathKeys[results.indexOf(result)]] = result.reason;
+      toolLoadReport.skippedByPath[Object.keys(tools)[results.indexOf(result)]] = result.reason;
       if (result.reason === "missing_or_invalid_export") {
         toolLoadReport.missingOrInvalidExportCount += 1;
       } else {
@@ -123,8 +123,6 @@ export function loadToolsFromInjected<T = unknown>(
       toolModules.set(result.path, result.module);
     }
   }
-
-  return [Promise.resolve(), toolModules, toolLoadReport] as const;
 
   return [toolPromises, toolModules, toolLoadReport] as const;
 }
