@@ -16,6 +16,7 @@ import type { RspackOptions } from "@rspack/core";
 export const configSchema = z.object({
   stdio: stdioTransportConfigSchema.optional(),
   http: httpTransportConfigSchema.optional(),
+  observability: z.boolean().optional(),
   experimental: experimentalConfigSchema.optional(),
   paths: pathsConfigSchema.optional(),
   bundler: bundlerConfigSchema.optional(),

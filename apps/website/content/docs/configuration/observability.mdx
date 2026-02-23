@@ -1,0 +1,67 @@
+---
+title: "Observability"
+metadataTitle: "Observability | xmcp Documentation"
+publishedAt: "2026-02-23"
+summary: "Understand xmcp execution logs, terminal formatting, correlation, and redaction."
+description: "Enable and use standardized observability logs for tools, prompts, and resources."
+---
+
+## Enable observability
+
+Enable runtime execution logs with a single flag:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: true,
+};
+
+export default config;
+```
+
+When enabled, xmcp logs execution events for tools, prompts, and resources to `stderr`.
+
+## Output format
+
+Each line includes a human-friendly terminal prefix plus a parseable JSON payload:
+
+```text
+2026-02-23T20:05:05.396Z INFO tool.start tool/get-weather req=4 dur=- outcome=- | {"@timestamp":"2026-02-23T20:05:05.396Z","event.action":"tool.start","log.level":"info",...}
+2026-02-23T20:05:05.399Z INFO tool.end tool/get-weather req=4 dur=3 outcome=success | {"@timestamp":"2026-02-23T20:05:05.399Z","event.action":"tool.end","event.duration":3000000,"event.outcome":"success",...}
+```
+
+- Left side: optimized for live terminal scanning.
+- Right side (`| {json}`): optimized for ingestion and tooling.
+
+## Standards alignment
+
+The current log shape intentionally follows common observability standards so logs can move into existing pipelines without custom adapters:
+
+- **OpenTelemetry-style event semantics**: `event.action`, `event.outcome`, `event.duration`
+- **ECS-compatible fields**: `@timestamp`, `log.level`, `trace.id`, `span.id`
+- **W3C Trace Context correlation**: `traceparent` header parsing for trace/span IDs
+
+This improves interoperability with typical log backends, dashboards, and tracing workflows.
+
+## Key fields
+
+| Field | Purpose |
+| --- | --- |
+| `@timestamp` | Canonical event time |
+| `event.action` | Lifecycle action (`tool.start`, `tool.end`, etc.) |
+| `log.level` | Severity (`info` / `error`) |
+| `event.outcome` | Success/failure on end events |
+| `event.duration` | Duration in nanoseconds |
+| `durationMs` | Duration in milliseconds (human-readable compatibility) |
+| `request.id` | Request correlation ID |
+| `trace.id`, `span.id` | Distributed trace correlation (when `traceparent` is present) |
+
+## Redaction defaults
+
+xmcp redacts common sensitive keys recursively in logged input/output summary by default, including:
+
+- `authorization`
+- `token`, `access_token`, `refresh_token`
+- `password`
+- `secret`
+- `apiKey` / `api_key`
+- `cookie`, `set-cookie`

@@ -137,6 +137,18 @@ export function injectTypescriptVariables(userConfig: XmcpConfigOutputSchema) {
 
 export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 
+export function injectObservabilityVariables(
+  userConfig: XmcpConfigOutputSchema
+) {
+  return {
+    OBSERVABILITY: JSON.stringify(Boolean(userConfig.observability)),
+  };
+}
+
+export type ObservabilityVariables = ReturnType<
+  typeof injectObservabilityVariables
+>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
@@ -144,4 +156,5 @@ export type InjectedVariables =
   | StdioVariables
   | TemplateVariables
   | AdapterVariables
-  | TypescriptVariables;
+  | TypescriptVariables
+  | ObservabilityVariables;

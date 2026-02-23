@@ -9,6 +9,11 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "xmcp/plugins/x402";
+import {
+  logExecutionEnd,
+  logExecutionStart,
+  summarizeToolOutput,
+} from "./observability";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -128,15 +133,44 @@ export function addToolsToServer(
     let transformedHandler;
 
     if (isReactFile(path) && uiWidget) {
-      transformedHandler = async (args: any, extra: any) => ({
-        content: [{ type: "text", text: "" }],
-        _meta: meta,
-        structuredContent: {
-          args,
-        },
-      });
+      transformedHandler = async (args: any, extra: any) => {
+        const startedAt = logExecutionStart({
+          type: "tool",
+          name: toolConfig.name,
+          input: args,
+          extra,
+        });
+
+        try {
+          const result = {
+            content: [{ type: "text", text: "" }],
+            _meta: meta,
+            structuredContent: {
+              args,
+            },
+          };
+
+          logExecutionEnd({
+            type: "tool",
+            name: toolConfig.name,
+            startedAt,
+            extra,
+            outputSummary: summarizeToolOutput(result as any),
+          });
+          return result;
+        } catch (error) {
+          logExecutionEnd({
+            type: "tool",
+            name: toolConfig.name,
+            startedAt,
+            extra,
+            error,
+          });
+          throw error;
+        }
+      };
     } else {
-      transformedHandler = transformToolHandler(handler, meta);
+      transformedHandler = transformToolHandler(handler, meta, toolConfig.name);
     }
 
     const toolConfigFormatted = {
