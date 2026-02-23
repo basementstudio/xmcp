@@ -476,10 +476,6 @@ export default async function getUserData() {
       user: {
         id: 123,
         name: "John Doe",
-        email: "john@example.com",
-      },
-      metadata: {
-        timestamp: new Date().toISOString(),
       },
     },
   };
@@ -487,6 +483,7 @@ export default async function getUserData() {
 ```
 
 If `outputSchema` is declared, `structuredContent` must conform to it. If your handler returns a primitive (`string` or `number`) and `outputSchema` has exactly one field, xmcp auto-injects it into `structuredContent` using that field.
+Undeclared keys are rejected when `outputSchema` is present.
 You can also return a plain object directly (for example `return content`) and xmcp will treat it as `structuredContent` when `outputSchema` is declared.
 When `structuredContent` is returned without `content`, xmcp auto-generates a text fallback (`JSON.stringify(structuredContent)`) for compatibility with clients that only render `content`.
 
