@@ -15,6 +15,7 @@ import { openAIResourceRegistry } from "./openai-resource-registry";
 export type ToolFile = {
   metadata: ToolMetadata;
   schema: ZodRawShape;
+  outputSchema?: ZodRawShape;
   default: UserToolHandler;
 };
 

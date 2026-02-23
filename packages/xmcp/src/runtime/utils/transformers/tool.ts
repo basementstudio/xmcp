@@ -10,14 +10,18 @@ import { validateContent } from "../validators";
 /**
  * Type for the original tool handler that users write
  */
+export type UserToolResponse =
+  | CallToolResult
+  | string
+  | number
+  | Record<string, unknown>;
+
 export type UserToolHandler = (
   args: ZodRawShape,
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) =>
-  | CallToolResult
-  | string
-  | number
-  | Promise<CallToolResult | string | number>;
+  | UserToolResponse
+  | Promise<UserToolResponse>;
 
 /**
  * Type for the transformed handler that the MCP server expects
@@ -45,13 +49,15 @@ export type McpToolHandler = (
  */
 export function transformToolHandler(
   handler: UserToolHandler,
-  meta?: Record<string, any>
+  meta?: Record<string, any>,
+  outputSchema?: ZodRawShape,
+  toolName = "unknown-tool"
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response = handler(args, extra);
+    let response: any = handler(args, extra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {
@@ -59,6 +65,38 @@ export function transformToolHandler(
     }
 
     if (typeof response === "string" || typeof response === "number") {
+      if (outputSchema) {
+        const outputSchemaEntries = Object.entries(outputSchema);
+        if (outputSchemaEntries.length !== 1) {
+          throw new Error(
+            `Tool "${toolName}" returned a primitive output, but outputSchema auto-mapping requires exactly one field. ` +
+              `Found ${outputSchemaEntries.length} fields. Return an explicit { structuredContent: ... } object instead.`
+          );
+        }
+
+        const [fieldName, fieldSchema] = outputSchemaEntries[0];
+        try {
+          fieldSchema.parse(response);
+        } catch {
+          throw new Error(
+            `Tool "${toolName}" returned a primitive ${typeof response}, but outputSchema field "${fieldName}" does not accept this value. ` +
+              `Return an explicit { structuredContent: ... } object instead.`
+          );
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: typeof response === "number" ? `${response}` : response,
+            },
+          ],
+          structuredContent: {
+            [fieldName]: response,
+          },
+        };
+      }
+
       // Check if we have OpenAI metadata to attach
       const hasOpenAIMeta =
         meta &&
@@ -90,6 +128,21 @@ export function transformToolHandler(
             text: typeof response === "number" ? `${response}` : response,
           },
         ],
+      };
+    }
+
+    // With outputSchema declared, allow returning a plain object as shorthand
+    // for `{ structuredContent: ... }`.
+    if (
+      outputSchema &&
+      response &&
+      typeof response === "object" &&
+      !Array.isArray(response) &&
+      !("structuredContent" in response) &&
+      !("content" in response && Array.isArray((response as any).content))
+    ) {
+      response = {
+        structuredContent: response,
       };
     }
 
@@ -166,8 +219,15 @@ export function transformToolHandler(
     }
 
     // Check if response has at least one of: content, structuredContent, or valid OpenAI _meta
-    const hasContent = "content" in response && Array.isArray(response.content);
+    let hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
+    const isError = "isError" in response && (response as any).isError === true;
+
+    if (outputSchema && !hasStructuredContent && !isError) {
+      throw new Error(
+        `Tool "${toolName}" declares outputSchema and must return "structuredContent".`
+      );
+    }
 
     if (!hasContent && !hasStructuredContent) {
       const responseValue = JSON.stringify(response, null, 2);
@@ -194,6 +254,17 @@ export function transformToolHandler(
           `  structuredContent: { your: "data" }\n` +
           `}`
       );
+    }
+
+    // Auto-generate text fallback for clients that only render content.
+    if (!hasContent && hasStructuredContent) {
+      response.content = [
+        {
+          type: "text",
+          text: JSON.stringify((response as any).structuredContent),
+        },
+      ];
+      hasContent = true;
     }
 
     // validate each content item if content is present
@@ -243,6 +314,6 @@ export function transformToolHandler(
       }
     }
 
-    return response;
+    return response as CallToolResult;
   };
 }

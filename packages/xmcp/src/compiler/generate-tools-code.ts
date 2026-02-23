@@ -47,7 +47,7 @@ export async function getTools() {
 
   for (const toolData of toolsData) {
     const { path, name: defaultName, module } = toolData;
-    const { default: handler, metadata, schema } = module;
+    const { default: handler, metadata, schema, outputSchema } = module;
 
     const toolConfig = {
       name: defaultName,
@@ -73,6 +73,22 @@ export async function getTools() {
       }
     }
 
+    let toolOutputSchema = undefined;
+    if (outputSchema && typeof outputSchema === "object" && outputSchema !== null) {
+      const isValidOutputSchema = Object.entries(outputSchema).every(([key, val]) => {
+        if (typeof key !== "string") return false;
+        if (typeof val !== "object" || val === null) return false;
+        if (!("parse" in val) || typeof val.parse !== "function") return false;
+        return true;
+      });
+
+      if (isValidOutputSchema) {
+        toolOutputSchema = outputSchema;
+      } else {
+        throw new Error(\`Invalid outputSchema for tool "\${toolConfig.name}" at \${path}. Expected Record<string, z.ZodType>\`);
+      }
+    }
+
     // Make sure tools has annotations with a title
     if (toolConfig.annotations === undefined) {
       toolConfig.annotations = {};
@@ -85,6 +101,7 @@ export async function getTools() {
     registry[toolConfig.name] = {
       description: toolConfig.description,
       inputSchema: z.object(toolSchema || {}),
+      outputSchema: toolOutputSchema ? z.object(toolOutputSchema) : undefined,
       execute: async (args, extra) => {
         const result = await handler(args, extra);
         return result;
@@ -135,6 +152,7 @@ export interface ToolItem {
 export interface ToolRegistryItem {
   description: string;
   inputSchema: z.ZodObject<any>;
+  outputSchema?: z.ZodObject<any>;
   execute: (args: any) => Promise<any>;
 }
 

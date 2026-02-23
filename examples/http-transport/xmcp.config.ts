@@ -1,9 +1,7 @@
 import { XmcpConfig } from "xmcp";
 
 const config: XmcpConfig = {
-  http: {
-    port: 3002,
-  },
+  http: true,
   typescript: {
     skipTypeCheck: true,
   },

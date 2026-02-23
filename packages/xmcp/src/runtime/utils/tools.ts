@@ -11,7 +11,7 @@ import { splitOpenAIMetaNested } from "./openai/split-meta";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
-import { isPaidHandler, getX402Registry } from "xmcp/plugins/x402";
+import { isPaidHandler, getX402Registry } from "@/plugins/x402";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -46,7 +46,7 @@ export function addToolsToServer(
       description: "No description provided",
     };
 
-    const { default: handler, metadata, schema } = toolModule;
+    const { default: handler, metadata, schema, outputSchema } = toolModule;
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
@@ -68,6 +68,17 @@ export function addToolsToServer(
       console.warn(
         `Invalid schema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
       );
+    }
+
+    let toolOutputSchema: ZodRawShape | undefined;
+    if (outputSchema !== undefined && outputSchema !== null) {
+      if (isZodRawShape(outputSchema)) {
+        toolOutputSchema = outputSchema;
+      } else {
+        throw new Error(
+          `Invalid outputSchema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
+        );
+      }
     }
 
     // Make sure tools has annotations with a title
@@ -171,7 +182,12 @@ export function addToolsToServer(
         },
       });
     } else {
-      transformedHandler = transformToolHandler(handler, meta);
+      transformedHandler = transformToolHandler(
+        handler,
+        meta,
+        toolOutputSchema,
+        toolConfig.name
+      );
     }
 
     const toolConfigFormatted = {
@@ -180,6 +196,7 @@ export function addToolsToServer(
       // Build the object schema using the project's Zod instance to avoid
       // cross-instance v3 shape issues in tools/list JSON schema generation.
       inputSchema: z.object(toolSchema),
+      outputSchema: toolOutputSchema ? z.object(toolOutputSchema) : undefined,
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };

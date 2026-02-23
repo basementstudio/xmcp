@@ -454,6 +454,19 @@ export default async function getProfile() {
 
 ### Structured Outputs
 
+Declare an `outputSchema` when your tool returns `structuredContent`:
+
+```typescript
+import { z } from "zod";
+
+export const outputSchema = {
+  user: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+};
+```
+
 Return structured data using the `structuredContent` property:
 
 ```typescript
@@ -472,6 +485,10 @@ export default async function getUserData() {
   };
 }
 ```
+
+If `outputSchema` is declared, `structuredContent` must conform to it. If your handler returns a primitive (`string` or `number`) and `outputSchema` has exactly one field, xmcp auto-injects it into `structuredContent` using that field.
+You can also return a plain object directly (for example `return content`) and xmcp will treat it as `structuredContent` when `outputSchema` is declared.
+When `structuredContent` is returned without `content`, xmcp auto-generates a text fallback (`JSON.stringify(structuredContent)`) for compatibility with clients that only render `content`.
 
 ### Combined Response
 
