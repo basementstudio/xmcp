@@ -10,7 +10,7 @@ previewImage: "/blog/apps-sdk.png"
 xmcp now supports building and serving UI resources compatible with OpenAI's Apps SDK. Get started by running:
 
 ```bash
-npx create-xmcp-app --gpt
+npx create-xmcp-app@latest
 ```
 
 <Video
@@ -18,7 +18,11 @@ npx create-xmcp-app --gpt
   controls
 />
 
-The `--gpt` flag scaffolds a project with the necessary files and dependencies to get you up and running quickly.
+<Callout variant="warning">
+  OpenAI now supports MCP Apps. This post contains legacy context, so older
+  syntax examples may be outdated. New projects should use the MCP App template
+  and `_meta.ui` metadata.
+</Callout>
 
 Once your project is set up, you'll find two main folders. The prompts folder is excluded from this template by default, but you can easily enable it by modifying the `xmcp.config.ts` file.
 
@@ -52,42 +56,40 @@ For more information on constructing resource URIs, check out the [resources doc
 
 This folder contains your tools, which interact with and retrieve your UI resources.
 
-The `ToolMetadata` includes a `_meta` property for adding Apps SDK-specific metadata, enabling your resources to be displayed within widgets.
+The `ToolMetadata` includes a `_meta.ui` property for MCP Apps metadata, enabling your resources to be displayed within widgets.
 
 Available metadata keys:
 
-- `openai/outputTemplate`: Points to your resource URI template (required for discoverability)
-- `openai/widgetAccessible`: Boolean indicating if the resource is accessible within a widget
-- `openai/resultCanProduceWidget`: Boolean indicating if the tool result can produce a widget
-- `openai/widgetDescription`: Description displayed to the model when a client renders the component
-- `openai/widgetPrefersBorder`: Enables border rendering for widgets better suited to a "Card" layout
+- `ui.csp.connectDomains`: Origins allowed for fetch/XHR/WebSocket calls
+- `ui.csp.resourceDomains`: Origins for images, scripts, stylesheets, and media
+- `ui.domain`: Optional dedicated subdomain for your widget sandbox origin
+- `ui.prefersBorder`: Requests a bordered card layout for widgets
 
 ```typescript
 import { type ToolMetadata } from "xmcp";
-
-const widgetMeta = {
-  "openai/outputTemplate": "ui://widget/your-ui-resource.html",
-  "openai/widgetAccessible": true,
-  "openai/resultCanProduceWidget": true,
-};
 
 export const metadata: ToolMetadata = {
   name: "get-your-ui-resource",
   description: "Show Your UI Resource",
   _meta: {
-    ...widgetMeta,
+    ui: {
+      csp: {
+        connectDomains: ["https://api.example.com"],
+        resourceDomains: ["https://cdn.example.com"],
+      }
+    },
   },
 };
 
 export default async function handler() {
   return {
-    _meta: widgetMeta, // Required: return metadata in the response
+    content: [{ type: "text", text: "Widget ready" }],
   };
 }
 ```
 
-If you're not returning content in the response, you can omit the `content` array property and simply return the widget metadata.
+If you don't need CSP or rendering hints, you can omit `_meta.ui` entirely.
 
 ## References
 
-For more details, see the [OpenAI Apps SDK documentation](https://developers.openai.com/apps-sdk). You can test your resources and tools using [MCPJam](https://mcpjam.com), an open source MCP inspector.
+For more details, see the [MCP Apps docs](https://modelcontextprotocol.github.io/ext-apps/api/) and [OpenAI Apps SDK docs](https://developers.openai.com/apps-sdk). You can test your resources and tools using [MCPJam](https://mcpjam.com), an open source MCP inspector.

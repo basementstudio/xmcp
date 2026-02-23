@@ -62,6 +62,14 @@ export type McpToolHandler = (
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) => CallToolResult | Promise<CallToolResult>;
 
+function hasUIMeta(meta?: Record<string, any>): boolean {
+  return !!(
+    meta &&
+    typeof meta === "object" &&
+    Object.keys(meta).some((key) => key.startsWith("ui/"))
+  );
+}
+
 /**
  * Transforms a user's tool handler into an MCP-compatible handler.
  *
@@ -69,12 +77,12 @@ export type McpToolHandler = (
  * 1. Passes through both args and extra parameters to the user's handler
  * 2. Transforms string/number responses into the required CallToolResult format
  * 3. Allows returning `content`, `structuredContent`, or both
- * 4. Allows returning only `_meta` (without `content`) when it contains OpenAI-specific keys
- * 5. Auto-wraps HTML strings with OpenAI metadata if provided
+ * 4. Allows returning only `_meta` (without `content`) when it contains widget metadata
+ * 5. Auto-wraps HTML strings with widget metadata if provided
  * 6. Validates that the response is a proper CallToolResult and throws a descriptive error if not
  *
  * @param handler - The user's tool handler function
- * @param meta - Optional metadata to attach to responses (for OpenAI widgets)
+ * @param meta - Optional metadata to attach to responses (for MCP app widgets)
  * @returns A transformed handler compatible with McpServer.registerTool
  * @throws Error if the handler returns an invalid response type
  */
@@ -128,14 +136,11 @@ export function transformToolHandler(
         };
       }
 
-      // Check if we have OpenAI metadata to attach
-      const hasOpenAIMeta =
-        meta &&
-        typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"));
+      // Check if we have widget metadata to attach
+      const hasWidgetMeta = hasUIMeta(meta);
 
-      if (hasOpenAIMeta) {
-        // For OpenAI widgets, return empty text content with metadata
+      if (hasWidgetMeta) {
+        // For widget tools, return empty text content with metadata
         // The actual HTML is served by the auto-generated resource
         return {
           content: [
@@ -184,7 +189,7 @@ export function transformToolHandler(
       };
     }
 
-    // Check if response has _meta but no content (special case for OpenAI metadata)
+    // Check if response has _meta but no content (special case for widget metadata)
     if (
       response &&
       typeof response === "object" &&
@@ -194,12 +199,7 @@ export function transformToolHandler(
     ) {
       const meta = (response as any)._meta;
 
-      // Check if _meta contains OpenAI-specific keys (keys starting with "openai/")
-      if (
-        meta &&
-        typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"))
-      ) {
+      if (hasUIMeta(meta)) {
         // Transform to include empty text content with the _meta
         return {
           content: [
@@ -247,16 +247,16 @@ export function transformToolHandler(
           `  content: [{ type: "text", text: "fallback" }],\n` +
           `  structuredContent: { your: "data" }\n` +
           `}\n\n` +
-          `Or for OpenAI metadata only:\n` +
+          `Or for widget metadata only:\n` +
           `{\n` +
           `  _meta: {\n` +
-          `    "openai/...": ...\n` +
+          `    "ui/...": ...\n` +
           `  }\n` +
           `}`
       );
     }
 
-    // Check if response has at least one of: content, structuredContent, or valid OpenAI _meta
+    // Check if response has at least one of: content or structuredContent
     let hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
     const isError = "isError" in response && (response as any).isError === true;
