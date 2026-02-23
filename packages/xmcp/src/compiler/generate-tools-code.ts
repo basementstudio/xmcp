@@ -101,7 +101,9 @@ export async function getTools() {
     registry[toolConfig.name] = {
       description: toolConfig.description,
       inputSchema: z.object(toolSchema || {}),
-      outputSchema: toolOutputSchema ? z.object(toolOutputSchema) : undefined,
+      outputSchema: toolOutputSchema
+        ? z.object(toolOutputSchema).strict()
+        : undefined,
       execute: async (args, extra) => {
         const result = await handler(args, extra);
         return result;

@@ -196,7 +196,9 @@ export function addToolsToServer(
       // Build the object schema using the project's Zod instance to avoid
       // cross-instance v3 shape issues in tools/list JSON schema generation.
       inputSchema: z.object(toolSchema),
-      outputSchema: toolOutputSchema ? z.object(toolOutputSchema) : undefined,
+      outputSchema: toolOutputSchema
+        ? z.object(toolOutputSchema).strict()
+        : undefined,
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };

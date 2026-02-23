@@ -13,6 +13,20 @@ function validateAgainstOutputSchema(
   toolName: string,
   errorPrefix: string
 ): void {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: expected a plain object.`
+    );
+  }
+
+  const outputKeys = new Set(Object.keys(outputSchema));
+  const extraKeys = Object.keys(data).filter((key) => !outputKeys.has(key));
+  if (extraKeys.length > 0) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: unrecognized key(s): ${extraKeys.join(", ")}`
+    );
+  }
+
   for (const [fieldName, fieldSchema] of Object.entries(outputSchema)) {
     try {
       fieldSchema.parse((data as any)[fieldName]);
