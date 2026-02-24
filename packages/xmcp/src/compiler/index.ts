@@ -36,10 +36,8 @@ import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import {
   addWatchedPath,
-  createRegenerationQueue,
   pruneMissingWatchedPaths,
   removeWatchedPath,
-  type WatchEvent,
 } from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
@@ -54,7 +52,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
-  let compilerStarted = false;
 
   const xmcpConfig = await getConfig();
   compilerContext.setContext({
@@ -186,40 +183,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     await restartDebouncePromise;
   };
 
-  const regenerationQueue = createRegenerationQueue(async (event: WatchEvent) => {
-    if (event.kind === "unlink" && event.filePath) {
-      logXmcp(`File deleted: ${event.filePath}`);
-    }
-
-    try {
-      logXmcp("Regenerating import map...");
-      await synchronizeImportMap();
-
-      if (event.kind === "unlink") {
-        logXmcp("Import map updated.");
-      }
-    } catch (error) {
-      logXmcpError("Import map regeneration failed", error);
-
-      if (event.kind === "unlink" && shouldManageHttpServer()) {
-        try {
-          await scheduleHttpRestart("Restarting http server...");
-          logXmcp("MCP server restarted");
-        } catch (restartError) {
-          logXmcpError("Failed to restart MCP server", restartError);
-        }
-      }
-    }
-  });
-
-  const scheduleRegeneration = (event: WatchEvent) => {
-    if (!compilerStarted) {
-      return;
-    }
-
-    regenerationQueue.schedule(event);
-  };
-
   if (xmcpConfig.bundler) {
     bundlerConfig = xmcpConfig.bundler(bundlerConfig);
   }
@@ -243,16 +206,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: (filePath) => {
         addWatchedPath(toolPaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "tool", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(toolPaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "tool", kind: "unlink", filePath });
+        logXmcp(`File deleted: ${filePath}`);
       },
       onChange: (filePath) => {
         bumpRevision();
-        scheduleRegeneration({ scope: "tool", kind: "change", filePath });
       },
     });
   }
@@ -269,16 +230,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: (filePath) => {
         addWatchedPath(promptPaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "prompt", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(promptPaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "prompt", kind: "unlink", filePath });
+        logXmcp(`File deleted: ${filePath}`);
       },
       onChange: (filePath) => {
         bumpRevision();
-        scheduleRegeneration({ scope: "prompt", kind: "change", filePath });
       },
     });
   }
@@ -295,16 +254,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: (filePath) => {
         addWatchedPath(resourcePaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "resource", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
         bumpRevision();
-        scheduleRegeneration({ scope: "resource", kind: "unlink", filePath });
+        logXmcp(`File deleted: ${filePath}`);
       },
       onChange: (filePath) => {
         bumpRevision();
-        scheduleRegeneration({ scope: "resource", kind: "change", filePath });
       },
     });
   }
@@ -318,18 +275,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           hasMiddleware: true,
         });
         bumpRevision();
-        scheduleRegeneration({ scope: "middleware", kind: "add" });
       },
       onUnlink: () => {
         compilerContext.setContext({
           hasMiddleware: false,
         });
         bumpRevision();
-        scheduleRegeneration({ scope: "middleware", kind: "unlink" });
+        logXmcp("File deleted: src/middleware.ts");
       },
       onChange: () => {
         bumpRevision();
-        scheduleRegeneration({ scope: "middleware", kind: "change" });
       },
     });
   }
@@ -337,7 +292,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // start compiler
   watcher.onReady(async () => {
     let firstBuild = true;
-    compilerStarted = true;
 
     // delete existing runtime folder
     deleteSync(runtimeFolderPath);
