@@ -65,29 +65,32 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     const detail = error instanceof Error ? error.message : String(error);
     console.error(`[xmcp] ${message}${detail ? `: ${detail}` : ""}`);
   };
-  let isImportMapDirty = true;
-  let hasPendingImportMapSync = true;
-  let importMapSyncPromise: Promise<void> | null = null;
+  let requestedRevision = 1;
+  let appliedRevision = 0;
+  let syncInFlight: Promise<void> | null = null;
+  const staleImportErrorSuppressions = new Map<string, number>();
 
-  const markImportMapDirty = () => {
-    isImportMapDirty = true;
-    hasPendingImportMapSync = true;
+  const bumpRevision = () => {
+    requestedRevision += 1;
   };
 
   const synchronizeImportMap = async () => {
-    if (importMapSyncPromise) {
-      await importMapSyncPromise;
+    if (syncInFlight) {
+      await syncInFlight;
       return;
     }
 
-    importMapSyncPromise = (async () => {
-      do {
-        hasPendingImportMapSync = false;
+    syncInFlight = (async () => {
+      while (true) {
+        let discoveredChanges = false;
 
         const prunedTools = pruneMissingWatchedPaths(toolPaths);
         const prunedPrompts = pruneMissingWatchedPaths(promptPaths);
         const prunedResources = pruneMissingWatchedPaths(resourcePaths);
         const hadPrunedEntries = prunedTools || prunedPrompts || prunedResources;
+        if (hadPrunedEntries) {
+          discoveredChanges = true;
+        }
 
         const middlewareExists = fs.existsSync(
           path.resolve(process.cwd(), "src/middleware.ts")
@@ -95,22 +98,27 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         const { hasMiddleware } = compilerContext.getContext();
         if (hasMiddleware !== middlewareExists) {
           compilerContext.setContext({ hasMiddleware: middlewareExists });
-          isImportMapDirty = true;
+          discoveredChanges = true;
         }
 
-        if (!isImportMapDirty && !hadPrunedEntries) {
-          continue;
+        if (discoveredChanges) {
+          bumpRevision();
         }
 
+        if (appliedRevision >= requestedRevision) {
+          break;
+        }
+
+        const targetRevision = requestedRevision;
         await generateCode();
-        isImportMapDirty = false;
-      } while (hasPendingImportMapSync);
+        appliedRevision = targetRevision;
+      }
     })();
 
     try {
-      await importMapSyncPromise;
+      await syncInFlight;
     } finally {
-      importMapSyncPromise = null;
+      syncInFlight = null;
     }
   };
 
@@ -124,6 +132,10 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     !xmcpConfig.experimental?.adapter;
   let lastRestartedBuildHash: string | null = null;
   let restartInFlight: Promise<void> | null = null;
+  let restartDebounceTimer: NodeJS.Timeout | null = null;
+  let restartDebouncePromise: Promise<void> | null = null;
+  let resolveRestartDebounce: (() => void) | null = null;
+  const RESTART_DEBOUNCE_MS = 120;
 
   const restartHttpServerSafely = async (reason?: string) => {
     if (restartInFlight) {
@@ -145,6 +157,35 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     }
   };
 
+  const scheduleHttpRestart = async (reason?: string) => {
+    if (reason) {
+      logXmcp(reason);
+    }
+
+    if (!restartDebouncePromise) {
+      restartDebouncePromise = new Promise<void>((resolve) => {
+        resolveRestartDebounce = resolve;
+      });
+    }
+
+    if (restartDebounceTimer) {
+      clearTimeout(restartDebounceTimer);
+    }
+
+    restartDebounceTimer = setTimeout(async () => {
+      restartDebounceTimer = null;
+      try {
+        await restartHttpServerSafely();
+      } finally {
+        resolveRestartDebounce?.();
+        resolveRestartDebounce = null;
+        restartDebouncePromise = null;
+      }
+    }, RESTART_DEBOUNCE_MS);
+
+    await restartDebouncePromise;
+  };
+
   const regenerationQueue = createRegenerationQueue(async (event: WatchEvent) => {
     if (event.kind === "unlink" && event.filePath) {
       logXmcp(`File deleted: ${event.filePath}`);
@@ -162,7 +203,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
       if (event.kind === "unlink" && shouldManageHttpServer()) {
         try {
-          await restartHttpServerSafely("Restarting http server...");
+          await scheduleHttpRestart("Restarting http server...");
           logXmcp("MCP server restarted");
         } catch (restartError) {
           logXmcpError("Failed to restart MCP server", restartError);
@@ -201,16 +242,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
       onAdd: (filePath) => {
         addWatchedPath(toolPaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "tool", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(toolPaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "tool", kind: "unlink", filePath });
       },
       onChange: (filePath) => {
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "tool", kind: "change", filePath });
       },
     });
@@ -227,16 +268,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
       onAdd: (filePath) => {
         addWatchedPath(promptPaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "prompt", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(promptPaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "prompt", kind: "unlink", filePath });
       },
       onChange: (filePath) => {
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "prompt", kind: "change", filePath });
       },
     });
@@ -253,16 +294,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
       onAdd: (filePath) => {
         addWatchedPath(resourcePaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "resource", kind: "add", filePath });
       },
       onUnlink: (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "resource", kind: "unlink", filePath });
       },
       onChange: (filePath) => {
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "resource", kind: "change", filePath });
       },
     });
@@ -276,18 +317,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         compilerContext.setContext({
           hasMiddleware: true,
         });
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "middleware", kind: "add" });
       },
       onUnlink: () => {
         compilerContext.setContext({
           hasMiddleware: false,
         });
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "middleware", kind: "unlink" });
       },
       onChange: () => {
-        markImportMapDirty();
+        bumpRevision();
         scheduleRegeneration({ scope: "middleware", kind: "change" });
       },
     });
@@ -381,10 +422,23 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             });
 
           if (hasOnlyStaleImportMapError) {
-            logXmcp(
-              "Skipped transient stale import-map error while files were syncing."
-            );
-            return;
+            const staleErrors = statsJson.errors ?? [];
+            const staleSignature = staleErrors
+              .map((error) =>
+                typeof error.message === "string" ? error.message : "unknown"
+              )
+              .sort()
+              .join("|");
+            const staleCount =
+              (staleImportErrorSuppressions.get(staleSignature) ?? 0) + 1;
+            staleImportErrorSuppressions.set(staleSignature, staleCount);
+
+            if (staleCount === 1) {
+              logXmcp(
+                "Skipped transient stale import-map error while files were syncing."
+              );
+              return;
+            }
           }
 
           console.error(
@@ -423,6 +477,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       }
 
       // Build succeeded
+      staleImportErrorSuppressions.clear();
       if (firstBuild) {
         onFirstBuild(mode, xmcpConfig);
       } else {
@@ -439,7 +494,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             currentBuildHash !== lastRestartedBuildHash;
 
           if (shouldRestart) {
-            await restartHttpServerSafely();
+            await scheduleHttpRestart();
             lastRestartedBuildHash = currentBuildHash;
           }
         }
