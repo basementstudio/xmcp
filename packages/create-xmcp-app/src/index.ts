@@ -103,7 +103,7 @@ const program = new Command()
       if (projectDir) {
         console.log(`  cd ${chalk.cyan(projectDir)}`);
       }
-      console.log(`  ${chalk.cyan("pnpm install")}`);
+      skipInstallFlag && console.log(`  ${chalk.cyan("pnpm install")}`);
       console.log(`  ${chalk.cyan("pnpm run dev")}`);
       console.log();
       console.log("To learn more about xmcp:");
