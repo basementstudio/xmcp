@@ -98,7 +98,9 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           discoveredChanges = true;
         }
 
-        if (discoveredChanges) {
+        // Only force a revision when reconciliation discovered changes
+        // and there isn't already a pending watcher-driven revision.
+        if (discoveredChanges && appliedRevision >= requestedRevision) {
           bumpRevision();
         }
 
@@ -448,8 +450,8 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             currentBuildHash !== lastRestartedBuildHash;
 
           if (shouldRestart) {
-            await scheduleHttpRestart();
             lastRestartedBuildHash = currentBuildHash;
+            await scheduleHttpRestart();
           }
         }
       }

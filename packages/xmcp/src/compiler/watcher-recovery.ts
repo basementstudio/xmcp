@@ -1,15 +1,6 @@
 import path from "path";
 import fs from "fs";
 
-export type WatchEventScope = "tool" | "prompt" | "resource" | "middleware";
-export type WatchEventKind = "add" | "change" | "unlink";
-
-export interface WatchEvent {
-  scope: WatchEventScope;
-  kind: WatchEventKind;
-  filePath?: string;
-}
-
 function normalizeSlashes(value: string): string {
   return value.replace(/\\/g, "/");
 }
@@ -78,61 +69,4 @@ export function pruneMissingWatchedPaths(
   }
 
   return removed;
-}
-
-export interface RegenerationQueue {
-  schedule: (event: WatchEvent) => void;
-  waitForIdle: () => Promise<void>;
-}
-
-export function createRegenerationQueue(
-  run: (event: WatchEvent) => Promise<void>
-): RegenerationQueue {
-  let latestEvent: WatchEvent | null = null;
-  let isRunning = false;
-  const idleResolvers: Array<() => void> = [];
-
-  const resolveIdle = () => {
-    if (isRunning || latestEvent) {
-      return;
-    }
-
-    while (idleResolvers.length > 0) {
-      idleResolvers.shift()?.();
-    }
-  };
-
-  const drain = async () => {
-    if (isRunning) {
-      return;
-    }
-
-    isRunning = true;
-    try {
-      while (latestEvent) {
-        const event = latestEvent;
-        latestEvent = null;
-        await run(event);
-      }
-    } finally {
-      isRunning = false;
-      resolveIdle();
-    }
-  };
-
-  return {
-    schedule(event: WatchEvent) {
-      latestEvent = event;
-      void drain();
-    },
-    waitForIdle() {
-      if (!isRunning && !latestEvent) {
-        return Promise.resolve();
-      }
-
-      return new Promise<void>((resolve) => {
-        idleResolvers.push(resolve);
-      });
-    },
-  };
 }
