@@ -89,6 +89,7 @@ export default silenceConsoleInTool(async function getWeather({
 - Console behavior outside the wrapped handler remains unchanged.
 - Thrown errors are propagated unchanged (xmcp still handles/logs them normally).
 - The wrapper is opt-in and has no overhead when unused.
+- In environments without async_hooks support, async handlers fall back to synchronous-only suppression to avoid race conditions.
 
 ## Schema Definition
 
