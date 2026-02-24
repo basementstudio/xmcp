@@ -125,10 +125,6 @@ export class ClientComponentCompiler {
     root.render(React.createElement(Component, props));
   }
 
-  if (window.openai !== undefined) {
-    render(window.openai.toolInput ?? {});
-  }
-
   window.addEventListener("message", (event) => {
     if (event.source !== window.parent && event.source !== null) return;
 

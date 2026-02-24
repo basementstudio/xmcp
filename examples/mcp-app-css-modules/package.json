@@ -1,0 +1,22 @@
+{
+  "name": "MCP App React CSS Modules",
+  "description": "Learn how to set up an xmcp server using MCP app widgets with React + CSS modules and single tool handlers",
+  "keywords": [
+    "mcp-app"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3"
+  }
+}
