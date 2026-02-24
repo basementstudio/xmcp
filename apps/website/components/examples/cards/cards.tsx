@@ -3,9 +3,15 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
-import { ExampleItem } from "../../../utils/github";
+import { ExampleItem, BRANCH } from "@/app/examples/utils/github";
 import { Tag } from "@/components/ui/tag";
+<<<<<<< Updated upstream
 import { Icons as UiIcons } from "@/components/ui/icons";
+=======
+import Image from "next/image";
+import Shadow from "./shadow.png";
+
+>>>>>>> Stashed changes
 interface ExampleCardsProps {
   examples: ExampleItem[];
   searchTerm: string;
@@ -43,6 +49,9 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     examples.forEach((example) => {
+      if (example.category) {
+        tagSet.add(example.category);
+      }
       if (example.tags) {
         example.tags.forEach((tag) => tagSet.add(tag));
       }
@@ -133,9 +142,15 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
   return (
     <div className="col-span-12 flex flex-col gap-8">
       <div className="flex flex-col gap-4">
+<<<<<<< Updated upstream
         <div className="flex items-center gap-4 min-w-0">
           <h3 className="text-sm font-medium text-brand-white tracking-wide shrink-0">
             Filter by category
+=======
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-brand-white uppercase tracking-wide">
+            Filter by Tags
+>>>>>>> Stashed changes
           </h3>
 
           <div className="group flex items-center gap-1 flex-1 min-w-0">
@@ -224,7 +239,10 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredExamples.length > 0 ? (
             filteredExamples.map((example: ExampleItem, index: number) => (
-              <ExampleCard key={`${example.name}-${index}`} {...example} />
+              <ExampleCard
+                key={example.slug || example.name || index}
+                {...example}
+              />
             ))
           ) : (
             <div className="col-span-full text-center py-12">
@@ -242,22 +260,47 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
 
 export function ExampleCard({
   className,
+  href,
+  ctaLabel,
+  target,
   ...item
 }: {
   className?: string;
+  href?: string;
+  ctaLabel?: string;
+  target?: string;
 } & ExampleItem) {
+<<<<<<< Updated upstream
   const { name, description, repositoryUrl, tags, kind } = item;
+=======
+  const { name, description, repositoryUrl, category, preview, previewUrl } =
+    item;
+  const slug = item.slug;
+  const resolvedPreview =
+    previewUrl ||
+    (preview
+      ? `https://raw.githubusercontent.com/xmcp-dev/templates/${BRANCH}/${preview}`
+      : undefined);
+  const linkHref = href ?? (slug ? `/examples/${slug}` : repositoryUrl);
+  const defaultsToExternal = href
+    ? linkHref.startsWith("http://") || linkHref.startsWith("https://")
+    : !slug; // fall back to repo when no slug
+  const linkTarget = target ?? (defaultsToExternal ? "_blank" : undefined);
+  const isExternal = linkTarget === "_blank";
+>>>>>>> Stashed changes
 
   return (
     <Link
-      href={repositoryUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={linkHref}
+      target={linkTarget}
+      rel={isExternal ? "noopener noreferrer" : undefined}
       className={cn(
-        "text-left group relative overflow-visible h-full min-w-[280px] block cursor-alias",
+        "text-left group relative overflow-hidden h-full min-w-[280px] block",
+        isExternal ? "cursor-alias" : "cursor-pointer",
         className
       )}
     >
+<<<<<<< Updated upstream
       <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="mb-3">
           <div className="flex items-center justify-between gap-2">
@@ -268,23 +311,71 @@ export function ExampleCard({
               {kind}
             </span>
           </div>
+=======
+      <div className="relative border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
+        <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
+          <h4 className="text-brand-white font-medium mt-0 text-[1.125rem]">
+            {name}
+          </h4>
+>>>>>>> Stashed changes
         </div>
 
-        <div className="flex-1 flex flex-col justify-between">
-          <div className="space-y-3 flex flex-col justify-between h-full">
-            <p className="text-sm text-brand-neutral-200 leading-relaxed">
+        <div className="flex-1 flex flex-col justify-between relative z-10">
+          <div className="space-y-3 flex flex-col justify-between h-full px-4">
+            <p className="text-sm text-brand-neutral-100 leading-relaxed">
               {description}
             </p>
           </div>
 
-          {tags && tags.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Tag text={tags[0]} />
-              </div>
+          {(category || ctaLabel) && (
+            <div className="flex items-center justify-between mt-4 px-4 pb-4 gap-3">
+              {category && <Tag text={category} />}
+              {ctaLabel && (
+                <span className="text-[0.625rem] uppercase tracking-wide border border-brand-neutral-400 px-2 py-1 text-brand-neutral-50">
+                  {ctaLabel}
+                </span>
+              )}
             </div>
           )}
         </div>
+
+        {resolvedPreview && (
+          <div
+            className="absolute inset-0 translate-y-[60%] opacity-50 translate-x-[10%]"
+            style={{
+              perspective: "550px",
+              perspectiveOrigin: "30% 55%",
+            }}
+          >
+            <Image
+              src={resolvedPreview}
+              alt={`${name} preview`}
+              fill
+              sizes="50vw"
+              className="object-cover scale-110 border-2 rounded-md border-brand-neutral-400/70 bg-brand-neutral-900"
+              priority={false}
+              style={{
+                background:
+                  "radial-gradient(50% 100% at 50% 100%, #000000 0%, rgba(217, 217, 217, 0) 100%)",
+                transform: "skew(-34deg, 18deg) rotateX(10deg) rotateY(-10deg)",
+                transformStyle: "preserve-3d",
+              }}
+            />
+            <Image
+              src={Shadow}
+              alt=""
+              aria-hidden
+              fill
+              sizes="50vw"
+              className="object-cover scale-200 pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-200 -translate-x-[10%] -translate-y-[45%] -rotate-12"
+              priority={false}
+              style={{
+                transform: "skew(-34deg, 18deg) rotateX(10deg) rotateY(-10deg)",
+                transformStyle: "preserve-3d",
+              }}
+            />
+          </div>
+        )}
       </div>
     </Link>
   );

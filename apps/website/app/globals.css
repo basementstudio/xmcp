@@ -301,8 +301,16 @@ input[type="email"] {
   @apply text-[1.5rem] leading-6 sm:text-[2.5rem] sm:leading-[3rem];
 }
 
+.heading-1 {
+  @apply text-[32px] font-normal leading-[36px] tracking-[-0.04em];
+}
+
 .heading-2 {
   @apply text-[1.5rem] leading-8 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
+}
+
+.body-l {
+  @apply text-base leading-[1.5rem] tracking-[0.01rem];
 }
 
 .text-gradient {

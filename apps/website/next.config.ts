@@ -32,6 +32,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "assets.basehub.com",
       },
+      {
+        hostname: "raw.githubusercontent.com",
+      },
     ],
   },
   async redirects() {

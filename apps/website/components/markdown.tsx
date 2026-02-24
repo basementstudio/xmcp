@@ -1,3 +1,5 @@
+"use client";
+
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
