@@ -106,34 +106,26 @@ export function transformToolHandler(
     if (typeof response === "string" || typeof response === "number") {
       if (outputSchema) {
         const outputSchemaEntries = Object.entries(outputSchema);
-        if (outputSchemaEntries.length !== 1) {
-          throw new Error(
-            `Tool "${toolName}" returned a primitive output, but outputSchema auto-mapping requires exactly one field. ` +
-              `Found ${outputSchemaEntries.length} fields. Return an explicit { structuredContent: ... } object instead.`
-          );
+        if (outputSchemaEntries.length === 1) {
+          const [fieldName, fieldSchema] = outputSchemaEntries[0];
+          try {
+            fieldSchema.parse(response);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: typeof response === "number" ? `${response}` : response,
+                },
+              ],
+              structuredContent: {
+                [fieldName]: response,
+              },
+            };
+          } catch {
+            // Backward compatible fallback: keep content-only when primitive
+            // output does not match outputSchema.
+          }
         }
-
-        const [fieldName, fieldSchema] = outputSchemaEntries[0];
-        try {
-          fieldSchema.parse(response);
-        } catch {
-          throw new Error(
-            `Tool "${toolName}" returned a primitive ${typeof response}, but outputSchema field "${fieldName}" does not accept this value. ` +
-              `Return an explicit { structuredContent: ... } object instead.`
-          );
-        }
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: typeof response === "number" ? `${response}` : response,
-            },
-          ],
-          structuredContent: {
-            [fieldName]: response,
-          },
-        };
       }
 
       // Check if we have widget metadata to attach
@@ -260,12 +252,6 @@ export function transformToolHandler(
     let hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
     const isError = "isError" in response && (response as any).isError === true;
-
-    if (outputSchema && !hasStructuredContent && !isError) {
-      throw new Error(
-        `Tool "${toolName}" declares outputSchema and must return "structuredContent".`
-      );
-    }
 
     if (!hasContent && !hasStructuredContent) {
       const responseValue = JSON.stringify(response, null, 2);
