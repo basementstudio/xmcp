@@ -34,6 +34,13 @@ import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
+import {
+  addWatchedPath,
+  createRegenerationQueue,
+  pruneMissingWatchedPaths,
+  removeWatchedPath,
+  type WatchEvent,
+} from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -53,7 +60,124 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  let bundlerConfig = getRspackConfig(xmcpConfig);
+  const logXmcp = (message: string) => console.log(`[xmcp] ${message}`);
+  const logXmcpError = (message: string, error: unknown) => {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[xmcp] ${message}${detail ? `: ${detail}` : ""}`);
+  };
+  let isImportMapDirty = true;
+  let hasPendingImportMapSync = true;
+  let importMapSyncPromise: Promise<void> | null = null;
+
+  const markImportMapDirty = () => {
+    isImportMapDirty = true;
+    hasPendingImportMapSync = true;
+  };
+
+  const synchronizeImportMap = async () => {
+    if (importMapSyncPromise) {
+      await importMapSyncPromise;
+      return;
+    }
+
+    importMapSyncPromise = (async () => {
+      do {
+        hasPendingImportMapSync = false;
+
+        const prunedTools = pruneMissingWatchedPaths(toolPaths);
+        const prunedPrompts = pruneMissingWatchedPaths(promptPaths);
+        const prunedResources = pruneMissingWatchedPaths(resourcePaths);
+        const hadPrunedEntries = prunedTools || prunedPrompts || prunedResources;
+
+        const middlewareExists = fs.existsSync(
+          path.resolve(process.cwd(), "src/middleware.ts")
+        );
+        const { hasMiddleware } = compilerContext.getContext();
+        if (hasMiddleware !== middlewareExists) {
+          compilerContext.setContext({ hasMiddleware: middlewareExists });
+          isImportMapDirty = true;
+        }
+
+        if (!isImportMapDirty && !hadPrunedEntries) {
+          continue;
+        }
+
+        await generateCode();
+        isImportMapDirty = false;
+      } while (hasPendingImportMapSync);
+    })();
+
+    try {
+      await importMapSyncPromise;
+    } finally {
+      importMapSyncPromise = null;
+    }
+  };
+
+  let bundlerConfig = getRspackConfig(xmcpConfig, {
+    onBeforeCompile: synchronizeImportMap,
+  });
+
+  const shouldManageHttpServer = () =>
+    mode === "development" &&
+    !!xmcpConfig.http &&
+    !xmcpConfig.experimental?.adapter;
+  let lastRestartedBuildHash: string | null = null;
+  let restartInFlight: Promise<void> | null = null;
+
+  const restartHttpServerSafely = async (reason?: string) => {
+    if (restartInFlight) {
+      return restartInFlight;
+    }
+
+    if (reason) {
+      logXmcp(reason);
+    }
+
+    restartInFlight = (async () => {
+      await startHttpServer();
+    })();
+
+    try {
+      await restartInFlight;
+    } finally {
+      restartInFlight = null;
+    }
+  };
+
+  const regenerationQueue = createRegenerationQueue(async (event: WatchEvent) => {
+    if (event.kind === "unlink" && event.filePath) {
+      logXmcp(`File deleted: ${event.filePath}`);
+    }
+
+    try {
+      logXmcp("Regenerating import map...");
+      await synchronizeImportMap();
+
+      if (event.kind === "unlink") {
+        logXmcp("Import map updated.");
+      }
+    } catch (error) {
+      logXmcpError("Import map regeneration failed", error);
+
+      if (event.kind === "unlink" && shouldManageHttpServer()) {
+        try {
+          await restartHttpServerSafely("Restarting http server...");
+          logXmcp("MCP server restarted");
+        } catch (restartError) {
+          logXmcpError("Failed to restart MCP server", restartError);
+        }
+      }
+    }
+  });
+
+  const scheduleRegeneration = (event: WatchEvent) => {
+    if (!compilerStarted) {
+      return;
+    }
+
+    regenerationQueue.schedule(event);
+  };
 
   if (xmcpConfig.bundler) {
     bundlerConfig = xmcpConfig.bundler(bundlerConfig);
@@ -75,22 +199,19 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle tools
   if (toolsPath) {
     watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        toolPaths.add(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onAdd: (filePath) => {
+        addWatchedPath(toolPaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "tool", kind: "add", filePath });
       },
-      onUnlink: async (path) => {
-        toolPaths.delete(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onUnlink: (filePath) => {
+        removeWatchedPath(toolPaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "tool", kind: "unlink", filePath });
       },
-      onChange: async () => {
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onChange: (filePath) => {
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "tool", kind: "change", filePath });
       },
     });
   }
@@ -104,17 +225,19 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle prompts
   if (promptsPath) {
     watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        promptPaths.add(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onAdd: (filePath) => {
+        addWatchedPath(promptPaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "prompt", kind: "add", filePath });
       },
-      onUnlink: async (path) => {
-        promptPaths.delete(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onUnlink: (filePath) => {
+        removeWatchedPath(promptPaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "prompt", kind: "unlink", filePath });
+      },
+      onChange: (filePath) => {
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "prompt", kind: "change", filePath });
       },
     });
   }
@@ -128,17 +251,19 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle resources
   if (resourcesPath) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        resourcePaths.add(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onAdd: (filePath) => {
+        addWatchedPath(resourcePaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "resource", kind: "add", filePath });
       },
-      onUnlink: async (path) => {
-        resourcePaths.delete(path);
-        if (compilerStarted) {
-          await generateCode();
-        }
+      onUnlink: (filePath) => {
+        removeWatchedPath(resourcePaths, filePath);
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "resource", kind: "unlink", filePath });
+      },
+      onChange: (filePath) => {
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "resource", kind: "change", filePath });
       },
     });
   }
@@ -147,21 +272,23 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
     watcher.watch("./src/middleware.ts", {
-      onAdd: async () => {
+      onAdd: () => {
         compilerContext.setContext({
           hasMiddleware: true,
         });
-        if (compilerStarted) {
-          await generateCode();
-        }
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "middleware", kind: "add" });
       },
-      onUnlink: async () => {
+      onUnlink: () => {
         compilerContext.setContext({
           hasMiddleware: false,
         });
-        if (compilerStarted) {
-          await generateCode();
-        }
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "middleware", kind: "unlink" });
+      },
+      onChange: () => {
+        markImportMapDirty();
+        scheduleRegeneration({ scope: "middleware", kind: "change" });
       },
     });
   }
@@ -176,7 +303,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     createFolder(runtimeFolderPath);
 
     // Generate all code (including client bundles) BEFORE bundler runs
-    await generateCode();
+    await synchronizeImportMap();
 
     rspack(bundlerConfig, async (err, stats) => {
       // Track compilation time
@@ -232,6 +359,34 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           console.error(err);
         }
         if (stats?.hasErrors()) {
+          const statsJson = stats.toJson({
+            all: false,
+            errors: true,
+            warnings: false,
+          });
+          const hasOnlyStaleImportMapError =
+            mode === "development" &&
+            !!statsJson.errors?.length &&
+            statsJson.errors.every((error) => {
+              const message =
+                typeof error.message === "string" ? error.message : "";
+              const moduleName =
+                typeof error.moduleName === "string" ? error.moduleName : "";
+              return (
+                (message.includes("Module not found") ||
+                  message.includes("Can't resolve")) &&
+                (message.includes(".xmcp/import-map.js") ||
+                  moduleName.includes(".xmcp/import-map.js"))
+              );
+            });
+
+          if (hasOnlyStaleImportMapError) {
+            logXmcp(
+              "Skipped transient stale import-map error while files were syncing."
+            );
+            return;
+          }
+
           console.error(
             stats.toString({
               colors: true,
@@ -277,7 +432,16 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           xmcpConfig["http"] &&
           !xmcpConfig.experimental?.adapter
         ) {
-          startHttpServer();
+          const currentBuildHash =
+            typeof stats?.hash === "string" ? stats.hash : null;
+          const shouldRestart =
+            currentBuildHash === null ||
+            currentBuildHash !== lastRestartedBuildHash;
+
+          if (shouldRestart) {
+            await restartHttpServerSafely();
+            lastRestartedBuildHash = currentBuildHash;
+          }
         }
       }
 
@@ -367,25 +531,29 @@ async function generateCode() {
 
   // Generate import map code (includes client bundles)
   const fileContent = generateImportCode();
-  fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+  writeFileIfChanged(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
   const envFilePath = path.join(rootFolder, "xmcp-env.d.ts");
-
-  // Delete existing file if it exists
-  if (fs.existsSync(envFilePath)) {
-    fs.unlinkSync(envFilePath);
-  }
-
-  fs.writeFileSync(envFilePath, runtimeExportsCode);
+  writeFileIfChanged(envFilePath, runtimeExportsCode);
 
   // only generating tools files for nextjs adapter mode
   const { xmcpConfig } = compilerContext.getContext();
   if (xmcpConfig?.experimental?.adapter === "nextjs") {
     const toolsCode = generateToolsExportCode();
-    fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsCode);
+    writeFileIfChanged(path.join(runtimeFolderPath, "tools.js"), toolsCode);
     const typesCode = generateToolsTypesCode();
-    fs.writeFileSync(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
+    writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
   }
+}
+
+function writeFileIfChanged(filePath: string, content: string) {
+  if (fs.existsSync(filePath)) {
+    const currentContent = fs.readFileSync(filePath, "utf8");
+    if (currentContent === content) {
+      return;
+    }
+  }
+  fs.writeFileSync(filePath, content);
 }

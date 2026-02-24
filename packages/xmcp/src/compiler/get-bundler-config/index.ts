@@ -28,9 +28,27 @@ import { getExternals } from "./get-externals";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import fs from "fs";
 
+interface GetRspackConfigOptions {
+  onBeforeCompile?: () => Promise<void>;
+}
+
+class BeforeCompileSyncPlugin {
+  constructor(private readonly onBeforeCompile: () => Promise<void>) {}
+
+  apply(compiler: any) {
+    compiler.hooks.beforeCompile.tapPromise(
+      "BeforeCompileSyncPlugin",
+      async () => {
+        await this.onBeforeCompile();
+      }
+    );
+  }
+}
+
 /** Creates the bundler configuration that xmcp will use to bundle the user's code */
 export function getRspackConfig(
-  xmcpConfig: XmcpConfigOutputSchema
+  xmcpConfig: XmcpConfigOutputSchema,
+  options: GetRspackConfigOptions = {}
 ): RspackOptions {
   const processFolder = process.cwd();
   const { mode, platforms } = compilerContext.getContext();
@@ -222,6 +240,10 @@ export function getRspackConfig(
     config.watchOptions = {
       ignored: [adapterOutputPath, path.join(processFolder, "dist/client")],
     };
+
+    if (options.onBeforeCompile) {
+      config.plugins!.push(new BeforeCompileSyncPlugin(options.onBeforeCompile));
+    }
   }
 
   const providedPackages = {
