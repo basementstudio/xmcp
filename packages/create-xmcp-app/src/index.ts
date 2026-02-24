@@ -51,6 +51,8 @@ const program = new Command()
       options.cloudflare ||
       process.argv.includes("--cloudflare") ||
       process.argv.includes("--cf");
+    const skipInstallFlag =
+      options.skipInstall || process.argv.includes("--skip-install");
 
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -146,7 +148,7 @@ const program = new Command()
     }
 
     let packageManager = "npm";
-    let skipInstall = options.skipInstall;
+    let skipInstall = skipInstallFlag;
     let transports = ["http"];
     let selectedPaths = ["tools", "prompts", "resources"];
     let template = "typescript";
