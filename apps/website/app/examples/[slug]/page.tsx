@@ -36,7 +36,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       theme: "ayu-dark",
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} {...props}>
+          <CodeBlock ref={ref} data-line-numbers {...props}>
             <pre className="!text-[12px] [&_*]:!text-[12px]">
               {props.children}
             </pre>
@@ -50,7 +50,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       theme: "ayu-dark",
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} {...props}>
+          <CodeBlock ref={ref} data-line-numbers {...props}>
             <pre className="!text-[12px] [&_*]:!text-[12px]">
               {props.children}
             </pre>
