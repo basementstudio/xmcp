@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
+import { Children, type ComponentProps, type ReactElement } from "react";
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { ExampleCard } from "@/components/examples/cards/cards";
 import { ExampleShareActions } from "@/components/examples/share-actions";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,38 @@ import { CodeBlock } from "@/components/codeblock";
 import { Github } from "lucide-react";
 
 const baseUrl = getBaseUrl();
+
+function ReadmePre(props: ComponentProps<"pre">) {
+  const code = Children.only(props.children) as ReactElement;
+  const codeProps = code.props as ComponentProps<"code">;
+  const content = codeProps.children;
+
+  if (typeof content !== "string") {
+    return (
+      <CodeBlock>
+        <pre>{props.children}</pre>
+      </CodeBlock>
+    );
+  }
+
+  let lang =
+    codeProps.className
+      ?.split(" ")
+      .find((v) => v.startsWith("language-"))
+      ?.slice("language-".length) ?? "text";
+
+  if (lang === "mdx") lang = "md";
+
+  return (
+    <DynamicCodeBlock
+      lang={lang}
+      code={content.trimEnd()}
+      options={{
+        theme: "ayu-dark",
+      }}
+    />
+  );
+}
 
 function stripLeadingHeading(markdown: string) {
   const lines = markdown.split("\n");
@@ -102,6 +136,11 @@ function getProviderLabel(provider: DeployProvider) {
     default:
       return "Provider";
   }
+}
+
+function isKindLabel(value: string) {
+  const normalized = value.trim().toLowerCase();
+  return normalized === "example" || normalized === "template";
 }
 
 export async function generateStaticParams() {
@@ -206,6 +245,14 @@ Add a README.md to this template to show content here.`;
   const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
     pageUrl
   )}`;
+  const categoryItems = Array.from(
+    new Set([
+      ...(example.category && !isKindLabel(example.category)
+        ? [example.category]
+        : []),
+      ...((example.tags ?? []).filter((tag) => !isKindLabel(tag))),
+    ])
+  );
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
@@ -290,11 +337,10 @@ Add a README.md to this template to show content here.`;
             </InfoCard>
           )}
 
-          {(example.category || (example.tags?.length ?? 0) > 0) && (
+          {categoryItems.length > 0 && (
             <InfoCard label="Categories">
               <div className="flex flex-wrap gap-2">
-                {example.category && <Tag text={example.category} />}
-                {example.tags?.map((tag) => (
+                {categoryItems.map((tag) => (
                   <Tag key={tag} text={tag} />
                 ))}
               </div>
@@ -315,11 +361,7 @@ Add a README.md to this template to show content here.`;
             <MDXRemote
               source={bodyContent}
               components={getMDXComponents({
-                pre: ({ ref, ...props }) => (
-                  <CodeBlock ref={ref} {...props}>
-                    <pre>{props.children}</pre>
-                  </CodeBlock>
-                ),
+                pre: ReadmePre,
               })}
             />
           </div>
