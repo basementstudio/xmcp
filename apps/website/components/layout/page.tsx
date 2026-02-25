@@ -35,7 +35,7 @@ export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
               <p className="text-sm text-brand-white mb-2 font-medium">
                 On this page
               </p>
-              <div className="flex flex-col pb-4 border-b border-white/20">
+              <div className="flex flex-col pb-4 border-b border-white/20 max-h-2/3 overflow-y-auto sidebar-scrollbar">
                 {toc.map((item) => (
                   <TocItem key={item.url} item={item} />
                 ))}

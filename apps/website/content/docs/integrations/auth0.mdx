@@ -1,0 +1,360 @@
+---
+title: "Auth0"
+metadataTitle: "Usage with Auth0 | xmcp Documentation"
+publishedAt: "2026-01-16"
+summary: "Add secure authentication to your MCP server using Auth0"
+description: "The Auth0 plugin provides authentication for your MCP server using Auth0 with scope-based authorization."
+---
+
+## Installation
+
+Install the Auth0 plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/auth0",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/auth0",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/auth0",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/auth0",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Auth0 Tenant Setup
+
+MCP clients use Dynamic Client Registration (DCR) and the OAuth 2.0 Resource Parameter to authenticate. Your Auth0 tenant requires specific configuration for this to work.
+
+### 1. Enable Dynamic Client Registration
+
+MCP clients register themselves automatically with your Auth0 tenant.
+
+1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
+2. Enable **"OIDC Dynamic Application Registration"**
+3. Save changes.
+
+### 2. Enable Resource Parameter Compatibility Profile
+
+1. Go to **Auth0 Dashboard** → **Settings** → **Advanced**
+2. Enable **"Resource Parameter Compatibility Profile"**
+3. Save changes.
+
+### 3. Promote Connection to Domain Level
+
+DCR-registered clients are third-party by default and can only use domain-level connections.
+
+1. Go to **Auth0 Dashboard** → **Authentication** → **Database**
+2. Select your connection (e.g., `Username-Password-Authentication`)
+3. Enable **"Enable for third-party clients"** (or "Promote to domain level")
+4. Save changes.
+
+### 4. Create the API
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs**
+2. Click **Create API**
+3. Set:
+   - **Name**: e.g., `MCP Server API`
+   - **Identifier**: Your server URL (for development we will use `http://localhost:3001/`)
+
+### 5. Set Default Audience
+
+1. Go to **Auth0 Dashboard** → **Settings** → **General**
+2. Under **API Authorization Settings**, set **Default Audience** to your API identifier.
+3. Save changes.
+
+### 6. Note your Domain, Client ID, and Client Secret
+
+- In your **Dashboard**, go to **Applications** and create an M2M application.
+- Go to **Settings** and under **Basic Information**, you will find your **Domain** (following the format `<tenant>.<region>.auth0.com`), **Client ID**, and **Client Secret**.
+- Save these values in your environment variables under `DOMAIN`, `CLIENT_ID`, and `CLIENT_SECRET`.
+
+### 7. Enable Management API
+
+Required for permission checking. The plugin queries Auth0 to determine which tools require permissions.
+
+1. In your M2M application, go to **APIs** tab
+2. Enable **Auth0 Management API**
+3. Grant the following permissions:
+   - `read:resource_servers`: Check which tool permissions are defined
+   - `read:users`: Verify user has the required permissions
+
+## Environment Variables
+
+Configure the following environment variables in your `.env` file:
+
+```bash
+# Credentials
+DOMAIN=your-tenant.auth0.com
+AUDIENCE=http://127.0.0.1:3001/
+CLIENT_ID=your-m2m-client-id
+CLIENT_SECRET=your-m2m-client-secret
+
+# App configuration
+BASE_URL=http://127.0.0.1:3001
+```
+
+<Callout variant="warning">
+  `AUDIENCE` must match your Auth0 API identifier.
+</Callout>
+
+## Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory:
+
+```typescript title="src/middleware.ts"
+import { auth0Provider } from "@xmcp-dev/auth0";
+
+export default auth0Provider({
+  domain: process.env.DOMAIN!,
+  audience: process.env.AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  clientId: process.env.CLIENT_ID!,
+  clientSecret: process.env.CLIENT_SECRET!,
+});
+```
+
+### Configuration Options
+
+- **`domain`**: Your Auth0 domain (e.g., `your-tenant.auth0.com`)
+- **`audience`**: The API identifier configured in Auth0.
+- **`baseURL`**: Base URL of your MCP server.
+- **`clientId`**: Application client ID.
+- **`clientSecret`**: Application client secret.
+- **`scopesSupported`**: (Optional) Array of additional OAuth scopes beyond the defaults (`openid`, `profile`, `email`)
+- **`management`**: (Optional) Override configuration for the Management API.
+    - `audience`: (Optional) Custom audience for the Management API.
+    - `resourceServerIdentifier`: (Optional) Resource server identifier.
+
+## Public vs Protected tools
+
+By default, all tools are public and accessible by any user that is authenticated. This means any user with a valid Auth0 token can access the tool, regardless of their roles or permissions.
+
+Use public tools for:
+
+- General-purpose utilities that all users need.
+- Non-sensitive operations like greeting users or displaying public information.
+- Tools that don't access or modify restricted resources.
+
+### Protected Tools
+
+Protected tools require specific permissions to access. Use them to restrict sensitive operations to authorized users only.
+
+Use protected tools for:
+
+- Operations that modify critical resources.
+- Features limited to specific user tiers or roles.
+- Access to Token Vault.
+
+### How It Works
+
+The plugin queries Auth0 Management API on each request:
+1. xmcp constructs the permission name as `tool:<name>` using the tool's `metadata.name`
+2. **Check if permission exists** → queries `read:resource_servers` to see if `tool:<name>` is defined
+3. **If permission exists** → queries `read:users` to verify the user has it assigned
+4. **If permission does not exist** → tool is public, any authenticated user can access
+
+Users without the required permission will see: "You don't have permission to use the 'tool-name' tool."
+
+<Callout variant="info">
+  If Management API calls fail, the secure default is to deny access.
+</Callout>
+
+## Configure roles and RBAC for protected tools
+
+This section is optional, only needed when you want to use permission-protected tools.
+
+### Enable RBAC
+
+1. Go to **Auth0 Dashboard** → **Applications** → **APIs** → your API
+2. Go to **Settings** tab
+3. Enable **"Enable RBAC"**
+4. Enable **"Add Permissions in the Access Token"**
+5. Save changes
+
+### Create Roles and Assign Permissions
+
+1. Go to **Auth0 Dashboard** → **User Management** → **Roles**
+2. Click **Create Role** (e.g., "MCP Admin")
+3. Go to **Permissions** tab → **Add Permissions**
+4. Select your API and add permissions (e.g., `tool:greet`, `tool:whoami`)
+5. Go to **Users** tab → **Add Users** to assign the role to users
+
+## Get a user session
+
+Access the authenticated user's session in your tools using `getAuthInfo()`.
+
+### Example: Greet the user with their Auth0 identity
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getAuthInfo } from "@xmcp-dev/auth0";
+
+export const schema = {
+  name: z.string().optional().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their Auth0 identity",
+};
+
+export default function greet({ name }: InferSchema<typeof schema>): string {
+  const authInfo = getAuthInfo();
+  const displayName = authInfo.user.name ?? name ?? "there";
+  return `Hello, ${displayName}! Your Auth0 user ID is ${authInfo.user.sub}`;
+}
+```
+
+The `authInfo` object contains token data and user claims:
+
+- `authInfo.token`: The raw access token
+- `authInfo.clientId`: OAuth client ID.
+- `authInfo.scopes`: Array of granted scopes.
+- `authInfo.permissions`: Array of additional permissions from the token.
+- `authInfo.expiresAt`: Token expiration timestamp.
+- `authInfo.user.sub`: User ID (subject claim).
+
+## Access the clients
+
+The `getClient()` and `getManagement()` functions give you access to the full Auth0 SDKs, allowing you to leverage all Auth0 features in your MCP tools.
+
+### Example: Exchange tokens to call external APIs
+
+Use `getClient()` to exchange tokens and call external APIs on behalf of authenticated users using Auth0's Custom Token Exchange flow:
+
+```typescript title="src/tools/call-api.ts"
+import type { ToolMetadata } from "xmcp";
+import { getClient, getAuthInfo } from "@xmcp-dev/auth0";
+
+export const metadata: ToolMetadata = {
+  name: "call-external-api",
+  description: "Call an external API on behalf of the authenticated user",
+};
+
+async function exchangeCustomToken(subjectToken: string) {
+  const client = getClient();
+  return await client.getTokenByExchangeProfile(subjectToken, {
+    subjectTokenType: "urn:ietf:params:oauth:token-type:access_token",
+    audience: process.env.EXTERNAL_API_AUDIENCE!,
+    ...(process.env.EXCHANGE_SCOPE && { scope: process.env.EXCHANGE_SCOPE }),
+  });
+}
+
+export default async function callExternalApi(): Promise<string> {
+  const authInfo = getAuthInfo();
+
+  try {
+    const { access_token } = await exchangeCustomToken(authInfo.token);
+
+    // Use the exchanged token to call your external API
+    const response = await fetch(process.env.EXTERNAL_API_URL!, {
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
+
+    return await response.text();
+  } catch (error) {
+    return error instanceof Error ? error.message : "Failed to call API";
+  }
+}
+```
+
+This example demonstrates how to use `getTokenByExchangeProfile()` to exchange the user's MCP access token for a new token with a different audience, allowing your MCP server to call external APIs on the user's behalf.
+
+### Example: Update user metadata
+
+```typescript title="src/tools/update-preferences.ts"
+import type { ToolMetadata } from "xmcp";
+import { getManagement, getAuthInfo } from "@xmcp-dev/auth0";
+
+export const metadata: ToolMetadata = {
+  name: "update-preferences",
+  description: "Update user preferences using the Management API",
+};
+
+export default async function updatePreferences(): Promise<string> {
+  const authInfo = getAuthInfo();
+  const client = getManagement();
+
+  try {
+    await client.users.update(authInfo.user.sub, {
+      user_metadata: { theme: "dark" },
+    });
+    return "Preferences updated!";
+  } catch (error) {
+    return error instanceof Error ? error.message : "Failed to update preferences";
+  }
+}
+```
+
+The `getManagement()` function provides typed methods for all Auth0 Management operations and is only available when the `management` configuration is provided.
+
+## Troubleshooting
+
+These are the most common errors you may encounter when using the Auth0 plugin:
+
+- `unauthorized`: The request is missing the Authorization header. The client needs to authenticate before accessing protected resources.
+- `token_expired`: The access token has expired. MCP clients should automatically refresh tokens; users can disconnect and reconnect to get fresh tokens.
+- `invalid_token`: Token verification failed. Check that your Auth0 configuration matches your tenant settings.
+- `InsufficientScopeError`: The token doesn't have the required scopes for the tool. Ensure the scope is defined in your Auth0 API and requested during login.
+- `Service not found`: The API identifier must match your `BASE_URL` exactly, including the trailing slash. MCP clients send a `resource` parameter that Auth0 uses as the audience, and any mismatch causes this error.
+
+### OAuth Init Failed
+
+If you see "OAuth init failed" when connecting:
+
+- Ensure Dynamic Client Registration is enabled in Auth0 Settings → Advanced
+- Enable the Resource Parameter Compatibility Profile in Auth0 Settings → Advanced
+
+### Access Denied / Service Not Found
+
+If you see "access denied" or "Service not found" errors:
+
+- Your Auth0 API identifier must match `BASE_URL` exactly (including trailing slash)
+- Promote your database connection to domain level (Authentication → Database → Enable for third-party clients)
+- Set the Default Audience in Settings → General → API Authorization Settings
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens
+- Users can disconnect and reconnect to get fresh tokens
+
+### Invalid Token Errors
+
+If token verification fails:
+
+- Verify `DOMAIN` matches your Auth0 tenant
+- Verify `AUDIENCE` matches your API identifier exactly (including trailing slash)
+
+### Permission Check Failed
+
+If you see "You don't have permission..." errors for tools that should be public:
+
+- Your M2M app needs `read:resource_servers` and `read:users` permissions on the Auth0 Management API
+- Ensure `CLIENT_ID` and `CLIENT_SECRET` are set correctly
+- Verify the permissions are granted in the M2M app's **APIs** tab
+
+### Session Not Initialized
+
+If `getAuthInfo()` throws an error:
+
+- Ensure `auth0Provider` is exported as default from `middleware.ts`
+- Ensure the tool is called on a route under `/mcp/*`
+- Don't call `getAuthInfo()` at module load time—only inside tool handlers

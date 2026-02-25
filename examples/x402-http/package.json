@@ -1,0 +1,19 @@
+{
+  "name": "paid-http-transport",
+  "description": "Example of x402 paid tools with xmcp HTTP transport",
+  "keywords": [
+    "http",
+    "x402",
+    "paid"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/x402": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

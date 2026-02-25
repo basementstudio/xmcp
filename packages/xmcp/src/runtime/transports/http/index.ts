@@ -1,6 +1,5 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
-import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "@/types/middleware";
 import {
   CorsConfig,
@@ -29,10 +28,6 @@ const middleware = INJECTED_MIDDLEWARE as () =>
       default: Middleware | Middleware[];
     }>
   | undefined;
-
-// oauth config
-// @ts-expect-error: injected by compiler
-const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
 
 async function main() {
   const options = {
@@ -76,7 +71,6 @@ async function main() {
         createServer,
         options,
         corsOptions,
-        oauthConfig,
         providers
       );
 

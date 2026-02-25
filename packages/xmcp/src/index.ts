@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-export { type Middleware } from "./types/middleware";
+export type { Middleware, WebMiddleware, WebMiddlewareContext } from "./types/middleware";
 dotenv.config();
 
 export type {
@@ -10,10 +10,9 @@ export type {
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
-export type { OpenAIMetadata, OpenAIToolInvocation } from "./types/openai-meta";
+export type { UIMetadata } from "./types/ui-meta";
 
 export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
-export type { OAuthConfigOptions } from "./auth/oauth";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
@@ -47,3 +46,5 @@ export type {
   EnvHeader,
 } from "./client/headers";
 export { isEnvHeader, headersToRecord } from "./client/headers";
+
+export { extractToolNamesFromRequest } from "./runtime/utils/request-tool-names";

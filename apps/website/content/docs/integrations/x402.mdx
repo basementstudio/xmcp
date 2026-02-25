@@ -1,0 +1,198 @@
+---
+title: "x402"
+metadataTitle: "Usage with x402 | xmcp Documentation"
+publishedAt: "2026-01-19"
+summary: "Monetize your MCP tools with USDC payments on Base"
+description: "The x402 plugin enables tool monetization through the HTTP 402 payment protocol using USDC on Base."
+---
+
+## Overview
+
+The x402 plugin integrates the [x402 payment protocol](https://www.x402.org/) with your xmcp server, enabling you to charge USDC micropayments for tool usage on the Base blockchain.
+
+## Installation
+
+Install the x402 plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm add @xmcp-dev/x402",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm install @xmcp-dev/x402",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/x402",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/x402",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Set up your wallet
+
+Before integrating the plugin, you need a wallet address to receive payments:
+
+1. Create or use an existing Ethereum-compatible wallet (e.g., Coinbase Wallet, MetaMask)
+2. Get your wallet's public address (starts with `0x`)
+3. For testing, use Base Sepolia testnet and get test USDC from the [Coinbase Developer Platform](https://portal.cdp.coinbase.com/) under **Wallets > Faucet**
+
+<Callout variant="info">
+  The x402 protocol uses USDC stablecoin for payments. On Base mainnet, 1 USDC = 1 USD.
+</Callout>
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and configure the following environment variables:
+
+```bash
+X402_WALLET=0x...
+
+# Optional: Custom facilitator URL (defaults to https://x402.org/facilitator)
+X402_FACILITATOR=https://x402.org/facilitator
+```
+
+## Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory and import the provider from the package:
+
+```typescript title="src/middleware.ts"
+import { x402Provider } from "@xmcp-dev/x402";
+
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  defaults: {
+    price: 0.01,
+    network: "base-sepolia",
+  },
+});
+```
+
+### Configuration Options
+
+- **`wallet`**: Your wallet address that receives payments
+- **`facilitator`**: (Optional) Facilitator URL (defaults to `https://x402.org/facilitator`)
+- **`debug`**: (Optional) Enable debug logging
+- **`defaults`**: (Optional) Default values for all paid tools
+  - **`price`**: Price in USDC (default: `0.01`)
+  - **`currency`**: Currency code (default: `"USDC"`)
+  - **`network`**: Blockchain network - `"base"` or `"base-sepolia"` (default: `"base"`)
+  - **`maxPaymentAge`**: Maximum payment age in seconds (default: `300`)
+
+## Monetize a Tool
+
+Wrap your tool functions with `paid()` to require payment:
+
+```typescript title="src/tools/analyze.ts"
+import { paid } from "@xmcp-dev/x402";
+
+export default paid(
+  { price: 0.05 },
+  async function analyze({ data }) {
+    // Tool logic here
+    return `Analysis complete for: ${data}`;
+  }
+);
+```
+
+### Pricing
+
+You can set a custom price for each tool by passing a `price` option to `paid()`. If not specified, the tool will use the default price from your provider configuration. If the provider doesn't specify a default price either, the tool will cost **0.01 USDC** per call.
+
+```typescript title="src/tools/premium-analysis.ts"
+import { paid } from "@xmcp-dev/x402";
+
+// This tool costs 0.10 USDC per call
+export default paid(
+  { price: 0.10 },
+  async function premiumAnalysis({ data }) {
+    // Premium tool logic
+    return `Premium analysis complete for: ${data}`;
+  }
+);
+```
+
+```typescript title="src/tools/basic-tool.ts"
+import { paid } from "@xmcp-dev/x402";
+
+// This tool uses the provider's default price,
+// or 0.01 USDC if no default is configured
+export default paid(async function basicTool({ input }) {
+  return `Processed: ${input}`;
+});
+```
+
+### Tool Options
+
+- **`price`**: Price in USDC for this tool (falls back to provider default, then 0.01 USDC)
+- **`network`**: Override default network
+- **`maxPaymentAge`**: Override maximum payment age
+- **`description`**: Description used in payment requirements
+
+## Get Payment Details
+
+Access payment details inside your tool using the `payment()` function:
+
+```typescript title="src/tools/paid-greet.ts"
+import { paid, payment } from "@xmcp-dev/x402";
+
+export default paid(async function paidGreet({ name }) {
+  const { payer, amount, network, transactionHash } = payment();
+
+  return `Hello, ${name}! Payment received from ${payer}. Transaction: ${transactionHash}`;
+});
+```
+
+## Networks
+
+The plugin supports two networks:
+
+| Network | Chain ID | Use Case |
+|---------|----------|----------|
+| `base` | 8453 | Production with real USDC |
+| `base-sepolia` | 84532 | Testing with testnet USDC |
+
+## Troubleshooting
+
+### Payment Required Response
+
+If clients receive a 402 response, they need to:
+
+- Extract payment requirements from `result.structuredContent.accepts`
+- Sign a payment authorization using their wallet
+- Retry with payment in `params._meta["x402/payment"]`
+
+### Payment Verification Failed
+
+If payment verification fails:
+
+- Ensure the payment amount matches the tool price
+- Check that the payment is recent (within `maxPaymentAge` seconds)
+- Verify the correct network is being used (base vs base-sepolia)
+
+### Settlement Errors
+
+If settlement fails after tool execution:
+
+- Check the facilitator URL is correct and reachable
+- Verify your wallet address is valid
+- Ensure the payer has sufficient USDC balance
+
+### Missing Payment Context
+
+If `payment()` throws `"x402 context not initialized"`:
+
+- Ensure `x402Provider` is exported as default from `middleware.ts`
+- Only call `payment()` inside paid tool handlers
+- Don't call `payment()` at module load time

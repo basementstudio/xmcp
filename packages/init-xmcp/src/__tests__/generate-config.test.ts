@@ -18,23 +18,26 @@ describe("generateConfig", () => {
     fs.removeSync(tempDir);
   });
 
-  it("should generate config without paths when both toolsPath and promptsPath are falsy", () => {
+  it("should generate config with all paths set to false when all paths are skipped", () => {
     generateConfig(projectPath, "nextjs");
 
     const configPath = path.join(projectPath, "xmcp.config.ts");
     assert(fs.existsSync(configPath), "Config file should be created");
 
     const configContent = fs.readFileSync(configPath, "utf-8");
-    assert(
-      !configContent.includes("paths:"),
-      "Should not include paths key when both are falsy"
-    );
+    assert(configContent.includes("paths: {"), "Should include paths object");
+    assert(configContent.includes("tools: false"), "Should include tools: false");
+    assert(configContent.includes("prompts: false"), "Should include prompts: false");
+    assert(configContent.includes("resources: false"), "Should include resources: false");
 
     const pathsMatches = configContent.match(/paths:/g);
-    assert(!pathsMatches, "Should not contain any paths key");
+    assert(
+      pathsMatches && pathsMatches.length === 1,
+      "Should contain exactly one paths object"
+    );
   });
 
-  it("should generate config with paths object containing only tools when toolsPath is truthy", () => {
+  it("should generate config with tools path set and prompts/resources as false", () => {
     generateConfig(projectPath, "nextjs", "./tools");
 
     const configPath = path.join(projectPath, "xmcp.config.ts");
@@ -46,10 +49,8 @@ describe("generateConfig", () => {
       configContent.includes('tools: "./tools"'),
       "Should include tools path"
     );
-    assert(
-      !configContent.includes("prompts:"),
-      "Should not include prompts path"
-    );
+    assert(configContent.includes("prompts: false"), "Should include prompts: false");
+    assert(configContent.includes("resources: false"), "Should include resources: false");
 
     const pathsMatches = configContent.match(/paths:/g);
     assert(
@@ -58,7 +59,7 @@ describe("generateConfig", () => {
     );
   });
 
-  it("should generate config with paths object containing only prompts when promptsPath is truthy", () => {
+  it("should generate config with prompts path set and tools/resources as false", () => {
     generateConfig(projectPath, "nextjs", undefined, "./prompts");
 
     const configPath = path.join(projectPath, "xmcp.config.ts");
@@ -70,7 +71,8 @@ describe("generateConfig", () => {
       configContent.includes('prompts: "./prompts"'),
       "Should include prompts path"
     );
-    assert(!configContent.includes("tools:"), "Should not include tools path");
+    assert(configContent.includes("tools: false"), "Should include tools: false");
+    assert(configContent.includes("resources: false"), "Should include resources: false");
 
     const pathsMatches = configContent.match(/paths:/g);
     assert(
@@ -79,8 +81,8 @@ describe("generateConfig", () => {
     );
   });
 
-  it("should generate config with paths object containing both when both are truthy", () => {
-    generateConfig(projectPath, "nextjs", "./tools", "./prompts");
+  it("should generate config with all paths set to their string values when all are provided", () => {
+    generateConfig(projectPath, "nextjs", "./tools", "./prompts", "./resources");
 
     const configPath = path.join(projectPath, "xmcp.config.ts");
     assert(fs.existsSync(configPath), "Config file should be created");
@@ -94,6 +96,57 @@ describe("generateConfig", () => {
     assert(
       configContent.includes('prompts: "./prompts"'),
       "Should include prompts path"
+    );
+    assert(
+      configContent.includes('resources: "./resources"'),
+      "Should include resources path"
+    );
+
+    const pathsMatches = configContent.match(/paths:/g);
+    assert(
+      pathsMatches && pathsMatches.length === 1,
+      "Should contain exactly one paths object"
+    );
+  });
+
+  it("should generate config with only resources path set and tools/prompts as false", () => {
+    generateConfig(projectPath, "nextjs", undefined, undefined, "./resources");
+
+    const configPath = path.join(projectPath, "xmcp.config.ts");
+    assert(fs.existsSync(configPath), "Config file should be created");
+
+    const configContent = fs.readFileSync(configPath, "utf-8");
+    assert(configContent.includes("paths: {"), "Should include paths object");
+    assert(configContent.includes("tools: false"), "Should include tools: false");
+    assert(configContent.includes("prompts: false"), "Should include prompts: false");
+    assert(
+      configContent.includes('resources: "./resources"'),
+      "Should include resources path"
+    );
+
+    const pathsMatches = configContent.match(/paths:/g);
+    assert(
+      pathsMatches && pathsMatches.length === 1,
+      "Should contain exactly one paths object"
+    );
+  });
+
+  it("should generate config with mixed paths (tools and resources set, prompts false)", () => {
+    generateConfig(projectPath, "nextjs", "./tools", undefined, "./resources");
+
+    const configPath = path.join(projectPath, "xmcp.config.ts");
+    assert(fs.existsSync(configPath), "Config file should be created");
+
+    const configContent = fs.readFileSync(configPath, "utf-8");
+    assert(configContent.includes("paths: {"), "Should include paths object");
+    assert(
+      configContent.includes('tools: "./tools"'),
+      "Should include tools path"
+    );
+    assert(configContent.includes("prompts: false"), "Should include prompts: false");
+    assert(
+      configContent.includes('resources: "./resources"'),
+      "Should include resources path"
     );
 
     const pathsMatches = configContent.match(/paths:/g);

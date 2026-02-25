@@ -49,8 +49,11 @@ export function hasRepo(filePath: string): Promise<boolean> {
 async function downloadTarStream(url: string) {
   const res = await fetch(url);
 
-  if (!res.body) {
-    throw new Error(`Failed to download: ${url}`);
+  if (!res.ok || !res.body) {
+    const statusText = res.statusText || "Unknown error";
+    throw new Error(
+      `Failed to download: ${url} (status ${res.status} ${statusText})`
+    );
   }
 
   return Readable.fromWeb(res.body as import("stream/web").ReadableStream);
@@ -143,7 +146,12 @@ async function getExamples(): Promise<string[]> {
 
     const items: GitHubContentItem[] = await res.json();
     const names = items
-      .filter((item) => item.type === "dir")
+      .filter(
+        (item) =>
+          item.type === "dir" &&
+          item.name !== ".config" &&
+          item.name !== ".vscode"
+      )
       .map((item) => item.name)
       .filter(Boolean);
 

@@ -2,9 +2,14 @@
 import { Command } from "commander";
 import { compile } from "./compiler";
 import { buildVercelOutput } from "./platforms/build-vercel-output";
+import { buildCloudflareOutput } from "./platforms/build-cloudflare-output";
 import chalk from "chalk";
 import { xmcpLogo } from "./utils/cli-icons";
-import { compilerContextProvider } from "./compiler/compiler-context";
+import {
+  compilerContext,
+  compilerContextProvider,
+} from "./compiler/compiler-context";
+import { runCreate, type CreateType } from "./cli/commands/create";
 
 const program = new Command();
 
@@ -13,13 +18,16 @@ program.name("xmcp").description("The MCP framework CLI").version("0.0.1");
 program
   .command("dev")
   .description("Start development mode")
-  .action(async () => {
+  .option("--cf", "Enable Cloudflare Workers output in development")
+  .action(async (options) => {
     console.log(`${xmcpLogo} Starting development mode...`);
+    const isCloudflareDev = options.cf || process.env.CF_PAGES === "1";
     await compilerContextProvider(
       {
         mode: "development",
-        // Ignore platforms on dev mode
-        platforms: {},
+        platforms: {
+          cloudflare: isCloudflareDev,
+        },
       },
       async () => {
         await compile();
@@ -31,21 +39,27 @@ program
   .command("build")
   .description("Build for production")
   .option("--vercel", "Build for Vercel deployment")
+  .option("--cf", "Build for Cloudflare Workers deployment")
   .action(async (options) => {
     console.log(`${xmcpLogo} Building for production...`);
     const isVercelBuild = options.vercel || process.env.VERCEL === "1";
+    const isCloudflareBuild = options.cf || process.env.CF_PAGES === "1";
 
     await compilerContextProvider(
       {
         mode: "production",
         platforms: {
           vercel: isVercelBuild,
+          cloudflare: isCloudflareBuild,
         },
       },
       async () => {
         await compile({
           onBuild: async () => {
-            if (isVercelBuild) {
+            const { xmcpConfig } = compilerContext.getContext();
+            const isUsingAdapter = !!xmcpConfig?.experimental?.adapter;
+
+            if (isVercelBuild && !isUsingAdapter) {
               console.log(`${xmcpLogo} Building for Vercel...`);
               try {
                 await buildVercelOutput();
@@ -56,10 +70,56 @@ program
                 );
               }
             }
+            if (isCloudflareBuild) {
+              console.log(`${xmcpLogo} Building for Cloudflare Workers...`);
+              try {
+                await buildCloudflareOutput();
+              } catch (error) {
+                console.error(
+                  chalk.red(
+                    "❌ Failed to create Cloudflare output structure:"
+                  ),
+                  error
+                );
+              }
+            }
           },
         });
       }
     );
+  });
+
+const VALID_CREATE_TYPES: CreateType[] = [
+  "tool",
+  "resource",
+  "prompt",
+  "widget",
+];
+
+program
+  .command("create <type> <name>")
+  .description("Scaffold a new tool, resource, prompt, or widget")
+  .option("-d, --dir <path>", "Custom output directory")
+  .action(async (type: string, name: string, options: { dir?: string }) => {
+    if (!VALID_CREATE_TYPES.includes(type as CreateType)) {
+      console.error(chalk.red(`Invalid type "${type}".`));
+      console.error(`Valid types: ${VALID_CREATE_TYPES.join(", ")}`);
+      process.exit(1);
+    }
+
+    try {
+      const outputPath = await runCreate({
+        type: type as CreateType,
+        name,
+        directory: options.dir,
+      });
+      console.log(`${xmcpLogo} Created ${type} "${name}" -> ${outputPath}`);
+    } catch (error) {
+      console.error(
+        chalk.red(error instanceof Error ? error.message : String(error))
+      );
+      process.exit(1);
+    }
   });
 
 program.parse();

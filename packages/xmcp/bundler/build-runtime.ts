@@ -1,6 +1,6 @@
 /**
- * This script builds the compiler. It's not the compiler itself
- * */
+ * This script builds the runtime files. It's not the compiler itself.
+ */
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -19,22 +19,24 @@ interface RuntimeRoot {
   path: string;
 }
 
+// Node.js runtime roots (express, nextjs adapters + transports)
 const runtimeRoots: RuntimeRoot[] = [
   { name: "headers", path: "headers" },
   { name: "stdio", path: "transports/stdio" },
   { name: "http", path: "transports/http" },
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
+  { name: "adapter-nestjs", path: "adapters/nestjs" },
 ];
-const entry: EntryObject = {};
 
-// add dynamic entries
+const entry: EntryObject = {};
 for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
+// Node.js config (express, nextjs, http, stdio)
 const config: RspackOptions = {
-  name: "runtime",
+  name: "runtime-node",
   entry,
   mode: "production",
   devtool: false,
@@ -42,6 +44,7 @@ const config: RspackOptions = {
   externalsPresets: { node: true },
   externals: {
     "@rspack/core": "@rspack/core",
+    "@nestjs/common": "@nestjs/common",
   },
   output: {
     filename: "[name].js",
@@ -66,6 +69,10 @@ const config: RspackOptions = {
                 tsx: false,
                 decorators: true,
               },
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
+              },
               target: "es2020",
             },
             module: {
@@ -80,6 +87,7 @@ const config: RspackOptions = {
     extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
     alias: {
       "@": srcPath,
+      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
     },
   },
   watchOptions: {
@@ -115,12 +123,13 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
 
   const handleStats = (err: Error | null, stats: any) => {
     if (err) {
-      console.error(err);
+      console.error("Runtime build error:", err);
       return;
     }
 
     if (stats?.hasErrors()) {
       console.error(
+        "Runtime build errors:",
         stats.toString({
           colors: true,
           chunks: false,
@@ -136,8 +145,6 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       })
     );
 
-    console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
-
     if (process.env.GENERATE_STATS === "true" && stats) {
       const statsJson = stats.toJson({
         all: false,
@@ -152,9 +159,10 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       console.log(chalk.green(`Saved runtime stats to ${statsPath}`));
     }
 
-    // Only call onCompiled once for the initial build
     if (!compileStarted) {
       compileStarted = true;
+      console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
+
       onCompiled(stats);
     }
   };

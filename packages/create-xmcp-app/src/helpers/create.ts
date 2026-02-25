@@ -6,6 +6,7 @@ import { renameFiles } from "./rename.js";
 import { updatePackageJson } from "./update-package.js";
 import { install } from "./install.js";
 import { generateConfig } from "./generate-config.js";
+import { applyCloudflareSettings } from "./cloudflare.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,7 @@ interface ProjectOptions {
   paths?: string[];
   template?: string;
   tailwind?: boolean;
+  cloudflare?: boolean;
 }
 
 /**
@@ -45,6 +47,7 @@ export function createProject(options: ProjectOptions): void {
     paths = ["tools", "prompts", "resources"],
     template = "typescript",
     tailwind = false,
+    cloudflare = false,
   } = options;
 
   // Ensure the project directory exists
@@ -52,7 +55,7 @@ export function createProject(options: ProjectOptions): void {
 
   // Get the template directory path
   let templateDir: string;
-  if (template === "gpt-apps" || template === "mcp-apps") {
+  if (template === "mcp-apps") {
     const subTemplate = tailwind ? "tailwind" : "default";
     templateDir = path.join(
       __dirname,
@@ -75,6 +78,10 @@ export function createProject(options: ProjectOptions): void {
 
   // Update package.json with project configuration
   updatePackageJson(projectPath, projectName, transports);
+
+  if (cloudflare) {
+    applyCloudflareSettings(projectPath);
+  }
 
   // Create necessary project directories
   createProjectDirectories(projectPath);

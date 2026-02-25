@@ -1,4 +1,5 @@
-import { type RequestHandler, type Router } from "express";
+import type { RequestHandler, Router } from "express";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 export type RequestHandlerAndRouter = {
   middleware: RequestHandler;
@@ -6,3 +7,13 @@ export type RequestHandlerAndRouter = {
 };
 
 export type Middleware = RequestHandler | RequestHandlerAndRouter;
+
+export type WebMiddlewareContext = {
+  auth?: AuthInfo;
+  setAuth: (auth: AuthInfo) => void;
+};
+
+export type WebMiddleware = (
+  request: Request,
+  context: WebMiddlewareContext
+) => Promise<Response | void> | Response | void;

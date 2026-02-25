@@ -1,35 +1,3 @@
-export function generateOpenAIHTML(
-  componentCode: string,
-  css: string | undefined
-): string {
-  const styleTag = css ? `<style>${css}</style>` : "";
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  ${styleTag}
-</head>
-<body>
-  <div id="root"></div>
-
-  <script type="module">
-    const componentSource = ${JSON.stringify(componentCode)};
-    const blobUrl = URL.createObjectURL(
-      new Blob([componentSource], { type: "text/javascript" })
-    );
-
-    await import(blobUrl);
-
-    requestAnimationFrame(() => {
-      URL.revokeObjectURL(blobUrl);
-    });
-  </script>
-</body>
-</html>`;
-}
-
 export function generateUIHTML(
   componentCode: string,
   css: string | undefined
@@ -50,8 +18,8 @@ export function generateUIHTML(
       id: nextId++,
       method: "ui/initialize",
       params: {
-        capabilities: {},
-        clientInfo: { name: "xmcp React Widget", version: "1.0.0" },
+        appCapabilities: {},
+        appInfo: { name: "xmcp React Widget", version: "1.0.0" },
         protocolVersion: "2025-06-18"
       }
     }, "*");

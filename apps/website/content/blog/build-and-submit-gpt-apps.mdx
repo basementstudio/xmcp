@@ -17,6 +17,12 @@ Learn how to submit your ChatGPT App to the OpenAI directory. We'll cover everyt
   build guide [here](/blog/doom-with-xmcp).
 </Callout>
 
+<Callout variant="warning">
+  OpenAI now supports MCP Apps. Some legacy syntax you may see in older guides
+  can be outdated, so prefer the current MCP Apps metadata format (`_meta.ui`)
+  in your implementation.
+</Callout>
+
 ## First steps
 
 If you don't have your assets ready, this is the moment to prepare them. The checklist includes:
@@ -52,7 +58,7 @@ You will need to explain why each permission is needed or not. Be specific about
 
 Next, you will need to verify your domain by serving the token provided by OpenAI at the path `/.well-known/openai-apps-challenge`.
 
-If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI-APPS-VERIFICATION-TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
+If you're using xmcp standalone mode, this route is automatically generated for you after setting the `OPENAI_APPS_VERIFICATION_TOKEN` environment variable. If you're using adapter mode, you'll need to create it manually.
 
 ## Testing
 

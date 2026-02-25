@@ -8,6 +8,7 @@ import { Framework } from "./detect-framework.js";
 import { createRoute } from "./create-handler.js";
 import { createPrompt } from "./create-prompt.js";
 import { createResources } from "./create-resources.js";
+import { createNestJsModule } from "./create-nestjs-module.js";
 
 interface InitOptions {
   projectRoot: string;
@@ -56,5 +57,9 @@ export async function init(options: InitOptions) {
 
   if (framework === "nextjs" && routePath) {
     createRoute(projectRoot, routePath);
+  }
+
+  if (framework === "nestjs") {
+    createNestJsModule(projectRoot);
   }
 }

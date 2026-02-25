@@ -1,0 +1,158 @@
+---
+title: "Monetization"
+metadataTitle: "MCP Server Monetization Guide | xmcp Documentation"
+publishedAt: "2026-01-19"
+summary: "Learn how monetization works on xmcp servers with payment-based access control."
+description: "Charge for your MCP tools using license keys or crypto micropayments. Understand human vs agent monetization models, and integrate with Polar or x402."
+---
+
+## Overview
+
+MCP servers can monetize tools through payment verification. xmcp supports two approaches: license key validation where tools check credentials before returning results, and crypto payments where the transport layer blocks execution until payment is verified.
+
+## Quickstart
+
+xmcp provides monetization plugins that handle payment verification and access control for your tools.
+
+<MonetizationPlugins />
+
+## When do you need monetization?
+
+Not every MCP server needs monetization. The decision depends on how your tools are deployed and what value they provide.
+
+**Monetize your tools when** they provide significant value that justifies payment. This includes tools that access proprietary data, perform expensive computations, call paid external APIs, or provide unique capabilities users are willing to pay for.
+
+**Monetization may not be necessary** for simple utilities, internal tools, or when your business model relies on other revenue streams like consulting or support contracts.
+
+## Human vs agent monetization
+
+The two monetization approaches serve fundamentally different use cases based on who initiates payment.
+
+**Human-based monetization** with [Polar](/docs/integrations/polar) requires a person to purchase a license key and configure it in their MCP client. The human decides to pay upfront through a checkout flow, subscription, or credit purchase. The agent then uses that credential for subsequent requests. This model works well for SaaS-style billing where users manage their own subscriptions.
+
+**Agent-based monetization** with [x402](/docs/integrations/x402) enables agents to pay autonomously. When an agent encounters a paid tool, it can sign a crypto payment from its wallet without human intervention. The agent receives payment requirements, authorizes the transaction, and continues. This enables true agent-to-agent commerce where AI agents can purchase services from other AI agents.
+
+### License key validation
+
+With Polar, the client includes a license key in the request headers. The server validates this key against Polar's API, checking that the license is active and within usage limits.
+
+```typescript title="src/tools/premium-tool.ts"
+import { PolarProvider } from "@xmcp-dev/polar";
+import { headers } from "xmcp/headers";
+
+const polar = PolarProvider.getInstance({
+  token: process.env.POLAR_TOKEN,
+  organizationId: process.env.POLAR_ORGANIZATION_ID,
+  productId: process.env.POLAR_PRODUCT_ID,
+});
+
+export default async function premiumTool({ data }) {
+  const licenseKey = headers()["license-key"];
+  const response = await polar.validateLicenseKey(licenseKey);
+
+  if (!response.valid) {
+    return response.message;
+  }
+
+  return `Result: ${data}`;
+}
+```
+
+The validation checks multiple conditions: license status, usage limits, expiration dates, and meter credits. If validation fails, the response includes a checkout URL where users can purchase or renew their license.
+
+#### Usage metering
+
+Polar supports usage-based billing through meter credits. When you pass an event to `validateLicenseKey`, the plugin tracks consumption against the user's credit balance:
+
+```typescript title="src/tools/metered-tool.ts"
+const response = await polar.validateLicenseKey(licenseKey, {
+  name: "api_call",
+  metadata: { tool_name: "premium-tool", calls: 1 },
+});
+```
+
+If the user has exhausted their meter credits, validation fails with a message and a checkout URL to purchase more. For more details, check the [Polar integration guide](/docs/integrations/polar).
+
+### Crypto payment flow
+
+With x402, the payment flow follows the [HTTP 402 Payment Required standard](https://www.x402.org/):
+
+1. Client calls a paid tool without payment
+2. Server responds with payment requirements (price, wallet, network)
+3. Client signs a payment authorization from their wallet
+4. Client retries the request with the signed payment in headers
+5. Server verifies the payment signature with a facilitator
+6. Tool executes and client receives the response
+7. Payment settles on-chain
+
+```typescript title="src/middleware.ts"
+import { x402Provider } from "@xmcp-dev/x402";
+
+export default x402Provider({
+  wallet: process.env.X402_WALLET,
+  defaults: {
+    price: 0.01,
+    currency: "USDC",
+    network: "base",
+  },
+});
+```
+
+```typescript title="src/tools/paid-tool.ts"
+import { paid } from "@xmcp-dev/x402";
+
+export default paid(
+  { price: 0.05 },
+  async function paidTool({ input }) {
+    return `Processed: ${input}`;
+  }
+);
+```
+
+The `paid()` wrapper marks a tool as requiring payment. Tools without this wrapper remain free. You can set prices per-tool or use the middleware defaults.
+
+#### Payment requirements
+
+When a client calls a paid tool without valid payment, the server returns the payment requirements:
+
+```json
+{
+  "error": "Payment required",
+  "accepts": [{
+    "scheme": "exact",
+    "network": "eip155:8453",
+    "amount": "50000",
+    "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "payTo": "0x..."
+  }]
+}
+```
+
+The client uses this information to construct a signed payment authorization. The `amount` is in atomic units (6 decimals for USDC), so `50000` equals $0.05.
+
+#### Payment context
+
+Inside a paid tool, you can access payment information:
+
+```typescript title="src/tools/paid-tool.ts"
+import { paid, payment } from "@xmcp-dev/x402";
+
+export default paid(async function paidTool({ input }) {
+  const { payer, transactionHash } = payment();
+  
+  return `Processed for ${payer}`;
+});
+```
+
+## Pricing considerations
+
+**For subscriptions**, consider what comparable services charge and what value users derive over a billing period. Polar supports multiple tiers, usage limits, and meter-based consumption tracking.
+
+**For pay-per-use**, consider the cost of executing the tool (API calls, compute, etc.) and add a margin. Prices between $0.001 and $0.10 per call are common for micropayments, depending on the tool's complexity and value.
+
+## References
+
+- [Polar Integration](/docs/integrations/polar) - Full setup guide for license keys
+- [x402 Integration](/docs/integrations/x402) - Full setup guide for crypto payments
+- [x402 Protocol](https://www.x402.org/) - HTTP 402 payment standard
+- [Polar Documentation](https://docs.polar.sh/) - License key management

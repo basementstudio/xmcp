@@ -6,7 +6,6 @@ import {
   getResolvedPathsConfig,
   getResolvedTemplateConfig,
   getResolvedTypescriptConfig,
-  getResolvedOAuthConfig,
   getResolvedExperimentalConfig,
   getResolvedCorsConfig,
 } from "../utils";
@@ -14,7 +13,6 @@ import {
   injectHttpVariables,
   injectCorsVariables,
   injectPathsVariables,
-  injectOAuthVariables,
   injectTemplateVariables,
   injectTypescriptVariables,
   injectAdapterVariables,
@@ -53,7 +51,7 @@ describe("Config System - Zod Defaults", () => {
     assert.equal(resolved.name, "xmcp server");
     assert.equal(
       resolved.description,
-      "This MCP server was bootstrapped with xmcp. Click the button below to connect to the endpoint."
+      "This MCP server was bootstrapped with xmcp."
     );
   });
 
@@ -170,28 +168,6 @@ describe("Config System - Resolution Functions", () => {
 
     assert.equal(resolved.adapter, "express");
   });
-
-  it("should resolve OAuth config or return null", () => {
-    const config1 = configSchema.parse({
-      experimental: {
-        oauth: {
-          issuerUrl: "https://example.com",
-          baseUrl: "https://app.example.com",
-          endpoints: {
-            authorizationUrl: "/oauth/authorize",
-            tokenUrl: "/oauth/token",
-            registerUrl: "/oauth/register",
-          },
-        },
-      },
-    });
-    const resolved1 = getResolvedOAuthConfig(config1);
-    assert.notEqual(resolved1, null);
-
-    const config2 = configSchema.parse({});
-    const resolved2 = getResolvedOAuthConfig(config2);
-    assert.equal(resolved2, null);
-  });
 });
 
 describe("Config System - Injection Functions", () => {
@@ -250,38 +226,6 @@ describe("Config System - Injection Functions", () => {
     assert.notEqual(variables.TOOLS_PATH, undefined);
     assert.equal(variables.PROMPTS_PATH, undefined);
     assert.equal(variables.RESOURCES_PATH, undefined);
-  });
-
-  it("should inject OAuth variables as undefined when oauth is null", () => {
-    const config = configSchema.parse({});
-    const variables = injectOAuthVariables(config);
-
-    // OAUTH_CONFIG should always be injected (runtime expects it)
-    // When oauth is not configured, it's injected as "undefined"
-    assert.notEqual(variables.OAUTH_CONFIG, undefined);
-    assert.equal(variables.OAUTH_CONFIG, "undefined");
-  });
-
-  it("should inject OAuth variables when oauth is configured", () => {
-    const config = configSchema.parse({
-      experimental: {
-        oauth: {
-          issuerUrl: "https://example.com",
-          baseUrl: "https://app.example.com",
-          endpoints: {
-            authorizationUrl: "/oauth/authorize",
-            tokenUrl: "/oauth/token",
-            registerUrl: "/oauth/register",
-          },
-        },
-      },
-    });
-    const variables = injectOAuthVariables(config);
-
-    assert.notEqual(variables.OAUTH_CONFIG, undefined);
-    const oauth = JSON.parse(variables.OAUTH_CONFIG);
-    assert.equal(oauth.issuerUrl, "https://example.com");
-    assert.equal(oauth.baseUrl, "https://app.example.com");
   });
 
   it("should inject template variables", () => {
