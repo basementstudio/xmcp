@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -49,7 +48,7 @@ export function DeployDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={variant} size="sm" className="px-4">
+        <Button variant={variant} size="sm" className="px-6">
           <span className="inline-flex items-center gap-1.5">
             <span>Deploy</span>
             <ChevronDown className="size-3.5" />
@@ -58,19 +57,19 @@ export function DeployDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="bg-brand-neutral-600 border border-brand-neutral-400 text-brand-neutral-50 p-1 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 [&_*:focus-visible]:outline-none [&_*:focus-visible]:ring-0 [&_*:focus-visible]:outline-offset-0"
+        className="!bg-brand-neutral-600 opacity-100 border border-brand-neutral-400 text-brand-neutral-50 p-1 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 shadow-lg backdrop-blur-none overflow-hidden [&_*:focus-visible]:outline-none [&_*:focus-visible]:ring-0 [&_*:focus-visible]:outline-offset-0"
       >
         {options.map((option) => (
           <DropdownMenuItem
             key={`${option.provider}-${option.href}`}
             asChild
-            className="outline-none border-none data-[highlighted]:outline-none data-[highlighted]:border-none"
+            className="outline-none border-0 ring-0 shadow-none data-[highlighted]:outline-none data-[highlighted]:border-0 data-[highlighted]:ring-0 data-[highlighted]:shadow-none data-[highlighted]:bg-brand-neutral-500"
           >
             <Link
               href={option.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full text-sm cursor-pointer px-2 py-1.5 text-brand-neutral-100 hover:bg-brand-neutral-500 hover:text-brand-white focus:outline-none focus:ring-0 border-none transition-colors duration-200 inline-flex items-center gap-2"
+              className="w-full text-sm cursor-pointer px-2 py-1.5 text-brand-neutral-100 hover:bg-brand-neutral-500 hover:text-brand-white data-[highlighted]:bg-brand-neutral-500 data-[highlighted]:text-brand-white focus:outline-none focus:ring-0 focus:shadow-none border-0 outline-none ring-0 shadow-none transition-colors duration-200 inline-flex items-center gap-2"
             >
               <ProviderIcon provider={option.provider} />
               <span>{option.label}</span>
@@ -87,15 +86,7 @@ function ProviderIcon({ provider }: { provider: DeployProvider }) {
     case "vercel":
       return <VercelMarkIcon className="size-3.5" />;
     case "alpic":
-      return (
-        <Image
-          src="https://avatars.githubusercontent.com/u/206831205?s=200&v=4"
-          alt="Alpic"
-          width={14}
-          height={14}
-          className="size-3.5 rounded-[2px]"
-        />
-      );
+      return <AlpicMarkIcon className="size-3.5" />;
     case "netlify":
       return <Layers className="size-3.5" />;
     case "railway":
@@ -119,5 +110,15 @@ function VercelMarkIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <path d="M12 2L22 20H2L12 2Z" />
     </svg>
+  );
+}
+
+function AlpicMarkIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <img
+      src="https://avatars.githubusercontent.com/u/206831205?s=200&v=4"
+      alt="Alpic"
+      className={props.className}
+    />
   );
 }

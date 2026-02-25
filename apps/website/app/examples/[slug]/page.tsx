@@ -61,6 +61,15 @@ function buildVercelCloneUrl(example: ExampleItem) {
   return `https://vercel.com/new/clone?${search.toString()}`;
 }
 
+function buildAlpicCloneUrl(example: ExampleItem) {
+  const repositoryRootUrl = `https://github.com/${example.sourceRepo}`;
+  const search = new URLSearchParams({
+    repositoryUrl: repositoryRootUrl,
+  });
+
+  return `https://app.alpic.ai/new/clone?${search.toString()}`;
+}
+
 function getProviderFromUrl(url: string): DeployProvider {
   const host = (() => {
     try {
@@ -168,6 +177,7 @@ export default async function ExampleDetailPage(
 Add a README.md to this template to show content here.`;
   const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
   const vercelCloneUrl = buildVercelCloneUrl(example);
+  const alpicCloneUrl = buildAlpicCloneUrl(example);
   const deployOptions: DeployOption[] = [
     {
       label: "Vercel",
@@ -176,7 +186,7 @@ Add a README.md to this template to show content here.`;
     },
     {
       label: "Alpic",
-      href: "https://alpic.ai/",
+      href: alpicCloneUrl,
       provider: "alpic",
     },
   ];
@@ -201,7 +211,7 @@ Add a README.md to this template to show content here.`;
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
       <Breadcrumb name={example.name} />
 
-      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-16">
         <div className="space-y-3">
           <h1 className="heading-1 text-gradient">{example.name}</h1>
           <p className="text-brand-neutral-100 text-base max-w-2xl">
@@ -212,7 +222,7 @@ Add a README.md to this template to show content here.`;
         <div className="flex flex-wrap items-center gap-3">
           <DeployDropdown options={deployOptions} variant="primary" />
           {example.demoUrl && (
-            <Button asChild variant="secondary" size="sm" className="px-4">
+            <Button asChild variant="secondary" size="sm" className="px-6">
               <Link
                 href={example.demoUrl}
                 target="_blank"
@@ -225,7 +235,7 @@ Add a README.md to this template to show content here.`;
         </div>
       </header>
 
-      <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500">
+      <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500 mt-4 md:mt-6">
         <div className="aspect-video relative">
           {example.previewUrl ? (
             <Image
