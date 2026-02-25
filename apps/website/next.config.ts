@@ -35,6 +35,9 @@ const nextConfig: NextConfig = {
       {
         hostname: "raw.githubusercontent.com",
       },
+      {
+        hostname: "avatars.githubusercontent.com",
+      },
     ],
   },
   async redirects() {

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { getBaseUrl } from "@/lib/base-url";
-import { fetchExamplesAndTemplates } from "@/utils/github";
+import { fetchExamplesAndTemplates } from "@/app/examples/utils/github";
 import { ExamplesPageContent } from "@/components/examples/page-content";
 
 export const dynamic = "force-static";

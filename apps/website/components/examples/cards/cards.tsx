@@ -3,22 +3,21 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
-import { ExampleItem, BRANCH } from "@/app/examples/utils/github";
+import { ExampleItem } from "@/app/examples/utils/github";
 import { Tag } from "@/components/ui/tag";
-<<<<<<< Updated upstream
 import { Icons as UiIcons } from "@/components/ui/icons";
-=======
 import Image from "next/image";
 import Shadow from "./shadow.png";
-
->>>>>>> Stashed changes
 interface ExampleCardsProps {
   examples: ExampleItem[];
   searchTerm: string;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -49,9 +48,7 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     examples.forEach((example) => {
-      if (example.category) {
-        tagSet.add(example.category);
-      }
+      tagSet.add(example.category ?? example.kind);
       if (example.tags) {
         example.tags.forEach((tag) => tagSet.add(tag));
       }
@@ -63,53 +60,46 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
     return examples.filter((example) => {
       const matchesSearch =
         debouncedSearchTerm.length === 0 ||
-        [
-          example.name,
-          example.description,
-          ...(example.tags ?? []),
-        ].some((value) => value.toLowerCase().includes(debouncedSearchTerm));
+        [example.name, example.description, ...(example.tags ?? [])].some(
+          (value) => value.toLowerCase().includes(debouncedSearchTerm)
+        );
 
       const matchesTags =
-        selectedTags.length === 0 ||
-        selectedTags.includes("All") ||
-        selectedTags.some((selectedTag) =>
-          (example.tags ?? []).includes(selectedTag)
-        );
+        selectedTag === null ||
+        selectedTag === "All" ||
+        (example.tags ?? []).includes(selectedTag) ||
+        example.category === selectedTag ||
+        example.kind === selectedTag;
 
       return matchesSearch && matchesTags;
     });
-  }, [debouncedSearchTerm, examples, selectedTags]);
+  }, [debouncedSearchTerm, examples, selectedTag]);
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredExamples.length / ITEMS_PER_PAGE)),
+    [filteredExamples.length]
+  );
+
+  const paginatedExamples = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredExamples.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [currentPage, filteredExamples]);
+
+  const pageStart = filteredExamples.length
+    ? (currentPage - 1) * ITEMS_PER_PAGE + 1
+    : 0;
+  const pageEnd = filteredExamples.length
+    ? Math.min(currentPage * ITEMS_PER_PAGE, filteredExamples.length)
+    : 0;
 
   const toggleTag = (tag: string) => {
-    setSelectedTags((prev) => {
+    setSelectedTag((prev) => {
       if (tag === "All") {
-        return [];
+        return null;
       }
 
-      let newTags;
-      if (prev.length === 0) {
-        newTags = [tag];
-      } else {
-        newTags = prev.includes(tag)
-          ? prev.filter((t) => t !== tag)
-          : [...prev, tag];
-      }
-
-      const nonAllTags = allTags.filter((t) => t !== "All");
-      const allNonAllTagsSelected = nonAllTags.every((t) =>
-        newTags.includes(t)
-      );
-
-      if (allNonAllTagsSelected && nonAllTags.length > 0) {
-        return [];
-      }
-
-      return newTags;
+      return prev === tag ? null : tag;
     });
-  };
-
-  const clearFilters = () => {
-    setSelectedTags([]);
   };
 
   const scrollCategories = (direction: "left" | "right") => {
@@ -139,18 +129,22 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
     };
   }, [allTags.length, updateScrollState]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, selectedTag]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <div className="col-span-12 flex flex-col gap-8">
-      <div className="flex flex-col gap-4">
-<<<<<<< Updated upstream
+      <div className="flex flex-col gap-4 max-w-[920px] w-full mx-auto">
         <div className="flex items-center gap-4 min-w-0">
-          <h3 className="text-sm font-medium text-brand-white tracking-wide shrink-0">
+          <h3 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
             Filter by category
-=======
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-brand-white uppercase tracking-wide">
-            Filter by Tags
->>>>>>> Stashed changes
           </h3>
 
           <div className="group flex items-center gap-1 flex-1 min-w-0">
@@ -164,7 +158,7 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
                   ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
                   : "opacity-0 pointer-events-none"
               )}
-              >
+            >
               <UiIcons.arrowLeft className="size-4" />
             </button>
 
@@ -179,14 +173,14 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
                       key={tag}
                       onClick={() => toggleTag(tag)}
                       className={cn(
-                        "text-xs px-3 py-1.5 border border-dashed transition-colors duration-200 uppercase tracking-wide cursor-pointer shrink-0",
+                        "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide cursor-pointer shrink-0",
                         (
                           tag === "All"
-                            ? selectedTags.length === 0
-                            : selectedTags.includes(tag)
+                            ? selectedTag === null
+                            : selectedTag === tag
                         )
-                          ? "border-brand-white bg-brand-neutral-600 text-brand-white"
-                          : "border-brand-neutral-400 text-brand-white hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                          ? "border-solid border-brand-white bg-brand-neutral-600 text-brand-white"
+                          : "border-dashed border-brand-neutral-400 text-brand-neutral-100 hover:text-brand-white hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                       )}
                     >
                       {tag}
@@ -219,26 +213,17 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
                   ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
                   : "opacity-0 pointer-events-none"
               )}
-              >
+            >
               <UiIcons.arrowLeft className="size-4 rotate-180" />
             </button>
           </div>
-
-          {selectedTags.length > 0 && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-brand-neutral-200 hover:text-white transition-colors shrink-0"
-            >
-              Clear filters
-            </button>
-          )}
         </div>
       </div>
 
-      <div className="min-h-[60vh]">
+      <div className="min-h-[60vh] flex flex-col gap-6">
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredExamples.length > 0 ? (
-            filteredExamples.map((example: ExampleItem, index: number) => (
+            paginatedExamples.map((example: ExampleItem, index: number) => (
               <ExampleCard
                 key={example.slug || example.name || index}
                 {...example}
@@ -253,6 +238,50 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
             </div>
           )}
         </section>
+
+        {filteredExamples.length > 0 && (
+          <div className="flex items-center justify-between gap-4">
+            <button
+              type="button"
+              aria-label="Go to previous page"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={cn(
+                "px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200",
+                currentPage === 1
+                  ? "border-brand-neutral-500 text-brand-neutral-300 cursor-not-allowed"
+                  : "border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+              )}
+            >
+              Previous
+            </button>
+
+            <p
+              aria-live="polite"
+              className="text-xs text-brand-neutral-200 uppercase tracking-wide text-center"
+            >
+              Page {currentPage} of {totalPages} • Showing {pageStart}-{pageEnd}{" "}
+              of {filteredExamples.length}
+            </p>
+
+            <button
+              type="button"
+              aria-label="Go to next page"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+              className={cn(
+                "px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200",
+                currentPage === totalPages
+                  ? "border-brand-neutral-500 text-brand-neutral-300 cursor-not-allowed"
+                  : "border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+              )}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -270,24 +299,13 @@ export function ExampleCard({
   ctaLabel?: string;
   target?: string;
 } & ExampleItem) {
-<<<<<<< Updated upstream
-  const { name, description, repositoryUrl, tags, kind } = item;
-=======
-  const { name, description, repositoryUrl, category, preview, previewUrl } =
-    item;
-  const slug = item.slug;
-  const resolvedPreview =
-    previewUrl ||
-    (preview
-      ? `https://raw.githubusercontent.com/xmcp-dev/templates/${BRANCH}/${preview}`
-      : undefined);
-  const linkHref = href ?? (slug ? `/examples/${slug}` : repositoryUrl);
-  const defaultsToExternal = href
-    ? linkHref.startsWith("http://") || linkHref.startsWith("https://")
-    : !slug; // fall back to repo when no slug
+  const { name, description, previewUrl } = item;
+  const category = item.category ?? item.kind;
+  const linkHref = href ?? `/examples/${item.slug}`;
+  const defaultsToExternal =
+    linkHref.startsWith("http://") || linkHref.startsWith("https://");
   const linkTarget = target ?? (defaultsToExternal ? "_blank" : undefined);
   const isExternal = linkTarget === "_blank";
->>>>>>> Stashed changes
 
   return (
     <Link
@@ -300,24 +318,11 @@ export function ExampleCard({
         className
       )}
     >
-<<<<<<< Updated upstream
-      <div className="relative border p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
-        <div className="mb-3">
-          <div className="flex items-center justify-between gap-2">
-            <h4 className="text-brand-white font-medium mt-0 uppercase">
-              {name}
-            </h4>
-            <span className="text-[10px] border border-brand-neutral-300 text-brand-neutral-100 px-1.5 py-0.5 uppercase tracking-wide">
-              {kind}
-            </span>
-          </div>
-=======
       <div className="relative border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
         <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
           <h4 className="text-brand-white font-medium mt-0 text-[1.125rem]">
             {name}
           </h4>
->>>>>>> Stashed changes
         </div>
 
         <div className="flex-1 flex flex-col justify-between relative z-10">
@@ -339,7 +344,7 @@ export function ExampleCard({
           )}
         </div>
 
-        {resolvedPreview && (
+        {previewUrl && (
           <div
             className="absolute inset-0 translate-y-[60%] opacity-50 translate-x-[10%]"
             style={{
@@ -348,7 +353,7 @@ export function ExampleCard({
             }}
           >
             <Image
-              src={resolvedPreview}
+              src={previewUrl}
               alt={`${name} preview`}
               fill
               sizes="50vw"

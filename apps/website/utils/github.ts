@@ -163,7 +163,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
           if (!metaResponse.ok) {
             return {
               name: dir.name,
-              description: `Template: ${dir.name}`,
+              description: dir.name,
               repositoryUrl,
               path: dir.path,
               tags: [],
@@ -183,7 +183,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
 
           return {
             name: metaContent.name || dir.name,
-            description: metaContent.description || `Template: ${dir.name}`,
+            description: metaContent.description || dir.name,
             repositoryUrl,
             path: dir.path,
             tags,
@@ -194,7 +194,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
           console.error(`Error fetching template metadata for ${dir.name}:`, error);
           return {
             name: dir.name,
-            description: `Template: ${dir.name}`,
+            description: dir.name,
             repositoryUrl,
             path: dir.path,
             tags: [],
