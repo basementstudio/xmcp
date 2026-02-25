@@ -338,7 +338,9 @@ Add a README.md to this template to show content here.`;
 
       {moreExamples.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-brand-white">More projects</h3>
+          <h3 className="text-lg font-medium text-brand-white">
+            Other templates and examples
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {moreExamples.map((item) => (
               <ExampleCard

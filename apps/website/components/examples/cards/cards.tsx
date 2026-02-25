@@ -239,22 +239,22 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
           )}
         </section>
 
-        {filteredExamples.length > 0 && (
-          <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              aria-label="Go to previous page"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className={cn(
-                "px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200",
-                currentPage === 1
-                  ? "border-brand-neutral-500 text-brand-neutral-300 cursor-not-allowed"
-                  : "border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+        {filteredExamples.length > ITEMS_PER_PAGE && (
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="justify-self-start">
+              {currentPage > 1 && (
+                <button
+                  type="button"
+                  aria-label="Go to previous page"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+                >
+                  Previous
+                </button>
               )}
-            >
-              Previous
-            </button>
+            </div>
 
             <p
               aria-live="polite"
@@ -264,22 +264,20 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
               of {filteredExamples.length}
             </p>
 
-            <button
-              type="button"
-              aria-label="Go to next page"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={currentPage === totalPages}
-              className={cn(
-                "px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200",
-                currentPage === totalPages
-                  ? "border-brand-neutral-500 text-brand-neutral-300 cursor-not-allowed"
-                  : "border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+            <div className="justify-self-end">
+              {currentPage < totalPages && (
+                <button
+                  type="button"
+                  aria-label="Go to next page"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+                >
+                  Next
+                </button>
               )}
-            >
-              Next
-            </button>
+            </div>
           </div>
         )}
       </div>
