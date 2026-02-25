@@ -4,7 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { Children, type ComponentProps, type ReactElement } from "react";
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { highlight } from "fumadocs-core/highlight";
+import type { BundledLanguage } from "shiki";
 import { ExampleCard } from "@/components/examples/cards/cards";
 import { ExampleShareActions } from "@/components/examples/share-actions";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,39 @@ import { Github } from "lucide-react";
 
 const baseUrl = getBaseUrl();
 
-function ReadmePre(props: ComponentProps<"pre">) {
+async function renderHighlightedCodeBlock(code: string, lang: string) {
+  try {
+    return await highlight(code, {
+      lang: lang as BundledLanguage,
+      theme: "ayu-dark",
+      components: {
+        pre: ({ ref, ...props }) => (
+          <CodeBlock ref={ref} {...props}>
+            <pre className="!text-[12px] [&_*]:!text-[12px]">
+              {props.children}
+            </pre>
+          </CodeBlock>
+        ),
+      },
+    });
+  } catch {
+    return await highlight(code, {
+      lang: "plaintext",
+      theme: "ayu-dark",
+      components: {
+        pre: ({ ref, ...props }) => (
+          <CodeBlock ref={ref} {...props}>
+            <pre className="!text-[12px] [&_*]:!text-[12px]">
+              {props.children}
+            </pre>
+          </CodeBlock>
+        ),
+      },
+    });
+  }
+}
+
+async function ReadmePre(props: ComponentProps<"pre">) {
   const code = Children.only(props.children) as ReactElement;
   const codeProps = code.props as ComponentProps<"code">;
   const content = codeProps.children;
@@ -49,15 +82,7 @@ function ReadmePre(props: ComponentProps<"pre">) {
 
   if (lang === "mdx") lang = "md";
 
-  return (
-    <DynamicCodeBlock
-      lang={lang}
-      code={content.trimEnd()}
-      options={{
-        theme: "ayu-dark",
-      }}
-    />
-  );
+  return renderHighlightedCodeBlock(content.trimEnd(), lang);
 }
 
 function stripLeadingHeading(markdown: string) {
