@@ -4,10 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { ExampleCard } from "@/components/examples/cards/cards";
+import { ExampleShareActions } from "@/components/examples/share-actions";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { getBaseUrl } from "@/lib/base-url";
-import { CopyUrlButton } from "@/components/blog/copy-url";
 import {
   DeployDropdown,
   type DeployOption,
@@ -22,7 +22,7 @@ import {
 import { Icons } from "@/components/icons";
 import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
-import { Github, Linkedin } from "lucide-react";
+import { Github } from "lucide-react";
 
 const baseUrl = getBaseUrl();
 
@@ -302,31 +302,11 @@ Add a README.md to this template to show content here.`;
           )}
 
           <InfoCard label="Share">
-            <div className="flex items-center gap-4">
-              <Link
-                href={xShareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Share on X"
-                className="inline-flex items-center text-brand-neutral-100 hover:text-brand-white"
-              >
-                <XIcon className="size-4" />
-              </Link>
-              <Link
-                href={linkedinShareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Share on LinkedIn"
-                className="inline-flex items-center text-brand-neutral-100 hover:text-brand-white"
-              >
-                <Linkedin className="size-4" />
-              </Link>
-              <CopyUrlButton
-                url={pageUrl}
-                withIcon
-                className="text-brand-neutral-100 hover:text-brand-white"
-              />
-            </div>
+            <ExampleShareActions
+              pageUrl={pageUrl}
+              xShareUrl={xShareUrl}
+              linkedinShareUrl={linkedinShareUrl}
+            />
           </InfoCard>
         </aside>
 
@@ -399,18 +379,5 @@ function InfoCard({
       </p>
       <div className="text-sm text-brand-white leading-relaxed">{children}</div>
     </div>
-  );
-}
-
-function XIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <path d="M18.901 2H21.998L14.983 10.016L23.234 22H16.773L11.715 14.746L5.369 22H2.27L9.775 13.425L1.859 2H8.484L13.056 8.693L18.901 2ZM17.814 20.027H19.53L7.552 3.87H5.711L17.814 20.027Z" />
-    </svg>
   );
 }
