@@ -341,7 +341,12 @@ Add a README.md to this template to show content here.`;
             <InfoCard label="Categories">
               <div className="flex flex-wrap gap-2">
                 {categoryItems.map((tag) => (
-                  <Tag key={tag} text={tag} />
+                  <Tag
+                    key={tag}
+                    text={tag}
+                    href={`/examples?category=${encodeURIComponent(tag)}`}
+                    interactive
+                  />
                 ))}
               </div>
             </InfoCard>

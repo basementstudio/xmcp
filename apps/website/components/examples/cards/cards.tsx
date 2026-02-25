@@ -4,24 +4,33 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import { ExampleItem } from "@/app/examples/utils/github";
-import { Tag } from "@/components/ui/tag";
+import { Tag, tagClassName } from "@/components/ui/tag";
 import { Icons as UiIcons } from "@/components/ui/icons";
 import Image from "next/image";
 import Shadow from "./shadow.png";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 interface ExampleCardsProps {
   examples: ExampleItem[];
   searchTerm: string;
+  initialCategoryFilter?: string;
 }
 
 const ITEMS_PER_PAGE = 12;
 
-export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
+export function ExampleCards({
+  examples,
+  searchTerm,
+  initialCategoryFilter,
+}: ExampleCardsProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -55,6 +64,21 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
     });
     return ["All", ...Array.from(tagSet).sort()];
   }, [examples]);
+
+  const urlCategory = searchParams.get("category") ?? initialCategoryFilter;
+
+  useEffect(() => {
+    if (!urlCategory) {
+      setSelectedTag(null);
+      return;
+    }
+
+    const normalized = urlCategory.trim().toLowerCase();
+    const matchedTag =
+      allTags.find((tag) => tag.toLowerCase() === normalized) ?? null;
+
+    setSelectedTag(matchedTag === "All" ? null : matchedTag);
+  }, [allTags, urlCategory]);
 
   const filteredExamples = useMemo(() => {
     return examples.filter((example) => {
@@ -93,12 +117,20 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
     : 0;
 
   const toggleTag = (tag: string) => {
-    setSelectedTag((prev) => {
-      if (tag === "All") {
-        return null;
-      }
+    const nextTag =
+      tag === "All" ? null : selectedTag === tag ? null : tag;
+    setSelectedTag(nextTag);
 
-      return prev === tag ? null : tag;
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextTag) {
+      params.set("category", nextTag);
+    } else {
+      params.delete("category");
+    }
+
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
     });
   };
 
@@ -170,17 +202,18 @@ export function ExampleCards({ examples, searchTerm }: ExampleCardsProps) {
                 <div className="flex min-w-max gap-2 py-0.5 pr-2">
                   {allTags.map((tag) => (
                     <button
+                      type="button"
                       key={tag}
                       onClick={() => toggleTag(tag)}
                       className={cn(
-                        "text-xs px-3 py-1.5 border transition-colors duration-200 uppercase tracking-wide cursor-pointer shrink-0",
+                        "text-xs cursor-pointer shrink-0",
                         (
                           tag === "All"
                             ? selectedTag === null
                             : selectedTag === tag
                         )
-                          ? "border-solid border-brand-white bg-brand-neutral-600 text-brand-white"
-                          : "border-dashed border-brand-neutral-400 text-brand-neutral-100 hover:text-brand-white hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                          ? tagClassName({ interactive: true, selected: true })
+                          : tagClassName({ interactive: true, selected: false })
                       )}
                     >
                       {tag}

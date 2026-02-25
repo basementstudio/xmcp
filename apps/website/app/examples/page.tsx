@@ -41,12 +41,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ExamplesPage() {
+type ExamplesPageSearchParams = {
+  category?: string | string[];
+};
+
+export default async function ExamplesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<ExamplesPageSearchParams> | ExamplesPageSearchParams;
+}) {
+  const resolvedSearchParams = await Promise.resolve(searchParams ?? {});
+  const categoryParam = resolvedSearchParams.category;
+  const initialCategoryFilter = Array.isArray(categoryParam)
+    ? categoryParam[0]
+    : categoryParam;
   const examples = await fetchExamplesAndTemplates();
 
   return (
     <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
-      <ExamplesPageContent examples={examples} />
+      <ExamplesPageContent
+        examples={examples}
+        initialCategoryFilter={initialCategoryFilter}
+      />
     </main>
   );
 }

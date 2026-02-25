@@ -8,9 +8,13 @@ import Image from "next/image";
 
 interface ExamplesPageContentProps {
   examples: ExampleItem[];
+  initialCategoryFilter?: string;
 }
 
-export function ExamplesPageContent({ examples }: ExamplesPageContentProps) {
+export function ExamplesPageContent({
+  examples,
+  initialCategoryFilter,
+}: ExamplesPageContentProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
@@ -57,7 +61,11 @@ export function ExamplesPageContent({ examples }: ExamplesPageContentProps) {
         </div>
       </div>
 
-      <ExampleCards examples={examples} searchTerm={searchTerm} />
+      <ExampleCards
+        examples={examples}
+        searchTerm={searchTerm}
+        initialCategoryFilter={initialCategoryFilter}
+      />
     </div>
   );
 }
