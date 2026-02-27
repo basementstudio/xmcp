@@ -117,8 +117,7 @@ export function ExampleCards({
     : 0;
 
   const toggleTag = (tag: string) => {
-    const nextTag =
-      tag === "All" ? null : selectedTag === tag ? null : tag;
+    const nextTag = tag === "All" ? null : selectedTag === tag ? null : tag;
     setSelectedTag(nextTag);
 
     const params = new URLSearchParams(searchParams.toString());
@@ -375,43 +374,51 @@ export function ExampleCard({
           )}
         </div>
 
-        {previewUrl && (
-          <div
-            className="absolute inset-0 translate-y-[60%] opacity-50 translate-x-[10%]"
-            style={{
-              perspective: "550px",
-              perspectiveOrigin: "30% 55%",
-            }}
-          >
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
+            <div className="absolute inset-x-0 bottom-0 h-[140px] overflow-hidden">
+              {previewUrl ? (
+                <Image
+                  src={previewUrl}
+                  alt={`${name} preview`}
+                  width={1200}
+                  height={630}
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="absolute top-0 left-0 w-full h-auto"
+                  priority={false}
+                />
+              ) : (
+                <Image
+                  src="/examples/fallback.png"
+                  alt={`${name} preview`}
+                  width={1200}
+                  height={630}
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="absolute top-0 left-0 w-full h-auto"
+                  priority={false}
+                />
+              )}
+            </div>
             <Image
-              src={previewUrl}
-              alt={`${name} preview`}
+              src="/textures/text5.png"
+              alt=""
+              aria-hidden
               fill
-              sizes="50vw"
-              className="object-cover scale-110 border-2 rounded-md border-brand-neutral-400/70 bg-brand-neutral-900"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-screen opacity-10 group-hover:opacity-55 transition-opacity duration-300"
               priority={false}
-              style={{
-                background:
-                  "radial-gradient(50% 100% at 50% 100%, #000000 0%, rgba(217, 217, 217, 0) 100%)",
-                transform: "skew(-34deg, 18deg) rotateX(10deg) rotateY(-10deg)",
-                transformStyle: "preserve-3d",
-              }}
             />
             <Image
               src={Shadow}
               alt=""
               aria-hidden
               fill
-              sizes="50vw"
-              className="object-cover scale-200 pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-200 -translate-x-[10%] -translate-y-[45%] -rotate-12"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="absolute inset-x-0 bottom-0 h-[140px] object-cover opacity-10 group-hover:opacity-15 transition-opacity duration-200"
               priority={false}
-              style={{
-                transform: "skew(-34deg, 18deg) rotateX(10deg) rotateY(-10deg)",
-                transformStyle: "preserve-3d",
-              }}
             />
           </div>
-        )}
+        </div>
       </div>
     </Link>
   );

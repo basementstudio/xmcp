@@ -49,6 +49,9 @@ type TemplateMeta = {
   category?: string;
   tags?: string[];
   tag?: string;
+  image?: string;
+  preview?: string;
+  previewImage?: string;
   websiteUrl?: string;
   demoUrl?: string;
   deployUrl?: string;
@@ -181,6 +184,35 @@ async function findPreviewPath(
   return undefined;
 }
 
+function isAbsoluteUrl(value: string) {
+  return /^https?:\/\//i.test(value);
+}
+
+function resolveTemplateImageUrl(
+  repo: string,
+  templateSlug: string,
+  ref: string,
+  meta?: TemplateMeta | null
+) {
+  const candidate = [meta?.image, meta?.preview, meta?.previewImage]
+    .find((value) => typeof value === "string" && value.trim().length > 0)
+    ?.trim();
+
+  if (!candidate) {
+    return undefined;
+  }
+
+  if (isAbsoluteUrl(candidate)) {
+    return candidate;
+  }
+
+  if (candidate.startsWith("/")) {
+    return buildRawUrl(repo, candidate, ref);
+  }
+
+  return buildRawUrl(repo, `${templateSlug}/${candidate}`, ref);
+}
+
 async function fetchRepoExamples(): Promise<ExampleItem[]> {
   const contents = await fetchRepoContents(XMCP_REPO, "examples", XMCP_BRANCH);
 
@@ -234,7 +266,7 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
 
   const templates = await Promise.all(
     directories.map(async (dir) => {
-      const [meta, preview] = await Promise.all([
+      const [meta, previewPath] = await Promise.all([
         fetchRepoFileJson<TemplateMeta>(
           TEMPLATES_REPO,
           `${dir.name}/.config/template.meta.json`,
@@ -242,6 +274,12 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
         ),
         findPreviewPath(TEMPLATES_REPO, dir.name, TEMPLATES_BRANCH),
       ]);
+      const metaImageUrl = resolveTemplateImageUrl(
+        TEMPLATES_REPO,
+        dir.name,
+        TEMPLATES_BRANCH,
+        meta
+      );
 
       const tags = Array.from(
         new Set([...(meta?.tags ?? []), meta?.tag].filter(Boolean))
@@ -261,9 +299,11 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
         websiteUrl: meta?.websiteUrl ?? meta?.website,
         demoUrl: meta?.demoUrl ?? meta?.demo,
         deployUrl: meta?.deployUrl ?? meta?.deploy,
-        preview,
-        previewUrl: preview
-          ? buildRawUrl(TEMPLATES_REPO, preview, TEMPLATES_BRANCH)
+        preview: previewPath,
+        previewUrl: metaImageUrl
+          ? metaImageUrl
+          : previewPath
+            ? buildRawUrl(TEMPLATES_REPO, previewPath, TEMPLATES_BRANCH)
           : undefined,
         readmePath: meta?.readme?.path,
       };
