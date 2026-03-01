@@ -59,6 +59,38 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
+## Silence Console Output In Tool Handlers
+
+If your tool contains debug logs during development, you can wrap the handler
+with `silenceConsoleInTool` to prevent `console.log`, `console.debug`,
+`console.info`, `console.warn`, and `console.error` from writing to stdout/stderr
+while that tool runs.
+
+```typescript title="src/tools/get-weather.ts"
+import { z } from "zod";
+import { type InferSchema, silenceConsoleInTool } from "xmcp";
+
+export const schema = {
+  city: z.string().describe("City name"),
+};
+
+export default silenceConsoleInTool(async function getWeather({
+  city,
+}: InferSchema<typeof schema>) {
+  console.log("debug payload", { city }); // silenced inside this handler
+
+  return `Weather for ${city}: sunny`;
+});
+```
+
+**Behavior:**
+
+- Console calls are silenced only inside the wrapped handler.
+- Console behavior outside the wrapped handler remains unchanged.
+- Thrown errors are propagated unchanged (xmcp still handles/logs them normally).
+- The wrapper is opt-in and has no overhead when unused.
+- In environments without async_hooks support, async handlers fall back to synchronous-only suppression to avoid race conditions.
+
 ## Schema Definition
 
 The schema defines your tool's input parameters using [Zod](https://zod.dev). Use `.describe()` on each parameter to help LLMs understand how to use your tool correctly.
