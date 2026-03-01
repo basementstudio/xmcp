@@ -15,6 +15,7 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 export type ToolFile = {
   metadata: ToolMetadata;
   schema: ZodRawShape;
+  outputSchema?: ZodRawShape;
   default: UserToolHandler;
 };
 
