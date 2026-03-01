@@ -17,6 +17,7 @@ import {
   injectTypescriptVariables,
   injectAdapterVariables,
   injectStdioVariables,
+  injectObservabilityVariables,
 } from "../injection";
 import { configSchema } from "../index";
 
@@ -277,6 +278,22 @@ describe("Config System - Injection Functions", () => {
   it("should not inject STDIO variables when stdio is undefined", () => {
     const variables = injectStdioVariables(undefined);
     assert.deepEqual(variables, {});
+  });
+
+  it("should inject observability as false by default", () => {
+    const config = configSchema.parse({});
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY, undefined);
+    assert.equal(JSON.parse(variables.OBSERVABILITY), false);
+  });
+
+  it("should inject observability as true when configured", () => {
+    const config = configSchema.parse({ observability: true });
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY, undefined);
+    assert.equal(JSON.parse(variables.OBSERVABILITY), true);
   });
 });
 

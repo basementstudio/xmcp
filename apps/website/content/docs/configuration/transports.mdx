@@ -77,3 +77,28 @@ const config: XmcpConfig = {
 ## Troubleshooting
 
 Keep in mind that clients like Claude Desktop are not compatible with STDIO logging and would cause a JSON parsing error.
+
+## Observability
+
+Enable execution observability logs for tools, prompts, and resources:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: true,
+};
+```
+
+When enabled, xmcp emits structured JSON logs to `stderr` for each execution start/end, including duration and success/failure details.
+
+Example output:
+
+```text
+2026-02-23T20:05:05.396Z INFO tool.start tool/structured-content req=4 dur=- outcome=- | {"@timestamp":"2026-02-23T20:05:05.396Z","event.action":"tool.start","log.level":"info",...}
+2026-02-23T20:05:05.399Z INFO tool.end tool/structured-content req=4 dur=3 outcome=success | {"@timestamp":"2026-02-23T20:05:05.399Z","event.action":"tool.end","event.duration":3000000,"event.outcome":"success",...}
+```
+
+Observability logs redact common sensitive keys recursively by default (`authorization`, `token`, `password`, `secret`, `apiKey`, `cookie`, etc.).
+
+If a `traceparent` header is present, xmcp also includes `trace.id` and `span.id` for cross-service correlation.
+
+For full details on format, standards alignment, and parsing tips, see the [Observability](./observability) page.

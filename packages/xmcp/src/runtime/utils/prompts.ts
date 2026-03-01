@@ -41,7 +41,8 @@ export function addPromptsToServer(
     // Transform the user's handler into an MCP-compatible handler
     const transformedHandler = transformPromptHandler(
       handler,
-      (promptConfig.role as "user" | "assistant") || "assistant"
+      (promptConfig.role as "user" | "assistant") || "assistant",
+      promptConfig.name
     );
 
     // Validate and ensure schema is properly typed
