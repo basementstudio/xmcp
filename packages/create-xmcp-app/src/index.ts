@@ -51,6 +51,8 @@ const program = new Command()
       options.cloudflare ||
       process.argv.includes("--cloudflare") ||
       process.argv.includes("--cf");
+    const skipInstallFlag =
+      options.skipInstall || process.argv.includes("--skip-install");
 
     console.log(chalk.bold(`\ncreate-xmcp-app@${packageJson.version}`));
 
@@ -101,7 +103,7 @@ const program = new Command()
       if (projectDir) {
         console.log(`  cd ${chalk.cyan(projectDir)}`);
       }
-      console.log(`  ${chalk.cyan("pnpm install")}`);
+      skipInstallFlag && console.log(`  ${chalk.cyan("pnpm install")}`);
       console.log(`  ${chalk.cyan("pnpm run dev")}`);
       console.log();
       console.log("To learn more about xmcp:");
@@ -146,7 +148,7 @@ const program = new Command()
     }
 
     let packageManager = "npm";
-    let skipInstall = options.skipInstall;
+    let skipInstall = skipInstallFlag;
     let transports = ["http"];
     let selectedPaths = ["tools", "prompts", "resources"];
     let template = "typescript";

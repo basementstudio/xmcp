@@ -25,6 +25,12 @@ npx create-xmcp-app@latest
 
 You will be asked for the project name and then guided through a series of prompts to configure your project.
 
+To scaffold without installing dependencies:
+
+```bash
+npx create-xmcp-app@latest my-app --skip-install
+```
+
 ## Options
 
 - `-y, --yes`: Skip all confirmation prompts and use defaults
