@@ -1,4 +1,4 @@
-import { OpenAIMetadata } from "./openai-meta";
+import { UIMetadata } from "./ui-meta";
 
 export interface ResourceMetadata {
   name: string;
@@ -6,9 +6,9 @@ export interface ResourceMetadata {
   description?: string;
   mimeType?: string;
   size?: number;
-  /** Metadata for the resource. Supports nested OpenAI metadata and other vendor extensions. */
+  /** Metadata for the resource. */
   _meta?: {
-    openai?: OpenAIMetadata;
+    ui?: UIMetadata;
     [key: string]: unknown;
   };
   [key: string]: any;

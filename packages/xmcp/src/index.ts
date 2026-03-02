@@ -10,7 +10,7 @@ export type {
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
-export type { OpenAIMetadata, OpenAIToolInvocation } from "./types/openai-meta";
+export type { UIMetadata } from "./types/ui-meta";
 
 export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
 import "./types/declarations";

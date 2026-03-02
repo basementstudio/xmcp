@@ -269,7 +269,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
       // Build succeeded
       if (firstBuild) {
-        onFirstBuild(mode, xmcpConfig);
+        onFirstBuild(xmcpConfig);
       } else {
         // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
