@@ -36,7 +36,6 @@ import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import {
   addWatchedPath,
-  pruneMissingWatchedPaths,
   removeWatchedPath,
 } from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
@@ -52,97 +51,21 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
+  let compilerStarted = false;
 
   const xmcpConfig = await getConfig();
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
   const logXmcp = (message: string) => console.log(`[xmcp] ${message}`);
-  const logXmcpError = (message: string, error: unknown) => {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error(`[xmcp] ${message}${detail ? `: ${detail}` : ""}`);
-  };
-  let requestedRevision = 1;
-  let appliedRevision = 0;
-  let syncInFlight: Promise<void> | null = null;
   const staleImportErrorSuppressions = new Map<string, number>();
-
-  const bumpRevision = () => {
-    requestedRevision += 1;
-  };
-
-  const synchronizeImportMap = async () => {
-    if (syncInFlight) {
-      await syncInFlight;
-      return;
-    }
-
-    syncInFlight = (async () => {
-      while (true) {
-        let discoveredChanges = false;
-
-        const prunedTools = pruneMissingWatchedPaths(toolPaths);
-        const prunedPrompts = pruneMissingWatchedPaths(promptPaths);
-        const prunedResources = pruneMissingWatchedPaths(resourcePaths);
-        const hadPrunedEntries = prunedTools || prunedPrompts || prunedResources;
-        if (hadPrunedEntries) {
-          discoveredChanges = true;
-        }
-
-        const middlewareExists = fs.existsSync(
-          path.resolve(process.cwd(), "src/middleware.ts")
-        );
-        const { hasMiddleware } = compilerContext.getContext();
-        if (hasMiddleware !== middlewareExists) {
-          compilerContext.setContext({ hasMiddleware: middlewareExists });
-          discoveredChanges = true;
-        }
-
-        // Only force a revision when reconciliation discovered changes
-        // and there isn't already a pending watcher-driven revision.
-        if (discoveredChanges && appliedRevision >= requestedRevision) {
-          bumpRevision();
-        }
-
-        if (appliedRevision >= requestedRevision) {
-          break;
-        }
-
-        const targetRevision = requestedRevision;
-        await generateCode();
-        appliedRevision = targetRevision;
-      }
-    })();
-
-    try {
-      await syncInFlight;
-    } finally {
-      syncInFlight = null;
-    }
-  };
-
-  let bundlerConfig = getRspackConfig(xmcpConfig, {
-    onBeforeCompile: synchronizeImportMap,
-  });
-
-  const shouldManageHttpServer = () =>
-    mode === "development" &&
-    !!xmcpConfig.http &&
-    !xmcpConfig.experimental?.adapter;
+  let bundlerConfig = getRspackConfig(xmcpConfig);
   let lastRestartedBuildHash: string | null = null;
   let restartInFlight: Promise<void> | null = null;
-  let restartDebounceTimer: NodeJS.Timeout | null = null;
-  let restartDebouncePromise: Promise<void> | null = null;
-  let resolveRestartDebounce: (() => void) | null = null;
-  const RESTART_DEBOUNCE_MS = 120;
 
-  const restartHttpServerSafely = async (reason?: string) => {
+  const restartHttpServerSafely = async () => {
     if (restartInFlight) {
       return restartInFlight;
-    }
-
-    if (reason) {
-      logXmcp(reason);
     }
 
     restartInFlight = (async () => {
@@ -154,35 +77,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     } finally {
       restartInFlight = null;
     }
-  };
-
-  const scheduleHttpRestart = async (reason?: string) => {
-    if (reason) {
-      logXmcp(reason);
-    }
-
-    if (!restartDebouncePromise) {
-      restartDebouncePromise = new Promise<void>((resolve) => {
-        resolveRestartDebounce = resolve;
-      });
-    }
-
-    if (restartDebounceTimer) {
-      clearTimeout(restartDebounceTimer);
-    }
-
-    restartDebounceTimer = setTimeout(async () => {
-      restartDebounceTimer = null;
-      try {
-        await restartHttpServerSafely();
-      } finally {
-        resolveRestartDebounce?.();
-        resolveRestartDebounce = null;
-        restartDebouncePromise = null;
-      }
-    }, RESTART_DEBOUNCE_MS);
-
-    await restartDebouncePromise;
   };
 
   if (xmcpConfig.bundler) {
@@ -205,17 +99,23 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle tools
   if (toolsPath) {
     watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
-      onAdd: (filePath) => {
+      onAdd: async (filePath) => {
         addWatchedPath(toolPaths, filePath);
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
-      onUnlink: (filePath) => {
+      onUnlink: async (filePath) => {
         removeWatchedPath(toolPaths, filePath);
-        bumpRevision();
         logXmcp(`File deleted: ${filePath}`);
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
-      onChange: (filePath) => {
-        bumpRevision();
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
     });
   }
@@ -229,17 +129,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle prompts
   if (promptsPath) {
     watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
-      onAdd: (filePath) => {
+      onAdd: async (filePath) => {
         addWatchedPath(promptPaths, filePath);
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
-      onUnlink: (filePath) => {
+      onUnlink: async (filePath) => {
         removeWatchedPath(promptPaths, filePath);
-        bumpRevision();
         logXmcp(`File deleted: ${filePath}`);
-      },
-      onChange: (filePath) => {
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
     });
   }
@@ -253,17 +154,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle resources
   if (resourcesPath) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
-      onAdd: (filePath) => {
+      onAdd: async (filePath) => {
         addWatchedPath(resourcePaths, filePath);
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
-      onUnlink: (filePath) => {
+      onUnlink: async (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
-        bumpRevision();
         logXmcp(`File deleted: ${filePath}`);
-      },
-      onChange: (filePath) => {
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
     });
   }
@@ -272,21 +174,22 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
     watcher.watch("./src/middleware.ts", {
-      onAdd: () => {
+      onAdd: async () => {
         compilerContext.setContext({
           hasMiddleware: true,
         });
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
-      onUnlink: () => {
+      onUnlink: async () => {
         compilerContext.setContext({
           hasMiddleware: false,
         });
-        bumpRevision();
         logXmcp("File deleted: src/middleware.ts");
-      },
-      onChange: () => {
-        bumpRevision();
+        if (compilerStarted) {
+          await generateCode();
+        }
       },
     });
   }
@@ -294,13 +197,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // start compiler
   watcher.onReady(async () => {
     let firstBuild = true;
+    compilerStarted = true;
 
     // delete existing runtime folder
     deleteSync(runtimeFolderPath);
     createFolder(runtimeFolderPath);
 
     // Generate all code (including client bundles) BEFORE bundler runs
-    await synchronizeImportMap();
+    await generateCode();
 
     rspack(bundlerConfig, async (err, stats) => {
       // Track compilation time
@@ -451,7 +355,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
           if (shouldRestart) {
             lastRestartedBuildHash = currentBuildHash;
-            await scheduleHttpRestart();
+            await restartHttpServerSafely();
           }
         }
       }
