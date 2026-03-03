@@ -1,0 +1,18 @@
+{
+  "name": "Observability HTTP",
+  "description": "Runnable xmcp example focused on observability logs over HTTP transport",
+  "keywords": [
+    "observability",
+    "http",
+    "logging"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
