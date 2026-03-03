@@ -13,6 +13,12 @@ import { flattenMeta } from "./ui/flatten-meta";
 import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import {
+  isObservabilityEnabled,
+  logExecutionEnd,
+  logExecutionStart,
+  summarizeResourceOutput,
+} from "./observability";
 
 // Client bundles can be injected at compile time for Cloudflare Workers
 // This variable is defined by DefinePlugin at compile time
@@ -277,7 +283,8 @@ export function addResourcesToServer(
     const transformedHandler = transformResourceHandler(
       handler,
       path,
-      resourceSchema
+      resourceSchema,
+      resourceConfig.name
     );
 
     if (resourceInfo.type === "direct") {
@@ -298,32 +305,69 @@ export function addResourcesToServer(
       // this is a wrapper over the transformed handler
       // would be nice to have a modelling layer + assertion to handle this
       const templateCallback = async (uri: URL, variables: any, extra: any) => {
-        // validate parameters against schema
-        const validatedParams: Record<string, any> = {};
-        for (const paramName of resourceInfo.parameters) {
-          const paramValue = variables[paramName];
-          const paramSchema = resourceSchema[paramName];
+        const run = async () => {
+          // validate parameters against schema
+          const validatedParams: Record<string, any> = {};
+          for (const paramName of resourceInfo.parameters) {
+            const paramValue = variables[paramName];
+            const paramSchema = resourceSchema[paramName];
 
-          if (paramValue === undefined) {
-            // throw a nice hint error
-            throw new Error(
-              `Missing required parameter: ${paramName}. Available variables: ${Object.keys(variables)}`
-            );
+            if (paramValue === undefined) {
+              // throw a nice hint error
+              throw new Error(
+                `Missing required parameter: ${paramName}. Available variables: ${Object.keys(variables)}`
+              );
+            }
+
+            if (paramSchema) {
+              validatedParams[paramName] = paramSchema.parse(paramValue);
+            } else {
+              validatedParams[paramName] = paramValue;
+            }
           }
 
-          if (paramSchema) {
-            validatedParams[paramName] = paramSchema.parse(paramValue);
-          } else {
-            validatedParams[paramName] = paramValue;
-          }
+          let response = handler(validatedParams, extra);
+          if (response instanceof Promise) response = await response;
+
+          const result =
+            typeof response === "string"
+              ? { contents: [{ uri: uri.href, text: response }] }
+              : response;
+
+          return result;
+        };
+
+        if (!isObservabilityEnabled()) {
+          return run();
         }
 
-        let response = handler(validatedParams, extra);
-        if (response instanceof Promise) response = await response;
+        const startedAt = logExecutionStart({
+          type: "resource",
+          name: resourceConfig.name,
+          input: { uri: uri.href, variables },
+          extra,
+        });
 
-        return typeof response === "string"
-          ? { contents: [{ uri: uri.href, text: response }] }
-          : response;
+        try {
+          const result = await run();
+          logExecutionEnd({
+            type: "resource",
+            name: resourceConfig.name,
+            startedAt,
+            extra,
+            outputSummary: summarizeResourceOutput(result),
+          });
+          return result;
+        } catch (error) {
+          logExecutionEnd({
+            type: "resource",
+            name: resourceConfig.name,
+            startedAt,
+            extra,
+            error,
+          });
+          throw error;
+        }
       };
 
       server.registerResource(

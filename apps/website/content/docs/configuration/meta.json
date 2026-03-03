@@ -3,6 +3,7 @@
   "icon": "RocketLaunchIcon",
   "pages": [
     "transports",
+    "observability",
     "custom-directories",
     "middlewares",
     "bundler",

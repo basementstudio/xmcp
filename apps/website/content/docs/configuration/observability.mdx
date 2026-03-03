@@ -1,0 +1,278 @@
+---
+title: "Observability"
+metadataTitle: "Observability | xmcp Documentation"
+publishedAt: "2026-02-23"
+summary: "Understand xmcp execution logs, terminal formatting, correlation, and redaction."
+description: "Enable and use standardized observability logs for tools, prompts, and resources."
+---
+
+## Enable observability
+
+Enable runtime execution logs with a single flag:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: true,
+};
+
+export default config;
+```
+
+When enabled, xmcp logs execution events for tools, prompts, and resources to `stderr`.
+
+You can also use the object form for advanced behavior:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: {
+    enabled: true,
+    stderr: true,
+    color: "auto",
+    sinkTimeoutMs: 1000,
+    maxQueueSize: 1000,
+    maxConcurrentSends: 4,
+    onSinkError: "warn",
+    sinks: [],
+    redaction: {
+      extraSensitiveKeys: ["sessionToken"],
+      allowedKeys: [],
+    },
+  },
+};
+
+export default config;
+```
+
+## External providers
+
+Use sink hooks to stream events to Grafana/Loki, Datadog, ELK, or custom backends while keeping local `stderr` logs.
+
+```typescript title="src/observability.ts"
+import { registerObservabilitySink } from "xmcp";
+
+registerObservabilitySink(async (event) => {
+  await fetch("https://logs.example.com/ingest", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(event),
+  });
+});
+```
+
+- Sink dispatch is async and non-blocking.
+- Sink failures do not break tool/prompt/resource execution.
+- Non-2xx sink responses are treated as delivery failures.
+- Cloudflare sink dispatch is not supported in this v1.
+
+## Configurable sinks (`xmcp.config.ts`)
+
+You can register sinks from config without writing runtime wiring code:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: {
+    enabled: true,
+    stderr: true,
+    color: "auto",
+    sinks: [
+      {
+        type: "webhook",
+        url: "https://logs.example.com/ingest",
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.LOG_INGEST_TOKEN}`,
+        },
+      },
+    ],
+  },
+};
+```
+
+Loki sink sends logs using `/loki/api/v1/push` with `streams[].values` timestamped in nanoseconds as strings.
+
+## Observability options reference
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `enabled` | `boolean` | `true` (object form) | Enables/disables observability events. |
+| `stderr` | `boolean` | `true` | Keeps local terminal debugging output. |
+| `color` | `"auto" \| "on" \| "off"` | `"auto"` | Controls ANSI color on the terminal prefix (`auto` = TTY-aware). |
+| `sinkTimeoutMs` | `number` | `1000` | Per-sink timeout before warning/drop. |
+| `maxQueueSize` | `number` | `1000` | Max in-memory pending sink deliveries. |
+| `maxConcurrentSends` | `number` | `4` | Parallel sink sends. |
+| `onSinkError` | `"silent" \| "warn"` | `"warn"` | Controls sink delivery error logging. |
+| `sinks` | `Array<webhook \| loki \| datadog>` | `[]` | Config-declared provider sinks. |
+| `redaction.extraSensitiveKeys` | `string[]` | `[]` | Additional key-name matches to redact. |
+| `redaction.allowedKeys` | `string[]` | `[]` | Explicit key-name allowlist (no redaction). |
+
+### Sink types
+
+`webhook`:
+
+```typescript
+{
+  type: "webhook";
+  url: string;
+  method?: "POST" | "PUT";
+  headers?: Record<string, string>;
+}
+```
+
+`loki`:
+
+```typescript
+{
+  type: "loki";
+  url: string;
+  tenantId?: string;
+  headers?: Record<string, string>;
+  labels?: Record<string, string>;
+}
+```
+
+`datadog`:
+
+```typescript
+{
+  type: "datadog";
+  apiKey: string;
+  site?: "us1" | "us3" | "us5" | "eu" | "ap1" | "ap2" | "us1-fed";
+  url?: string; // optional custom override (advanced)
+  ddsource?: string;
+  service?: string;
+  ddtags?: string;
+  headers?: Record<string, string>;
+}
+```
+
+### Loki recipe (Grafana)
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: {
+    enabled: true,
+    stderr: true,
+    color: "auto",
+    sinks: [
+      {
+        type: "loki",
+        url: "https://loki.example.com/loki/api/v1/push",
+        tenantId: "acme-prod", // optional
+        headers: {
+          Authorization: `Bearer ${process.env.LOKI_TOKEN}`,
+        },
+        labels: {
+          source: "xmcp",
+          app: "my-mcp-server",
+          env: "production",
+        },
+      },
+    ],
+  },
+};
+```
+
+### Datadog
+
+Use a first-class Datadog sink:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: {
+    enabled: true,
+    stderr: true,
+    color: "auto",
+    sinks: [
+      {
+        type: "datadog",
+        apiKey: process.env.DATADOG_API_KEY ?? "",
+        site: "us1", // us1, us3, us5, eu, ap1, ap2, us1-fed
+        ddsource: "xmcp",
+        service: "my-mcp-server",
+        ddtags: "env:prod,team:platform",
+      },
+    ],
+  },
+};
+```
+
+If omitted, `site` defaults to `us1`.
+
+### ELK / other providers
+
+Use either:
+
+- `type: "webhook"` sink to send xmcp events to your ingestion endpoint, or
+- `registerObservabilitySink(...)` for custom mapping/signing/retries.
+
+This keeps xmcp provider-agnostic while supporting most backends.
+
+## Runtime hooks
+
+For custom transformations/retries/signatures, use runtime hooks:
+
+- `registerObservabilitySink`
+- `clearObservabilitySinks`
+- `setObservabilityConfig`
+- `getObservabilityConfig`
+
+## Output format
+
+Each line includes a human-friendly terminal prefix plus a parseable JSON payload:
+
+```text
+2026-02-23T20:05:05.396Z INFO tool.start tool/get-weather req=4 dur=- outcome=- | {"@timestamp":"2026-02-23T20:05:05.396Z","event.action":"tool.start","log.level":"info",...}
+2026-02-23T20:05:05.399Z INFO tool.end tool/get-weather req=4 dur=3 outcome=success | {"@timestamp":"2026-02-23T20:05:05.399Z","event.action":"tool.end","event.duration":3000000,"event.outcome":"success",...}
+```
+
+- Left side: optimized for live terminal scanning.
+- Left side may include ANSI colors for readability when `observability.color` is enabled (`auto` by default).
+- Right side (`| {json}`): optimized for ingestion and tooling.
+- JSON payload remains uncolored for copy/paste and parser compatibility.
+
+### Color mode and environment overrides
+
+Color behavior can be controlled in config and overridden at runtime:
+
+- `observability.color = "auto"` uses TTY-aware detection.
+- `observability.color = "on"` forces colorized prefixes.
+- `observability.color = "off"` disables colorized prefixes.
+- `XMCP_OBSERVABILITY_COLOR=auto|on|off` overrides config at runtime.
+- `NO_COLOR` disables color in `auto` mode.
+- `FORCE_COLOR` enables color in `auto` mode.
+
+## Standards alignment
+
+The current log shape intentionally follows common observability standards so logs can move into existing pipelines without custom adapters:
+
+- **OpenTelemetry-style event semantics**: `event.action`, `event.outcome`, `event.duration`
+- **ECS-compatible fields**: `@timestamp`, `log.level`, `trace.id`, `span.id`
+- **W3C Trace Context correlation**: `traceparent` header parsing for trace/span IDs
+
+This improves interoperability with typical log backends, dashboards, and tracing workflows.
+
+## Key fields
+
+| Field | Purpose |
+| --- | --- |
+| `@timestamp` | Canonical event time |
+| `event.action` | Lifecycle action (`tool.start`, `tool.end`, etc.) |
+| `log.level` | Severity (`info` / `error`) |
+| `event.outcome` | Success/failure on end events |
+| `event.duration` | Duration in nanoseconds |
+| `durationMs` | Duration in milliseconds (human-readable compatibility) |
+| `request.id` | Request correlation ID |
+| `trace.id`, `span.id` | Distributed trace correlation (when `traceparent` is present) |
+
+## Redaction defaults
+
+xmcp redacts common sensitive keys recursively in logged input/output summary by default, including:
+
+- `authorization`
+- `token`, `access_token`, `refresh_token`
+- `password`
+- `secret`
+- `apiKey` / `api_key`
+- `cookie`, `set-cookie`
+
+You can add custom keys through `observability.redaction.extraSensitiveKeys`, and preserve specific keys with `observability.redaction.allowedKeys`.
