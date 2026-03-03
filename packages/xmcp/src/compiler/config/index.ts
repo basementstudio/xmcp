@@ -7,6 +7,7 @@ import {
   templateConfigSchema,
   typescriptConfigSchema,
   bundlerConfigSchema,
+  observabilityConfigSchema,
 } from "./schemas";
 import type { RspackOptions } from "@rspack/core";
 
@@ -16,7 +17,7 @@ import type { RspackOptions } from "@rspack/core";
 export const configSchema = z.object({
   stdio: stdioTransportConfigSchema.optional(),
   http: httpTransportConfigSchema.optional(),
-  observability: z.boolean().optional(),
+  observability: observabilityConfigSchema.optional(),
   experimental: experimentalConfigSchema.optional(),
   paths: pathsConfigSchema.optional(),
   bundler: bundlerConfigSchema.optional(),
@@ -45,6 +46,7 @@ export type {
   ResolvedStdioConfig,
   ResolvedPathsConfig,
   ResolvedExperimentalConfig,
+  ResolvedObservabilityConfig,
 } from "./utils";
 
 // Template, TypeScript, and CORS configs don't need resolved types
@@ -60,4 +62,5 @@ export type {
   BundlerConfig,
   TemplateConfig,
   TypescriptConfig,
+  ObservabilityConfig,
 } from "./schemas";

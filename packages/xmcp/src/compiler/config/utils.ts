@@ -6,6 +6,7 @@ import {
   typescriptConfigSchema,
   corsConfigSchema,
   experimentalConfigSchema,
+  observabilityConfigSchema,
   DEFAULT_PATHS,
 } from "./schemas";
 import type { z } from "zod/v3";
@@ -165,4 +166,36 @@ export function getResolvedTypescriptConfig(
 ): z.output<typeof typescriptConfigSchema> {
   const typescript = userConfig?.typescript;
   return typescriptConfigSchema.parse(typescript ?? {});
+}
+
+export type ResolvedObservabilityConfig = Extract<
+  z.output<typeof observabilityConfigSchema>,
+  object
+>;
+
+export function getResolvedObservabilityConfig(
+  userConfig: XmcpConfigOutputSchema
+): ResolvedObservabilityConfig {
+  const observability = userConfig?.observability;
+  if (observability === true) {
+    return observabilityConfigSchema.parse({}) as ResolvedObservabilityConfig;
+  }
+
+  if (typeof observability === "object" && observability !== null) {
+    return observabilityConfigSchema.parse(observability) as ResolvedObservabilityConfig;
+  }
+
+  return {
+    enabled: false,
+    stderr: true,
+    sinkTimeoutMs: 1000,
+    maxQueueSize: 1000,
+    maxConcurrentSends: 4,
+    onSinkError: "warn",
+    sinks: [],
+    redaction: {
+      extraSensitiveKeys: [],
+      allowedKeys: [],
+    },
+  };
 }

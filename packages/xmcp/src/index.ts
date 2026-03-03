@@ -18,6 +18,22 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export {
+  registerObservabilitySink,
+  clearObservabilitySinks,
+  setObservabilityConfig,
+  getObservabilityConfig,
+} from "./runtime/utils/observability";
+export type {
+  ExecutionEvent,
+  ObservabilitySink,
+  RuntimeObservabilityConfig,
+  ObservabilityRedactionConfig,
+  ConfiguredObservabilitySink,
+  LokiObservabilitySinkConfig,
+  WebhookObservabilitySinkConfig,
+  DatadogObservabilitySinkConfig,
+} from "./runtime/utils/observability";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 

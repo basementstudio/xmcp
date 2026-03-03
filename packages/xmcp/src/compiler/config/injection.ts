@@ -7,6 +7,7 @@ import {
   getResolvedTemplateConfig,
   getResolvedExperimentalConfig,
   getResolvedTypescriptConfig,
+  getResolvedObservabilityConfig,
 } from "./utils";
 import type { ResolvedHttpConfig, XmcpConfigOutputSchema } from "./index";
 import type { HttpTransportConfig } from "./schemas/transport/http";
@@ -140,8 +141,11 @@ export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 export function injectObservabilityVariables(
   userConfig: XmcpConfigOutputSchema
 ) {
+  const observabilityConfig = getResolvedObservabilityConfig(userConfig);
+
   return {
-    OBSERVABILITY: JSON.stringify(Boolean(userConfig.observability)),
+    OBSERVABILITY: JSON.stringify(Boolean(observabilityConfig.enabled)),
+    OBSERVABILITY_CONFIG: JSON.stringify(observabilityConfig),
   };
 }
 

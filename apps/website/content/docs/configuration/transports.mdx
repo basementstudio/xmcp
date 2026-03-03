@@ -84,7 +84,17 @@ Enable execution observability logs for tools, prompts, and resources:
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
-  observability: true,
+  observability: {
+    enabled: true,
+    stderr: true,
+    sinks: [
+      {
+        type: "datadog",
+        apiKey: process.env.DATADOG_API_KEY ?? "",
+        site: "us1",
+      },
+    ],
+  },
 };
 ```
 
