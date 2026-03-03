@@ -10,6 +10,7 @@ import {
   ResourceInfo,
 } from "../utils/resource-uri-composer";
 import {
+  isObservabilityEnabled,
   logExecutionEnd,
   logExecutionStart,
   summarizeResourceOutput,
@@ -63,6 +64,73 @@ export function transformResourceHandler(
     uri: URL,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<ReadResourceResult> => {
+    const run = async (): Promise<ReadResourceResult> => {
+      // extract and validate parameters from the actual URI using the template and schema
+      const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);
+
+      let response = handler(parameters, extra);
+
+      // only await if it's actually a promise
+      if (response instanceof Promise) {
+        response = await response;
+      }
+
+      // transform string response to ReadResourceResult
+      if (typeof response === "string") {
+        return {
+          contents: [
+            {
+              uri: uri.href,
+              text: response,
+            },
+          ],
+        };
+      }
+
+      // validate response format
+      if (
+        !response ||
+        typeof response !== "object" ||
+        !Array.isArray(response.contents)
+      ) {
+        const responseType = response === null ? "null" : typeof response;
+        const responseValue =
+          response === undefined
+            ? "undefined"
+            : response === null
+              ? "null"
+              : typeof response === "object"
+                ? JSON.stringify(response, null, 2)
+                : String(response);
+
+        throw new Error(
+          `Resource handler must return a ReadResourceResult or string. ` +
+            `Got ${responseType}: ${responseValue}\n\n` +
+            `Expected ReadResourceResult format:\n` +
+            `{\n` +
+            `  contents: [\n` +
+            `    { uri: "resource://uri", text: "content here" },\n` +
+            `    { uri: "resource://uri", mimeType: "application/json", text: "json content" },\n` +
+            `    { uri: "resource://uri", blob: base64data }\n` +
+            `  ]\n` +
+            `}`
+        );
+      }
+
+      // ensure all content items have the URI set
+      response.contents.forEach((content) => {
+        if (!content.uri) {
+          content.uri = uri.href;
+        }
+      });
+
+      return response;
+    };
+
+    if (!isObservabilityEnabled()) {
+      return run();
+    }
+
     const startedAt = logExecutionStart({
       type: "resource",
       name: resourceName,
@@ -71,69 +139,6 @@ export function transformResourceHandler(
     });
 
     try {
-      const run = async (): Promise<ReadResourceResult> => {
-        // extract and validate parameters from the actual URI using the template and schema
-        const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);
-
-        let response = handler(parameters, extra);
-
-        // only await if it's actually a promise
-        if (response instanceof Promise) {
-          response = await response;
-        }
-
-        // transform string response to ReadResourceResult
-        if (typeof response === "string") {
-          return {
-            contents: [
-              {
-                uri: uri.href,
-                text: response,
-              },
-            ],
-          };
-        }
-
-        // validate response format
-        if (
-          !response ||
-          typeof response !== "object" ||
-          !Array.isArray(response.contents)
-        ) {
-          const responseType = response === null ? "null" : typeof response;
-          const responseValue =
-            response === undefined
-              ? "undefined"
-              : response === null
-                ? "null"
-                : typeof response === "object"
-                  ? JSON.stringify(response, null, 2)
-                  : String(response);
-
-          throw new Error(
-            `Resource handler must return a ReadResourceResult or string. ` +
-              `Got ${responseType}: ${responseValue}\n\n` +
-              `Expected ReadResourceResult format:\n` +
-              `{\n` +
-              `  contents: [\n` +
-              `    { uri: "resource://uri", text: "content here" },\n` +
-              `    { uri: "resource://uri", mimeType: "application/json", text: "json content" },\n` +
-              `    { uri: "resource://uri", blob: base64data }\n` +
-              `  ]\n` +
-              `}`
-          );
-        }
-
-        // ensure all content items have the URI set
-        response.contents.forEach((content) => {
-          if (!content.uri) {
-            content.uri = uri.href;
-          }
-        });
-
-        return response;
-      };
-
       const result = await run();
       logExecutionEnd({
         type: "resource",

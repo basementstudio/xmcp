@@ -14,6 +14,7 @@ import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import {
+  isObservabilityEnabled,
   logExecutionEnd,
   logExecutionStart,
   summarizeResourceOutput,
@@ -304,14 +305,7 @@ export function addResourcesToServer(
       // this is a wrapper over the transformed handler
       // would be nice to have a modelling layer + assertion to handle this
       const templateCallback = async (uri: URL, variables: any, extra: any) => {
-        const startedAt = logExecutionStart({
-          type: "resource",
-          name: resourceConfig.name,
-          input: { uri: uri.href, variables },
-          extra,
-        });
-
-        try {
+        const run = async () => {
           // validate parameters against schema
           const validatedParams: Record<string, any> = {};
           for (const paramName of resourceInfo.parameters) {
@@ -340,6 +334,22 @@ export function addResourcesToServer(
               ? { contents: [{ uri: uri.href, text: response }] }
               : response;
 
+          return result;
+        };
+
+        if (!isObservabilityEnabled()) {
+          return run();
+        }
+
+        const startedAt = logExecutionStart({
+          type: "resource",
+          name: resourceConfig.name,
+          input: { uri: uri.href, variables },
+          extra,
+        });
+
+        try {
+          const result = await run();
           logExecutionEnd({
             type: "resource",
             name: resourceConfig.name,
@@ -347,7 +357,6 @@ export function addResourcesToServer(
             extra,
             outputSummary: summarizeResourceOutput(result),
           });
-
           return result;
         } catch (error) {
           logExecutionEnd({

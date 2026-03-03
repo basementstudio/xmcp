@@ -10,6 +10,7 @@ import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "xmcp/plugins/x402";
 import {
+  isObservabilityEnabled,
   logExecutionEnd,
   logExecutionStart,
   summarizeToolOutput,
@@ -134,6 +135,16 @@ export function addToolsToServer(
 
     if (isReactFile(path) && uiWidget) {
       transformedHandler = async (args: any, extra: any) => {
+        if (!isObservabilityEnabled()) {
+          return {
+            content: [{ type: "text", text: "" }],
+            _meta: meta,
+            structuredContent: {
+              args,
+            },
+          };
+        }
+
         const startedAt = logExecutionStart({
           type: "tool",
           name: toolConfig.name,

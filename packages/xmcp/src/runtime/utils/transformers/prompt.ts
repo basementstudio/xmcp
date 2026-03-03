@@ -7,6 +7,7 @@ import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { PromptArgsRawShape } from "../prompts";
 import { contentValidators, validateContent } from "../validators";
 import {
+  isObservabilityEnabled,
   logExecutionEnd,
   logExecutionStart,
   summarizePromptOutput,
@@ -59,6 +60,74 @@ export function transformPromptHandler(
     args: PromptArgsRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<GetPromptResult> => {
+    const run = async (): Promise<GetPromptResult> => {
+      let response = handler(args, extra);
+
+      // only await if it's actually a promise
+      if (response instanceof Promise) {
+        response = await response;
+      }
+
+      let content: GetPromptResult["messages"][number]["content"];
+
+      // transform string/number responses to text content
+      if (typeof response === "string" || typeof response === "number") {
+        content = {
+          type: "text",
+          text: typeof response === "number" ? `${response}` : response,
+        };
+      } else {
+        // validate content object responses
+        const validationResult = validateContent(response);
+        if (validationResult.valid) {
+          content = response as PromptContent;
+        } else {
+          const responseType = response === null ? "null" : typeof response;
+          const responseValue =
+            response === undefined
+              ? "undefined"
+              : response === null
+                ? "null"
+                : typeof response === "object"
+                  ? JSON.stringify(response, null, 2)
+                  : String(response);
+
+          throw new Error(
+            `Prompt handler must return a PromptContent object, string, or number. ` +
+              `Got ${responseType}: ${responseValue}\n\n` +
+              `Validation error: ${validationResult.error}\n\n` +
+              `Expected formats:\n` +
+              `- String: "your text here"\n` +
+              `- Number: 42\n` +
+              `- Text content: { type: "text", text: "your text here" }\n` +
+              `- Image content: { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
+              `- Audio content: { type: "audio", data: "base64data", mimeType: "audio/mpeg" }\n` +
+              `- Resource link: { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
+              `- All content types support an optional "_meta" object property`
+          );
+        }
+      }
+
+      // validate the role
+      if (role !== "user" && role !== "assistant") {
+        throw new Error(`Invalid role: ${role}`);
+      }
+
+      // final result with single message
+      return {
+        messages: [
+          {
+            role,
+            content,
+          },
+        ],
+      };
+    };
+
+    if (!isObservabilityEnabled()) {
+      return run();
+    }
+
     const startedAt = logExecutionStart({
       type: "prompt",
       name: promptName,
@@ -67,70 +136,6 @@ export function transformPromptHandler(
     });
 
     try {
-      const run = async (): Promise<GetPromptResult> => {
-        let response = handler(args, extra);
-
-        // only await if it's actually a promise
-        if (response instanceof Promise) {
-          response = await response;
-        }
-
-        let content: GetPromptResult["messages"][number]["content"];
-
-        // transform string/number responses to text content
-        if (typeof response === "string" || typeof response === "number") {
-          content = {
-            type: "text",
-            text: typeof response === "number" ? `${response}` : response,
-          };
-        } else {
-          // validate content object responses
-          const validationResult = validateContent(response);
-          if (validationResult.valid) {
-            content = response as PromptContent;
-          } else {
-            const responseType = response === null ? "null" : typeof response;
-            const responseValue =
-              response === undefined
-                ? "undefined"
-                : response === null
-                  ? "null"
-                  : typeof response === "object"
-                    ? JSON.stringify(response, null, 2)
-                    : String(response);
-
-            throw new Error(
-              `Prompt handler must return a PromptContent object, string, or number. ` +
-                `Got ${responseType}: ${responseValue}\n\n` +
-                `Validation error: ${validationResult.error}\n\n` +
-                `Expected formats:\n` +
-                `- String: "your text here"\n` +
-                `- Number: 42\n` +
-                `- Text content: { type: "text", text: "your text here" }\n` +
-                `- Image content: { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
-                `- Audio content: { type: "audio", data: "base64data", mimeType: "audio/mpeg" }\n` +
-                `- Resource link: { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
-                `- All content types support an optional "_meta" object property`
-            );
-          }
-        }
-
-        // validate the role
-        if (role !== "user" && role !== "assistant") {
-          throw new Error(`Invalid role: ${role}`);
-        }
-
-        // final result with single message
-        return {
-          messages: [
-            {
-              role,
-              content,
-            },
-          ],
-        };
-      };
-
       const result = await run();
       logExecutionEnd({
         type: "prompt",

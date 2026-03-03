@@ -52,7 +52,7 @@ type ExecutionEndLog = ExecutionLogCommon & {
 
 declare const OBSERVABILITY: boolean | undefined;
 
-function isObservabilityEnabled(): boolean {
+export function isObservabilityEnabled(): boolean {
   if (typeof OBSERVABILITY !== "undefined") {
     return Boolean(OBSERVABILITY);
   }
