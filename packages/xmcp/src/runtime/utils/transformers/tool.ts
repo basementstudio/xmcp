@@ -7,17 +7,52 @@ import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
 
+function validateAgainstOutputSchema(
+  data: Record<string, unknown>,
+  outputSchema: ZodRawShape,
+  toolName: string,
+  errorPrefix: string
+): void {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: expected a plain object.`
+    );
+  }
+
+  const outputKeys = new Set(Object.keys(outputSchema));
+  const extraKeys = Object.keys(data).filter((key) => !outputKeys.has(key));
+  if (extraKeys.length > 0) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: unrecognized key(s): ${extraKeys.join(", ")}`
+    );
+  }
+
+  for (const [fieldName, fieldSchema] of Object.entries(outputSchema)) {
+    try {
+      fieldSchema.parse((data as any)[fieldName]);
+    } catch (error: any) {
+      throw new Error(
+        `Tool "${toolName}" ${errorPrefix}: ${error?.message ?? `invalid field "${fieldName}"`}`
+      );
+    }
+  }
+}
+
 /**
  * Type for the original tool handler that users write
  */
+export type UserToolResponse =
+  | CallToolResult
+  | string
+  | number
+  | Record<string, unknown>;
+
 export type UserToolHandler = (
   args: ZodRawShape,
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) =>
-  | CallToolResult
-  | string
-  | number
-  | Promise<CallToolResult | string | number>;
+  | UserToolResponse
+  | Promise<UserToolResponse>;
 
 /**
  * Type for the transformed handler that the MCP server expects
@@ -53,13 +88,15 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
  */
 export function transformToolHandler(
   handler: UserToolHandler,
-  meta?: Record<string, any>
+  meta?: Record<string, any>,
+  outputSchema?: ZodRawShape,
+  toolName = "unknown-tool"
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response = handler(args, extra);
+    let response: any = handler(args, extra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {
@@ -67,6 +104,30 @@ export function transformToolHandler(
     }
 
     if (typeof response === "string" || typeof response === "number") {
+      if (outputSchema) {
+        const outputSchemaEntries = Object.entries(outputSchema);
+        if (outputSchemaEntries.length === 1) {
+          const [fieldName, fieldSchema] = outputSchemaEntries[0];
+          try {
+            fieldSchema.parse(response);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: typeof response === "number" ? `${response}` : response,
+                },
+              ],
+              structuredContent: {
+                [fieldName]: response,
+              },
+            };
+          } catch {
+            // Backward compatible fallback: keep content-only when primitive
+            // output does not match outputSchema.
+          }
+        }
+      }
+
       // Check if we have widget metadata to attach
       const hasWidgetMeta = hasUIMeta(meta);
 
@@ -95,6 +156,28 @@ export function transformToolHandler(
             text: typeof response === "number" ? `${response}` : response,
           },
         ],
+      };
+    }
+
+    // With outputSchema declared, allow returning a plain object as shorthand
+    // for `{ structuredContent: ... }`.
+    if (
+      outputSchema &&
+      response &&
+      typeof response === "object" &&
+      !Array.isArray(response) &&
+      !("structuredContent" in response) &&
+      !("content" in response && Array.isArray((response as any).content))
+    ) {
+      // Validate the response against outputSchema before wrapping.
+      validateAgainstOutputSchema(
+        response as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned data that does not match outputSchema"
+      );
+      response = {
+        structuredContent: response,
       };
     }
 
@@ -166,8 +249,9 @@ export function transformToolHandler(
     }
 
     // Check if response has at least one of: content or structuredContent
-    const hasContent = "content" in response && Array.isArray(response.content);
+    let hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
+    const isError = "isError" in response && (response as any).isError === true;
 
     if (!hasContent && !hasStructuredContent) {
       const responseValue = JSON.stringify(response, null, 2);
@@ -194,6 +278,27 @@ export function transformToolHandler(
           `  structuredContent: { your: "data" }\n` +
           `}`
       );
+    }
+
+    // Validate structuredContent against outputSchema if present.
+    if (outputSchema && hasStructuredContent) {
+      validateAgainstOutputSchema(
+        (response as any).structuredContent as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned structuredContent that does not match outputSchema"
+      );
+    }
+
+    // Auto-generate text fallback for clients that only render content.
+    if (!hasContent && hasStructuredContent) {
+      response.content = [
+        {
+          type: "text",
+          text: JSON.stringify((response as any).structuredContent),
+        },
+      ];
+      hasContent = true;
     }
 
     // validate each content item if content is present
@@ -243,6 +348,6 @@ export function transformToolHandler(
       }
     }
 
-    return response;
+    return response as CallToolResult;
   };
 }

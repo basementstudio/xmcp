@@ -25,10 +25,19 @@ export const metadata: ToolMetadata = {
   },
 };
 
+export const outputSchema = {
+  message: z.string(),
+};
+
 // Tool implementation
 export default function ${functionName}(params: InferSchema<typeof schema>) {
   // TODO: Implement your tool logic here
-  return "Hello from ${name}!";
+  return {
+    content: [{ type: "text", text: "Hello from ${name}!" }],
+    structuredContent: {
+      message: "Hello from ${name}!",
+    },
+  };
 }
 `;
 }
