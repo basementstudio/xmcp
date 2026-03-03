@@ -27,6 +27,7 @@ const config: XmcpConfig = {
   observability: {
     enabled: true,
     stderr: true,
+    color: "auto",
     sinkTimeoutMs: 1000,
     maxQueueSize: 1000,
     maxConcurrentSends: 4,
@@ -72,6 +73,7 @@ const config: XmcpConfig = {
   observability: {
     enabled: true,
     stderr: true,
+    color: "auto",
     sinks: [
       {
         type: "webhook",
@@ -94,6 +96,7 @@ Loki sink sends logs using `/loki/api/v1/push` with `streams[].values` timestamp
 | --- | --- | --- | --- |
 | `enabled` | `boolean` | `true` (object form) | Enables/disables observability events. |
 | `stderr` | `boolean` | `true` | Keeps local terminal debugging output. |
+| `color` | `"auto" \| "on" \| "off"` | `"auto"` | Controls ANSI color on the terminal prefix (`auto` = TTY-aware). |
 | `sinkTimeoutMs` | `number` | `1000` | Per-sink timeout before warning/drop. |
 | `maxQueueSize` | `number` | `1000` | Max in-memory pending sink deliveries. |
 | `maxConcurrentSends` | `number` | `4` | Parallel sink sends. |
@@ -149,6 +152,7 @@ const config: XmcpConfig = {
   observability: {
     enabled: true,
     stderr: true,
+    color: "auto",
     sinks: [
       {
         type: "loki",
@@ -177,6 +181,7 @@ const config: XmcpConfig = {
   observability: {
     enabled: true,
     stderr: true,
+    color: "auto",
     sinks: [
       {
         type: "datadog",
@@ -221,7 +226,20 @@ Each line includes a human-friendly terminal prefix plus a parseable JSON payloa
 ```
 
 - Left side: optimized for live terminal scanning.
+- Left side may include ANSI colors for readability when `observability.color` is enabled (`auto` by default).
 - Right side (`| {json}`): optimized for ingestion and tooling.
+- JSON payload remains uncolored for copy/paste and parser compatibility.
+
+### Color mode and environment overrides
+
+Color behavior can be controlled in config and overridden at runtime:
+
+- `observability.color = "auto"` uses TTY-aware detection.
+- `observability.color = "on"` forces colorized prefixes.
+- `observability.color = "off"` disables colorized prefixes.
+- `XMCP_OBSERVABILITY_COLOR=auto|on|off` overrides config at runtime.
+- `NO_COLOR` disables color in `auto` mode.
+- `FORCE_COLOR` enables color in `auto` mode.
 
 ## Standards alignment
 

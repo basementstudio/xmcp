@@ -87,6 +87,7 @@ const config: XmcpConfig = {
   observability: {
     enabled: true,
     stderr: true,
+    color: "auto",
     sinks: [
       {
         type: "datadog",
@@ -99,6 +100,7 @@ const config: XmcpConfig = {
 ```
 
 When enabled, xmcp emits structured JSON logs to `stderr` for each execution start/end, including duration and success/failure details.
+The terminal prefix can be colorized for readability (`observability.color`), while the JSON payload remains plain and parseable.
 
 Example output:
 

@@ -116,3 +116,6 @@ curl -sS http://127.0.0.1:3002/mcp \
 - With the `traceparent` header, `trace.id` and `span.id` are present
 - For the edge-case call, `input.bigObject` includes `__truncatedKeys`, and oversized arrays include `[TRUNCATED:n items]`
 - For the invalid `traceparent` call, `trace.id` and `span.id` are omitted
+- Prefix readability can be improved with `observability.color` (`auto`, `on`, `off`)
+- `XMCP_OBSERVABILITY_COLOR` can override config at runtime (`auto|on|off`)
+- Even with colors enabled, the JSON payload after `|` remains plain and parseable

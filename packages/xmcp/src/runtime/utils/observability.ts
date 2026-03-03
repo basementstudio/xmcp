@@ -11,6 +11,7 @@ export type ExecutionType = "tool" | "prompt" | "resource";
 type LogLevel = "info" | "error";
 type SinkErrorHandling = "silent" | "warn";
 type SinkHttpMethod = "POST" | "PUT";
+type ObservabilityColorMode = "auto" | "on" | "off";
 
 type ExecutionLogCommon = {
   source: "xmcp";
@@ -63,6 +64,7 @@ export type ObservabilityRedactionConfig = {
 export type RuntimeObservabilityConfig = {
   enabled: boolean;
   stderr: boolean;
+  color: ObservabilityColorMode;
   sinkTimeoutMs: number;
   maxQueueSize: number;
   maxConcurrentSends: number;
@@ -123,6 +125,7 @@ declare const IS_CLOUDFLARE: boolean | undefined;
 const DEFAULT_OBSERVABILITY_CONFIG: RuntimeObservabilityConfig = {
   enabled: false,
   stderr: true,
+  color: "auto",
   sinkTimeoutMs: 1000,
   maxQueueSize: 1000,
   maxConcurrentSends: 4,
@@ -425,13 +428,120 @@ function toErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function emitLogToStderr(payload: ExecutionEvent): void {
+const ANSI = {
+  reset: "\x1b[0m",
+  dim: "\x1b[2m",
+  gray: "\x1b[90m",
+  redBold: "\x1b[1;31m",
+  cyanBold: "\x1b[1;36m",
+  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
+  yellow: "\x1b[33m",
+  green: "\x1b[32m",
+  red: "\x1b[31m",
+} as const;
+
+function paint(text: string, style: string, enabled: boolean): string {
+  if (!enabled) {
+    return text;
+  }
+  return `${style}${text}${ANSI.reset}`;
+}
+
+function parseColorMode(value: string | undefined): ObservabilityColorMode | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "auto" || normalized === "on" || normalized === "off") {
+    return normalized;
+  }
+
+  return undefined;
+}
+
+function hasTruthyEnvVar(name: string): boolean {
+  const value = process.env[name];
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return normalized !== "0" && normalized !== "false";
+}
+
+function shouldUseColor(config: RuntimeObservabilityConfig): boolean {
+  const envMode = parseColorMode(process.env.XMCP_OBSERVABILITY_COLOR);
+  const mode = envMode ?? config.color ?? "auto";
+
+  if (mode === "off") {
+    return false;
+  }
+  if (mode === "on") {
+    return true;
+  }
+  if (hasTruthyEnvVar("NO_COLOR")) {
+    return false;
+  }
+  if (hasTruthyEnvVar("FORCE_COLOR")) {
+    return true;
+  }
+
+  return Boolean(process.stderr?.isTTY);
+}
+
+function colorizeLevel(level: LogLevel, enabled: boolean): string {
+  if (level === "error") {
+    return paint(level.toUpperCase(), ANSI.redBold, enabled);
+  }
+  return paint(level.toUpperCase(), ANSI.cyanBold, enabled);
+}
+
+function colorizeDuration(duration: number | "-", enabled: boolean): string {
+  if (duration === "-") {
+    return paint("-", ANSI.gray, enabled);
+  }
+  if (duration >= 1000) {
+    return paint(String(duration), ANSI.red, enabled);
+  }
+  if (duration >= 250) {
+    return paint(String(duration), ANSI.yellow, enabled);
+  }
+  return paint(String(duration), ANSI.green, enabled);
+}
+
+function colorizeOutcome(
+  outcome: ExecutionEndLog["event.outcome"] | "-",
+  enabled: boolean
+): string {
+  if (outcome === "-") {
+    return paint("-", ANSI.gray, enabled);
+  }
+  if (outcome === "success") {
+    return paint("success", ANSI.green, enabled);
+  }
+  return paint("failure", ANSI.red, enabled);
+}
+
+function emitLogToStderr(
+  payload: ExecutionEvent,
+  config: RuntimeObservabilityConfig
+): void {
   const request = payload["request.id"] ?? "-";
   const duration = payload.phase === "end" ? payload.durationMs : "-";
   const outcome = payload.phase === "end" ? payload["event.outcome"] : "-";
-  const level = payload["log.level"].toUpperCase();
+  const color = shouldUseColor(config);
 
-  const prefix = `${payload["@timestamp"]} ${level} ${payload["event.action"]} ${payload.type}/${payload.name} req=${request} dur=${duration} outcome=${outcome}`;
+  const prefix = [
+    paint(payload["@timestamp"], `${ANSI.dim}${ANSI.gray}`, color),
+    colorizeLevel(payload["log.level"], color),
+    paint(payload["event.action"], ANSI.blue, color),
+    paint(`${payload.type}/${payload.name}`, ANSI.magenta, color),
+    `${paint("req=", ANSI.dim, color)}${paint(String(request), ANSI.yellow, color)}`,
+    `${paint("dur=", ANSI.dim, color)}${colorizeDuration(duration, color)}`,
+    `${paint("outcome=", ANSI.dim, color)}${colorizeOutcome(outcome, color)}`,
+  ].join(" ");
   console.error(`${prefix} | ${JSON.stringify(payload)}`);
 }
 
@@ -676,7 +786,7 @@ function emitLog(payload: ExecutionEvent, config: RuntimeObservabilityConfig): v
   syncConfiguredSinks(config);
 
   if (config.stderr) {
-    emitLogToStderr(payload);
+    emitLogToStderr(payload, config);
   }
 
   dispatchToSinks(payload, config);

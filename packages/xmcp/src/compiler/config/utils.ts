@@ -188,6 +188,7 @@ export function getResolvedObservabilityConfig(
   return {
     enabled: false,
     stderr: true,
+    color: "auto",
     sinkTimeoutMs: 1000,
     maxQueueSize: 1000,
     maxConcurrentSends: 4,

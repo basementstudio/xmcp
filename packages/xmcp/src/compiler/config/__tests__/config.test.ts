@@ -302,6 +302,7 @@ describe("Config System - Injection Functions", () => {
     const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
     assert.equal(observabilityConfig.enabled, true);
     assert.equal(observabilityConfig.stderr, true);
+    assert.equal(observabilityConfig.color, "auto");
   });
 
   it("should inject observability object config", () => {
@@ -309,6 +310,7 @@ describe("Config System - Injection Functions", () => {
       observability: {
         enabled: true,
         stderr: false,
+        color: "off",
         sinkTimeoutMs: 250,
         sinks: [{ type: "webhook", url: "https://logs.example.com" }],
         redaction: {
@@ -322,6 +324,7 @@ describe("Config System - Injection Functions", () => {
     const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
     assert.equal(observabilityConfig.enabled, true);
     assert.equal(observabilityConfig.stderr, false);
+    assert.equal(observabilityConfig.color, "off");
     assert.equal(observabilityConfig.sinkTimeoutMs, 250);
     assert.equal(observabilityConfig.sinks.length, 1);
     assert.equal(observabilityConfig.sinks[0].type, "webhook");
@@ -361,6 +364,7 @@ describe("Config System - Observability Resolution", () => {
     const resolved = getResolvedObservabilityConfig(config);
     assert.equal(resolved.enabled, true);
     assert.equal(resolved.stderr, true);
+    assert.equal(resolved.color, "auto");
     assert.equal(resolved.maxConcurrentSends, 4);
   });
 
@@ -368,6 +372,18 @@ describe("Config System - Observability Resolution", () => {
     const config = configSchema.parse({});
     const resolved = getResolvedObservabilityConfig(config);
     assert.equal(resolved.enabled, false);
+    assert.equal(resolved.color, "auto");
+  });
+
+  it("should resolve observability color when configured", () => {
+    const config = configSchema.parse({
+      observability: {
+        color: "on",
+      },
+    });
+
+    const resolved = getResolvedObservabilityConfig(config);
+    assert.equal(resolved.color, "on");
   });
 });
 

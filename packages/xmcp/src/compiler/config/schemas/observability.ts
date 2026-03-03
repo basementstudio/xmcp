@@ -56,6 +56,7 @@ const observabilityRedactionSchema = observabilityRedactionBaseSchema
 const observabilityObjectBaseSchema = z.object({
   enabled: z.boolean().default(true),
   stderr: z.boolean().default(true),
+  color: z.enum(["auto", "on", "off"]).default("auto"),
   sinkTimeoutMs: z.number().int().positive().default(1000),
   maxQueueSize: z.number().int().positive().default(1000),
   maxConcurrentSends: z.number().int().positive().default(4),
