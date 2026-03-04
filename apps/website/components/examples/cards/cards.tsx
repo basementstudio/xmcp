@@ -281,7 +281,7 @@ export function ExampleCards({
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
-                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                 >
                   Previous
                 </button>
@@ -304,7 +304,7 @@ export function ExampleCards({
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
-                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-brand-white"
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                 >
                   Next
                 </button>
