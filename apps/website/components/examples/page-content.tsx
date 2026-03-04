@@ -26,13 +26,13 @@ export function ExamplesPageContent({
         >
           <div className="absolute left-1/2 top-20 h-[180px] w-[300px] -translate-x-1/2 rounded-full bg-[#D9D9D9] opacity-20 blur-[110px] md:h-[240px] md:w-[380px] md:opacity-24 md:blur-[130px]" />
           <Image
-            src="/examples/spot.png"
+            src="/textures/text6.png"
             alt=""
             aria-hidden
             width={1217}
             height={956}
             priority
-            className="pointer-events-none select-none absolute left-1/2 top-[-40px] h-auto w-[560px] -translate-x-1/2 rotate-[-42.61deg] opacity-16 mix-blend-plus-lighter md:top-[-80px] md:w-[720px] md:opacity-20"
+            className="pointer-events-none select-none absolute left-1/2 top-[-40px] h-auto w-[560px] -translate-x-1/2 rotate-[-64.61deg] opacity-16 mix-blend-plus-lighter md:top-[-80px] md:w-[720px] md:opacity-20"
           />
         </div>
 
