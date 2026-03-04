@@ -418,6 +418,10 @@ export function ExampleCard({
               priority={false}
             />
           </div>
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none opacity-100 transition-opacity duration-300 group-hover:opacity-45 [box-shadow:inset_0_66px_86px_rgba(0,0,0,0.58),inset_0_-84px_104px_rgba(0,0,0,0.74),inset_52px_0_64px_rgba(0,0,0,0.62),inset_-52px_0_64px_rgba(0,0,0,0.62)]"
+          />
         </div>
       </div>
     </Link>
