@@ -376,7 +376,7 @@ export function ExampleCard({
 
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
-            <div className="absolute inset-x-0 bottom-0 h-[140px] overflow-hidden">
+            <div className="absolute inset-0 overflow-hidden">
               {previewUrl ? (
                 <Image
                   src={previewUrl}
@@ -384,7 +384,7 @@ export function ExampleCard({
                   width={1200}
                   height={630}
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className="absolute top-0 left-0 w-full h-auto"
+                  className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
                   priority={false}
                 />
               ) : (
@@ -394,7 +394,7 @@ export function ExampleCard({
                   width={1200}
                   height={630}
                   sizes="(max-width: 768px) 100vw, 33vw"
-                  className="absolute top-0 left-0 w-full h-auto"
+                  className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
                   priority={false}
                 />
               )}
@@ -420,7 +420,7 @@ export function ExampleCard({
           </div>
           <div
             aria-hidden
-            className="absolute inset-0 pointer-events-none opacity-100 transition-opacity duration-300 group-hover:opacity-45 [box-shadow:inset_0_66px_86px_rgba(0,0,0,0.58),inset_0_-84px_104px_rgba(0,0,0,0.74),inset_52px_0_64px_rgba(0,0,0,0.62),inset_-52px_0_64px_rgba(0,0,0,0.62)]"
+            className="absolute inset-0 pointer-events-none opacity-100 transition-opacity duration-300 group-hover:opacity-66 [box-shadow:inset_0_38px_58px_rgba(0,0,0,0.28),inset_0_-50px_68px_rgba(0,0,0,0.38),inset_30px_0_42px_rgba(0,0,0,0.3),inset_-30px_0_42px_rgba(0,0,0,0.3)]"
           />
         </div>
       </div>
