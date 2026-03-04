@@ -330,6 +330,7 @@ export function ExampleCard({
   target?: string;
 } & ExampleItem) {
   const { name, description, previewUrl } = item;
+  const displayName = name.replace(/-/g, " ").replace(/\s+/g, " ").trim();
   const isGenericLabel = (value?: string) => {
     if (!value) return true;
     const normalized = value.trim().toLowerCase();
@@ -366,14 +367,14 @@ export function ExampleCard({
     >
       <div className="relative border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
         <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
-          <h4 className="text-brand-white font-medium mt-0 text-[1.125rem]">
-            {name}
+          <h4 className="text-brand-white font-medium mt-0 text-[1.125rem] capitalize">
+            {displayName}
           </h4>
         </div>
 
         <div className="flex-1 flex flex-col justify-between relative z-10">
           <div className="space-y-3 flex flex-col justify-between h-full px-4">
-            <p className="text-sm text-brand-neutral-100 leading-relaxed">
+            <p className="text-sm text-brand-neutral-100 leading-relaxed capitalize">
               {description}
             </p>
           </div>
@@ -396,7 +397,7 @@ export function ExampleCard({
               {previewUrl ? (
                 <Image
                   src={previewUrl}
-                  alt={`${name} preview`}
+                  alt={`${displayName} preview`}
                   width={1200}
                   height={630}
                   sizes="(max-width: 768px) 100vw, 33vw"
@@ -406,7 +407,7 @@ export function ExampleCard({
               ) : (
                 <Image
                   src="/examples/fallback.png"
-                  alt={`${name} preview`}
+                  alt={`${displayName} preview`}
                   width={1200}
                   height={630}
                   sizes="(max-width: 768px) 100vw, 33vw"

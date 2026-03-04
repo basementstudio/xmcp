@@ -168,6 +168,10 @@ function isKindLabel(value: string) {
   return normalized === "example" || normalized === "template";
 }
 
+function normalizeDisplayLabel(value: string) {
+  return value.replace(/-/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export async function generateStaticParams() {
   const items = await fetchExamplesAndTemplates();
   return items.map(({ slug }) => ({ slug }));
@@ -278,15 +282,16 @@ Add a README.md to this template to show content here.`;
       ...((example.tags ?? []).filter((tag) => !isKindLabel(tag))),
     ])
   );
+  const displayName = normalizeDisplayLabel(example.name);
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
-      <Breadcrumb name={example.name} />
+      <Breadcrumb name={displayName} />
 
       <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-16">
         <div className="space-y-3">
-          <h1 className="heading-1 text-gradient">{example.name}</h1>
-          <p className="text-brand-neutral-100 text-base max-w-2xl">
+          <h1 className="heading-1 text-gradient capitalize">{displayName}</h1>
+          <p className="text-brand-neutral-100 text-base max-w-2xl capitalize">
             {example.description}
           </p>
         </div>
@@ -432,7 +437,7 @@ function Breadcrumb({ name }: { name: string }) {
       <span className="text-brand-neutral-100">
         <Icons.arrowDown className="w-4 h-4 -rotate-90" />
       </span>
-      <span className="text-brand-white">{name}</span>
+      <span className="text-brand-white capitalize">{name}</span>
     </div>
   );
 }
