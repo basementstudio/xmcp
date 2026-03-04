@@ -330,7 +330,23 @@ export function ExampleCard({
   target?: string;
 } & ExampleItem) {
   const { name, description, previewUrl } = item;
-  const category = item.category ?? item.kind;
+  const isGenericLabel = (value?: string) => {
+    if (!value) return true;
+    const normalized = value.trim().toLowerCase();
+    return (
+      normalized.length === 0 ||
+      normalized === "example" ||
+      normalized === "examples" ||
+      normalized === "template" ||
+      normalized === "templates" ||
+      normalized === item.kind
+    );
+  };
+  const category =
+    (!isGenericLabel(item.category) ? item.category : undefined) ??
+    item.tags?.find((tag) => !isGenericLabel(tag)) ??
+    item.category ??
+    item.kind;
   const linkHref = href ?? `/examples/${item.slug}`;
   const defaultsToExternal =
     linkHref.startsWith("http://") || linkHref.startsWith("https://");
