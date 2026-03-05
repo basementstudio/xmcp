@@ -329,7 +329,7 @@ export function ExampleCard({
   ctaLabel?: string;
   target?: string;
 } & ExampleItem) {
-  const { name, description, previewUrl } = item;
+  const { name, description } = item;
   const displayName = name.replace(/-/g, " ").replace(/\s+/g, " ").trim();
   const isGenericLabel = (value?: string) => {
     if (!value) return true;
@@ -394,27 +394,15 @@ export function ExampleCard({
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
             <div className="absolute inset-0 overflow-hidden">
-              {previewUrl ? (
-                <Image
-                  src={previewUrl}
-                  alt={`${displayName} preview`}
-                  width={1200}
-                  height={630}
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
-                  priority={false}
-                />
-              ) : (
-                <Image
-                  src="/examples/fallback.png"
-                  alt={`${displayName} preview`}
-                  width={1200}
-                  height={630}
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
-                  priority={false}
-                />
-              )}
+              <Image
+                src="/examples/fallback.png"
+                alt={`${displayName} preview`}
+                width={1200}
+                height={630}
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
+                priority={false}
+              />
             </div>
             <Image
               src="/textures/text5.png"
