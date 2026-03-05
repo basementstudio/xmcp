@@ -3,7 +3,8 @@
   "description": "Access and utilize HTTP request headers in xmcp tool calls",
   "keywords": [
     "headers",
-    "http"
+    "http",
+    "request"
   ],
   "scripts": {
     "build": "xmcp build",

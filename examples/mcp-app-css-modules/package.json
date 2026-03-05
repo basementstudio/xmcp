@@ -2,6 +2,9 @@
   "name": "MCP App React CSS Modules",
   "description": "Learn how to set up an xmcp server using MCP app widgets with React + CSS modules and single tool handlers",
   "keywords": [
+    "ui",
+    "react",
+    "css-modules",
     "mcp-app"
   ],
   "scripts": {

@@ -2,8 +2,8 @@
   "name": "auth0-http-example",
   "description": "HTTP-based xmcp server with Auth0 authentication",
   "keywords": [
-    "http",
     "authentication",
+    "http",
     "auth0"
   ],
   "scripts": {

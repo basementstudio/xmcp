@@ -2,8 +2,9 @@
   "name": "Next.js with Auth",
   "description": "A Next.js application with xmcp and authentication handler",
   "keywords": [
+    "authentication",
     "nextjs",
-    "authentication"
+    "auth"
   ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",
