@@ -3,8 +3,8 @@
   "description": "Learn how to set up an xmcp server using HTTP transport",
   "keywords": [
     "transport",
-    "http",
-    "server"
+    "server",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",

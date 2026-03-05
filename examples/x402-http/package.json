@@ -3,9 +3,9 @@
   "description": "Example of x402 paid tools with xmcp HTTP transport",
   "keywords": [
     "monetization",
-    "http",
     "x402",
-    "paid"
+    "paid",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",

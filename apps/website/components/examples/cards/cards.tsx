@@ -57,10 +57,7 @@ export function ExampleCards({
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     examples.forEach((example) => {
-      tagSet.add(example.category ?? example.kind);
-      if (example.tags) {
-        example.tags.forEach((tag) => tagSet.add(tag));
-      }
+      tagSet.add(example.primaryFilterTag ?? example.category ?? example.kind);
     });
     return ["All", ...Array.from(tagSet).sort()];
   }, [examples]);

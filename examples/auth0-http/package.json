@@ -3,8 +3,8 @@
   "description": "HTTP-based xmcp server with Auth0 authentication",
   "keywords": [
     "authentication",
-    "http",
-    "auth0"
+    "auth0",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",

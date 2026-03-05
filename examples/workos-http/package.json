@@ -3,8 +3,8 @@
   "description": "HTTP-based xmcp server with WorkOS AuthKit integration",
   "keywords": [
     "authentication",
-    "http",
-    "workos"
+    "workos",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",

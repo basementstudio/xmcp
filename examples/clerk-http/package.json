@@ -3,8 +3,8 @@
   "description": "HTTP-based xmcp server with Clerk authentication",
   "keywords": [
     "authentication",
-    "http",
-    "clerk"
+    "clerk",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",
