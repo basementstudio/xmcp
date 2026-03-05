@@ -181,6 +181,34 @@ function normalizeDisplayLabel(value: string) {
   return value.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function humanizeMetadataName(value: string) {
+  const normalized = normalizeDisplayLabel(value);
+  const uppercaseTokens = new Set([
+    "api",
+    "ai",
+    "sdk",
+    "http",
+    "https",
+    "jwt",
+    "mcp",
+    "ui",
+    "css",
+    "xml",
+    "json",
+    "url",
+    "id",
+  ]);
+
+  return normalized
+    .split(" ")
+    .map((token) => {
+      const lower = token.toLowerCase();
+      if (uppercaseTokens.has(lower)) return lower.toUpperCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
 function formatRepositoryLabel(repositoryUrl: string) {
   const match = repositoryUrl.match(/github\.com\/([^\/]+\/[^\/?#]+)/i);
   return match ? match[1] : repositoryUrl;
@@ -205,13 +233,25 @@ export async function generateMetadata(
   }
 
   const canonical = `${baseUrl}/examples/${slug}`;
+  const metadataName = humanizeMetadataName(example.name);
+  const metadataTitle = `${metadataName} | xmcp Examples`;
+  const metadataKeywords = Array.from(
+    new Set(
+      [
+        ...(example.metadataKeywords ?? []),
+        ...(example.tags ?? []),
+        example.category,
+      ].filter(Boolean)
+    )
+  ) as string[];
 
   return {
-    title: `${example.name} - xmcp examples`,
+    title: metadataTitle,
     description: example.description,
+    keywords: metadataKeywords,
     alternates: { canonical },
     openGraph: {
-      title: `${example.name} - xmcp examples`,
+      title: metadataTitle,
       description: example.description,
       url: canonical,
       siteName: "xmcp",
@@ -228,7 +268,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: `${example.name} - xmcp examples`,
+      title: metadataTitle,
       description: example.description,
       images: example.previewUrl ? [example.previewUrl] : undefined,
     },

@@ -11,6 +11,7 @@ export type ExampleItem = {
   sourceBranch: string;
   category?: string;
   tags?: string[];
+  metadataKeywords?: string[];
   websiteUrl?: string;
   demoUrl?: string;
   deployUrl?: string;
@@ -241,6 +242,7 @@ async function fetchRepoExamples(): Promise<ExampleItem[]> {
         sourceBranch: XMCP_BRANCH,
         category: "example",
         tags: packageMeta?.keywords?.slice(0, 1) ?? [],
+        metadataKeywords: packageMeta?.keywords ?? [],
         websiteUrl: packageMeta?.homepage,
         demoUrl: packageMeta?.demoUrl,
         deployUrl: packageMeta?.deployUrl,
@@ -284,6 +286,9 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
       const tags = Array.from(
         new Set([...(meta?.tags ?? []), meta?.tag].filter(Boolean))
       ) as string[];
+      const metadataKeywords = Array.from(
+        new Set([meta?.category, ...tags].filter(Boolean))
+      ) as string[];
 
       return {
         kind: "template" as const,
@@ -296,6 +301,7 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
         sourceBranch: TEMPLATES_BRANCH,
         category: meta?.category,
         tags,
+        metadataKeywords,
         websiteUrl: meta?.websiteUrl ?? meta?.website,
         demoUrl: meta?.demoUrl ?? meta?.demo,
         deployUrl: meta?.deployUrl ?? meta?.deploy,
