@@ -167,6 +167,16 @@ function isKindLabel(value: string) {
   return normalized === "example" || normalized === "template";
 }
 
+function isNextJsLabel(value?: string) {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return (
+    normalized === "nextjs" ||
+    normalized === "next.js" ||
+    normalized === "next js"
+  );
+}
+
 function normalizeDisplayLabel(value: string) {
   return value.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -283,6 +293,12 @@ Add a README.md to this template to show content here.`;
       ...((example.tags ?? []).filter((tag) => !isKindLabel(tag))),
     ])
   );
+  const fallbackPreviewSrc =
+    isNextJsLabel(example.category) ||
+    (example.tags ?? []).some((tag) => isNextJsLabel(tag))
+      ? "/examples/nextjs.svg"
+      : "/examples/fallback.svg";
+  const isNextJsFallback = fallbackPreviewSrc === "/examples/nextjs.svg";
   const displayName = normalizeDisplayLabel(example.name);
   const repositoryLabel = formatRepositoryLabel(example.repositoryUrl);
 
@@ -333,27 +349,28 @@ Add a README.md to this template to show content here.`;
               priority
             />
           ) : (
-            <div className="absolute inset-0 bg-brand-neutral-600/25 flex items-center justify-center">
-              <div className="relative w-full max-w-[520px] aspect-[850/742] opacity-65">
-                <Image
-                  src="/xmcp.png"
-                  alt="xmcp placeholder"
-                  fill
-                  sizes="(max-width: 768px) 90vw, 520px"
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </div>
+            <Image
+              src={fallbackPreviewSrc}
+              alt={`${example.name} preview`}
+              fill
+              sizes="100vw"
+              unoptimized
+              className={
+                isNextJsFallback
+                  ? "object-contain [object-position:center_70%] scale-90"
+                  : "object-contain [object-position:center_70%]"
+              }
+              priority
+            />
           )}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-75">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
             <Image
               src="/textures/text5.png"
               alt=""
               aria-hidden
               fill
               sizes="100vw"
-              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-screen opacity-55"
+              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
               priority={false}
             />
           </div>

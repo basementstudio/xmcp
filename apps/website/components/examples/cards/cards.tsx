@@ -386,8 +386,8 @@ export function ExampleCard({
     isNextJsLabel(item.category) ||
     (item.tags ?? []).some((tag) => isNextJsLabel(tag));
   const cardImageSrc = isNextJsItem
-    ? "/examples/nextjs.png"
-    : "/examples/fallback.png";
+    ? "/examples/nextjs.svg"
+    : "/examples/fallback.svg";
   const category =
     (!isGenericLabel(item.category) ? item.category : undefined) ??
     item.tags?.find((tag) => !isGenericLabel(tag)) ??
@@ -445,6 +445,7 @@ export function ExampleCard({
                 width={1200}
                 height={630}
                 sizes="(max-width: 768px) 100vw, 33vw"
+                unoptimized
                 className={cn(
                   "absolute opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]",
                   isNextJsItem
