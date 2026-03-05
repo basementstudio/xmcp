@@ -415,7 +415,6 @@ Add a README.md to this template to show content here.`;
                 {...item}
                 href={`/examples/${item.slug}`}
                 target="_self"
-                ctaLabel="View"
               />
             ))}
           </div>

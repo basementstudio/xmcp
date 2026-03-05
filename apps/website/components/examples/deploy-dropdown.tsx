@@ -48,10 +48,17 @@ export function DeployDropdown({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={variant} size="sm" className="px-6">
-          <span className="inline-flex items-center gap-1.5">
+        <Button
+          variant={variant}
+          size="sm"
+          className="group h-8 min-w-0 rounded-[2px] pl-3 pr-2 py-1.5"
+        >
+          <span className="inline-flex items-center gap-1">
             <span>Deploy</span>
-            <ChevronDown className="size-3.5" />
+            <ChevronDown
+              strokeWidth={1.75}
+              className="size-3 transition-transform duration-200 group-data-[state=open]:rotate-180"
+            />
           </span>
         </Button>
       </DropdownMenuTrigger>
