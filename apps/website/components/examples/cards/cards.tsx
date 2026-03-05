@@ -343,6 +343,21 @@ export function ExampleCard({
       normalized === item.kind
     );
   };
+  const isNextJsLabel = (value?: string) => {
+    if (!value) return false;
+    const normalized = value.trim().toLowerCase();
+    return (
+      normalized === "nextjs" ||
+      normalized === "next.js" ||
+      normalized === "next js"
+    );
+  };
+  const isNextJsItem =
+    isNextJsLabel(item.category) ||
+    (item.tags ?? []).some((tag) => isNextJsLabel(tag));
+  const cardImageSrc = isNextJsItem
+    ? "/examples/nextjs.png"
+    : "/examples/fallback.png";
   const category =
     (!isGenericLabel(item.category) ? item.category : undefined) ??
     item.tags?.find((tag) => !isGenericLabel(tag)) ??
@@ -395,12 +410,17 @@ export function ExampleCard({
           <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
             <div className="absolute inset-0 overflow-hidden">
               <Image
-                src="/examples/fallback.png"
+                src={cardImageSrc}
                 alt={`${displayName} preview`}
                 width={1200}
                 height={630}
                 sizes="(max-width: 768px) 100vw, 33vw"
-                className="absolute -bottom-7 left-0 w-full opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]"
+                className={cn(
+                  "absolute opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]",
+                  isNextJsItem
+                    ? "bottom-7 left-1/2 -translate-x-1/2 w-[78%]"
+                    : "-bottom-7 left-0 w-full"
+                )}
                 priority={false}
               />
             </div>
