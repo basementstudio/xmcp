@@ -198,18 +198,18 @@ export function ExampleCards({
   return (
     <div className="col-span-12 flex flex-col gap-8">
       <div className="flex flex-col gap-4 max-w-[920px] w-full mx-auto">
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex flex-col items-start gap-2 min-w-0 md:flex-row md:items-center md:gap-4">
           <h3 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
             Filter by category
           </h3>
 
-          <div className="group flex items-center gap-1 flex-1 min-w-0">
+          <div className="group flex items-center gap-1 w-full flex-1 min-w-0">
             <button
               type="button"
               aria-label="Scroll categories left"
               onClick={() => scrollCategories("left")}
               className={cn(
-                "size-8 shrink-0 grid place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
+                "hidden md:grid size-8 shrink-0 place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
                 canScrollLeft
                   ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
                   : "opacity-0 pointer-events-none"
@@ -265,7 +265,7 @@ export function ExampleCards({
               aria-label="Scroll categories right"
               onClick={() => scrollCategories("right")}
               className={cn(
-                "size-8 shrink-0 grid place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
+                "hidden md:grid size-8 shrink-0 place-items-center text-brand-white/80 hover:text-brand-white transition-opacity duration-200",
                 canScrollRight
                   ? "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
                   : "opacity-0 pointer-events-none"
@@ -317,8 +317,13 @@ export function ExampleCards({
               aria-live="polite"
               className="text-xs text-brand-neutral-200 uppercase tracking-wide text-center"
             >
-              Page {currentPage} of {totalPages} • Showing {pageStart}-{pageEnd}{" "}
-              of {filteredExamples.length}
+              <span className="block md:inline">
+                Page {currentPage} of {totalPages}
+              </span>
+              <span className="hidden md:inline"> • </span>
+              <span className="block md:inline">
+                Showing {pageStart}-{pageEnd} of {filteredExamples.length}
+              </span>
             </p>
 
             <div className="justify-self-end">

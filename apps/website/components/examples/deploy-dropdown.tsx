@@ -44,7 +44,7 @@ export function DeployDropdown({
         <Button
           variant={variant}
           size="sm"
-          className="group h-8 w-[90px] min-w-0 rounded-[2px] pl-3 pr-2 pt-1.5 pb-1.5 gap-2"
+          className="group h-10 md:h-8 w-auto md:w-[90px] min-w-0 rounded-[2px] pl-3.5 md:pl-3 pr-2.5 md:pr-2 pt-1.5 pb-1.5 gap-2 text-[15px] leading-5 md:text-sm"
         >
           <span>Deploy</span>
           <ArrowDownIcon className="h-[5px] w-[10px] transition-transform duration-200 group-data-[state=open]:rotate-180" />

@@ -292,14 +292,21 @@ Add a README.md to this template to show content here.`;
 
       <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-16">
         <div className="space-y-3">
-          <h1 className="heading-1 text-gradient capitalize">{displayName}</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="heading-1 text-gradient capitalize">{displayName}</h1>
+            <div className="lg:hidden shrink-0">
+              <DeployDropdown options={deployOptions} variant="primary" />
+            </div>
+          </div>
           <p className="text-brand-neutral-100 text-base max-w-2xl capitalize">
             {example.description}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <DeployDropdown options={deployOptions} variant="primary" />
+        <div className="flex w-full justify-end lg:w-auto flex-wrap items-center gap-3">
+          <div className="hidden lg:block">
+            <DeployDropdown options={deployOptions} variant="primary" />
+          </div>
           {example.demoUrl && (
             <Button asChild variant="secondary" size="sm" className="px-6">
               <Link

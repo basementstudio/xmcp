@@ -19,7 +19,7 @@ export function ExamplesPageContent({
 
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="relative col-span-12 mb-8">
+      <div className="relative col-span-12 mb-4 md:mb-8">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -top-28 h-[460px] sm:-top-32 sm:h-[520px] z-0 [mask-image:radial-gradient(ellipse_at_center,black_52%,transparent_100%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
