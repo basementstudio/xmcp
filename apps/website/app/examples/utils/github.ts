@@ -240,7 +240,7 @@ async function fetchRepoExamples(): Promise<ExampleItem[]> {
         sourceRepo: XMCP_REPO,
         sourceBranch: XMCP_BRANCH,
         category: "example",
-        tags: packageMeta?.keywords ?? [],
+        tags: packageMeta?.keywords?.slice(0, 1) ?? [],
         websiteUrl: packageMeta?.homepage,
         demoUrl: packageMeta?.demoUrl,
         deployUrl: packageMeta?.deployUrl,

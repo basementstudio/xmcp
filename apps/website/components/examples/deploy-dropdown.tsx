@@ -7,14 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import {
-  ChevronDown,
-  Cloud,
-  ExternalLink,
-  Layers,
-  Rocket,
-  Train,
-} from "lucide-react";
+import { Cloud, ExternalLink, Layers, Rocket, Train } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
 import { VariantProps } from "class-variance-authority";
@@ -46,20 +39,15 @@ export function DeployDropdown({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant={variant}
           size="sm"
-          className="group h-8 min-w-0 rounded-[2px] pl-3 pr-2 py-1.5"
+          className="group h-8 w-[90px] min-w-0 rounded-[2px] pl-3 pr-2 pt-1.5 pb-1.5 gap-2"
         >
-          <span className="inline-flex items-center gap-1">
-            <span>Deploy</span>
-            <ChevronDown
-              strokeWidth={1.75}
-              className="size-3 transition-transform duration-200 group-data-[state=open]:rotate-180"
-            />
-          </span>
+          <span>Deploy</span>
+          <ArrowDownIcon className="h-[5px] w-[10px] transition-transform duration-200 group-data-[state=open]:rotate-180" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -85,6 +73,21 @@ export function DeployDropdown({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function ArrowDownIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="10"
+      height="5"
+      viewBox="0 0 10 5"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M5 5L0 0H10L5 5Z" fill="currentColor" />
+    </svg>
   );
 }
 

@@ -22,7 +22,7 @@ export function ExampleCards({
   searchTerm,
   initialCategoryFilter,
 }: ExampleCardsProps) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -65,20 +65,41 @@ export function ExampleCards({
     return ["All", ...Array.from(tagSet).sort()];
   }, [examples]);
 
-  const urlCategory = searchParams.get("category") ?? initialCategoryFilter;
+  const urlCategories = useMemo(() => {
+    const rawUrlCategories = searchParams.getAll("category");
+    return rawUrlCategories.length > 0
+      ? rawUrlCategories
+      : initialCategoryFilter
+        ? initialCategoryFilter
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        : [];
+  }, [searchParams, initialCategoryFilter]);
 
   useEffect(() => {
-    if (!urlCategory) {
-      setSelectedTag(null);
+    if (urlCategories.length === 0) {
+      setSelectedTags([]);
       return;
     }
 
-    const normalized = urlCategory.trim().toLowerCase();
-    const matchedTag =
-      allTags.find((tag) => tag.toLowerCase() === normalized) ?? null;
+    const normalizedCategories = new Set(
+      urlCategories.map((value) => value.trim().toLowerCase())
+    );
+    const matchedTags = allTags.filter(
+      (tag) => tag !== "All" && normalizedCategories.has(tag.toLowerCase())
+    );
 
-    setSelectedTag(matchedTag === "All" ? null : matchedTag);
-  }, [allTags, urlCategory]);
+    setSelectedTags((current) => {
+      if (
+        current.length === matchedTags.length &&
+        current.every((tag, index) => tag === matchedTags[index])
+      ) {
+        return current;
+      }
+      return matchedTags;
+    });
+  }, [allTags, urlCategories]);
 
   const filteredExamples = useMemo(() => {
     return examples.filter((example) => {
@@ -89,15 +110,17 @@ export function ExampleCards({
         );
 
       const matchesTags =
-        selectedTag === null ||
-        selectedTag === "All" ||
-        (example.tags ?? []).includes(selectedTag) ||
-        example.category === selectedTag ||
-        example.kind === selectedTag;
+        selectedTags.length === 0 ||
+        selectedTags.some(
+          (selectedTag) =>
+            (example.tags ?? []).includes(selectedTag) ||
+            example.category === selectedTag ||
+            example.kind === selectedTag
+        );
 
       return matchesSearch && matchesTags;
     });
-  }, [debouncedSearchTerm, examples, selectedTag]);
+  }, [debouncedSearchTerm, examples, selectedTags]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredExamples.length / ITEMS_PER_PAGE)),
@@ -117,15 +140,17 @@ export function ExampleCards({
     : 0;
 
   const toggleTag = (tag: string) => {
-    const nextTag = tag === "All" ? null : selectedTag === tag ? null : tag;
-    setSelectedTag(nextTag);
+    const nextTags =
+      tag === "All"
+        ? []
+        : selectedTags.includes(tag)
+          ? selectedTags.filter((selectedTag) => selectedTag !== tag)
+          : [...selectedTags, tag];
+    setSelectedTags(nextTags);
 
     const params = new URLSearchParams(searchParams.toString());
-    if (nextTag) {
-      params.set("category", nextTag);
-    } else {
-      params.delete("category");
-    }
+    params.delete("category");
+    nextTags.forEach((nextTag) => params.append("category", nextTag));
 
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
@@ -162,7 +187,7 @@ export function ExampleCards({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, selectedTag]);
+  }, [debouncedSearchTerm, selectedTags]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -208,8 +233,8 @@ export function ExampleCards({
                         "text-xs cursor-pointer shrink-0",
                         (
                           tag === "All"
-                            ? selectedTag === null
-                            : selectedTag === tag
+                            ? selectedTags.length === 0
+                            : selectedTags.includes(tag)
                         )
                           ? tagClassName({ interactive: true, selected: true })
                           : tagClassName({ interactive: true, selected: false })
@@ -281,7 +306,7 @@ export function ExampleCards({
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
-                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600 cursor-pointer"
                 >
                   Previous
                 </button>
@@ -304,7 +329,7 @@ export function ExampleCards({
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
-                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                  className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600 cursor-pointer"
                 >
                   Next
                 </button>

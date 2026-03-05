@@ -25,7 +25,6 @@ import {
 import { Icons } from "@/components/icons";
 import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
-import { Github } from "lucide-react";
 
 const baseUrl = getBaseUrl();
 
@@ -172,6 +171,11 @@ function normalizeDisplayLabel(value: string) {
   return value.replace(/-/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function formatRepositoryLabel(repositoryUrl: string) {
+  const match = repositoryUrl.match(/github\.com\/([^\/]+\/[^\/?#]+)/i);
+  return match ? match[1] : repositoryUrl;
+}
+
 export async function generateStaticParams() {
   const items = await fetchExamplesAndTemplates();
   return items.map(({ slug }) => ({ slug }));
@@ -271,9 +275,6 @@ Add a README.md to this template to show content here.`;
   const xShareUrl = `https://www.x.com/intent/post?text=${encodeURIComponent(
     shareMessage
   )}&url=${encodeURIComponent(pageUrl)}`;
-  const linkedinShareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-    pageUrl
-  )}`;
   const categoryItems = Array.from(
     new Set([
       ...(example.category && !isKindLabel(example.category)
@@ -283,6 +284,7 @@ Add a README.md to this template to show content here.`;
     ])
   );
   const displayName = normalizeDisplayLabel(example.name);
+  const repositoryLabel = formatRepositoryLabel(example.repositoryUrl);
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
@@ -313,7 +315,7 @@ Add a README.md to this template to show content here.`;
       </header>
 
       <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500 mt-4 md:mt-6">
-        <div className="aspect-video relative">
+        <div className="aspect-[16/8] relative">
           {example.previewUrl ? (
             <Image
               src={example.previewUrl}
@@ -337,22 +339,32 @@ Add a README.md to this template to show content here.`;
               </div>
             </div>
           )}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-75">
+            <Image
+              src="/textures/text5.png"
+              alt=""
+              aria-hidden
+              fill
+              sizes="100vw"
+              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-screen opacity-55"
+              priority={false}
+            />
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <aside className="lg:col-span-3 space-y-8">
-          <div>
+          <InfoCard label="GitHub Repo">
             <Link
               href={example.repositoryUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-brand-white text-brand-neutral-50 inline-flex items-center gap-2"
+              className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
             >
-              <Github className="size-4" />
-              <span>GitHub</span>
+              {repositoryLabel}
             </Link>
-          </div>
+          </InfoCard>
 
           {(example.demoUrl || example.websiteUrl) && (
             <InfoCard label="Website link">
@@ -376,6 +388,7 @@ Add a README.md to this template to show content here.`;
                     text={tag}
                     href={`/examples?category=${encodeURIComponent(tag)}`}
                     interactive
+                    className="bg-brand-neutral-600"
                   />
                 ))}
               </div>
@@ -385,8 +398,8 @@ Add a README.md to this template to show content here.`;
           <InfoCard label="Share">
             <ExampleShareActions
               pageUrl={pageUrl}
+              repositoryUrl={example.repositoryUrl}
               xShareUrl={xShareUrl}
-              linkedinShareUrl={linkedinShareUrl}
             />
           </InfoCard>
         </aside>
@@ -450,7 +463,7 @@ function InfoCard({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs uppercase tracking-wide text-brand-neutral-400">
+      <p className="text-xs tracking-wide text-brand-neutral-100">
         {label}
       </p>
       <div className="text-sm text-brand-white leading-relaxed">{children}</div>
