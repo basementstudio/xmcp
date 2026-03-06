@@ -13,6 +13,23 @@ const templateConfigBaseSchema = z.object({
     .string()
     .default("This MCP server was bootstrapped with xmcp."),
   /**
+   * Icons for the MCP server, matching the MCP spec's `serverInfo.icons` format.
+   * When not provided, defaults to the xmcp logo.
+   *
+   * @example
+   * icons: [{ src: "https://example.com/icon.png", mimeType: "image/png" }]
+   */
+  icons: z
+    .array(
+      z.object({
+        src: z.string(),
+        mimeType: z.string().optional(),
+        sizes: z.array(z.string()).optional(),
+        theme: z.enum(["light", "dark"]).optional(),
+      })
+    )
+    .optional(),
+  /**
    * Custom home page content for the `/` endpoint.
    *
    * Can be either:
