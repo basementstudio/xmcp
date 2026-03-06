@@ -10,6 +10,11 @@ import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
+import {
+  loadToolsFromInjected,
+  logToolLoadSummary,
+} from "./tool-loading";
+import type { ToolLoadReport } from "./tool-loading";
 import { uIResourceRegistry } from "./ext-apps-registry";
 
 export type ToolFile = {
@@ -54,6 +59,17 @@ export const INJECTED_CONFIG = {
   version: "0.0.1",
 } as const satisfies Implementation;
 
+export type {
+  ToolModuleValidationReason,
+  ToolLoadSkipReason,
+  ToolLoadReport,
+} from "./tool-loading";
+export {
+  validateToolModule,
+  logToolLoadSummary,
+  resetToolLoadingDiagnosticsForTests,
+} from "./tool-loading";
+
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
 export async function configureServer(
@@ -71,15 +87,9 @@ export async function configureServer(
 }
 
 export function loadTools() {
-  const toolModules = new Map<string, ToolFile>();
-
-  const toolPromises = Object.keys(injectedTools).map((path) =>
-    injectedTools[path]().then((toolModule) => {
-      toolModules.set(path, toolModule);
-    })
+  return loadToolsFromInjected<ToolFile>(
+    injectedTools as Record<string, () => Promise<unknown>>
   );
-
-  return [toolPromises, toolModules] as const;
 }
 
 export function loadPrompts() {
@@ -106,13 +116,28 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
+let toolDiagnosticsPreloadPromise: Promise<ToolLoadReport> | null = null;
+
+export async function preloadToolLoadingDiagnostics(): Promise<ToolLoadReport> {
+  if (!toolDiagnosticsPreloadPromise) {
+    const [toolPromises, , toolLoadReport] = loadTools();
+    toolDiagnosticsPreloadPromise = Promise.all(toolPromises).then(() => {
+      logToolLoadSummary(toolLoadReport);
+      return toolLoadReport;
+    });
+  }
+
+  return toolDiagnosticsPreloadPromise;
+}
+
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
-  const [toolPromises, toolModules] = loadTools();
+  const [toolPromises, toolModules, toolLoadReport] = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
   await Promise.all(toolPromises);
   await Promise.all(promptPromises);
   await Promise.all(resourcePromises);
+  logToolLoadSummary(toolLoadReport);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
