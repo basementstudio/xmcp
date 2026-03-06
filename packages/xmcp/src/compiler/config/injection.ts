@@ -102,9 +102,11 @@ export function injectTemplateVariables(userConfig: XmcpConfigOutputSchema) {
     }
   }
 
+  const { icons: _, ...templateConfigWithoutIcons } = resolvedConfig;
+
   return {
     TEMPLATE_CONFIG: JSON.stringify({
-      ...resolvedConfig,
+      ...templateConfigWithoutIcons,
       homePage,
     }),
   };
