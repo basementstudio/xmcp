@@ -25,6 +25,7 @@ import {
 import { Icons } from "@/components/icons";
 import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
+import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
 
 const baseUrl = getBaseUrl();
 
@@ -165,16 +166,6 @@ function getProviderLabel(provider: DeployProvider) {
 function isKindLabel(value: string) {
   const normalized = value.trim().toLowerCase();
   return normalized === "example" || normalized === "template";
-}
-
-function isNextJsLabel(value?: string) {
-  if (!value) return false;
-  const normalized = value.trim().toLowerCase();
-  return (
-    normalized === "nextjs" ||
-    normalized === "next.js" ||
-    normalized === "next js"
-  );
 }
 
 function normalizeDisplayLabel(value: string) {
@@ -333,12 +324,7 @@ Add a README.md to this template to show content here.`;
       ...((example.tags ?? []).filter((tag) => !isKindLabel(tag))),
     ])
   );
-  const fallbackPreviewSrc =
-    isNextJsLabel(example.category) ||
-    (example.tags ?? []).some((tag) => isNextJsLabel(tag))
-      ? "/examples/nextjs.svg"
-      : "/examples/fallback.svg";
-  const isNextJsFallback = fallbackPreviewSrc === "/examples/nextjs.svg";
+  const previewImage = resolveExamplePreviewImage(example);
   const displayName = normalizeDisplayLabel(example.name);
   const repositoryLabel = formatRepositoryLabel(example.repositoryUrl);
 
@@ -379,9 +365,9 @@ Add a README.md to this template to show content here.`;
 
       <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500 mt-4 md:mt-6">
         <div className="aspect-[16/8] relative">
-          {example.previewUrl ? (
+          {!previewImage.isFallback ? (
             <Image
-              src={example.previewUrl}
+              src={previewImage.src}
               alt={`${example.name} preview`}
               fill
               sizes="100vw"
@@ -390,13 +376,13 @@ Add a README.md to this template to show content here.`;
             />
           ) : (
             <Image
-              src={fallbackPreviewSrc}
+              src={previewImage.src}
               alt={`${example.name} preview`}
               fill
               sizes="100vw"
               unoptimized
               className={
-                isNextJsFallback
+                previewImage.isNextJsFallback
                   ? "object-contain [object-position:center_70%] scale-90"
                   : "object-contain [object-position:center_70%]"
               }

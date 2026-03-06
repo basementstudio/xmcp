@@ -7,6 +7,7 @@ import { ExampleItem } from "@/app/examples/utils/github";
 import { Tag, tagClassName } from "@/components/ui/tag";
 import { Icons as UiIcons } from "@/components/ui/icons";
 import Image from "next/image";
+import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
 import Shadow from "./shadow.png";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 interface ExampleCardsProps {
@@ -16,6 +17,21 @@ interface ExampleCardsProps {
 }
 
 const ITEMS_PER_PAGE = 12;
+
+function getFallbackImageClass(src: string) {
+  switch (src) {
+    case "/examples/auth0.svg":
+      return "bottom-6 left-[54%] -translate-x-1/2 w-[60%]";
+    case "/examples/clerk.svg":
+      return "bottom-6 left-[54%] -translate-x-1/2 w-[60%]";
+    case "/examples/nestjs.svg":
+      return "bottom-6 left-[54%] -translate-x-1/2 w-[66%]";
+    case "/examples/workos.svg":
+      return "bottom-6 left-[56%] -translate-x-1/2 w-[64%]";
+    default:
+      return "-bottom-7 left-0 w-full";
+  }
+}
 
 export function ExampleCards({
   examples,
@@ -370,21 +386,7 @@ export function ExampleCard({
       normalized === item.kind
     );
   };
-  const isNextJsLabel = (value?: string) => {
-    if (!value) return false;
-    const normalized = value.trim().toLowerCase();
-    return (
-      normalized === "nextjs" ||
-      normalized === "next.js" ||
-      normalized === "next js"
-    );
-  };
-  const isNextJsItem =
-    isNextJsLabel(item.category) ||
-    (item.tags ?? []).some((tag) => isNextJsLabel(tag));
-  const cardImageSrc = isNextJsItem
-    ? "/examples/nextjs.svg"
-    : "/examples/fallback.svg";
+  const previewImage = resolveExamplePreviewImage(item);
   const category =
     (!isGenericLabel(item.category) ? item.category : undefined) ??
     item.tags?.find((tag) => !isGenericLabel(tag)) ??
@@ -437,7 +439,7 @@ export function ExampleCard({
           <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
             <div className="absolute inset-0 overflow-hidden">
               <Image
-                src={cardImageSrc}
+                src={previewImage.src}
                 alt={`${displayName} preview`}
                 width={1200}
                 height={630}
@@ -445,9 +447,11 @@ export function ExampleCard({
                 unoptimized
                 className={cn(
                   "absolute opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]",
-                  isNextJsItem
+                  previewImage.isFallback && previewImage.isNextJsFallback
                     ? "bottom-7 left-1/2 -translate-x-1/2 w-[78%]"
-                    : "-bottom-7 left-0 w-full"
+                    : previewImage.isFallback
+                      ? getFallbackImageClass(previewImage.src)
+                      : "-bottom-7 left-0 w-full"
                 )}
                 priority={false}
               />
