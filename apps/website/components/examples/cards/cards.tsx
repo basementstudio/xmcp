@@ -23,11 +23,23 @@ function getFallbackImageClass(src: string) {
     case "/examples/auth0.svg":
       return "bottom-6 left-[54%] -translate-x-1/2 w-[60%]";
     case "/examples/clerk.svg":
-      return "bottom-6 left-[54%] -translate-x-1/2 w-[60%]";
+      return "bottom-8 left-[52%] -translate-x-1/2 w-[68%]";
     case "/examples/nestjs.svg":
-      return "bottom-6 left-[54%] -translate-x-1/2 w-[66%]";
+      return "bottom-8 left-[54%] -translate-x-1/2 w-[74%]";
     case "/examples/workos.svg":
-      return "bottom-6 left-[56%] -translate-x-1/2 w-[64%]";
+      return "bottom-8 left-[56%] -translate-x-1/2 w-[72%]";
+    case "/examples/cloudflare.svg":
+      return "bottom-4 left-[59%] -translate-x-1/2 w-[86%]";
+    case "/examples/express.svg":
+      return "bottom-4 left-[54%] -translate-x-1/2 w-[84%]";
+    case "/examples/betterauth.svg":
+      return "bottom-4 left-[55%] -translate-x-1/2 w-[76%]";
+    case "/examples/polar.svg":
+      return "bottom-2 left-[55%] -translate-x-1/2 w-[88%]";
+    case "/examples/react.svg":
+      return "bottom-0 left-[56%] -translate-x-1/2 w-[96%]";
+    case "/examples/tailwind.svg":
+      return "bottom-0 left-[54%] -translate-x-1/2 w-full";
     default:
       return "-bottom-7 left-0 w-full";
   }
