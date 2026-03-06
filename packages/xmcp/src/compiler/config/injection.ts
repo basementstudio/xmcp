@@ -126,7 +126,9 @@ export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
       readFileSync(resolve(process.cwd(), "package.json"), "utf-8")
     );
     if (pkg.version) version = pkg.version;
-  } catch {}
+  } catch (err) {
+    console.warn(`[xmcp] Could not read version from package.json:`, err);
+  }
 
   const serverInfo: Record<string, unknown> = {
     name: templateConfig.name,
