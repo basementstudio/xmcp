@@ -287,12 +287,7 @@ describe("Config System - Injection Functions", () => {
     assert.notEqual(variables.SERVER_INFO, undefined);
     const serverInfo = JSON.parse(variables.SERVER_INFO);
     assert.equal(serverInfo.name, "xmcp server");
-    assert.equal(serverInfo.icons.length, 1);
-    assert.ok(
-      serverInfo.icons[0].src.startsWith("data:image/svg+xml;base64,"),
-      "Default icon should be a data URI"
-    );
-    assert.equal(serverInfo.icons[0].mimeType, "image/svg+xml");
+    assert.deepEqual(serverInfo.icons, []);
   });
 
   it("should inject server info with user-supplied icons", () => {
