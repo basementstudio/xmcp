@@ -112,6 +112,28 @@ export function injectTemplateVariables(userConfig: XmcpConfigOutputSchema) {
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
 
+const DEFAULT_XMCP_ICON = {
+  src: "https://xmcp.dev/xmcp-logo.svg",
+  mimeType: "image/svg+xml",
+};
+
+export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
+  const templateConfig = getResolvedTemplateConfig(userConfig);
+
+  const serverInfo: Record<string, unknown> = {
+    name: templateConfig.name,
+    version: "0.0.1",
+    description: templateConfig.description,
+    icons: templateConfig.icons ?? [DEFAULT_XMCP_ICON],
+  };
+
+  return {
+    SERVER_INFO: JSON.stringify(serverInfo),
+  };
+}
+
+export type ServerInfoVariables = ReturnType<typeof injectServerInfoVariables>;
+
 export function injectAdapterVariables(userConfig: XmcpConfigOutputSchema) {
   const experimentalConfig = getResolvedExperimentalConfig(userConfig);
 
@@ -143,5 +165,6 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
+  | ServerInfoVariables
   | AdapterVariables
   | TypescriptVariables;

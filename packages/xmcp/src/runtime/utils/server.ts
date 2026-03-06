@@ -48,11 +48,8 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
-export const INJECTED_CONFIG = {
-  // TODO get from project config
-  name: "MCP Server",
-  version: "0.0.1",
-} as const satisfies Implementation;
+// @ts-expect-error: injected by compiler
+export const INJECTED_CONFIG = SERVER_INFO as Implementation;
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
