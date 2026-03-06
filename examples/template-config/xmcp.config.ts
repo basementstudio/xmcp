@@ -8,7 +8,7 @@ const config: XmcpConfig = {
 
     // Icons shown in MCP clients (e.g. Claude Connectors).
     // When omitted, the default xmcp logo is used.
-    icons: [{ src: "https://xmcp.dev/xmcp-logo.svg", mimeType: "image/png" }],
+    icons: [{ src: "https://xmcp.dev/xmcp-logo.svg", mimeType: "image/svg+xml" }],
 
     // Custom home page - can be inline HTML or a file path
     // Option 1: Inline HTML string
