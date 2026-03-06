@@ -120,9 +120,17 @@ const DEFAULT_XMCP_ICON = {
 export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
   const templateConfig = getResolvedTemplateConfig(userConfig);
 
+  let version = "0.0.1";
+  try {
+    const pkg = JSON.parse(
+      readFileSync(resolve(process.cwd(), "package.json"), "utf-8")
+    );
+    if (pkg.version) version = pkg.version;
+  } catch {}
+
   const serverInfo: Record<string, unknown> = {
     name: templateConfig.name,
-    version: "0.0.1",
+    version,
     description: templateConfig.description,
     icons: templateConfig.icons ?? [DEFAULT_XMCP_ICON],
   };
