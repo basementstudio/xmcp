@@ -39,7 +39,7 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1(@types/react@19.2.14)(react@19.2.4)
       '@next/mdx':
-        specifier: 16.1.6
+        specifier: ^16.1.6
         version: 16.1.6(@mdx-js/loader@3.1.1(webpack@5.104.1))(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.4))
       '@openrouter/ai-sdk-provider':
         specifier: ^1.5.0
@@ -150,7 +150,7 @@ importers:
         specifier: ^0.544.0
         version: 0.544.0(react@19.2.4)
       next:
-        specifier: 16.1.6
+        specifier: ^16.1.6
         version: 16.1.6(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next-mdx-remote:
         specifier: ^6.0.0
@@ -211,7 +211,7 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       '@next/eslint-plugin-next':
-        specifier: 16.1.6
+        specifier: ^16.1.6
         version: 16.1.6
       '@tailwindcss/postcss':
         specifier: ^4.1.17
@@ -232,7 +232,7 @@ importers:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
       eslint-config-next:
-        specifier: 16.1.6
+        specifier: ^16.1.6
         version: 16.1.6(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       eslint-plugin-react-hooks:
         specifier: ^5.2.0
