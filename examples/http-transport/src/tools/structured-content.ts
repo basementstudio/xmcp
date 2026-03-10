@@ -1,3 +1,11 @@
+import { z } from "zod";
+
+export const outputSchema = {
+  temperature: z.number(),
+  conditions: z.string(),
+  humidity: z.number(),
+};
+
 // Tool implementation
 export default async function structuredContent() {
   const content = {

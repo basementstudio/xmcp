@@ -1,0 +1,87 @@
+---
+title: "Server Info"
+metadataTitle: "Server Info Configuration | xmcp Documentation"
+publishedAt: "2026-03-10"
+summary: "Configure your MCP server identity, icons, and home page."
+description: "Customize the name, description, icons, and home page of your MCP server."
+---
+
+The `template` config controls how your MCP server identifies itself to clients and what it displays on its home page.
+
+The `name`, `description`, and `icons` fields are sent in the MCP `initialize` response as `serverInfo`, so MCP clients can display your server with a branded name and icon instead of a generic tile.
+
+## Server Info
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  template: {
+    name: "My MCP Server",
+    description: "A server that does amazing things.",
+  },
+};
+```
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `name` | `"xmcp server"` | Display name shown in MCP clients and the home page |
+| `description` | `"This MCP server was bootstrapped with xmcp."` | Server description |
+
+The server `version` is automatically read from your project's `package.json` at build time.
+
+## Icons
+
+You can provide custom icons that MCP clients will use to display your server. The format follows the [MCP spec's `serverInfo.icons`](https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle#implementation) format.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  template: {
+    name: "My MCP Server",
+    icons: [
+      { src: "https://example.com/icon.png", mimeType: "image/png" },
+      { src: "./logo.svg", mimeType: "image/svg+xml" },
+      { src: "https://example.com/icon.webp", mimeType: "image/webp" },
+    ],
+  },
+};
+```
+
+Each icon object supports:
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `src` | Yes | URL, data URI, or local file path (relative to project root) |
+| `mimeType` | No | MIME type supported: `image/png`, `image/jpeg`, `image/svg+xml`, `image/webp` |
+| `sizes` | No | Array of size strings (e.g. `["64x64", "128x128"]`) |
+| `theme` | No | `"light"` or `"dark"` for theme-specific icons |
+
+You can use a local file path for `src` and xmcp will read the file at build time and inline it as a data URI:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  template: {
+    icons: [
+      { src: "src/assets/icon.png" },
+    ],
+  },
+};
+```
+
+When no icons are configured, the xmcp logo is used as the default icon.
+
+## Home Page
+
+Customize the HTML page served at the `/` endpoint of your HTTP server.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  template: {
+    // Option 1: Inline HTML
+    homePage: "<html><body><h1>Welcome!</h1></body></html>",
+
+    // Option 2: Path to an HTML file (relative to project root)
+    // homePage: "src/home.html",
+  },
+};
+```
+
+When `homePage` is not provided, xmcp serves a default landing page with your server name and description.
