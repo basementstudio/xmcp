@@ -1,9 +1,5 @@
 import dotenv from "dotenv";
-export type {
-  Middleware,
-  WebMiddleware,
-  WebMiddlewareContext,
-} from "./types/middleware";
+export type { Middleware, WebMiddleware, WebMiddlewareContext } from "./types/middleware";
 dotenv.config();
 
 export type {
