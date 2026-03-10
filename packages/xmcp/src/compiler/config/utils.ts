@@ -189,11 +189,6 @@ export function getResolvedObservabilityConfig(
     enabled: false,
     stderr: true,
     color: "auto",
-    sinkTimeoutMs: 1000,
-    maxQueueSize: 1000,
-    maxConcurrentSends: 4,
-    onSinkError: "warn",
-    sinks: [],
     redaction: {
       extraSensitiveKeys: [],
       allowedKeys: [],

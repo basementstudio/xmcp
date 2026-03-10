@@ -9,8 +9,6 @@ import {
 
 export type ExecutionType = "tool" | "prompt" | "resource";
 type LogLevel = "info" | "error";
-type SinkErrorHandling = "silent" | "warn";
-type SinkHttpMethod = "POST" | "PUT";
 type ObservabilityColorMode = "auto" | "on" | "off";
 
 type ExecutionLogCommon = {
@@ -65,72 +63,19 @@ export type RuntimeObservabilityConfig = {
   enabled: boolean;
   stderr: boolean;
   color: ObservabilityColorMode;
-  sinkTimeoutMs: number;
-  maxQueueSize: number;
-  maxConcurrentSends: number;
-  onSinkError: SinkErrorHandling;
-  sinks: ConfiguredObservabilitySink[];
   redaction: {
     extraSensitiveKeys: string[];
     allowedKeys: string[];
   };
 };
 
-export type ObservabilitySink = (
-  event: ExecutionEvent
-) => void | Promise<void>;
-
-type RuntimeObservabilityOverrides = Omit<
-  Partial<RuntimeObservabilityConfig>,
-  "redaction"
-> & {
-  redaction?: Partial<RuntimeObservabilityConfig["redaction"]>;
-};
-
-export type WebhookObservabilitySinkConfig = {
-  type: "webhook";
-  url: string;
-  method?: SinkHttpMethod;
-  headers?: Record<string, string>;
-};
-
-export type LokiObservabilitySinkConfig = {
-  type: "loki";
-  url: string;
-  headers?: Record<string, string>;
-  tenantId?: string;
-  labels?: Record<string, string>;
-};
-
-export type DatadogObservabilitySinkConfig = {
-  type: "datadog";
-  apiKey: string;
-  site?: "us1" | "us3" | "us5" | "eu" | "ap1" | "ap2" | "us1-fed";
-  url?: string;
-  ddsource?: string;
-  service?: string;
-  ddtags?: string;
-  headers?: Record<string, string>;
-};
-
-export type ConfiguredObservabilitySink =
-  | WebhookObservabilitySinkConfig
-  | LokiObservabilitySinkConfig
-  | DatadogObservabilitySinkConfig;
-
 declare const OBSERVABILITY: boolean | undefined;
 declare const OBSERVABILITY_CONFIG: RuntimeObservabilityConfig | undefined;
-declare const IS_CLOUDFLARE: boolean | undefined;
 
 const DEFAULT_OBSERVABILITY_CONFIG: RuntimeObservabilityConfig = {
   enabled: false,
   stderr: true,
   color: "auto",
-  sinkTimeoutMs: 1000,
-  maxQueueSize: 1000,
-  maxConcurrentSends: 4,
-  onSinkError: "warn",
-  sinks: [],
   redaction: {
     extraSensitiveKeys: [],
     allowedKeys: [],
@@ -144,16 +89,14 @@ const MAX_STRING_LENGTH = 2000;
 const MAX_ARRAY_ITEMS = 50;
 const MAX_OBJECT_KEYS = 100;
 
-const registeredSinks = new Set<ObservabilitySink>();
-const pendingDispatchQueue: Array<{
-  sink: ObservabilitySink;
-  event: ExecutionEvent;
-  config: RuntimeObservabilityConfig;
-}> = [];
-let activeDispatches = 0;
+type RuntimeObservabilityOverrides = Omit<
+  Partial<RuntimeObservabilityConfig>,
+  "redaction"
+> & {
+  redaction?: Partial<RuntimeObservabilityConfig["redaction"]>;
+};
+
 let runtimeConfigOverrides: RuntimeObservabilityOverrides = {};
-let configuredSinksSignature = "";
-let configuredSinkUnsubscribes: Array<() => void> = [];
 
 function resolveEnabledFlag(): boolean {
   if (typeof OBSERVABILITY !== "undefined") {
@@ -211,19 +154,6 @@ export function setObservabilityConfig(
       ...(config.redaction ?? {}),
     },
   };
-}
-
-export function registerObservabilitySink(
-  sink: ObservabilitySink
-): () => void {
-  registeredSinks.add(sink);
-  return () => {
-    registeredSinks.delete(sink);
-  };
-}
-
-export function clearObservabilitySinks(): void {
-  registeredSinks.clear();
 }
 
 export function isObservabilityEnabled(): boolean {
@@ -545,251 +475,10 @@ function emitLogToStderr(
   console.error(`${prefix} | ${JSON.stringify(payload)}`);
 }
 
-function emitSinkWarning(config: RuntimeObservabilityConfig, message: string): void {
-  if (config.onSinkError !== "warn") {
-    return;
-  }
-
-  console.error(`[xmcp][observability] ${message}`);
-}
-
-function cleanupConfiguredSinks(): void {
-  for (const unsubscribe of configuredSinkUnsubscribes) {
-    unsubscribe();
-  }
-  configuredSinkUnsubscribes = [];
-}
-
-function getCloudflareFlag(): boolean {
-  return typeof IS_CLOUDFLARE !== "undefined" && Boolean(IS_CLOUDFLARE);
-}
-
-function toUnixTimeNanos(timestamp: string): string {
-  const millis = Date.parse(timestamp);
-  const safeMillis = Number.isFinite(millis) ? millis : Date.now();
-  return `${safeMillis * 1_000_000}`;
-}
-
-function toEventMessage(event: ExecutionEvent): string {
-  if (event.phase === "end") {
-    return `${event["event.action"]} ${event.type}/${event.name} outcome=${event["event.outcome"]} durationMs=${event.durationMs}`;
-  }
-
-  return `${event["event.action"]} ${event.type}/${event.name}`;
-}
-
-function getDatadogLogsUrl(sinkConfig: DatadogObservabilitySinkConfig): string {
-  if (sinkConfig.url) {
-    return sinkConfig.url;
-  }
-
-  const site = sinkConfig.site ?? "us1";
-  const hostBySite: Record<NonNullable<DatadogObservabilitySinkConfig["site"]>, string> = {
-    us1: "http-intake.logs.datadoghq.com",
-    us3: "http-intake.logs.us3.datadoghq.com",
-    us5: "http-intake.logs.us5.datadoghq.com",
-    eu: "http-intake.logs.datadoghq.eu",
-    ap1: "http-intake.logs.ap1.datadoghq.com",
-    ap2: "http-intake.logs.ap2.datadoghq.com",
-    "us1-fed": "http-intake.logs.ddog-gov.com",
-  };
-
-  return `https://${hostBySite[site]}/v1/input`;
-}
-
-function createSinkFromConfig(
-  sinkConfig: ConfiguredObservabilitySink
-): ObservabilitySink {
-  if (sinkConfig.type === "webhook") {
-    return async (event) => {
-      const response = await fetch(sinkConfig.url, {
-        method: sinkConfig.method ?? "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(sinkConfig.headers ?? {}),
-        },
-        body: JSON.stringify(event),
-      });
-
-      if (!response.ok) {
-        throw new Error(`webhook sink failed with status ${response.status}`);
-      }
-    };
-  }
-
-  if (sinkConfig.type === "datadog") {
-    const logsUrl = getDatadogLogsUrl(sinkConfig);
-
-    return async (event) => {
-      const response = await fetch(logsUrl, {
-        method: "POST",
-        headers: {
-          "DD-API-KEY": sinkConfig.apiKey,
-          "content-type": "application/json",
-          ...(sinkConfig.headers ?? {}),
-        },
-        body: JSON.stringify({
-          ...event,
-          message: toEventMessage(event),
-          ddsource: sinkConfig.ddsource ?? "xmcp",
-          ...(sinkConfig.service ? { service: sinkConfig.service } : {}),
-          ...(sinkConfig.ddtags ? { ddtags: sinkConfig.ddtags } : {}),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`datadog sink failed with status ${response.status}`);
-      }
-    };
-  }
-
-  const labels = {
-    source: "xmcp",
-    ...(sinkConfig.labels ?? {}),
-  };
-
-  return async (event) => {
-    const response = await fetch(sinkConfig.url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        ...(sinkConfig.tenantId
-          ? { "X-Scope-OrgID": sinkConfig.tenantId }
-          : {}),
-        ...(sinkConfig.headers ?? {}),
-      },
-      body: JSON.stringify({
-        streams: [
-          {
-            stream: labels,
-            values: [[toUnixTimeNanos(event["@timestamp"]), JSON.stringify(event)]],
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`loki sink failed with status ${response.status}`);
-    }
-  };
-}
-
-function syncConfiguredSinks(config: RuntimeObservabilityConfig): void {
-  if (getCloudflareFlag()) {
-    if (configuredSinkUnsubscribes.length > 0) {
-      cleanupConfiguredSinks();
-      configuredSinksSignature = "";
-    }
-    return;
-  }
-
-  const signature = JSON.stringify(config.sinks ?? []);
-  if (signature === configuredSinksSignature) {
-    return;
-  }
-
-  cleanupConfiguredSinks();
-  configuredSinksSignature = signature;
-
-  for (const sinkConfig of config.sinks ?? []) {
-    const sink = createSinkFromConfig(sinkConfig);
-    const unsubscribe = registerObservabilitySink(sink);
-    configuredSinkUnsubscribes.push(unsubscribe);
-  }
-}
-
-function queueSinkDispatch(
-  sink: ObservabilitySink,
-  event: ExecutionEvent,
-  config: RuntimeObservabilityConfig
-): void {
-  if (pendingDispatchQueue.length >= config.maxQueueSize) {
-    emitSinkWarning(config, "dropping observability event: sink queue is full");
-    return;
-  }
-
-  pendingDispatchQueue.push({ sink, event, config });
-  void drainSinkQueue();
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  if (timeoutMs <= 0) {
-    return promise;
-  }
-
-  let timer: ReturnType<typeof setTimeout> | undefined;
-
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(new Error(`sink timeout after ${timeoutMs}ms`));
-    }, timeoutMs);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    if (timer) {
-      clearTimeout(timer);
-    }
-  });
-}
-
-async function drainSinkQueue(): Promise<void> {
-  while (pendingDispatchQueue.length > 0) {
-    const nextConfig = pendingDispatchQueue[0]?.config;
-    if (!nextConfig) {
-      return;
-    }
-
-    if (activeDispatches >= nextConfig.maxConcurrentSends) {
-      return;
-    }
-
-    const item = pendingDispatchQueue.shift();
-    if (!item) {
-      return;
-    }
-
-    activeDispatches += 1;
-
-    const sinkCall = Promise.resolve(item.sink(item.event));
-    withTimeout(sinkCall, item.config.sinkTimeoutMs)
-      .catch((error) => {
-        emitSinkWarning(
-          item.config,
-          `sink delivery failed: ${toErrorMessage(error)}`
-        );
-      })
-      .finally(() => {
-        activeDispatches = Math.max(0, activeDispatches - 1);
-        void drainSinkQueue();
-      });
-  }
-}
-
-function dispatchToSinks(
-  payload: ExecutionEvent,
-  config: RuntimeObservabilityConfig
-): void {
-  if (getCloudflareFlag()) {
-    return;
-  }
-
-  if (registeredSinks.size === 0) {
-    return;
-  }
-
-  for (const sink of registeredSinks) {
-    queueSinkDispatch(sink, payload, config);
-  }
-}
-
 function emitLog(payload: ExecutionEvent, config: RuntimeObservabilityConfig): void {
-  syncConfiguredSinks(config);
-
   if (config.stderr) {
     emitLogToStderr(payload, config);
   }
-
-  dispatchToSinks(payload, config);
 }
 
 export function logExecutionStart(options: {
@@ -964,10 +653,5 @@ export function summarizeResourceOutput(result: ReadResourceResult): unknown {
 }
 
 export function _resetObservabilityStateForTests(): void {
-  cleanupConfiguredSinks();
-  configuredSinksSignature = "";
-  clearObservabilitySinks();
-  pendingDispatchQueue.length = 0;
-  activeDispatches = 0;
   runtimeConfigOverrides = {};
 }

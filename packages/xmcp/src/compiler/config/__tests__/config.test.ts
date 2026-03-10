@@ -311,8 +311,6 @@ describe("Config System - Injection Functions", () => {
         enabled: true,
         stderr: false,
         color: "off",
-        sinkTimeoutMs: 250,
-        sinks: [{ type: "webhook", url: "https://logs.example.com" }],
         redaction: {
           extraSensitiveKeys: ["sessionToken"],
         },
@@ -325,33 +323,10 @@ describe("Config System - Injection Functions", () => {
     assert.equal(observabilityConfig.enabled, true);
     assert.equal(observabilityConfig.stderr, false);
     assert.equal(observabilityConfig.color, "off");
-    assert.equal(observabilityConfig.sinkTimeoutMs, 250);
-    assert.equal(observabilityConfig.sinks.length, 1);
-    assert.equal(observabilityConfig.sinks[0].type, "webhook");
     assert.deepEqual(observabilityConfig.redaction.extraSensitiveKeys, [
       "sessionToken",
     ]);
     assert.deepEqual(observabilityConfig.redaction.allowedKeys, []);
-  });
-
-  it("should inject datadog sink defaults", () => {
-    const config = configSchema.parse({
-      observability: {
-        sinks: [
-          {
-            type: "datadog",
-            apiKey: "test-key",
-          },
-        ],
-      },
-    });
-    const variables = injectObservabilityVariables(config);
-    const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
-
-    assert.equal(observabilityConfig.sinks.length, 1);
-    assert.equal(observabilityConfig.sinks[0].type, "datadog");
-    assert.equal(observabilityConfig.sinks[0].site, "us1");
-    assert.equal(observabilityConfig.sinks[0].ddsource, "xmcp");
   });
 });
 
@@ -365,7 +340,6 @@ describe("Config System - Observability Resolution", () => {
     assert.equal(resolved.enabled, true);
     assert.equal(resolved.stderr, true);
     assert.equal(resolved.color, "auto");
-    assert.equal(resolved.maxConcurrentSends, 4);
   });
 
   it("should resolve observability as disabled when omitted", () => {
