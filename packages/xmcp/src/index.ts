@@ -1,5 +1,9 @@
 import dotenv from "dotenv";
-export type { Middleware, WebMiddleware, WebMiddlewareContext } from "./types/middleware";
+export type {
+  Middleware,
+  WebMiddleware,
+  WebMiddlewareContext,
+} from "./types/middleware";
 dotenv.config();
 
 export type {
@@ -18,6 +22,7 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 
 export {
