@@ -6,6 +6,7 @@ import { z } from "zod/v3";
 // Base schema with defaults - used for parsing with defaults applied
 const stdioTransportObjectBaseSchema = z.object({
   debug: z.boolean().default(false),
+  silent: z.boolean().default(false),
 });
 
 // Input schema - all fields optional for partial configs

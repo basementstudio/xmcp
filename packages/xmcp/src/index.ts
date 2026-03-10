@@ -18,8 +18,6 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
-export { silenceConsoleInTool } from "./utils/silent-console";
-
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 
 export {
