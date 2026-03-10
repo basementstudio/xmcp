@@ -67,7 +67,7 @@ const config: XmcpConfig = {`;
   // Add template configuration with default icon
   configContent += `
   template: {
-    icons: [{ src: "./favicon.svg" }],
+    icons: [{ src: "./xmcp.svg" }],
   },`;
 
   // Remove trailing comma if present
