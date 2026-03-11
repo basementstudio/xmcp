@@ -260,6 +260,24 @@ pre::-webkit-scrollbar {
   display: none;
 }
 
+.codeblock-scroll-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-neutral-300) transparent;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar {
+  height: 10px;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar-thumb {
+  background: var(--color-brand-neutral-300);
+  border-radius: 0;
+}
+
 pre {
   -ms-overflow-style: none;
   /* IE and Edge */
