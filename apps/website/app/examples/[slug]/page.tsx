@@ -26,6 +26,7 @@ import { Icons } from "@/components/icons";
 import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
 import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
+import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 const baseUrl = getBaseUrl();
 
@@ -33,7 +34,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
       lang: lang as BundledLanguage,
-      theme: "ayu-dark",
+      theme: xmcpAyuDarkTheme,
       components: {
         pre: ({ ref, ...props }) => (
           <CodeBlock ref={ref} data-line-numbers {...props}>
@@ -47,7 +48,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   } catch {
     return await highlight(code, {
       lang: "plaintext",
-      theme: "ayu-dark",
+      theme: xmcpAyuDarkTheme,
       components: {
         pre: ({ ref, ...props }) => (
           <CodeBlock ref={ref} data-line-numbers {...props}>
