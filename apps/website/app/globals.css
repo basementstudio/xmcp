@@ -214,14 +214,23 @@ html:has(#nd-blog-layout) {
 
 .prose li {
   @apply my-3 relative text-brand-neutral-50;
-  padding-left: 1rem;
+  padding-left: 0.9rem;
+}
+
+.prose li > p {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .prose ul li::before {
-  content: "⊹ ";
+  content: "";
   position: absolute;
   left: 0;
-  font-weight: bold;
+  top: calc(0.5lh - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-brand-neutral-50);
 }
 
 .prose hr {
