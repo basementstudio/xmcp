@@ -8,7 +8,7 @@ export const metadata: ToolMetadata = {
 };
 
 export const schema = {
-  initialCount: z.number().describe("The name of the user to greet"),
+  initialCount: z.number().describe("The initial count value"),
 };
 
 export default function handler({ initialCount }: InferSchema<typeof schema>) {
