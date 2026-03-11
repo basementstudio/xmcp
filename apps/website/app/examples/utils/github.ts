@@ -160,6 +160,27 @@ async function fetchRepoFileText(
   }
 }
 
+async function fetchRawFileText(
+  repo: string,
+  path: string,
+  ref = "main"
+): Promise<string | null> {
+  try {
+    const response = await fetch(buildRawUrl(repo, path, ref), {
+      cache: "force-cache",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error(`Error fetching raw text ${repo}/${path}:`, error);
+    return null;
+  }
+}
+
 async function findPreviewPath(
   repo: string,
   templateSlug: string,
@@ -357,15 +378,36 @@ export async function fetchExampleReadme(
   example: ExampleItem
 ): Promise<string | null> {
   const basePath = example.path.replace(/^\/+/, "");
-  const normalizedPath = example.readmePath
+  const configuredPath = example.readmePath
     ? `${basePath}/${example.readmePath.replace(/^\/+/, "")}`
-    : `${basePath}/README.md`;
+    : undefined;
+  const defaultReadmePath = `${basePath}/README.md`;
 
-  return fetchRepoFileText(
-    example.sourceRepo,
-    normalizedPath,
-    example.sourceBranch
-  );
+  const candidatePaths = Array.from(
+    new Set([configuredPath, defaultReadmePath].filter(Boolean))
+  ) as string[];
+
+  for (const path of candidatePaths) {
+    const fromApi = await fetchRepoFileText(
+      example.sourceRepo,
+      path,
+      example.sourceBranch
+    );
+    if (fromApi) {
+      return fromApi;
+    }
+
+    const fromRaw = await fetchRawFileText(
+      example.sourceRepo,
+      path,
+      example.sourceBranch
+    );
+    if (fromRaw) {
+      return fromRaw;
+    }
+  }
+
+  return null;
 }
 
 export async function getRepoStars(repoUrl: string): Promise<string> {
