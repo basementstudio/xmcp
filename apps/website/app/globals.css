@@ -58,8 +58,8 @@ html:has(#nd-blog-layout) {
 
 /* Sidebar scrollbar styling */
 .sidebar-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-track {
@@ -67,18 +67,18 @@ html:has(#nd-blog-layout) {
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-brand-neutral-300);
   border-radius: 0;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--color-brand-neutral-200);
 }
 
 /* Firefox scrollbar */
 .sidebar-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.8) transparent;
+  scrollbar-color: var(--color-brand-neutral-300) transparent;
 }
 
 /* Markdown content styling */
