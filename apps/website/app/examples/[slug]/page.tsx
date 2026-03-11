@@ -205,6 +205,66 @@ function formatRepositoryLabel(repositoryUrl: string) {
   return match ? match[1] : repositoryUrl;
 }
 
+function normalizeForMatch(value?: string) {
+  return value?.trim().toLowerCase() ?? "";
+}
+
+function getSuggestionScore(current: ExampleItem, candidate: ExampleItem) {
+  let score = 0;
+
+  const currentCategory = normalizeForMatch(current.category);
+  const candidateCategory = normalizeForMatch(candidate.category);
+  if (currentCategory && currentCategory === candidateCategory) {
+    score += 10;
+  }
+
+  const currentTags = new Set(
+    (current.tags ?? []).map((tag) => normalizeForMatch(tag)).filter(Boolean)
+  );
+  const candidateTags = new Set(
+    (candidate.tags ?? []).map((tag) => normalizeForMatch(tag)).filter(Boolean)
+  );
+  let sharedTagCount = 0;
+  for (const tag of candidateTags) {
+    if (currentTags.has(tag)) {
+      sharedTagCount += 1;
+    }
+  }
+  score += Math.min(sharedTagCount * 2, 6);
+
+  const currentPrimaryTag = normalizeForMatch(current.primaryFilterTag);
+  const candidatePrimaryTag = normalizeForMatch(candidate.primaryFilterTag);
+  if (currentPrimaryTag && currentPrimaryTag === candidatePrimaryTag) {
+    score += 1;
+  }
+
+  return score;
+}
+
+function rankRelatedItems(current: ExampleItem, items: ExampleItem[]) {
+  return items
+    .filter((item) => item.kind !== current.kind || item.slug !== current.slug)
+    .map((item) => ({
+      item,
+      score: getSuggestionScore(current, item),
+      sortName: normalizeForMatch(item.name),
+      sortSlug: normalizeForMatch(item.slug),
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+
+      if (a.sortName !== b.sortName) {
+        return a.sortName.localeCompare(b.sortName);
+      }
+
+      return a.sortSlug.localeCompare(b.sortSlug);
+    })
+    .slice(0, 3)
+    .map(({ item }) => item);
+}
+
 export async function generateStaticParams() {
   const items = await fetchExamplesAndTemplates();
   return items.map(({ slug }) => ({ slug }));
@@ -281,9 +341,7 @@ export default async function ExampleDetailPage(
     fetchExamplesAndTemplates(),
   ]);
 
-  const moreExamples = examples
-    .filter((item) => item.kind !== example.kind || item.slug !== example.slug)
-    .slice(0, 3);
+  const moreExamples = rankRelatedItems(example, examples);
 
   const fallbackReadme = `# README not found
 
