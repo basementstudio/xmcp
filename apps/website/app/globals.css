@@ -156,7 +156,7 @@ html:has(#nd-blog-layout) {
 
 .prose img {
   /* Don't apply styles to next/image */
-  @apply m-0 max-w-full w-full h-auto;
+  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-sm;
 }
 
 .prose p {

@@ -156,7 +156,10 @@ export function CodeBlock({
             className:
               "-me-2 opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
             children: allowCopy && (
-              <CopyButton containerRef={areaRef} className="top-0 right-0.5" />
+              <CopyButton
+                containerRef={areaRef}
+                className="top-0 right-0.5 [&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+              />
             ),
           })}
         </div>
@@ -164,7 +167,12 @@ export function CodeBlock({
         Actions({
           className:
             "absolute top-2 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
-          children: allowCopy && <CopyButton containerRef={areaRef} />,
+          children: allowCopy && (
+            <CopyButton
+              containerRef={areaRef}
+              className="[&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+            />
+          ),
         })
       )}
       <div className="flex flex-col">

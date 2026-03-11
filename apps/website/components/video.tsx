@@ -6,7 +6,7 @@ interface VideoProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
 export function Video({ src, aspectRatio = "16/9", ...props }: VideoProps) {
   return (
     <div
-      className="relative w-full overflow-hidden rounded-lg"
+      className="relative w-full overflow-hidden rounded-sm border border-brand-neutral-500"
       style={{ aspectRatio }}
     >
       <video
@@ -17,4 +17,3 @@ export function Video({ src, aspectRatio = "16/9", ...props }: VideoProps) {
     </div>
   );
 }
-

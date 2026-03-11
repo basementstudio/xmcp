@@ -29,7 +29,7 @@ function RoundedImage(props: {
   width: number;
   height: number;
 }) {
-  return <Image {...props} alt={props.alt} className="rounded-lg" />;
+  return <Image {...props} alt={props.alt} className="rounded-sm" />;
 }
 
 export function slugify(str: string) {
