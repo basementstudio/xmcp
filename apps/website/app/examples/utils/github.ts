@@ -188,23 +188,21 @@ async function findPreviewPath(
 ): Promise<string | undefined> {
   const extensions = ["png", "webp", "jpg", "jpeg"];
 
-  for (const ext of extensions) {
-    const candidate = `${templateSlug}/.config/preview.${ext}`;
-    try {
-      const response = await fetch(buildApiContentsUrl(repo, candidate, ref), {
-        headers: getGitHubHeaders(),
-        cache: "force-cache",
-      });
-
-      if (response.ok) {
+  try {
+    return await Promise.any(
+      extensions.map(async (ext) => {
+        const candidate = `${templateSlug}/.config/preview.${ext}`;
+        const response = await fetch(buildApiContentsUrl(repo, candidate, ref), {
+          headers: getGitHubHeaders(),
+          cache: "force-cache",
+        });
+        if (!response.ok) throw new Error("not found");
         return candidate;
-      }
-    } catch (error) {
-      console.error(`Error checking preview ${repo}/${candidate}:`, error);
-    }
+      })
+    );
+  } catch {
+    return undefined;
   }
-
-  return undefined;
 }
 
 function isAbsoluteUrl(value: string) {
