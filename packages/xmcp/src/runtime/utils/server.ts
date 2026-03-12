@@ -116,13 +116,18 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
+let toolPreloadCache: {
+  toolModules: Map<string, ToolFile>;
+  toolLoadReport: ToolLoadReport;
+} | null = null;
 let toolDiagnosticsPreloadPromise: Promise<ToolLoadReport> | null = null;
 
 export async function preloadToolLoadingDiagnostics(): Promise<ToolLoadReport> {
   if (!toolDiagnosticsPreloadPromise) {
-    const [toolPromises, , toolLoadReport] = loadTools();
+    const [toolPromises, toolModules, toolLoadReport] = loadTools();
     toolDiagnosticsPreloadPromise = Promise.all(toolPromises).then(() => {
       logToolLoadSummary(toolLoadReport);
+      toolPreloadCache = { toolModules, toolLoadReport };
       return toolLoadReport;
     });
   }
@@ -132,12 +137,20 @@ export async function preloadToolLoadingDiagnostics(): Promise<ToolLoadReport> {
 
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
-  const [toolPromises, toolModules, toolLoadReport] = loadTools();
+
+  let toolModules: Map<string, ToolFile>;
+  if (toolPreloadCache) {
+    toolModules = toolPreloadCache.toolModules;
+  } else {
+    const [toolPromises, loadedToolModules, toolLoadReport] = loadTools();
+    await Promise.all(toolPromises);
+    logToolLoadSummary(toolLoadReport);
+    toolModules = loadedToolModules;
+  }
+
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all(toolPromises);
   await Promise.all(promptPromises);
   await Promise.all(resourcePromises);
-  logToolLoadSummary(toolLoadReport);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
