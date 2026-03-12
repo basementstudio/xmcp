@@ -367,10 +367,10 @@ export async function fetchExampleBySlug(
   const items = await fetchExamplesAndTemplates();
   const matches = items.filter((item) => item.slug === slug);
 
-  if (matches.length !== 1) {
-    return null;
+  if (matches.length === 0) return null;
+  if (matches.length > 1) {
+    console.warn(`[fetchExampleBySlug] slug collision detected for "${slug}"`);
   }
-
   return matches[0] ?? null;
 }
 
