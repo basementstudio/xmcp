@@ -18,7 +18,6 @@ import {
 } from "@/components/examples/deploy-dropdown";
 import {
   ExampleItem,
-  fetchExampleBySlug,
   fetchExampleReadme,
   fetchExamplesAndTemplates,
 } from "@/app/examples/utils/github";
@@ -95,9 +94,10 @@ function stripLeadingHeading(markdown: string) {
   const next = lines[first + 1] ?? "";
 
   const isAtx = /^#{1,6}\s+/.test(line);
-  const isSetext =
-    next.trim().length > 0 &&
-    (/^=+$/.test(next.trim()) || /^-+$/.test(next.trim()));
+  const isSetextEquals = /^=+$/.test(next.trim());
+  const isSetextDashes =
+    /^-{2,}$/.test(next.trim()) && !/^\s/.test(line) && line.trim().split(/\s+/).length <= 10;
+  const isSetext = next.trim().length > 0 && (isSetextEquals || isSetextDashes);
 
   if (!isAtx && !isSetext) return markdown;
 
@@ -122,9 +122,10 @@ function buildVercelCloneUrl(example: ExampleItem) {
 }
 
 function buildAlpicCloneUrl(example: ExampleItem) {
-  const repositoryRootUrl = `https://github.com/${example.sourceRepo}`;
+  const folderPath = example.path.replace(/^\/+/, "");
+  const repoWithBranch = `https://github.com/${example.sourceRepo}/tree/${example.sourceBranch}/${folderPath}`;
   const search = new URLSearchParams({
-    repositoryUrl: repositoryRootUrl,
+    repositoryUrl: repoWithBranch,
   });
 
   return `https://app.alpic.ai/new/clone?${search.toString()}`;
@@ -268,7 +269,18 @@ function rankRelatedItems(current: ExampleItem, items: ExampleItem[]) {
 
 export async function generateStaticParams() {
   const items = await fetchExamplesAndTemplates();
-  return items.map(({ slug }) => ({ slug }));
+  const seen = new Map<string, string>();
+  for (const item of items) {
+    const existing = seen.get(item.slug);
+    if (existing) {
+      console.warn(
+        `[examples] slug collision: "${item.slug}" exists as both ${existing} and ${item.kind}`
+      );
+    } else {
+      seen.set(item.slug, item.kind);
+    }
+  }
+  return [...new Map(items.map((i) => [i.slug, { slug: i.slug }])).values()];
 }
 
 export async function generateMetadata(
@@ -276,7 +288,8 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const slug = params.slug;
-  const example = await fetchExampleBySlug(slug);
+  const items = await fetchExamplesAndTemplates();
+  const example = items.find((i) => i.slug === slug) ?? null;
   if (!example) {
     return {
       title: "Example not found - xmcp",
@@ -332,17 +345,14 @@ export default async function ExampleDetailPage(
 ) {
   const params = await props.params;
   const slug = params.slug;
-  const example = await fetchExampleBySlug(slug);
+  const items = await fetchExamplesAndTemplates();
+  const example = items.find((i) => i.slug === slug) ?? null;
   if (!example) {
     notFound();
   }
 
-  const [readmeContent, examples] = await Promise.all([
-    fetchExampleReadme(example),
-    fetchExamplesAndTemplates(),
-  ]);
-
-  const moreExamples = rankRelatedItems(example, examples);
+  const readmeContent = await fetchExampleReadme(example);
+  const moreExamples = rankRelatedItems(example, items);
 
   const fallbackReadme = `# README not found
 

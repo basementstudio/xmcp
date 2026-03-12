@@ -385,32 +385,31 @@ export async function fetchExampleReadme(
     new Set([configuredPath, defaultReadmePath].filter(Boolean))
   ) as string[];
 
-  for (const path of candidatePaths) {
-    const fromApi = await fetchRepoFileText(
-      example.sourceRepo,
-      path,
-      example.sourceBranch
+  try {
+    return await Promise.any(
+      candidatePaths.flatMap((path) => [
+        fetchRepoFileText(example.sourceRepo, path, example.sourceBranch).then(
+          (result) => {
+            if (!result) throw new Error("not found");
+            return result;
+          }
+        ),
+        fetchRawFileText(example.sourceRepo, path, example.sourceBranch).then(
+          (result) => {
+            if (!result) throw new Error("not found");
+            return result;
+          }
+        ),
+      ])
     );
-    if (fromApi) {
-      return fromApi;
-    }
-
-    const fromRaw = await fetchRawFileText(
-      example.sourceRepo,
-      path,
-      example.sourceBranch
-    );
-    if (fromRaw) {
-      return fromRaw;
-    }
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 export async function getRepoStars(repoUrl: string): Promise<string> {
   try {
-    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/?\#]+)/);
     if (!match) {
       return "0";
     }
@@ -438,6 +437,8 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
   }
 }
 
+let _tokenWarningEmitted = false;
+
 function getGitHubHeaders() {
   const headers: Record<string, string> = {
     "User-Agent": "request",
@@ -445,6 +446,11 @@ function getGitHubHeaders() {
 
   if (process.env.GITHUB_TOKEN) {
     headers.Authorization = `token ${process.env.GITHUB_TOKEN}`;
+  } else if (!_tokenWarningEmitted) {
+    _tokenWarningEmitted = true;
+    console.warn(
+      "[examples] GITHUB_TOKEN is not set — GitHub API requests are limited to 60/hour"
+    );
   }
 
   return headers;

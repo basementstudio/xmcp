@@ -305,9 +305,9 @@ export function ExampleCards({
       <div className="min-h-[60vh] flex flex-col gap-6">
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredExamples.length > 0 ? (
-            paginatedExamples.map((example: ExampleItem, index: number) => (
+            paginatedExamples.map((example: ExampleItem) => (
               <ExampleCard
-                key={example.slug || example.name || index}
+                key={`${example.kind}-${example.slug}`}
                 {...example}
               />
             ))

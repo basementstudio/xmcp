@@ -124,14 +124,14 @@ function VercelMarkIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function AlpicMarkIcon(props: React.SVGProps<SVGSVGElement>) {
+function AlpicMarkIcon({ className }: { className?: string }) {
   return (
     <Image
       src="/examples/alpic.png"
       alt="Alpic"
       width={14}
       height={14}
-      className={props.className}
+      className={className}
     />
   );
 }
