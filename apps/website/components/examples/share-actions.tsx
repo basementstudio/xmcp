@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type ShareTarget = "github" | "page";
 
@@ -27,6 +27,14 @@ export function ExampleShareActions({
       setActiveSuccess((current) => (current === target ? null : current));
     }, 1200);
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const copyToClipboard = async (target: ShareTarget, value: string) => {
     try {
