@@ -422,6 +422,7 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
       `https://api.github.com/repos/${owner}/${cleanRepo}`,
       {
         headers: getGitHubHeaders(),
+        cache: "force-cache",
       }
     );
 
