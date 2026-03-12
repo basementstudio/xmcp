@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -125,9 +126,11 @@ function VercelMarkIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function AlpicMarkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <img
-      src="https://avatars.githubusercontent.com/u/206831205?s=200&v=4"
+    <Image
+      src="/examples/alpic.png"
       alt="Alpic"
+      width={14}
+      height={14}
       className={props.className}
     />
   );
