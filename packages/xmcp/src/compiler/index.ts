@@ -57,7 +57,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
-  const logXmcp = (message: string) => console.log(`[xmcp] ${message}`);
   const staleImportErrorSuppressions = new Map<string, number>();
   let bundlerConfig = getRspackConfig(xmcpConfig);
   let lastRestartedBuildHash: string | null = null;
@@ -107,7 +106,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(toolPaths, filePath);
-        logXmcp(`File deleted: ${filePath}`);
         if (compilerStarted) {
           await generateCode();
         }
@@ -137,7 +135,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(promptPaths, filePath);
-        logXmcp(`File deleted: ${filePath}`);
         if (compilerStarted) {
           await generateCode();
         }
@@ -162,7 +159,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
-        logXmcp(`File deleted: ${filePath}`);
         if (compilerStarted) {
           await generateCode();
         }
@@ -186,7 +182,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         compilerContext.setContext({
           hasMiddleware: false,
         });
-        logXmcp("File deleted: src/middleware.ts");
         if (compilerStarted) {
           await generateCode();
         }
@@ -294,9 +289,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             staleImportErrorSuppressions.set(staleSignature, staleCount);
 
             if (staleCount === 1) {
-              logXmcp(
-                "Skipped transient stale import-map error while files were syncing."
-              );
               return;
             }
           }
