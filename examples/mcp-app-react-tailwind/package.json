@@ -2,6 +2,9 @@
   "name": "MCP App React Tailwind",
   "description": "Learn how to set up an xmcp server using MCP app widgets with React + Tailwind and single tool handlers",
   "keywords": [
+    "ui",
+    "react",
+    "tailwind",
     "mcp-app"
   ],
   "scripts": {

@@ -2,7 +2,9 @@
   "name": "Custom Paths",
   "description": "Configure custom file paths for xmcp tools and prompts directories",
   "keywords": [
-    "config"
+    "configuration",
+    "paths",
+    "module-resolution"
   ],
   "scripts": {
     "build": "xmcp build",

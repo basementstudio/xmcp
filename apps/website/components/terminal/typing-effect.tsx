@@ -102,7 +102,7 @@ export default function TypingEffect({
 
   return (
     <div className="text-left flex items-center py-2">
-      <span className="text-white mr-2 select-none font-bold">⊹</span>
+      <span className="text-white mr-2 select-none">•</span>
       <TypewriterText
         text={children}
         className="text-white"

@@ -81,6 +81,51 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const inTab = useContext(TabsContext) !== null;
   const areaRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const syncLockRef = useRef(false);
+  const [railWidth, setRailWidth] = useState(0);
+
+  useEffect(() => {
+    const area = areaRef.current;
+    const rail = railRef.current;
+    if (!area || !rail) return;
+
+    const syncFromArea = () => {
+      if (syncLockRef.current) return;
+      syncLockRef.current = true;
+      rail.scrollLeft = area.scrollLeft;
+      syncLockRef.current = false;
+    };
+
+    const syncFromRail = () => {
+      if (syncLockRef.current) return;
+      syncLockRef.current = true;
+      area.scrollLeft = rail.scrollLeft;
+      syncLockRef.current = false;
+    };
+
+    const updateMetrics = () => {
+      setRailWidth(area.scrollWidth);
+      rail.scrollLeft = area.scrollLeft;
+    };
+
+    updateMetrics();
+    area.addEventListener("scroll", syncFromArea, { passive: true });
+    rail.addEventListener("scroll", syncFromRail, { passive: true });
+    window.addEventListener("resize", updateMetrics);
+
+    const observer = new ResizeObserver(updateMetrics);
+    observer.observe(area);
+    const pre = area.querySelector("pre");
+    if (pre) observer.observe(pre);
+
+    return () => {
+      area.removeEventListener("scroll", syncFromArea);
+      rail.removeEventListener("scroll", syncFromRail);
+      window.removeEventListener("resize", updateMetrics);
+      observer.disconnect();
+    };
+  }, [children, title]);
 
   return (
     <figure
@@ -90,13 +135,12 @@ export function CodeBlock({
       className={cn(
         inTab ? "bg-fd-secondary -mx-px -mb-px" : "my-2 bg-fd-card",
         keepBackground && "bg-(--shiki-light-bg) dark:bg-(--shiki-dark-bg)",
-
-        "shiki relative border border-brand-neutral-400 outline-none not-prose overflow-hidden text-sm rounded-xs",
+        "group shiki relative border border-brand-neutral-500 bg-brand-black/60 outline-none not-prose overflow-hidden text-sm rounded-sm",
         props.className
       )}
     >
       {title ? (
-        <div className="flex items-center gap-2 h-9.5 border-b px-4 border-brand-neutral-400 text-brand-neutral-100">
+        <div className="flex items-center gap-2 h-10 border-b px-4 border-brand-neutral-500 text-brand-neutral-100">
           {typeof icon === "string" ? (
             <div
               className="[&_svg]:size-3.5"
@@ -109,38 +153,63 @@ export function CodeBlock({
           )}
           <figcaption className="flex-1 truncate">{title}</figcaption>
           {Actions({
-            className: "-me-2",
+            className:
+              "-me-2 opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
             children: allowCopy && (
-              <CopyButton containerRef={areaRef} className="top-0 right-0.5" />
+              <CopyButton
+                containerRef={areaRef}
+                className="top-0 right-0.5 [&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+              />
             ),
           })}
         </div>
       ) : (
         Actions({
           className:
-            "absolute top-2 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground",
-          children: allowCopy && <CopyButton containerRef={areaRef} />,
+            "absolute top-2 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
+          children: allowCopy && (
+            <CopyButton
+              containerRef={areaRef}
+              className="[&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+            />
+          ),
         })
       )}
-      <div
-        ref={areaRef}
-        {...viewportProps}
-        className={cn(
-          "text-[13px] py-2 overflow-auto max-h-[600px] sidebar-scrollbar",
-          viewportProps.className
-        )}
-        style={
-          {
-            // space for toolbar
-            "--padding-right": !title ? "calc(var(--spacing) * 8)" : undefined,
-            counterSet: props["data-line-numbers"]
-              ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
-              : undefined,
-            ...viewportProps.style,
-          } as object
-        }
-      >
-        {children}
+      <div className="flex flex-col">
+        <div
+          ref={areaRef}
+          {...viewportProps}
+          className={cn(
+            "text-[13px] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
+            viewportProps.className
+          )}
+          style={
+            {
+              // space for toolbar
+              "--padding-right": !title
+                ? "calc(var(--spacing) * 8)"
+                : undefined,
+              counterSet: props["data-line-numbers"]
+                ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
+                : undefined,
+              ...viewportProps.style,
+            } as object
+          }
+        >
+          {children}
+        </div>
+        <div
+          ref={railRef}
+          className="codeblock-scroll-rail h-4 overflow-x-auto overflow-y-hidden border-t border-brand-neutral-500 bg-brand-neutral-600/60"
+        >
+          <div
+            className="h-px"
+            style={{
+              width: `${railWidth}px`,
+              minWidth: "100%",
+            }}
+          />
+        </div>
       </div>
     </figure>
   );

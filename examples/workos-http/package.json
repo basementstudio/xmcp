@@ -2,9 +2,9 @@
   "name": "workos-http-example",
   "description": "HTTP-based xmcp server with WorkOS AuthKit integration",
   "keywords": [
-    "http",
     "authentication",
-    "workos"
+    "workos",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",

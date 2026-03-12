@@ -43,6 +43,7 @@
     "fumadocs-core": "^15.8.5",
     "fumadocs-mdx": "^12.0.3",
     "fumadocs-ui": "^15.8.5",
+    "geist": "^1.7.0",
     "gray-matter": "^4.0.3",
     "gsap": "^3.14.1",
     "hast": "^1.0.0",
