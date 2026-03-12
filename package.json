@@ -72,9 +72,7 @@
       "cookie@<1.1.1": "1.1.1",
       "lodash@<4.17.22": "4.17.23",
       "file-type@>=13.0.0 <21.3.1": "21.3.1",
-      "@modelcontextprotocol/sdk@<1.26.0": "1.26.0",
-      "@types/react": "19.2.14",
-      "@types/react-dom": "19.2.3"
+      "@modelcontextprotocol/sdk@<1.26.0": "1.26.0"
     }
   },
   "packageManager": "pnpm@10.8.1",
