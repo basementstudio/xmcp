@@ -59,9 +59,16 @@ if (silent) {
   // Redirect all console methods to stderr so they don't interfere with
   // the MCP stdio protocol on stdout.
   const stderrConsole = new console.Console(process.stderr, process.stderr);
-  const methods = ["log", "debug", "info", "warn", "error"] as const;
+  const methods = [
+    "log", "debug", "info", "warn", "error",
+    "dir", "table", "trace", "assert",
+    "time", "timeEnd", "timeLog",
+    "count", "countReset",
+    "group", "groupEnd", "groupCollapsed",
+    "clear",
+  ] as const;
   for (const method of methods) {
-    console[method] = stderrConsole[method].bind(stderrConsole);
+    (console as any)[method] = (stderrConsole as any)[method].bind(stderrConsole);
   }
 }
 

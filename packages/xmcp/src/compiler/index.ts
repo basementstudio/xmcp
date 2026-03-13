@@ -342,8 +342,9 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           const currentBuildHash =
             typeof stats?.hash === "string" ? stats.hash : null;
           const shouldRestart =
-            currentBuildHash === null ||
-            currentBuildHash !== lastRestartedBuildHash;
+            currentBuildHash === null
+              ? lastRestartedBuildHash === null
+              : currentBuildHash !== lastRestartedBuildHash;
 
           if (shouldRestart) {
             lastRestartedBuildHash = currentBuildHash;

@@ -167,7 +167,8 @@ export function transformToolHandler(
       typeof response === "object" &&
       !Array.isArray(response) &&
       !("structuredContent" in response) &&
-      !("content" in response && Array.isArray((response as any).content))
+      !("content" in response && Array.isArray((response as any).content)) &&
+      !("_meta" in response)
     ) {
       // Validate the response against outputSchema before wrapping.
       validateAgainstOutputSchema(
@@ -253,7 +254,7 @@ export function transformToolHandler(
     const hasStructuredContent = "structuredContent" in response;
     const isError = "isError" in response && (response as any).isError === true;
 
-    if (!hasContent && !hasStructuredContent) {
+    if (!hasContent && !hasStructuredContent && !isError) {
       const responseValue = JSON.stringify(response, null, 2);
 
       throw new Error(
@@ -280,8 +281,19 @@ export function transformToolHandler(
       );
     }
 
+    // Auto-generate fallback content for isError responses without content
+    if (isError && !hasContent && !hasStructuredContent) {
+      const { isError: _, ...rest } = response as Record<string, unknown>;
+      const errorText =
+        Object.keys(rest).length > 0
+          ? `Tool execution failed: ${JSON.stringify(rest)}`
+          : "Tool execution failed";
+      response.content = [{ type: "text", text: errorText }];
+      hasContent = true;
+    }
+
     // Validate structuredContent against outputSchema if present.
-    if (outputSchema && hasStructuredContent) {
+    if (outputSchema && hasStructuredContent && !isError) {
       validateAgainstOutputSchema(
         (response as any).structuredContent as Record<string, unknown>,
         outputSchema,
