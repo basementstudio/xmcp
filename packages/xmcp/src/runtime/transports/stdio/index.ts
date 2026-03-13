@@ -52,6 +52,25 @@ class StdioTransport {
 
 // @ts-expect-error: injected by compiler
 const debug = STDIO_CONFIG.debug || false;
+// @ts-expect-error: injected by compiler
+const silent = STDIO_CONFIG.silent || false;
+
+if (silent) {
+  // Redirect all console methods to stderr so they don't interfere with
+  // the MCP stdio protocol on stdout.
+  const stderrConsole = new console.Console(process.stderr, process.stderr);
+  const methods = [
+    "log", "debug", "info", "warn", "error",
+    "dir", "table", "trace", "assert",
+    "time", "timeEnd", "timeLog",
+    "count", "countReset",
+    "group", "groupEnd", "groupCollapsed",
+    "clear",
+  ] as const;
+  for (const method of methods) {
+    (console as any)[method] = (stderrConsole as any)[method].bind(stderrConsole);
+  }
+}
 
 createServer().then((mcpServer) => {
   const stdioTransport = new StdioTransport(mcpServer, debug);

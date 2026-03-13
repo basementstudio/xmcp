@@ -20,6 +20,10 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
+  // This log is redirected to stderr (not stdout) thanks to silent mode,
+  // so it won't interfere with the MCP protocol.
+  console.log("greet called with:", { name });
+
   const result = `Hello, ${name}!`;
 
   return {
