@@ -1,6 +1,6 @@
 {
   "title": "Deployment",
-  "pages": ["vercel", "cloudflare", "alpic", "replit", "smithery"],
+  "pages": ["vercel", "cloudflare", "alpic", "replit"],
   "defaultOpen": true,
   "root": true
 }

@@ -1,0 +1,65 @@
+---
+title: "Smithery"
+metadataTitle: "Publish to Smithery | xmcp Documentation"
+publishedAt: "2026-01-28"
+summary: "Publish your xmcp server to Smithery for distribution and observability."
+description: "Publish your xmcp server to Smithery for distribution and observability."
+---
+
+[Smithery](https://smithery.ai) is the largest open marketplace for MCP servers. Publishing your xmcp server to Smithery makes it discoverable to other developers and gives you access to distribution analytics.
+
+<Callout type="info">
+    Smithery is a registry, not a hosting provider. You need to deploy your server yourself before publishing it.
+</Callout>
+
+## HTTP Servers
+
+For servers using Streamable HTTP transport, Smithery Gateway acts as a proxy to your deployed server.
+
+1. Deploy your xmcp server to a hosting provider (e.g. [Vercel](/docs/deployment/vercel), [Cloudflare](/docs/deployment/cloudflare))
+2. Go to [smithery.ai/new](https://smithery.ai/new)
+3. Enter your server's public HTTPS URL
+4. Complete the publishing flow
+
+
+## Stdio Servers
+
+Stdio-based servers can be published to Smithery using the CLI. Users discover them on the marketplace and run them locally on their own machines via [mcpb](https://github.com/modelcontextprotocol/mcpb).
+
+```bash
+smithery mcp publish --name @your-org/your-server --transport stdio
+```
+
+### Session Configuration
+
+If your server needs user-provided values like API keys or settings, you can define a session configuration schema. For stdio servers, Smithery translates schema fields into command-line arguments in kebab-case format.
+
+For example, given this schema:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "apiKey": {
+      "type": "string",
+      "title": "API Key"
+    },
+    "model": {
+      "type": "string",
+      "title": "Model",
+      "default": "gpt-4"
+    }
+  },
+  "required": ["apiKey"]
+}
+```
+
+Smithery will run your server as:
+
+```bash
+your-server --api-key=sk-xxx --model=gpt-4
+```
+
+Supported types are `string`, `number`, and `boolean`, with a maximum of 20 fields.
+
+Learn more about session configuration and publishing in the [Smithery documentation](https://smithery.ai/docs/build/publish).
