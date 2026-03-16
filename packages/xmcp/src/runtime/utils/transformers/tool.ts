@@ -168,7 +168,8 @@ export function transformToolHandler(
       !Array.isArray(response) &&
       !("structuredContent" in response) &&
       !("content" in response && Array.isArray((response as any).content)) &&
-      !("_meta" in response)
+      !("_meta" in response) &&
+      !("isError" in response)
     ) {
       // Validate the response against outputSchema before wrapping.
       validateAgainstOutputSchema(
