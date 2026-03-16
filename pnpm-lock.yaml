@@ -648,6 +648,24 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  examples/observability-grafana:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
+  examples/observability-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   examples/polar-http:
     dependencies:
       '@xmcp-dev/polar':
