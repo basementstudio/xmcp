@@ -1,0 +1,20 @@
+{
+  "name": "Observability Grafana",
+  "description": "End-to-end example: xmcp observability logs shipped to Grafana via Loki + Promtail",
+  "keywords": [
+    "observability",
+    "grafana",
+    "loki",
+    "promtail",
+    "docker"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

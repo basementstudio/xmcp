@@ -8,6 +8,7 @@ import {
   getResolvedTypescriptConfig,
   getResolvedExperimentalConfig,
   getResolvedCorsConfig,
+  getResolvedObservabilityConfig,
 } from "../utils";
 import {
   injectHttpVariables,
@@ -17,6 +18,7 @@ import {
   injectTypescriptVariables,
   injectAdapterVariables,
   injectStdioVariables,
+  injectObservabilityVariables,
   injectServerInfoVariables,
 } from "../injection";
 import { configSchema } from "../index";
@@ -280,6 +282,54 @@ describe("Config System - Injection Functions", () => {
     assert.deepEqual(variables, {});
   });
 
+  it("should inject observability as false by default", () => {
+    const config = configSchema.parse({});
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY, undefined);
+    assert.equal(JSON.parse(variables.OBSERVABILITY), false);
+    assert.notEqual(variables.OBSERVABILITY_CONFIG, undefined);
+    const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
+    assert.equal(observabilityConfig.enabled, false);
+  });
+
+  it("should inject observability as true when configured", () => {
+    const config = configSchema.parse({ observability: true });
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY, undefined);
+    assert.equal(JSON.parse(variables.OBSERVABILITY), true);
+    assert.notEqual(variables.OBSERVABILITY_CONFIG, undefined);
+    const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
+    assert.equal(observabilityConfig.enabled, true);
+    assert.equal(observabilityConfig.stderr, true);
+    assert.equal(observabilityConfig.color, "auto");
+  });
+
+  it("should inject observability object config", () => {
+    const config = configSchema.parse({
+      observability: {
+        enabled: true,
+        stderr: false,
+        color: "off",
+        redaction: {
+          extraSensitiveKeys: ["sessionToken"],
+        },
+      },
+    });
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY_CONFIG, undefined);
+    const observabilityConfig = JSON.parse(variables.OBSERVABILITY_CONFIG);
+    assert.equal(observabilityConfig.enabled, true);
+    assert.equal(observabilityConfig.stderr, false);
+    assert.equal(observabilityConfig.color, "off");
+    assert.deepEqual(observabilityConfig.redaction.extraSensitiveKeys, [
+      "sessionToken",
+    ]);
+    assert.deepEqual(observabilityConfig.redaction.allowedKeys, []);
+  });
+
   it("should inject server info with empty icons when icons not configured", () => {
     const config = configSchema.parse({ template: {} });
     const variables = injectServerInfoVariables(config);
@@ -313,6 +363,37 @@ describe("Config System - Injection Functions", () => {
     const serverInfo = JSON.parse(variables.SERVER_INFO);
     assert.equal(typeof serverInfo.version, "string");
     assert.notEqual(serverInfo.version, "");
+  });
+});
+
+describe("Config System - Observability Resolution", () => {
+  it("should resolve observability defaults from object config", () => {
+    const config = configSchema.parse({
+      observability: {},
+    });
+
+    const resolved = getResolvedObservabilityConfig(config);
+    assert.equal(resolved.enabled, true);
+    assert.equal(resolved.stderr, true);
+    assert.equal(resolved.color, "auto");
+  });
+
+  it("should resolve observability as disabled when omitted", () => {
+    const config = configSchema.parse({});
+    const resolved = getResolvedObservabilityConfig(config);
+    assert.equal(resolved.enabled, false);
+    assert.equal(resolved.color, "auto");
+  });
+
+  it("should resolve observability color when configured", () => {
+    const config = configSchema.parse({
+      observability: {
+        color: "on",
+      },
+    });
+
+    const resolved = getResolvedObservabilityConfig(config);
+    assert.equal(resolved.color, "on");
   });
 });
 

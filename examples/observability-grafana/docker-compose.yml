@@ -1,0 +1,43 @@
+services:
+  xmcp-server:
+    build:
+      context: ../../
+      dockerfile: examples/observability-grafana/Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - xmcp-logs:/var/log/xmcp
+
+  loki:
+    image: grafana/loki:3.4.2
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml
+      - xmcp-logs:/var/log/xmcp
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+      - xmcp-server
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/loki.yml
+    depends_on:
+      - loki
+
+volumes:
+  xmcp-logs:

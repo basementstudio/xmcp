@@ -9,6 +9,12 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import {
+  isObservabilityEnabled,
+  logExecutionEnd,
+  logExecutionStart,
+  summarizeToolOutput,
+} from "./observability";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -139,13 +145,52 @@ export function addToolsToServer(
     let transformedHandler;
 
     if (isReactFile(path) && uiWidget) {
-      transformedHandler = async (args: any, extra: any) => ({
-        content: [{ type: "text", text: "" }],
-        _meta: meta,
-        structuredContent: {
-          args,
-        },
-      });
+      transformedHandler = async (args: any, extra: any) => {
+        if (!isObservabilityEnabled()) {
+          return {
+            content: [{ type: "text", text: "" }],
+            _meta: meta,
+            structuredContent: {
+              args,
+            },
+          };
+        }
+
+        const startedAt = logExecutionStart({
+          type: "tool",
+          name: toolConfig.name,
+          input: args,
+          extra,
+        });
+
+        try {
+          const result = {
+            content: [{ type: "text", text: "" }],
+            _meta: meta,
+            structuredContent: {
+              args,
+            },
+          };
+
+          logExecutionEnd({
+            type: "tool",
+            name: toolConfig.name,
+            startedAt,
+            extra,
+            outputSummary: summarizeToolOutput(result as any),
+          });
+          return result;
+        } catch (error) {
+          logExecutionEnd({
+            type: "tool",
+            name: toolConfig.name,
+            startedAt,
+            extra,
+            error,
+          });
+          throw error;
+        }
+      };
     } else {
       transformedHandler = transformToolHandler(
         handler,

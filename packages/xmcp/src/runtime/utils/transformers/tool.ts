@@ -6,6 +6,12 @@ import {
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
+import {
+  isObservabilityEnabled,
+  logExecutionEnd,
+  logExecutionStart,
+  summarizeToolOutput,
+} from "../observability";
 
 function validateAgainstOutputSchema(
   data: Record<string, unknown>,
@@ -92,274 +98,311 @@ export function transformToolHandler(
   outputSchema?: ZodRawShape,
   toolName = "unknown-tool"
 ): McpToolHandler {
+  const resolvedToolName =
+    typeof toolName === "string" ? toolName : "unknown-tool";
+
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response: any = handler(args, extra);
+    const run = async (): Promise<CallToolResult> => {
+      let response: any = handler(args, extra);
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+      // only await if it's actually a promise
+      if (response instanceof Promise) {
+        response = await response;
+      }
 
-    if (typeof response === "string" || typeof response === "number") {
-      if (outputSchema) {
-        const outputSchemaEntries = Object.entries(outputSchema);
-        if (outputSchemaEntries.length === 1) {
-          const [fieldName, fieldSchema] = outputSchemaEntries[0];
-          try {
-            fieldSchema.parse(response);
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: typeof response === "number" ? `${response}` : response,
+      if (typeof response === "string" || typeof response === "number") {
+        if (outputSchema) {
+          const outputSchemaEntries = Object.entries(outputSchema);
+          if (outputSchemaEntries.length === 1) {
+            const [fieldName, fieldSchema] = outputSchemaEntries[0];
+            try {
+              fieldSchema.parse(response);
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: typeof response === "number" ? `${response}` : response,
+                  },
+                ],
+                structuredContent: {
+                  [fieldName]: response,
                 },
-              ],
-              structuredContent: {
-                [fieldName]: response,
-              },
-            };
-          } catch {
-            // Backward compatible fallback: keep content-only when primitive
-            // output does not match outputSchema.
+              };
+            } catch {
+              // Backward compatible fallback: keep content-only when primitive
+              // output does not match outputSchema.
+            }
           }
         }
-      }
 
-      // Check if we have widget metadata to attach
-      const hasWidgetMeta = hasUIMeta(meta);
+        // Check if we have widget metadata to attach
+        const hasWidgetMeta = hasUIMeta(meta);
 
-      if (hasWidgetMeta) {
-        // For widget tools, return empty text content with metadata
-        // The actual HTML is served by the auto-generated resource
+        if (hasWidgetMeta) {
+          // For widget tools, return empty text content with metadata
+          // The actual HTML is served by the auto-generated resource
+          return {
+            content: [
+              {
+                type: "text",
+                text: "",
+              },
+            ],
+            structuredContent: {
+              args,
+            },
+            _meta: meta,
+          };
+        }
+
+        // Regular string/number response
         return {
           content: [
             {
               type: "text",
-              text: "",
+              text: typeof response === "number" ? `${response}` : response,
             },
           ],
-          structuredContent: {
-            args,
-          },
-          _meta: meta,
         };
       }
 
-      // Regular string/number response
-      return {
-        content: [
-          {
-            type: "text",
-            text: typeof response === "number" ? `${response}` : response,
-          },
-        ],
-      };
-    }
-
-    // With outputSchema declared, allow returning a plain object as shorthand
-    // for `{ structuredContent: ... }`.
-    if (
-      outputSchema &&
-      response &&
-      typeof response === "object" &&
-      !Array.isArray(response) &&
-      !("structuredContent" in response) &&
-      !("content" in response && Array.isArray((response as any).content)) &&
-      !("_meta" in response)
-    ) {
-      // Validate the response against outputSchema before wrapping.
-      validateAgainstOutputSchema(
-        response as Record<string, unknown>,
-        outputSchema,
-        toolName,
-        "returned data that does not match outputSchema"
-      );
-      response = {
-        structuredContent: response,
-      };
-    }
-
-    // Check if response has _meta but no content (special case for widget metadata)
-    if (
-      response &&
-      typeof response === "object" &&
-      "_meta" in response &&
-      !("content" in response) &&
-      !("structuredContent" in response)
-    ) {
-      const meta = (response as any)._meta;
-
-      if (hasUIMeta(meta)) {
-        // Transform to include empty text content with the _meta
-        return {
-          content: [
-            {
-              type: "text",
-              text: "",
-            },
-          ],
-          _meta: meta,
+      // With outputSchema declared, allow returning a plain object as shorthand
+      // for `{ structuredContent: ... }`.
+      if (
+        outputSchema &&
+        response &&
+        typeof response === "object" &&
+        !Array.isArray(response) &&
+        !("structuredContent" in response) &&
+        !("content" in response && Array.isArray((response as any).content)) &&
+        !("_meta" in response)
+      ) {
+        // Validate the response against outputSchema before wrapping.
+        validateAgainstOutputSchema(
+          response as Record<string, unknown>,
+          outputSchema,
+          toolName,
+          "returned data that does not match outputSchema"
+        );
+        response = {
+          structuredContent: response,
         };
       }
-    }
 
-    // validate response is an object
-    if (!response || typeof response !== "object") {
-      const responseType = response === null ? "null" : typeof response;
-      const responseValue =
-        response === undefined
-          ? "undefined"
-          : response === null
-            ? "null"
-            : typeof response === "object"
-              ? JSON.stringify(response, null, 2)
-              : String(response);
+      // Check if response has _meta but no content (special case for widget metadata)
+      if (
+        response &&
+        typeof response === "object" &&
+        "_meta" in response &&
+        !("content" in response) &&
+        !("structuredContent" in response)
+      ) {
+        const meta = (response as any)._meta;
 
-      throw new Error(
-        `Tool handler must return a CallToolResult, string, or number. ` +
-          `Got ${responseType}: ${responseValue}\n\n` +
-          `Expected CallToolResult format:\n` +
-          `{\n` +
-          `  content: [\n` +
-          `    { type: "text", text: "your text here" },\n` +
-          `    { type: "image", data: "base64data", mimeType: "image/jpeg" },\n` +
-          `    { type: "audio", data: "base64data", mimeType: "audio/mpeg" },\n` +
-          `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
-          `    // All content types support an optional "_meta" object property\n` +
-          `  ]\n` +
-          `}\n\n` +
-          `Or with structured content:\n` +
-          `{\n` +
-          `  structuredContent: { your: "data" }\n` +
-          `}\n\n` +
-          `Or both for backwards compatibility:\n` +
-          `{\n` +
-          `  content: [{ type: "text", text: "fallback" }],\n` +
-          `  structuredContent: { your: "data" }\n` +
-          `}\n\n` +
-          `Or for widget metadata only:\n` +
-          `{\n` +
-          `  _meta: {\n` +
-          `    "ui/...": ...\n` +
-          `  }\n` +
-          `}`
-      );
-    }
-
-    // Check if response has at least one of: content or structuredContent
-    let hasContent = "content" in response && Array.isArray(response.content);
-    const hasStructuredContent = "structuredContent" in response;
-    const isError = "isError" in response && (response as any).isError === true;
-
-    if (!hasContent && !hasStructuredContent && !isError) {
-      const responseValue = JSON.stringify(response, null, 2);
-
-      throw new Error(
-        `Tool handler must return at least 'content' or 'structuredContent'. ` +
-          `Got: ${responseValue}\n\n` +
-          `Expected CallToolResult format:\n` +
-          `{\n` +
-          `  content: [\n` +
-          `    { type: "text", text: "your text here" },\n` +
-          `    { type: "image", data: "base64data", mimeType: "image/jpeg" },\n` +
-          `    { type: "audio", data: "base64data", mimeType: "audio/mpeg" },\n` +
-          `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
-          `  ]\n` +
-          `}\n\n` +
-          `Or with structured content:\n` +
-          `{\n` +
-          `  structuredContent: { your: "data" }\n` +
-          `}\n\n` +
-          `Or both for backwards compatibility:\n` +
-          `{\n` +
-          `  content: [{ type: "text", text: "fallback" }],\n` +
-          `  structuredContent: { your: "data" }\n` +
-          `}`
-      );
-    }
-
-    // Auto-generate fallback content for isError responses without content
-    if (isError && !hasContent && !hasStructuredContent) {
-      const { isError: _, ...rest } = response as Record<string, unknown>;
-      const errorText =
-        Object.keys(rest).length > 0
-          ? `Tool execution failed: ${JSON.stringify(rest)}`
-          : "Tool execution failed";
-      response.content = [{ type: "text", text: errorText }];
-      hasContent = true;
-    }
-
-    // Validate structuredContent against outputSchema if present.
-    if (outputSchema && hasStructuredContent && !isError) {
-      validateAgainstOutputSchema(
-        (response as any).structuredContent as Record<string, unknown>,
-        outputSchema,
-        toolName,
-        "returned structuredContent that does not match outputSchema"
-      );
-    }
-
-    // Auto-generate text fallback for clients that only render content.
-    if (!hasContent && hasStructuredContent) {
-      response.content = [
-        {
-          type: "text",
-          text: JSON.stringify((response as any).structuredContent),
-        },
-      ];
-      hasContent = true;
-    }
-
-    // validate each content item if content is present
-    if (hasContent) {
-      for (let i = 0; i < response.content.length; i++) {
-        const contentItem = response.content[i];
-        const validationResult = validateContent(contentItem);
-        if (!validationResult.valid) {
-          throw new Error(
-            `Invalid content item at index ${i}: ${validationResult.error}\n\n` +
-              `Content item: ${JSON.stringify(contentItem, null, 2)}\n\n` +
-              `Expected content formats:\n` +
-              `- Text: { type: "text", text: "your text here" }\n` +
-              `- Image: { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
-              `- Audio: { type: "audio", data: "base64data", mimeType: "audio/mpeg" }\n` +
-              `- Resource: { type: "resource_link", name: "name", uri: "uri" }\n` +
-              `All content types support an optional "_meta" object property`
-          );
+        if (hasUIMeta(meta)) {
+          // Transform to include empty text content with the _meta
+          return {
+            content: [
+              {
+                type: "text",
+                text: "",
+              },
+            ],
+            _meta: meta,
+          };
         }
       }
-    }
 
-    // validate structuredContent if present
-    if (hasStructuredContent) {
-      const structuredContent = (response as any).structuredContent;
-
-      if (
-        structuredContent === null ||
-        typeof structuredContent !== "object" ||
-        Array.isArray(structuredContent)
-      ) {
-        const structuredType = Array.isArray(structuredContent)
-          ? "array"
-          : typeof structuredContent;
+      // validate response is an object
+      if (!response || typeof response !== "object") {
+        const responseType = response === null ? "null" : typeof response;
+        const responseValue =
+          response === undefined
+            ? "undefined"
+            : response === null
+              ? "null"
+              : typeof response === "object"
+                ? JSON.stringify(response, null, 2)
+                : String(response);
 
         throw new Error(
-          `'structuredContent' must be a plain object (not an array or primitive). ` +
-            `Got ${structuredType}: ${JSON.stringify(structuredContent, null, 2)}\n\n` +
-            `Expected format:\n` +
+          `Tool handler must return a CallToolResult, string, or number. ` +
+            `Got ${responseType}: ${responseValue}\n\n` +
+            `Expected CallToolResult format:\n` +
             `{\n` +
-            `  structuredContent: {\n` +
-            `    key: "value",\n` +
-            `    nested: { data: "here" }\n` +
+            `  content: [\n` +
+            `    { type: "text", text: "your text here" },\n` +
+            `    { type: "image", data: "base64data", mimeType: "image/jpeg" },\n` +
+            `    { type: "audio", data: "base64data", mimeType: "audio/mpeg" },\n` +
+            `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
+            `    // All content types support an optional "_meta" object property\n` +
+            `  ]\n` +
+            `}\n\n` +
+            `Or with structured content:\n` +
+            `{\n` +
+            `  structuredContent: { your: "data" }\n` +
+            `}\n\n` +
+            `Or both for backwards compatibility:\n` +
+            `{\n` +
+            `  content: [{ type: "text", text: "fallback" }],\n` +
+            `  structuredContent: { your: "data" }\n` +
+            `}\n\n` +
+            `Or for widget metadata only:\n` +
+            `{\n` +
+            `  _meta: {\n` +
+            `    "ui/...": ...\n` +
             `  }\n` +
             `}`
         );
       }
+
+      // Check if response has at least one of: content or structuredContent
+      let hasContent = "content" in response && Array.isArray(response.content);
+      const hasStructuredContent = "structuredContent" in response;
+      const isError = "isError" in response && (response as any).isError === true;
+
+      if (!hasContent && !hasStructuredContent && !isError) {
+        const responseValue = JSON.stringify(response, null, 2);
+
+        throw new Error(
+          `Tool handler must return at least 'content' or 'structuredContent'. ` +
+            `Got: ${responseValue}\n\n` +
+            `Expected CallToolResult format:\n` +
+            `{\n` +
+            `  content: [\n` +
+            `    { type: "text", text: "your text here" },\n` +
+            `    { type: "image", data: "base64data", mimeType: "image/jpeg" },\n` +
+            `    { type: "audio", data: "base64data", mimeType: "audio/mpeg" },\n` +
+            `    { type: "resource_link", name: "resource name", uri: "resource://uri" }\n` +
+            `  ]\n` +
+            `}\n\n` +
+            `Or with structured content:\n` +
+            `{\n` +
+            `  structuredContent: { your: "data" }\n` +
+            `}\n\n` +
+            `Or both for backwards compatibility:\n` +
+            `{\n` +
+            `  content: [{ type: "text", text: "fallback" }],\n` +
+            `  structuredContent: { your: "data" }\n` +
+            `}`
+        );
+      }
+
+      // Auto-generate fallback content for isError responses without content
+      if (isError && !hasContent && !hasStructuredContent) {
+        const { isError: _, ...rest } = response as Record<string, unknown>;
+        const errorText =
+          Object.keys(rest).length > 0
+            ? `Tool execution failed: ${JSON.stringify(rest)}`
+            : "Tool execution failed";
+        response.content = [{ type: "text", text: errorText }];
+        hasContent = true;
+      }
+
+      // Validate structuredContent against outputSchema if present.
+      if (outputSchema && hasStructuredContent && !isError) {
+        validateAgainstOutputSchema(
+          (response as any).structuredContent as Record<string, unknown>,
+          outputSchema,
+          toolName,
+          "returned structuredContent that does not match outputSchema"
+        );
+      }
+
+      // Auto-generate text fallback for clients that only render content.
+      if (!hasContent && hasStructuredContent) {
+        response.content = [
+          {
+            type: "text",
+            text: JSON.stringify((response as any).structuredContent),
+          },
+        ];
+        hasContent = true;
+      }
+
+      // validate each content item if content is present
+      if (hasContent) {
+        for (let i = 0; i < response.content.length; i++) {
+          const contentItem = response.content[i];
+          const validationResult = validateContent(contentItem);
+          if (!validationResult.valid) {
+            throw new Error(
+              `Invalid content item at index ${i}: ${validationResult.error}\n\n` +
+                `Content item: ${JSON.stringify(contentItem, null, 2)}\n\n` +
+                `Expected content formats:\n` +
+                `- Text: { type: "text", text: "your text here" }\n` +
+                `- Image: { type: "image", data: "base64data", mimeType: "image/jpeg" }\n` +
+                `- Audio: { type: "audio", data: "base64data", mimeType: "audio/mpeg" }\n` +
+                `- Resource: { type: "resource_link", name: "name", uri: "uri" }\n` +
+                `All content types support an optional "_meta" object property`
+            );
+          }
+        }
+      }
+
+      // validate structuredContent if present
+      if (hasStructuredContent) {
+        const structuredContent = (response as any).structuredContent;
+
+        if (
+          structuredContent === null ||
+          typeof structuredContent !== "object" ||
+          Array.isArray(structuredContent)
+        ) {
+          const structuredType = Array.isArray(structuredContent)
+            ? "array"
+            : typeof structuredContent;
+
+          throw new Error(
+            `'structuredContent' must be a plain object (not an array or primitive). ` +
+              `Got ${structuredType}: ${JSON.stringify(structuredContent, null, 2)}\n\n` +
+              `Expected format:\n` +
+              `{\n` +
+              `  structuredContent: {\n` +
+              `    key: "value",\n` +
+              `    nested: { data: "here" }\n` +
+              `  }\n` +
+              `}`
+          );
+        }
+      }
+
+      return response;
+    };
+
+    if (!isObservabilityEnabled()) {
+      return run();
     }
 
-    return response as CallToolResult;
+    const startedAt = logExecutionStart({
+      type: "tool",
+      name: resolvedToolName,
+      input: args,
+      extra,
+    });
+
+    try {
+      const result = await run();
+      logExecutionEnd({
+        type: "tool",
+        name: resolvedToolName,
+        startedAt,
+        extra,
+        outputSummary: summarizeToolOutput(result),
+      });
+      return result;
+    } catch (error) {
+      logExecutionEnd({
+        type: "tool",
+        name: resolvedToolName,
+        startedAt,
+        extra,
+        error,
+      });
+      throw error;
+    }
   };
 }
