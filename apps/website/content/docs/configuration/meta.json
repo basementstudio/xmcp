@@ -6,6 +6,7 @@
     "observability",
     "custom-directories",
     "middlewares",
+    "server-info",
     "bundler",
     "telemetry"
   ],

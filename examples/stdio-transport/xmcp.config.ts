@@ -1,7 +1,9 @@
 import { XmcpConfig } from "xmcp";
 
 const config: XmcpConfig = {
-  stdio: true,
+  stdio: {
+    silent: true,
+  },
 };
 
 export default config;

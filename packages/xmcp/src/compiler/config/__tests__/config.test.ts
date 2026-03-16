@@ -19,6 +19,7 @@ import {
   injectAdapterVariables,
   injectStdioVariables,
   injectObservabilityVariables,
+  injectServerInfoVariables,
 } from "../injection";
 import { configSchema } from "../index";
 
@@ -327,6 +328,41 @@ describe("Config System - Injection Functions", () => {
       "sessionToken",
     ]);
     assert.deepEqual(observabilityConfig.redaction.allowedKeys, []);
+  });
+
+  it("should inject server info with empty icons when icons not configured", () => {
+    const config = configSchema.parse({ template: {} });
+    const variables = injectServerInfoVariables(config);
+
+    assert.notEqual(variables.SERVER_INFO, undefined);
+    const serverInfo = JSON.parse(variables.SERVER_INFO);
+    assert.equal(serverInfo.name, "xmcp server");
+    assert.deepEqual(serverInfo.icons, []);
+  });
+
+  it("should inject server info with user-supplied icons", () => {
+    const config = configSchema.parse({
+      template: {
+        name: "My Server",
+        icons: [{ src: "https://example.com/icon.png", mimeType: "image/png" }],
+      },
+    });
+    const variables = injectServerInfoVariables(config);
+
+    const serverInfo = JSON.parse(variables.SERVER_INFO);
+    assert.equal(serverInfo.name, "My Server");
+    assert.deepEqual(serverInfo.icons, [
+      { src: "https://example.com/icon.png", mimeType: "image/png" },
+    ]);
+  });
+
+  it("should inject server info with version as a string", () => {
+    const config = configSchema.parse({});
+    const variables = injectServerInfoVariables(config);
+
+    const serverInfo = JSON.parse(variables.SERVER_INFO);
+    assert.equal(typeof serverInfo.version, "string");
+    assert.notEqual(serverInfo.version, "");
   });
 });
 

@@ -34,6 +34,10 @@ import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
+import {
+  addWatchedPath,
+  removeWatchedPath,
+} from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -53,7 +57,26 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
+  const staleImportErrorSuppressions = new Map<string, number>();
   let bundlerConfig = getRspackConfig(xmcpConfig);
+  let lastRestartedBuildHash: string | null = null;
+  let restartInFlight: Promise<void> | null = null;
+
+  const restartHttpServerSafely = async () => {
+    if (restartInFlight) {
+      return restartInFlight;
+    }
+
+    restartInFlight = (async () => {
+      await startHttpServer();
+    })();
+
+    try {
+      await restartInFlight;
+    } finally {
+      restartInFlight = null;
+    }
+  };
 
   if (xmcpConfig.bundler) {
     bundlerConfig = xmcpConfig.bundler(bundlerConfig);
@@ -75,14 +98,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle tools
   if (toolsPath) {
     watcher.watch(`${toolsPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        toolPaths.add(path);
+      onAdd: async (filePath) => {
+        addWatchedPath(toolPaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
       },
-      onUnlink: async (path) => {
-        toolPaths.delete(path);
+      onUnlink: async (filePath) => {
+        removeWatchedPath(toolPaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
@@ -104,14 +127,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle prompts
   if (promptsPath) {
     watcher.watch(`${promptsPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        promptPaths.add(path);
+      onAdd: async (filePath) => {
+        addWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
       },
-      onUnlink: async (path) => {
-        promptPaths.delete(path);
+      onUnlink: async (filePath) => {
+        removeWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
@@ -128,14 +151,14 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // handle resources
   if (resourcesPath) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
-      onAdd: async (path) => {
-        resourcePaths.add(path);
+      onAdd: async (filePath) => {
+        addWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
       },
-      onUnlink: async (path) => {
-        resourcePaths.delete(path);
+      onUnlink: async (filePath) => {
+        removeWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
           await generateCode();
         }
@@ -232,6 +255,44 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           console.error(err);
         }
         if (stats?.hasErrors()) {
+          const statsJson = stats.toJson({
+            all: false,
+            errors: true,
+            warnings: false,
+          });
+          const hasOnlyStaleImportMapError =
+            mode === "development" &&
+            !!statsJson.errors?.length &&
+            statsJson.errors.every((error) => {
+              const message =
+                typeof error.message === "string" ? error.message : "";
+              const moduleName =
+                typeof error.moduleName === "string" ? error.moduleName : "";
+              return (
+                (message.includes("Module not found") ||
+                  message.includes("Can't resolve")) &&
+                (message.includes(".xmcp/import-map.js") ||
+                  moduleName.includes(".xmcp/import-map.js"))
+              );
+            });
+
+          if (hasOnlyStaleImportMapError) {
+            const staleErrors = statsJson.errors ?? [];
+            const staleSignature = staleErrors
+              .map((error) =>
+                typeof error.message === "string" ? error.message : "unknown"
+              )
+              .sort()
+              .join("|");
+            const staleCount =
+              (staleImportErrorSuppressions.get(staleSignature) ?? 0) + 1;
+            staleImportErrorSuppressions.set(staleSignature, staleCount);
+
+            if (staleCount === 1) {
+              return;
+            }
+          }
+
           console.error(
             stats.toString({
               colors: true,
@@ -268,8 +329,9 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       }
 
       // Build succeeded
+      staleImportErrorSuppressions.clear();
       if (firstBuild) {
-        onFirstBuild(mode, xmcpConfig);
+        onFirstBuild(xmcpConfig);
       } else {
         // on dev mode, bundler will recompile the code, so we need to start the http server after the first one
         if (
@@ -277,7 +339,17 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           xmcpConfig["http"] &&
           !xmcpConfig.experimental?.adapter
         ) {
-          startHttpServer();
+          const currentBuildHash =
+            typeof stats?.hash === "string" ? stats.hash : null;
+          const shouldRestart =
+            currentBuildHash === null
+              ? lastRestartedBuildHash === null
+              : currentBuildHash !== lastRestartedBuildHash;
+
+          if (shouldRestart) {
+            lastRestartedBuildHash = currentBuildHash;
+            await restartHttpServerSafely();
+          }
         }
       }
 
@@ -367,25 +439,29 @@ async function generateCode() {
 
   // Generate import map code (includes client bundles)
   const fileContent = generateImportCode();
-  fs.writeFileSync(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+  writeFileIfChanged(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
   const envFilePath = path.join(rootFolder, "xmcp-env.d.ts");
-
-  // Delete existing file if it exists
-  if (fs.existsSync(envFilePath)) {
-    fs.unlinkSync(envFilePath);
-  }
-
-  fs.writeFileSync(envFilePath, runtimeExportsCode);
+  writeFileIfChanged(envFilePath, runtimeExportsCode);
 
   // only generating tools files for nextjs adapter mode
   const { xmcpConfig } = compilerContext.getContext();
   if (xmcpConfig?.experimental?.adapter === "nextjs") {
     const toolsCode = generateToolsExportCode();
-    fs.writeFileSync(path.join(runtimeFolderPath, "tools.js"), toolsCode);
+    writeFileIfChanged(path.join(runtimeFolderPath, "tools.js"), toolsCode);
     const typesCode = generateToolsTypesCode();
-    fs.writeFileSync(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
+    writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
   }
+}
+
+function writeFileIfChanged(filePath: string, content: string) {
+  if (fs.existsSync(filePath)) {
+    const currentContent = fs.readFileSync(filePath, "utf8");
+    if (currentContent === content) {
+      return;
+    }
+  }
+  fs.writeFileSync(filePath, content);
 }

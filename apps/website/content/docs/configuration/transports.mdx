@@ -74,9 +74,23 @@ const config: XmcpConfig = {
 };
 ```
 
+### Silent mode
+
+When using STDIO transport, any `console.log`, `console.debug`, `console.info`, `console.warn`, or `console.error` calls in your tool handlers will write to stdout, which interferes with the MCP protocol. Enable `silent` to automatically redirect all console output to stderr instead:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  stdio: {
+    silent: true,
+  },
+};
+```
+
+This is useful when your tools or dependencies contain debug logs that would otherwise corrupt the MCP communication. The logs are not lost, they are still visible in stderr.
+
 ## Troubleshooting
 
-Keep in mind that clients like Claude Desktop are not compatible with STDIO logging and would cause a JSON parsing error.
+Keep in mind that clients like Claude Desktop are not compatible with STDIO logging and would cause a JSON parsing error. You can use the `silent` option to redirect console output to stderr and avoid this issue.
 
 ## Observability
 

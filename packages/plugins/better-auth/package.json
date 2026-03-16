@@ -50,18 +50,18 @@
   "dependencies": {
     "better-auth": "1.4.5",
     "express": "^4.22.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^18.3.1 || ^19.0.0",
+    "react-dom": "^18.3.1 || ^19.0.0",
     "react-router": "^7.13.0",
-    "react-router-dom": "^7.10.1"
+    "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.2",
     "@types/pg": "^8.15.6",
-    "@types/react": "^18.3.27",
-    "@types/react-dom": "^18.3.7",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.22",
     "chalk": "^5.6.2",
