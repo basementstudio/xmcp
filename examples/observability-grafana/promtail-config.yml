@@ -1,0 +1,43 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: xmcp
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: xmcp
+          __path__: /var/log/xmcp/server.log
+    pipeline_stages:
+      # Extract the JSON payload after the " | " delimiter
+      - regex:
+          expression: '.* \| (?P<json_payload>\{.*\})$'
+      # Parse the JSON payload into labels
+      - json:
+          source: json_payload
+          expressions:
+            level: '"log.level"'
+            type: type
+            name: name
+            phase: phase
+            outcome: '"event.outcome"'
+            action: '"event.action"'
+            trace_id: '"trace.id"'
+            request_id: '"request.id"'
+      # Promote fields to Loki labels for filtering
+      - labels:
+          level:
+          type:
+          name:
+          phase:
+          outcome:
+          action:
+      # Use the JSON payload as the stored log line
+      - output:
+          source: json_payload

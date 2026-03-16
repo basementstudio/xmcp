@@ -52,10 +52,10 @@ export default config;
 
 Each line includes a human-friendly terminal prefix plus a parseable JSON payload:
 
-```text
-2026-02-23T20:05:05.396Z INFO tool.start tool/get-weather req=4 dur=- outcome=- | {"@timestamp":"2026-02-23T20:05:05.396Z","event.action":"tool.start","log.level":"info",...}
-2026-02-23T20:05:05.399Z INFO tool.end tool/get-weather req=4 dur=3 outcome=success | {"@timestamp":"2026-02-23T20:05:05.399Z","event.action":"tool.end","event.duration":3000000,"event.outcome":"success",...}
-```
+<LogLine>
+{`2026-02-23T20:05:05.396Z INFO tool.start tool/get-weather req=4 dur=- outcome=- | {"@timestamp":"2026-02-23T20:05:05.396Z","event.action":"tool.start","log.level":"info",...}
+2026-02-23T20:05:05.399Z INFO tool.end tool/get-weather req=4 dur=3 outcome=success | {"@timestamp":"2026-02-23T20:05:05.399Z","event.action":"tool.end","event.duration":3000000,"event.outcome":"success",...}`}
+</LogLine>
 
 - Left side: optimized for live terminal scanning.
 - Left side may include ANSI colors for readability when `observability.color` is enabled (`auto` by default).
@@ -82,6 +82,61 @@ The current log shape intentionally follows common observability standards so lo
 - **W3C Trace Context correlation**: `traceparent` header parsing for trace/span IDs
 
 This improves interoperability with typical log backends, dashboards, and tracing workflows.
+
+## Shipping logs to external systems
+
+Since xmcp emits structured JSON to `stderr`, you can ship logs to any external system using standard log collectors — no custom sinks or adapters needed.
+
+The general pattern is:
+
+```
+xmcp server (stderr) → log collector → log backend → dashboard
+```
+
+### Example: Grafana via Loki + Promtail
+
+The [`observability-grafana`](https://github.com/nichochar/xmcp/tree/main/examples/observability-grafana) example provides a full Docker Compose setup with xmcp, Promtail, Loki, and Grafana.
+
+Set `color: "off"` in your config to keep stderr output clean for machine parsing:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  observability: {
+    enabled: true,
+    color: "off",
+  },
+};
+
+export default config;
+```
+
+Promtail extracts the JSON payload after the `|` delimiter and pushes it to Loki. You can then query with LogQL:
+
+```text
+# All xmcp logs
+{job="xmcp"}
+
+# Failed tool executions
+{job="xmcp", outcome="failure"}
+
+# Slow tools (> 500ms)
+{job="xmcp", phase="end"} | json | durationMs > 500
+
+# Trace correlation
+{job="xmcp"} | json | trace_id="<your-trace-id>"
+```
+
+### Other collectors
+
+The same approach works with any log collector that can read `stderr` or a log file:
+
+- **Grafana Alloy** — `loki.source.file` component
+- **Fluentd / Fluent Bit** — tail input with JSON parser
+- **Vector** — `file` source with `json_parser` transform
+- **Docker log drivers** — route container stderr to CloudWatch, Datadog, or Loki directly
+- **OpenTelemetry Collector** — `filelog` receiver
+
+Since the JSON payload includes `trace.id` and `span.id` fields, collectors that support trace correlation can link logs to distributed traces automatically.
 
 ## Key fields
 
