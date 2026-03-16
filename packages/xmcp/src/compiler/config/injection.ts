@@ -77,10 +77,12 @@ export function injectStdioVariables(
   if (!stdioConfig) return {};
 
   const debug = typeof stdioConfig === "object" ? stdioConfig.debug : false;
+  const silent = typeof stdioConfig === "object" ? stdioConfig.silent : false;
 
   return {
     STDIO_CONFIG: JSON.stringify({
       debug,
+      silent,
     }),
   };
 }
@@ -102,15 +104,74 @@ export function injectTemplateVariables(userConfig: XmcpConfigOutputSchema) {
     }
   }
 
+  const { icons: _, ...templateConfigWithoutIcons } = resolvedConfig;
+
   return {
     TEMPLATE_CONFIG: JSON.stringify({
-      ...resolvedConfig,
+      ...templateConfigWithoutIcons,
       homePage,
     }),
   };
 }
 
 export type TemplateVariables = ReturnType<typeof injectTemplateVariables>;
+
+const MIME_BY_EXT: Record<string, string> = {
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+};
+
+function resolveIconSrc(icon: {
+  src: string;
+  mimeType?: string;
+  sizes?: string[];
+  theme?: string;
+}) {
+  if (/^https?:\/\/|^data:/.test(icon.src)) return icon;
+
+  const filePath = resolve(process.cwd(), icon.src);
+  if (!existsSync(filePath)) {
+    console.warn(`[xmcp] icon file not found: ${filePath}`);
+    return icon;
+  }
+
+  const ext = icon.src.substring(icon.src.lastIndexOf(".")).toLowerCase();
+  const mime = icon.mimeType ?? MIME_BY_EXT[ext] ?? "application/octet-stream";
+  const data = readFileSync(filePath);
+  return { ...icon, src: `data:${mime};base64,${data.toString("base64")}` };
+}
+
+export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
+  const templateConfig = getResolvedTemplateConfig(userConfig);
+
+  let version = "0.0.1";
+  try {
+    const pkg = JSON.parse(
+      readFileSync(resolve(process.cwd(), "package.json"), "utf-8")
+    );
+    if (pkg.version) version = pkg.version;
+  } catch (err) {
+    console.warn(`[xmcp] Could not read version from package.json:`, err);
+  }
+
+  const icons = (templateConfig.icons ?? []).map(resolveIconSrc);
+
+  const serverInfo: Record<string, unknown> = {
+    name: templateConfig.name,
+    version,
+    description: templateConfig.description,
+    icons,
+  };
+
+  return {
+    SERVER_INFO: JSON.stringify(serverInfo),
+  };
+}
+
+export type ServerInfoVariables = ReturnType<typeof injectServerInfoVariables>;
 
 export function injectAdapterVariables(userConfig: XmcpConfigOutputSchema) {
   const experimentalConfig = getResolvedExperimentalConfig(userConfig);
@@ -143,5 +204,6 @@ export type InjectedVariables =
   | PathsVariables
   | StdioVariables
   | TemplateVariables
+  | ServerInfoVariables
   | AdapterVariables
   | TypescriptVariables;

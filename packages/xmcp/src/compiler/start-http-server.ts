@@ -14,10 +14,17 @@ function spawnHttpServer() {
   return process;
 }
 
-async function killProcess(process: ChildProcess) {
-  process.kill("SIGKILL");
-  await new Promise((resolve) => {
-    process.on("exit", resolve);
+async function killProcess(proc: ChildProcess) {
+  await new Promise<void>((resolve) => {
+    if (proc.exitCode !== null || proc.signalCode !== null) {
+      return resolve();
+    }
+    proc.on("exit", () => resolve());
+    try {
+      proc.kill("SIGKILL");
+    } catch {
+      resolve();
+    }
   });
 }
 

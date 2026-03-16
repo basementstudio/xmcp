@@ -64,6 +64,12 @@ const config: XmcpConfig = {`;
   configContent += `
   },`;
 
+  // Add template configuration with default icon
+  configContent += `
+  template: {
+    icons: [{ src: "./xmcp.svg" }],
+  },`;
+
   // Remove trailing comma if present
   configContent = configContent.endsWith(",")
     ? configContent.slice(0, -1)
