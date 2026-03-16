@@ -4,10 +4,9 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import {
   configureServer,
   INJECTED_CONFIG,
-  logToolLoadSummary,
+  preloadToolLoadingDiagnostics,
   loadPrompts,
   loadResources,
-  loadTools,
 } from "@/runtime/utils/server";
 
 export interface ServerLifecycle {
@@ -38,12 +37,11 @@ export function setupCleanupHandlers(
  * Initializes and configures the MCP server with tools, prompts, and resources
  */
 export async function initializeMcpServer(): Promise<McpServer> {
-  const [toolPromises, toolModules, toolLoadReport] = loadTools();
+  const { toolModules } = await preloadToolLoadingDiagnostics();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
 
-  await Promise.all([...toolPromises, ...promptPromises, ...resourcePromises]);
-  logToolLoadSummary(toolLoadReport);
+  await Promise.all([...promptPromises, ...resourcePromises]);
 
   const server = new McpServer(INJECTED_CONFIG);
 

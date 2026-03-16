@@ -120,15 +120,21 @@ let toolPreloadCache: {
   toolModules: Map<string, ToolFile>;
   toolLoadReport: ToolLoadReport;
 } | null = null;
-let toolDiagnosticsPreloadPromise: Promise<ToolLoadReport> | null = null;
+let toolDiagnosticsPreloadPromise: Promise<{
+  toolModules: Map<string, ToolFile>;
+  toolLoadReport: ToolLoadReport;
+}> | null = null;
 
-export async function preloadToolLoadingDiagnostics(): Promise<ToolLoadReport> {
+export async function preloadToolLoadingDiagnostics(): Promise<{
+  toolModules: Map<string, ToolFile>;
+  toolLoadReport: ToolLoadReport;
+}> {
   if (!toolDiagnosticsPreloadPromise) {
     const [toolPromises, toolModules, toolLoadReport] = loadTools();
     toolDiagnosticsPreloadPromise = Promise.all(toolPromises).then(() => {
       logToolLoadSummary(toolLoadReport);
       toolPreloadCache = { toolModules, toolLoadReport };
-      return toolLoadReport;
+      return { toolModules, toolLoadReport };
     });
   }
 
