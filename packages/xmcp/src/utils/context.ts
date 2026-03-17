@@ -56,7 +56,7 @@ export function createContext<T extends Object>({
 
   const context = new AsyncLocalStorage<T>();
   const fallbackStoreWrapper = (globalThis as any)[fallbackKey] ?? {
-    current: null as T | null,
+    stack: [] as T[],
   };
   setGlobalContext(fallbackKey, fallbackStoreWrapper);
 
@@ -67,8 +67,10 @@ export function createContext<T extends Object>({
       return store;
     }
 
-    if (fallbackStoreWrapper.current) {
-      return fallbackStoreWrapper.current;
+    const fallbackStore =
+      fallbackStoreWrapper.stack[fallbackStoreWrapper.stack.length - 1];
+    if (fallbackStore) {
+      return fallbackStore;
     }
 
     throw new Error(
@@ -77,7 +79,9 @@ export function createContext<T extends Object>({
   };
 
   const setContext: SetContext<T> = (data) => {
-    const store = context.getStore() ?? fallbackStoreWrapper.current;
+    const store =
+      context.getStore() ??
+      fallbackStoreWrapper.stack[fallbackStoreWrapper.stack.length - 1];
 
     if (!store) {
       throw new Error(
@@ -89,8 +93,12 @@ export function createContext<T extends Object>({
   };
 
   const provider = <R>(initialValue: T, callback: () => R): R => {
-    fallbackStoreWrapper.current = initialValue;
-    return context.run(initialValue, callback);
+    fallbackStoreWrapper.stack.push(initialValue);
+    try {
+      return context.run(initialValue, callback);
+    } finally {
+      fallbackStoreWrapper.stack.pop();
+    }
   };
 
   const result: Context<T> = {

@@ -1,7 +1,8 @@
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport";
 import { MessageExtraInfo } from "@modelcontextprotocol/sdk/types";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
-import { setLogLevel, type LogLevel } from "@/runtime/utils/logger";
+import { isLogLevel, setLogLevel } from "@/runtime/utils/logger";
+import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 
 export interface JsonRpcMessage {
   jsonrpc: string;
@@ -26,11 +27,13 @@ export class WebStatelessHttpTransport implements Transport {
     {
       requestIds: Set<string | number>;
       responses: JsonRpcMessage[];
+      notifications: JsonRpcMessage[];
       resolve: (response: Response) => void;
+      requestContextId?: string;
     }
   > = new Map();
   private _requestToCollectorMapping: Map<string | number, string> = new Map();
-  private _bufferedNotifications: JsonRpcMessage[] = [];
+  private _requestContextToCollectorMapping: Map<string, string> = new Map();
 
   // MCP SDK transport interface
   onmessage?: (message: JsonRpcMessage, extra?: MessageExtraInfo) => void;
@@ -44,6 +47,14 @@ export class WebStatelessHttpTransport implements Transport {
   private log(message: string, ...args: any[]): void {
     if (this.debug) {
       console.log(`[WebStatelessHTTP] ${message}`, ...args);
+    }
+  }
+
+  private getRequestContextId(): string | undefined {
+    try {
+      return getHttpRequestContext().id;
+    } catch {
+      return undefined;
     }
   }
 
@@ -76,14 +87,24 @@ export class WebStatelessHttpTransport implements Transport {
     });
     this._responseResolvers.clear();
     this._requestToCollectorMapping.clear();
+    this._requestContextToCollectorMapping.clear();
   }
 
   async send(message: JsonRpcMessage): Promise<void> {
     const requestId = message.id;
 
     if (requestId === undefined || requestId === null) {
-      // Buffer notifications (e.g. logging) to include in the response
-      this._bufferedNotifications.push(message);
+      const requestContextId = this.getRequestContextId();
+      if (!requestContextId) return;
+
+      const collectorId =
+        this._requestContextToCollectorMapping.get(requestContextId);
+      if (!collectorId) return;
+
+      const collector = this._responseResolvers.get(collectorId);
+      if (collector) {
+        collector.notifications.push(message);
+      }
       return;
     }
 
@@ -99,11 +120,7 @@ export class WebStatelessHttpTransport implements Transport {
 
         // All responses collected, resolve the promise
         if (collector.requestIds.size === 0) {
-          const allMessages = [
-            ...this._bufferedNotifications,
-            ...collector.responses,
-          ];
-          this._bufferedNotifications = [];
+          const allMessages = [...collector.notifications, ...collector.responses];
 
           const responseBody =
             allMessages.length === 1
@@ -119,6 +136,11 @@ export class WebStatelessHttpTransport implements Transport {
 
           // Cleanup
           this._responseResolvers.delete(collectorId);
+          if (collector.requestContextId) {
+            this._requestContextToCollectorMapping.delete(
+              collector.requestContextId
+            );
+          }
           for (const response of collector.responses) {
             if (response.id !== undefined && response.id !== null) {
               this._requestToCollectorMapping.delete(response.id);
@@ -206,11 +228,12 @@ export class WebStatelessHttpTransport implements Transport {
       const incomingMessages: JsonRpcMessage[] = Array.isArray(rawMessage)
         ? rawMessage
         : [rawMessage];
+      const sessionId = request.headers.get("mcp-session-id") ?? undefined;
 
       // Capture logging/setLevel so the level persists across stateless requests
       for (const msg of incomingMessages) {
-        if (msg.method === "logging/setLevel" && msg.params?.level) {
-          setLogLevel(msg.params.level as LogLevel);
+        if (msg.method === "logging/setLevel" && isLogLevel(msg.params?.level)) {
+          setLogLevel(msg.params.level, sessionId);
         }
       }
 
@@ -260,11 +283,17 @@ export class WebStatelessHttpTransport implements Transport {
       // Create a promise that will resolve when all responses are collected
       const responsePromise = new Promise<Response>((resolve) => {
         const collectorId = crypto.randomUUID();
+        const requestContextId = this.getRequestContextId();
         this._responseResolvers.set(collectorId, {
           requestIds: new Set(requestIds),
           responses: invalidResponses,
+          notifications: [],
           resolve,
+          requestContextId,
         });
+        if (requestContextId) {
+          this._requestContextToCollectorMapping.set(requestContextId, collectorId);
+        }
 
         for (const requestId of requestIds) {
           this._requestToCollectorMapping.set(requestId, collectorId);

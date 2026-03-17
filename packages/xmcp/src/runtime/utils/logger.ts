@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { createContext } from "../../utils/context";
+import { getHttpRequestContext } from "../contexts/http-request-context";
 
 export type LogLevel =
   | "debug"
@@ -32,23 +33,79 @@ const LOG_LEVELS: LogLevel[] = [
   "alert",
   "emergency",
 ];
+const LOG_LEVEL_SET = new Set<LogLevel>(LOG_LEVELS);
 
-/**
- * Log level shared across bundles via globalThis.
- * Uses Symbol.for() to ensure the same key across separate bundle instances.
- */
-const LOG_LEVEL_KEY = Symbol.for("xmcp-log-level");
+const SESSION_LOG_LEVEL_TTL_MS = 30 * 60 * 1000;
+const sessionLogLevels = new Map<
+  string,
+  { level: LogLevel; expiresAt: number }
+>();
 
-export function setLogLevel(level: LogLevel): void {
-  (globalThis as any)[LOG_LEVEL_KEY] = level;
+function cleanupExpiredSessionLogLevels(now: number): void {
+  for (const [sessionId, entry] of sessionLogLevels.entries()) {
+    if (entry.expiresAt <= now) {
+      sessionLogLevels.delete(sessionId);
+    }
+  }
 }
 
-function getCurrentLogLevel(): LogLevel {
-  return (globalThis as any)[LOG_LEVEL_KEY] ?? "debug";
+export function setLogLevel(level: LogLevel, sessionId?: string): void {
+  if (!sessionId) {
+    return;
+  }
+
+  const now = Date.now();
+  cleanupExpiredSessionLogLevels(now);
+  sessionLogLevels.set(sessionId, {
+    level,
+    expiresAt: now + SESSION_LOG_LEVEL_TTL_MS,
+  });
 }
 
-function shouldLog(level: LogLevel): boolean {
-  return LOG_LEVELS.indexOf(level) >= LOG_LEVELS.indexOf(getCurrentLogLevel());
+export function isLogLevel(value: unknown): value is LogLevel {
+  return typeof value === "string" && LOG_LEVEL_SET.has(value as LogLevel);
+}
+
+function getCurrentLogLevel(sessionId?: string): LogLevel {
+  if (!sessionId) {
+    return "debug";
+  }
+
+  const now = Date.now();
+  cleanupExpiredSessionLogLevels(now);
+
+  const entry = sessionLogLevels.get(sessionId);
+  if (!entry) {
+    return "debug";
+  }
+
+  // Sliding TTL: keep active sessions alive.
+  entry.expiresAt = now + SESSION_LOG_LEVEL_TTL_MS;
+  return entry.level;
+}
+
+function shouldLog(level: LogLevel, sessionId?: string): boolean {
+  return (
+    LOG_LEVELS.indexOf(level) >=
+    LOG_LEVELS.indexOf(getCurrentLogLevel(sessionId))
+  );
+}
+
+function getSessionIdFromHeaders(): string | undefined {
+  try {
+    const rawValue = getHttpRequestContext().headers["mcp-session-id"];
+    if (Array.isArray(rawValue)) {
+      return rawValue[0];
+    }
+
+    return rawValue;
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveSessionId(sessionId?: string): string | undefined {
+  return sessionId ?? getSessionIdFromHeaders();
 }
 
 interface LoggerContext {
@@ -75,11 +132,17 @@ export const logger: Logger = {} as Logger;
 
 for (const level of LOG_LEVELS) {
   logger[level] = (data: unknown, loggerName?: string) => {
-    if (!shouldLog(level)) return;
     const ctx = loggerCtx.getContext();
-    ctx.server.sendLoggingMessage(
-      { level, logger: loggerName, data },
-      ctx.sessionId
-    );
+    const sessionId = resolveSessionId(ctx.sessionId);
+    if (!shouldLog(level, sessionId)) return;
+
+    try {
+      ctx.server.sendLoggingMessage(
+        { level, logger: loggerName, data },
+        sessionId
+      );
+    } catch {
+      // Logging must never crash the caller.
+    }
   };
 }

@@ -20,14 +20,17 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  getHttpRequestContext,
+  httpRequestContextProvider,
+} from "@/runtime/contexts/http-request-context";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
-import { setLogLevel, type LogLevel } from "@/runtime/utils/logger";
+import { isLogLevel, setLogLevel } from "@/runtime/utils/logger";
 
 // Global type declarations for tool name context
 declare global {
@@ -45,11 +48,33 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
       res: ServerResponse;
       requestIds: Set<string | number>;
       responses: JsonRpcMessage[];
+      notifications: JsonRpcMessage[];
       expectedCount: number;
+      requestContextId?: string;
     }
   > = new Map();
   private _requestToCollectorMapping: Map<string | number, string> = new Map();
-  private _bufferedNotifications: JsonRpcMessage[] = [];
+  private _requestContextToCollectorMapping: Map<string, string> = new Map();
+
+  private getSessionIdFromRequest(
+    req: IncomingMessage
+  ): string | undefined {
+    const rawValue = req.headers["mcp-session-id"];
+
+    if (Array.isArray(rawValue)) {
+      return rawValue[0];
+    }
+
+    return rawValue;
+  }
+
+  private getRequestContextId(): string | undefined {
+    try {
+      return getHttpRequestContext().id;
+    } catch {
+      return undefined;
+    }
+  }
 
   constructor(debug: boolean, bodySizeLimit: string) {
     super();
@@ -83,14 +108,24 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
     });
     this._singleResponseCollectors?.clear();
     this._requestToCollectorMapping?.clear();
+    this._requestContextToCollectorMapping?.clear();
   }
 
   async send(message: JsonRpcMessage): Promise<void> {
     const requestId = message.id;
 
     if (requestId === undefined || requestId === null) {
-      // Buffer notifications (e.g. logging) to include in the response
-      this._bufferedNotifications.push(message);
+      const requestContextId = this.getRequestContextId();
+      if (!requestContextId) return;
+
+      const collectorId =
+        this._requestContextToCollectorMapping.get(requestContextId);
+      if (!collectorId) return;
+
+      const collector = this._singleResponseCollectors?.get(collectorId);
+      if (collector) {
+        collector.notifications.push(message);
+      }
       return;
     }
 
@@ -109,11 +144,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
             "Content-Type": "application/json",
           };
 
-          const allMessages = [
-            ...this._bufferedNotifications,
-            ...collector.responses,
-          ];
-          this._bufferedNotifications = [];
+          const allMessages = [...collector.notifications, ...collector.responses];
 
           const responseBody =
             allMessages.length === 1
@@ -125,6 +156,11 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
             .end(JSON.stringify(responseBody));
 
           this._singleResponseCollectors?.delete(collectorId);
+          if (collector.requestContextId) {
+            this._requestContextToCollectorMapping.delete(
+              collector.requestContextId
+            );
+          }
           for (const response of collector.responses) {
             if (response.id !== undefined && response.id !== null) {
               this._requestToCollectorMapping?.delete(response.id);
@@ -212,11 +248,12 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
       const messages: JsonRpcMessage[] = Array.isArray(rawMessage)
         ? rawMessage
         : [rawMessage];
+      const sessionId = this.getSessionIdFromRequest(req);
 
       // Capture logging/setLevel so the level persists across stateless requests
       for (const msg of messages) {
-        if (msg.method === "logging/setLevel" && msg.params?.level) {
-          setLogLevel(msg.params.level as LogLevel);
+        if (msg.method === "logging/setLevel" && isLogLevel(msg.params?.level)) {
+          setLogLevel(msg.params.level, sessionId);
         }
       }
 
@@ -241,7 +278,9 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
       }
 
       const responseCollector: JsonRpcMessage[] = [];
+      const notificationCollector: JsonRpcMessage[] = [];
       const expectedResponses = requestIds.length;
+      const requestContextId = this.getRequestContextId();
 
       const collectorId = randomUUID();
       this._singleResponseCollectors =
@@ -250,8 +289,13 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
         res,
         requestIds: new Set(requestIds),
         responses: responseCollector,
+        notifications: notificationCollector,
         expectedCount: expectedResponses,
+        requestContextId,
       });
+      if (requestContextId) {
+        this._requestContextToCollectorMapping.set(requestContextId, collectorId);
+      }
 
       for (const requestId of requestIds) {
         this._requestToCollectorMapping =
