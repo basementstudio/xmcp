@@ -27,6 +27,15 @@ const getGlobalContext = <T>(key: symbol): T => {
   return (globalThis as any)[key] as T;
 };
 
+function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "then" in value &&
+    typeof (value as PromiseLike<T>).then === "function"
+  );
+}
+
 /**
  * Create context allows you to create scoped variables for functions.
  * Similar to React's context API.
@@ -95,9 +104,18 @@ export function createContext<T extends Object>({
   const provider = <R>(initialValue: T, callback: () => R): R => {
     fallbackStoreWrapper.stack.push(initialValue);
     try {
-      return context.run(initialValue, callback);
-    } finally {
+      const result = context.run(initialValue, callback);
+
+      if (isPromiseLike(result)) {
+        return Promise.resolve(result).finally(() => {
+          fallbackStoreWrapper.stack.pop();
+        }) as R;
+      }
+
       fallbackStoreWrapper.stack.pop();
+      return result;
+    } finally {
+      // Async cleanup is handled by the promise.finally above.
     }
   };
 
