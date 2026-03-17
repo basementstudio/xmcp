@@ -16,10 +16,7 @@ import type {
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 import { createVerifier, extractBearerToken } from "./jwt.js";
-import {
-  isToolPermissionDefined,
-  userHasToolPermission,
-} from "./permissions.js";
+import { isToolPermissionDefined, userHasToolPermission } from "./permissions.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
 
@@ -70,10 +67,6 @@ function createManagementClient(config: Config): ManagementClient {
 
 function auth0Router(config: Config): Router {
   const router = Router();
-<<<<<<< Updated upstream
-  const baseUrl = config.baseURL.replace(/\/+$/, "");
-=======
->>>>>>> Stashed changes
   const domainClean = config.domain
     .replace(/^https?:\/\//, "")
     .replace(/\/+$/, "");
@@ -87,11 +80,7 @@ function auth0Router(config: Config): Router {
     "/.well-known/oauth-protected-resource",
     (_req: Request, res: Response) => {
       const metadata: OAuthProtectedResourceMetadata = {
-<<<<<<< Updated upstream
-        resource: baseUrl,
-=======
         resource: config.audience,
->>>>>>> Stashed changes
         authorization_servers: [auth0Url],
         bearer_methods_supported: ["header"],
         scopes_supported: scopes,
@@ -190,12 +179,7 @@ function auth0Middleware(
       }
 
       try {
-        await enforceToolPermissions(
-          req,
-          config,
-          result.authInfo,
-          managementClient
-        );
+        await enforceToolPermissions(req, config, result.authInfo, managementClient);
       } catch (error) {
         if (!res.headersSent) {
           const message = error instanceof Error ? error.message : "Forbidden";
