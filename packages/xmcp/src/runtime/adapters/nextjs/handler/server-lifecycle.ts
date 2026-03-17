@@ -1,13 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import type { ServerResponse } from "node:http";
 import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
-import {
-  configureServer,
-  INJECTED_CONFIG,
-  loadPrompts,
-  loadResources,
-  loadTools,
-} from "@/runtime/utils/server";
+import { createServer } from "@/runtime/utils/server";
 
 export interface ServerLifecycle {
   server: McpServer;
@@ -37,17 +31,7 @@ export function setupCleanupHandlers(
  * Initializes and configures the MCP server with tools, prompts, and resources
  */
 export async function initializeMcpServer(): Promise<McpServer> {
-  const [toolPromises, toolModules] = loadTools();
-  const [promptPromises, promptModules] = loadPrompts();
-  const [resourcePromises, resourceModules] = loadResources();
-
-  await Promise.all([...toolPromises, ...promptPromises, ...resourcePromises]);
-
-  const server = new McpServer(INJECTED_CONFIG);
-
-  await configureServer(server, toolModules, promptModules, resourceModules);
-
-  return server;
+  return createServer();
 }
 
 /**
