@@ -7,17 +7,52 @@ import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
 
+function validateAgainstOutputSchema(
+  data: Record<string, unknown>,
+  outputSchema: ZodRawShape,
+  toolName: string,
+  errorPrefix: string
+): void {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: expected a plain object.`
+    );
+  }
+
+  const outputKeys = new Set(Object.keys(outputSchema));
+  const extraKeys = Object.keys(data).filter((key) => !outputKeys.has(key));
+  if (extraKeys.length > 0) {
+    throw new Error(
+      `Tool "${toolName}" ${errorPrefix}: unrecognized key(s): ${extraKeys.join(", ")}`
+    );
+  }
+
+  for (const [fieldName, fieldSchema] of Object.entries(outputSchema)) {
+    try {
+      fieldSchema.parse((data as any)[fieldName]);
+    } catch (error: any) {
+      throw new Error(
+        `Tool "${toolName}" ${errorPrefix}: ${error?.message ?? `invalid field "${fieldName}"`}`
+      );
+    }
+  }
+}
+
 /**
  * Type for the original tool handler that users write
  */
+export type UserToolResponse =
+  | CallToolResult
+  | string
+  | number
+  | Record<string, unknown>;
+
 export type UserToolHandler = (
   args: ZodRawShape,
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) =>
-  | CallToolResult
-  | string
-  | number
-  | Promise<CallToolResult | string | number>;
+  | UserToolResponse
+  | Promise<UserToolResponse>;
 
 /**
  * Type for the transformed handler that the MCP server expects
@@ -27,6 +62,14 @@ export type McpToolHandler = (
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ) => CallToolResult | Promise<CallToolResult>;
 
+function hasUIMeta(meta?: Record<string, any>): boolean {
+  return !!(
+    meta &&
+    typeof meta === "object" &&
+    Object.keys(meta).some((key) => key.startsWith("ui/"))
+  );
+}
+
 /**
  * Transforms a user's tool handler into an MCP-compatible handler.
  *
@@ -34,24 +77,26 @@ export type McpToolHandler = (
  * 1. Passes through both args and extra parameters to the user's handler
  * 2. Transforms string/number responses into the required CallToolResult format
  * 3. Allows returning `content`, `structuredContent`, or both
- * 4. Allows returning only `_meta` (without `content`) when it contains OpenAI-specific keys
- * 5. Auto-wraps HTML strings with OpenAI metadata if provided
+ * 4. Allows returning only `_meta` (without `content`) when it contains widget metadata
+ * 5. Auto-wraps HTML strings with widget metadata if provided
  * 6. Validates that the response is a proper CallToolResult and throws a descriptive error if not
  *
  * @param handler - The user's tool handler function
- * @param meta - Optional metadata to attach to responses (for OpenAI widgets)
+ * @param meta - Optional metadata to attach to responses (for MCP app widgets)
  * @returns A transformed handler compatible with McpServer.registerTool
  * @throws Error if the handler returns an invalid response type
  */
 export function transformToolHandler(
   handler: UserToolHandler,
-  meta?: Record<string, any>
+  meta?: Record<string, any>,
+  outputSchema?: ZodRawShape,
+  toolName = "unknown-tool"
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response = handler(args, extra);
+    let response: any = handler(args, extra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {
@@ -59,14 +104,35 @@ export function transformToolHandler(
     }
 
     if (typeof response === "string" || typeof response === "number") {
-      // Check if we have OpenAI metadata to attach
-      const hasOpenAIMeta =
-        meta &&
-        typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"));
+      if (outputSchema) {
+        const outputSchemaEntries = Object.entries(outputSchema);
+        if (outputSchemaEntries.length === 1) {
+          const [fieldName, fieldSchema] = outputSchemaEntries[0];
+          try {
+            fieldSchema.parse(response);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: typeof response === "number" ? `${response}` : response,
+                },
+              ],
+              structuredContent: {
+                [fieldName]: response,
+              },
+            };
+          } catch {
+            // Backward compatible fallback: keep content-only when primitive
+            // output does not match outputSchema.
+          }
+        }
+      }
 
-      if (hasOpenAIMeta) {
-        // For OpenAI widgets, return empty text content with metadata
+      // Check if we have widget metadata to attach
+      const hasWidgetMeta = hasUIMeta(meta);
+
+      if (hasWidgetMeta) {
+        // For widget tools, return empty text content with metadata
         // The actual HTML is served by the auto-generated resource
         return {
           content: [
@@ -93,7 +159,31 @@ export function transformToolHandler(
       };
     }
 
-    // Check if response has _meta but no content (special case for OpenAI metadata)
+    // With outputSchema declared, allow returning a plain object as shorthand
+    // for `{ structuredContent: ... }`.
+    if (
+      outputSchema &&
+      response &&
+      typeof response === "object" &&
+      !Array.isArray(response) &&
+      !("structuredContent" in response) &&
+      !("content" in response && Array.isArray((response as any).content)) &&
+      !("_meta" in response) &&
+      !("isError" in response)
+    ) {
+      // Validate the response against outputSchema before wrapping.
+      validateAgainstOutputSchema(
+        response as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned data that does not match outputSchema"
+      );
+      response = {
+        structuredContent: response,
+      };
+    }
+
+    // Check if response has _meta but no content (special case for widget metadata)
     if (
       response &&
       typeof response === "object" &&
@@ -103,12 +193,7 @@ export function transformToolHandler(
     ) {
       const meta = (response as any)._meta;
 
-      // Check if _meta contains OpenAI-specific keys (keys starting with "openai/")
-      if (
-        meta &&
-        typeof meta === "object" &&
-        Object.keys(meta).some((key) => key.startsWith("openai/"))
-      ) {
+      if (hasUIMeta(meta)) {
         // Transform to include empty text content with the _meta
         return {
           content: [
@@ -156,20 +241,21 @@ export function transformToolHandler(
           `  content: [{ type: "text", text: "fallback" }],\n` +
           `  structuredContent: { your: "data" }\n` +
           `}\n\n` +
-          `Or for OpenAI metadata only:\n` +
+          `Or for widget metadata only:\n` +
           `{\n` +
           `  _meta: {\n` +
-          `    "openai/...": ...\n` +
+          `    "ui/...": ...\n` +
           `  }\n` +
           `}`
       );
     }
 
-    // Check if response has at least one of: content, structuredContent, or valid OpenAI _meta
-    const hasContent = "content" in response && Array.isArray(response.content);
+    // Check if response has at least one of: content or structuredContent
+    let hasContent = "content" in response && Array.isArray(response.content);
     const hasStructuredContent = "structuredContent" in response;
+    const isError = "isError" in response && (response as any).isError === true;
 
-    if (!hasContent && !hasStructuredContent) {
+    if (!hasContent && !hasStructuredContent && !isError) {
       const responseValue = JSON.stringify(response, null, 2);
 
       throw new Error(
@@ -194,6 +280,38 @@ export function transformToolHandler(
           `  structuredContent: { your: "data" }\n` +
           `}`
       );
+    }
+
+    // Auto-generate fallback content for isError responses without content
+    if (isError && !hasContent && !hasStructuredContent) {
+      const { isError: _, ...rest } = response as Record<string, unknown>;
+      const errorText =
+        Object.keys(rest).length > 0
+          ? `Tool execution failed: ${JSON.stringify(rest)}`
+          : "Tool execution failed";
+      response.content = [{ type: "text", text: errorText }];
+      hasContent = true;
+    }
+
+    // Validate structuredContent against outputSchema if present.
+    if (outputSchema && hasStructuredContent && !isError) {
+      validateAgainstOutputSchema(
+        (response as any).structuredContent as Record<string, unknown>,
+        outputSchema,
+        toolName,
+        "returned structuredContent that does not match outputSchema"
+      );
+    }
+
+    // Auto-generate text fallback for clients that only render content.
+    if (!hasContent && hasStructuredContent) {
+      response.content = [
+        {
+          type: "text",
+          text: JSON.stringify((response as any).structuredContent),
+        },
+      ];
+      hasContent = true;
     }
 
     // validate each content item if content is present
@@ -243,6 +361,6 @@ export function transformToolHandler(
       }
     }
 
-    return response;
+    return response as CallToolResult;
   };
 }

@@ -74,6 +74,29 @@ export function getExternals(): RspackOptions["externals"] {
         return callback(undefined, `commonjs ${pathRequest}`);
       }
 
+      /**
+       * When using NestJS, externalize NestJS-related packages
+       * since they should come from the user's node_modules
+       */
+      if (xmcpConfig.experimental?.adapter === "nestjs") {
+        // Externalize NestJS core packages
+        const nestjsPackages = [
+          "@nestjs/common",
+          "@nestjs/core",
+          "@nestjs/platform-express",
+          "reflect-metadata",
+          "rxjs",
+        ];
+
+        if (
+          nestjsPackages.some(
+            (pkg) => request === pkg || request.startsWith(`${pkg}/`)
+          )
+        ) {
+          return callback(undefined, `commonjs ${request}`);
+        }
+      }
+
       // Bundle relative imports and absolute paths
       callback();
     },

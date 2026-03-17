@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "xmcp dev & basehub dev & next dev --turbopack",
-    "build": "xmcp build && basehub && next build --turbopack",
+    "dev": "xmcp dev & basehub dev & next dev",
+    "build": "xmcp build && basehub && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.80",
     "@ai-sdk/react": "^2.0.109",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
-    "@next/mdx": "^15.5.7",
+    "@next/mdx": "^16.1.6",
     "@openrouter/ai-sdk-provider": "^1.5.0",
     "@orama/orama": "^3.1.16",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -50,10 +50,10 @@
     "html2canvas": "^1.4.1",
     "leva": "^0.10.1",
     "lucide-react": "^0.544.0",
-    "next": "15.5.9",
-    "next-mdx-remote": "^5.0.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "next": "^16.1.6",
+    "next-mdx-remote": "^6.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "react-error-boundary": "^6.0.0",
     "react-remove-scroll": "^2.7.2",
     "rehype-katex": "^7.0.1",
@@ -72,14 +72,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
-    "@next/eslint-plugin-next": "^15.5.7",
+    "@next/eslint-plugin-next": "^16.1.6",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/hast": "^3.0.4",
     "@types/node": "^20.19.26",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
     "eslint": "^9.39.1",
-    "eslint-config-next": "15.3.4",
+    "eslint-config-next": "^16.1.6",
     "eslint-plugin-react-hooks": "^5.2.0",
     "glslify-loader": "^2.0.0",
     "prettier": "^3.7.4",
@@ -88,5 +88,11 @@
     "tailwindcss": "^4.1.17",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.14",
+      "@types/react-dom": "19.2.3"
+    }
   }
 }

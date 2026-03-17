@@ -351,14 +351,21 @@ const program = new Command()
         console.log(`   • ${routePath}/route.ts`);
       }
 
+      if (detectedFramework === "nestjs") {
+        const hasSrcFolder = fs.existsSync(path.join(projectRoot, "src"));
+        const xmcpPath = hasSrcFolder ? "src/xmcp" : "xmcp";
+        console.log(`   • ${xmcpPath}/xmcp.controller.ts`);
+        console.log(`   • ${xmcpPath}/xmcp.module.ts`);
+      }
+
       console.log(chalk.blue("\n❯ Files updated:"));
       console.log(`   • package.json`);
       console.log(`   • tsconfig.json`);
 
       console.log(chalk.blue("\nNext steps:"));
 
-      // code integration for express projects (default)
-      if (detectedFramework !== "nextjs") {
+      // code integration for express projects
+      if (detectedFramework !== "nextjs" && detectedFramework !== "nestjs") {
         const integrationCode = `import { xmcpHandler } from '@xmcp/adapter';
 
 myApp.post("/mcp", xmcpHandler);
@@ -369,6 +376,29 @@ myApp.get("/mcp", xmcpHandler);`;
 
         console.log(
           "\nTo get started with the xmcpHandler in your Express application, add this code to your server:\n"
+        );
+        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
+        lines.forEach((line) => {
+          const padding = " ".repeat(maxLength - line.length);
+          console.log(chalk.green(chalk.bgBlack(`  ${line}${padding}`)));
+        });
+        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
+      }
+
+      // code integration for NestJS projects
+      if (detectedFramework === "nestjs") {
+        const integrationCode = `import { XmcpModule } from "./xmcp/xmcp.module";
+
+@Module({
+  imports: [XmcpModule],
+})
+export class AppModule {}`;
+
+        const lines = integrationCode.split("\n");
+        const maxLength = Math.max(...lines.map((line) => line.length)) + 2;
+
+        console.log(
+          "\nTo get started with xmcp in your NestJS application, add this to your app.module.ts:\n"
         );
         console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
         lines.forEach((line) => {

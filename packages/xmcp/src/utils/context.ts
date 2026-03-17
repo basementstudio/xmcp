@@ -28,7 +28,7 @@ const getGlobalContext = <T>(key: symbol): T => {
 };
 
 /**
- * Create context allows you to create scoped variables for fucntions.
+ * Create context allows you to create scoped variables for functions.
  * Similar to React's context API.
  * Usage:
  * ```ts

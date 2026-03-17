@@ -25,6 +25,12 @@ npx create-xmcp-app@latest
 
 You will be asked for the project name and then guided through a series of prompts to configure your project.
 
+To scaffold without installing dependencies:
+
+```bash
+npx create-xmcp-app@latest my-app --skip-install
+```
+
 ## Options
 
 - `-y, --yes`: Skip all confirmation prompts and use defaults
@@ -35,9 +41,8 @@ You will be asked for the project name and then guided through a series of promp
 - `--skip-install`: Skip installing dependencies
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
-- `--gpt`: Initialize with GPT App template (ChatGPT/OpenAI widgets)
-- `--ui`: Initialize with MCP App template (React widgets for ext-apps)
-- `--tailwind, --tw`: Use Tailwind CSS (only with --gpt or --ui, defaults to --ui if used alone)
+- `--ui`: Initialize with MCP App template (non-tailwind)
+- `--tailwind, --tw`: Use Tailwind CSS (only with MCP App template)
 
 ## Getting Started
 

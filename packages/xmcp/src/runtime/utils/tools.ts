@@ -1,16 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { z } from "zod";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
-import { openAIResourceRegistry } from "./openai-resource-registry";
-import { flattenMeta, hasOpenAIMeta } from "./openai/flatten-meta";
 import { isReactFile } from "./react";
-import { splitOpenAIMetaNested } from "./openai/split-meta";
 import { uIResourceRegistry } from "./ext-apps-registry";
-import { hasUIMeta } from "./ui/flatten-meta";
+import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
-import { isPaidHandler, getX402Registry } from "xmcp/plugins/x402";
+import { isPaidHandler, getX402Registry } from "@/plugins/x402";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -45,7 +43,7 @@ export function addToolsToServer(
       description: "No description provided",
     };
 
-    const { default: handler, metadata, schema } = toolModule;
+    const { default: handler, metadata, schema, outputSchema } = toolModule;
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
@@ -69,6 +67,17 @@ export function addToolsToServer(
       );
     }
 
+    let toolOutputSchema: ZodRawShape | undefined;
+    if (outputSchema !== undefined && outputSchema !== null) {
+      if (isZodRawShape(outputSchema)) {
+        toolOutputSchema = outputSchema;
+      } else {
+        throw new Error(
+          `Invalid outputSchema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
+        );
+      }
+    }
+
     // Make sure tools has annotations with a title
     if (toolConfig.annotations === undefined) {
       toolConfig.annotations = {};
@@ -83,85 +92,53 @@ export function addToolsToServer(
 
     const isReact = isReactFile(path);
 
-    // Check if this is an OpenAI widget tool
-    const openaiWidget = hasOpenAIMeta(toolConfig._meta);
-    const uiWidget = hasUIMeta(toolConfig._meta) || (isReact && !openaiWidget);
+    const uiWidget = hasUIMeta(toolConfig._meta) || isReact;
 
     let toolSpecificMeta = toolConfig._meta;
 
-    if (uiWidget || openaiWidget) {
-      const openaiResourceUri = `ui://widget/${toolConfig.name}.html`;
+    if (uiWidget) {
       const mcpuiResourceUri = `ui://app/${toolConfig.name}.html`;
 
-      // Auto-inject outputTemplate and resourceUri before splitting
-      if (openaiWidget) {
-        if (!toolConfig._meta.openai) {
-          toolConfig._meta.openai = {};
-        }
-        if (!toolConfig._meta.openai.outputTemplate) {
-          toolConfig._meta.openai.outputTemplate = openaiResourceUri;
-        }
+      if (!toolConfig._meta.ui) {
+        toolConfig._meta.ui = {};
+      }
+      if (!toolConfig._meta.ui.resourceUri) {
+        toolConfig._meta.ui.resourceUri = mcpuiResourceUri;
       }
 
-      if (uiWidget) {
-        if (!toolConfig._meta.ui) {
-          toolConfig._meta.ui = {};
-        }
-        if (!toolConfig._meta.ui.resourceUri) {
-          toolConfig._meta.ui.resourceUri = mcpuiResourceUri;
-        }
+      const uiSplit = splitUIMetaNested(toolSpecificMeta);
+      toolSpecificMeta = uiSplit.toolMeta;
+      const resourceSpecificMeta = uiSplit.resourceMeta;
+
+      // Ensure CSP resource domains includes esm.sh
+      resourceSpecificMeta.ui = resourceSpecificMeta.ui || {};
+      resourceSpecificMeta.ui.csp = resourceSpecificMeta.ui.csp || {};
+      resourceSpecificMeta.ui.csp.resourceDomains =
+        resourceSpecificMeta.ui.csp.resourceDomains || [];
+
+      if (
+        !resourceSpecificMeta.ui.csp.resourceDomains.includes(
+          "https://esm.sh"
+        )
+      ) {
+        resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
       }
 
-      // Split metadata only for the widgets that are enabled
-      if (openaiWidget) {
-        const openaiSplit = splitOpenAIMetaNested(toolSpecificMeta);
-        toolSpecificMeta = openaiSplit.toolMeta;
-
-        openAIResourceRegistry.add(toolConfig.name, {
-          name: toolConfig.name,
-          uri: openaiResourceUri,
-          handler,
-          _meta: openaiSplit.resourceMeta,
-          toolPath: isReact ? path : undefined,
-          mimeType: "text/html+skybridge",
-        });
-      }
-
-      if (uiWidget) {
-        const uiSplit = splitUIMetaNested(toolSpecificMeta);
-        toolSpecificMeta = uiSplit.toolMeta;
-        const resourceSpecificMeta = uiSplit.resourceMeta;
-
-        // Ensure CSP resource domains includes esm.sh
-        resourceSpecificMeta.ui = resourceSpecificMeta.ui || {};
-        resourceSpecificMeta.ui.csp = resourceSpecificMeta.ui.csp || {};
-        resourceSpecificMeta.ui.csp.resourceDomains =
-          resourceSpecificMeta.ui.csp.resourceDomains || [];
-
-        if (
-          !resourceSpecificMeta.ui.csp.resourceDomains.includes(
-            "https://esm.sh"
-          )
-        ) {
-          resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
-        }
-
-        uIResourceRegistry.add(toolConfig.name, {
-          name: toolConfig.name,
-          uri: mcpuiResourceUri,
-          handler,
-          mimeType: "text/html;profile=mcp-app",
-          _meta: resourceSpecificMeta,
-          toolPath: isReact ? path : undefined,
-        });
-      }
+      uIResourceRegistry.add(toolConfig.name, {
+        name: toolConfig.name,
+        uri: mcpuiResourceUri,
+        handler,
+        mimeType: "text/html;profile=mcp-app",
+        _meta: resourceSpecificMeta,
+        toolPath: isReact ? path : undefined,
+      });
     }
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
-    const meta = openaiWidget || uiWidget ? flattenedToolMeta : undefined;
+    const meta = uiWidget ? flattenedToolMeta : undefined;
     let transformedHandler;
 
-    if (isReactFile(path) && (openaiWidget || uiWidget)) {
+    if (isReactFile(path) && uiWidget) {
       transformedHandler = async (args: any, extra: any) => ({
         content: [{ type: "text", text: "" }],
         _meta: meta,
@@ -170,13 +147,23 @@ export function addToolsToServer(
         },
       });
     } else {
-      transformedHandler = transformToolHandler(handler, meta);
+      transformedHandler = transformToolHandler(
+        handler,
+        meta,
+        toolOutputSchema,
+        toolConfig.name
+      );
     }
 
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
-      inputSchema: toolSchema,
+      // Build the object schema using the project's Zod instance to avoid
+      // cross-instance v3 shape issues in tools/list JSON schema generation.
+      inputSchema: z.object(toolSchema),
+      outputSchema: toolOutputSchema
+        ? z.object(toolOutputSchema).strict()
+        : undefined,
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
