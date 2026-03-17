@@ -8,7 +8,7 @@ type SetContext<T extends DefaultContext> = (data: Partial<T>) => void;
 
 export interface Context<T extends DefaultContext> {
   /** Run a callback with a specific context. */
-  provider: (initialValue: T, callback: () => void) => void;
+  provider: <R>(initialValue: T, callback: () => R) => R;
   /** Get the context. */
   getContext: GetContext<T>;
   /** Partially update the context. */
@@ -88,7 +88,7 @@ export function createContext<T extends Object>({
     Object.assign(store, data);
   };
 
-  const provider = (initialValue: T, callback: () => void) => {
+  const provider = <R>(initialValue: T, callback: () => R): R => {
     fallbackStoreWrapper.current = initialValue;
     return context.run(initialValue, callback);
   };

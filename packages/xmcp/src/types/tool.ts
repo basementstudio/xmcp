@@ -2,6 +2,7 @@ import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
 import { UIMetadata } from "./ui-meta";
 
+
 export interface ToolAnnotations {
   /** Human-readable title for the tool */
   title?: string;

@@ -4,8 +4,10 @@ import {
   ServerNotification,
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { ZodRawShape } from "zod/v3";
 import { validateContent } from "../validators";
+import { loggerContextProvider } from "../logger";
 
 function validateAgainstOutputSchema(
   data: Record<string, unknown>,
@@ -90,18 +92,27 @@ export function transformToolHandler(
   handler: UserToolHandler,
   meta?: Record<string, any>,
   outputSchema?: ZodRawShape,
-  toolName = "unknown-tool"
+  toolName = "unknown-tool",
+  server?: McpServer
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response: any = handler(args, extra);
+    const runHandler = async () => {
+      let response: any = handler(args, extra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response: any = server
+      ? await loggerContextProvider(
+          { server, sessionId: extra.sessionId },
+          runHandler
+        )
+      : await runHandler();
 
     if (typeof response === "string" || typeof response === "number") {
       if (outputSchema) {
