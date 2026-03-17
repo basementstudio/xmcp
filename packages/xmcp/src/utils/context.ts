@@ -103,19 +103,23 @@ export function createContext<T extends Object>({
 
   const provider = <R>(initialValue: T, callback: () => R): R => {
     fallbackStoreWrapper.stack.push(initialValue);
+    let asyncInFlight = false;
+
     try {
       const result = context.run(initialValue, callback);
 
       if (isPromiseLike(result)) {
+        asyncInFlight = true;
         return Promise.resolve(result).finally(() => {
           fallbackStoreWrapper.stack.pop();
         }) as R;
       }
 
-      fallbackStoreWrapper.stack.pop();
       return result;
     } finally {
-      // Async cleanup is handled by the promise.finally above.
+      if (!asyncInFlight) {
+        fallbackStoreWrapper.stack.pop();
+      }
     }
   };
 
