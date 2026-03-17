@@ -1,6 +1,7 @@
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport";
 import { MessageExtraInfo } from "@modelcontextprotocol/sdk/types";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { setLogLevel, type LogLevel } from "@/runtime/utils/logger";
 
 export interface JsonRpcMessage {
   jsonrpc: string;
@@ -29,6 +30,7 @@ export class WebStatelessHttpTransport implements Transport {
     }
   > = new Map();
   private _requestToCollectorMapping: Map<string | number, string> = new Map();
+  private _bufferedNotifications: JsonRpcMessage[] = [];
 
   // MCP SDK transport interface
   onmessage?: (message: JsonRpcMessage, extra?: MessageExtraInfo) => void;
@@ -80,10 +82,8 @@ export class WebStatelessHttpTransport implements Transport {
     const requestId = message.id;
 
     if (requestId === undefined || requestId === null) {
-      // In stateless mode, we can't handle notifications without request IDs
-      if (this.debug) {
-        this.log("Dropping notification without request ID");
-      }
+      // Buffer notifications (e.g. logging) to include in the response
+      this._bufferedNotifications.push(message);
       return;
     }
 
@@ -99,10 +99,16 @@ export class WebStatelessHttpTransport implements Transport {
 
         // All responses collected, resolve the promise
         if (collector.requestIds.size === 0) {
+          const allMessages = [
+            ...this._bufferedNotifications,
+            ...collector.responses,
+          ];
+          this._bufferedNotifications = [];
+
           const responseBody =
-            collector.responses.length === 1
-              ? collector.responses[0]
-              : collector.responses;
+            allMessages.length === 1
+              ? allMessages[0]
+              : allMessages;
 
           collector.resolve(
             new Response(JSON.stringify(responseBody), {
@@ -200,6 +206,13 @@ export class WebStatelessHttpTransport implements Transport {
       const incomingMessages: JsonRpcMessage[] = Array.isArray(rawMessage)
         ? rawMessage
         : [rawMessage];
+
+      // Capture logging/setLevel so the level persists across stateless requests
+      for (const msg of incomingMessages) {
+        if (msg.method === "logging/setLevel" && msg.params?.level) {
+          setLogLevel(msg.params.level as LogLevel);
+        }
+      }
 
       const invalidResponses: JsonRpcMessage[] = [];
       const messages = incomingMessages.filter((msg) => {

@@ -27,6 +27,7 @@ import {
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { setLogLevel, type LogLevel } from "@/runtime/utils/logger";
 
 // Global type declarations for tool name context
 declare global {
@@ -48,6 +49,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
     }
   > = new Map();
   private _requestToCollectorMapping: Map<string | number, string> = new Map();
+  private _bufferedNotifications: JsonRpcMessage[] = [];
 
   constructor(debug: boolean, bodySizeLimit: string) {
     super();
@@ -87,10 +89,8 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
     const requestId = message.id;
 
     if (requestId === undefined || requestId === null) {
-      // In stateless mode, we can't handle notifications without request IDs
-      if (this.debug) {
-        console.log("[StatelessHTTP] Dropping notification without request ID");
-      }
+      // Buffer notifications (e.g. logging) to include in the response
+      this._bufferedNotifications.push(message);
       return;
     }
 
@@ -109,10 +109,16 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
             "Content-Type": "application/json",
           };
 
+          const allMessages = [
+            ...this._bufferedNotifications,
+            ...collector.responses,
+          ];
+          this._bufferedNotifications = [];
+
           const responseBody =
-            collector.responses.length === 1
-              ? collector.responses[0]
-              : collector.responses;
+            allMessages.length === 1
+              ? allMessages[0]
+              : allMessages;
 
           collector.res
             .writeHead(200, headers)
@@ -206,6 +212,13 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
       const messages: JsonRpcMessage[] = Array.isArray(rawMessage)
         ? rawMessage
         : [rawMessage];
+
+      // Capture logging/setLevel so the level persists across stateless requests
+      for (const msg of messages) {
+        if (msg.method === "logging/setLevel" && msg.params?.level) {
+          setLogLevel(msg.params.level as LogLevel);
+        }
+      }
 
       const hasRequests = messages.some(
         (msg) => msg.method && msg.id !== undefined

@@ -2,48 +2,21 @@ import { z } from "zod";
 import { type InferSchema, type ToolMetadata, logger } from "xmcp";
 
 export const schema = {
-  source: z.string().describe("The data source to process (e.g. 'users', 'orders')"),
+  a: z.number().describe("First number"),
+  b: z.number().describe("Second number"),
 };
 
 export const metadata: ToolMetadata = {
-  name: "process-data",
-  description: "Process data from a source, demonstrating structured logging at each step",
-  annotations: {
-    title: "Process Data",
-    readOnlyHint: true,
-  },
+  name: "add",
+  description: "Add two numbers together",
 };
 
-export default async function processData({ source }: InferSchema<typeof schema>) {
-  logger.info(`Starting data processing for "${source}"`, "process-data");
+export default async function add({ a, b }: InferSchema<typeof schema>) {
+  logger.info(`Adding ${a} + ${b}`, "add");
 
-  // Step 1: Validate the source
-  logger.debug({ step: "validate", source }, "process-data");
-  const validSources = ["users", "orders", "products"];
-  if (!validSources.includes(source)) {
-    logger.warning(
-      `Unknown source "${source}", proceeding with defaults`,
-      "process-data"
-    );
-  }
+  const result = a + b;
 
-  // Step 2: Fetch records
-  logger.info("Fetching records...", "process-data");
-  const records = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    name: `${source}-item-${i + 1}`,
-  }));
-  logger.debug({ step: "fetch", recordCount: records.length }, "process-data");
+  logger.debug({ a, b, result }, "add");
 
-  // Step 3: Process each record
-  for (const record of records) {
-    logger.debug({ step: "process", recordId: record.id }, "process-data");
-  }
-
-  logger.info(
-    `Completed processing ${records.length} records from "${source}"`,
-    "process-data"
-  );
-
-  return `Processed ${records.length} records from "${source}"`;
+  return `Result: ${result}`;
 }

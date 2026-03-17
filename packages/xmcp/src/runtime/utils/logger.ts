@@ -33,6 +33,24 @@ const LOG_LEVELS: LogLevel[] = [
   "emergency",
 ];
 
+/**
+ * Log level shared across bundles via globalThis.
+ * Uses Symbol.for() to ensure the same key across separate bundle instances.
+ */
+const LOG_LEVEL_KEY = Symbol.for("xmcp-log-level");
+
+export function setLogLevel(level: LogLevel): void {
+  (globalThis as any)[LOG_LEVEL_KEY] = level;
+}
+
+function getCurrentLogLevel(): LogLevel {
+  return (globalThis as any)[LOG_LEVEL_KEY] ?? "debug";
+}
+
+function shouldLog(level: LogLevel): boolean {
+  return LOG_LEVELS.indexOf(level) >= LOG_LEVELS.indexOf(getCurrentLogLevel());
+}
+
 interface LoggerContext {
   server: McpServer;
   sessionId?: string;
@@ -57,6 +75,7 @@ export const logger: Logger = {} as Logger;
 
 for (const level of LOG_LEVELS) {
   logger[level] = (data: unknown, loggerName?: string) => {
+    if (!shouldLog(level)) return;
     const ctx = loggerCtx.getContext();
     ctx.server.sendLoggingMessage(
       { level, logger: loggerName, data },
