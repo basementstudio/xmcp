@@ -280,7 +280,7 @@ describe("Config System - Injection Functions", () => {
     assert.deepEqual(variables, {});
   });
 
-  it("should inject server info with default xmcp icon when icons not configured", () => {
+  it("should inject server info with empty icons when icons not configured", () => {
     const config = configSchema.parse({ template: {} });
     const variables = injectServerInfoVariables(config);
 
