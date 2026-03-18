@@ -15,11 +15,7 @@ const DEPLOY_PROVIDER_CONFIG = {
     label: "Alpic",
     buildHref: buildAlpicCloneUrl,
   },
-  replit: {
-    label: "Replit",
-    buildHref: buildReplitCloneUrl,
-  },
-} satisfies Record<"vercel" | "alpic" | "replit", DeployProviderConfig>;
+} satisfies Record<"vercel" | "alpic", DeployProviderConfig>;
 
 export function buildDeployOptions(example: ExampleItem): DeployOption[] {
   const options: DeployOption[] = Object.entries(DEPLOY_PROVIDER_CONFIG).map(
@@ -29,6 +25,13 @@ export function buildDeployOptions(example: ExampleItem): DeployOption[] {
       provider: provider as keyof typeof DEPLOY_PROVIDER_CONFIG,
     })
   );
+
+  options.push({
+    label: "Replit",
+    href: example.replitUrl ?? "#",
+    provider: "replit",
+    disabled: !example.replitUrl,
+  });
 
   if (example.deployUrl) {
     const provider = getProviderFromUrl(example.deployUrl);

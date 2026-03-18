@@ -43,6 +43,19 @@ export function ExampleDetailSidebar({
         </InfoCard>
       )}
 
+      {example.replitUrl && (
+        <InfoCard label="Remix on Replit">
+          <Link
+            href={example.replitUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
+          >
+            {example.replitUrl}
+          </Link>
+        </InfoCard>
+      )}
+
       {categoryItems.length > 0 && (
         <InfoCard label="Categories">
           <div className="flex flex-wrap gap-2">

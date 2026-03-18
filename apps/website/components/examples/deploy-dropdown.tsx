@@ -26,6 +26,7 @@ export type DeployOption = {
   label: string;
   href: string;
   provider: DeployProvider;
+  disabled?: boolean;
 };
 
 export function DeployDropdown({
@@ -55,23 +56,34 @@ export function DeployDropdown({
         align="end"
         className="z-50 !bg-brand-neutral-600 opacity-100 border border-brand-neutral-400 text-brand-neutral-50 p-1 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 shadow-lg backdrop-blur-none overflow-hidden [&_*:focus-visible]:outline-none [&_*:focus-visible]:ring-0 [&_*:focus-visible]:outline-offset-0"
       >
-        {options.map((option) => (
-          <DropdownMenuItem
-            key={`${option.provider}-${option.href}`}
-            asChild
-            className="outline-none border-0 ring-0 shadow-none data-[highlighted]:outline-none data-[highlighted]:border-0 data-[highlighted]:ring-0 data-[highlighted]:shadow-none data-[highlighted]:bg-brand-neutral-500"
-          >
-            <Link
-              href={option.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full text-sm cursor-pointer px-2 py-1.5 text-brand-neutral-100 hover:bg-brand-neutral-500 hover:text-brand-white data-[highlighted]:bg-brand-neutral-500 data-[highlighted]:text-brand-white focus:outline-none focus:ring-0 focus:shadow-none border-0 outline-none ring-0 shadow-none transition-colors duration-200 inline-flex items-center gap-2"
+        {options.map((option) =>
+          option.disabled ? (
+            <DropdownMenuItem
+              key={`${option.provider}-disabled`}
+              disabled
+              className="outline-none border-0 ring-0 shadow-none w-full text-sm px-2 py-1.5 text-brand-neutral-300 opacity-50 cursor-not-allowed inline-flex items-center gap-2"
             >
               <ProviderIcon provider={option.provider} />
               <span>{option.label}</span>
-            </Link>
-          </DropdownMenuItem>
-        ))}
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              key={`${option.provider}-${option.href}`}
+              asChild
+              className="outline-none border-0 ring-0 shadow-none data-[highlighted]:outline-none data-[highlighted]:border-0 data-[highlighted]:ring-0 data-[highlighted]:shadow-none data-[highlighted]:bg-brand-neutral-500"
+            >
+              <Link
+                href={option.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-sm cursor-pointer px-2 py-1.5 text-brand-neutral-100 hover:bg-brand-neutral-500 hover:text-brand-white data-[highlighted]:bg-brand-neutral-500 data-[highlighted]:text-brand-white focus:outline-none focus:ring-0 focus:shadow-none border-0 outline-none ring-0 shadow-none transition-colors duration-200 inline-flex items-center gap-2"
+              >
+                <ProviderIcon provider={option.provider} />
+                <span>{option.label}</span>
+              </Link>
+            </DropdownMenuItem>
+          )
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -138,7 +150,7 @@ function AlpicMarkIcon({ className }: { className?: string }) {
   );
 }
 
-function ReplitMarkIcon(props: React.SVGProps<SVGSVGElement>) {
+export function ReplitMarkIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 22 30"

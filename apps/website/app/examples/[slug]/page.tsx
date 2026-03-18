@@ -152,6 +152,7 @@ Add a README.md to this template to show content here.`;
           name={displayName}
           description={example.description}
           demoUrl={example.demoUrl}
+          replitUrl={example.replitUrl}
           deployOptions={deployOptions}
         />
 

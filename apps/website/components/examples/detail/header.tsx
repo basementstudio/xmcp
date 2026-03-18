@@ -1,17 +1,19 @@
 import Link from "next/link";
 import type { DeployOption } from "@/components/examples/deploy-dropdown";
-import { DeployDropdown } from "@/components/examples/deploy-dropdown";
+import { DeployDropdown, ReplitMarkIcon } from "@/components/examples/deploy-dropdown";
 import { Button } from "@/components/ui/button";
 
 export function ExampleDetailHeader({
   name,
   description,
   demoUrl,
+  replitUrl,
   deployOptions,
 }: {
   name: string;
   description: string;
   demoUrl?: string;
+  replitUrl?: string;
   deployOptions: DeployOption[];
 }) {
   return (
@@ -35,6 +37,14 @@ export function ExampleDetailHeader({
           <div className="hidden lg:block">
             <DeployDropdown options={deployOptions} variant="primary" />
           </div>
+        )}
+        {replitUrl && (
+          <Button asChild variant="secondary" size="sm" className="px-6">
+            <Link href={replitUrl} target="_blank" rel="noopener noreferrer">
+              <ReplitMarkIcon className="size-3.5" />
+              <span>Remix</span>
+            </Link>
+          </Button>
         )}
         {demoUrl && (
           <Button asChild variant="secondary" size="sm" className="px-6">

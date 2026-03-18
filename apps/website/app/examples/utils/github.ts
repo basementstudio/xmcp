@@ -18,6 +18,7 @@ export type ExampleItem = {
   websiteUrl?: string;
   demoUrl?: string;
   deployUrl?: string;
+  replitUrl?: string;
   preview?: string;
   previewUrl?: string;
   readmePath?: string;
@@ -44,6 +45,7 @@ type PackageMeta = {
   homepage?: string;
   demoUrl?: string;
   deployUrl?: string;
+  replitUrl?: string;
   readmePath?: string;
 };
 
@@ -62,6 +64,7 @@ type TemplateMeta = {
   website?: string;
   demo?: string;
   deploy?: string;
+  replitUrl?: string;
   readme?: {
     path?: string;
   };
@@ -269,6 +272,7 @@ async function fetchRepoExamples(): Promise<ExampleItem[]> {
         websiteUrl: packageMeta?.homepage,
         demoUrl: packageMeta?.demoUrl,
         deployUrl: packageMeta?.deployUrl,
+        replitUrl: packageMeta?.replitUrl,
         readmePath: packageMeta?.readmePath,
       };
     })
@@ -330,6 +334,7 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
         websiteUrl: meta?.websiteUrl ?? meta?.website,
         demoUrl: meta?.demoUrl ?? meta?.demo,
         deployUrl: meta?.deployUrl ?? meta?.deploy,
+        replitUrl: meta?.replitUrl,
         preview: previewPath,
         previewUrl: metaImageUrl
           ? metaImageUrl
