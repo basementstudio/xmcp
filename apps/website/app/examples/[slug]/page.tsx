@@ -6,7 +6,6 @@ import {
   fetchExampleReadme,
   fetchExamplesAndTemplates,
 } from "@/app/examples/utils/github";
-import { EXAMPLES_REVALIDATE_SECONDS } from "@/app/examples/utils/constants";
 import {
   formatRepositoryLabel,
   humanizeMetadataName,
@@ -24,7 +23,7 @@ import { ExampleDetailSidebar } from "@/components/examples/detail/sidebar";
 import { getBaseUrl } from "@/lib/base-url";
 import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
 
-export const revalidate = EXAMPLES_REVALIDATE_SECONDS;
+export const revalidate = 1800; // 30 minutes
 
 const baseUrl = getBaseUrl();
 
