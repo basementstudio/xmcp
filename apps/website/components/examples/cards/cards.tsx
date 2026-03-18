@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
-import { ExampleItem } from "@/app/examples/utils/github";
+import type { ExampleItem } from "@/app/examples/utils/github";
 import { Tag, tagClassName } from "@/components/ui/tag";
 import { Icons as UiIcons } from "@/components/ui/icons";
 import Image from "next/image";
@@ -85,7 +85,7 @@ export function ExampleCards({
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     examples.forEach((example) => {
-      tagSet.add(example.primaryFilterTag ?? example.category ?? example.kind);
+      tagSet.add(example.primaryFilterTag ?? example.category ?? example.type);
     });
     return ["All", ...Array.from(tagSet).sort()];
   }, [examples]);
@@ -140,7 +140,7 @@ export function ExampleCards({
           (selectedTag) =>
             (example.tags ?? []).includes(selectedTag) ||
             example.category === selectedTag ||
-            example.kind === selectedTag
+            example.type === selectedTag
         );
 
       return matchesSearch && matchesTags;
@@ -307,7 +307,7 @@ export function ExampleCards({
           {filteredExamples.length > 0 ? (
             paginatedExamples.map((example: ExampleItem) => (
               <ExampleCard
-                key={`${example.kind}-${example.slug}`}
+                key={`${example.type}-${example.slug}`}
                 {...example}
               />
             ))
@@ -395,7 +395,7 @@ export function ExampleCard({
       normalized === "examples" ||
       normalized === "template" ||
       normalized === "templates" ||
-      normalized === item.kind
+      normalized === item.type
     );
   };
   const previewImage = resolveExamplePreviewImage(item);
@@ -403,7 +403,7 @@ export function ExampleCard({
     (!isGenericLabel(item.category) ? item.category : undefined) ??
     item.tags?.find((tag) => !isGenericLabel(tag)) ??
     item.category ??
-    item.kind;
+    item.type;
   const linkHref = href ?? `/examples/${item.slug}`;
   const defaultsToExternal =
     linkHref.startsWith("http://") || linkHref.startsWith("https://");

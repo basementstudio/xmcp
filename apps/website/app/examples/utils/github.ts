@@ -1,7 +1,9 @@
-export type ExampleKind = "example" | "template";
+import { EXAMPLES_REVALIDATE_SECONDS } from "./constants";
+
+export type ExampleType = "example" | "template";
 
 export type ExampleItem = {
-  kind: ExampleKind;
+  type: ExampleType;
   slug: string;
   name: string;
   description: string;
@@ -90,7 +92,7 @@ async function fetchRepoContents(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      cache: "force-cache",
+      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
     });
 
     if (!response.ok) {
@@ -113,7 +115,7 @@ async function fetchRepoFileJson<T = unknown>(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      cache: "force-cache",
+      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
     });
 
     if (!response.ok) {
@@ -141,7 +143,7 @@ async function fetchRepoFileText(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      cache: "force-cache",
+      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
     });
 
     if (!response.ok) {
@@ -167,7 +169,7 @@ async function fetchRawFileText(
 ): Promise<string | null> {
   try {
     const response = await fetch(buildRawUrl(repo, path, ref), {
-      cache: "force-cache",
+      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
     });
 
     if (!response.ok) {
@@ -194,7 +196,7 @@ async function findPreviewPath(
         const candidate = `${templateSlug}/.config/preview.${ext}`;
         const response = await fetch(buildApiContentsUrl(repo, candidate, ref), {
           headers: getGitHubHeaders(),
-          cache: "force-cache",
+          next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
         });
         if (!response.ok) throw new Error("not found");
         return candidate;
@@ -252,7 +254,7 @@ async function fetchRepoExamples(): Promise<ExampleItem[]> {
       );
 
       return {
-        kind: "example" as const,
+        type: "example" as const,
         slug: dir.name,
         name: packageMeta?.name ?? dir.name,
         description: packageMeta?.description ?? `Example: ${dir.name}`,
@@ -313,7 +315,7 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
       const primaryFilterTag = meta?.category ?? tags[0];
 
       return {
-        kind: "template" as const,
+        type: "template" as const,
         slug: dir.name,
         name: meta?.name ?? dir.name,
         description: meta?.description ?? dir.name,
@@ -352,11 +354,11 @@ export async function fetchExamplesAndTemplates(): Promise<ExampleItem[]> {
 }
 
 export async function fetchExample(
-  kind: ExampleKind,
+  type: ExampleType,
   slug: string
 ): Promise<ExampleItem | null> {
   const items = await fetchExamplesAndTemplates();
-  return items.find((item) => item.kind === kind && item.slug === slug) ?? null;
+  return items.find((item) => item.type === type && item.slug === slug) ?? null;
 }
 
 export async function fetchExampleBySlug(
@@ -421,7 +423,7 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
       `https://api.github.com/repos/${owner}/${cleanRepo}`,
       {
         headers: getGitHubHeaders(),
-        cache: "force-cache",
+        next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
       }
     );
 

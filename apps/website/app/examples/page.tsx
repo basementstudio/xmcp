@@ -1,9 +1,11 @@
 import { Metadata } from "next";
 import { getBaseUrl } from "@/lib/base-url";
+import { EXAMPLES_REVALIDATE_SECONDS } from "@/app/examples/utils/constants";
 import { fetchExamplesAndTemplates } from "@/app/examples/utils/github";
 import { ExamplesPageContent } from "@/components/examples/page-content";
 
 export const dynamic = "force-static";
+export const revalidate = EXAMPLES_REVALIDATE_SECONDS;
 
 const baseUrl = getBaseUrl();
 

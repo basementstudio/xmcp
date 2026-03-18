@@ -1,295 +1,65 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MDXRemote } from "next-mdx-remote/rsc";
-import { Children, type ComponentProps, type ReactElement } from "react";
-import { highlight } from "fumadocs-core/highlight";
-import type { BundledLanguage } from "shiki";
-import { ExampleCard } from "@/components/examples/cards/cards";
-import { ExampleShareActions } from "@/components/examples/share-actions";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
-import { getBaseUrl } from "@/lib/base-url";
 import {
-  DeployDropdown,
-  type DeployOption,
-  type DeployProvider,
-} from "@/components/examples/deploy-dropdown";
-import {
-  ExampleItem,
+  fetchExampleBySlug,
   fetchExampleReadme,
   fetchExamplesAndTemplates,
 } from "@/app/examples/utils/github";
-import { Icons } from "@/components/icons";
-import { getMDXComponents } from "@/components/mdx-components";
-import { CodeBlock } from "@/components/codeblock";
+import { EXAMPLES_REVALIDATE_SECONDS } from "@/app/examples/utils/constants";
+import {
+  formatRepositoryLabel,
+  humanizeMetadataName,
+  isTypeLabel,
+  normalizeDisplayLabel,
+  rankRelatedItems,
+  stripLeadingHeading,
+} from "@/app/examples/utils/detail";
+import { buildDeployOptions } from "@/app/examples/utils/deploy";
+import { ExampleBreadcrumb } from "@/components/examples/detail/breadcrumb";
+import { ExampleDetailHeader } from "@/components/examples/detail/header";
+import { RelatedExamples } from "@/components/examples/detail/related-items";
+import { ExampleReadmeContent } from "@/components/examples/detail/readme-content";
+import { ExampleDetailSidebar } from "@/components/examples/detail/sidebar";
+import { getBaseUrl } from "@/lib/base-url";
 import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+
+export const revalidate = EXAMPLES_REVALIDATE_SECONDS;
 
 const baseUrl = getBaseUrl();
 
-async function renderHighlightedCodeBlock(code: string, lang: string) {
-  try {
-    return await highlight(code, {
-      lang: lang as BundledLanguage,
-      theme: xmcpAyuDarkTheme,
-      components: {
-        pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
-        ),
-      },
-    });
-  } catch {
-    return await highlight(code, {
-      lang: "plaintext",
-      theme: xmcpAyuDarkTheme,
-      components: {
-        pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
-        ),
-      },
-    });
-  }
-}
-
-async function ReadmePre(props: ComponentProps<"pre">) {
-  const code = Children.only(props.children) as ReactElement;
-  const codeProps = code.props as ComponentProps<"code">;
-  const content = codeProps.children;
-
-  if (typeof content !== "string") {
-    return (
-      <CodeBlock>
-        <pre>{props.children}</pre>
-      </CodeBlock>
-    );
-  }
-
-  let lang =
-    codeProps.className
-      ?.split(" ")
-      .find((v) => v.startsWith("language-"))
-      ?.slice("language-".length) ?? "text";
-
-  if (lang === "mdx") lang = "md";
-
-  return renderHighlightedCodeBlock(content.trimEnd(), lang);
-}
-
-function stripLeadingHeading(markdown: string) {
-  const lines = markdown.split("\n");
-  const first = lines.findIndex((line) => line.trim().length > 0);
-  if (first === -1) return markdown;
-
-  const line = lines[first];
-  const next = lines[first + 1] ?? "";
-
-  const isAtx = /^#{1,6}\s+/.test(line);
-  const isSetextEquals = /^=+$/.test(next.trim());
-  const isSetextDashes =
-    /^-{2,}$/.test(next.trim()) && !/^\s/.test(line) && line.trim().split(/\s+/).length <= 10;
-  const isSetext = next.trim().length > 0 && (isSetextEquals || isSetextDashes);
-
-  if (!isAtx && !isSetext) return markdown;
-
-  const removeCount = isSetext ? 2 : 1;
-  lines.splice(first, removeCount);
-
-  while (first < lines.length && lines[first].trim().length === 0) {
-    lines.splice(first, 1);
-  }
-
-  return lines.join("\n");
-}
-
-function buildVercelCloneUrl(example: ExampleItem) {
-  const folderPath = example.path.replace(/^\/+/, "");
-  const repoWithBranch = `https://github.com/${example.sourceRepo}/tree/${example.sourceBranch}/${folderPath}`;
-  const search = new URLSearchParams({
-    "repository-url": repoWithBranch,
-  });
-
-  return `https://vercel.com/new/clone?${search.toString()}`;
-}
-
-function buildAlpicCloneUrl(example: ExampleItem) {
-  const folderPath = example.path.replace(/^\/+/, "");
-  const repoWithBranch = `https://github.com/${example.sourceRepo}/tree/${example.sourceBranch}/${folderPath}`;
-  const search = new URLSearchParams({
-    repositoryUrl: repoWithBranch,
-  });
-
-  return `https://app.alpic.ai/new/clone?${search.toString()}`;
-}
-
-function getProviderFromUrl(url: string): DeployProvider {
-  const host = (() => {
-    try {
-      return new URL(url).hostname.toLowerCase();
-    } catch {
-      return "";
-    }
-  })();
-
-  if (host.includes("vercel")) return "vercel";
-  if (host.includes("netlify")) return "netlify";
-  if (host.includes("railway")) return "railway";
-  if (host.includes("render")) return "render";
-  if (host.includes("cloudflare")) return "cloudflare";
-  return "other";
-}
-
-function getProviderLabel(provider: DeployProvider) {
-  switch (provider) {
-    case "vercel":
-      return "Vercel";
-    case "netlify":
-      return "Netlify";
-    case "railway":
-      return "Railway";
-    case "render":
-      return "Render";
-    case "cloudflare":
-      return "Cloudflare";
-    default:
-      return "Provider";
-  }
-}
-
-function isKindLabel(value: string) {
-  const normalized = value.trim().toLowerCase();
-  return normalized === "example" || normalized === "template";
-}
-
-function normalizeDisplayLabel(value: string) {
-  return value.replace(/-/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function humanizeMetadataName(value: string) {
-  const normalized = normalizeDisplayLabel(value);
-  const uppercaseTokens = new Set([
-    "api",
-    "ai",
-    "sdk",
-    "http",
-    "https",
-    "jwt",
-    "mcp",
-    "ui",
-    "css",
-    "xml",
-    "json",
-    "url",
-    "id",
-  ]);
-
-  return normalized
-    .split(" ")
-    .map((token) => {
-      const lower = token.toLowerCase();
-      if (uppercaseTokens.has(lower)) return lower.toUpperCase();
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    })
-    .join(" ");
-}
-
-function formatRepositoryLabel(repositoryUrl: string) {
-  const match = repositoryUrl.match(/github\.com\/([^\/]+\/[^\/?#]+)/i);
-  return match ? match[1] : repositoryUrl;
-}
-
-function normalizeForMatch(value?: string) {
-  return value?.trim().toLowerCase() ?? "";
-}
-
-function getSuggestionScore(current: ExampleItem, candidate: ExampleItem) {
-  let score = 0;
-
-  const currentCategory = normalizeForMatch(current.category);
-  const candidateCategory = normalizeForMatch(candidate.category);
-  if (currentCategory && currentCategory === candidateCategory) {
-    score += 10;
-  }
-
-  const currentTags = new Set(
-    (current.tags ?? []).map((tag) => normalizeForMatch(tag)).filter(Boolean)
-  );
-  const candidateTags = new Set(
-    (candidate.tags ?? []).map((tag) => normalizeForMatch(tag)).filter(Boolean)
-  );
-  let sharedTagCount = 0;
-  for (const tag of candidateTags) {
-    if (currentTags.has(tag)) {
-      sharedTagCount += 1;
-    }
-  }
-  score += Math.min(sharedTagCount * 2, 6);
-
-  const currentPrimaryTag = normalizeForMatch(current.primaryFilterTag);
-  const candidatePrimaryTag = normalizeForMatch(candidate.primaryFilterTag);
-  if (currentPrimaryTag && currentPrimaryTag === candidatePrimaryTag) {
-    score += 1;
-  }
-
-  return score;
-}
-
-function rankRelatedItems(current: ExampleItem, items: ExampleItem[]) {
-  return items
-    .filter((item) => item.kind !== current.kind || item.slug !== current.slug)
-    .map((item) => ({
-      item,
-      score: getSuggestionScore(current, item),
-      sortName: normalizeForMatch(item.name),
-      sortSlug: normalizeForMatch(item.slug),
-    }))
-    .sort((a, b) => {
-      if (b.score !== a.score) {
-        return b.score - a.score;
-      }
-
-      if (a.sortName !== b.sortName) {
-        return a.sortName.localeCompare(b.sortName);
-      }
-
-      return a.sortSlug.localeCompare(b.sortSlug);
-    })
-    .slice(0, 3)
-    .map(({ item }) => item);
-}
+type ExampleDetailPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
 
 export async function generateStaticParams() {
   const items = await fetchExamplesAndTemplates();
   const seen = new Map<string, string>();
+
   for (const item of items) {
     const existing = seen.get(item.slug);
     if (existing) {
       console.warn(
-        `[examples] slug collision: "${item.slug}" exists as both ${existing} and ${item.kind}`
+        `[examples] slug collision: "${item.slug}" exists as both ${existing} and ${item.type}`
       );
     } else {
-      seen.set(item.slug, item.kind);
+      seen.set(item.slug, item.type);
     }
   }
-  return [...new Map(items.map((i) => [i.slug, { slug: i.slug }])).values()];
+
+  return [
+    ...new Map(items.map((item) => [item.slug, { slug: item.slug }])).values(),
+  ];
 }
 
 export async function generateMetadata(
-  props: PageProps<"/examples/[slug]">
+  props: ExampleDetailPageProps
 ): Promise<Metadata> {
   const params = await props.params;
-  const slug = params.slug;
-  const items = await fetchExamplesAndTemplates();
-  const example = items.find((i) => i.slug === slug) ?? null;
+  const example = await fetchExampleBySlug(params.slug);
+
   if (!example) {
     return {
       title: "Example not found - xmcp",
@@ -297,7 +67,7 @@ export async function generateMetadata(
     };
   }
 
-  const canonical = `${baseUrl}/examples/${slug}`;
+  const canonical = `${baseUrl}/examples/${example.slug}`;
   const metadataName = humanizeMetadataName(example.name);
   const metadataTitle = `${metadataName} | xmcp Examples`;
   const metadataKeywords = Array.from(
@@ -340,46 +110,18 @@ export async function generateMetadata(
   };
 }
 
-export default async function ExampleDetailPage(
-  props: PageProps<"/examples/[slug]">
-) {
+export default async function ExampleDetailPage(props: ExampleDetailPageProps) {
   const params = await props.params;
-  const slug = params.slug;
   const items = await fetchExamplesAndTemplates();
-  const example = items.find((i) => i.slug === slug) ?? null;
+  const example = items.find((item) => item.slug === params.slug) ?? null;
+
   if (!example) {
     notFound();
   }
 
   const readmeContent = await fetchExampleReadme(example);
   const moreExamples = rankRelatedItems(example, items);
-
-  const fallbackReadme = `# README not found
-
-Add a README.md to this template to show content here.`;
-  const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
-  const vercelCloneUrl = buildVercelCloneUrl(example);
-  const alpicCloneUrl = buildAlpicCloneUrl(example);
-  const deployOptions: DeployOption[] = [
-    {
-      label: "Vercel",
-      href: vercelCloneUrl,
-      provider: "vercel",
-    },
-    {
-      label: "Alpic",
-      href: alpicCloneUrl,
-      provider: "alpic",
-    },
-  ];
-  if (example.deployUrl && example.deployUrl !== vercelCloneUrl) {
-    const provider = getProviderFromUrl(example.deployUrl);
-    deployOptions.push({
-      label: getProviderLabel(provider),
-      href: example.deployUrl,
-      provider,
-    });
-  }
+  const deployOptions = buildDeployOptions(example);
   const pageUrl = `${baseUrl}/examples/${example.slug}`;
   const shareMessage = `Check out ${example.name} on xmcp`;
   const xShareUrl = `https://www.x.com/intent/post?text=${encodeURIComponent(
@@ -387,205 +129,88 @@ Add a README.md to this template to show content here.`;
   )}&url=${encodeURIComponent(pageUrl)}`;
   const categoryItems = Array.from(
     new Set([
-      ...(example.category && !isKindLabel(example.category)
+      ...(example.category && !isTypeLabel(example.category)
         ? [example.category]
         : []),
-      ...((example.tags ?? []).filter((tag) => !isKindLabel(tag))),
+      ...(example.tags ?? []).filter((tag) => !isTypeLabel(tag)),
     ])
   );
   const previewImage = resolveExamplePreviewImage(example);
   const displayName = normalizeDisplayLabel(example.name);
   const repositoryLabel = formatRepositoryLabel(example.repositoryUrl);
+  const fallbackReadme = `# README not found
+
+Add a README.md to this template to show content here.`;
+  const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
-      <Breadcrumb name={displayName} />
+      <ExampleBreadcrumb name={displayName} />
 
-      <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-16">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h1 className="heading-1 text-gradient capitalize">{displayName}</h1>
-            <div className="lg:hidden shrink-0">
-              <DeployDropdown options={deployOptions} variant="primary" />
+      <div className="space-y-4 md:space-y-6">
+        <ExampleDetailHeader
+          name={displayName}
+          description={example.description}
+          demoUrl={example.demoUrl}
+          deployOptions={deployOptions}
+        />
+
+        <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500">
+          <div className="aspect-[16/8] relative">
+            {!previewImage.isFallback ? (
+              <Image
+                src={previewImage.src}
+                alt={`${example.name} preview`}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <Image
+                src={previewImage.src}
+                alt={`${example.name} preview`}
+                fill
+                sizes="100vw"
+                unoptimized
+                className={
+                  previewImage.isNextJsFallback
+                    ? "object-contain [object-position:center_70%] scale-90"
+                    : "object-contain [object-position:center_70%]"
+                }
+                priority
+              />
+            )}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
+              <Image
+                src="/textures/text5.png"
+                alt=""
+                aria-hidden
+                fill
+                sizes="100vw"
+                className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
+                priority={false}
+              />
             </div>
-          </div>
-          <p className="text-brand-neutral-100 text-base max-w-2xl capitalize">
-            {example.description}
-          </p>
-        </div>
-
-        <div className="flex w-full justify-end lg:w-auto flex-wrap items-center gap-3">
-          <div className="hidden lg:block">
-            <DeployDropdown options={deployOptions} variant="primary" />
-          </div>
-          {example.demoUrl && (
-            <Button asChild variant="secondary" size="sm" className="px-6">
-              <Link
-                href={example.demoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Demo
-              </Link>
-            </Button>
-          )}
-        </div>
-      </header>
-
-      <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500 mt-4 md:mt-6">
-        <div className="aspect-[16/8] relative">
-          {!previewImage.isFallback ? (
-            <Image
-              src={previewImage.src}
-              alt={`${example.name} preview`}
-              fill
-              sizes="100vw"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <Image
-              src={previewImage.src}
-              alt={`${example.name} preview`}
-              fill
-              sizes="100vw"
-              unoptimized
-              className={
-                previewImage.isNextJsFallback
-                  ? "object-contain [object-position:center_70%] scale-90"
-                  : "object-contain [object-position:center_70%]"
-              }
-              priority
-            />
-          )}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
-            <Image
-              src="/textures/text5.png"
-              alt=""
-              aria-hidden
-              fill
-              sizes="100vw"
-              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
-              priority={false}
-            />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <aside className="lg:col-span-3 space-y-8">
-          <InfoCard label="GitHub Repo">
-            <Link
-              href={example.repositoryUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
-            >
-              {repositoryLabel}
-            </Link>
-          </InfoCard>
-
-          {(example.demoUrl || example.websiteUrl) && (
-            <InfoCard label="Website link">
-              <Link
-                href={example.demoUrl || example.websiteUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-brand-white text-brand-neutral-50 underline underline-offset-2"
-              >
-                {example.demoUrl || example.websiteUrl}
-              </Link>
-            </InfoCard>
-          )}
-
-          {categoryItems.length > 0 && (
-            <InfoCard label="Categories">
-              <div className="flex flex-wrap gap-2">
-                {categoryItems.map((tag) => (
-                  <Tag
-                    key={tag}
-                    text={tag}
-                    href={`/examples?category=${encodeURIComponent(tag)}`}
-                    interactive
-                    className="bg-brand-neutral-600"
-                  />
-                ))}
-              </div>
-            </InfoCard>
-          )}
-
-          <InfoCard label="Share">
-            <ExampleShareActions
-              pageUrl={pageUrl}
-              repositoryUrl={example.repositoryUrl}
-              xShareUrl={xShareUrl}
-            />
-          </InfoCard>
-        </aside>
+        <ExampleDetailSidebar
+          example={example}
+          repositoryLabel={repositoryLabel}
+          categoryItems={categoryItems}
+          pageUrl={pageUrl}
+          xShareUrl={xShareUrl}
+        />
 
         <section className="lg:col-span-9 space-y-6 pl-8 border-l border-brand-neutral-500">
-          <div className="prose prose-invert max-w-none">
-            <MDXRemote
-              source={bodyContent}
-              components={getMDXComponents({
-                pre: ReadmePre,
-              })}
-            />
-          </div>
+          <ExampleReadmeContent source={bodyContent} />
         </section>
       </div>
 
-      {moreExamples.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium text-brand-white">
-            Other templates and examples
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {moreExamples.map((item) => (
-              <ExampleCard
-                key={`${item.kind}-${item.slug}`}
-                {...item}
-                href={`/examples/${item.slug}`}
-                target="_self"
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      <RelatedExamples items={moreExamples} />
     </main>
-  );
-}
-
-function Breadcrumb({ name }: { name: string }) {
-  return (
-    <div className="text-sm text-brand-neutral-200 flex items-center gap-1">
-      <Link
-        href="/examples"
-        className="hover:text-brand-white text-brand-neutral-100"
-      >
-        Templates
-      </Link>
-      <span className="text-brand-neutral-100">
-        <Icons.arrowDown className="w-4 h-4 -rotate-90" />
-      </span>
-      <span className="text-brand-white capitalize">{name}</span>
-    </div>
-  );
-}
-
-function InfoCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs tracking-wide text-brand-neutral-100">
-        {label}
-      </p>
-      <div className="text-sm text-brand-white leading-relaxed">{children}</div>
-    </div>
   );
 }

@@ -1,0 +1,1 @@
+export const EXAMPLES_REVALIDATE_SECONDS = 60 * 30;

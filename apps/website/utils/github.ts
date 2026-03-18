@@ -13,6 +13,7 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
       `https://api.github.com/repos/${owner}/${cleanRepo}`,
       {
         headers: getGitHubHeaders(),
+        cache: "force-cache",
       }
     );
 
@@ -34,7 +35,7 @@ export type ExampleItem = {
   repositoryUrl: string;
   path: string;
   tags?: string[];
-  kind: "example" | "template";
+  type: "example" | "template";
   sourceRepo?: string;
 };
 
@@ -77,7 +78,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
               repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
               path: dir.path,
               tags: [],
-              kind: "example",
+              type: "example",
               sourceRepo: "basementstudio/xmcp",
             };
           }
@@ -93,7 +94,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
             repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
             path: dir.path,
             tags: packageContent.keywords || [],
-            kind: "example",
+            type: "example",
             sourceRepo: "basementstudio/xmcp",
           };
         } catch (error) {
@@ -104,7 +105,7 @@ export async function fetchExamples(): Promise<ExampleItem[]> {
             repositoryUrl: `https://github.com/basementstudio/xmcp/tree/main/examples/${dir.name}`,
             path: dir.path,
             tags: [],
-            kind: "example",
+            type: "example",
             sourceRepo: "basementstudio/xmcp",
           };
         }
@@ -167,7 +168,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
               repositoryUrl,
               path: dir.path,
               tags: [],
-              kind: "template",
+              type: "template",
               sourceRepo: templatesRepo,
             };
           }
@@ -187,7 +188,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
             repositoryUrl,
             path: dir.path,
             tags,
-            kind: "template",
+            type: "template",
             sourceRepo: templatesRepo,
           };
         } catch (error) {
@@ -198,7 +199,7 @@ export async function fetchTemplates(): Promise<ExampleItem[]> {
             repositoryUrl,
             path: dir.path,
             tags: [],
-            kind: "template",
+            type: "template",
             sourceRepo: templatesRepo,
           };
         }
