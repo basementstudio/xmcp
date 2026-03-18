@@ -9,6 +9,13 @@ declare module "xmcp/plugins/x402" {
   export type PaidHandler = import("../plugins/x402/index").PaidHandler;
 }
 
+declare module "xmcp/plugins/mpp" {
+  export const isMppPaidHandler: typeof import("../plugins/mpp/index").isMppPaidHandler;
+  export const getMppRegistry: typeof import("../plugins/mpp/index").getMppRegistry;
+  export type MppToolOptions = import("../plugins/mpp/index").MppToolOptions;
+  export type MppPaidHandler = import("../plugins/mpp/index").MppPaidHandler;
+}
+
 declare module "xmcp/cloudflare" {
   export const apiKeyAuthMiddleware: typeof import("../runtime/platforms/cloudflare/middlewares/api-key").cloudflareApiKeyAuthMiddleware;
   export const jwtAuthMiddleware: typeof import("../runtime/platforms/cloudflare/middlewares/jwt").cloudflareJwtAuthMiddleware;

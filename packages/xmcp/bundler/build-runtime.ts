@@ -88,6 +88,7 @@ const config: RspackOptions = {
     alias: {
       "@": srcPath,
       "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
+      "xmcp/plugins/mpp": path.join(srcPath, "plugins/mpp"),
     },
   },
   watchOptions: {

@@ -1,0 +1,49 @@
+{
+  "name": "@xmcp-dev/mpp",
+  "description": "Stripe MPP (Machine Payment Protocol) integration for xmcp",
+  "version": "0.1.0",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "mpp",
+    "stripe",
+    "payments",
+    "mcp",
+    "machine-payments"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/mpp"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "mppx": "^0.4.1",
+    "stripe": "^17.0.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.2",
+    "typescript": "catalog:",
+    "xmcp": "^0.5.8"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.5.8"
+  }
+}

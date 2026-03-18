@@ -9,6 +9,7 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import { isMppPaidHandler, getMppRegistry } from "@/plugins/mpp";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -49,11 +50,28 @@ export function addToolsToServer(
       Object.assign(toolConfig, metadata);
     }
 
+    // Detect dual-protocol conflict (FR-13)
+    const isX402 = isPaidHandler(handler);
+    const isMpp = isMppPaidHandler(handler);
+    if (isX402 && isMpp) {
+      throw new Error(
+        `Tool "${toolConfig.name}" is marked with both x402 paid() and mpp paid(). Only one payment protocol per tool is allowed.`
+      );
+    }
+
     // Register paid tools in x402 registry if plugin is installed
-    if (isPaidHandler(handler)) {
+    if (isX402) {
       const registry = getX402Registry();
       if (registry) {
         registry.set(toolConfig.name, handler.__x402);
+      }
+    }
+
+    // Register paid tools in MPP registry if plugin is installed
+    if (isMpp) {
+      const registry = getMppRegistry();
+      if (registry) {
+        registry.set(toolConfig.name, handler.__mpp);
       }
     }
 

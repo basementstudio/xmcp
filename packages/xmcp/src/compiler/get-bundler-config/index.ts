@@ -153,6 +153,10 @@ export function getRspackConfig(
           isCloudflare && xmcpSrcPath
             ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
             : path.resolve(processFolder, ".xmcp/x402.js"),
+        "xmcp/plugins/mpp":
+          isCloudflare && xmcpSrcPath
+            ? path.join(xmcpSrcPath, "plugins/mpp/index.ts")
+            : path.resolve(processFolder, ".xmcp/mpp.js"),
         ...(isCloudflare && xmcpSrcPath
           ? {
               "@": xmcpSrcPath,
