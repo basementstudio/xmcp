@@ -1,0 +1,218 @@
+---
+title: "Stripe MPP"
+metadataTitle: "Usage with Stripe MPP | xmcp Documentation"
+publishedAt: "2026-03-18"
+summary: "Monetize your MCP tools with card and Link payments via Stripe"
+description: "The MPP plugin enables tool monetization through Stripe's Machine Payment Protocol using cards and Link wallets."
+---
+
+## Overview
+
+The MPP plugin integrates [Stripe's Machine Payment Protocol](https://docs.stripe.com/payments/machine/mpp) with your xmcp server, enabling you to charge for tool usage using traditional payment methods like credit cards, debit cards, and [Link](https://link.co/) wallets through Stripe's payment infrastructure.
+
+## Installation
+
+Install the MPP plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm add @xmcp-dev/mpp",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm install @xmcp-dev/mpp",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/mpp",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/mpp",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Set up your Stripe account
+
+Before integrating the plugin, you need a Stripe account with machine payments enabled:
+
+1. Create or use an existing [Stripe account](https://dashboard.stripe.com/register)
+2. Activate your account and complete onboarding
+3. Request **Machine Payments** access by contacting [machine-payments@stripe.com](mailto:machine-payments@stripe.com)
+4. Get your secret key from the [Stripe Dashboard](https://dashboard.stripe.com/apikeys)
+
+<Callout variant="info">
+  Stripe MPP uses Shared Payment Tokens (SPT) to process payments through cards and Link wallets. The `mppx` SDK handles challenge generation, credential verification, and payment processing automatically.
+</Callout>
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and configure the following environment variables:
+
+```bash
+STRIPE_SECRET_KEY=sk_test_...
+
+# Optional: Persistent secret key for MPP challenges
+# If not set, an ephemeral key is auto-generated (credentials won't survive restarts)
+MPP_SECRET_KEY=your_base64_secret_here
+```
+
+## Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory and import the provider from the package:
+
+```typescript title="src/middleware.ts"
+import { mppProvider } from "@xmcp-dev/mpp";
+
+export default mppProvider({
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
+  defaults: {
+    amount: "1",
+    currency: "usd",
+  },
+});
+```
+
+### Configuration Options
+
+- **`stripeSecretKey`**: Your Stripe secret key (required)
+- **`mppSecretKey`**: (Optional) Secret key for securing MPP challenges. If omitted, an ephemeral key is auto-generated with a startup warning
+- **`paymentMethodTypes`**: (Optional) Accepted payment methods (default: `["card", "link"]`)
+- **`debug`**: (Optional) Enable debug logging
+- **`defaults`**: (Optional) Default values for all paid tools
+  - **`amount`**: Charge amount as a string (default: `"1"`)
+  - **`currency`**: Currency code (default: `"usd"`)
+
+## Monetize a Tool
+
+Wrap your tool functions with `paid()` to require payment:
+
+```typescript title="src/tools/analyze.ts"
+import { paid } from "@xmcp-dev/mpp";
+
+export default paid(
+  { amount: "5", currency: "usd" },
+  async function analyze({ data }) {
+    // Tool logic here
+    return `Analysis complete for: ${data}`;
+  }
+);
+```
+
+### Pricing
+
+You can set a custom amount for each tool by passing options to `paid()`. If not specified, the tool will use the default amount from your provider configuration. If the provider doesn't specify defaults either, the tool will cost **$1 USD** per call.
+
+```typescript title="src/tools/premium-analysis.ts"
+import { paid } from "@xmcp-dev/mpp";
+
+// This tool costs $5 per call
+export default paid(
+  { amount: "5", currency: "usd" },
+  async function premiumAnalysis({ data }) {
+    // Premium tool logic
+    return `Premium analysis complete for: ${data}`;
+  }
+);
+```
+
+```typescript title="src/tools/basic-tool.ts"
+import { paid } from "@xmcp-dev/mpp";
+
+// This tool uses the provider's default amount,
+// or $1 USD if no default is configured
+export default paid(async function basicTool({ input }) {
+  return `Processed: ${input}`;
+});
+```
+
+### Tool Options
+
+- **`amount`**: Charge amount for this tool (falls back to provider default, then `"1"`)
+- **`currency`**: Currency code for this tool (falls back to provider default, then `"usd"`)
+- **`description`**: Description used in payment challenges
+
+## Get Payment Details
+
+Access payment details inside your tool using the `payment()` function:
+
+```typescript title="src/tools/paid-greet.ts"
+import { paid, payment } from "@xmcp-dev/mpp";
+
+export default paid(async function paidGreet({ name }) {
+  const { paymentId, amount, currency } = payment();
+
+  return `Hello, ${name}! Payment of ${amount} ${currency} received (${paymentId}).`;
+});
+```
+
+## Payment Methods
+
+The plugin supports the following payment methods through Stripe:
+
+| Method | Description | Use Case |
+|--------|-------------|----------|
+| `card` | Credit and debit cards | Broadest compatibility |
+| `link` | Stripe Link wallets | Fast checkout for returning users |
+
+## How It Works
+
+The MPP payment flow follows the [Machine Payment Protocol](https://docs.stripe.com/payments/machine/mpp):
+
+1. Client calls a paid tool without payment credentials
+2. Server returns a 402 challenge with payment requirements
+3. Client creates a payment credential using their payment method
+4. Client retries the request with the credential in `params._meta["mpp/payment"]`
+5. Server verifies the credential via the `mppx` SDK
+6. Tool executes and client receives the response with a receipt in `_meta["mpp/payment-response"]`
+
+## Troubleshooting
+
+### Payment Required Response
+
+If clients receive a payment challenge, they need to:
+
+- Extract the challenge from `result.structuredContent.challenge`
+- Create a payment credential using their Stripe payment method
+- Retry with the credential in `params._meta["mpp/payment"]`
+
+### Payment Verification Failed
+
+If payment verification fails:
+
+- Ensure the credential was created from the correct challenge
+- Check that the payment method is valid and has sufficient funds
+- Verify the Stripe secret key is correct and has machine payments enabled
+
+### Service Unavailable
+
+If clients receive a "service unavailable" error:
+
+- Check that the `mppx` package is installed and accessible
+- Verify your Stripe secret key is valid
+- Ensure your Stripe account has machine payments enabled
+- Check network connectivity to Stripe's servers
+
+### Missing Payment Context
+
+If `payment()` throws an error:
+
+- Ensure `mppProvider` is exported as default from `middleware.ts`
+- Only call `payment()` inside paid tool handlers
+- Don't call `payment()` at module load time
+
+### Ephemeral Key Warning
+
+If you see a warning about ephemeral keys at startup:
+
+- Set `mppSecretKey` in your provider config for production
+- Generate a persistent key: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+- Store it as an environment variable

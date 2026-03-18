@@ -3,12 +3,12 @@ title: "Monetization"
 metadataTitle: "MCP Server Monetization Guide | xmcp Documentation"
 publishedAt: "2026-01-19"
 summary: "Learn how monetization works on xmcp servers with payment-based access control."
-description: "Charge for your MCP tools using license keys or crypto micropayments. Understand human vs agent monetization models, and integrate with Polar or x402."
+description: "Charge for your MCP tools using license keys, crypto micropayments, or card payments. Understand human vs agent monetization models, and integrate with Polar, x402, or Stripe MPP."
 ---
 
 ## Overview
 
-MCP servers can monetize tools through payment verification. xmcp supports two approaches: license key validation where tools check credentials before returning results, and crypto payments where the transport layer blocks execution until payment is verified.
+MCP servers can monetize tools through payment verification. xmcp supports three approaches: license key validation where tools check credentials before returning results, crypto payments where the transport layer blocks execution until payment is verified, and card/Link payments through Stripe's Machine Payment Protocol (MPP).
 
 ## Quickstart
 
@@ -30,7 +30,9 @@ The two monetization approaches serve fundamentally different use cases based on
 
 **Human-based monetization** with [Polar](/docs/integrations/polar) requires a person to purchase a license key and configure it in their MCP client. The human decides to pay upfront through a checkout flow, subscription, or credit purchase. The agent then uses that credential for subsequent requests. This model works well for SaaS-style billing where users manage their own subscriptions.
 
-**Agent-based monetization** with [x402](/docs/integrations/x402) enables agents to pay autonomously. When an agent encounters a paid tool, it can sign a crypto payment from its wallet without human intervention. The agent receives payment requirements, authorizes the transaction, and continues. This enables true agent-to-agent commerce where AI agents can purchase services from other AI agents.
+**Agent-based monetization with crypto** using [x402](/docs/integrations/x402) enables agents to pay autonomously with USDC on Base. When an agent encounters a paid tool, it can sign a crypto payment from its wallet without human intervention. The agent receives payment requirements, authorizes the transaction, and continues. This enables true agent-to-agent commerce where AI agents can purchase services from other AI agents.
+
+**Agent-based monetization with cards** using [Stripe MPP](/docs/integrations/mpp) enables agents to pay using traditional payment methods (credit cards, debit cards, Link wallets) through Stripe. The agent receives a payment challenge, creates a credential using its Stripe payment method, and retries the request. Settlement happens through Stripe's payment rails, making it accessible to agents without crypto wallets.
 
 ### License key validation
 
@@ -144,6 +146,56 @@ export default paid(async function paidTool({ input }) {
 });
 ```
 
+### Card/Link payment flow
+
+With [Stripe MPP](/docs/integrations/mpp), the payment flow follows the [Machine Payment Protocol](https://docs.stripe.com/payments/machine/mpp):
+
+1. Client calls a paid tool without payment credentials
+2. Server responds with a 402 challenge containing payment requirements
+3. Client creates a payment credential using their card or Link wallet
+4. Client retries the request with the credential
+5. Server verifies the credential and processes payment through Stripe
+6. Tool executes and client receives the response with a receipt
+
+```typescript title="src/middleware.ts"
+import { mppProvider } from "@xmcp-dev/mpp";
+
+export default mppProvider({
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY!,
+  defaults: {
+    amount: "1",
+    currency: "usd",
+  },
+});
+```
+
+```typescript title="src/tools/paid-tool.ts"
+import { paid } from "@xmcp-dev/mpp";
+
+export default paid(
+  { amount: "5", currency: "usd" },
+  async function paidTool({ input }) {
+    return `Processed: ${input}`;
+  }
+);
+```
+
+The `paid()` wrapper marks a tool as requiring payment, just like with x402. Tools without this wrapper remain free. The key difference is that payments settle through Stripe's payment rails instead of on-chain.
+
+#### Payment context
+
+Inside a paid tool, you can access payment information:
+
+```typescript title="src/tools/paid-tool.ts"
+import { paid, payment } from "@xmcp-dev/mpp";
+
+export default paid(async function paidTool({ input }) {
+  const { paymentId, amount, currency } = payment();
+
+  return `Processed for payment ${paymentId}`;
+});
+```
+
 ## Pricing considerations
 
 **For subscriptions**, consider what comparable services charge and what value users derive over a billing period. Polar supports multiple tiers, usage limits, and meter-based consumption tracking.
@@ -154,5 +206,7 @@ export default paid(async function paidTool({ input }) {
 
 - [Polar Integration](/docs/integrations/polar) - Full setup guide for license keys
 - [x402 Integration](/docs/integrations/x402) - Full setup guide for crypto payments
+- [Stripe MPP Integration](/docs/integrations/mpp) - Full setup guide for card/Link payments
 - [x402 Protocol](https://www.x402.org/) - HTTP 402 payment standard
+- [Stripe MPP Protocol](https://docs.stripe.com/payments/machine/mpp) - Machine Payment Protocol
 - [Polar Documentation](https://docs.polar.sh/) - License key management
