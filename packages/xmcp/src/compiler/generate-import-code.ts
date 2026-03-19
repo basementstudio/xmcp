@@ -13,6 +13,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
+    notificationPaths,
     hasMiddleware,
     clientBundles,
     platforms,
@@ -27,6 +28,7 @@ export function generateImportCode(): string {
       toolPaths,
       promptPaths,
       resourcePaths,
+      notificationPaths,
       hasMiddleware,
       clientBundles
     );
@@ -36,6 +38,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
+    notificationPaths,
     hasMiddleware,
     clientBundles
   );
@@ -49,6 +52,7 @@ function generateStaticImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
+  notificationPaths: Set<string>,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -57,6 +61,7 @@ function generateStaticImportCode(
   const toolsEntries: string[] = [];
   const promptsEntries: string[] = [];
   const resourcesEntries: string[] = [];
+  const notificationsEntries: string[] = [];
 
   Array.from(toolPaths).forEach((p) => {
     const path = p.replace(/\\/g, "/");
@@ -80,6 +85,14 @@ function generateStaticImportCode(
     const identifier = pathToIdentifier(path);
     staticImports.push(`import * as ${identifier} from "${relativePath}";`);
     resourcesEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
+  });
+
+  Array.from(notificationPaths).forEach((p) => {
+    const path = p.replace(/\\/g, "/");
+    const relativePath = `../${path}`;
+    const identifier = pathToIdentifier(path);
+    staticImports.push(`import * as ${identifier} from "${relativePath}";`);
+    notificationsEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
   });
 
   let middlewareCode = "";
@@ -110,6 +123,10 @@ export const resources = {
 ${resourcesEntries.join("\n")}
 };
 
+export const notifications = {
+${notificationsEntries.join("\n")}
+};
+
 export const clientBundles = {
 ${clientBundlesEntries}
 };
@@ -126,6 +143,7 @@ function generateDynamicImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
+  notificationPaths: Set<string>,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -146,6 +164,14 @@ function generateDynamicImportCode(
     .join("\n");
 
   const importResourcesCode = Array.from(resourcePaths)
+    .map((p) => {
+      const path = p.replace(/\\/g, "/");
+      const relativePath = `../${path}`;
+      return `"${path}": () => import("${relativePath}"),`;
+    })
+    .join("\n");
+
+  const importNotificationsCode = Array.from(notificationPaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
       const relativePath = `../${path}`;
@@ -176,6 +202,10 @@ ${importPromptsCode}
 
 export const resources = {
 ${importResourcesCode}
+};
+
+export const notifications = {
+${importNotificationsCode}
 };
 
 export const clientBundles = {

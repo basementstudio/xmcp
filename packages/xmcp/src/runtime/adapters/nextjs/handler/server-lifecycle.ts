@@ -7,6 +7,7 @@ import {
   loadPrompts,
   loadResources,
   loadTools,
+  loadNotifications,
 } from "@/runtime/utils/server";
 
 export interface ServerLifecycle {
@@ -40,12 +41,13 @@ export async function initializeMcpServer(): Promise<McpServer> {
   const [toolPromises, toolModules] = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
+  const [notificationPromises, notificationModules] = loadNotifications();
 
-  await Promise.all([...toolPromises, ...promptPromises, ...resourcePromises]);
+  await Promise.all([...toolPromises, ...promptPromises, ...resourcePromises, ...notificationPromises]);
 
   const server = new McpServer(INJECTED_CONFIG);
 
-  await configureServer(server, toolModules, promptModules, resourceModules);
+  await configureServer(server, toolModules, promptModules, resourceModules, notificationModules);
 
   return server;
 }

@@ -56,6 +56,7 @@ export type ResolvedPathsConfig = {
   tools: string | null;
   prompts: string | null;
   resources: string | null;
+  notifications: string | null;
 };
 
 export function getResolvedPathsConfig(
@@ -67,6 +68,7 @@ export function getResolvedPathsConfig(
       tools: DEFAULT_PATHS.tools,
       prompts: DEFAULT_PATHS.prompts,
       resources: DEFAULT_PATHS.resources,
+      notifications: DEFAULT_PATHS.notifications,
     };
   }
 
@@ -74,6 +76,7 @@ export function getResolvedPathsConfig(
     tools: DEFAULT_PATHS.tools,
     prompts: DEFAULT_PATHS.prompts,
     resources: DEFAULT_PATHS.resources,
+    notifications: DEFAULT_PATHS.notifications,
   };
 
   // Handle tools path
@@ -97,6 +100,15 @@ export function getResolvedPathsConfig(
       : null;
   } else if (typeof userPaths.resources === "string") {
     resolvedPaths.resources = userPaths.resources;
+  }
+
+  // Handle notifications path
+  if (typeof userPaths.notifications === "boolean") {
+    resolvedPaths.notifications = userPaths.notifications
+      ? DEFAULT_PATHS.notifications
+      : null;
+  } else if (typeof userPaths.notifications === "string") {
+    resolvedPaths.notifications = userPaths.notifications;
   }
 
   return resolvedPaths;

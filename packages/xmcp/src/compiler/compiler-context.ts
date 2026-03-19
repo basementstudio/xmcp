@@ -20,6 +20,8 @@ interface CompilerContext {
   promptPaths: Set<string>;
   /** The paths to the resources. */
   resourcePaths: Set<string>;
+  /** The paths to the notifications. */
+  notificationPaths: Set<string>;
   /** Whether the middleware is enabled. */
   hasMiddleware: boolean;
   /** The parsed config. */
@@ -36,7 +38,7 @@ export const compilerContext = createContext<CompilerContext>({
 export const compilerContextProvider = async (
   initialValue: Omit<
     CompilerContext,
-    "toolPaths" | "promptPaths" | "resourcePaths" | "hasMiddleware"
+    "toolPaths" | "promptPaths" | "resourcePaths" | "notificationPaths" | "hasMiddleware"
   >,
   callback: () => void
 ) => {
@@ -46,6 +48,7 @@ export const compilerContextProvider = async (
       toolPaths: new Set(),
       promptPaths: new Set(),
       resourcePaths: new Set(),
+      notificationPaths: new Set(),
       hasMiddleware: false,
     },
     () => Promise.resolve(callback())

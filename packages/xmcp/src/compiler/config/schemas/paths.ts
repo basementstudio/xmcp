@@ -8,6 +8,7 @@ const pathsConfigBaseSchema = z.object({
   tools: z.union([z.boolean(), z.string()]).default(true),
   prompts: z.union([z.boolean(), z.string()]).default(true),
   resources: z.union([z.boolean(), z.string()]).default(true),
+  notifications: z.union([z.boolean(), z.string()]).default(true),
 });
 
 // Input schema - all fields optional for partial configs
@@ -32,4 +33,5 @@ export const DEFAULT_PATHS = {
   tools: "src/tools",
   prompts: "src/prompts",
   resources: "src/resources",
+  notifications: "src/notifications",
 } as const;

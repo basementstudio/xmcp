@@ -23,6 +23,9 @@ my-project/
 │   └── resources/      # Resource files are auto-discovered here
 │       ├── (config)/app.ts
 │       ├── (users)/[userId]/profile.ts
+│   └── notifications/  # Notification handlers are auto-discovered here
+│       ├── roots-changed.ts
+│       ├── on-cancel.ts
 ├── dist/               # Built output (generated)
 ├── package.json
 ├── tsconfig.json
@@ -41,7 +44,7 @@ There are the three top-level files that are required for your project:
 
 The `src/` directory houses your project's implementation. xmcp follows a declarative, file-system based approach—simply create a file in the appropriate directory, and it will be automatically discovered and registered.
 
-The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, and `resources/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
+The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, `resources/`, and `notifications/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
 
 <ConceptBoxes>
   <ConceptBox
@@ -58,6 +61,11 @@ The optional `middleware.ts` file at the root of `src/` processes HTTP requests 
     title="Resources"
     description="Understand how to expose data through resources."
     href="/docs/core-concepts/resources"
+  />
+  <ConceptBox
+    title="Notifications"
+    description="Subscribe to MCP client notifications like cancellation or root changes."
+    href="/docs/core-concepts/notifications"
   />
   <ConceptBox
     title="Middleware"
