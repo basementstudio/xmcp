@@ -10,16 +10,10 @@ export const schema = {
 // Define tool metadata
 export const metadata: ToolMetadata = {
   name: "greet",
-  description: "Greet the user (paid tool - $1)",
-  annotations: {
-    title: "Greet the user",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
+  description: "Greet the user",
 };
 
-// Paid tool implementation - uses middleware defaults ($1)
+// Paid tool implementation - uses defaults
 export default paid(async function greet({ name }: InferSchema<typeof schema>) {
-  return `Hello, ${name}! (paid via Stripe MPP)`;
+  return `Hello, ${name}!`;
 });
