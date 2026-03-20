@@ -45,6 +45,29 @@ npx init-xmcp@latest
 ⊹ Visit [xmcp.dev](https://xmcp.dev) to learn more about the project.\
 ⊹ Visit [xmcp.dev/docs](https://xmcp.dev/docs) to view the full documentation.
 
+## Troubleshooting
+
+### Default export required
+
+`xmcp` expects each file in `tools` to export a callable `default` handler.
+
+```ts
+// tools/greet.ts
+export default function greet() {
+  return "hello";
+}
+```
+
+If a file is empty, missing a `default` export, or exports a non-function as default, `xmcp` will:
+- print a friendly warning with the file path
+- skip only that file
+- continue starting the server
+
+Startup also prints per-type summaries like:
+- `1 tools skipped due to empty/malformed files or import errors.`
+
+For real import/syntax failures, `xmcp` keeps the full error output/stack trace to help debugging.
+
 ## Security
 
 If you believe you have found a security vulnerability, we encourage you to let us know right away.
