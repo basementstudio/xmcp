@@ -1,0 +1,102 @@
+---
+title: "Notifications"
+metadataTitle: "Notifications | xmcp Documentation"
+publishedAt: "2026-03-19"
+summary: "Learn how to subscribe to MCP client notifications in your xmcp application."
+description: "Notifications are one-way messages from clients to servers. xmcp provides a file-based convention for subscribing to these events using the subscribe() function."
+---
+
+By default, `xmcp` detects files under the `/src/notifications/` directory and registers them as notification handlers, but you can specify a [custom directory](/docs/configuration/custom-directories) if you prefer.
+
+A notification file exports a single default using the `subscribe()` function:
+
+```typescript title="src/notifications/roots-changed.ts"
+import { subscribe } from "xmcp";
+
+export default subscribe("notifications/roots/list_changed", async (params, extra) => {
+  console.log("Client roots changed — refreshing workspace context");
+});
+```
+
+## What are MCP notifications?
+
+In the MCP protocol, notifications are **one-way messages** that don't expect a response. Clients send notifications to servers to signal events like session initialization, request cancellation, or workspace changes.
+
+## Available notification methods
+
+These are the standard MCP client-to-server notification methods:
+
+| Method                               | Params                                              | Description                                         |
+| ------------------------------------ | --------------------------------------------------- | --------------------------------------------------- |
+| `notifications/initialized`          | _none_                                              | Client completed the initialization handshake       |
+| `notifications/roots/list_changed`   | _none_                                              | Client's root URIs changed                          |
+| `notifications/cancelled`            | `requestId`, `reason?`                              | Client cancelled an in-flight request               |
+| `notifications/progress`             | `progressToken`, `progress`, `total?`, `message?`   | Client sent a progress update                       |
+
+Custom notification methods are also supported — `params` will be typed as `Record<string, unknown>`.
+
+## Handler signature
+
+The handler receives two arguments:
+
+- **`params`**: The notification parameters, fully typed for known methods.
+- **`extra`**: Context object with `signal` (AbortSignal).
+
+```typescript title="src/notifications/on-cancel.ts"
+import { subscribe } from "xmcp";
+
+export default subscribe("notifications/cancelled", async (params, extra) => {
+  // params.requestId and params.reason are fully typed
+  console.log(`Request ${params.requestId} was cancelled: ${params.reason}`);
+});
+```
+
+## Multiple handlers
+
+Multiple files can subscribe to the same notification method. All handlers run **concurrently** and are **isolated** — if one throws, the others still execute.
+
+```typescript title="src/notifications/log-cancel.ts"
+import { subscribe } from "xmcp";
+
+export default subscribe("notifications/cancelled", async (params) => {
+  console.log(`Cancelled: ${params.requestId}`);
+});
+```
+
+```typescript title="src/notifications/metrics-cancel.ts"
+import { subscribe } from "xmcp";
+
+export default subscribe("notifications/cancelled", async (params) => {
+  // Track cancellation metrics
+  metrics.increment("request.cancelled");
+});
+```
+
+Both handlers fire when a cancellation notification arrives.
+
+## SDK handler preservation
+
+For `notifications/cancelled` and `notifications/progress`, the MCP SDK has built-in internal handlers that manage request abortion and progress tracking. Your handlers run **alongside** them — they never replace the SDK's built-in behavior.
+
+## Custom notification methods
+
+You can subscribe to any notification method string, not just the standard ones. Custom methods have `params` typed as `Record<string, unknown>`:
+
+```typescript title="src/notifications/custom-event.ts"
+import { subscribe } from "xmcp";
+
+export default subscribe("custom/my-event", async (params) => {
+  // params is Record<string, unknown>
+  console.log("Custom event received:", params);
+});
+```
+
+## Error handling
+
+Handler errors are logged automatically and don't affect other handlers or server stability:
+
+```
+[xmcp] Notification handler error for "notifications/cancelled": Error: something went wrong
+```
+
+Invalid notification files (missing or malformed `subscribe()` export) produce a warning but don't prevent the server from starting.

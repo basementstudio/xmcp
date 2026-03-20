@@ -238,6 +238,10 @@ export function getRspackConfig(
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "resources",
     ],
+    INJECTED_NOTIFICATIONS: [
+      path.resolve(processFolder, ".xmcp/import-map.js"),
+      "notifications",
+    ],
     INJECTED_MIDDLEWARE: [
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "middleware",

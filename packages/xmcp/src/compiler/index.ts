@@ -48,7 +48,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
+  const { mode, toolPaths, promptPaths, resourcePaths, notificationPaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
@@ -166,6 +166,29 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
+  // handle notifications
+  let notificationsPath = isValidPath(
+    getResolvedPathsConfig(xmcpConfig).notifications,
+    "notifications"
+  );
+
+  if (notificationsPath) {
+    watcher.watch(`${notificationsPath}/**/*.{ts,tsx}`, {
+      onAdd: async (filePath) => {
+        addWatchedPath(notificationPaths, filePath);
+        if (compilerStarted) {
+          await generateCode();
+        }
+      },
+      onUnlink: async (filePath) => {
+        removeWatchedPath(notificationPaths, filePath);
+        if (compilerStarted) {
+          await generateCode();
+        }
+      },
+    });
+  }
+
   // if adapter is not enabled, handle middleware
   if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
@@ -220,6 +243,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           reactToolsCount,
           promptsCount: promptPaths.size,
           resourcesCount: resourcePaths.size,
+          notificationsCount: notificationPaths.size,
           transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
           adapter: xmcpConfig.experimental?.adapter
             ? (xmcpConfig.experimental.adapter as AdapterType)

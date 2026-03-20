@@ -213,6 +213,13 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
 
       if (!hasRequests) {
         // Handle notifications (no response expected)
+        // Still dispatch to the server so notification handlers can fire
+        const authInfo: AuthInfo | undefined = req.auth;
+        for (const message of messages) {
+          if (this.onmessage) {
+            this.onmessage(message, { authInfo });
+          }
+        }
         res.writeHead(202).end();
         return;
       }
