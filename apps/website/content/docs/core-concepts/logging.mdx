@@ -1,0 +1,100 @@
+---
+title: "Logging"
+metadataTitle: "Logging | xmcp Documentation"
+publishedAt: "2026-03-17"
+summary: "Send structured log messages from your MCP server to connected clients."
+description: "The logging capability lets your tools, prompts, and resources send structured log messages to clients. Clients can control verbosity via log levels, and messages are automatically filtered based on the client's preference."
+---
+
+xmcp supports the MCP [logging capability](https://modelcontextprotocol.io/specification/draft/server/utilities/logging), which provides a standardized way for servers to send structured log messages to clients.
+
+## Usage
+
+Import `logger` from `xmcp` and call any log method directly in your handlers:
+
+```typescript title="src/tools/sync-data.ts"
+import { z } from "zod";
+import { type InferSchema, logger } from "xmcp";
+
+export const schema = {
+  source: z.string().describe("Data source to sync from"),
+};
+
+export const metadata = {
+  name: "sync-data",
+  description: "Sync data from an external source",
+};
+
+export default async function syncData({ source }: InferSchema<typeof schema>) {
+  logger.info(`Starting sync from ${source}`, "sync-data");
+
+  try {
+    const records = await fetchRecords(source);
+    logger.debug({ recordCount: records.length }, "sync-data");
+
+    await processRecords(records);
+    logger.info("Sync completed successfully", "sync-data");
+
+    return `Synced ${records.length} records`;
+  } catch (error) {
+    logger.error({ error: String(error), source }, "sync-data");
+    return { isError: true, content: [{ type: "text", text: "Sync failed" }] };
+  }
+}
+```
+
+No need to accept `extra` as a parameter, `logger` automatically resolves the current server session from async context.
+
+## Log Levels
+
+The logging levels follow [RFC 5424](https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1) severity levels, from least to most severe:
+
+| Method        | Description                      | Example Use Case           |
+| ------------- | -------------------------------- | -------------------------- |
+| `debug`       | Detailed debugging information   | Function entry/exit points |
+| `info`        | General informational messages   | Operation progress updates |
+| `notice`      | Normal but significant events    | Configuration changes      |
+| `warning`     | Warning conditions               | Deprecated feature usage   |
+| `error`       | Error conditions                 | Operation failures         |
+| `critical`    | Critical conditions              | System component failures  |
+| `alert`       | Action must be taken immediately | Data corruption detected   |
+| `emergency`   | System is unusable               | Complete system failure    |
+
+## Sending a Message
+
+Each log method has the same signature:
+
+```typescript
+logger.info(data: unknown, loggerName?: string): void
+```
+
+- **`data`**: The log payload. Can be a string, number, object, or any JSON-serializable value.
+- **`loggerName`** _(optional)_: A label to identify the source of the message (e.g., your tool name or a subsystem).
+
+## Client-Controlled Log Level
+
+Clients can send a `logging/setLevel` request to control which messages they receive. When a client sets the level to `"warning"`, only messages at `warning` severity and above are delivered; `debug`, `info`, and `notice` messages are silently dropped.
+
+If no level has been set by the client, all messages are sent.
+
+## Works Everywhere
+
+Logging is available in all handler types:
+
+```typescript title="src/prompts/analyze.ts"
+import { logger } from "xmcp";
+
+export default async function analyze(args: any) {
+  logger.info("Running analysis prompt", "analyze");
+  return "Analysis result...";
+}
+```
+
+```typescript title="src/resources/status.ts"
+import { logger } from "xmcp";
+
+export default async function status(args: any) {
+  logger.debug("Fetching system status", "status");
+  return "System OK";
+}
+```

@@ -151,7 +151,8 @@ export function addToolsToServer(
         handler,
         meta,
         toolOutputSchema,
-        toolConfig.name
+        toolConfig.name,
+        server
       );
     }
 

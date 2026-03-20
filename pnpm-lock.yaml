@@ -522,6 +522,15 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  examples/logging:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   examples/mcp-app-css-modules:
     dependencies:
       react:

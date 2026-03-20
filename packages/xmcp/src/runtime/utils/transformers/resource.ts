@@ -4,11 +4,13 @@ import {
   ServerNotification,
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { ZodRawShape } from "zod/v3";
 import {
   composeUriFromPath,
   ResourceInfo,
 } from "../utils/resource-uri-composer";
+import { loggerContextProvider } from "../logger";
 
 /**
  * Type for the original resource handler that users write
@@ -43,7 +45,8 @@ export type McpResourceHandler = (
 export function transformResourceHandler(
   handler: UserResourceHandler,
   filePath: string,
-  schema: ZodRawShape = {}
+  schema: ZodRawShape = {},
+  server?: McpServer
 ): McpResourceHandler {
   const resourceInfo = composeUriFromPath(filePath);
 
@@ -60,12 +63,20 @@ export function transformResourceHandler(
     // extract and validate parameters from the actual URI using the template and schema
     const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);
 
-    let response = handler(parameters, extra);
+    const runHandler = async () => {
+      let response = handler(parameters, extra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response = server
+      ? await loggerContextProvider(
+          { server, sessionId: extra.sessionId },
+          runHandler
+        )
+      : await runHandler();
 
     // transform string response to ReadResourceResult
     if (typeof response === "string") {
