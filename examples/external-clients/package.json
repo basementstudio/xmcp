@@ -2,8 +2,9 @@
   "name": "External Clients",
   "description": "Learn how to use external clients in xmcp",
   "keywords": [
-    "external",
-    "clients"
+    "clients",
+    "integrations",
+    "external-clients"
   ],
   "scripts": {
     "build": "xmcp build",

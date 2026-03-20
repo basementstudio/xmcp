@@ -3,13 +3,19 @@
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Copy } from "lucide-react";
 
 interface CopyUrlButtonProps {
   url: string;
   className?: string;
+  withIcon?: boolean;
 }
 
-export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
+export function CopyUrlButton({
+  url,
+  className,
+  withIcon = false,
+}: CopyUrlButtonProps) {
   const [isCopying, setIsCopying] = useState(false);
   const [copied, triggerCopy] = useCopyButton(async () => {
     setIsCopying(true);
@@ -26,12 +32,13 @@ export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
       onClick={triggerCopy}
       disabled={isCopying}
       className={cn(
-        "relative inline-flex items-center text-sm font-medium text-brand-neutral-100 disabled:opacity-60 cursor-pointer",
+        "relative inline-flex items-center gap-1 text-sm font-medium text-brand-neutral-100 disabled:opacity-60 cursor-pointer",
         "min-w-[76px] justify-start",
         className
       )}
       aria-live="polite"
     >
+      {withIcon && <Copy className="size-3.5 shrink-0" />}
       <span
         className={cn(
           "block transition-all duration-300 ease-out",
@@ -39,7 +46,7 @@ export function CopyUrlButton({ url, className }: CopyUrlButtonProps) {
         )}
         aria-hidden={copied}
       >
-        Copy URL
+        URL
       </span>
       <span
         className={cn(

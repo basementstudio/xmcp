@@ -58,8 +58,8 @@ html:has(#nd-blog-layout) {
 
 /* Sidebar scrollbar styling */
 .sidebar-scrollbar::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-track {
@@ -67,18 +67,18 @@ html:has(#nd-blog-layout) {
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-brand-neutral-300);
   border-radius: 0;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 1);
+  background: var(--color-brand-neutral-200);
 }
 
 /* Firefox scrollbar */
 .sidebar-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.8) transparent;
+  scrollbar-color: var(--color-brand-neutral-300) transparent;
 }
 
 /* Markdown content styling */
@@ -136,7 +136,6 @@ html:has(#nd-blog-layout) {
 }
 
 .prose code {
-  @apply px-2 py-0.5;
   color: #ffffff;
 }
 
@@ -157,7 +156,7 @@ html:has(#nd-blog-layout) {
 
 .prose img {
   /* Don't apply styles to next/image */
-  @apply m-0 max-w-full w-full h-auto;
+  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-sm;
 }
 
 .prose p {
@@ -175,7 +174,22 @@ html:has(#nd-blog-layout) {
 
 .prose p code,
 .prose li code {
-  @apply border border-white/20 text-[0.9rem] px-[4px] py-[1px];
+  @apply border border-brand-neutral-400 bg-brand-neutral-600 text-brand-neutral-100 text-[0.9rem] px-1.5 py-0.5 rounded-[2px] font-mono leading-none align-baseline;
+  letter-spacing: 0;
+  color: var(--color-brand-neutral-100) !important;
+  background-color: var(--color-brand-neutral-600) !important;
+}
+
+.prose p code *,
+.prose li code * {
+  color: inherit !important;
+}
+
+.prose p code::before,
+.prose p code::after,
+.prose li code::before,
+.prose li code::after {
+  content: none;
 }
 
 .prose blockquote {
@@ -200,14 +214,23 @@ html:has(#nd-blog-layout) {
 
 .prose li {
   @apply my-3 relative text-brand-neutral-50;
-  padding-left: 1rem;
+  padding-left: 0.9rem;
+}
+
+.prose li > p {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .prose ul li::before {
-  content: "⊹ ";
+  content: "";
   position: absolute;
   left: 0;
-  font-weight: bold;
+  top: calc(0.5lh - 2px);
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-brand-neutral-50);
 }
 
 .prose hr {
@@ -260,6 +283,24 @@ pre::-webkit-scrollbar {
   display: none;
 }
 
+.codeblock-scroll-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-neutral-300) transparent;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar {
+  height: 10px;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.codeblock-scroll-rail::-webkit-scrollbar-thumb {
+  background: var(--color-brand-neutral-300);
+  border-radius: 0;
+}
+
 pre {
   -ms-overflow-style: none;
   /* IE and Edge */
@@ -301,8 +342,16 @@ input[type="email"] {
   @apply text-[1.5rem] leading-6 sm:text-[2.5rem] sm:leading-[3rem];
 }
 
+.heading-1 {
+  @apply text-[32px] font-normal leading-[36px] tracking-[-0.04em];
+}
+
 .heading-2 {
   @apply text-[1.5rem] leading-8 tracking-[-0.03rem] sm:text-[2rem] sm:leading-[2.25rem] sm:tracking-[-0.04rem];
+}
+
+.body-l {
+  @apply text-base leading-[1.5rem] tracking-[0.01rem];
 }
 
 .text-gradient {

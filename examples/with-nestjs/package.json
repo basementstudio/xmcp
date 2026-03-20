@@ -30,7 +30,8 @@
   },
   "keywords": [
     "adapter",
-    "nestjs"
+    "nestjs",
+    "typescript"
   ],
   "author": "",
   "license": "MIT"

@@ -2,7 +2,9 @@
   "name": "Template Config",
   "description": "Modify the template config in the xmcp.config.ts file.",
   "keywords": [
-    "config"
+    "configuration",
+    "template",
+    "scaffolding"
   ],
   "scripts": {
     "build": "xmcp build",
