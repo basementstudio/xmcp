@@ -149,4 +149,63 @@ describe("withExecutionLogging", () => {
       process.stderr.write = originalWrite;
     }
   });
+
+  it("should not crash when input contains BigInt values", async () => {
+    const writes: string[] = [];
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((chunk: any) => {
+      writes.push(String(chunk));
+      return true;
+    }) as typeof process.stderr.write;
+
+    try {
+      await withExecutionLogging(
+        {
+          kind: "tool",
+          name: "bigint",
+          input: { count: BigInt(42) },
+          handler: async () => "ok",
+        },
+        {
+          enabled: true,
+          includeInput: true,
+        }
+      );
+
+      assert.equal(writes.length, 2);
+      const startLog = JSON.parse(writes[0]);
+      assert.equal(startLog.input.count, "42");
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+  });
+
+  it("should not throw when stderr write fails", async () => {
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    let writes = 0;
+    process.stderr.write = ((_: any) => {
+      writes += 1;
+      throw new Error("stderr unavailable");
+    }) as typeof process.stderr.write;
+
+    try {
+      const result = await withExecutionLogging(
+        {
+          kind: "tool",
+          name: "write-failure",
+          input: { name: "Ada" },
+          handler: async () => "ok",
+        },
+        {
+          enabled: true,
+          includeInput: true,
+        }
+      );
+
+      assert.equal(result, "ok");
+      assert.equal(writes >= 2, true);
+    } finally {
+      process.stderr.write = originalWrite;
+    }
+  });
 });

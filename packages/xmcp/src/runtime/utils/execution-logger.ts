@@ -26,6 +26,18 @@ const defaultExecutionLogConfig: ExecutionLogConfig = {
 };
 
 export function getExecutionLogConfig(): ExecutionLogConfig {
+  if (
+    typeof OBSERVABILITY_CONFIG === "undefined" &&
+    typeof globalThis !== "undefined" &&
+    "OBSERVABILITY_CONFIG" in globalThis
+  ) {
+    return {
+      ...defaultExecutionLogConfig,
+      ...((globalThis as { OBSERVABILITY_CONFIG?: ExecutionLogConfig })
+        .OBSERVABILITY_CONFIG ?? {}),
+    };
+  }
+
   if (typeof OBSERVABILITY_CONFIG === "undefined") {
     return defaultExecutionLogConfig;
   }
@@ -39,6 +51,10 @@ export function getExecutionLogConfig(): ExecutionLogConfig {
 function safeSerializeError(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
+  }
+
+  if (typeof error === "bigint") {
+    return error.toString();
   }
 
   if (typeof error === "string") {
@@ -56,6 +72,10 @@ function safeStringify(value: unknown): string {
   const seen = new WeakSet<object>();
 
   return JSON.stringify(value, (_key, currentValue) => {
+    if (typeof currentValue === "bigint") {
+      return currentValue.toString();
+    }
+
     if (typeof currentValue === "object" && currentValue !== null) {
       if (seen.has(currentValue)) {
         return "[Circular]";
@@ -69,21 +89,47 @@ function safeStringify(value: unknown): string {
 }
 
 function writeExecutionLog(payload: ExecutionLogPayload): void {
-  const line = safeStringify({
-    scope: "xmcp",
-    ...payload,
-  });
+  try {
+    const line = safeStringify({
+      scope: "xmcp",
+      ...payload,
+    });
 
-  if (
-    typeof process !== "undefined" &&
-    process?.stderr &&
-    typeof process.stderr.write === "function"
-  ) {
-    process.stderr.write(`${line}\n`);
-    return;
+    if (
+      typeof process !== "undefined" &&
+      process?.stderr &&
+      typeof process.stderr.write === "function"
+    ) {
+      process.stderr.write(`${line}\n`);
+      return;
+    }
+  } catch {
+    try {
+      const fallbackLine = JSON.stringify({
+        scope: "xmcp",
+        event: payload.event,
+        kind: payload.kind,
+        name: payload.name,
+        timestamp: payload.timestamp,
+        durationMs: payload.durationMs,
+        success: payload.success,
+        error:
+          payload.error ??
+          "Failed to serialize observability payload; emitted fallback log",
+      });
+
+      if (
+        typeof process !== "undefined" &&
+        process?.stderr &&
+        typeof process.stderr.write === "function"
+      ) {
+        process.stderr.write(`${fallbackLine}\n`);
+        return;
+      }
+    } catch {
+      return;
+    }
   }
-
-  console.error(line);
 }
 
 export async function withExecutionLogging<T>(
@@ -92,6 +138,8 @@ export async function withExecutionLogging<T>(
     name: string;
     input?: unknown;
     handler: () => T | Promise<T>;
+    isFailureResult?: (result: T) => boolean;
+    getFailureError?: (result: T) => string | undefined;
   },
   config: ExecutionLogConfig = getExecutionLogConfig()
 ): Promise<T> {
@@ -111,6 +159,7 @@ export async function withExecutionLogging<T>(
   try {
     const result = await options.handler();
     const finishedAt = Date.now();
+    const isFailureResult = options.isFailureResult?.(result) ?? false;
 
     writeExecutionLog({
       event: "execution.end",
@@ -118,7 +167,10 @@ export async function withExecutionLogging<T>(
       name: options.name,
       timestamp: new Date(finishedAt).toISOString(),
       durationMs: finishedAt - startedAt,
-      success: true,
+      success: !isFailureResult,
+      ...(isFailureResult
+        ? { error: options.getFailureError?.(result) }
+        : {}),
     });
 
     return result;
