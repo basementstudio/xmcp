@@ -13,6 +13,7 @@ import { flattenMeta } from "./ui/flatten-meta";
 import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { withExecutionLogging } from "./execution-logger";
 
 // Client bundles can be injected at compile time for Cloudflare Workers
 // This variable is defined by DefinePlugin at compile time
@@ -225,12 +226,20 @@ export function addResourcesToServer(
       };
     };
 
+    const loggedHandler = async (uri: URL, extra: any) =>
+      withExecutionLogging({
+        kind: "resource",
+        name: resourceConfig.name,
+        input: { uri: uri.href },
+        handler: () => transformedHandler(uri, extra),
+      });
+
     // Register as a direct resource
     server.registerResource(
       autoResource.name,
       autoResource.uri,
       resourceConfig,
-      transformedHandler
+      loggedHandler
     );
   });
 
@@ -282,11 +291,19 @@ export function addResourcesToServer(
 
     if (resourceInfo.type === "direct") {
       // register as a direct resource (static composed URI)
+      const loggedHandler = async (uri: URL, extra: any) =>
+        withExecutionLogging({
+          kind: "resource",
+          name: resourceConfig.name,
+          input: { uri: uri.href },
+          handler: () => transformedHandler(uri, extra),
+        });
+
       server.registerResource(
         resourceConfig.name as string,
         uri,
         resourceConfig,
-        transformedHandler
+        loggedHandler
       );
     } else {
       // register as a resource template (dynamic URI with parameters)
@@ -326,11 +343,26 @@ export function addResourcesToServer(
           : response;
       };
 
+      const loggedTemplateHandler = async (
+        uri: URL,
+        variables: any,
+        extra: any
+      ) =>
+        withExecutionLogging({
+          kind: "resource",
+          name: resourceConfig.name,
+          input: {
+            uri: uri.href,
+            variables,
+          },
+          handler: () => templateCallback(uri, variables, extra),
+        });
+
       server.registerResource(
         resourceConfig.name as string,
         resourceTemplate,
         resourceConfig,
-        templateCallback
+        loggedTemplateHandler
       );
     }
   });

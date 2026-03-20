@@ -8,6 +8,7 @@ import {
   getResolvedTypescriptConfig,
   getResolvedExperimentalConfig,
   getResolvedCorsConfig,
+  getResolvedObservabilityConfig,
 } from "../utils";
 import {
   injectHttpVariables,
@@ -18,6 +19,7 @@ import {
   injectAdapterVariables,
   injectStdioVariables,
   injectServerInfoVariables,
+  injectObservabilityVariables,
 } from "../injection";
 import { configSchema } from "../index";
 
@@ -74,6 +76,14 @@ describe("Config System - Zod Defaults", () => {
       assert.equal(corsConfig.credentials, false);
       assert.equal(corsConfig.maxAge, 86400);
     }
+  });
+
+  it("should apply observability defaults", () => {
+    const parsed = configSchema.parse({ observability: {} });
+    const resolved = getResolvedObservabilityConfig(parsed);
+
+    assert.equal(resolved.enabled, false);
+    assert.equal(resolved.includeInput, true);
   });
 });
 
@@ -313,6 +323,21 @@ describe("Config System - Injection Functions", () => {
     const serverInfo = JSON.parse(variables.SERVER_INFO);
     assert.equal(typeof serverInfo.version, "string");
     assert.notEqual(serverInfo.version, "");
+  });
+
+  it("should inject observability variables", () => {
+    const config = configSchema.parse({
+      observability: {
+        enabled: true,
+        includeInput: false,
+      },
+    });
+    const variables = injectObservabilityVariables(config);
+
+    assert.notEqual(variables.OBSERVABILITY_CONFIG, undefined);
+    const observability = JSON.parse(variables.OBSERVABILITY_CONFIG);
+    assert.equal(observability.enabled, true);
+    assert.equal(observability.includeInput, false);
   });
 });
 

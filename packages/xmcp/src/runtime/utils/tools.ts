@@ -3,12 +3,13 @@ import { z } from "zod";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
-import { transformToolHandler } from "./transformers/tool";
+import { McpToolHandler, transformToolHandler } from "./transformers/tool";
 import { isReactFile } from "./react";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import { withExecutionLogging } from "./execution-logger";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -136,7 +137,7 @@ export function addToolsToServer(
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
     const meta = uiWidget ? flattenedToolMeta : undefined;
-    let transformedHandler;
+    let transformedHandler: McpToolHandler;
 
     if (isReactFile(path) && uiWidget) {
       transformedHandler = async (args: any, extra: any) => ({
@@ -168,11 +169,19 @@ export function addToolsToServer(
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
+    const loggedHandler = async (args: any, extra: any) =>
+      withExecutionLogging({
+        kind: "tool",
+        name: toolConfig.name,
+        input: args,
+        handler: () => transformedHandler(args, extra),
+      });
+
     // server as any prevents infinite type recursion
     (server as any).registerTool(
       toolConfig.name,
       toolConfigFormatted,
-      transformedHandler
+      loggedHandler
     );
   });
 

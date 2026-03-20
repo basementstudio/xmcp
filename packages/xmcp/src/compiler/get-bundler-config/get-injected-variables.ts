@@ -10,6 +10,7 @@ import {
   injectServerInfoVariables,
   injectAdapterVariables,
   injectTypescriptVariables,
+  injectObservabilityVariables,
 } from "../config/injection";
 import { getResolvedHttpConfig } from "../config/utils";
 
@@ -32,6 +33,7 @@ export function getInjectedVariables(
   const serverInfoVariables = injectServerInfoVariables(xmcpConfig);
   const adapterVariables = injectAdapterVariables(xmcpConfig);
   const typescriptVariables = injectTypescriptVariables(xmcpConfig);
+  const observabilityVariables = injectObservabilityVariables(xmcpConfig);
 
   return {
     ...httpVariables,
@@ -42,5 +44,6 @@ export function getInjectedVariables(
     ...serverInfoVariables,
     ...adapterVariables,
     ...typescriptVariables,
+    ...observabilityVariables,
   };
 }

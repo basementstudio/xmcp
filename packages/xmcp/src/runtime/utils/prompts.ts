@@ -3,6 +3,7 @@ import { ZodOptional, ZodType, ZodTypeDef, ZodRawShape } from "zod/v3";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
+import { withExecutionLogging } from "./execution-logger";
 
 interface PromptMetadata {
   name: string;
@@ -53,6 +54,14 @@ export function addPromptsToServer(
       );
     }
 
+    const loggedHandler = async (args: PromptArgsRawShape, extra: any) =>
+      withExecutionLogging({
+        kind: "prompt",
+        name: promptConfig.name,
+        input: args,
+        handler: () => transformedHandler(args, extra),
+      });
+
     // server as any prevents infinite type recursion
     (server as any).registerPrompt(
       promptConfig.name,
@@ -61,7 +70,7 @@ export function addPromptsToServer(
         description: promptConfig.description,
         argsSchema: schema,
       },
-      transformedHandler
+      loggedHandler
     );
   });
 
