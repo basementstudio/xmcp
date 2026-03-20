@@ -6,6 +6,7 @@ import {
   typescriptConfigSchema,
   corsConfigSchema,
   experimentalConfigSchema,
+  observabilityConfigSchema,
   DEFAULT_PATHS,
 } from "./schemas";
 import type { z } from "zod/v3";
@@ -165,4 +166,15 @@ export function getResolvedTypescriptConfig(
 ): z.output<typeof typescriptConfigSchema> {
   const typescript = userConfig?.typescript;
   return typescriptConfigSchema.parse(typescript ?? {});
+}
+
+export type ResolvedObservabilityConfig = z.output<
+  typeof observabilityConfigSchema
+>;
+
+export function getResolvedObservabilityConfig(
+  userConfig: XmcpConfigOutputSchema
+): ResolvedObservabilityConfig {
+  const observability = userConfig?.observability;
+  return observabilityConfigSchema.parse(observability ?? {});
 }
