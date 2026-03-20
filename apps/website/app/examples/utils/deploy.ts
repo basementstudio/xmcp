@@ -1,6 +1,18 @@
 import type { ExampleItem } from "./github";
 import type { DeployOption, DeployProvider } from "@/components/examples/deploy-dropdown";
 
+const PROVIDER_MAP = {
+  vercel: "Vercel",
+  alpic: "Alpic",
+  replit: "Replit",
+  netlify: "Netlify",
+  railway: "Railway",
+  render: "Render",
+  cloudflare: "Cloudflare",
+} as const satisfies Record<string, string>;
+
+type MappedProvider = keyof typeof PROVIDER_MAP;
+
 type DeployProviderConfig = {
   label: string;
   buildHref: (example: ExampleItem) => string;
@@ -8,11 +20,11 @@ type DeployProviderConfig = {
 
 const DEPLOY_PROVIDER_CONFIG = {
   vercel: {
-    label: "Vercel",
+    label: PROVIDER_MAP.vercel,
     buildHref: buildVercelCloneUrl,
   },
   alpic: {
-    label: "Alpic",
+    label: PROVIDER_MAP.alpic,
     buildHref: buildAlpicCloneUrl,
   },
 } satisfies Record<"vercel" | "alpic", DeployProviderConfig>;
@@ -88,33 +100,9 @@ function getProviderFromUrl(url: string): DeployProvider {
     }
   })();
 
-  if (host.includes("vercel")) return "vercel";
-  if (host.includes("alpic")) return "alpic";
-  if (host.includes("replit")) return "replit";
-  if (host.includes("netlify")) return "netlify";
-  if (host.includes("railway")) return "railway";
-  if (host.includes("render")) return "render";
-  if (host.includes("cloudflare")) return "cloudflare";
-  return "other";
+  return (Object.keys(PROVIDER_MAP) as MappedProvider[]).find((key) => host.includes(key)) ?? "other";
 }
 
 function getProviderLabel(provider: DeployProvider) {
-  switch (provider) {
-    case "vercel":
-      return "Vercel";
-    case "alpic":
-      return "Alpic";
-    case "replit":
-      return "Replit";
-    case "netlify":
-      return "Netlify";
-    case "railway":
-      return "Railway";
-    case "render":
-      return "Render";
-    case "cloudflare":
-      return "Cloudflare";
-    default:
-      return "Provider";
-  }
+  return PROVIDER_MAP[provider as MappedProvider] ?? "Provider";
 }
