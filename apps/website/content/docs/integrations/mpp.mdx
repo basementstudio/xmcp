@@ -77,6 +77,7 @@ export default mppProvider({
   defaults: {
     amount: "1",
     currency: "usd",
+    decimals: 2,
   },
 });
 ```
@@ -90,6 +91,7 @@ export default mppProvider({
 - **`defaults`**: (Optional) Default values for all paid tools
   - **`amount`**: Charge amount as a string (default: `"1"`)
   - **`currency`**: Currency code (default: `"usd"`)
+  - **`decimals`**: Number of decimal places for the currency (default: `2`). Use `0` for zero-decimal currencies like JPY, or `6` for crypto like USDC
 
 ## Monetize a Tool
 
@@ -138,6 +140,7 @@ export default paid(async function basicTool({ input }) {
 
 - **`amount`**: Charge amount for this tool (falls back to provider default, then `"1"`)
 - **`currency`**: Currency code for this tool (falls back to provider default, then `"usd"`)
+- **`decimals`**: Decimal places for the currency (falls back to provider default, then `2`)
 - **`description`**: Description used in payment challenges
 
 ## Get Payment Details

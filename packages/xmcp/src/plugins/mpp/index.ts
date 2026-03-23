@@ -1,6 +1,7 @@
 export interface MppToolOptions {
   amount?: string;
   currency?: string;
+  decimals?: number;
   description?: string;
 }
 

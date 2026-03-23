@@ -135,6 +135,7 @@ function mppMiddleware(config: MppConfig): RequestHandler {
       // Build a synthetic Fetch API Request for mppx
       const amount = toolOptions.amount ?? config.defaults?.amount ?? "1";
       const currency = toolOptions.currency ?? config.defaults?.currency ?? "usd";
+      const decimals = toolOptions.decimals ?? config.defaults?.decimals ?? 2;
 
       const syntheticUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
       const syntheticHeaders: Record<string, string> = {};
@@ -157,6 +158,7 @@ function mppMiddleware(config: MppConfig): RequestHandler {
         result = await mppxInstance.charge({
           amount,
           currency,
+          decimals,
           description: toolOptions.description ?? `Access to ${toolName} tool`,
         })(syntheticRequest);
       } catch (err) {

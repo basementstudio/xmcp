@@ -37,6 +37,7 @@ export const mppConfigSchema = z.object({
     .object({
       amount: z.string().optional().default("1"),
       currency: z.string().optional().default("usd"),
+      decimals: z.number().optional().default(2),
     })
     .optional(),
 });
