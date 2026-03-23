@@ -3,6 +3,7 @@ import { HomeHero } from "@/components/home/hero";
 import { HomeFeatures } from "@/components/home/features";
 import { HomeSteps } from "@/components/home/steps";
 import { HomeBlog } from "@/components/home/blog";
+import { HomeTestimonials } from "@/components/home/testimonials";
 import { getLatestVersion } from "@/lib/get-version";
 
 export const dynamic = "force-static";
@@ -23,6 +24,7 @@ export default async function Home() {
       <HomeHero version={version} />
       <HomeFeatures />
       <HomeSteps />
+      <HomeTestimonials />
       <HomeBlog />
     </main>
   );
