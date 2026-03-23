@@ -273,9 +273,16 @@ async function sendChallenge(
   mppxResult: any
 ): Promise<void> {
   let challengeBody: unknown;
+  let wwwAuthenticate: string | null = null;
   try {
-    // mppxResult.challenge is a Response object — extract its body
+    // mppxResult.challenge is a Response object — extract its body and WWW-Authenticate header
     const challengeResponse = mppxResult.challenge ?? mppxResult;
+
+    // Extract WWW-Authenticate header (contains the full mppx challenge)
+    if (challengeResponse && typeof challengeResponse.headers?.get === "function") {
+      wwwAuthenticate = challengeResponse.headers.get("www-authenticate");
+    }
+
     if (challengeResponse && typeof challengeResponse.json === "function") {
       challengeBody = await challengeResponse.json();
     } else if (challengeResponse && typeof challengeResponse.text === "function") {
@@ -296,6 +303,7 @@ async function sendChallenge(
     type: "mpp-challenge",
     error: "Payment required",
     challenge: challengeBody,
+    ...(wwwAuthenticate ? { wwwAuthenticate } : {}),
   };
 
   res.status(200).json({
