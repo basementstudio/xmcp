@@ -59,35 +59,6 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
-## Tool Loading Errors
-
-When `xmcp` starts, it loads every file under your tools directory.
-
-- Empty tool files are skipped with a friendly warning
-- Files without a `default` export are skipped with a friendly warning
-- Real syntax or import errors still fail normally so you can see the full stack trace
-
-For example, if `src/tools/draft.ts` is empty, startup will log:
-
-```txt
-[xmcp] Failed to load tool file: src/tools/draft.ts
-   -> File is empty.
-[xmcp] 1 tool skipped due to empty files or missing default exports
-```
-
-If the file exists but does not export a default handler, startup will log:
-
-```txt
-[xmcp] Failed to load tool file: src/tools/draft.ts
-   -> File does not export a default tool handler.
-```
-
-<Callout variant="info">
-  Friendly handling is intentionally limited to empty files and missing default
-  exports. Invalid implementations and real import/syntax errors still surface
-  as normal runtime errors.
-</Callout>
-
 ## Schema Definition
 
 The schema defines your tool's input parameters using [Zod](https://zod.dev). Use `.describe()` on each parameter to help LLMs understand how to use your tool correctly.
@@ -484,3 +455,34 @@ export default async function getData() {
   };
 }
 ```
+
+## Troubleshooting
+
+### Tool Loading Errors
+
+When `xmcp` starts, it loads every file under your tools directory.
+
+- Empty tool files are skipped with a friendly warning
+- Files without a `default` export are skipped with a friendly warning
+- Real syntax or import errors still fail normally so you can see the full stack trace
+
+For example, if `src/tools/draft.ts` is empty, startup will log:
+
+```txt
+[xmcp] Failed to load tool file: src/tools/draft.ts
+   -> File is empty.
+[xmcp] 1 tool skipped due to empty files or missing default exports
+```
+
+If the file exists but does not export a default handler, startup will log:
+
+```txt
+[xmcp] Failed to load tool file: src/tools/draft.ts
+   -> File does not export a default tool handler.
+```
+
+<Callout variant="info">
+  Friendly handling is intentionally limited to empty files and missing default
+  exports. Invalid implementations and real import/syntax errors still surface
+  as normal runtime errors.
+</Callout>

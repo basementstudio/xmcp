@@ -1,12 +1,12 @@
 import type { ToolFile } from "./server";
 
-export const EMPTY_TOOL_FILE_MESSAGE = "File is empty.";
-export const MISSING_DEFAULT_EXPORT_MESSAGE =
+const EMPTY_TOOL_FILE_MESSAGE = "File is empty.";
+const MISSING_DEFAULT_EXPORT_MESSAGE =
   "File does not export a default tool handler.";
 const INVALID_DEFAULT_EXPORT_MESSAGE =
   "Default export must be a tool handler function.";
 
-export type ToolLoadIssue = {
+type ToolLoadIssue = {
   path: string;
   message: string;
 };
@@ -104,7 +104,7 @@ export async function loadToolModules(
   };
 }
 
-export function createToolLoadIssueReporter(
+function createToolLoadIssueReporter(
   logger: Pick<Console, "warn"> = console
 ) {
   let lastReportedSummaryKey = "";
