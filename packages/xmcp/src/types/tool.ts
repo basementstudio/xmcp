@@ -99,6 +99,44 @@ export interface ToolExtraArguments {
       [key: string]: unknown;
     }
   ) => Promise<z.infer<U>>;
+
+  /** Returns cached metadata and JSON Schema for all registered tools */
+  listTools: () => ToolInfo[];
+
+  /** Invoke another registered tool by name. Returns CallToolResult with isError on failure — never throws. */
+  callTool: (
+    toolName: string,
+    args: Record<string, unknown>
+  ) => Promise<CallToolResultCompat>;
+}
+
+/** Metadata about a registered tool, returned by `extra.listTools()` */
+export interface ToolInfo {
+  /** Tool identifier (unique within server) */
+  name: string;
+  /** Human-readable description */
+  description: string;
+  /** JSON Schema describing accepted parameters */
+  inputSchema: Record<string, unknown>;
+  /** JSON Schema describing output structure (if defined) */
+  outputSchema?: Record<string, unknown>;
+  /** Tool annotations (readOnlyHint, destructiveHint, etc.) */
+  annotations?: ToolAnnotations;
+}
+
+/** The result of calling a tool via `extra.callTool()` */
+export interface CallToolResultCompat {
+  content: Array<{
+    type: string;
+    text?: string;
+    data?: string;
+    mimeType?: string;
+    uri?: string;
+    [key: string]: unknown;
+  }>;
+  structuredContent?: Record<string, unknown>;
+  isError?: boolean;
+  _meta?: Record<string, unknown>;
 }
 
 export type InferSchema<T extends Record<string, unknown>> = {
