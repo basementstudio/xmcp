@@ -1,9 +1,9 @@
 ---
 title: "Code Mode"
 metadataTitle: "Code Mode Pattern Guide | xmcp Documentation"
-publishedAt: "2026-03-25"
+publishedAt: "2026-03-26"
 summary: "Reduce tool context bloat by exposing your entire API surface through just 2 meta-tools."
-description: "Learn how to implement the Code Mode pattern in xmcp — replace hundreds of individual MCP tools with search and execute meta-tools for massive token savings."
+description: "Learn how to implement the Code Mode pattern in xmcp, replace hundreds of individual MCP tools with search and execute meta-tools for massive token savings."
 ---
 
 ## Overview
@@ -12,8 +12,8 @@ MCP servers with many tools create a problem: every tool definition (name, descr
 
 Code Mode solves this with a simple pattern: instead of exposing all tools directly, expose just **2 meta-tools**:
 
-- **`search`** — Agents query tool metadata to discover what's available
-- **`execute`** — Agents invoke any tool by name
+- **`search`**: Agents query tool metadata to discover what's available
+- **`execute`**: Agents invoke any tool by name
 
 This reduces the tool definition footprint from tens of thousands of tokens to under 1,000 — a 99%+ reduction. The pattern was [popularized by Cloudflare](https://blog.cloudflare.com/code-mode-mcp/) for their 2,500+ endpoint API.
 
@@ -27,16 +27,16 @@ This reduces the tool definition footprint from tens of thousands of tokens to u
 
 xmcp provides two primitives in every tool handler's `extra` parameter:
 
-- **`extra.listTools()`** — Returns metadata and JSON Schema for all registered tools
-- **`extra.callTool(name, args)`** — Invokes another tool by name, validates args, and returns the result
+- **`extra.listTools()`**: Returns metadata and JSON Schema for all registered tools
+- **`extra.callTool(name, args)`**: Invokes another tool by name, validates args, and returns the result
 
-You use these to build your own `search` and `execute` tools — no plugins or special configuration needed.
+You use these to build your own `search` and `execute` tools. No plugins or special configuration needed.
 
 ## Quickstart
 
 Create two tool files in your xmcp project:
 
-### 1. The search tool
+### The search tool
 
 ```typescript title="src/tools/search.ts"
 import { z } from "zod";
@@ -50,9 +50,6 @@ export const metadata: ToolMetadata = {
   name: "search",
   description:
     "Search available tools by name or description. Returns matching tools with their input schemas so you know how to call them.",
-  annotations: {
-    readOnlyHint: true,
-  },
 };
 
 export default async function search({ query }, extra) {
@@ -69,7 +66,7 @@ export default async function search({ query }, extra) {
 }
 ```
 
-### 2. The execute tool
+### The execute tool
 
 ```typescript title="src/tools/execute.ts"
 import { z } from "zod";
@@ -97,11 +94,9 @@ export default async function execute({ toolName, args }, extra) {
 }
 ```
 
-That's it. But there's one more step to get the full token savings.
+### Tools as `internal`
 
-### 3. Mark tools as `internal`
-
-By default, all tools appear in MCP's `tools/list` response — agents see them upfront. To hide tools from `tools/list` while keeping them callable via `execute`, add `internal: true` to their annotations:
+By default, all tools appear in MCP's `tools/list` response. When connecting to a server, clients see them upfront. To hide tools from `tools/list` while keeping them callable via `execute`, add `internal: true` to their annotations:
 
 ```typescript title="src/tools/get-user.ts"
 import { z } from "zod";
@@ -115,9 +110,7 @@ export const metadata: ToolMetadata = {
   name: "get-user",
   description: "Retrieve user profile information by ID",
   annotations: {
-    readOnlyHint: true,
     internal: true,
-    tags: ["users", "read"],
   },
 };
 
@@ -229,11 +222,11 @@ export default jwtAuthMiddleware({
 });
 ```
 
-When an authenticated agent calls `execute`, the called tool receives the same `authInfo` — no additional setup needed.
+When an authenticated agent calls `execute`, the called tool receives the same `authInfo`.
 
-## Advanced: smarter search
+## Smarter search
 
-The default `search` example includes TF-IDF scoring and fuzzy matching — it handles typos ("crete" matches "create") and ranks results by relevance. For most use cases this is sufficient.
+The default `search` example includes TF-IDF scoring and fuzzy matching. It handles typos ("crete" matches "create") and ranks results by relevance. For most use cases this is sufficient.
 
 For **true semantic search** (where "remove" finds "delete"), you need embeddings. You can swap in any embedding provider in your search tool:
 
@@ -264,43 +257,8 @@ export default async function search({ query }, extra) {
 
 Since `search` is just a regular xmcp tool, you have full control over the search strategy.
 
-## Advanced: sandboxed code execution
-
-For the full Cloudflare-style experience where agents write JavaScript code (not just tool names), you can add a sandbox library like `quickjs-emscripten`:
-
-```typescript title="src/tools/execute.ts"
-import { getQuickJS } from "quickjs-emscripten";
-
-export default async function execute({ code }, extra) {
-  const QuickJS = await getQuickJS();
-  const vm = QuickJS.newContext();
-
-  // Inject tools as callable functions in the sandbox
-  const toolsHandle = vm.newObject();
-  for (const tool of extra.listTools()) {
-    const fn = vm.newFunction(tool.name, (...handles) => {
-      const args = JSON.parse(vm.getString(handles[0]));
-      return extra.callTool(tool.name, args);
-    });
-    vm.setProp(toolsHandle, tool.name, fn);
-    fn.dispose();
-  }
-  vm.setProp(vm.global, "tools", toolsHandle);
-  toolsHandle.dispose();
-
-  const result = vm.evalCode(code);
-  const output = vm.getString(result.value);
-  result.value.dispose();
-  vm.dispose();
-
-  return output;
-}
-```
-
-This is an application-level choice — xmcp provides the primitives, you decide the execution model.
-
 ## References
 
-- [Cloudflare Code Mode announcement](https://blog.cloudflare.com/code-mode-mcp/) — The original pattern
-- [Tools documentation](/docs/core-concepts/tools) — How xmcp tools work
-- [Authentication guide](/docs/guides/authentication) — Combining Code Mode with auth
+- [Cloudflare Code Mode announcement](https://blog.cloudflare.com/code-mode-mcp/): The original pattern
+- [Tools documentation](/docs/core-concepts/tools): How xmcp tools work
+- [Authentication guide](/docs/guides/authentication): Combining Code Mode with auth
