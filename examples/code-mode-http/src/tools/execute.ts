@@ -21,6 +21,11 @@ export default async function execute(
   { toolName, args }: { toolName: string; args: string },
   extra: ToolExtraArguments
 ) {
-  const parsedArgs = JSON.parse(args);
+  let parsedArgs;
+  try {
+    parsedArgs = JSON.parse(args);
+  } catch {
+    return { content: [{ type: "text", text: "Invalid JSON in args" }], isError: true };
+  }
   return await extra.callTool(toolName, parsedArgs);
 }

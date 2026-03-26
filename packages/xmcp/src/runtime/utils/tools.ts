@@ -184,13 +184,13 @@ export function addToolsToServer(
     // Wrap the handler to inject listTools and callTool into extra
     const originalHandler = transformedHandler;
     const wrappedHandler = async (args: any, extra: any) => {
-      const augmentedExtra = {
+      const extraTools: any = {
         ...extra,
         listTools: () => registry.list(),
         callTool: (name: string, toolArgs: Record<string, unknown>) =>
-          registry.call(name, toolArgs, extra),
+          registry.call(name, toolArgs, extraTools),
       };
-      return originalHandler(args, augmentedExtra);
+      return originalHandler(args, extraTools);
     };
 
     // Only register with MCP server if not marked as internal.

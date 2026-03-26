@@ -13,6 +13,7 @@ interface ToolRegistryEntry {
   name: string;
   description: string;
   handler: UserToolHandler;
+  mcpHandler: ReturnType<typeof transformToolHandler>;
   schema: ZodRawShape;
   outputSchema?: ZodRawShape;
   annotations?: ToolAnnotations;
@@ -37,6 +38,7 @@ export class ToolRegistry {
       name,
       description,
       handler,
+      mcpHandler: transformToolHandler(handler, undefined, outputSchema, name),
       schema,
       outputSchema,
       annotations,
@@ -145,14 +147,7 @@ export class ToolRegistry {
     }
 
     try {
-      // Wrap the user handler through transformToolHandler to get proper CallToolResult
-      const mcpHandler = transformToolHandler(
-        entry.handler,
-        undefined,
-        entry.outputSchema,
-        entry.name
-      );
-      const result = await mcpHandler(parseResult.data as ZodRawShape, extra);
+      const result = await entry.mcpHandler(parseResult.data as ZodRawShape, extra);
       return result as CallToolResultCompat;
     } catch (error: unknown) {
       const message =
