@@ -1,5 +1,6 @@
 {
   "title": "Integrations",
+  "pages": ["sandbox", "polar", "x402", "auth0", "clerk", "better-auth", "workos"],
   "defaultOpen": true,
   "root": true
 }

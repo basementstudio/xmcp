@@ -262,6 +262,39 @@ export default async function search({ query }, extra) {
 
 Since `search` is just a regular xmcp tool, you have full control over the search strategy.
 
+## Sandboxed code execution
+
+For the full Cloudflare-style Code Mode where agents write JavaScript code that runs in an isolated sandbox, use the [`@xmcp-dev/sandbox`](/docs/integrations/sandbox) plugin.
+
+```bash
+pnpm add @xmcp-dev/sandbox
+```
+
+```typescript
+import { runInSandbox } from "@xmcp-dev/sandbox";
+
+// Search: agent queries the API spec in a WASM sandbox
+const result = await runInSandbox(code, {
+  globals: [{ name: "spec", type: "value", value: specJson }],
+  timeoutMs: 5000,
+});
+
+// Execute: agent chains API calls using the host engine
+const result = await runInSandbox(code, {
+  engine: "host",
+  globals: [
+    { name: "get", type: "function", fn: async (path) => fetchFromApi(path) },
+  ],
+  timeoutMs: 30000,
+});
+```
+
+The plugin supports multiple engines with different isolation and async trade-offs. See the [full sandbox documentation](/docs/integrations/sandbox) for the API reference, engine comparison, security model, and examples.
+
+**Examples:**
+- `examples/openapi-code-mode` - Full sandbox (V8 isolates for execute, WASM for search)
+- `examples/openapi-code-mode-host` - Host engine only (no native deps)
+
 ## References
 
 - [Cloudflare Code Mode announcement](https://blog.cloudflare.com/code-mode-mcp/): The original pattern

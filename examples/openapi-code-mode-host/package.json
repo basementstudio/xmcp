@@ -1,0 +1,20 @@
+{
+  "name": "OpenAPI Code Mode (Host Engine)",
+  "description": "Wrap any REST API as a Code Mode MCP server using the host sandbox engine — no native deps",
+  "keywords": [
+    "http",
+    "code-mode",
+    "openapi",
+    "sandbox"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "@xmcp-dev/sandbox": "workspace:*"
+  }
+}

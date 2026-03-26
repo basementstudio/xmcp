@@ -1,0 +1,253 @@
+---
+title: "Sandbox"
+metadataTitle: "Sandboxed Code Execution | xmcp Documentation"
+publishedAt: "2026-03-26"
+summary: "Execute agent-provided JavaScript code safely in an isolated sandbox"
+description: "The @xmcp-dev/sandbox plugin provides sandboxed JavaScript execution for xmcp tools. Run untrusted code with configurable isolation, timeouts, and memory limits."
+---
+
+## Overview
+
+The `@xmcp-dev/sandbox` plugin lets you execute agent-provided JavaScript code in an isolated environment. Agents write code, you define what globals are available, and the sandbox runs it safely with resource limits.
+
+This enables the [Code Mode pattern](/docs/guides/code-mode) where agents programmatically query API specs and chain API calls, but the plugin is general-purpose. You can use it in any tool for any kind of sandboxed evaluation.
+
+## Installation
+
+```bash
+pnpm add @xmcp-dev/sandbox
+```
+
+## Quick example
+
+```typescript title="src/tools/eval.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+import { runInSandbox } from "@xmcp-dev/sandbox";
+
+export const schema = {
+  code: z.string().describe("JavaScript code to evaluate"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "eval",
+  description: "Evaluate JavaScript code in a sandbox",
+};
+
+export default async function evaluate({ code }) {
+  const result = await runInSandbox(code, {
+    globals: [
+      { name: "data", type: "value", value: { users: ["Alice", "Bob"] } },
+    ],
+    timeoutMs: 5000,
+  });
+
+  if (!result.success) {
+    return { content: [{ type: "text", text: result.error }], isError: true };
+  }
+  return JSON.stringify(result.data, null, 2);
+}
+```
+
+Agent sends: `const d = JSON.parse(data); return d.users.length`
+
+Returns: `2`
+
+## API
+
+### `runInSandbox(code, options)`
+
+Executes a JavaScript code string and returns a result. Never throws.
+
+```typescript
+import { runInSandbox } from "@xmcp-dev/sandbox";
+
+const result = await runInSandbox("return 1 + 1", {
+  globals: [],
+  timeoutMs: 5000,
+});
+// { success: true, data: 2 }
+```
+
+**Parameters:**
+
+- `code` (string) — JavaScript code to execute. Use `return` to produce a value.
+- `options` (SandboxOptions):
+  - `globals` — Array of values and functions available to the code
+  - `timeoutMs` — Maximum execution time (default: 30000ms)
+  - `memoryLimitBytes` — Maximum heap memory (default: 50MB, quickjs only)
+  - `engine` — Sandbox engine to use (default: `"quickjs"`)
+
+**Returns:** `SandboxResult`
+
+```typescript
+interface SandboxResult {
+  success: boolean;
+  data?: unknown;   // Return value (if success)
+  error?: string;   // Error message (if failure)
+}
+```
+
+## Engines
+
+The `engine` option controls how agent code is executed. Choose per call based on your needs.
+
+### `"quickjs"` (default)
+
+Runs code in an isolated **QuickJS WASM virtual machine**. Complete isolation: no filesystem, no network, no `process`, no `require`. Only injected globals are accessible.
+
+```typescript
+const result = await runInSandbox(code, {
+  engine: "quickjs", // default, can omit
+  globals: [{ name: "spec", type: "value", value: specData }],
+});
+```
+
+**Pros:** Full WASM isolation. No native dependencies. Works on Node.js and Vercel Serverless.
+
+**Limitation:** Only supports a single `await` on a host function per execution. This is due to the WASM ASYNCIFY constraint in QuickJS. Chained awaits (`await get(); await get()`) will fail.
+
+**Best for:** Data-only tools like search/filter where the code processes injected data without making async calls.
+
+### `"host"`
+
+Runs code on the **Node.js host** via `AsyncFunction` with scoped parameters. The agent can only access the globals you inject. `require`, `process`, `fs`, and other Node.js globals are not in scope.
+
+```typescript
+const result = await runInSandbox(code, {
+  engine: "host",
+  globals: [
+    { name: "get", type: "function", fn: async (path) => fetchData(path) },
+  ],
+});
+```
+
+**Pros:** Full async/await support. Chained calls, loops with await, `Promise.all` all work. No native dependencies.
+
+**Limitation:** Weaker isolation than WASM. Code runs in the same process with limited scope rather than a separate VM. The agent cannot access Node.js globals, but the isolation is enforced by JavaScript scoping, not a VM boundary.
+
+**Best for:** Tools that need multiple async calls (API chaining, batch operations). Good default when you control the injected functions.
+
+### `isolated-vm` (bring your own)
+
+For full V8 isolation with unlimited async support, add [`isolated-vm`](https://github.com/laverdet/isolated-vm) to your project directly. It runs code in a separate V8 heap with the same isolation guarantees as a web worker.
+
+```bash
+pnpm add isolated-vm
+```
+
+See `examples/openapi-code-mode` for a working implementation. This requires a native C++ binary (compiled during install).
+
+## Globals
+
+### Value globals
+
+Inject static data. Serialized as a JSON string in the sandbox. The agent parses it with `JSON.parse()`.
+
+```typescript
+globals: [
+  { name: "spec", type: "value", value: myOpenAPISpec },
+  { name: "config", type: "value", value: { maxResults: 10 } },
+]
+```
+
+Inside agent code:
+```javascript
+const s = JSON.parse(spec);
+const c = JSON.parse(config);
+return s.paths;
+```
+
+### Function globals
+
+Inject async host functions. The agent calls them with `await`. The function runs on the host, not in the sandbox. Results are returned as JSON strings.
+
+```typescript
+globals: [
+  {
+    name: "query",
+    type: "function",
+    fn: async (sql) => {
+      const rows = await db.execute(sql);
+      return JSON.stringify(rows);
+    },
+  },
+]
+```
+
+Inside agent code:
+```javascript
+const users = JSON.parse(await query("SELECT * FROM users LIMIT 5"));
+return users;
+```
+
+## Security
+
+### What agent code cannot do
+
+Regardless of engine, agent code cannot:
+
+- Access the filesystem (`require('fs')` is `undefined`)
+- Access environment variables (`process` is `undefined`)
+- Make network calls directly (`fetch` is `undefined` unless you inject it)
+- Import modules (`require` and `import` are not available)
+
+The agent can only use what you explicitly inject via `globals`.
+
+### What you should protect
+
+- Only inject the minimum globals needed
+- Validate URLs in injected HTTP functions (whitelist allowed paths)
+- Set appropriate timeouts to prevent resource abuse
+- Use `"quickjs"` for maximum isolation when async is not needed
+
+## Resource limits
+
+### Timeout
+
+```typescript
+const result = await runInSandbox("while(true){}", {
+  globals: [],
+  timeoutMs: 1000, // Terminates after 1 second
+});
+// { success: false, error: "Execution timed out after 1000ms" }
+```
+
+### Memory (quickjs only)
+
+```typescript
+const result = await runInSandbox(code, {
+  globals: [],
+  memoryLimitBytes: 10 * 1024 * 1024, // 10MB
+});
+```
+
+## Error handling
+
+`runInSandbox` never throws. All errors are returned in the result:
+
+```typescript
+// Syntax error
+await runInSandbox("{{{", { globals: [] });
+// { success: false, error: "unexpected token in expression: ')'" }
+
+// Runtime error
+await runInSandbox("throw new Error('boom')", { globals: [] });
+// { success: false, error: "boom" }
+
+// Timeout
+await runInSandbox("while(true){}", { globals: [], timeoutMs: 1000 });
+// { success: false, error: "Execution timed out after 1000ms" }
+```
+
+## Examples
+
+- [`examples/openapi-code-mode`](/docs/guides/code-mode) — Full sandbox with `isolated-vm` for execute, `quickjs` for search
+- [`examples/openapi-code-mode-host`](/docs/guides/code-mode) — Same pattern using `"host"` engine only (no native deps)
+- [`examples/code-mode-http`](/docs/guides/code-mode) — Structured Code Mode without sandboxed execution
+
+## References
+
+- [Code Mode guide](/docs/guides/code-mode) — The pattern that uses this plugin
+- [Cloudflare Code Mode](https://blog.cloudflare.com/code-mode-mcp/) — The original inspiration
+- [quickjs-emscripten](https://github.com/justjake/quickjs-emscripten) — The WASM engine powering the `"quickjs"` backend
