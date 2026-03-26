@@ -15,6 +15,10 @@ import {
   loadPromptModules,
   reportPromptLoadIssues,
 } from "@/runtime/utils/prompt-loader";
+import {
+  loadResourceModules,
+  reportResourceLoadIssues,
+} from "@/runtime/utils/resource-loader";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -93,25 +97,24 @@ export async function loadPrompts() {
   return promptModules;
 }
 
-export function loadResources() {
-  const resourceModules = new Map<string, ResourceFile>();
+export async function loadResources() {
+  const { resourceModules, skippedResources } =
+    await loadResourceModules(injectedResources);
 
-  const resourcePromises = Object.keys(injectedResources).map((path) =>
-    injectedResources[path]().then((resourceModule) => {
-      resourceModules.set(path, resourceModule);
-    })
-  );
+  reportResourceLoadIssues(skippedResources);
 
-  return [resourcePromises, resourceModules] as const;
+  return resourceModules;
 }
 
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
   const [toolPromises, toolModules] = loadTools();
   const promptModulesPromise = loadPrompts();
-  const [resourcePromises, resourceModules] = loadResources();
+  const resourceModulesPromise = loadResources();
   await Promise.all(toolPromises);
-  const promptModules = await promptModulesPromise;
-  await Promise.all(resourcePromises);
+  const [promptModules, resourceModules] = await Promise.all([
+    promptModulesPromise,
+    resourceModulesPromise,
+  ]);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
