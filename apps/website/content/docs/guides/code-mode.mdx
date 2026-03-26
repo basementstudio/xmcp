@@ -77,20 +77,23 @@ import type { ToolMetadata } from "xmcp";
 
 export const schema = {
   toolName: z.string().describe("Name of the tool to execute"),
-  args: z.record(z.any()).describe("Arguments to pass to the tool"),
+  args: z
+    .string()
+    .describe('JSON string of arguments (e.g. \'{"name": "World"}\')'),
 };
 
 export const metadata: ToolMetadata = {
   name: "execute",
   description:
-    "Execute any available tool by name. Use the search tool first to discover available tools and their required arguments.",
+    "Execute any available tool by name. Use the search tool first to discover available tools and their required arguments. Pass args as a JSON string.",
   annotations: {
     openWorldHint: true,
   },
 };
 
 export default async function execute({ toolName, args }, extra) {
-  return await extra.callTool(toolName, args);
+  const parsedArgs = JSON.parse(args);
+  return await extra.callTool(toolName, parsedArgs);
 }
 ```
 
@@ -162,7 +165,7 @@ Response:
   "tool": "execute",
   "args": {
     "toolName": "get-user",
-    "args": { "userId": "usr_123" }
+    "args": "{\"userId\": \"usr_123\"}"
   }
 }
 ```
