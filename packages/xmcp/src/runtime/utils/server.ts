@@ -11,6 +11,10 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import {
+  loadPromptModules,
+  reportPromptLoadIssues,
+} from "@/runtime/utils/prompt-loader";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -80,16 +84,13 @@ export function loadTools() {
   return [toolPromises, toolModules] as const;
 }
 
-export function loadPrompts() {
-  const promptModules = new Map<string, PromptFile>();
+export async function loadPrompts() {
+  const { promptModules, skippedPrompts } =
+    await loadPromptModules(injectedPrompts);
 
-  const promptPromises = Object.keys(injectedPrompts).map((path) =>
-    injectedPrompts[path]().then((promptModule) => {
-      promptModules.set(path, promptModule);
-    })
-  );
+  reportPromptLoadIssues(skippedPrompts);
 
-  return [promptPromises, promptModules] as const;
+  return promptModules;
 }
 
 export function loadResources() {
@@ -107,10 +108,10 @@ export function loadResources() {
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
   const [toolPromises, toolModules] = loadTools();
-  const [promptPromises, promptModules] = loadPrompts();
+  const promptModulesPromise = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
   await Promise.all(toolPromises);
-  await Promise.all(promptPromises);
+  const promptModules = await promptModulesPromise;
   await Promise.all(resourcePromises);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
