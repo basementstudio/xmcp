@@ -3,7 +3,11 @@ import type { ToolMetadata } from "xmcp";
 export const metadata: ToolMetadata = {
   name: "list-users",
   description: "List all users in the system",
-  annotations: { readOnlyHint: true },
+  annotations: {
+    readOnlyHint: true,
+    internal: true,
+    tags: ["users", "read"],
+  },
 };
 
 const users = [

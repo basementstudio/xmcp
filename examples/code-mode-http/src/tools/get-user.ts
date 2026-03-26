@@ -8,7 +8,12 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "get-user",
   description: "Retrieve user profile information by ID",
-  annotations: { readOnlyHint: true },
+  annotations: {
+    readOnlyHint: true,
+    internal: true,
+    tags: ["users", "read"],
+    examples: [{ args: { userId: "1" }, description: "Get Alice's profile" }],
+  },
 };
 
 const users: Record<string, { id: string; name: string; email: string }> = {

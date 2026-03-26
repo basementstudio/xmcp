@@ -97,11 +97,11 @@ export default async function execute({ toolName, args }, extra) {
 }
 ```
 
-That's it. Your server now exposes just `search` and `execute` to agents, while all your other tools are accessible through them.
+That's it. But there's one more step to get the full token savings.
 
-### 3. Your actual tools
+### 3. Mark tools as `internal`
 
-Keep building tools as normal. They're still registered with xmcp — they're just accessed through the `execute` meta-tool instead of directly:
+By default, all tools appear in MCP's `tools/list` response — agents see them upfront. To hide tools from `tools/list` while keeping them callable via `execute`, add `internal: true` to their annotations:
 
 ```typescript title="src/tools/get-user.ts"
 import { z } from "zod";
@@ -114,6 +114,11 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "get-user",
   description: "Retrieve user profile information by ID",
+  annotations: {
+    readOnlyHint: true,
+    internal: true,
+    tags: ["users", "read"],
+  },
 };
 
 export default async function getUser({ userId }) {
@@ -121,6 +126,21 @@ export default async function getUser({ userId }) {
   return JSON.stringify(user);
 }
 ```
+
+Now agents connecting to your server only see `search` + `execute` in `tools/list` (~1,000 tokens). The internal tools are discoverable via `search` and callable via `execute`.
+
+### Tags for richer discovery
+
+Use `tags` in annotations to help agents filter tools by category:
+
+```typescript
+annotations: {
+  internal: true,
+  tags: ["users", "admin"],
+}
+```
+
+Then agents can search by tag: `search({ tag: "users" })` to find all user-related tools without scanning descriptions.
 
 ## How agents interact with Code Mode
 
@@ -211,26 +231,38 @@ export default jwtAuthMiddleware({
 
 When an authenticated agent calls `execute`, the called tool receives the same `authInfo` — no additional setup needed.
 
-## Advanced: filtering the tool list
+## Advanced: smarter search
 
-You may want to exclude the meta-tools themselves from search results, or only expose a subset of tools:
+The default `search` example includes TF-IDF scoring and fuzzy matching — it handles typos ("crete" matches "create") and ranks results by relevance. For most use cases this is sufficient.
+
+For **true semantic search** (where "remove" finds "delete"), you need embeddings. You can swap in any embedding provider in your search tool:
 
 ```typescript title="src/tools/search.ts"
+import { embed } from "your-embedding-lib"; // OpenAI, Cohere, local model, etc.
+
+// Pre-compute embeddings at startup
+let toolEmbeddings: Map<string, number[]>;
+
 export default async function search({ query }, extra) {
-  const tools = extra.listTools();
-  const hidden = new Set(["search", "execute"]);
+  if (!toolEmbeddings) {
+    toolEmbeddings = new Map();
+    for (const tool of extra.listTools()) {
+      const vec = await embed(tool.description);
+      toolEmbeddings.set(tool.name, vec);
+    }
+  }
 
-  const matches = tools
-    .filter((t) => !hidden.has(t.name))
-    .filter(
-      (t) =>
-        t.name.toLowerCase().includes(query.toLowerCase()) ||
-        t.description.toLowerCase().includes(query.toLowerCase())
-    );
+  const queryVec = await embed(query);
+  const scored = extra.listTools().map((t) => ({
+    ...t,
+    score: cosineSimilarity(queryVec, toolEmbeddings.get(t.name)!),
+  }));
 
-  return JSON.stringify(matches, null, 2);
+  return JSON.stringify(scored.sort((a, b) => b.score - a.score).slice(0, 10));
 }
 ```
+
+Since `search` is just a regular xmcp tool, you have full control over the search strategy.
 
 ## Advanced: sandboxed code execution
 

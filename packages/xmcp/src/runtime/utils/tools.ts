@@ -193,12 +193,16 @@ export function addToolsToServer(
       return originalHandler(args, augmentedExtra);
     };
 
-    // server as any prevents infinite type recursion
-    (server as any).registerTool(
-      toolConfig.name,
-      toolConfigFormatted,
-      wrappedHandler
-    );
+    // Only register with MCP server if not marked as internal.
+    // Internal tools are still in the ToolRegistry (accessible via callTool/listTools).
+    if (!toolConfig.annotations?.internal) {
+      // server as any prevents infinite type recursion
+      (server as any).registerTool(
+        toolConfig.name,
+        toolConfigFormatted,
+        wrappedHandler
+      );
+    }
   });
 
   return server;

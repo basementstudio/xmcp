@@ -13,6 +13,8 @@ export interface ToolAnnotations {
   idempotentHint?: boolean;
   /** If true, tool interacts with external entities */
   openWorldHint?: boolean;
+  /** If true, tool is hidden from MCP tools/list but accessible via extra.callTool() and extra.listTools() */
+  internal?: boolean;
   [key: string]: any;
 }
 

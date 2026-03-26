@@ -9,7 +9,17 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "create-user",
   description: "Create a new user account with name and email",
-  annotations: { destructiveHint: true },
+  annotations: {
+    destructiveHint: true,
+    internal: true,
+    tags: ["users", "write"],
+    examples: [
+      {
+        args: { name: "Alice", email: "alice@example.com" },
+        description: "Create a new user",
+      },
+    ],
+  },
 };
 
 export default async function createUser({
