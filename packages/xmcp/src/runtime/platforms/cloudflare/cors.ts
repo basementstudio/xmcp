@@ -6,7 +6,6 @@ import type { CorsConfig } from "@/compiler/config";
 import { buildCorsHeaders } from "@/runtime/transports/http/cors/headers";
 
 // CORS config - injected by compiler as combined object
-// @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
 /**

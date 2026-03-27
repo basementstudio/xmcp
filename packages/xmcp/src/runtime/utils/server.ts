@@ -31,25 +31,21 @@ export type ResourceFile = {
   default: UserResourceHandler;
 };
 
-// @ts-expect-error: injected by compiler
 export const injectedTools = INJECTED_TOOLS as Record<
   string,
   () => Promise<ToolFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedPrompts = INJECTED_PROMPTS as Record<
   string,
   () => Promise<PromptFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedResources = INJECTED_RESOURCES as Record<
   string,
   () => Promise<ResourceFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const INJECTED_CONFIG = SERVER_INFO as Implementation;
 
 /* Loads all modules and injects them into the server */

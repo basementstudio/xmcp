@@ -12,10 +12,8 @@ import { httpRequestContextProvider } from "@/runtime/contexts/http-request-cont
 import { randomUUID } from "node:crypto";
 import type { CorsConfig } from "@/compiler/config";
 
-// @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
-// @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as {
   port: number;
   host: string;
