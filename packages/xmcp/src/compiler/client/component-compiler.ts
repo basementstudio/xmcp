@@ -125,12 +125,25 @@ export class ClientComponentCompiler {
     root.render(React.createElement(Component, props));
   }
 
+  render({});
+
   window.addEventListener("message", (event) => {
     if (event.source !== window.parent && event.source !== null) return;
+    const method = event.data?.method;
+    const supportedMethod =
+      method === "ui/notifications/tool-input" ||
+      method === "tool-input" ||
+      method === "mcp-apps:tool-input";
 
-    if (event.data?.method === "ui/notifications/tool-input") {
-      render(event.data.params?.arguments ?? {});
-    }
+    if (!supportedMethod) return;
+
+    const args =
+      event.data?.params?.arguments ??
+      event.data?.params?.input ??
+      event.data?.arguments ??
+      {};
+
+    render(args);
   });
   `;
   }
@@ -221,7 +234,7 @@ export class ClientComponentCompiler {
         concatenateModules: true,
         moduleIds: "deterministic",
       },
-      cache: true,
+      cache: false,
     };
   }
 }
