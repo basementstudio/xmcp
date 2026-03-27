@@ -11,6 +11,7 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -68,16 +69,10 @@ export async function configureServer(
   return server;
 }
 
-export function loadTools() {
-  const toolModules = new Map<string, ToolFile>();
-
-  const toolPromises = Object.keys(injectedTools).map((path) =>
-    injectedTools[path]().then((toolModule) => {
-      toolModules.set(path, toolModule);
-    })
-  );
-
-  return [toolPromises, toolModules] as const;
+export async function loadTools() {
+  const { toolModules, skippedTools } = await loadToolModules(injectedTools);
+  reportToolLoadIssues(skippedTools);
+  return toolModules;
 }
 
 export function loadPrompts() {
@@ -106,11 +101,10 @@ export function loadResources() {
 
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
-  const [toolPromises, toolModules] = loadTools();
+  const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all(toolPromises);
-  await Promise.all(promptPromises);
-  await Promise.all(resourcePromises);
+  await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
+  const toolModules = await toolModulesPromise;
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
