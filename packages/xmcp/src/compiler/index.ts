@@ -133,6 +133,11 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           await generateCode();
         }
       },
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode();
+        }
+      },
       onUnlink: async (filePath) => {
         removeWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
@@ -153,6 +158,11 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     watcher.watch(`${resourcesPath}/**/*.{ts,tsx}`, {
       onAdd: async (filePath) => {
         addWatchedPath(resourcePaths, filePath);
+        if (compilerStarted) {
+          await generateCode();
+        }
+      },
+      onChange: async () => {
         if (compilerStarted) {
           await generateCode();
         }

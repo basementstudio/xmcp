@@ -1,3 +1,4 @@
+import fs from "fs";
 import { compilerContext } from "./compiler-context";
 
 /**
@@ -6,6 +7,14 @@ import { compilerContext } from "./compiler-context";
  */
 function pathToIdentifier(path: string): string {
   return path.replace(/[^a-zA-Z0-9]/g, "_");
+}
+
+function isEmptySourceFile(path: string): boolean {
+  try {
+    return fs.readFileSync(path, "utf8").trim().length === 0;
+  } catch {
+    return false;
+  }
 }
 
 export function generateImportCode(): string {
@@ -60,6 +69,11 @@ function generateStaticImportCode(
 
   Array.from(toolPaths).forEach((p) => {
     const path = p.replace(/\\/g, "/");
+    if (isEmptySourceFile(p)) {
+      toolsEntries.push(`"${path}": () => Promise.resolve({}),`);
+      return;
+    }
+
     const relativePath = `../${path}`;
     const identifier = pathToIdentifier(path);
     staticImports.push(`import * as ${identifier} from "${relativePath}";`);
@@ -68,6 +82,11 @@ function generateStaticImportCode(
 
   Array.from(promptPaths).forEach((p) => {
     const path = p.replace(/\\/g, "/");
+    if (isEmptySourceFile(p)) {
+      promptsEntries.push(`"${path}": () => Promise.resolve({}),`);
+      return;
+    }
+
     const relativePath = `../${path}`;
     const identifier = pathToIdentifier(path);
     staticImports.push(`import * as ${identifier} from "${relativePath}";`);
@@ -76,6 +95,11 @@ function generateStaticImportCode(
 
   Array.from(resourcePaths).forEach((p) => {
     const path = p.replace(/\\/g, "/");
+    if (isEmptySourceFile(p)) {
+      resourcesEntries.push(`"${path}": () => Promise.resolve({}),`);
+      return;
+    }
+
     const relativePath = `../${path}`;
     const identifier = pathToIdentifier(path);
     staticImports.push(`import * as ${identifier} from "${relativePath}";`);
@@ -132,6 +156,10 @@ function generateDynamicImportCode(
   const importToolsCode = Array.from(toolPaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
+      if (isEmptySourceFile(p)) {
+        return `"${path}": () => Promise.resolve({}),`;
+      }
+
       const relativePath = `../${path}`;
       return `"${path}": () => import("${relativePath}"),`;
     })
@@ -140,6 +168,10 @@ function generateDynamicImportCode(
   const importPromptsCode = Array.from(promptPaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
+      if (isEmptySourceFile(p)) {
+        return `"${path}": () => Promise.resolve({}),`;
+      }
+
       const relativePath = `../${path}`;
       return `"${path}": () => import("${relativePath}"),`;
     })
@@ -148,6 +180,10 @@ function generateDynamicImportCode(
   const importResourcesCode = Array.from(resourcePaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
+      if (isEmptySourceFile(p)) {
+        return `"${path}": () => Promise.resolve({}),`;
+      }
+
       const relativePath = `../${path}`;
       return `"${path}": () => import("${relativePath}"),`;
     })
