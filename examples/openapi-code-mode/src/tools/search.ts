@@ -37,8 +37,8 @@ export default async function search({ code }: { code: string }) {
   }
 
   const result = await runInSandbox(code, {
-    globals: [{ name: "spec", type: "value", value: specJson }],
-    timeoutMs: 5000,
+    globals: { spec: specJson },
+    timeoutMs: 10000,
   });
 
   if (!result.success) {

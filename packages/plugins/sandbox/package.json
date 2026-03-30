@@ -33,9 +33,10 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "quickjs-emscripten": "^0.32.0"
+    "@vercel/sandbox": "^1.8.0"
   },
   "devDependencies": {
+    "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
     "xmcp": "workspace:*"
   },

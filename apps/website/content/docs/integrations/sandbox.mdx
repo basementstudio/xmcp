@@ -1,16 +1,18 @@
 ---
 title: "Sandbox"
 metadataTitle: "Sandboxed Code Execution | xmcp Documentation"
-publishedAt: "2026-03-26"
-summary: "Execute agent-provided JavaScript code safely in an isolated sandbox"
-description: "The @xmcp-dev/sandbox plugin provides sandboxed JavaScript execution for xmcp tools. Run untrusted code with configurable isolation, timeouts, and memory limits."
+publishedAt: "2026-03-30"
+summary: "Execute agent-provided JavaScript code safely in an isolated Vercel Sandbox"
+description: "The @xmcp-dev/sandbox plugin runs untrusted code in Vercel Sandbox Firecracker microVMs with OS-level isolation, full async/await, and no native dependencies."
 ---
 
 ## Overview
 
-The `@xmcp-dev/sandbox` plugin lets you execute agent-provided JavaScript code in an isolated environment. Agents write code, you define what globals are available, and the sandbox runs it safely with resource limits.
+The `@xmcp-dev/sandbox` plugin lets you execute agent-provided JavaScript code in an isolated [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) environment. Each execution runs in its own Firecracker microVM with a separate filesystem, network stack, and process space.
 
-This enables the [Code Mode pattern](/docs/guides/code-mode) where agents programmatically query API specs and chain API calls, but the plugin is general-purpose. You can use it in any tool for any kind of sandboxed evaluation.
+This enables the [Code Mode pattern](/docs/guides/code-mode) where agents write JavaScript to query API specs and chain HTTP calls. The plugin is general-purpose and can be used in any tool for sandboxed evaluation.
+
+**Requires a Vercel account.** Authentication is automatic when deployed on Vercel. For local development, run `vercel link` and `vercel env pull`.
 
 ## Installation
 
@@ -31,14 +33,12 @@ export const schema = {
 
 export const metadata: ToolMetadata = {
   name: "eval",
-  description: "Evaluate JavaScript code in a sandbox",
+  description: "Evaluate JavaScript code in an isolated sandbox",
 };
 
 export default async function evaluate({ code }) {
   const result = await runInSandbox(code, {
-    globals: [
-      { name: "data", type: "value", value: { users: ["Alice", "Bob"] } },
-    ],
+    globals: { data: JSON.stringify({ users: ["Alice", "Bob"] }) },
     timeoutMs: 5000,
   });
 
@@ -55,32 +55,40 @@ Returns: `2`
 
 ## API
 
-### `runInSandbox(code, options)`
+### `runInSandbox(code, options?)`
 
-Executes a JavaScript code string and returns a result. Never throws.
+Executes a JavaScript code string in an isolated Vercel Sandbox microVM. Never throws.
 
 ```typescript
 import { runInSandbox } from "@xmcp-dev/sandbox";
 
-const result = await runInSandbox("return 1 + 1", {
-  globals: [],
-  timeoutMs: 5000,
-});
+const result = await runInSandbox("return 1 + 1", { timeoutMs: 5000 });
 // { success: true, data: 2 }
 ```
 
 **Parameters:**
 
-- `code` (string) — JavaScript code to execute. Use `return` to produce a value.
-- `options` (SandboxOptions):
-  - `globals` — Array of values and functions available to the code
-  - `timeoutMs` — Maximum execution time (default: 30000ms)
-  - `memoryLimitBytes` — Maximum heap memory (default: 50MB, quickjs only)
-  - `engine` — Sandbox engine to use (default: `"quickjs"`)
+- `code` (string) -- JavaScript code to execute. Use `return` to produce a value. Agent code has access to `fetch()` for HTTP requests.
+- `options` (SandboxOptions, optional):
+  - `globals` -- Record of named string values injected as constants
+  - `timeoutMs` -- Maximum execution time (default: 30000ms)
+  - `env` -- Environment variables injected into `process.env` inside the VM. Use for secrets.
+  - `networkPolicy` -- Network restrictions: `"allow-all"` (default), `"deny-all"`, or `{ allow: ["domain.com"] }`
+  - `packages` -- npm packages to install before execution (e.g. `["cheerio", "yaml"]`)
+  - `snapshotId` -- Resume from a snapshot instead of a fresh VM. See `createSnapshot()`.
 
 **Returns:** `SandboxResult`
 
 ```typescript
+interface SandboxOptions {
+  globals?: Record<string, string>;
+  timeoutMs?: number;
+  env?: Record<string, string>;
+  networkPolicy?: "allow-all" | "deny-all" | { allow?: string[] | Record<string, NetworkPolicyRule[]> };
+  packages?: string[];
+  snapshotId?: string;
+}
+
 interface SandboxResult {
   success: boolean;
   data?: unknown;   // Return value (if success)
@@ -88,138 +96,126 @@ interface SandboxResult {
 }
 ```
 
-## Engines
-
-The `engine` option controls how agent code is executed. Choose per call based on your needs.
-
-### `"quickjs"` (default)
-
-Runs code in an isolated **QuickJS WASM virtual machine**. Complete isolation: no filesystem, no network, no `process`, no `require`. Only injected globals are accessible.
-
-```typescript
-const result = await runInSandbox(code, {
-  engine: "quickjs", // default, can omit
-  globals: [{ name: "spec", type: "value", value: specData }],
-});
-```
-
-**Pros:** Full WASM isolation. No native dependencies. Works on Node.js and Vercel Serverless.
-
-**Limitation:** Only supports a single `await` on a host function per execution. This is due to the WASM ASYNCIFY constraint in QuickJS. Chained awaits (`await get(); await get()`) will fail.
-
-**Best for:** Data-only tools like search/filter where the code processes injected data without making async calls.
-
-### `"host"`
-
-Runs code on the **Node.js host** via `AsyncFunction` with scoped parameters. The agent can only access the globals you inject. `require`, `process`, `fs`, and other Node.js globals are not in scope.
-
-```typescript
-const result = await runInSandbox(code, {
-  engine: "host",
-  globals: [
-    { name: "get", type: "function", fn: async (path) => fetchData(path) },
-  ],
-});
-```
-
-**Pros:** Full async/await support. Chained calls, loops with await, `Promise.all` all work. No native dependencies.
-
-**Limitation:** Weaker isolation than WASM. Code runs in the same process with limited scope rather than a separate VM. The agent cannot access Node.js globals, but the isolation is enforced by JavaScript scoping, not a VM boundary.
-
-**Best for:** Tools that need multiple async calls (API chaining, batch operations). Good default when you control the injected functions.
-
-### `isolated-vm` (bring your own)
-
-For full V8 isolation with unlimited async support, add [`isolated-vm`](https://github.com/laverdet/isolated-vm) to your project directly. It runs code in a separate V8 heap with the same isolation guarantees as a web worker.
-
-```bash
-pnpm add isolated-vm
-```
-
-See `examples/openapi-code-mode` for a working implementation. This requires a native C++ binary (compiled during install).
-
 ## Globals
 
-### Value globals
-
-Inject static data. Serialized as a JSON string in the sandbox. The agent parses it with `JSON.parse()`.
-
-```typescript
-globals: [
-  { name: "spec", type: "value", value: myOpenAPISpec },
-  { name: "config", type: "value", value: { maxResults: 10 } },
-]
-```
-
-Inside agent code:
-```javascript
-const s = JSON.parse(spec);
-const c = JSON.parse(config);
-return s.paths;
-```
-
-### Function globals
-
-Inject async host functions. The agent calls them with `await`. The function runs on the host, not in the sandbox. Results are returned as JSON strings.
-
-```typescript
-globals: [
-  {
-    name: "query",
-    type: "function",
-    fn: async (sql) => {
-      const rows = await db.execute(sql);
-      return JSON.stringify(rows);
-    },
-  },
-]
-```
-
-Inside agent code:
-```javascript
-const users = JSON.parse(await query("SELECT * FROM users LIMIT 5"));
-return users;
-```
-
-## Security
-
-### What agent code cannot do
-
-Regardless of engine, agent code cannot:
-
-- Access the filesystem (`require('fs')` is `undefined`)
-- Access environment variables (`process` is `undefined`)
-- Make network calls directly (`fetch` is `undefined` unless you inject it)
-- Import modules (`require` and `import` are not available)
-
-The agent can only use what you explicitly inject via `globals`.
-
-### What you should protect
-
-- Only inject the minimum globals needed
-- Validate URLs in injected HTTP functions (whitelist allowed paths)
-- Set appropriate timeouts to prevent resource abuse
-- Use `"quickjs"` for maximum isolation when async is not needed
-
-## Resource limits
-
-### Timeout
-
-```typescript
-const result = await runInSandbox("while(true){}", {
-  globals: [],
-  timeoutMs: 1000, // Terminates after 1 second
-});
-// { success: false, error: "Execution timed out after 1000ms" }
-```
-
-### Memory (quickjs only)
+Inject named values as strings. Agent code accesses them as `const` variables and parses JSON values with `JSON.parse()`.
 
 ```typescript
 const result = await runInSandbox(code, {
-  globals: [],
-  memoryLimitBytes: 10 * 1024 * 1024, // 10MB
+  globals: {
+    spec: myOpenAPISpecJson,
+    baseUrl: "https://api.example.com",
+    apiKey: process.env.API_KEY || "",
+  },
 });
+```
+
+Inside agent code:
+
+```javascript
+const s = JSON.parse(spec);
+const res = await fetch(baseUrl + "/users", {
+  headers: { Authorization: "Bearer " + apiKey },
+});
+return await res.json();
+```
+
+Globals are value-only (strings). Agent code uses `fetch()` directly inside the microVM for HTTP calls. There are no function globals.
+
+## Environment variables
+
+Use `env` to inject secrets into `process.env` inside the VM. This is more secure than passing secrets as globals (which appear as literal strings in the script source).
+
+```typescript
+const result = await runInSandbox(code, {
+  globals: { baseUrl: "https://api.example.com" },
+  env: { API_KEY: process.env.API_KEY },
+});
+```
+
+Inside agent code:
+```javascript
+const res = await fetch(baseUrl + "/data", {
+  headers: { Authorization: "Bearer " + process.env.API_KEY },
+});
+return await res.json();
+```
+
+## Network policy
+
+Restrict which domains agent code can reach from inside the VM.
+
+```typescript
+// Only allow calls to your API (default is "allow-all")
+const result = await runInSandbox(code, {
+  globals: { baseUrl: "https://api.example.com" },
+  networkPolicy: { allow: ["api.example.com"] },
+});
+
+// Block all network access (data-only sandbox)
+const result = await runInSandbox(code, {
+  globals: { spec: specJson },
+  networkPolicy: "deny-all",
+});
+```
+
+## Installing packages
+
+Pre-install npm packages before the agent's code runs.
+
+```typescript
+const result = await runInSandbox(code, {
+  packages: ["cheerio", "yaml"],
+  globals: { htmlContent: myHtml },
+});
+```
+
+Inside agent code:
+```javascript
+const cheerio = require("cheerio");
+const $ = cheerio.load(htmlContent);
+return $("h1").text();
+```
+
+## Snapshots
+
+Create a reusable snapshot with pre-installed packages for faster repeated executions.
+
+```typescript
+import { createSnapshot, runInSandbox } from "@xmcp-dev/sandbox";
+
+// Create once (e.g., at server startup)
+const snapshotId = await createSnapshot({ packages: ["yaml", "lodash"] });
+
+// Use for every call (skips npm install, starts faster)
+const result = await runInSandbox(code, {
+  snapshotId,
+  globals: { data: myData },
+});
+```
+
+Snapshots expire after 30 days on Vercel by default.
+
+## Isolation and security
+
+Each `runInSandbox` call creates a new Firecracker microVM on Vercel's infrastructure with:
+
+- **Separate filesystem** -- agent code cannot access the host's files
+- **Separate process space** -- agent code cannot access host environment variables or processes
+- **Full network access** -- agent code can call `fetch()` (configurable via Vercel Sandbox network policies)
+- **Node.js 24** -- full standard library available inside the VM
+
+Agent code cannot:
+- Read or write files on the host
+- Access `process.env` from the host (only what's injected via globals)
+- Import host modules
+- Affect the host process in any way
+
+## Timeouts
+
+```typescript
+const result = await runInSandbox("while(true){}", { timeoutMs: 1000 });
+// { success: false, error: "Execution timed out after 1000ms" }
 ```
 
 ## Error handling
@@ -228,26 +224,50 @@ const result = await runInSandbox(code, {
 
 ```typescript
 // Syntax error
-await runInSandbox("{{{", { globals: [] });
-// { success: false, error: "unexpected token in expression: ')'" }
+await runInSandbox("{{{", {});
+// { success: false, error: "Unexpected token '{'" }
 
 // Runtime error
-await runInSandbox("throw new Error('boom')", { globals: [] });
+await runInSandbox("throw new Error('boom')", {});
 // { success: false, error: "boom" }
 
-// Timeout
-await runInSandbox("while(true){}", { globals: [], timeoutMs: 1000 });
-// { success: false, error: "Execution timed out after 1000ms" }
+// Missing Vercel auth
+await runInSandbox("return 1", {});
+// { success: false, error: "Vercel Sandbox requires authentication. Run 'vercel link'..." }
 ```
+
+## Vercel auth setup
+
+### Production (on Vercel)
+
+Authentication is automatic. No setup needed.
+
+### Local development
+
+```bash
+# Link your project to Vercel
+vercel link
+
+# Pull development credentials (expires after 12 hours)
+vercel env pull
+```
+
+## Pricing
+
+Vercel Sandbox usage is billed through your Vercel account:
+
+- **Free tier (Hobby):** 5 free CPU hours/month, up to 10 concurrent sandboxes
+- **Pro:** $0.128/hour active CPU, charged against $20/month credit
+- **Quick execution (~2 min):** ~$0.01
+
+See [Vercel Sandbox pricing](https://vercel.com/docs/vercel-sandbox/pricing) for details.
 
 ## Examples
 
-- [`examples/openapi-code-mode`](/docs/guides/code-mode) — Full sandbox with `isolated-vm` for execute, `quickjs` for search
-- [`examples/openapi-code-mode-host`](/docs/guides/code-mode) — Same pattern using `"host"` engine only (no native deps)
-- [`examples/code-mode-http`](/docs/guides/code-mode) — Structured Code Mode without sandboxed execution
+- [`examples/openapi-code-mode`](/docs/guides/code-mode) -- Full OpenAPI Code Mode with Petstore API (search + execute in Vercel Sandbox)
 
 ## References
 
-- [Code Mode guide](/docs/guides/code-mode) — The pattern that uses this plugin
-- [Cloudflare Code Mode](https://blog.cloudflare.com/code-mode-mcp/) — The original inspiration
-- [quickjs-emscripten](https://github.com/justjake/quickjs-emscripten) — The WASM engine powering the `"quickjs"` backend
+- [Code Mode guide](/docs/guides/code-mode) -- The pattern that uses this plugin
+- [Cloudflare Code Mode](https://blog.cloudflare.com/code-mode-mcp/) -- The original inspiration
+- [Vercel Sandbox docs](https://vercel.com/docs/vercel-sandbox) -- The underlying infrastructure

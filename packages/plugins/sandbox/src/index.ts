@@ -1,6 +1,7 @@
-export { runInSandbox } from "./sandbox.js";
+export { runInSandbox, createSnapshot } from "./sandbox.js";
 export type {
-  SandboxGlobal,
   SandboxOptions,
   SandboxResult,
+  CreateSnapshotOptions,
+  NetworkPolicy,
 } from "./types.js";

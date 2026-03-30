@@ -1,213 +1,185 @@
-import {
-  newAsyncContext,
-  shouldInterruptAfterDeadline,
-} from "quickjs-emscripten";
-import type { QuickJSAsyncContext, QuickJSAsyncRuntime } from "quickjs-emscripten";
-import type { SandboxOptions, SandboxResult } from "./types.js";
+import { Sandbox } from "@vercel/sandbox";
+import type {
+  SandboxOptions,
+  SandboxResult,
+  CreateSnapshotOptions,
+} from "./types.js";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
-const DEFAULT_MEMORY_LIMIT = 50 * 1024 * 1024; // 50MB
-const DEFAULT_STACK_SIZE = 512 * 1024; // 512KB
 
 /**
- * Execute JavaScript code in a sandbox.
+ * Execute JavaScript code in an isolated Vercel Sandbox (Firecracker microVM).
  *
- * Two engines available:
- * - "quickjs" (default): Full WASM isolation via QuickJS. Best for data-only code. Single await only.
- * - "host": Runs on Node.js with scoped parameters via AsyncFunction. Full async/chaining support. Weaker isolation.
- *
- * Always returns SandboxResult, never throws.
+ * - Globals are injected as const variables (string values)
+ * - Env vars are injected into process.env (use for secrets)
+ * - Agent code has access to fetch() for HTTP calls
+ * - Full async/await support (chained awaits, loops, Promise.all)
+ * - OS-level isolation (separate filesystem, network, process space)
+ * - Always returns SandboxResult, never throws
  */
 export async function runInSandbox(
   code: string,
-  options: SandboxOptions
+  options?: SandboxOptions
 ): Promise<SandboxResult> {
-  const engine = options.engine ?? "quickjs";
-
-  if (engine === "host") {
-    return runOnHost(code, options);
-  }
-  return runInQuickJS(code, options);
-}
-
-/**
- * Host engine: runs agent code via AsyncFunction with scoped parameters.
- * Supports multiple await/chaining. Globals are passed as function parameters.
- * No WASM isolation — agent code can only access injected globals.
- */
-async function runOnHost(
-  code: string,
-  options: SandboxOptions
-): Promise<SandboxResult> {
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  let sandbox: Awaited<ReturnType<typeof Sandbox.create>> | null = null;
 
   try {
-    const paramNames: string[] = [];
-    const paramValues: unknown[] = [];
+    // Create VM: from snapshot or fresh
+    const baseParams = {
+      timeout: timeoutMs + 5000,
+      env: options?.env,
+      networkPolicy: options?.networkPolicy,
+    };
 
-    for (const global of options.globals) {
-      paramNames.push(global.name);
-      if (global.type === "value") {
-        // Pass values as JSON strings (same convention as quickjs engine)
-        paramValues.push(
-          typeof global.value === "string"
-            ? global.value
-            : JSON.stringify(global.value)
-        );
-      } else if (global.type === "function" && global.fn) {
-        paramValues.push(global.fn);
+    if (options?.snapshotId) {
+      sandbox = await Sandbox.create({
+        ...baseParams,
+        source: { type: "snapshot" as const, snapshotId: options.snapshotId },
+      });
+    } else {
+      sandbox = await Sandbox.create({
+        ...baseParams,
+        runtime: "node24" as const,
+      });
+    }
+
+    // Install packages if requested
+    if (options?.packages?.length) {
+      const installCmd = await sandbox.runCommand("npm", [
+        "install",
+        "--no-audit",
+        "--no-fund",
+        ...options.packages,
+      ]);
+      if (installCmd.exitCode !== 0) {
+        const stderr = await installCmd.stderr();
+        return {
+          success: false,
+          error: `Failed to install packages: ${stderr}`,
+        };
       }
     }
 
-    const AsyncFunction = Object.getPrototypeOf(
-      async function () {}
-    ).constructor;
-    const fn = new AsyncFunction(...paramNames, code);
+    // Build script: declare globals as const + wrap agent code in async IIFE
+    const globalsCode = Object.entries(options?.globals ?? {})
+      .map(([name, value]) => `const ${name} = ${JSON.stringify(value)};`)
+      .join("\n");
 
-    const result = await Promise.race([
-      fn(...paramValues),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`Execution timed out after ${timeoutMs}ms`)),
-          timeoutMs
-        )
-      ),
+    const script = `
+${globalsCode}
+(async () => {
+  try {
+    const __result = await (async () => { ${code} })();
+    process.stdout.write(JSON.stringify({ ok: true, data: __result }));
+  } catch (e) {
+    process.stdout.write(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }));
+  }
+})();
+`;
+
+    await sandbox.writeFiles([
+      { path: "/tmp/run.js", content: Buffer.from(script) },
     ]);
 
-    return { success: true, data: result };
+    const abortController = new AbortController();
+    const timer = setTimeout(() => abortController.abort(), timeoutMs);
+
+    let cmd;
+    try {
+      cmd = await sandbox.runCommand("node", ["/tmp/run.js"], {
+        signal: abortController.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (cmd.exitCode !== 0) {
+      const stderr = await cmd.stderr();
+      return {
+        success: false,
+        error: stderr || `Process exited with code ${cmd.exitCode}`,
+      };
+    }
+
+    const stdout = await cmd.stdout();
+    if (!stdout.trim()) {
+      return { success: true, data: undefined };
+    }
+
+    const parsed = JSON.parse(stdout);
+    return parsed.ok
+      ? { success: true, data: parsed.data }
+      : { success: false, error: parsed.error };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return { success: false, error: message };
-  }
-}
 
-/**
- * QuickJS engine: runs agent code in an isolated WASM sandbox.
- * Full isolation (no filesystem, network, Node.js globals).
- * Limitation: only supports a single await on host functions (ASYNCIFY constraint).
- */
-async function runInQuickJS(
-  code: string,
-  options: SandboxOptions
-): Promise<SandboxResult> {
-  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const memoryLimit = options.memoryLimitBytes ?? DEFAULT_MEMORY_LIMIT;
-
-  let context: QuickJSAsyncContext | null = null;
-  let runtime: QuickJSAsyncRuntime | null = null;
-
-  try {
-    context = await newAsyncContext();
-    runtime = context.runtime;
-
-    // Set resource limits
-    runtime.setMemoryLimit(memoryLimit);
-    runtime.setMaxStackSize(DEFAULT_STACK_SIZE);
-    runtime.setInterruptHandler(
-      shouldInterruptAfterDeadline(Date.now() + timeoutMs)
-    );
-
-    // Inject globals
-    for (const global of options.globals) {
-      if (global.type === "value") {
-        const jsonStr =
-          typeof global.value === "string"
-            ? global.value
-            : JSON.stringify(global.value);
-        const handle = context.newString(jsonStr);
-        context.setProp(context.global, global.name, handle);
-        handle.dispose();
-      } else if (global.type === "function" && global.fn) {
-        const hostFn = global.fn;
-        const fnHandle = context.newAsyncifiedFunction(
-          global.name,
-          async (...args) => {
-            const jsArgs = args.map((arg) => context!.dump(arg));
-            const result = await hostFn(...jsArgs);
-            const resultStr =
-              typeof result === "string" ? result : JSON.stringify(result);
-            return context!.newString(resultStr);
-          }
-        );
-        context.setProp(context.global, global.name, fnHandle);
-        fnHandle.dispose();
-      }
+    if (
+      message.includes("unauthorized") ||
+      message.includes("OIDC") ||
+      message.includes("credentials") ||
+      message.includes("401")
+    ) {
+      return {
+        success: false,
+        error:
+          "Vercel Sandbox requires authentication. Run 'vercel link' and 'vercel env pull' for local development.",
+      };
     }
 
-    const hasFunctionGlobals = options.globals.some(
-      (g) => g.type === "function"
-    );
-
-    // Wrap agent code: async IIFE serializes result into __output global
-    const wrappedCode = `
-      (async () => {
-        try {
-          const __val = await (async () => { ${code} })();
-          globalThis.__output = JSON.stringify({ ok: true, data: __val });
-        } catch(e) {
-          globalThis.__output = JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) });
-        }
-      })()
-    `;
-
-    if (hasFunctionGlobals) {
-      const evalResult = await context.evalCodeAsync(wrappedCode);
-      if (evalResult.error) {
-        const errorValue = context.dump(evalResult.error);
-        evalResult.error.dispose();
-        const errorMsg =
-          typeof errorValue === "object" && errorValue !== null
-            ? (errorValue as any).message || JSON.stringify(errorValue)
-            : String(errorValue);
-        return { success: false, error: errorMsg };
-      }
-      evalResult.value.dispose();
-      runtime.executePendingJobs();
-    } else {
-      const evalResult = context.evalCode(wrappedCode);
-      if (evalResult.error) {
-        const errorValue = context.dump(evalResult.error);
-        evalResult.error.dispose();
-        const errorMsg =
-          typeof errorValue === "object" && errorValue !== null
-            ? (errorValue as any).message || JSON.stringify(errorValue)
-            : String(errorValue);
-        return { success: false, error: errorMsg };
-      }
-      evalResult.value.dispose();
-      runtime.executePendingJobs();
-    }
-
-    // Read serialized output
-    const outputHandle = context.getProp(context.global, "__output");
-    const outputStr = context.getString(outputHandle);
-    outputHandle.dispose();
-
-    const parsed = JSON.parse(outputStr);
-    if (parsed.ok) {
-      return { success: true, data: parsed.data };
-    } else {
-      return { success: false, error: parsed.error };
-    }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (message.includes("interrupted")) {
+    if (message.includes("abort") || message.includes("timeout")) {
       return {
         success: false,
         error: `Execution timed out after ${timeoutMs}ms`,
       };
     }
+
     return { success: false, error: message };
   } finally {
-    try {
-      if (context) context.dispose();
-    } catch {
-      // Ignore ASYNCIFY cleanup errors
+    if (sandbox) {
+      try {
+        await sandbox.stop();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
-    try {
-      if (runtime) runtime.dispose();
-    } catch {
-      // Ignore ASYNCIFY cleanup errors
+  }
+}
+
+/**
+ * Create a reusable snapshot with pre-installed packages.
+ * Use the returned snapshotId in runInSandbox({ snapshotId }) for faster execution.
+ *
+ * Snapshots expire after 30 days by default on Vercel.
+ */
+export async function createSnapshot(
+  options?: CreateSnapshotOptions
+): Promise<string> {
+  const sandbox = await Sandbox.create({ runtime: "node24" });
+
+  try {
+    if (options?.packages?.length) {
+      const installCmd = await sandbox.runCommand("npm", [
+        "install",
+        "--no-audit",
+        "--no-fund",
+        ...options.packages,
+      ]);
+      if (installCmd.exitCode !== 0) {
+        const stderr = await installCmd.stderr();
+        throw new Error(`Failed to install packages: ${stderr}`);
+      }
     }
+
+    const snapshot = await sandbox.snapshot();
+    return snapshot.snapshotId;
+  } catch (err) {
+    // Ensure sandbox is stopped even if snapshot fails
+    try {
+      await sandbox.stop();
+    } catch {
+      // Ignore
+    }
+    throw err;
   }
 }
