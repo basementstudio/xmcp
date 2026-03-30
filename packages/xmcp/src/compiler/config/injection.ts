@@ -164,13 +164,11 @@ export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
     version,
     description: templateConfig.description,
     icons,
+    instructions: templateConfig.instructions,
   };
 
   return {
     SERVER_INFO: JSON.stringify(serverInfo),
-    ...(templateConfig.instructions && {
-      SERVER_INSTRUCTIONS: JSON.stringify(templateConfig.instructions),
-    }),
   };
 }
 

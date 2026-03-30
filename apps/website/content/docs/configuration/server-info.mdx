@@ -31,7 +31,7 @@ The server `version` is automatically read from your project's `package.json` at
 
 ## Instructions
 
-The optional `instructions` field lets you provide guidance to LLM clients about how to use your server effectively. When set, it is sent in the MCP [`initialize` response](https://modelcontextprotocol.io/specification/draft/schema#initializeresult-instructions) and can be added to the system prompt by MCP clients.
+The optional `instructions` field lets you provide guidance to LLM clients about how to use your server effectively. When set, it is sent in the MCP [`initialize` response](https://modelcontextprotocol.io/specification/2025-11-25/schema#initializeresult-instructions) and can be added to the system prompt by MCP clients.
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {

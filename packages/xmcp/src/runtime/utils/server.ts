@@ -50,10 +50,7 @@ export const injectedResources = INJECTED_RESOURCES as Record<
 >;
 
 // @ts-expect-error: injected by compiler
-export const INJECTED_CONFIG = SERVER_INFO as Implementation;
-
-// @ts-expect-error: injected by compiler
-const INJECTED_INSTRUCTIONS: string | undefined = typeof SERVER_INSTRUCTIONS !== "undefined" ? SERVER_INSTRUCTIONS as string : undefined;
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -108,9 +105,8 @@ export function loadResources() {
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG, {
-    ...(INJECTED_INSTRUCTIONS && { instructions: INJECTED_INSTRUCTIONS }),
-  });
+  const { instructions, ...serverInfo } = INJECTED_CONFIG;
+  const server = new McpServer(serverInfo, { instructions });
   const [toolPromises, toolModules] = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
