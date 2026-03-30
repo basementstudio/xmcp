@@ -89,7 +89,7 @@ export default function RootLayout({
             SearchDialog: DefaultSearchDialog,
             options: {
               links: [
-                ["Getting Started", "/docs/getting-started/introduction"],
+                ["Getting Started", "/docs"],
                 ["Configuration", "/docs/configuration/custom-directories"],
                 ["Core Concepts", "/docs/core-concepts/tools"],
                 ["Authentication", "/docs/authentication/api-key"],

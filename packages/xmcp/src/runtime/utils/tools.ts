@@ -30,6 +30,14 @@ export function pathToName(path: string): string {
   return fileName.replace(/\.[^/.]+$/, "");
 }
 
+/** Ensures toolConfig has its own annotations object with a title */
+export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annotations">): void {
+  toolConfig.annotations = { ...(toolConfig.annotations ?? {}) };
+  if (toolConfig.annotations.title === undefined) {
+    toolConfig.annotations.title = toolConfig.name;
+  }
+}
+
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
@@ -79,12 +87,7 @@ export function addToolsToServer(
     }
 
     // Make sure tools has annotations with a title
-    if (toolConfig.annotations === undefined) {
-      toolConfig.annotations = {};
-    }
-    if (toolConfig.annotations.title === undefined) {
-      toolConfig.annotations.title = toolConfig.name;
-    }
+    ensureAnnotations(toolConfig);
 
     if (toolConfig._meta === undefined) {
       toolConfig._meta = {};

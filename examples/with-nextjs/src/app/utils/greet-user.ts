@@ -1,30 +1,11 @@
 import { openai } from "@ai-sdk/openai";
-import { loadAllTools } from "@xmcp/tools";
-import { generateText, tool } from "ai";
-import { z } from "zod";
-
-type ReturnTypeOfTool = Awaited<ReturnType<typeof loadAllTools>>[number];
-
-function returnValidToolFormatted(tool: ReturnTypeOfTool) {
-  return {
-    description: tool.metadata.description,
-    inputSchema: z.object({}),
-    execute: tool.handler,
-  };
-}
+import { tools } from "@xmcp/tools";
+import { generateText } from "ai";
 
 export const generateResponse = async () => {
-  const tools = await loadAllTools();
-
   const result = await generateText({
     model: openai("gpt-4o"),
-    tools: {
-      getWeather: tool(
-        returnValidToolFormatted(
-          tools.find((tool) => tool.metadata.name === "get-weather")!
-        )
-      ),
-    },
+    tools,
     maxRetries: 1,
     prompt: "Get the weather for the state of California",
   });
