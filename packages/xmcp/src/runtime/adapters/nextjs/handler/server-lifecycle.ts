@@ -37,11 +37,16 @@ export function setupCleanupHandlers(
  * Initializes and configures the MCP server with tools, prompts, and resources
  */
 export async function initializeMcpServer(): Promise<McpServer> {
-  const [toolPromises, toolModules] = loadTools();
+  const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
 
-  await Promise.all([...toolPromises, ...promptPromises, ...resourcePromises]);
+  await Promise.all([
+    toolModulesPromise,
+    ...promptPromises,
+    ...resourcePromises,
+  ]);
+  const toolModules = await toolModulesPromise;
 
   const server = new McpServer(INJECTED_CONFIG, {
     capabilities: { logging: {} },
