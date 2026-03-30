@@ -13,7 +13,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
-    notificationPaths,
+    hasNotifications,
     hasMiddleware,
     clientBundles,
     platforms,
@@ -28,7 +28,7 @@ export function generateImportCode(): string {
       toolPaths,
       promptPaths,
       resourcePaths,
-      notificationPaths,
+      hasNotifications,
       hasMiddleware,
       clientBundles
     );
@@ -38,7 +38,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
-    notificationPaths,
+    hasNotifications,
     hasMiddleware,
     clientBundles
   );
@@ -52,7 +52,7 @@ function generateStaticImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
-  notificationPaths: Set<string>,
+  hasNotifications: boolean,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -61,7 +61,6 @@ function generateStaticImportCode(
   const toolsEntries: string[] = [];
   const promptsEntries: string[] = [];
   const resourcesEntries: string[] = [];
-  const notificationsEntries: string[] = [];
 
   Array.from(toolPaths).forEach((p) => {
     const path = p.replace(/\\/g, "/");
@@ -87,13 +86,11 @@ function generateStaticImportCode(
     resourcesEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
   });
 
-  Array.from(notificationPaths).forEach((p) => {
-    const path = p.replace(/\\/g, "/");
-    const relativePath = `../${path}`;
-    const identifier = pathToIdentifier(path);
-    staticImports.push(`import * as ${identifier} from "${relativePath}";`);
-    notificationsEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
-  });
+  let notificationsCode = "";
+  if (hasNotifications) {
+    staticImports.push(`import * as _notifications from "../src/notifications.ts";`);
+    notificationsCode = `export const notifications = () => Promise.resolve(_notifications);`;
+  }
 
   let middlewareCode = "";
   if (hasMiddleware) {
@@ -123,14 +120,11 @@ export const resources = {
 ${resourcesEntries.join("\n")}
 };
 
-export const notifications = {
-${notificationsEntries.join("\n")}
-};
-
 export const clientBundles = {
 ${clientBundlesEntries}
 };
 
+${notificationsCode}
 ${middlewareCode}
 `;
 }
@@ -143,7 +137,7 @@ function generateDynamicImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
-  notificationPaths: Set<string>,
+  hasNotifications: boolean,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -171,13 +165,9 @@ function generateDynamicImportCode(
     })
     .join("\n");
 
-  const importNotificationsCode = Array.from(notificationPaths)
-    .map((p) => {
-      const path = p.replace(/\\/g, "/");
-      const relativePath = `../${path}`;
-      return `"${path}": () => import("${relativePath}"),`;
-    })
-    .join("\n");
+  const importNotificationsCode = hasNotifications
+    ? `export const notifications = () => import("../src/notifications.ts");`
+    : "";
 
   const importMiddlewareCode = hasMiddleware
     ? `export const middleware = () => import("../src/middleware.ts");`
@@ -204,14 +194,11 @@ export const resources = {
 ${importResourcesCode}
 };
 
-export const notifications = {
-${importNotificationsCode}
-};
-
 export const clientBundles = {
 ${clientBundlesEntries}
 };
 
+${importNotificationsCode}
 ${importMiddlewareCode}
 `;
 }

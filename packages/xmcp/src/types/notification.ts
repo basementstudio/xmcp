@@ -1,50 +1,63 @@
-// Known MCP client→server notification methods
-export type KnownNotificationMethod =
-  | "notifications/cancelled"
-  | "notifications/progress"
-  | "notifications/initialized"
-  | "notifications/roots/list_changed";
+// Known keys users write in defineNotifications()
+export type NotificationKey =
+  | "initialized"
+  | "cancelled"
+  | "progress"
+  | "rootsListChanged"
+  | "taskStatus";
 
-// Open type: known methods + arbitrary strings
-export type NotificationMethod = KnownNotificationMethod | (string & {});
+// Full MCP method strings (used internally for SDK registration)
+export type NotificationMethodMap = {
+  initialized: "notifications/initialized";
+  cancelled: "notifications/cancelled";
+  progress: "notifications/progress";
+  rootsListChanged: "notifications/roots/list_changed";
+  taskStatus: "notifications/tasks/status";
+};
 
-// Typed params for known methods
-export type KnownNotificationParams = {
-  "notifications/cancelled": { requestId: string | number; reason?: string };
-  "notifications/progress": {
+// Task status values from the MCP spec
+export type TaskStatus =
+  | "working"
+  | "input_required"
+  | "completed"
+  | "failed"
+  | "cancelled";
+
+// Typed params for each known key
+export type NotificationParams = {
+  initialized: Record<string, never>;
+  cancelled: { requestId?: string | number; reason?: string };
+  progress: {
     progressToken: string | number;
     progress: number;
     total?: number;
     message?: string;
   };
-  "notifications/initialized": Record<string, never>;
-  "notifications/roots/list_changed": Record<string, never>;
+  rootsListChanged: Record<string, never>;
+  taskStatus: {
+    taskId: string;
+    status: TaskStatus;
+    statusMessage?: string;
+    createdAt: string;
+    lastUpdatedAt: string;
+    ttl: number | null;
+    pollInterval?: number;
+  };
 };
 
-// Resolve params: known → typed, unknown → Record<string, unknown>
-export type NotificationParamsFor<M extends string> =
-  M extends keyof KnownNotificationParams
-    ? KnownNotificationParams[M]
-    : Record<string, unknown>;
+// Handler type for known keys — paramless notifications don't require params arg
+export type NotificationHandler<K extends NotificationKey = NotificationKey> =
+  NotificationParams[K] extends Record<string, never>
+    ? () => void | Promise<void>
+    : (params: NotificationParams[K]) => void | Promise<void>;
 
-// Extra context available at notification time.
-// Unlike tool handlers, notification handlers don't have access to
-// sendNotification/sendRequest/authInfo since notifications are
-// dispatched outside the request-response lifecycle.
-export interface NotificationExtra {
-  /** An abort signal for the notification handler */
-  signal: AbortSignal;
-}
-
-// Handler callback type
-export type NotificationHandler<M extends string = string> = (
-  params: NotificationParamsFor<M>,
-  extra: NotificationExtra
+// Handler type for custom notification methods
+export type CustomNotificationHandler = (
+  params: Record<string, unknown>
 ) => void | Promise<void>;
 
-// Return type of subscribe()
-export interface NotificationSubscription<M extends string = string> {
-  __isNotificationSubscription: true;
-  method: M;
-  handler: NotificationHandler<M>;
+// Return type of defineNotifications()
+export interface NotificationsConfig {
+  __isNotificationsConfig: true;
+  handlers: Record<string, (...args: any[]) => void | Promise<void>>;
 }

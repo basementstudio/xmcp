@@ -4,17 +4,11 @@ import {
   ProgressNotificationSchema,
   InitializedNotificationSchema,
   RootsListChangedNotificationSchema,
+  TaskStatusNotificationSchema,
   NotificationSchema,
 } from "@modelcontextprotocol/sdk/types";
 import { z } from "zod";
-import type {
-  NotificationSubscription,
-  NotificationExtra,
-} from "@/types/notification";
-
-export type NotificationFile = {
-  default: NotificationSubscription;
-};
+import type { NotificationsConfig } from "@/types/notification";
 
 // Map known methods → SDK Zod schemas
 const KNOWN_SCHEMAS: Record<string, z.ZodType<any>> = {
@@ -22,6 +16,7 @@ const KNOWN_SCHEMAS: Record<string, z.ZodType<any>> = {
   "notifications/progress": ProgressNotificationSchema,
   "notifications/initialized": InitializedNotificationSchema,
   "notifications/roots/list_changed": RootsListChangedNotificationSchema,
+  "notifications/tasks/status": TaskStatusNotificationSchema,
 };
 
 // Methods where SDK has internal handlers that must be preserved
@@ -38,49 +33,38 @@ function createGenericSchema(method: string) {
 
 export function addNotificationsToServer(
   server: McpServer,
-  notificationModules: Map<string, NotificationFile>
+  config: NotificationsConfig | undefined
 ): void {
-  // Group user handlers by method
-  const handlersByMethod = new Map<
-    string,
-    Array<NotificationSubscription["handler"]>
-  >();
-
-  notificationModules.forEach((mod, path) => {
-    const subscription = mod.default;
-    if (!subscription || !subscription.__isNotificationSubscription) {
-      console.warn(
-        `[xmcp] Invalid notification subscription at ${path}. Expected default export from subscribe().`
-      );
-      return;
-    }
-
-    const { method, handler } = subscription;
-    if (!handlersByMethod.has(method)) {
-      handlersByMethod.set(method, []);
-    }
-    handlersByMethod.get(method)!.push(handler);
-  });
+  if (!config || !config.__isNotificationsConfig) return;
 
   const lowLevelServer = server.server;
 
-  handlersByMethod.forEach((handlers, method) => {
+  for (const [method, handler] of Object.entries(config.handlers)) {
+    if (!handler) continue;
+
     const schema = KNOWN_SCHEMAS[method] ?? createGenericSchema(method);
 
     // For SDK internal methods, preserve the existing handler via wrap approach.
-    // The SDK's Protocol stores handlers in _notificationHandlers Map keyed by method string.
-    // We read the existing handler before overwriting to chain it with user handlers.
+    // Uses the SDK's private _notificationHandlers Map — if the SDK renames this
+    // field, we throw at startup rather than silently losing cancellation/progress.
     let existingHandler:
       | ((notification: any) => void | Promise<void>)
       | undefined;
     if (SDK_INTERNAL_METHODS.has(method)) {
-      existingHandler = (lowLevelServer as any)._notificationHandlers?.get(
-        method
-      );
+      const handlersMap = (lowLevelServer as any)._notificationHandlers;
+      if (!handlersMap || typeof handlersMap.get !== "function") {
+        throw new Error(
+          `[xmcp] SDK internal structure changed: _notificationHandlers is missing. ` +
+            `Cannot safely register "${method}" without breaking SDK behavior. ` +
+            `Please update xmcp to a version compatible with this SDK.`
+        );
+      }
+      existingHandler = handlersMap.get(method);
       if (!existingHandler) {
-        console.warn(
-          `[xmcp] Could not find SDK internal handler for "${method}". ` +
-            `SDK request cancellation/progress tracking may not work correctly.`
+        throw new Error(
+          `[xmcp] SDK internal handler for "${method}" not found. ` +
+            `Registering a user handler would overwrite SDK behavior for request cancellation/progress tracking. ` +
+            `Please update xmcp to a version compatible with this SDK.`
         );
       }
     }
@@ -98,26 +82,16 @@ export function addNotificationsToServer(
         }
       }
 
-      // 2. Build extra context
-      const extra: NotificationExtra = {
-        signal: new AbortController().signal,
-      };
-
-      // 3. Run all user handlers concurrently with isolation
+      // 2. Run user handler with error isolation
       const params = notification.params ?? {};
-      const results = await Promise.allSettled(
-        handlers.map((h) => Promise.resolve(h(params as any, extra)))
-      );
-
-      // 4. Log any handler errors
-      results.forEach((result) => {
-        if (result.status === "rejected") {
-          console.error(
-            `[xmcp] Notification handler error for "${method}":`,
-            result.reason
-          );
-        }
-      });
+      try {
+        await handler(params as any);
+      } catch (err) {
+        console.error(
+          `[xmcp] Notification handler error for "${method}":`,
+          err
+        );
+      }
     });
-  });
+  }
 }

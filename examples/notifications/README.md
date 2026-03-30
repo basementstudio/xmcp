@@ -1,62 +1,81 @@
 # Notifications
 
-Subscribe to MCP client notifications using xmcp's file-based convention.
+Handle MCP client notifications using a single setup file.
 
 ## What are MCP notifications?
 
-In MCP, notifications are **one-way messages** from client to server (or server to client). Unlike requests, they don't expect a response. Common client-to-server notifications include:
+In MCP, notifications are **one-way messages** from client to server (or server to client). Unlike requests, they don't expect a response. The client-to-server notifications are:
 
-| Notification                         | When it fires                                   |
-| ------------------------------------ | ----------------------------------------------- |
-| `notifications/initialized`          | Client completed the initialization handshake   |
-| `notifications/roots/list_changed`   | Client's root URIs changed                      |
-| `notifications/cancelled`            | Client cancelled an in-flight request            |
-| `notifications/progress`             | Client sent a progress update                    |
+| Key                | MCP Method                            | When it fires                                   |
+| ------------------ | ------------------------------------- | ----------------------------------------------- |
+| `initialized`      | `notifications/initialized`           | Client completed the initialization handshake   |
+| `cancelled`        | `notifications/cancelled`             | Client cancelled an in-flight request            |
+| `progress`         | `notifications/progress`              | Client sent a progress update                    |
+| `rootsListChanged` | `notifications/roots/list_changed`    | Client's root URIs changed                      |
+| `taskStatus`       | `notifications/tasks/status`          | Task status changed                              |
 
 ## How it works
 
-Create files in `src/notifications/` that export a `subscribe()` call:
+Create a `src/notifications.ts` file that exports a `defineNotifications()` call:
 
 ```ts
-// src/notifications/roots-changed.ts
-import { subscribe } from "xmcp";
+// src/notifications.ts
+import { defineNotifications } from "xmcp";
 
-export default subscribe("notifications/roots/list_changed", async () => {
-  console.log("Roots list changed!");
+export default defineNotifications({
+  initialized: async () => {
+    console.log("Client initialized");
+  },
+  cancelled: async (params) => {
+    console.log("Cancelled:", params.requestId);
+  },
+  progress: async (params) => {
+    console.log("Progress:", params.progress);
+  },
+  rootsListChanged: async () => {
+    console.log("Roots changed");
+  },
+  taskStatus: async (params) => {
+    console.log(`Task ${params.taskId}: ${params.status}`);
+  },
 });
 ```
 
-xmcp discovers these files at build time (just like tools, prompts, and resources) and registers the handlers on the MCP server at runtime.
+xmcp discovers this file at build time (similar to `src/middleware.ts`) and registers the handlers on the MCP server at runtime. Keys are mapped to full MCP method names automatically.
 
 ### Handler signature
 
 ```ts
-subscribe(method, async (params, extra) => {
-  // params — typed based on the notification method
-  // extra  — { signal: AbortSignal }
+defineNotifications({
+  // Paramless, no arguments needed
+  initialized: async () => { ... },
+
+  // With params, fully typed
+  cancelled: async (params) => {
+    params.requestId // string | number | undefined
+    params.reason    // string | undefined
+  },
+
+  // Custom methods, params is Record<string, unknown>
+  "custom/my-event": async (params) => { ... },
 });
 ```
 
-- **Known methods** (`notifications/cancelled`, `notifications/progress`, etc.) get fully typed `params`.
-- **Custom methods** are also supported — `params` is typed as `Record<string, unknown>`.
-- **Multiple files** can subscribe to the same notification. All handlers run concurrently.
-- **Error isolation** — if one handler throws, others still execute.
+- **Known keys** get fully typed `params` and autocomplete.
+- **Custom methods** (any string) are also supported. `params` is typed as `Record<string, unknown>`.
+- **Error isolation**: if a handler throws, it's caught and logged without affecting the server.
 
 ### SDK handler preservation
 
-For `notifications/cancelled` and `notifications/progress`, the MCP SDK already has internal handlers (for aborting requests and tracking progress). Your handlers run **alongside** them — they don't replace the SDK's built-in behavior.
+For `cancelled` and `progress`, the MCP SDK already has internal handlers (for aborting requests and tracking progress). Your handlers run **alongside** them and don't replace the SDK's built-in behavior.
 
 ## Project structure
 
 ```
 src/
-├── notifications/
-│   ├── roots-changed.ts    # Reacts to root URI changes
-│   ├── on-cancel.ts        # Logs cancelled requests
-│   ├── on-progress.ts      # Logs progress updates
-│   └── on-initialized.ts   # Logs session initialization
+├── notifications.ts       # All notification handlers in one place
 └── tools/
-    └── ping.ts             # Simple ping tool
+    └── ping.ts            # Simple ping tool
 ```
 
 ## Running the example
@@ -87,21 +106,8 @@ You should see output like:
 
 ```
 [notification] Client session initialized
-[notification] Roots list changed — workspace context may need updating
-[notification] Request req-42 was cancelled: User clicked cancel
+[notification] Roots list changed
+[notification] Request req-42 cancelled: User clicked cancel
 [notification] Progress (75%): Almost done
-```
-
-## Configuration
-
-The notifications directory path is configurable in `xmcp.config.ts`:
-
-```ts
-const config: XmcpConfig = {
-  paths: {
-    notifications: "src/notifications",  // default
-    // notifications: "src/events",      // custom path
-    // notifications: false,             // disable
-  },
-};
+[notification] Task task-1: completed
 ```

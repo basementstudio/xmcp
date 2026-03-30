@@ -13,12 +13,13 @@ export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 export type {
-  NotificationMethod,
+  NotificationKey,
   NotificationHandler,
-  NotificationSubscription,
-  NotificationExtra,
+  CustomNotificationHandler,
+  NotificationsConfig,
+  NotificationParams,
 } from "./types/notification";
-export { subscribe } from "./subscribe";
+export { defineNotifications } from "./define-notifications";
 
 export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
 import "./types/declarations";

@@ -48,7 +48,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths, promptPaths, resourcePaths, notificationPaths, platforms } =
+  const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
@@ -166,28 +166,25 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
-  // handle notifications
-  let notificationsPath = isValidPath(
-    getResolvedPathsConfig(xmcpConfig).notifications,
-    "notifications"
-  );
-
-  if (notificationsPath) {
-    watcher.watch(`${notificationsPath}/**/*.{ts,tsx}`, {
-      onAdd: async (filePath) => {
-        addWatchedPath(notificationPaths, filePath);
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-      onUnlink: async (filePath) => {
-        removeWatchedPath(notificationPaths, filePath);
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-    });
-  }
+  // handle notifications (single-file pattern, like middleware)
+  watcher.watch("./src/notifications.ts", {
+    onAdd: async () => {
+      compilerContext.setContext({
+        hasNotifications: true,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+    onUnlink: async () => {
+      compilerContext.setContext({
+        hasNotifications: false,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+  });
 
   // if adapter is not enabled, handle middleware
   if (!xmcpConfig.experimental?.adapter) {
@@ -243,7 +240,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           reactToolsCount,
           promptsCount: promptPaths.size,
           resourcesCount: resourcePaths.size,
-          notificationsCount: notificationPaths.size,
+          hasNotifications: compilerContext.getContext().hasNotifications,
           transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
           adapter: xmcpConfig.experimental?.adapter
             ? (xmcpConfig.experimental.adapter as AdapterType)

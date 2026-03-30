@@ -13,23 +13,21 @@ A basic project structure is as follows:
 ```
 my-project/
 ├── src/
-│   ├── middleware.ts   # Middleware for http request/response processing
-│   └── tools/          # Tool files are auto-discovered here
+│   ├── middleware.ts     # Middleware for http request/response processing
+│   ├── notifications.ts  # Notification handlers setup file
+│   └── tools/            # Tool files are auto-discovered here
 │       ├── greet.ts
 │       ├── search.ts
 │   └── prompts/          # Prompt files are auto-discovered here
 │       ├── review-code.ts
 │       ├── team-greeting.ts
-│   └── resources/      # Resource files are auto-discovered here
+│   └── resources/        # Resource files are auto-discovered here
 │       ├── (config)/app.ts
 │       ├── (users)/[userId]/profile.ts
-│   └── notifications/  # Notification handlers are auto-discovered here
-│       ├── roots-changed.ts
-│       ├── on-cancel.ts
-├── dist/               # Built output (generated)
+├── dist/                 # Built output (generated)
 ├── package.json
 ├── tsconfig.json
-└── xmcp.config.ts       # Configuration file for xmcp
+└── xmcp.config.ts        # Configuration file for xmcp
 ```
 
 ## Top-level files
@@ -44,7 +42,7 @@ There are the three top-level files that are required for your project:
 
 The `src/` directory houses your project's implementation. xmcp follows a declarative, file-system based approach—simply create a file in the appropriate directory, and it will be automatically discovered and registered.
 
-The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, `resources/`, and `notifications/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
+The optional `middleware.ts` and `notifications.ts` files at the root of `src/` handle HTTP middleware and MCP notification events respectively. You can customize the location of `tools/`, `prompts/`, and `resources/` directories in your `xmcp.config.ts` file. See the [custom directories](../../configuration/custom-directories) documentation for details.
 
 <ConceptBoxes>
   <ConceptBox

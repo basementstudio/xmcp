@@ -9,13 +9,11 @@ import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
-import {
-  addNotificationsToServer,
-  NotificationFile,
-} from "./notifications";
+import { addNotificationsToServer } from "./notifications";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import type { NotificationsConfig } from "@/types/notification";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -51,13 +49,10 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
-// @ts-expect-error: injected by compiler
-export const injectedNotifications = INJECTED_NOTIFICATIONS as Record<
-  string,
-  () => Promise<NotificationFile>
->;
+const injectedNotifications = INJECTED_NOTIFICATIONS as
+  | (() => Promise<{ default?: NotificationsConfig }>)
+  | undefined;
 
-// @ts-expect-error: injected by compiler
 export const INJECTED_CONFIG = SERVER_INFO as Implementation;
 
 /* Loads all modules and injects them into the server */
@@ -67,14 +62,14 @@ export async function configureServer(
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
   resourceModules: Map<string, ResourceFile>,
-  notificationModules: Map<string, NotificationFile>
+  notificationsConfig: NotificationsConfig | undefined
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
 
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
-  addNotificationsToServer(server, notificationModules);
+  addNotificationsToServer(server, notificationsConfig);
   return server;
 }
 
@@ -108,16 +103,12 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
-export function loadNotifications() {
-  const notificationModules = new Map<string, NotificationFile>();
-
-  const notificationPromises = Object.keys(injectedNotifications).map((path) =>
-    injectedNotifications[path]().then((notificationModule) => {
-      notificationModules.set(path, notificationModule);
-    })
-  );
-
-  return [notificationPromises, notificationModules] as const;
+export async function loadNotificationsConfig(): Promise<
+  NotificationsConfig | undefined
+> {
+  if (!injectedNotifications) return undefined;
+  const mod = await injectedNotifications();
+  return mod?.default;
 }
 
 export async function createServer() {
@@ -125,19 +116,20 @@ export async function createServer() {
   const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
-  const [notificationPromises, notificationModules] = loadNotifications();
+  const notificationsConfigPromise = loadNotificationsConfig();
   await Promise.all([
     toolModulesPromise,
     ...promptPromises,
     ...resourcePromises,
-    ...notificationPromises,
+    notificationsConfigPromise,
   ]);
   const toolModules = await toolModulesPromise;
+  const notificationsConfig = await notificationsConfigPromise;
   return configureServer(
     server,
     toolModules,
     promptModules,
     resourceModules,
-    notificationModules
+    notificationsConfig
   );
 }

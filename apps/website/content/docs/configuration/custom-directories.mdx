@@ -6,7 +6,7 @@ summary: "Learn how to customize the directories for tools, prompts, and resourc
 description: "Customize where xmcp looks for tools, prompts, and resources."
 ---
 
-Customize where `xmcp` looks for tools, prompts, resources, and notifications by configuring the `paths` option. If not specified, these are the defaults:
+Customize where `xmcp` looks for tools, prompts, and resources by configuring the `paths` option. If not specified, these are the defaults:
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
@@ -14,7 +14,6 @@ const config: XmcpConfig = {
     tools: "src/tools",
     prompts: "src/prompts",
     resources: "src/resources",
-    notifications: "src/notifications",
   },
 };
 
@@ -31,7 +30,6 @@ const config: XmcpConfig = {
     tools: "src/tools",
     prompts: false, // Prompts directory disabled
     resources: "src/resources",
-    notifications: false, // Notifications directory disabled
   },
 };
 
