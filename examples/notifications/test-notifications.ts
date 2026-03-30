@@ -71,7 +71,7 @@ async function main() {
 
   // Send initialized notification
   await sendJsonRpc("notifications/initialized");
-  console.log("   Done.\n");
+  console.log("   Expected: [notification] Client session initialized\n");
 
   // 2. roots/list_changed (batched with a request to share the session)
   console.log("2. Sending notifications/roots/list_changed...");
@@ -79,9 +79,7 @@ async function main() {
     { jsonrpc: "2.0", method: "notifications/roots/list_changed" },
     { jsonrpc: "2.0", method: "tools/list", id: 2 },
   ]);
-  console.log(
-    "   Expected: [notification] Roots list changed — workspace context may need updating\n"
-  );
+  console.log("   Expected: [notification] Roots list changed\n");
 
   // 3. notifications/cancelled
   console.log("3. Sending notifications/cancelled...");
@@ -90,7 +88,7 @@ async function main() {
     reason: "User clicked cancel",
   });
   console.log(
-    "   Expected: [notification] Request req-42 was cancelled: User clicked cancel\n"
+    "   Expected: [notification] Request req-42 cancelled: User clicked cancel\n"
   );
 
   // 4. notifications/progress
@@ -101,8 +99,29 @@ async function main() {
     total: 100,
     message: "Almost done",
   });
+  console.log("   Expected: [notification] Progress (75%): Almost done\n");
+
+  // 5. notifications/tasks/status
+  console.log("5. Sending notifications/tasks/status...");
+  await sendJsonRpc("notifications/tasks/status", {
+    taskId: "task-1",
+    status: "completed",
+    statusMessage: "All items processed",
+    createdAt: new Date().toISOString(),
+    lastUpdatedAt: new Date().toISOString(),
+    ttl: null,
+  });
   console.log(
-    "   Expected: [notification] Progress (75%): Almost done\n"
+    "   Expected: [notification] Task task-1: completed - All items processed\n"
+  );
+
+  // 6. Custom notification
+  console.log("6. Sending custom/my-event...");
+  await sendJsonRpc("custom/my-event", {
+    foo: "bar",
+  });
+  console.log(
+    '   Expected: [notification] Custom event received: { foo: "bar" }\n'
   );
 
   console.log("All notifications sent. Check the server terminal for output.");
