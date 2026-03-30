@@ -46,7 +46,6 @@ export function readClientBundlesFromDisk(): Record<
   return bundles;
 }
 
-// @ts-expect-error: injected by compiler
 export const runtimeFiles = RUNTIME_FILES as Record<string, string>;
 
 /**

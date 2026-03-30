@@ -11,6 +11,7 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -31,25 +32,21 @@ export type ResourceFile = {
   default: UserResourceHandler;
 };
 
-// @ts-expect-error: injected by compiler
 export const injectedTools = INJECTED_TOOLS as Record<
   string,
   () => Promise<ToolFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedPrompts = INJECTED_PROMPTS as Record<
   string,
   () => Promise<PromptFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedResources = INJECTED_RESOURCES as Record<
   string,
   () => Promise<ResourceFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
 
 /* Loads all modules and injects them into the server */
@@ -68,16 +65,10 @@ export async function configureServer(
   return server;
 }
 
-export function loadTools() {
-  const toolModules = new Map<string, ToolFile>();
-
-  const toolPromises = Object.keys(injectedTools).map((path) =>
-    injectedTools[path]().then((toolModule) => {
-      toolModules.set(path, toolModule);
-    })
-  );
-
-  return [toolPromises, toolModules] as const;
+export async function loadTools() {
+  const { toolModules, skippedTools } = await loadToolModules(injectedTools);
+  reportToolLoadIssues(skippedTools);
+  return toolModules;
 }
 
 export function loadPrompts() {
@@ -107,11 +98,10 @@ export function loadResources() {
 export async function createServer() {
   const { instructions, ...serverInfo } = INJECTED_CONFIG;
   const server = new McpServer(serverInfo, { instructions });
-  const [toolPromises, toolModules] = loadTools();
+  const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all(toolPromises);
-  await Promise.all(promptPromises);
-  await Promise.all(resourcePromises);
+  await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
+  const toolModules = await toolModulesPromise;
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
