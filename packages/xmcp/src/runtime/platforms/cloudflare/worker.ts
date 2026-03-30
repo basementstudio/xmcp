@@ -8,23 +8,20 @@ import type { Env, ExecutionContext } from "./types";
 import type { WebMiddleware, WebMiddlewareContext } from "@/types/middleware";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
-// @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as {
   port: number;
   host: string;
-  bodySizeLimit: string;
+  bodySizeLimit: number;
   endpoint: string;
   debug: boolean;
 };
 
-// @ts-expect-error: injected by compiler
 const templateConfig = TEMPLATE_CONFIG as {
   name?: string;
   description?: string;
   homePage?: string;
 };
 
-// @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as
   | (() => Promise<{ default?: WebMiddleware | WebMiddleware[] }>)
   | undefined;

@@ -6,22 +6,14 @@ import { httpRequestContextProvider } from "@/runtime/contexts/http-request-cont
 import { randomUUID } from "node:crypto";
 
 // cors config
-// @ts-expect-error: injected by compiler
 const corsOrigin = HTTP_CORS_ORIGIN as string;
-// @ts-expect-error: injected by compiler
 const corsMethods = HTTP_CORS_METHODS as string;
-// @ts-expect-error: injected by compiler
 const corsAllowedHeaders = HTTP_CORS_ALLOWED_HEADERS as string;
-// @ts-expect-error: injected by compiler
 const corsExposedHeaders = HTTP_CORS_EXPOSED_HEADERS as string;
-// @ts-expect-error: injected by compiler
 const corsCredentials = HTTP_CORS_CREDENTIALS as boolean;
-// @ts-expect-error: injected by compiler
 const corsMaxAge = HTTP_CORS_MAX_AGE as number;
 
-// @ts-expect-error: injected by compiler
 const debug = HTTP_DEBUG as boolean;
-// @ts-expect-error: injected by compiler
 const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
 
 export async function xmcpHandler(req: Request, res: Response) {
