@@ -1172,6 +1172,9 @@ importers:
       '@vercel/sandbox':
         specifier: ^1.8.0
         version: 1.9.0
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
     devDependencies:
       '@types/node':
         specifier: ^22.19.2

@@ -40,7 +40,7 @@ export async function runInSandbox(
     } else {
       sandbox = await Sandbox.create({
         ...baseParams,
-        runtime: "node24" as const,
+        runtime: (options?.runtime ?? "node24") as any,
       });
     }
 

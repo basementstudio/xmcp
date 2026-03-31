@@ -270,23 +270,29 @@ For the full Cloudflare-style Code Mode where agents write JavaScript code that 
 pnpm add @xmcp-dev/sandbox
 ```
 
-```typescript
-import { runInSandbox } from "@xmcp-dev/sandbox";
-
-// Search: agent queries the API spec in a sandboxed microVM
-const result = await runInSandbox(code, {
-  globals: { spec: specJson },
-  timeoutMs: 10000,
-});
-
-// Execute: agent chains API calls using fetch() inside the microVM
-const result = await runInSandbox(code, {
-  globals: { baseUrl: "https://api.example.com", apiKey: process.env.API_KEY },
-  timeoutMs: 30000,
-});
+```typescript title="src/tools/search.ts"
+import { searchTool } from "@xmcp-dev/sandbox";
+const search = searchTool({ url: "https://api.example.com/openapi.json" });
+export const schema = search.schema;
+export const metadata = search.metadata;
+export default search.handler;
 ```
 
-Requires a Vercel account. See the [full sandbox documentation](/docs/integrations/sandbox) for the API reference, security model, auth setup, and pricing.
+```typescript title="src/tools/execute.ts"
+import { executeTool } from "@xmcp-dev/sandbox";
+const execute = executeTool({
+  url: "https://api.example.com",
+  env: ["API_KEY"],
+  networkPolicy: { allow: ["api.example.com"] },
+});
+export const schema = execute.schema;
+export const metadata = execute.metadata;
+export default execute.handler;
+```
+
+The search tool includes built-in helpers by default. Agents can use `search("pet")` for fuzzy search, `filter({ method: "GET", tag: "pet" })` for structured filtering, or the raw `spec` global for custom queries.
+
+Two files, fully configured. Requires a Vercel account. See the [full sandbox documentation](/docs/integrations/sandbox) for the API reference, search helpers, custom implementations, and pricing.
 
 **Example:** `examples/openapi-code-mode` -- Full OpenAPI Code Mode with Petstore API
 
