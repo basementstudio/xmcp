@@ -1,0 +1,85 @@
+{
+  "title": "Basic UI",
+  "description": "Minimal @xmcp-dev/ui app schema for quick copy-paste demos.",
+  "mcpServerUrl": "http://localhost:6274",
+  "theme": "dark",
+  "themeTokens": {
+    "primary": "190 95% 54%",
+    "primaryForeground": "222 47% 11%",
+    "accent": "160 84% 39%",
+    "accentForeground": "210 40% 98%",
+    "ring": "190 95% 54%",
+    "radius": "1.05rem"
+  },
+  "state": {
+    "status": "Ready",
+    "summary": "This UI was rendered from a copy-paste JSON file.",
+    "notes": "You can replace this object with any valid AppSchema."
+  },
+  "root": {
+    "type": "grid",
+    "props": {
+      "columns": 1,
+      "gap": 20
+    },
+    "children": [
+      {
+        "type": "card",
+        "props": {
+          "title": "Basic UI Example",
+          "description": "A minimal schema that the TL can paste directly into renderJson."
+        },
+        "children": [
+          {
+            "type": "badge",
+            "props": {
+              "label": "Copy Paste Ready"
+            }
+          },
+          {
+            "type": "separator",
+            "props": {}
+          },
+          {
+            "type": "text",
+            "props": {
+              "variant": "body",
+              "content": "{{summary}}"
+            }
+          },
+          {
+            "type": "textarea",
+            "props": {
+              "label": "Notes",
+              "stateKey": "notes",
+              "rows": 4
+            }
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "props": {
+          "columns": 2,
+          "gap": 16
+        },
+        "children": [
+          {
+            "type": "stat-card",
+            "props": {
+              "label": "Status",
+              "valueKey": "status"
+            }
+          },
+          {
+            "type": "stat-card",
+            "props": {
+              "label": "Mode",
+              "valueKey": "summary"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
