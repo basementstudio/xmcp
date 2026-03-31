@@ -7,6 +7,14 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  ToolRequestOptions,
+  SampleRequest,
+  SampleResult,
+  SampleMessage,
+  SampleContent,
+  SampleModelPreferences,
+  SampleToolChoice,
+  SampleToolSelection,
   InferSchema,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
