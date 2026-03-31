@@ -16,9 +16,24 @@ const setStateActionSchema = z.object({
   value: z.unknown(),
 });
 
+const openLinkActionSchema = z.object({
+  type: z.literal("open-link"),
+  url: z.string(),
+});
+
+const setStateBatchActionSchema = z.object({
+  type: z.literal("set-state-batch"),
+  entries: z.array(z.object({
+    key: z.string(),
+    value: z.unknown(),
+  })),
+});
+
 const actionSchema = z.union([
   callToolActionSchema,
   setStateActionSchema,
+  openLinkActionSchema,
+  setStateBatchActionSchema,
 ]);
 
 // ── Component types ───────────────────────────────────────────────────
@@ -26,9 +41,12 @@ const actionSchema = z.union([
 const componentTypeSchema = z.enum([
   "grid",
   "card",
+  "tabs",
   "table",
   "stat-card",
   "text",
+  "image",
+  "link",
   "input",
   "textarea",
   "select",
@@ -39,6 +57,7 @@ const componentTypeSchema = z.enum([
   "switch",
   "alert",
   "loader",
+  "progress",
 ]);
 
 // ── Component-specific prop schemas ───────────────────────────────────
@@ -53,6 +72,18 @@ export const cardPropsSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   padding: z.number().optional().default(24),
+  className: z.string().optional(),
+});
+
+const tabItemSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+});
+
+export const tabsPropsSchema = z.object({
+  tabs: z.array(tabItemSchema),
+  stateKey: z.string(),
+  defaultValue: z.string().optional(),
   className: z.string().optional(),
 });
 
@@ -156,6 +187,29 @@ export const loaderPropsSchema = z.object({
   className: z.string().optional(),
 });
 
+export const progressPropsSchema = z.object({
+  valueKey: z.string(),
+  max: z.number().optional().default(100),
+  label: z.string().optional(),
+  className: z.string().optional(),
+});
+
+export const imagePropsSchema = z.object({
+  src: z.string().optional(),
+  srcKey: z.string().optional(),
+  alt: z.string().optional(),
+  width: z.string().optional(),
+  height: z.string().optional(),
+  className: z.string().optional(),
+});
+
+export const linkPropsSchema = z.object({
+  href: z.string(),
+  label: z.string(),
+  external: z.boolean().optional(),
+  className: z.string().optional(),
+});
+
 const gridComponentSchema = z.object({
   type: z.literal("grid"),
   id: z.string().optional(),
@@ -167,6 +221,13 @@ const cardComponentSchema = z.object({
   type: z.literal("card"),
   id: z.string().optional(),
   props: cardPropsSchema,
+  children: z.array(z.lazy(() => componentSchema)).optional(),
+});
+
+const tabsComponentSchema = z.object({
+  type: z.literal("tabs"),
+  id: z.string().optional(),
+  props: tabsPropsSchema,
   children: z.array(z.lazy(() => componentSchema)).optional(),
 });
 
@@ -192,18 +253,21 @@ const inputComponentSchema = z.object({
   type: z.literal("input"),
   id: z.string().optional(),
   props: inputPropsSchema,
+  actions: z.record(z.string(), actionSchema).optional(),
 });
 
 const textareaComponentSchema = z.object({
   type: z.literal("textarea"),
   id: z.string().optional(),
   props: textareaPropsSchema,
+  actions: z.record(z.string(), actionSchema).optional(),
 });
 
 const selectComponentSchema = z.object({
   type: z.literal("select"),
   id: z.string().optional(),
   props: selectPropsSchema,
+  actions: z.record(z.string(), actionSchema).optional(),
 });
 
 const buttonComponentSchema = z.object({
@@ -229,12 +293,14 @@ const checkboxComponentSchema = z.object({
   type: z.literal("checkbox"),
   id: z.string().optional(),
   props: checkboxPropsSchema,
+  actions: z.record(z.string(), actionSchema).optional(),
 });
 
 const switchComponentSchema = z.object({
   type: z.literal("switch"),
   id: z.string().optional(),
   props: switchPropsSchema,
+  actions: z.record(z.string(), actionSchema).optional(),
 });
 
 const alertComponentSchema = z.object({
@@ -249,13 +315,34 @@ const loaderComponentSchema = z.object({
   props: loaderPropsSchema,
 });
 
+const progressComponentSchema = z.object({
+  type: z.literal("progress"),
+  id: z.string().optional(),
+  props: progressPropsSchema,
+});
+
+const imageComponentSchema = z.object({
+  type: z.literal("image"),
+  id: z.string().optional(),
+  props: imagePropsSchema,
+});
+
+const linkComponentSchema = z.object({
+  type: z.literal("link"),
+  id: z.string().optional(),
+  props: linkPropsSchema,
+});
+
 const componentSchema: z.ZodType = z.lazy(() =>
   z.discriminatedUnion("type", [
     gridComponentSchema,
     cardComponentSchema,
+    tabsComponentSchema,
     tableComponentSchema,
     statCardComponentSchema,
     textComponentSchema,
+    imageComponentSchema,
+    linkComponentSchema,
     inputComponentSchema,
     textareaComponentSchema,
     selectComponentSchema,
@@ -266,6 +353,7 @@ const componentSchema: z.ZodType = z.lazy(() =>
     switchComponentSchema,
     alertComponentSchema,
     loaderComponentSchema,
+    progressComponentSchema,
   ]),
 );
 

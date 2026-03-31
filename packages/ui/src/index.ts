@@ -64,6 +64,12 @@ export {
   TableHead,
   TableCell,
   TableCaption,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  Progress,
+  Link,
 } from "./react/index.js";
 export { cn } from "./react/utils.js";
 
@@ -74,13 +80,19 @@ export type {
   Action,
   CallToolAction,
   SetStateAction,
+  OpenLinkAction,
+  SetStateBatchAction,
   ComponentType,
   GridProps,
   CardProps,
+  TabsProps,
+  TabItem,
   TableProps,
   TableColumn,
   StatCardProps,
   TextProps,
+  ImageProps,
+  LinkProps,
   InputProps,
   TextareaProps,
   SelectProps,
@@ -92,6 +104,7 @@ export type {
   SwitchProps,
   AlertProps,
   LoaderProps,
+  ProgressProps,
 } from "./schema/types.js";
 
 // State hooks (for advanced usage)

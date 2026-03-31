@@ -3,9 +3,12 @@ import type { ThemeMode, ThemeTokens } from "../react/theme.js";
 export type ComponentType =
   | "grid"
   | "card"
+  | "tabs"
   | "table"
   | "stat-card"
   | "text"
+  | "image"
+  | "link"
   | "input"
   | "textarea"
   | "select"
@@ -15,7 +18,8 @@ export type ComponentType =
   | "checkbox"
   | "switch"
   | "alert"
-  | "loader";
+  | "loader"
+  | "progress";
 
 // ── App root ──────────────────────────────────────────────────────────
 
@@ -42,7 +46,7 @@ export interface Component {
 
 // ── Actions ───────────────────────────────────────────────────────────
 
-export type Action = CallToolAction | SetStateAction;
+export type Action = CallToolAction | SetStateAction | OpenLinkAction | SetStateBatchAction;
 
 export interface CallToolAction {
   type: "call-tool";
@@ -55,6 +59,16 @@ export interface SetStateAction {
   type: "set-state";
   key: string;
   value: unknown;
+}
+
+export interface OpenLinkAction {
+  type: "open-link";
+  url: string;
+}
+
+export interface SetStateBatchAction {
+  type: "set-state-batch";
+  entries: Array<{ key: string; value: unknown }>;
 }
 
 // ── Component-specific props ──────────────────────────────────────────
@@ -72,6 +86,18 @@ export interface CardProps {
   description?: string;
   /** @default 24 */
   padding?: number;
+  className?: string;
+}
+
+export interface TabItem {
+  label: string;
+  value: string;
+}
+
+export interface TabsProps {
+  tabs: TabItem[];
+  stateKey: string;
+  defaultValue?: string;
   className?: string;
 }
 
@@ -172,5 +198,28 @@ export interface AlertProps {
 export interface LoaderProps {
   loadingKey: string;
   label?: string;
+  className?: string;
+}
+
+export interface ProgressProps {
+  valueKey: string;
+  max?: number;
+  label?: string;
+  className?: string;
+}
+
+export interface ImageProps {
+  src?: string;
+  srcKey?: string;
+  alt?: string;
+  width?: string;
+  height?: string;
+  className?: string;
+}
+
+export interface LinkProps {
+  href: string;
+  label: string;
+  external?: boolean;
   className?: string;
 }

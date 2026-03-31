@@ -4,6 +4,8 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { Slot } from "@radix-ui/react-slot";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cva, type VariantProps } from "class-variance-authority";
 import { createTheme, type ThemeMode, type ThemeTokens, useTheme, uiShellClassName } from "./theme.js";
 import { cn } from "./utils.js";
@@ -685,3 +687,96 @@ export const TableCaption = React.forwardRef<
   <caption ref={ref} className={cn("mt-4 text-sm text-[hsl(var(--muted-foreground))]", className)} {...props} />
 ));
 TableCaption.displayName = "TableCaption";
+
+// ── Tabs ────────────────────────────────────────────────────────────
+
+export const Tabs = TabsPrimitive.Root;
+
+export const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "inline-flex h-10 items-center justify-center rounded-[calc(var(--radius)-0.15rem)] bg-[hsl(var(--muted))] p-1 text-[hsl(var(--muted-foreground))]",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsList.displayName = TabsPrimitive.List.displayName;
+
+export const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-[calc(var(--radius)-0.25rem)] px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[hsl(var(--background))] data-[state=active]:text-[hsl(var(--foreground))] data-[state=active]:shadow-sm",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
+
+export const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))]",
+      className,
+    )}
+    {...props}
+  />
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
+
+// ── Progress ────────────────────────────────────────────────────────
+
+export const Progress = React.forwardRef<
+  React.ElementRef<typeof ProgressPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>
+>(({ className, value, max = 100, ...props }, ref) => (
+  <ProgressPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative h-2 w-full overflow-hidden rounded-full bg-[hsl(var(--muted))]",
+      className,
+    )}
+    value={value}
+    max={max}
+    {...props}
+  >
+    <ProgressPrimitive.Indicator
+      className="h-full bg-[hsl(var(--primary))] transition-all duration-300 ease-in-out"
+      style={{ width: `${((value ?? 0) / max) * 100}%` }}
+    />
+  </ProgressPrimitive.Root>
+));
+Progress.displayName = ProgressPrimitive.Root.displayName;
+
+// ── Link ────────────────────────────────────────────────────────────
+
+export function Link({
+  className,
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <a
+      className={cn(
+        "inline-flex items-center gap-1 text-sm font-medium text-[hsl(var(--primary))] underline-offset-4 hover:underline",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </a>
+  );
+}

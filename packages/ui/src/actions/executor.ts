@@ -1,4 +1,4 @@
-import type { Action, CallToolAction, SetStateAction } from "../schema/types.js";
+import type { Action, CallToolAction, SetStateAction, OpenLinkAction, SetStateBatchAction } from "../schema/types.js";
 import type { Dispatch } from "react";
 import type { UiAction } from "../renderer/StateProvider.js";
 import { getByPath } from "../state/path.js";
@@ -141,6 +141,25 @@ export async function executeAction(
           : setAction.value;
 
       dispatch({ type: "SET_STATE", key: setAction.key, value: resolvedValue });
+      break;
+    }
+
+    case "open-link": {
+      const linkAction = action as OpenLinkAction;
+      const resolvedUrl = resolveTemplate(linkAction.url, state, eventValue);
+      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+      break;
+    }
+
+    case "set-state-batch": {
+      const batchAction = action as SetStateBatchAction;
+      for (const entry of batchAction.entries) {
+        const resolvedValue =
+          typeof entry.value === "string"
+            ? resolveTemplate(entry.value, state, eventValue)
+            : entry.value;
+        dispatch({ type: "SET_STATE", key: entry.key, value: resolvedValue });
+      }
       break;
     }
   }
