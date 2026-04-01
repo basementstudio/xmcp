@@ -26,7 +26,10 @@ export const CLIENT_IDENTITY = {
 const CLIENT_CAPABILITIES = {
   capabilities: {
     sampling: {},
-    elicitation: {},
+    elicitation: {
+      form: {},
+      url: {},
+    },
     roots: { listChanged: true },
   },
 } as const;
