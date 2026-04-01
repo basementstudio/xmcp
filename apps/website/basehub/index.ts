@@ -57,3 +57,24 @@ export const fetchMCPs = async () => {
 
   return res.showcase.mcps.items;
 };
+
+const TestimonialFragment = fragmentOn("TestimonialComponent", {
+  _title: true,
+  handle: true,
+  tagline: true,
+  logo: {
+    url: true,
+  },
+});
+
+export const fetchTestimonials = async () => {
+  const res = await basehub().query({
+    testimonials: {
+      items: {
+        ...TestimonialFragment,
+      },
+    },
+  });
+
+  return res.testimonials.items;
+};

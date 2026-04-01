@@ -1,38 +1,20 @@
 import { Tag } from "@/components/ui/tag";
+import { fetchTestimonials } from "@/basehub";
+import { TestimonialsCarousel } from "./carousel";
 import Image from "next/image";
 
 interface TestimonialProps {
-  quote: string;
-  name: string;
+  _title: string;
   handle: string;
-  avatar: string;
+  tagline: string;
+  logo: {
+    url: string;
+  } | null;
 }
 
-const testimonials: TestimonialProps[] = [
-  {
-    quote:
-      "xmcp made it incredibly easy to get our MCP server up and running. The file-based routing is a game changer.",
-    name: "Alex Rivera",
-    handle: "@arivera_dev",
-    avatar: "/testimonials/avatar-1.jpg",
-  },
-  {
-    quote:
-      "We migrated from a custom setup to xmcp in a day. The middleware system and auth integration saved us weeks of work.",
-    name: "Sarah Chen",
-    handle: "@sarahchen_ai",
-    avatar: "/testimonials/avatar-2.jpg",
-  },
-  {
-    quote:
-      "The TypeScript-first approach and extensible config make xmcp the best framework for building production MCP servers.",
-    name: "Marcus Johnson",
-    handle: "@marcusj",
-    avatar: "/testimonials/avatar-3.jpg",
-  },
-];
+export async function HomeTestimonials() {
+  const testimonials = await fetchTestimonials();
 
-export const HomeTestimonials = () => {
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
       <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
@@ -48,33 +30,41 @@ export const HomeTestimonials = () => {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <TestimonialsCarousel>
         {testimonials.map((testimonial, index) => (
-          <TestimonialCard key={index} {...testimonial} />
+          <TestimonialCard key={index} {...(testimonial as TestimonialProps)} />
         ))}
-      </div>
+      </TestimonialsCarousel>
     </div>
   );
-};
+}
 
-const TestimonialCard = ({ quote, name, handle, avatar }: TestimonialProps) => {
+const TestimonialCard = ({ _title, handle, tagline, logo }: TestimonialProps) => {
   return (
-    <div className="flex flex-col p-4 rounded-xs border border-brand-neutral-500 hover:bg-black hover:border-brand-neutral-300 transition-colors duration-200 h-full">
+    <div className="flex flex-col p-4 rounded-xs border border-brand-neutral-500 hover:bg-black hover:border-brand-neutral-300 transition-colors duration-200 w-[calc(50%-10px)] min-w-[300px] flex-shrink-0 snap-start">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
-        &ldquo;{quote}&rdquo;
+        &ldquo;{tagline}&rdquo;
       </p>
       <div className="mt-4 flex items-center gap-3">
-        <Image
-          src={avatar}
-          alt={name}
-          width={32}
-          height={32}
-          className="w-8 h-8 rounded-full object-cover"
-        />
-        <div className="flex flex-col">
-          <span className="text-brand-white text-sm font-medium">{name}</span>
-          <span className="text-brand-neutral-200 text-xs">{handle}</span>
+        <div className="w-8 h-8 min-w-8 min-h-8 rounded-lg border-2 border-brand-neutral-500 overflow-hidden bg-brand-black flex items-center justify-center">
+          {logo ? (
+            <Image
+              src={logo.url}
+              alt={_title}
+              width={24}
+              height={24}
+              className="w-5 h-5 object-contain"
+            />
+          ) : null}
         </div>
+        <a
+          href={`https://x.com/${handle.replace(/^@/, "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-white text-sm font-medium hover:text-brand-neutral-100 transition-colors"
+        >
+          {handle.startsWith("@") ? handle : `@${handle}`}
+        </a>
       </div>
     </div>
   );
