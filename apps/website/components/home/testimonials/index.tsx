@@ -7,6 +7,7 @@ interface TestimonialProps {
   _title: string;
   handle: string;
   tagline: string;
+  position: string | null;
   logo: {
     url: string;
   } | null;
@@ -39,32 +40,37 @@ export async function HomeTestimonials() {
   );
 }
 
-const TestimonialCard = ({ _title, handle, tagline, logo }: TestimonialProps) => {
+const TestimonialCard = ({ _title, handle, tagline, position, logo }: TestimonialProps) => {
   return (
     <div className="flex flex-col p-4 rounded-xs border border-brand-neutral-500 hover:bg-black hover:border-brand-neutral-300 transition-colors duration-200 w-[calc(50%-10px)] min-w-[300px] flex-shrink-0 snap-start">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
         &ldquo;{tagline}&rdquo;
       </p>
       <div className="mt-4 flex items-center gap-3">
-        <div className="w-8 h-8 min-w-8 min-h-8 rounded-lg border-2 border-brand-neutral-500 overflow-hidden bg-brand-black flex items-center justify-center">
+        <div className="w-10 h-10 min-w-10 min-h-10 rounded-lg border-2 border-brand-neutral-500 overflow-hidden bg-brand-black">
           {logo ? (
             <Image
               src={logo.url}
               alt={_title}
-              width={24}
-              height={24}
-              className="w-5 h-5 object-contain"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
             />
           ) : null}
         </div>
-        <a
-          href={`https://x.com/${handle.replace(/^@/, "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-brand-white text-sm font-medium hover:text-brand-neutral-100 transition-colors"
-        >
-          {handle.startsWith("@") ? handle : `@${handle}`}
-        </a>
+        <div className="flex flex-col">
+          <a
+            href={`https://x.com/${handle.replace(/^@/, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand-white text-sm font-medium hover:text-brand-neutral-100 transition-colors"
+          >
+            {handle.startsWith("@") ? handle : `@${handle}`}
+          </a>
+          {position && (
+            <span className="text-brand-neutral-200 text-xs">{position}</span>
+          )}
+        </div>
       </div>
     </div>
   );
