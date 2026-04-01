@@ -84,7 +84,7 @@ export default async ({ topic }, extra) => {
 };
 ```
 
-For agentic flows, pass local xmcp tool names in `tools`. xmcp will send the matching tool definitions, execute any returned `tool_use` blocks, append `tool_result` messages, and continue the loop automatically until the model finishes or `maxSteps` is reached.
+For agentic flows, pass local xmcp tool names in `tools` or use `"all"`. xmcp will send the matching local tool definitions, execute any returned `tool_use` blocks, append `tool_result` messages, and continue the loop automatically until the model finishes or `maxSteps` is reached.
 
 ```ts
 const result = await extra.sample({

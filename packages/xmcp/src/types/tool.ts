@@ -80,11 +80,6 @@ export type SampleRequest =
 export interface ToolRequestOptions {
   /** Progress notification callback */
   onprogress?: (progress: any) => void;
-  /** Optional task creation parameters for fetch-later flows */
-  task?: {
-    ttl?: number | null;
-    pollInterval?: number;
-  };
   /** Abort signal for cancelling the request */
   signal?: AbortSignal;
   /** Request timeout in milliseconds */

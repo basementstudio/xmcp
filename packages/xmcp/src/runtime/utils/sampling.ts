@@ -189,15 +189,10 @@ export function createToolExtraArguments(
   extra: SamplingExtra,
   currentToolName?: string
 ): ToolExtraArguments {
-  return {
-    ...(extra as Record<string, unknown>),
-    sendRequest: (request, resultSchema, options) =>
-      extra.sendRequest(
-        request,
-        resultSchema as Parameters<typeof extra.sendRequest>[1],
-        options
-      ) as Promise<any>,
-    sample: (request, options) =>
+  return Object.assign({}, extra, {
+    sendRequest: (request: any, resultSchema: any, options?: ToolRequestOptions) =>
+      extra.sendRequest(request, resultSchema, options),
+    sample: (request: SampleRequest, options?: ToolRequestOptions) =>
       sampleFromClient(extra, request, options, currentToolName),
-  } as ToolExtraArguments;
+  }) as ToolExtraArguments;
 }
