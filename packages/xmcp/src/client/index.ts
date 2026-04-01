@@ -25,7 +25,9 @@ export const CLIENT_IDENTITY = {
 
 const CLIENT_CAPABILITIES = {
   capabilities: {
-    sampling: {},
+    sampling: {
+      tools: {},
+    },
     elicitation: {},
     roots: { listChanged: true },
   },

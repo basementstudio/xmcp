@@ -45,6 +45,65 @@ npx init-xmcp@latest
 ⊹ Visit [xmcp.dev](https://xmcp.dev) to learn more about the project.\
 ⊹ Visit [xmcp.dev/docs](https://xmcp.dev/docs) to view the full documentation.
 
+## Sampling From Tools
+
+Tool handlers can request MCP sampling directly through `extra.sample()`.
+
+```ts
+import { z } from "zod";
+
+export const schema = {
+  topic: z.string(),
+};
+
+export default async ({ topic }, extra) => {
+  const result = await extra.sample({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Write a concise summary about ${topic}.`,
+        },
+      },
+    ],
+    maxTokens: 300,
+  });
+
+  return {
+    content: [
+      {
+        type: "text",
+        text:
+          result.content.type === "text"
+            ? result.content.text
+            : "The client did not return text content.",
+      },
+    ],
+  };
+};
+```
+
+For agentic flows, pass local xmcp tool names in `tools` or use `"all"`. xmcp will send the matching local tool definitions and handle the `tool_use -> tool_result -> continue` loop until the model finishes or `maxSteps` is reached.
+
+```ts
+const result = await extra.sample({
+  messages: [
+    {
+      role: "user",
+      content: {
+        type: "text",
+        text: "Research the current status and give me a short answer.",
+      },
+    },
+  ],
+  tools: ["search_docs", "fetch_page"],
+  toolChoice: { mode: "auto" },
+  maxTokens: 800,
+  maxSteps: 6,
+});
+```
+
 ## Security
 
 If you believe you have found a security vulnerability, we encourage you to let us know right away.
