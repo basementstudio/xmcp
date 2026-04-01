@@ -104,7 +104,8 @@ async function executeToolUse(
 export async function sampleFromClient(
   extra: SamplingExtra,
   request: SampleRequest,
-  options?: ToolRequestOptions
+  options?: ToolRequestOptions,
+  currentToolName?: string
 ): Promise<SampleResult> {
   const { tools: toolSelection, maxSteps = DEFAULT_SAMPLE_MAX_STEPS, ...params } =
     request;
@@ -120,11 +121,15 @@ export async function sampleFromClient(
     );
   }
 
-  const resolvedTools = resolveSamplingTools(toolSelection);
+  const resolvedTools = resolveSamplingTools(toolSelection).filter(
+    (tool) => toolSelection !== "all" || tool.definition.name !== currentToolName
+  );
 
   if (resolvedTools.length === 0) {
     throw new Error(
-      'Sampling requested tools, but no tools were registered. Pass explicit tool names or omit "tools".'
+      toolSelection === "all" && currentToolName
+        ? `Sampling requested "all" tools, but "${currentToolName}" is the only available tool. Pass explicit tool names or omit "tools".`
+        : 'Sampling requested tools, but no tools were registered. Pass explicit tool names or omit "tools".'
     );
   }
 
@@ -161,9 +166,11 @@ export async function sampleFromClient(
       );
     }
 
-    const toolResults = await Promise.all(
-      toolUses.map((toolUse) => executeToolUse(toolUse, extra, toolMap))
-    );
+    const toolResults: ToolResultContent[] = [];
+
+    for (const toolUse of toolUses) {
+      toolResults.push(await executeToolUse(toolUse, extra, toolMap));
+    }
 
     messages = [
       ...messages,
@@ -179,22 +186,18 @@ export async function sampleFromClient(
 }
 
 export function createToolExtraArguments(
-  extra: SamplingExtra
+  extra: SamplingExtra,
+  currentToolName?: string
 ): ToolExtraArguments {
   return {
-    signal: extra.signal,
-    authInfo: extra.authInfo,
-    sessionId: extra.sessionId,
-    _meta: extra._meta,
-    requestId: extra.requestId,
-    requestInfo: extra.requestInfo,
-    sendNotification: extra.sendNotification,
+    ...(extra as Record<string, unknown>),
     sendRequest: (request, resultSchema, options) =>
       extra.sendRequest(
         request,
         resultSchema as Parameters<typeof extra.sendRequest>[1],
         options
       ) as Promise<any>,
-    sample: (request, options) => sampleFromClient(extra, request, options),
-  };
+    sample: (request, options) =>
+      sampleFromClient(extra, request, options, currentToolName),
+  } as ToolExtraArguments;
 }

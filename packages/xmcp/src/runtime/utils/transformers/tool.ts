@@ -98,7 +98,7 @@ export function transformToolHandler(
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    const toolExtra = createToolExtraArguments(extra);
+    const toolExtra = createToolExtraArguments(extra, toolName);
     let response: any = handler(args, toolExtra);
 
     // only await if it's actually a promise

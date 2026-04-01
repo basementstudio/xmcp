@@ -52,7 +52,7 @@ export type SampleMessage = SamplingMessage;
 export type SampleContent = SamplingMessageContentBlock;
 export type SampleModelPreferences = ModelPreferences;
 export type SampleToolChoice = ToolChoice;
-export type SampleToolSelection = "all" | string[];
+export type SampleToolSelection = "all" | readonly string[];
 export type SampleResult = CreateMessageResult | CreateMessageResultWithTools;
 
 type SampleRequestBase = Omit<CreateMessageRequestParams, "tools" | "toolChoice"> & {
@@ -80,6 +80,11 @@ export type SampleRequest =
 export interface ToolRequestOptions {
   /** Progress notification callback */
   onprogress?: (progress: any) => void;
+  /** Optional task creation parameters for fetch-later flows */
+  task?: {
+    ttl?: number | null;
+    pollInterval?: number;
+  };
   /** Abort signal for cancelling the request */
   signal?: AbortSignal;
   /** Request timeout in milliseconds */
