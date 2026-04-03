@@ -425,7 +425,7 @@ export class StatelessStreamableHTTPTransport {
   }
 
   private async handleStatelessRequest(
-    req: Request,
+    req: Request & { auth?: AuthInfo },
     res: Response
   ): Promise<void> {
     try {

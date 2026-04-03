@@ -1,5 +1,6 @@
 import { compilerContext } from "./compiler-context";
 import type { ToolsConfig } from "./config";
+import type { ResolvedToolEntry } from "./tool-discovery";
 
 /**
  * Generate a valid identifier from a file path for use in variable names.
@@ -9,24 +10,19 @@ function pathToIdentifier(path: string): string {
   return path.replace(/[^a-zA-Z0-9]/g, "_");
 }
 
-/** Extract tool name from a file path (filename without extension) */
-function pathToToolName(path: string): string {
-  const fileName = path.split("/").pop() || path;
-  return fileName.replace(/\.[^/.]+$/, "");
-}
-
 /** Filter tool paths based on include/exclude config */
 function filterToolPaths(
-  toolPaths: Set<string>,
+  toolEntries: ResolvedToolEntry[],
   toolsConfig?: ToolsConfig
 ): Set<string> {
+  const toolPaths = new Set(toolEntries.map((entry) => entry.path));
   if (!toolsConfig) return toolPaths;
 
   if (toolsConfig.include) {
     const includeSet = new Set(toolsConfig.include);
     const filtered = new Set<string>();
-    for (const path of toolPaths) {
-      if (includeSet.has(pathToToolName(path))) filtered.add(path);
+    for (const entry of toolEntries) {
+      if (includeSet.has(entry.canonicalName)) filtered.add(entry.path);
     }
     if (filtered.size === 0 && toolPaths.size > 0) {
       console.warn("[xmcp] Warning: tools.include resulted in zero tools");
@@ -37,8 +33,8 @@ function filterToolPaths(
   if (toolsConfig.exclude) {
     const excludeSet = new Set(toolsConfig.exclude);
     const filtered = new Set<string>();
-    for (const path of toolPaths) {
-      if (!excludeSet.has(pathToToolName(path))) filtered.add(path);
+    for (const entry of toolEntries) {
+      if (!excludeSet.has(entry.canonicalName)) filtered.add(entry.path);
     }
     return filtered;
   }
@@ -46,9 +42,8 @@ function filterToolPaths(
   return toolPaths;
 }
 
-export function generateImportCode(): string {
+export function generateImportCode(toolEntries: ResolvedToolEntry[]): string {
   const {
-    toolPaths,
     promptPaths,
     resourcePaths,
     hasMiddleware,
@@ -57,7 +52,7 @@ export function generateImportCode(): string {
     xmcpConfig,
   } = compilerContext.getContext();
 
-  const filteredToolPaths = filterToolPaths(toolPaths, xmcpConfig?.tools);
+  const filteredToolPaths = filterToolPaths(toolEntries, xmcpConfig?.tools);
 
   const isCloudflare = platforms?.cloudflare;
 

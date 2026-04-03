@@ -151,8 +151,8 @@ export function addToolsToServer(
     // Warn on duplicate tool names
     const existing = toolData.get(toolConfig.name);
     if (existing) {
-      console.warn(
-        `[xmcp] Warning: duplicate tool name "${toolConfig.name}" (files: "${existing.path}", "${path}"). The last file wins.`
+      throw new Error(
+        `[xmcp] Duplicate tool name "${toolConfig.name}" found in "${existing.path}" and "${path}". Rename one tool or remove one file.`
       );
     }
 

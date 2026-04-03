@@ -20,6 +20,8 @@ Filtering happens in three layers, evaluated in order:
 
 A tool must survive all three layers to be registered. If a client calls a hidden tool directly, the server returns a standard "tool not found" error without revealing that the tool exists.
 
+Tool names in `tools.include`, `tools.exclude`, and `tools.enable` always refer to the tool's public name: `metadata.name` when present, otherwise the filename fallback. If a tool file is named `internal-name.ts` but exports `metadata.name = "public-name"`, config must use `"public-name"`.
+
 ### Example
 
 Consider a server with four tools:
@@ -175,6 +177,10 @@ export default config;
 
 Tools in the `include` list also override `enabled: false`. This is how operators can opt in to disabled-by-default tools.
 
+<Callout variant="info">
+  `include`, `exclude`, and `enable` match the tool's public name from `metadata.name`, not the source filename.
+</Callout>
+
 ### Exclude list
 
 Load all tools except the listed ones.
@@ -208,6 +214,24 @@ const config: XmcpConfig = {
 };
 
 export default config;
+```
+
+### Duplicate names
+
+Each tool must have a unique public name. If two files resolve to the same tool name, xmcp fails with an error instead of picking one silently.
+
+```typescript title="src/tools/internal-name.ts"
+export const metadata = {
+  name: "public-name",
+};
+```
+
+```typescript title="xmcp.config.ts"
+const config = {
+  tools: {
+    include: ["public-name"],
+  },
+};
 ```
 
 ## STDIO transport

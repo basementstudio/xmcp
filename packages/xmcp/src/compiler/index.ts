@@ -7,6 +7,7 @@ import {
   generateToolsExportCode,
   generateToolsTypesCode,
 } from "./generate-tools-code";
+import { resolveToolEntries } from "./tool-discovery";
 import fs from "fs";
 import { rootFolder, runtimeFolderPath } from "@/utils/constants";
 import { createFolder } from "@/utils/fs-utils";
@@ -433,12 +434,14 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
 async function generateCode() {
   // Build client bundles first (if there are React components)
   const clientBundles = await buildClientBundles();
+  const { toolPaths } = compilerContext.getContext();
+  const toolEntries = await resolveToolEntries(toolPaths);
 
   // Store in context for import map generation
   compilerContext.setContext({ clientBundles });
 
   // Generate import map code (includes client bundles)
-  const fileContent = generateImportCode();
+  const fileContent = generateImportCode(toolEntries);
   writeFileIfChanged(path.join(runtimeFolderPath, "import-map.js"), fileContent);
 
   // Generate runtime exports for global access
@@ -449,9 +452,9 @@ async function generateCode() {
   // only generating tools files for nextjs adapter mode
   const { xmcpConfig } = compilerContext.getContext();
   if (xmcpConfig?.experimental?.adapter === "nextjs") {
-    const toolsCode = generateToolsExportCode();
+    const toolsCode = generateToolsExportCode(toolEntries);
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.js"), toolsCode);
-    const typesCode = generateToolsTypesCode();
+    const typesCode = generateToolsTypesCode(toolEntries);
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
   }
 }
