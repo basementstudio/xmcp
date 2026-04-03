@@ -8,6 +8,7 @@ export type {
   ToolOutputSchema,
   ToolExtraArguments,
   InferSchema,
+  ElicitResult,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
@@ -21,6 +22,7 @@ export { jwtAuthMiddleware } from "./auth/jwt";
 export { createContext } from "./utils/context";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
+export { UrlElicitationRequiredError } from "@modelcontextprotocol/sdk/types";
 
 export {
   createHTTPClient,
