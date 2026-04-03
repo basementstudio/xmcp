@@ -467,6 +467,15 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  examples/dynamic-tool-discovery:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   examples/ext-apps:
     dependencies:
       react:
