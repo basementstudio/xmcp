@@ -26,7 +26,7 @@ export async function xmcpHandler(request: Request): Promise<Response> {
   return nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
     try {
       // Initialize server and transport
-      const lifecycle = await createServerLifecycle(BODY_SIZE_LIMIT, request.auth);
+      const lifecycle = await createServerLifecycle(BODY_SIZE_LIMIT, (request as any).auth);
 
       // Setup cleanup handlers
       setupCleanupHandlers(res, lifecycle);

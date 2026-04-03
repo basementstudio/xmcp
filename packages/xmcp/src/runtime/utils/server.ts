@@ -98,6 +98,11 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
+export const enableList: string[] | undefined =
+  typeof INJECTED_TOOLS_ENABLE !== "undefined"
+    ? INJECTED_TOOLS_ENABLE
+    : undefined;
+
 export async function createServer(authInfo?: AuthInfo) {
   const server = new McpServer(INJECTED_CONFIG);
   const toolModulesPromise = loadTools();
@@ -105,11 +110,6 @@ export async function createServer(authInfo?: AuthInfo) {
   const [resourcePromises, resourceModules] = loadResources();
   await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
   const toolModules = await toolModulesPromise;
-
-  const enableList =
-    typeof INJECTED_TOOLS_ENABLE !== "undefined"
-      ? INJECTED_TOOLS_ENABLE
-      : undefined;
 
   return configureServer(
     server,

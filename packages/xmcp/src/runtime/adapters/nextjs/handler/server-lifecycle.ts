@@ -4,6 +4,7 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import {
   configureServer,
   INJECTED_CONFIG,
+  enableList,
   loadPrompts,
   loadResources,
   loadTools,
@@ -52,11 +53,6 @@ export async function initializeMcpServer(
   const toolModules = await toolModulesPromise;
 
   const server = new McpServer(INJECTED_CONFIG);
-
-  const enableList =
-    typeof INJECTED_TOOLS_ENABLE !== "undefined"
-      ? INJECTED_TOOLS_ENABLE
-      : undefined;
 
   await configureServer(
     server,

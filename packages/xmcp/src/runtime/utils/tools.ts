@@ -56,7 +56,9 @@ export function shouldRegisterTool(
   // requiredScopes — ALL must match
   if (metadata.requiredScopes && metadata.requiredScopes.length > 0) {
     if (
-      !metadata.requiredScopes.every((s) => authInfo!.scopes.includes(s))
+      !metadata.requiredScopes.every((s) =>
+        (authInfo!.scopes ?? []).includes(s)
+      )
     )
       return false;
   }
@@ -144,6 +146,14 @@ export function addToolsToServer(
 
     if (!shouldRegisterTool(toolConfig, authInfo, includedInConfig)) {
       return; // skip this tool
+    }
+
+    // Warn on duplicate tool names
+    const existing = toolData.get(toolConfig.name);
+    if (existing) {
+      console.warn(
+        `[xmcp] Warning: duplicate tool name "${toolConfig.name}" (files: "${existing.path}", "${path}"). The last file wins.`
+      );
     }
 
     passedFilter.add(toolConfig.name);

@@ -40,6 +40,18 @@ export function getInjectedVariables(
     ...(toolsConfig?.enable ?? []),
   ];
 
+  // Warn if a tool is in both exclude and enable (exclude wins at build time)
+  if (toolsConfig?.exclude && toolsConfig?.enable) {
+    const excludeSet = new Set(toolsConfig.exclude);
+    for (const name of toolsConfig.enable) {
+      if (excludeSet.has(name)) {
+        console.warn(
+          `[xmcp] Warning: tool "${name}" is in both 'exclude' and 'enable'. It will be excluded at build time and the enable override will have no effect.`
+        );
+      }
+    }
+  }
+
   return {
     ...httpVariables,
     ...corsVariables,
