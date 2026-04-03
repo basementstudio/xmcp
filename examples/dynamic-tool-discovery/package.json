@@ -1,0 +1,19 @@
+{
+  "name": "Dynamic Tool Discovery",
+  "description": "Learn how to control tool visibility with auth, scopes, dependencies, and configuration",
+  "keywords": [
+    "http",
+    "tool-discovery",
+    "auth",
+    "scopes"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

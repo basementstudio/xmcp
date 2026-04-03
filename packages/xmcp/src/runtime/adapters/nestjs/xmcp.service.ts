@@ -47,7 +47,7 @@ export class XmcpService implements OnModuleInit, OnModuleDestroy {
           try {
             setHeaders(res, corsConfig, req.headers.origin);
 
-            const server = await createServer();
+            const server = await createServer((req as any).auth);
             const transport = new StatelessHttpServerTransport(
               httpConfig.debug,
               String(httpConfig.bodySizeLimit) || "10mb"

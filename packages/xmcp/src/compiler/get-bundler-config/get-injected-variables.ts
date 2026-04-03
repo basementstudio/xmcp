@@ -33,6 +33,13 @@ export function getInjectedVariables(
   const adapterVariables = injectAdapterVariables(xmcpConfig);
   const typescriptVariables = injectTypescriptVariables(xmcpConfig);
 
+  // Compute enable list for runtime (union of include + enable arrays)
+  const toolsConfig = xmcpConfig.tools;
+  const enableList = [
+    ...(toolsConfig?.include ?? []),
+    ...(toolsConfig?.enable ?? []),
+  ];
+
   return {
     ...httpVariables,
     ...corsVariables,
@@ -42,5 +49,7 @@ export function getInjectedVariables(
     ...serverInfoVariables,
     ...adapterVariables,
     ...typescriptVariables,
+    INJECTED_TOOLS_ENABLE:
+      enableList.length > 0 ? JSON.stringify(enableList) : "undefined",
   };
 }

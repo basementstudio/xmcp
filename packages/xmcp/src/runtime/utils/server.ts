@@ -12,6 +12,7 @@ import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -55,11 +56,13 @@ export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
-  resourceModules: Map<string, ResourceFile>
+  resourceModules: Map<string, ResourceFile>,
+  authInfo?: AuthInfo,
+  enableList?: string[]
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
 
-  addToolsToServer(server, toolModules);
+  addToolsToServer(server, toolModules, authInfo, enableList);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
   return server;
@@ -95,12 +98,25 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
-export async function createServer() {
+export async function createServer(authInfo?: AuthInfo) {
   const server = new McpServer(INJECTED_CONFIG);
   const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
   await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
   const toolModules = await toolModulesPromise;
-  return configureServer(server, toolModules, promptModules, resourceModules);
+
+  const enableList =
+    typeof INJECTED_TOOLS_ENABLE !== "undefined"
+      ? INJECTED_TOOLS_ENABLE
+      : undefined;
+
+  return configureServer(
+    server,
+    toolModules,
+    promptModules,
+    resourceModules,
+    authInfo,
+    enableList
+  );
 }

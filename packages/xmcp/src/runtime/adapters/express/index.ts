@@ -34,7 +34,7 @@ export async function xmcpHandler(req: Request, res: Response) {
           req.headers.origin
         );
 
-        const server = await createServer();
+        const server = await createServer((req as any).auth);
         const transport = new StatelessHttpServerTransport(
           debug,
           bodySizeLimit || "10mb"

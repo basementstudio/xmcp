@@ -1,4 +1,5 @@
 import { compilerContext } from "./compiler-context";
+import type { ToolsConfig } from "./config";
 
 /**
  * Generate a valid identifier from a file path for use in variable names.
@@ -6,6 +7,43 @@ import { compilerContext } from "./compiler-context";
  */
 function pathToIdentifier(path: string): string {
   return path.replace(/[^a-zA-Z0-9]/g, "_");
+}
+
+/** Extract tool name from a file path (filename without extension) */
+function pathToToolName(path: string): string {
+  const fileName = path.split("/").pop() || path;
+  return fileName.replace(/\.[^/.]+$/, "");
+}
+
+/** Filter tool paths based on include/exclude config */
+function filterToolPaths(
+  toolPaths: Set<string>,
+  toolsConfig?: ToolsConfig
+): Set<string> {
+  if (!toolsConfig) return toolPaths;
+
+  if (toolsConfig.include) {
+    const includeSet = new Set(toolsConfig.include);
+    const filtered = new Set<string>();
+    for (const path of toolPaths) {
+      if (includeSet.has(pathToToolName(path))) filtered.add(path);
+    }
+    if (filtered.size === 0 && toolPaths.size > 0) {
+      console.warn("[xmcp] Warning: tools.include resulted in zero tools");
+    }
+    return filtered;
+  }
+
+  if (toolsConfig.exclude) {
+    const excludeSet = new Set(toolsConfig.exclude);
+    const filtered = new Set<string>();
+    for (const path of toolPaths) {
+      if (!excludeSet.has(pathToToolName(path))) filtered.add(path);
+    }
+    return filtered;
+  }
+
+  return toolPaths;
 }
 
 export function generateImportCode(): string {
@@ -16,7 +54,10 @@ export function generateImportCode(): string {
     hasMiddleware,
     clientBundles,
     platforms,
+    xmcpConfig,
   } = compilerContext.getContext();
+
+  const filteredToolPaths = filterToolPaths(toolPaths, xmcpConfig?.tools);
 
   const isCloudflare = platforms?.cloudflare;
 
@@ -24,7 +65,7 @@ export function generateImportCode(): string {
   // For Node.js, use dynamic imports for lazy loading.
   if (isCloudflare) {
     return generateStaticImportCode(
-      toolPaths,
+      filteredToolPaths,
       promptPaths,
       resourcePaths,
       hasMiddleware,
@@ -33,7 +74,7 @@ export function generateImportCode(): string {
   }
 
   return generateDynamicImportCode(
-    toolPaths,
+    filteredToolPaths,
     promptPaths,
     resourcePaths,
     hasMiddleware,
