@@ -11,6 +11,11 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
+import {
+  loadResourceModules,
+  reportResourceLoadIssues,
+} from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 
 export type ToolFile = {
@@ -71,36 +76,31 @@ export async function loadTools() {
   return toolModules;
 }
 
-export function loadPrompts() {
-  const promptModules = new Map<string, PromptFile>();
-
-  const promptPromises = Object.keys(injectedPrompts).map((path) =>
-    injectedPrompts[path]().then((promptModule) => {
-      promptModules.set(path, promptModule);
-    })
+export async function loadPrompts() {
+  const { promptModules, skippedPrompts } = await loadPromptModules(
+    injectedPrompts
   );
-
-  return [promptPromises, promptModules] as const;
+  reportPromptLoadIssues(skippedPrompts);
+  return promptModules;
 }
 
-export function loadResources() {
-  const resourceModules = new Map<string, ResourceFile>();
-
-  const resourcePromises = Object.keys(injectedResources).map((path) =>
-    injectedResources[path]().then((resourceModule) => {
-      resourceModules.set(path, resourceModule);
-    })
+export async function loadResources() {
+  const { resourceModules, skippedResources } = await loadResourceModules(
+    injectedResources
   );
-
-  return [resourcePromises, resourceModules] as const;
+  reportResourceLoadIssues(skippedResources);
+  return resourceModules;
 }
 
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
   const toolModulesPromise = loadTools();
-  const [promptPromises, promptModules] = loadPrompts();
-  const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
-  const toolModules = await toolModulesPromise;
+  const promptModulesPromise = loadPrompts();
+  const resourceModulesPromise = loadResources();
+  const [toolModules, promptModules, resourceModules] = await Promise.all([
+    toolModulesPromise,
+    promptModulesPromise,
+    resourceModulesPromise,
+  ]);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }

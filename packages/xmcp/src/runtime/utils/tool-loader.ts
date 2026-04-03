@@ -34,7 +34,17 @@ function classifyToolModule(
 
   const moduleRecord = toolModule as Record<string, unknown>;
   const keys = Object.keys(moduleRecord);
-  if (keys.length === 0) {
+  const defaultExport = moduleRecord.default;
+  const nonInteropKeys = keys.filter((key) => key !== "__esModule");
+
+  if (
+    keys.length === 0 ||
+    (nonInteropKeys.length === 1 &&
+      nonInteropKeys[0] === "default" &&
+      typeof defaultExport === "object" &&
+      defaultExport !== null &&
+      Object.keys(defaultExport as Record<string, unknown>).length === 0)
+  ) {
     return "empty";
   }
 

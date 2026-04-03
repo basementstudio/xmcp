@@ -130,13 +130,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: async (filePath) => {
         addWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
+        }
+      },
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode({ rebuildClientBundles: false });
         }
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
         }
       },
     });
@@ -154,13 +159,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: async (filePath) => {
         addWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
+        }
+      },
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode({ rebuildClientBundles: false });
         }
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
         }
       },
     });
@@ -430,9 +440,16 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
  * Generates all runtime code and builds client bundles if needed
  * This centralizes all code generation logic including client bundle building
  */
-async function generateCode() {
-  // Build client bundles first (if there are React components)
-  const clientBundles = await buildClientBundles();
+async function generateCode({
+  rebuildClientBundles = true,
+}: {
+  rebuildClientBundles?: boolean;
+} = {}) {
+  const { clientBundles: currentClientBundles } = compilerContext.getContext();
+  const clientBundles =
+    rebuildClientBundles || currentClientBundles === undefined
+      ? await buildClientBundles()
+      : currentClientBundles;
 
   // Store in context for import map generation
   compilerContext.setContext({ clientBundles });
