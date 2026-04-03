@@ -1,0 +1,303 @@
+---
+title: "Code Mode"
+metadataTitle: "Code Mode Pattern Guide | xmcp Documentation"
+publishedAt: "2026-03-26"
+summary: "Reduce tool context bloat by exposing your entire API surface through just 2 meta-tools."
+description: "Learn how to implement the Code Mode pattern in xmcp, replace hundreds of individual MCP tools with search and execute meta-tools for massive token savings."
+---
+
+## Overview
+
+MCP servers with many tools create a problem: every tool definition (name, description, full schema) is loaded into the agent's context window upfront. A server with 100 tools can consume 50,000+ tokens before the agent starts working.
+
+Code Mode solves this with a simple pattern: instead of exposing all tools directly, expose just **2 meta-tools**:
+
+- **`search`**: Agents query tool metadata to discover what's available
+- **`execute`**: Agents invoke any tool by name
+
+This reduces the tool definition footprint from tens of thousands of tokens to under 1,000 — a 99%+ reduction. The pattern was [popularized by Cloudflare](https://blog.cloudflare.com/code-mode-mcp/) for their 2,500+ endpoint API.
+
+## When to use Code Mode
+
+**Use Code Mode when** your server exposes many tools (20+) that an agent rarely needs all at once. Common cases: API wrappers, enterprise integrations, multi-service orchestrators, or any server where tool discovery is more efficient than upfront loading.
+
+**Code Mode may not be necessary** for servers with a small, focused set of tools (under 10-15) where loading all definitions upfront is acceptable.
+
+## How it works
+
+xmcp provides two primitives in every tool handler's `extra` parameter:
+
+- **`extra.listTools()`**: Returns metadata and JSON Schema for all registered tools
+- **`extra.callTool(name, args)`**: Invokes another tool by name, validates args, and returns the result
+
+You use these to build your own `search` and `execute` tools. No plugins or special configuration needed.
+
+## Quickstart
+
+Create two tool files in your xmcp project:
+
+### The search tool
+
+```typescript title="src/tools/search.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+
+export const schema = {
+  query: z.string().describe("Search query to filter available tools"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "search",
+  description:
+    "Search available tools by name or description. Returns matching tools with their input schemas so you know how to call them.",
+};
+
+export default async function search({ query }, extra) {
+  const tools = extra.listTools();
+  const q = query.toLowerCase();
+
+  const matches = tools.filter(
+    (t) =>
+      t.name.toLowerCase().includes(q) ||
+      t.description.toLowerCase().includes(q)
+  );
+
+  return JSON.stringify(matches, null, 2);
+}
+```
+
+### The execute tool
+
+```typescript title="src/tools/execute.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+
+export const schema = {
+  toolName: z.string().describe("Name of the tool to execute"),
+  args: z
+    .string()
+    .describe('JSON string of arguments (e.g. \'{"name": "World"}\')'),
+};
+
+export const metadata: ToolMetadata = {
+  name: "execute",
+  description:
+    "Execute any available tool by name. Use the search tool first to discover available tools and their required arguments. Pass args as a JSON string.",
+  annotations: {
+    openWorldHint: true,
+  },
+};
+
+export default async function execute({ toolName, args }, extra) {
+  let parsedArgs;
+  try {
+    parsedArgs = JSON.parse(args);
+  } catch {
+    return { content: [{ type: "text", text: "Invalid JSON in args" }], isError: true };
+  }
+  return await extra.callTool(toolName, parsedArgs);
+}
+```
+
+### Tools as `internal`
+
+By default, all tools appear in MCP's `tools/list` response. When connecting to a server, clients see them upfront. To hide tools from `tools/list` while keeping them callable via `execute`, add `internal: true` to their annotations:
+
+```typescript title="src/tools/get-user.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+
+export const schema = {
+  userId: z.string().describe("The user ID to look up"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-user",
+  description: "Retrieve user profile information by ID",
+  annotations: {
+    internal: true,
+  },
+};
+
+export default async function getUser({ userId }) {
+  const user = await db.users.findById(userId);
+  return JSON.stringify(user);
+}
+```
+
+Now agents connecting to your server only see `search` + `execute` in `tools/list` (~1,000 tokens). The internal tools are discoverable via `search` and callable via `execute`.
+
+### Tags for richer discovery
+
+Use `tags` in annotations to help agents filter tools by category:
+
+```typescript
+annotations: {
+  internal: true,
+  tags: ["users", "admin"],
+}
+```
+
+Then agents can search by tag: `search({ tag: "users" })` to find all user-related tools without scanning descriptions.
+
+## How agents interact with Code Mode
+
+An agent connecting to your server sees only 2 tools. Here's a typical interaction:
+
+**Step 1:** Agent calls `search` to find relevant tools:
+
+```json
+{
+  "tool": "search",
+  "args": { "query": "user" }
+}
+```
+
+Response:
+
+```json
+[
+  {
+    "name": "get-user",
+    "description": "Retrieve user profile information by ID",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The user ID to look up" }
+      },
+      "required": ["userId"]
+    }
+  },
+  {
+    "name": "update-user",
+    "description": "Update user profile fields",
+    "inputSchema": { "..." }
+  }
+]
+```
+
+**Step 2:** Agent calls `execute` with the discovered tool:
+
+```json
+{
+  "tool": "execute",
+  "args": {
+    "toolName": "get-user",
+    "args": "{\"userId\": \"usr_123\"}"
+  }
+}
+```
+
+The agent gets the same result as if it had called `get-user` directly.
+
+## Tool chaining
+
+Since `callTool` is available in any handler, you can also build orchestrator tools that chain multiple calls:
+
+```typescript title="src/tools/onboard-user.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+
+export const schema = {
+  email: z.string().email(),
+  name: z.string(),
+};
+
+export const metadata: ToolMetadata = {
+  name: "onboard-user",
+  description: "Create a user account and send welcome email",
+};
+
+export default async function onboardUser({ email, name }, extra) {
+  const user = await extra.callTool("create-user", { email, name });
+  await extra.callTool("send-welcome-email", { userId: user.id });
+  return user;
+}
+```
+
+## Combining with authentication
+
+Code Mode works with any xmcp auth middleware. The auth context automatically propagates through `callTool`:
+
+```typescript title="src/middleware.ts"
+import { jwtAuthMiddleware } from "xmcp";
+
+export default jwtAuthMiddleware({
+  secret: process.env.JWT_SECRET,
+});
+```
+
+When an authenticated agent calls `execute`, the called tool receives the same `authInfo`.
+
+## Smarter search
+
+The default `search` example includes TF-IDF scoring and fuzzy matching. It handles typos ("crete" matches "create") and ranks results by relevance. For most use cases this is sufficient.
+
+For **true semantic search** (where "remove" finds "delete"), you need embeddings. You can swap in any embedding provider in your search tool:
+
+```typescript title="src/tools/search.ts"
+import { embed } from "your-embedding-lib"; // OpenAI, Cohere, local model, etc.
+
+// Pre-compute embeddings at startup
+let toolEmbeddings: Map<string, number[]>;
+
+export default async function search({ query }, extra) {
+  if (!toolEmbeddings) {
+    toolEmbeddings = new Map();
+    for (const tool of extra.listTools()) {
+      const vec = await embed(tool.description);
+      toolEmbeddings.set(tool.name, vec);
+    }
+  }
+
+  const queryVec = await embed(query);
+  const scored = extra.listTools().map((t) => ({
+    ...t,
+    score: cosineSimilarity(queryVec, toolEmbeddings.get(t.name)!),
+  }));
+
+  return JSON.stringify(scored.sort((a, b) => b.score - a.score).slice(0, 10));
+}
+```
+
+Since `search` is just a regular xmcp tool, you have full control over the search strategy.
+
+## Sandboxed code execution
+
+For the full Cloudflare-style Code Mode where agents write JavaScript code that runs in an isolated sandbox, use the [`@xmcp-dev/sandbox`](/docs/integrations/sandbox) plugin. It runs agent code in [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) Firecracker microVMs with OS-level isolation, full async/await, and no native dependencies.
+
+```bash
+pnpm add @xmcp-dev/sandbox
+```
+
+```typescript title="src/tools/search.ts"
+import { searchTool } from "@xmcp-dev/sandbox";
+const search = searchTool({ url: "https://api.example.com/openapi.json" });
+export const schema = search.schema;
+export const metadata = search.metadata;
+export default search.handler;
+```
+
+```typescript title="src/tools/execute.ts"
+import { executeTool } from "@xmcp-dev/sandbox";
+const execute = executeTool({
+  url: "https://api.example.com",
+  env: ["API_KEY"],
+  networkPolicy: { allow: ["api.example.com"] },
+});
+export const schema = execute.schema;
+export const metadata = execute.metadata;
+export default execute.handler;
+```
+
+The search tool includes built-in helpers by default. Agents can use `search("pet")` for fuzzy search, `filter({ method: "GET", tag: "pet" })` for structured filtering, or the raw `spec` global for custom queries.
+
+Two files, fully configured. Requires a Vercel account. See the [full sandbox documentation](/docs/integrations/sandbox) for the API reference, search helpers, custom implementations, and pricing.
+
+**Example:** `examples/openapi-code-mode` -- Full OpenAPI Code Mode with Petstore API
+
+## References
+
+- [Cloudflare Code Mode announcement](https://blog.cloudflare.com/code-mode-mcp/): The original pattern
+- [Tools documentation](/docs/core-concepts/tools): How xmcp tools work
+- [Authentication guide](/docs/guides/authentication): Combining Code Mode with auth

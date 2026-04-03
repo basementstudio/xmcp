@@ -1,0 +1,47 @@
+{
+  "name": "@xmcp-dev/sandbox",
+  "description": "Sandboxed JavaScript code execution for xmcp tools using QuickJS WebAssembly",
+  "version": "0.1.0",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "sandbox",
+    "quickjs",
+    "wasm",
+    "code-mode",
+    "mcp"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/sandbox"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@vercel/sandbox": "^1.8.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "xmcp": "workspace:*"
+  }
+}

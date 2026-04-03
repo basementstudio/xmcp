@@ -1,0 +1,370 @@
+---
+title: "Sandbox"
+metadataTitle: "Sandboxed Code Execution | xmcp Documentation"
+publishedAt: "2026-03-30"
+summary: "Execute agent-provided JavaScript code safely in an isolated Vercel Sandbox"
+description: "The @xmcp-dev/sandbox plugin runs untrusted code in Vercel Sandbox Firecracker microVMs with OS-level isolation, full async/await, and no native dependencies."
+---
+
+## Overview
+
+The `@xmcp-dev/sandbox` plugin lets you execute agent-provided JavaScript code in an isolated [Vercel Sandbox](https://vercel.com/docs/vercel-sandbox) environment. Each execution runs in its own Firecracker microVM with a separate filesystem, network stack, and process space.
+
+This enables the [Code Mode pattern](/docs/guides/code-mode) where agents write JavaScript to query API specs and chain HTTP calls. The plugin is general-purpose and can be used in any tool for sandboxed evaluation.
+
+**Requires a Vercel account.** Authentication is automatic when deployed on Vercel. For local development, run `vercel link` and `vercel env pull`.
+
+## Installation
+
+```bash
+pnpm add @xmcp-dev/sandbox
+```
+
+## Quick setup (factory functions)
+
+The fastest way to add Code Mode. Two files, ~7 lines each:
+
+```typescript title="src/tools/search.ts"
+import { searchTool } from "@xmcp-dev/sandbox";
+
+const search = searchTool({
+  url: "https://petstore3.swagger.io/api/v3/openapi.json",
+});
+
+export const schema = search.schema;
+export const metadata = search.metadata;
+export default search.handler;
+```
+
+```typescript title="src/tools/execute.ts"
+import { executeTool } from "@xmcp-dev/sandbox";
+
+const execute = executeTool({
+  url: "https://petstore3.swagger.io/api/v3",
+  env: ["API_KEY"],
+  networkPolicy: { allow: ["petstore3.swagger.io"] },
+});
+
+export const schema = execute.schema;
+export const metadata = execute.metadata;
+export default execute.handler;
+```
+
+That's it. Agents can now search the API spec and execute calls.
+
+### `searchTool(config)`
+
+Creates a search tool that loads an OpenAPI spec and lets agents query it with JavaScript.
+
+- `url` (required) -- URL of the OpenAPI spec
+- `timeoutMs` -- Execution timeout (default: 10000ms)
+- `networkPolicy` -- Network restrictions (default: `"deny-all"` since search is data-only)
+- `helpers` -- Inject built-in search functions (default: `true`). See [Search helpers](#search-helpers).
+
+### `executeTool(config)`
+
+Creates an execute tool that lets agents make API calls with `fetch()` inside the sandbox.
+
+- `url` (required) -- API base URL, injected as the `url` global
+- `env` -- Host env var names to forward to the sandbox (e.g. `["API_KEY"]`)
+- `networkPolicy` -- Network restrictions (default: `"allow-all"`)
+- `timeoutMs` -- Execution timeout (default: 30000ms)
+- `packages` -- npm packages to install before execution
+
+### Search helpers
+
+When `helpers: true` (the default), the search tool injects built-in functions into the sandbox alongside the raw `spec` global. Agents can use whichever approach fits best:
+
+**`search(query)`** -- Fuzzy text search across paths, summaries, descriptions, tags, and operationIds. Returns results ranked by relevance. Handles typos (e.g. "crete" matches "create").
+
+```javascript
+// Agent code
+return search("pet")
+// → [{ path: "/pet", method: "POST", summary: "Add a new pet", ... }, ...]
+```
+
+**`filter({ method?, tag?, path? })`** -- Structured filtering by HTTP method, tag name, or path substring.
+
+```javascript
+// Agent code
+return filter({ method: "GET", tag: "pet" })
+// → only GET endpoints tagged "pet"
+
+return filter({ path: "find" })
+// → endpoints with "find" in the path
+```
+
+**`endpoints`** -- Pre-parsed array of all endpoints from the spec.
+
+```javascript
+// Agent code
+return endpoints.slice(0, 5)
+// Each: { path, method, summary, description, tags, parameters, operationId }
+```
+
+**Raw `spec`** -- The full OpenAPI spec as a JSON string, always available for custom queries.
+
+```javascript
+// Agent code
+const s = JSON.parse(spec);
+return s.info
+```
+
+To disable helpers and only expose the raw `spec`: `searchTool({ url: "...", helpers: false })`.
+
+## Custom implementation (raw API)
+
+For full control over the tool handler, use `runInSandbox` directly:
+
+```typescript title="src/tools/search.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+import { runInSandbox } from "@xmcp-dev/sandbox";
+
+export const schema = {
+  code: z.string().describe("JavaScript code to query the API spec"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "search",
+  description: "Search API endpoints with JavaScript",
+};
+
+export default async function search({ code }) {
+  const spec = await fetch("https://api.example.com/openapi.json").then(r => r.text());
+
+  const result = await runInSandbox(code, {
+    globals: { spec },
+    timeoutMs: 5000,
+    networkPolicy: "deny-all",
+  });
+
+  if (!result.success) {
+    return { content: [{ type: "text", text: result.error }], isError: true };
+  }
+  return JSON.stringify(result.data, null, 2);
+}
+```
+
+This gives you full control over spec loading, error handling, result transformation, and any custom logic.
+
+## API
+
+### `runInSandbox(code, options?)`
+
+Executes a JavaScript code string in an isolated Vercel Sandbox microVM. Never throws.
+
+```typescript
+import { runInSandbox } from "@xmcp-dev/sandbox";
+
+const result = await runInSandbox("return 1 + 1", { timeoutMs: 5000 });
+// { success: true, data: 2 }
+```
+
+**Parameters:**
+
+- `code` (string) -- JavaScript code to execute. Use `return` to produce a value. Agent code has access to `fetch()` for HTTP requests.
+- `options` (SandboxOptions, optional):
+  - `globals` -- Record of named string values injected as constants
+  - `timeoutMs` -- Maximum execution time (default: 30000ms)
+  - `env` -- Environment variables injected into `process.env` inside the VM. Use for secrets.
+  - `networkPolicy` -- Network restrictions: `"allow-all"` (default), `"deny-all"`, or `{ allow: ["domain.com"] }`
+  - `packages` -- npm packages to install before execution (e.g. `["cheerio", "yaml"]`)
+  - `snapshotId` -- Resume from a snapshot instead of a fresh VM. See `createSnapshot()`.
+  - `runtime` -- VM runtime: `"node24"` (default), `"node22"`, or `"python3.13"`
+
+**Returns:** `SandboxResult`
+
+```typescript
+interface SandboxOptions {
+  globals?: Record<string, string>;
+  timeoutMs?: number;
+  env?: Record<string, string>;
+  networkPolicy?: "allow-all" | "deny-all" | { allow?: string[] | Record<string, NetworkPolicyRule[]> };
+  packages?: string[];
+  snapshotId?: string;
+  runtime?: string;
+}
+
+interface SandboxResult {
+  success: boolean;
+  data?: unknown;   // Return value (if success)
+  error?: string;   // Error message (if failure)
+}
+```
+
+## Globals
+
+Inject named values as strings. Agent code accesses them as `const` variables and parses JSON values with `JSON.parse()`.
+
+```typescript
+const result = await runInSandbox(code, {
+  globals: {
+    spec: myOpenAPISpecJson,
+    url: "https://api.example.com",
+  },
+  env: { API_KEY: process.env.API_KEY },
+});
+```
+
+Inside agent code:
+
+```javascript
+const s = JSON.parse(spec);
+const res = await fetch(url + "/users", {
+  headers: { Authorization: "Bearer " + process.env.API_KEY },
+});
+return await res.json();
+```
+
+Globals are value-only (strings). Use `env` for secrets (they go into `process.env` inside the VM instead of the script source). Agent code uses `fetch()` directly inside the microVM for HTTP calls.
+
+## Environment variables
+
+Use `env` to inject secrets into `process.env` inside the VM. This is more secure than passing secrets as globals (which appear as literal strings in the script source).
+
+```typescript
+const result = await runInSandbox(code, {
+  globals: { url: "https://api.example.com" },
+  env: { API_KEY: process.env.API_KEY },
+});
+```
+
+Inside agent code:
+```javascript
+const res = await fetch(url + "/data", {
+  headers: { Authorization: "Bearer " + process.env.API_KEY },
+});
+return await res.json();
+```
+
+## Network policy
+
+Restrict which domains agent code can reach from inside the VM.
+
+```typescript
+// Only allow calls to your API (default is "allow-all")
+const result = await runInSandbox(code, {
+  globals: { url: "https://api.example.com" },
+  networkPolicy: { allow: ["api.example.com"] },
+});
+
+// Block all network access (data-only sandbox)
+const result = await runInSandbox(code, {
+  globals: { spec: specJson },
+  networkPolicy: "deny-all",
+});
+```
+
+## Installing packages
+
+Pre-install npm packages before the agent's code runs.
+
+```typescript
+const result = await runInSandbox(code, {
+  packages: ["cheerio", "yaml"],
+  globals: { htmlContent: myHtml },
+});
+```
+
+Inside agent code:
+```javascript
+const cheerio = require("cheerio");
+const $ = cheerio.load(htmlContent);
+return $("h1").text();
+```
+
+## Snapshots
+
+Create a reusable snapshot with pre-installed packages for faster repeated executions.
+
+```typescript
+import { createSnapshot, runInSandbox } from "@xmcp-dev/sandbox";
+
+// Create once (e.g., at server startup)
+const snapshotId = await createSnapshot({ packages: ["yaml", "lodash"] });
+
+// Use for every call (skips npm install, starts faster)
+const result = await runInSandbox(code, {
+  snapshotId,
+  globals: { data: myData },
+});
+```
+
+Snapshots expire after 30 days on Vercel by default.
+
+## Isolation and security
+
+Each `runInSandbox` call creates a new Firecracker microVM on Vercel's infrastructure with:
+
+- **Separate filesystem** -- agent code cannot access the host's files
+- **Separate process space** -- agent code cannot access host environment variables or processes
+- **Full network access** -- agent code can call `fetch()` (configurable via Vercel Sandbox network policies)
+- **Node.js 24** -- full standard library available inside the VM
+
+Agent code cannot:
+- Read or write files on the host
+- Access `process.env` from the host (only what's injected via globals)
+- Import host modules
+- Affect the host process in any way
+
+## Timeouts
+
+```typescript
+const result = await runInSandbox("while(true){}", { timeoutMs: 1000 });
+// { success: false, error: "Execution timed out after 1000ms" }
+```
+
+## Error handling
+
+`runInSandbox` never throws. All errors are returned in the result:
+
+```typescript
+// Syntax error
+await runInSandbox("{{{", {});
+// { success: false, error: "Unexpected token '{'" }
+
+// Runtime error
+await runInSandbox("throw new Error('boom')", {});
+// { success: false, error: "boom" }
+
+// Missing Vercel auth
+await runInSandbox("return 1", {});
+// { success: false, error: "Vercel Sandbox requires authentication. Run 'vercel link'..." }
+```
+
+## Vercel auth setup
+
+### Production (on Vercel)
+
+Authentication is automatic. No setup needed.
+
+### Local development
+
+```bash
+# Link your project to Vercel
+vercel link
+
+# Pull development credentials (expires after 12 hours)
+vercel env pull
+```
+
+## Pricing
+
+Vercel Sandbox usage is billed through your Vercel account:
+
+- **Free tier (Hobby):** 5 free CPU hours/month, up to 10 concurrent sandboxes
+- **Pro:** $0.128/hour active CPU, charged against $20/month credit
+- **Quick execution (~2 min):** ~$0.01
+
+See [Vercel Sandbox pricing](https://vercel.com/docs/vercel-sandbox/pricing) for details.
+
+## Examples
+
+- [`examples/openapi-code-mode`](/docs/guides/code-mode) -- Full OpenAPI Code Mode with Petstore API (search + execute in Vercel Sandbox)
+
+## References
+
+- [Code Mode guide](/docs/guides/code-mode) -- The pattern that uses this plugin
+- [Cloudflare Code Mode](https://blog.cloudflare.com/code-mode-mcp/) -- The original inspiration
+- [Vercel Sandbox docs](https://vercel.com/docs/vercel-sandbox) -- The underlying infrastructure
