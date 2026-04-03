@@ -62,6 +62,7 @@ export async function configureServer(
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
+
   return server;
 }
 
@@ -96,7 +97,9 @@ export function loadResources() {
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG);
+  const server = new McpServer(INJECTED_CONFIG, {
+    capabilities: { logging: {} },
+  });
   const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();

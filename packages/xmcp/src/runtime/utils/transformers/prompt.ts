@@ -4,8 +4,10 @@ import {
   ServerNotification,
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { PromptArgsRawShape } from "../prompts";
 import { contentValidators, validateContent } from "../validators";
+import { loggerContextProvider } from "../logger";
 
 /**
  * Type for content that users can return from prompt handlers
@@ -47,18 +49,27 @@ export type McpPromptHandler = (
  */
 export function transformPromptHandler(
   handler: UserPromptHandler,
-  role: "user" | "assistant" = "assistant"
+  role: "user" | "assistant" = "assistant",
+  server?: McpServer
 ): McpPromptHandler {
   return async (
     args: PromptArgsRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<GetPromptResult> => {
-    let response = handler(args, extra);
+    const runHandler = async () => {
+      let response = handler(args, extra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response = server
+      ? await loggerContextProvider(
+          { server, sessionId: extra.sessionId },
+          runHandler
+        )
+      : await runHandler();
 
     let content: GetPromptResult["messages"][number]["content"];
 

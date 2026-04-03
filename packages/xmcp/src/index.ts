@@ -9,6 +9,8 @@ export type {
   ToolExtraArguments,
   InferSchema,
 } from "./types/tool";
+export type { Logger } from "./runtime/utils/logger";
+export { logger } from "./runtime/utils/logger";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
