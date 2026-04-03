@@ -192,10 +192,10 @@ export const metadata: ToolMetadata = {
 };
 ```
 
-- **`enabled`** — set to `false` to disable a tool by default. Operators can re-enable it via `tools.enable` or `tools.include` in `xmcp.config.ts`.
-- **`requiresAuth`** — tool is hidden from unauthenticated requests.
-- **`requiredScopes`** — all listed scopes must be present. Implies `requiresAuth`.
-- **`dependsOn`** — tool is only visible when all named tools are also registered.
+- **`enabled`**: set to `false` to disable a tool by default. Operators can re-enable it via `tools.enable` or `tools.include` in `xmcp.config.ts`.
+- **`requiresAuth`**: tool is hidden from unauthenticated requests.
+- **`requiredScopes`**: all listed scopes must be present. Implies `requiresAuth`.
+- **`dependsOn`**: tool is only visible when all named tools are also registered.
 
 For a full guide on configuring tool visibility, see [Dynamic Tool Discovery](/docs/guides/dynamic-tool-discovery).
 
