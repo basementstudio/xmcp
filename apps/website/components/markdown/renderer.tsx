@@ -4,6 +4,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
 import { Code, Pre } from "./code-blocks";
 import { Callout } from "../ui/callout";
+import { Quote } from "../ui/quote";
 
 function CustomLink(props: { href: string; children: React.ReactNode }) {
   const href = props.href;
@@ -29,7 +30,7 @@ function RoundedImage(props: {
   width: number;
   height: number;
 }) {
-  return <Image {...props} alt={props.alt} className="rounded-lg" />;
+  return <Image {...props} alt={props.alt} className="rounded-sm" />;
 }
 
 export function slugify(str: string) {
@@ -88,6 +89,7 @@ const components = {
   code: Code,
   pre: Pre,
   Callout,
+  Quote,
 };
 
 export function CustomMDX(props: {
