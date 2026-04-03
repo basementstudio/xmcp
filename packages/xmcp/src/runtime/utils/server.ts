@@ -9,9 +9,11 @@ import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
+import { addNotificationsToServer } from "./notifications";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import type { NotificationsConfig } from "@/types/notification";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -47,6 +49,10 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
+const injectedNotifications = INJECTED_NOTIFICATIONS as
+  | (() => Promise<{ default?: NotificationsConfig }>)
+  | undefined;
+
 export const INJECTED_CONFIG = SERVER_INFO as Implementation;
 
 /* Loads all modules and injects them into the server */
@@ -55,13 +61,15 @@ export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
-  resourceModules: Map<string, ResourceFile>
+  resourceModules: Map<string, ResourceFile>,
+  notificationsConfig: NotificationsConfig | undefined
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
 
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
+  addNotificationsToServer(server, notificationsConfig);
   return server;
 }
 
@@ -95,12 +103,33 @@ export function loadResources() {
   return [resourcePromises, resourceModules] as const;
 }
 
+export async function loadNotificationsConfig(): Promise<
+  NotificationsConfig | undefined
+> {
+  if (!injectedNotifications) return undefined;
+  const mod = await injectedNotifications();
+  return mod?.default;
+}
+
 export async function createServer() {
   const server = new McpServer(INJECTED_CONFIG);
   const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all([toolModulesPromise, ...promptPromises, ...resourcePromises]);
+  const notificationsConfigPromise = loadNotificationsConfig();
+  await Promise.all([
+    toolModulesPromise,
+    ...promptPromises,
+    ...resourcePromises,
+    notificationsConfigPromise,
+  ]);
   const toolModules = await toolModulesPromise;
-  return configureServer(server, toolModules, promptModules, resourceModules);
+  const notificationsConfig = await notificationsConfigPromise;
+  return configureServer(
+    server,
+    toolModules,
+    promptModules,
+    resourceModules,
+    notificationsConfig
+  );
 }

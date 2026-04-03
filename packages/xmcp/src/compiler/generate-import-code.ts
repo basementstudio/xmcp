@@ -13,6 +13,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
+    hasNotifications,
     hasMiddleware,
     clientBundles,
     platforms,
@@ -27,6 +28,7 @@ export function generateImportCode(): string {
       toolPaths,
       promptPaths,
       resourcePaths,
+      hasNotifications,
       hasMiddleware,
       clientBundles
     );
@@ -36,6 +38,7 @@ export function generateImportCode(): string {
     toolPaths,
     promptPaths,
     resourcePaths,
+    hasNotifications,
     hasMiddleware,
     clientBundles
   );
@@ -49,6 +52,7 @@ function generateStaticImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
+  hasNotifications: boolean,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -82,6 +86,12 @@ function generateStaticImportCode(
     resourcesEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
   });
 
+  let notificationsCode = "";
+  if (hasNotifications) {
+    staticImports.push(`import * as _notifications from "../src/notifications.ts";`);
+    notificationsCode = `export const notifications = () => Promise.resolve(_notifications);`;
+  }
+
   let middlewareCode = "";
   if (hasMiddleware) {
     staticImports.push(`import * as _middleware from "../src/middleware.ts";`);
@@ -114,6 +124,7 @@ export const clientBundles = {
 ${clientBundlesEntries}
 };
 
+${notificationsCode}
 ${middlewareCode}
 `;
 }
@@ -126,6 +137,7 @@ function generateDynamicImportCode(
   toolPaths: Set<string>,
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
+  hasNotifications: boolean,
   hasMiddleware: boolean,
   clientBundles?: Map<string, string>
 ): string {
@@ -152,6 +164,10 @@ function generateDynamicImportCode(
       return `"${path}": () => import("${relativePath}"),`;
     })
     .join("\n");
+
+  const importNotificationsCode = hasNotifications
+    ? `export const notifications = () => import("../src/notifications.ts");`
+    : "";
 
   const importMiddlewareCode = hasMiddleware
     ? `export const middleware = () => import("../src/middleware.ts");`
@@ -182,6 +198,7 @@ export const clientBundles = {
 ${clientBundlesEntries}
 };
 
+${importNotificationsCode}
 ${importMiddlewareCode}
 `;
 }
