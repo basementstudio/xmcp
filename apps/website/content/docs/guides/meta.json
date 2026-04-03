@@ -1,6 +1,6 @@
 {
   "title": "Guides",
-  "pages": ["xmcp-mcp-server", "authentication", "monetization"],
+  "pages": ["xmcp-mcp-server", "authentication", "monetization", "code-mode"],
   "defaultOpen": true,
   "root": true
 }

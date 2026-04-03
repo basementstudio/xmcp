@@ -449,6 +449,15 @@ importers:
         specifier: ^4.62.0
         version: 4.62.0(@cloudflare/workers-types@4.20260127.0)
 
+  examples/code-mode-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   examples/custom-bundler-config:
     dependencies:
       xmcp:

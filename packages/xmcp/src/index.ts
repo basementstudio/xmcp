@@ -7,6 +7,8 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  ToolInfo,
+  CallToolResultCompat,
   InferSchema,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";

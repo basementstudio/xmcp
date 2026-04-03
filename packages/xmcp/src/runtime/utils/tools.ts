@@ -9,6 +9,7 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import { ToolRegistry } from "./tool-registry";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -43,6 +44,8 @@ export function addToolsToServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>
 ): McpServer {
+  const registry = new ToolRegistry();
+
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
 
@@ -171,12 +174,38 @@ export function addToolsToServer(
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
-    // server as any prevents infinite type recursion
-    (server as any).registerTool(
+    // Register in the tool registry for listTools/callTool support
+    registry.register(
       toolConfig.name,
-      toolConfigFormatted,
-      transformedHandler
+      handler,
+      toolSchema,
+      toolOutputSchema,
+      toolConfig.description,
+      toolConfig.annotations
     );
+
+    // Wrap the handler to inject listTools and callTool into extra
+    const originalHandler = transformedHandler;
+    const wrappedHandler = async (args: any, extra: any) => {
+      const extraTools: any = {
+        ...extra,
+        listTools: () => registry.list(),
+        callTool: (name: string, toolArgs: Record<string, unknown>) =>
+          registry.call(name, toolArgs, extraTools),
+      };
+      return originalHandler(args, extraTools);
+    };
+
+    // Only register with MCP server if not marked as internal.
+    // Internal tools are still in the ToolRegistry (accessible via callTool/listTools).
+    if (!toolConfig.annotations?.internal) {
+      // server as any prevents infinite type recursion
+      (server as any).registerTool(
+        toolConfig.name,
+        toolConfigFormatted,
+        wrappedHandler
+      );
+    }
   });
 
   return server;
