@@ -48,7 +48,8 @@ export async function initializeMcpServer(): Promise<McpServer> {
   ]);
   const toolModules = await toolModulesPromise;
 
-  const server = new McpServer(INJECTED_CONFIG);
+  const { instructions, ...serverInfo } = INJECTED_CONFIG;
+  const server = new McpServer(serverInfo, { instructions });
 
   await configureServer(server, toolModules, promptModules, resourceModules);
 

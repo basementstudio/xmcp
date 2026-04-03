@@ -2,8 +2,8 @@
 title: "Server Info"
 metadataTitle: "Server Info Configuration | xmcp Documentation"
 publishedAt: "2026-03-10"
-summary: "Configure your MCP server identity, icons, and home page."
-description: "Customize the name, description, icons, and home page of your MCP server."
+summary: "Configure your MCP server identity, instructions, icons, and home page."
+description: "Customize the name, description, instructions, icons, and home page of your MCP server."
 ---
 
 The `template` config controls how your MCP server identifies itself to clients and what it displays on its home page.
@@ -25,8 +25,33 @@ const config: XmcpConfig = {
 | --- | --- | --- |
 | `name` | `"xmcp server"` | Display name shown in MCP clients and the home page |
 | `description` | `"This MCP server was bootstrapped with xmcp."` | Server description |
+| `instructions` | — | Instructions describing how to use the server and its features |
 
 The server `version` is automatically read from your project's `package.json` at build time.
+
+## Instructions
+
+The optional `instructions` field lets you provide guidance to LLM clients about how to use your server effectively. When set, it is sent in the MCP [`initialize` response](https://modelcontextprotocol.io/specification/2025-11-25/schema#initializeresult-instructions) and can be added to the system prompt by MCP clients.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  template: {
+    name: "My MCP Server",
+    instructions:
+      "Always call get-user before calling update-user. " +
+      "Use list-items with pagination for large datasets. " +
+      "The search tool supports fuzzy matching by default.",
+  },
+};
+```
+
+Instructions should focus on information that helps the model use the server effectively, such as:
+
+- **Cross-tool relationships**: which tools should be called together or in sequence
+- **Workflow patterns**: recommended ways to accomplish common tasks
+- **Constraints**: limitations or requirements the model should be aware of
+
+Instructions should **not** duplicate information already present in individual tool descriptions.
 
 ## Icons
 
