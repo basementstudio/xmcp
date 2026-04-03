@@ -28,6 +28,14 @@ export interface ToolMetadata {
     ui?: UIMetadata;
     [key: string]: unknown;
   };
+  /** Whether this tool is enabled. Defaults to true. Set to false to disable by default. */
+  enabled?: boolean;
+  /** If true, tool is only visible to authenticated requests. */
+  requiresAuth?: boolean;
+  /** OAuth scopes required for this tool to be visible. Implies requiresAuth. All scopes must match. */
+  requiredScopes?: string[];
+  /** Tool names this tool depends on. Only visible if all dependencies are registered. */
+  dependsOn?: string[];
 }
 
 type CompatibleZodType = z.ZodTypeAny | ZodTypeV4<unknown>;

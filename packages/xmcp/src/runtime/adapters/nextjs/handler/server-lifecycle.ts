@@ -4,10 +4,12 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import {
   configureServer,
   INJECTED_CONFIG,
+  enableList,
   loadPrompts,
   loadResources,
   loadTools,
 } from "@/runtime/utils/server";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 export interface ServerLifecycle {
   server: McpServer;
@@ -36,7 +38,9 @@ export function setupCleanupHandlers(
 /**
  * Initializes and configures the MCP server with tools, prompts, and resources
  */
-export async function initializeMcpServer(): Promise<McpServer> {
+export async function initializeMcpServer(
+  authInfo?: AuthInfo
+): Promise<McpServer> {
   const toolModulesPromise = loadTools();
   const [promptPromises, promptModules] = loadPrompts();
   const [resourcePromises, resourceModules] = loadResources();
@@ -50,7 +54,14 @@ export async function initializeMcpServer(): Promise<McpServer> {
 
   const server = new McpServer(INJECTED_CONFIG);
 
-  await configureServer(server, toolModules, promptModules, resourceModules);
+  await configureServer(
+    server,
+    toolModules,
+    promptModules,
+    resourceModules,
+    authInfo,
+    enableList
+  );
 
   return server;
 }
@@ -59,9 +70,10 @@ export async function initializeMcpServer(): Promise<McpServer> {
  * Creates and connects server lifecycle components
  */
 export async function createServerLifecycle(
-  bodySizeLimit: string = "10mb"
+  bodySizeLimit: string = "10mb",
+  authInfo?: AuthInfo
 ): Promise<ServerLifecycle> {
-  const server = await initializeMcpServer();
+  const server = await initializeMcpServer(authInfo);
   const transport = new StatelessHttpServerTransport(false, bodySizeLimit);
 
   await server.connect(transport);

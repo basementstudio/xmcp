@@ -1,0 +1,239 @@
+---
+title: "Dynamic Tool Discovery"
+metadataTitle: "Dynamic Tool Discovery | xmcp Documentation"
+publishedAt: "2026-04-03"
+summary: "Control which tools are visible based on authentication, scopes, dependencies, and server configuration."
+description: "Dynamic tool discovery lets you filter which tools are available to clients based on authentication status, OAuth scopes, inter-tool dependencies, and server-level include/exclude configuration."
+---
+
+## Overview
+
+By default, xmcp registers all tools found in your tools directory and makes them available to every client. Every tool is enabled unless explicitly configured otherwise.
+
+Dynamic tool discovery adds control over which tools are visible per request. This is useful when your server exposes tools with different access levels, when certain tools should only appear after authentication, or when you want to keep deployments lightweight by loading only what you need.
+
+Filtering happens in three layers, evaluated in order:
+
+1. **Build time**: the `tools` config in `xmcp.config.ts` removes tools from the bundle entirely
+2. **Runtime pass 1**: per-tool metadata (`enabled`, `requiresAuth`, `requiredScopes`) is evaluated against the current request
+3. **Runtime pass 2**: `dependsOn` declarations are resolved iteratively until all dependency chains settle
+
+A tool must survive all three layers to be registered. If a client calls a hidden tool directly, the server returns a standard "tool not found" error without revealing that the tool exists.
+
+Tool names in `tools.include`, `tools.exclude`, and `tools.enable` always refer to the tool's public name: `metadata.name` when present, otherwise the filename fallback. If a tool file is named `internal-name.ts` but exports `metadata.name = "public-name"`, config must use `"public-name"`.
+
+### Example
+
+Consider a server with four tools:
+
+| Tool | `requiresAuth` | `requiredScopes` | `dependsOn` |
+| ---- | -------------- | ---------------- | ----------- |
+| public-info | - | - | - |
+| user-profile | `true` | - | - |
+| admin-panel | `true` | `["admin"]` | - |
+| advanced-analytics | - | - | `["admin-panel"]` |
+
+An **unauthenticated client** sees only `public-info`.
+
+An **authenticated client with scopes `["read"]`** sees `public-info` and `user-profile`. The `admin-panel` tool requires the `admin` scope, so it stays hidden. Because `admin-panel` is hidden, `advanced-analytics` is also hidden since its dependency is not registered.
+
+An **authenticated client with scopes `["admin"]`** sees all four tools. The `admin-panel` passes its scope check, which satisfies the dependency for `advanced-analytics`.
+
+## Per-tool metadata
+
+All tools are enabled by default. The following optional metadata fields let tool authors declare visibility requirements directly on their tools.
+
+### Require authentication
+
+Set `requiresAuth: true` to hide a tool from unauthenticated clients. The tool only appears in `tools/list` when the request includes a valid access token.
+
+```typescript title="src/tools/user-profile.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+
+export const schema = {
+  field: z
+    .enum(["email", "name", "role"])
+    .describe("The profile field to retrieve"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "user-profile",
+  description: "Retrieve the authenticated user's profile.",
+  requiresAuth: true,
+};
+
+export default async function userProfile({
+  field,
+}: InferSchema<typeof schema>) {
+  return `Profile field "${field}" for the authenticated user.`;
+}
+```
+
+### Require specific scopes
+
+Use `requiredScopes` to restrict a tool to users whose access token includes specific OAuth scopes. All listed scopes must be present for the tool to appear.
+
+```typescript title="src/tools/admin-panel.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+
+export const schema = {
+  action: z
+    .enum(["list-users", "reset-cache", "view-logs"])
+    .describe("The admin action to perform"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "admin-panel",
+  description: "Perform administrative actions. Requires admin scope.",
+  requiredScopes: ["admin"],
+};
+
+export default async function adminPanel({
+  action,
+}: InferSchema<typeof schema>) {
+  return `Admin action "${action}" executed successfully.`;
+}
+```
+
+A client with scopes `["read"]` won't see this tool. A client with scopes `["admin", "read"]` will.
+
+<Callout variant="info">
+  Setting `requiredScopes` implies authentication is required. You can omit `requiresAuth` when scopes are declared, but including it makes the intent clearer.
+</Callout>
+
+### Declare tool dependencies
+
+Use `dependsOn` to create progressive discovery, where a tool only appears when its prerequisites are also registered. Dependencies are presence-based: the check passes if the named tool survives all its own filters in the same request.
+
+This is particularly useful when combined with scoped tools. In the following example, `advanced-analytics` becomes visible only when the user has the `admin` scope, because its dependency `admin-panel` requires that scope.
+
+```typescript title="src/tools/advanced-analytics.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+
+export const schema = {
+  report: z
+    .enum(["usage", "performance", "errors"])
+    .describe("The type of analytics report to generate"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "advanced-analytics",
+  description: "Generate analytics reports. Available when admin-panel is accessible.",
+  dependsOn: ["admin-panel"],
+};
+
+export default async function advancedAnalytics({
+  report,
+}: InferSchema<typeof schema>) {
+  return `Analytics report "${report}" generated.`;
+}
+```
+
+If the user does not have the `admin` scope, `admin-panel` is hidden. Because `admin-panel` is hidden, `advanced-analytics` is hidden too. When the user does have the scope, both tools appear.
+
+Circular dependencies are detected automatically. If tool A depends on tool B and tool B depends on tool A, both are excluded and a warning is logged.
+
+### Disable a tool by default
+
+Set `enabled: false` to ship a tool that is hidden unless the server operator opts in through the `enable` or `include` configuration.
+
+```typescript title="src/tools/experimental.ts"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "experimental",
+  description: "An experimental feature, disabled by default.",
+  enabled: false,
+};
+
+export default async function experimental() {
+  return "This feature is enabled via server configuration.";
+}
+```
+
+## Server configuration
+
+The `tools` key in `xmcp.config.ts` controls which tools are bundled and loaded by the server. These options filter tools at build time, before any runtime checks.
+
+### Include list
+
+Only bundle and register the listed tools. All other tools are excluded from the build.
+
+```typescript title="xmcp.config.ts"
+import { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+  tools: {
+    include: ["public-info", "user-profile"],
+  },
+};
+
+export default config;
+```
+
+Tools in the `include` list also override `enabled: false`. This is how operators can opt in to disabled-by-default tools.
+
+<Callout variant="info">
+  `include`, `exclude`, and `enable` match the tool's public name from `metadata.name`, not the source filename.
+</Callout>
+
+### Exclude list
+
+Load all tools except the listed ones.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: true,
+  tools: {
+    exclude: ["debug-tool", "internal-test"],
+  },
+};
+
+export default config;
+```
+
+<Callout variant="warning">
+  `include` and `exclude` cannot be used together. The server will reject this configuration with an error.
+</Callout>
+
+### Enable list
+
+Re-enable specific tools that have `enabled: false` in their metadata without switching to whitelist mode. This works alongside `exclude` or on its own.
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: true,
+  tools: {
+    exclude: ["debug-tool"],
+    enable: ["experimental"],
+  },
+};
+
+export default config;
+```
+
+### Duplicate names
+
+Each tool must have a unique public name. If two files resolve to the same tool name, xmcp fails with an error instead of picking one silently.
+
+```typescript title="src/tools/internal-name.ts"
+export const metadata = {
+  name: "public-name",
+};
+```
+
+```typescript title="xmcp.config.ts"
+const config = {
+  tools: {
+    include: ["public-name"],
+  },
+};
+```
+
+## STDIO transport
+
+STDIO runs locally on the user's machine and has no authentication mechanism. Tools with `requiresAuth` or `requiredScopes` are automatically hidden since no auth context exists. Tools using `enabled` and `dependsOn` work normally.

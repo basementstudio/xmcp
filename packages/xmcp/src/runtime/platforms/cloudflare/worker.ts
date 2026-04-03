@@ -136,7 +136,7 @@ async function handleMcpRequest(
       let transport: WebStatelessHttpTransport | null = null;
 
       try {
-        server = await createServer();
+        server = await createServer(authInfo);
         transport = new WebStatelessHttpTransport(httpConfig.debug);
 
         await server.connect(transport);

@@ -177,6 +177,30 @@ annotations: {
   about when and how to call your tools, but they don't enforce any behavior.
 </Callout>
 
+### Tool Discovery
+
+Control when a tool is visible to clients using discovery metadata fields:
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "admin-panel",
+  description: "Admin operations",
+  enabled: false,            // disabled by default (opt-in via config)
+  requiresAuth: true,        // only visible to authenticated clients
+  requiredScopes: ["admin"], // requires the "admin" scope
+  dependsOn: ["setup-tool"], // only visible when "setup-tool" is registered
+};
+```
+
+- **`enabled`**: set to `false` to disable a tool by default. Operators can re-enable it via `tools.enable` or `tools.include` in `xmcp.config.ts`.
+- **`requiresAuth`**: tool is hidden from unauthenticated requests.
+- **`requiredScopes`**: all listed scopes must be present. Implies `requiresAuth`.
+- **`dependsOn`**: tool is only visible when all named tools are also registered.
+
+Discovery config matches the tool's public name, meaning `metadata.name` when present. Tool names must also be unique across the project; duplicate names are treated as an error.
+
+For a full guide on configuring tool visibility, see [Dynamic Tool Discovery](/docs/guides/dynamic-tool-discovery).
+
 ### MCP Apps metadata
 
 <Callout variant="info">

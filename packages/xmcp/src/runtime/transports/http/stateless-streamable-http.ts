@@ -278,12 +278,12 @@ export class StatelessStreamableHTTPTransport {
   private endpoint: string;
   private debug: boolean;
   private options: HttpTransportOptions;
-  private createServerFn: () => Promise<McpServer>;
+  private createServerFn: (authInfo?: AuthInfo) => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
 
   constructor(
-    createServerFn: () => Promise<McpServer>,
+    createServerFn: (authInfo?: AuthInfo) => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
     providers?: Provider[]
@@ -425,12 +425,12 @@ export class StatelessStreamableHTTPTransport {
   }
 
   private async handleStatelessRequest(
-    req: Request,
+    req: Request & { auth?: AuthInfo },
     res: Response
   ): Promise<void> {
     try {
       // Create new instances for complete isolation
-      const server = await this.createServerFn();
+      const server = await this.createServerFn(req.auth);
       const transport = new StatelessHttpServerTransport(
         this.debug,
         this.options.bodySizeLimit || "10mb"
