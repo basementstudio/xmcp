@@ -449,6 +449,18 @@ importers:
         specifier: ^4.62.0
         version: 4.62.0(@cloudflare/workers-types@4.20260127.0)
 
+  examples/commet-http:
+    dependencies:
+      '@xmcp-dev/commet':
+        specifier: workspace:*
+        version: link:../../packages/plugins/commet
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   examples/custom-bundler-config:
     dependencies:
       xmcp:
@@ -1131,6 +1143,22 @@ importers:
         specifier: ^0.5.7
         version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13)
 
+  packages/plugins/commet:
+    dependencies:
+      '@commet/node':
+        specifier: ^1.7.0
+        version: 1.7.1(typescript@5.9.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.19.2
+        version: 22.19.2
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      xmcp:
+        specifier: workspace:*
+        version: link:../../xmcp
+
   packages/plugins/polar:
     devDependencies:
       '@types/node':
@@ -1620,6 +1648,12 @@ packages:
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
+
+  '@commet/node@1.7.1':
+    resolution: {integrity: sha512-7oNyevpJyOWkHb+5JYY0xsFe1l13AVx+bPuOkyYMSiCiscZ+umZLa+0PEEdFsDkpHK4R8G8NcCPiGtM1SE7Uxw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      typescript: '>=5.0.0'
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -9094,6 +9128,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zod@4.1.13:
     resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
 
@@ -9507,6 +9544,11 @@ snapshots:
 
   '@colors/colors@1.5.0':
     optional: true
+
+  '@commet/node@1.7.1(typescript@5.9.3)':
+    dependencies:
+      typescript: 5.9.3
+      zod: 4.1.12
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -17872,6 +17914,8 @@ snapshots:
       zod: 4.1.13
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zod@4.1.13: {}
 
