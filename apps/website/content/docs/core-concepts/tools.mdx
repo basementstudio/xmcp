@@ -455,3 +455,100 @@ export default async function getData() {
   };
 }
 ```
+
+## Sampling From Tools
+
+Tool handlers can request MCP sampling directly through `extra.sample()`. This
+is useful when a tool needs to ask the connected client model for a follow-up
+response, either as a one-shot completion or as a tool-enabled workflow that
+can call back into local xmcp tools.
+
+```typescript title="src/tools/summarize-with-sample.ts"
+import { z } from "zod";
+import {
+  getSampleTextContent,
+  type InferSchema,
+  type ToolExtraArguments,
+  type ToolMetadata,
+} from "xmcp";
+
+export const schema = {
+  topic: z.string().describe("Topic to summarize"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "summarize_with_sample",
+  description: "Demonstrates extra.sample() without tool use",
+};
+
+export default async function summarizeWithSample(
+  { topic }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const result = await extra.sample({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Write a concise summary about ${topic}.`,
+        },
+      },
+    ],
+    maxTokens: 300,
+  });
+
+  return {
+    content: [
+      {
+        type: "text",
+        text:
+          getSampleTextContent(result) ||
+          "The client did not return text content.",
+      },
+    ],
+  };
+}
+```
+
+When you pass `tools`, xmcp resolves the named local tools, forwards their
+definitions to the client, executes any returned `tool_use` blocks, and
+continues the `tool_use -> tool_result -> continue` loop until the model
+finishes or `maxSteps` is reached.
+
+```typescript title="src/tools/research-topic.ts"
+const result = await extra.sample({
+  messages: [
+    {
+      role: "user",
+      content: {
+        type: "text",
+        text: `Research ${topic} using the local tools and give me a short answer.`,
+      },
+    },
+  ],
+  tools: ["search_docs"],
+  toolChoice: { mode: "required" },
+  maxTokens: 500,
+  maxSteps: 4,
+});
+```
+
+`SampleResult["content"]` is a union. Without tools, clients usually return a
+single content block. With tools enabled, the response can be an array that
+mixes text and `tool_use` blocks. Use `getSampleContentBlocks(result)` to
+normalize both shapes, or `getSampleTextContent(result)` when you only need text
+output.
+
+A full working example lives in the repository under
+`examples/stdio-transport/src/tools/`, including
+`summarize-with-sample.ts`, `research-topic.ts`, and `search-docs.ts`.
+
+You can test the same flow in [MCPJam](https://www.mcpjam.com/). The screenshots
+below were captured there while exercising the sampling helper:
+
+![Basic `extra.sample()` flow captured in MCPJam](https://github.com/user-attachments/assets/181c6623-44a8-4377-958a-79d7d53cff52)
+
+![Tool-enabled sampling flow in MCPJam showing the local tool request](https://github.com/user-attachments/assets/2f21c706-3dbc-45b5-b415-1f1749d78877)
+
+![Tool-enabled sampling flow in MCPJam after xmcp continued with the tool result](https://github.com/user-attachments/assets/75ed63ac-4523-4d90-8224-9485df67e2a9)

@@ -50,6 +50,7 @@ npx init-xmcp@latest
 Tool handlers can request MCP sampling directly through `extra.sample()`.
 
 ```ts
+import { getSampleTextContent } from "xmcp";
 import { z } from "zod";
 
 export const schema = {
@@ -75,9 +76,8 @@ export default async ({ topic }, extra) => {
       {
         type: "text",
         text:
-          result.content.type === "text"
-            ? result.content.text
-            : "The client did not return text content.",
+          getSampleTextContent(result) ||
+          "The client did not return text content.",
       },
     ],
   };
@@ -103,6 +103,10 @@ const result = await extra.sample({
   maxSteps: 6,
 });
 ```
+
+When `tools` are enabled, `SampleResult["content"]` can be a single block or an
+array. Use `getSampleContentBlocks(result)` to normalize both shapes, or
+`getSampleTextContent(result)` when you only need the text blocks.
 
 ## Security
 

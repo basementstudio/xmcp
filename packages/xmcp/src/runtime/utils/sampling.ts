@@ -15,7 +15,11 @@ import type {
   ToolExtraArguments,
   ToolRequestOptions,
 } from "@/types/tool";
-import { resolveSamplingTools } from "./sampling-tool-registry";
+import {
+  resolveSamplingTools,
+  type SamplingToolRegistration,
+  type SamplingToolRegistry,
+} from "./sampling-tool-registry";
 
 const DEFAULT_SAMPLE_MAX_STEPS = 8;
 
@@ -68,7 +72,7 @@ function extractToolUses(response: CreateMessageResultWithTools): ToolUseContent
 async function executeToolUse(
   toolUse: ToolUseContent,
   extra: SamplingExtra,
-  toolMap: Map<string, ReturnType<typeof resolveSamplingTools>[number]>
+  toolMap: Map<string, SamplingToolRegistration>
 ): Promise<ToolResultContent> {
   const tool = toolMap.get(toolUse.name);
 
@@ -105,7 +109,8 @@ export async function sampleFromClient(
   extra: SamplingExtra,
   request: SampleRequest,
   options?: ToolRequestOptions,
-  currentToolName?: string
+  currentToolName?: string,
+  samplingToolRegistry?: SamplingToolRegistry
 ): Promise<SampleResult> {
   const { tools: toolSelection, maxSteps = DEFAULT_SAMPLE_MAX_STEPS, ...params } =
     request;
@@ -121,7 +126,10 @@ export async function sampleFromClient(
     );
   }
 
-  const resolvedTools = resolveSamplingTools(toolSelection).filter(
+  const resolvedTools = resolveSamplingTools(
+    toolSelection,
+    samplingToolRegistry
+  ).filter(
     (tool) => toolSelection !== "all" || tool.definition.name !== currentToolName
   );
 
@@ -187,12 +195,19 @@ export async function sampleFromClient(
 
 export function createToolExtraArguments(
   extra: SamplingExtra,
-  currentToolName?: string
+  currentToolName?: string,
+  samplingToolRegistry?: SamplingToolRegistry
 ): ToolExtraArguments {
   return Object.assign({}, extra, {
     sendRequest: (request: any, resultSchema: any, options?: ToolRequestOptions) =>
       extra.sendRequest(request, resultSchema, options),
     sample: (request: SampleRequest, options?: ToolRequestOptions) =>
-      sampleFromClient(extra, request, options, currentToolName),
+      sampleFromClient(
+        extra,
+        request,
+        options,
+        currentToolName,
+        samplingToolRegistry
+      ),
   }) as ToolExtraArguments;
 }

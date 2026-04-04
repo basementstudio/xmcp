@@ -8,24 +8,35 @@ export interface SamplingToolRegistration {
   execute: McpToolHandler;
 }
 
-const samplingToolRegistry = new Map<string, SamplingToolRegistration>();
+export type SamplingToolRegistry = Map<string, SamplingToolRegistration>;
 
-export function clearSamplingToolRegistry(): void {
-  samplingToolRegistry.clear();
+const defaultSamplingToolRegistry: SamplingToolRegistry =
+  createSamplingToolRegistry();
+
+export function createSamplingToolRegistry(): SamplingToolRegistry {
+  return new Map<string, SamplingToolRegistration>();
+}
+
+export function clearSamplingToolRegistry(
+  registry: SamplingToolRegistry = defaultSamplingToolRegistry
+): void {
+  registry.clear();
 }
 
 export function registerSamplingTool(
   name: string,
-  registration: SamplingToolRegistration
+  registration: SamplingToolRegistration,
+  registry: SamplingToolRegistry = defaultSamplingToolRegistry
 ): void {
-  samplingToolRegistry.set(name, registration);
+  registry.set(name, registration);
 }
 
 export function resolveSamplingTools(
-  selection: SampleToolSelection
+  selection: SampleToolSelection,
+  registry: SamplingToolRegistry = defaultSamplingToolRegistry
 ): SamplingToolRegistration[] {
   if (selection === "all") {
-    return Array.from(samplingToolRegistry.values());
+    return Array.from(registry.values());
   }
 
   const resolved: SamplingToolRegistration[] = [];
@@ -38,7 +49,7 @@ export function resolveSamplingTools(
     }
 
     seen.add(name);
-    const tool = samplingToolRegistry.get(name);
+    const tool = registry.get(name);
 
     if (!tool) {
       missing.push(name);
