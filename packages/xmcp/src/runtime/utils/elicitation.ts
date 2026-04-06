@@ -68,15 +68,10 @@ export async function elicitFromTool(
     options
   );
 
-  if (result.action === "accept") {
-    return {
-      ...result,
-      content: result.content ?? undefined,
-    };
-  }
-
-  const { content: _content, ...rest } = result;
-  return rest;
+  return {
+    ...result,
+    content: result.content ?? undefined,
+  };
 }
 
 function normalizeElicitationRequest(request: ElicitRequest) {
@@ -165,10 +160,15 @@ function assertValidUrlRequest(
   );
   assertNonEmptyString(request.url, "URL elicitation requires a non-empty URL.");
 
+  let parsedUrl: URL;
   try {
-    new URL(request.url);
+    parsedUrl = new URL(request.url);
   } catch {
-    throw new Error("URL elicitation requires a valid absolute URL.");
+    throw new Error("URL elicitation requires a valid http or https URL.");
+  }
+
+  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    throw new Error("URL elicitation requires a valid http or https URL.");
   }
 }
 
@@ -203,6 +203,16 @@ function assertSupportedFormField(
       field.enumNames,
       `Form elicitation field "${fieldName}" enumNames must be strings.`
     );
+
+    if (
+      typeof field.enumNames !== "undefined" &&
+      field.enumNames.length !== field.enum.length
+    ) {
+      throw new Error(
+        `Form elicitation field "${fieldName}" enumNames length must match enum length.`
+      );
+    }
+
     assertOptionalString(
       field.default,
       `Form elicitation field "${fieldName}" default must be a string.`
