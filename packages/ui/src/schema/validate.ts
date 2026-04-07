@@ -18,7 +18,7 @@ const setStateActionSchema = z.object({
 
 const openLinkActionSchema = z.object({
   type: z.literal("open-link"),
-  url: z.string(),
+  url: z.string().refine(u => !u.toLowerCase().startsWith("javascript:"), { message: "javascript: URLs are not allowed" }),
 });
 
 const setStateBatchActionSchema = z.object({
@@ -63,15 +63,15 @@ const componentTypeSchema = z.enum([
 // ── Component-specific prop schemas ───────────────────────────────────
 
 export const gridPropsSchema = z.object({
-  columns: z.number().optional().default(2),
-  gap: z.number().optional().default(16),
+  columns: z.number().int().min(1).max(12).optional().default(2),
+  gap: z.number().min(0).optional().default(16),
   className: z.string().optional(),
 });
 
 export const cardPropsSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
-  padding: z.number().optional().default(24),
+  padding: z.number().min(0).optional().default(24),
   className: z.string().optional(),
 });
 
@@ -81,7 +81,7 @@ const tabItemSchema = z.object({
 });
 
 export const tabsPropsSchema = z.object({
-  tabs: z.array(tabItemSchema),
+  tabs: z.array(tabItemSchema).min(1),
   stateKey: z.string(),
   defaultValue: z.string().optional(),
   className: z.string().optional(),
@@ -126,7 +126,7 @@ export const textareaPropsSchema = z.object({
   label: z.string().optional(),
   placeholder: z.string().optional(),
   stateKey: z.string(),
-  rows: z.number().optional(),
+  rows: z.number().int().min(1).optional(),
   className: z.string().optional(),
 });
 
@@ -189,7 +189,7 @@ export const loaderPropsSchema = z.object({
 
 export const progressPropsSchema = z.object({
   valueKey: z.string(),
-  max: z.number().optional().default(100),
+  max: z.number().min(1).optional().default(100),
   label: z.string().optional(),
   className: z.string().optional(),
 });
@@ -201,7 +201,7 @@ export const imagePropsSchema = z.object({
   width: z.string().optional(),
   height: z.string().optional(),
   className: z.string().optional(),
-});
+}).refine(d => d.src || d.srcKey, { message: "image requires src or srcKey" });
 
 export const linkPropsSchema = z.object({
   href: z.string(),
@@ -363,7 +363,7 @@ const appSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   state: z.record(z.string(), z.unknown()).optional(),
-  mcpServerUrl: z.string(),
+  mcpServerUrl: z.string().url(),
   mcpHeaders: z
     .array(
       z.object({

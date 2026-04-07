@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   useUiState,
   useUiDispatch,
@@ -21,6 +21,7 @@ export function Input({
   className,
   actions,
 }: InputComponentProps) {
+  const id = useId();
   const value = useUiState(stateKey);
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
@@ -39,8 +40,9 @@ export function Input({
 
   return (
     <div className="flex flex-col gap-1.5">
-      {label ? <Label>{label}</Label> : null}
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
       <BaseInput
+        id={id}
         type={type}
         value={value != null ? String(value) : ""}
         onChange={handleChange}

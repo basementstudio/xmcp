@@ -41,6 +41,7 @@ export function Table({ dataKey, columns, className }: TableComponentProps) {
             {columns.map((col) => (
               <TableHead
                 key={col.key}
+                scope="col"
                 className={cn("text-slate-400")}
                 style={col.width ? { width: col.width } : undefined}
               >
@@ -51,7 +52,7 @@ export function Table({ dataKey, columns, className }: TableComponentProps) {
         </TableHeader>
         <TableBody>
           {data.map((row: Record<string, unknown>, rowIndex: number) => (
-            <TableRow key={rowIndex}>
+            <TableRow key={row?.[columns[0]?.key] != null ? String(row[columns[0].key]) : rowIndex}>
               {columns.map((col) => (
                 <TableCell key={col.key}>
                   {row?.[col.key] != null ? String(row[col.key]) : ""}

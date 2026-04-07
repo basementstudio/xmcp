@@ -12,7 +12,7 @@ const DEFAULT_MCP_SERVER_URL = "http://localhost:6274";
 export const metadata: ToolMetadata = {
   name: "renderJson",
   description:
-    "Render a full @xmcp-dev/ui AppSchema for MCP Apps-compatible clients. The JSON must include at least title, mcpServerUrl, and a root component object.",
+    "Render a full @xmcp-dev/ui AppSchema for MCP Apps-compatible clients. Before generating the schema, read the skill://xmcp-ui/schema-reference resource for the full component catalog and schema format. The JSON must include at least title, mcpServerUrl, and a root component object.",
 };
 
 export const schema = {
@@ -20,7 +20,37 @@ export const schema = {
     .string()
     .optional()
     .describe(
-      "Optional raw AppSchema JSON string to render directly. Required fields: title, mcpServerUrl, and root. Root must be a component object like { type: 'card', props: {}, children: [] }.",
+      `AppSchema JSON string. For the full reference, read the skill://xmcp-ui/schema-reference resource.
+
+Root shape: { title, mcpServerUrl, root: Component }
+Component: { type, props, children?, actions? }
+
+VALID TYPES ONLY: grid, card, tabs, table, stat-card, text, image, link, input, textarea, select, button, badge, separator, checkbox, switch, alert, loader, progress.
+
+Key props per type:
+- grid: columns?, gap? (children: yes)
+- card: title?, description? (children: yes)
+- tabs: tabs[{label,value}], stateKey (children: yes)
+- table: dataKey, columns[{key,label}]
+- stat-card: label, valueKey
+- text: content, variant?("h1"|"h2"|"h3"|"body"|"caption")
+- input: stateKey, label?, type?
+- button: label, variant?("primary"|"secondary"|"danger") (actions: {onClick})
+- badge: label, variant?("default"|"secondary"|"destructive"|"outline")
+- separator: orientation?
+- select: stateKey, options[{value,label}]
+- checkbox: stateKey, label?
+- switch: stateKey, label?
+- alert: messageKey, variant?("info"|"success"|"warning"|"error")
+- loader: loadingKey, label?
+- progress: valueKey, max?
+- image: src OR srcKey, alt?
+- link: href, label, external?
+
+Actions: { type:"call-tool", tool, args, resultKey } | { type:"set-state", key, value }
+Templates: {{stateKey}} resolves from state, {{event.value}} for onChange.
+
+DO NOT use types like "page", "stack", "divider", "list", "hero" — they do not exist and will cause errors.`,
     ),
 };
 
@@ -225,11 +255,37 @@ function renderErrorState(title: string, body: string, details?: string) {
 export default function handler({
   schemaJson,
 }: InferSchema<typeof schema>) {
-  try {
-    const parsedInput = schemaJson?.trim()
-      ? JSON.parse(schemaJson)
-      : createDefaultJsonApp();
+  // If no schema provided, show the default demo app
+  if (!schemaJson?.trim()) {
+    const validated = validateSchema(createDefaultJsonApp());
+    return (
+      <App
+        schema={validated}
+        className="mx-auto max-w-6xl py-10"
+      />
+    );
+  }
 
+  // Try to parse the incoming JSON — during streaming it may be incomplete
+  let parsedInput: unknown;
+  try {
+    parsedInput = JSON.parse(schemaJson);
+  } catch {
+    // Incomplete JSON during streaming — show a loading indicator
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center font-sans text-slate-100">
+        <div className="flex flex-col items-center gap-4">
+          <svg className="h-8 w-8 animate-spin text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm text-slate-400">Building your UI...</p>
+        </div>
+      </div>
+    );
+  }
+
+  try {
     const validated = validateSchema(parsedInput);
 
     return (
@@ -239,14 +295,6 @@ export default function handler({
       />
     );
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      return renderErrorState(
-        "Invalid JSON",
-        "The provided schemaJson input could not be parsed. Pass a valid AppSchema JSON object with title, mcpServerUrl, and root.",
-        error.message,
-      );
-    }
-
     const message = error instanceof Error ? error.message : String(error);
     return renderErrorState(
       "Invalid App Schema",

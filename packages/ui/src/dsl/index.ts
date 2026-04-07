@@ -26,19 +26,41 @@ import type {
   LoaderProps,
   ProgressProps,
   ComponentType,
+  PropsMap,
 } from "../schema/types.js";
+import { validateSchema } from "../schema/validate.js";
 
-// Helper type for button DSL (adds onClick shorthand)
+// Helper types for DSL (adds action shorthands)
 interface ButtonDSLProps extends ButtonProps {
   onClick?: Action;
 }
 
-function makeComponent(
-  type: ComponentType,
-  props: Record<string, unknown>,
+interface InputDSLProps extends InputProps {
+  onChange?: Action;
+}
+
+interface TextareaDSLProps extends TextareaProps {
+  onChange?: Action;
+}
+
+interface SelectDSLProps extends SelectProps {
+  onChange?: Action;
+}
+
+interface CheckboxDSLProps extends CheckboxProps {
+  onChange?: Action;
+}
+
+interface SwitchDSLProps extends SwitchProps {
+  onChange?: Action;
+}
+
+function makeComponent<T extends ComponentType>(
+  type: T,
+  props: PropsMap[T],
   children?: Component[]
 ): Component {
-  const component: Component = { type, props };
+  const component: Component = { type, props: props as Record<string, unknown> };
   if (children && children.length > 0) {
     component.children = children;
   }
@@ -52,54 +74,69 @@ export const ui = {
 
   // Layout components accept props + children
   grid(props: GridProps, ...children: Component[]): Component {
-    return makeComponent("grid", props as unknown as Record<string, unknown>, children);
+    return makeComponent("grid", props, children);
   },
 
   card(props: CardProps, ...children: Component[]): Component {
-    return makeComponent("card", props as unknown as Record<string, unknown>, children);
+    return makeComponent("card", props, children);
   },
 
   tabs(props: TabsProps, ...children: Component[]): Component {
-    return makeComponent("tabs", props as unknown as Record<string, unknown>, children);
+    return makeComponent("tabs", props, children);
   },
 
   // Data components (no children)
   table(props: TableProps): Component {
-    return makeComponent("table", props as unknown as Record<string, unknown>);
+    return makeComponent("table", props);
   },
 
   statCard(props: StatCardProps): Component {
-    return makeComponent("stat-card", props as unknown as Record<string, unknown>);
+    return makeComponent("stat-card", props);
   },
 
   text(props: TextProps): Component {
-    return makeComponent("text", props as unknown as Record<string, unknown>);
+    return makeComponent("text", props);
   },
 
   image(props: ImageProps): Component {
-    return makeComponent("image", props as unknown as Record<string, unknown>);
+    return makeComponent("image", props);
   },
 
   link(props: LinkProps): Component {
-    return makeComponent("link", props as unknown as Record<string, unknown>);
+    return makeComponent("link", props);
   },
 
   // Form components
-  input(props: InputProps): Component {
-    return makeComponent("input", props as unknown as Record<string, unknown>);
+  input(props: InputDSLProps): Component {
+    const { onChange, ...rest } = props;
+    const component = makeComponent("input", rest);
+    if (onChange) {
+      component.actions = { onChange };
+    }
+    return component;
   },
 
-  textarea(props: TextareaProps): Component {
-    return makeComponent("textarea", props as unknown as Record<string, unknown>);
+  textarea(props: TextareaDSLProps): Component {
+    const { onChange, ...rest } = props;
+    const component = makeComponent("textarea", rest);
+    if (onChange) {
+      component.actions = { onChange };
+    }
+    return component;
   },
 
-  select(props: SelectProps): Component {
-    return makeComponent("select", props as unknown as Record<string, unknown>);
+  select(props: SelectDSLProps): Component {
+    const { onChange, ...rest } = props;
+    const component = makeComponent("select", rest);
+    if (onChange) {
+      component.actions = { onChange };
+    }
+    return component;
   },
 
   button(props: ButtonDSLProps): Component {
     const { onClick, ...rest } = props;
-    const component = makeComponent("button", rest as unknown as Record<string, unknown>);
+    const component = makeComponent("button", rest);
     if (onClick) {
       component.actions = { onClick };
     }
@@ -107,32 +144,42 @@ export const ui = {
   },
 
   badge(props: BadgeProps): Component {
-    return makeComponent("badge", props as unknown as Record<string, unknown>);
+    return makeComponent("badge", props);
   },
 
   separator(props: SeparatorProps = {}): Component {
-    return makeComponent("separator", props as unknown as Record<string, unknown>);
+    return makeComponent("separator", props);
   },
 
-  checkbox(props: CheckboxProps): Component {
-    return makeComponent("checkbox", props as unknown as Record<string, unknown>);
+  checkbox(props: CheckboxDSLProps): Component {
+    const { onChange, ...rest } = props;
+    const component = makeComponent("checkbox", rest);
+    if (onChange) {
+      component.actions = { onChange };
+    }
+    return component;
   },
 
-  switch(props: SwitchProps): Component {
-    return makeComponent("switch", props as unknown as Record<string, unknown>);
+  switch(props: SwitchDSLProps): Component {
+    const { onChange, ...rest } = props;
+    const component = makeComponent("switch", rest);
+    if (onChange) {
+      component.actions = { onChange };
+    }
+    return component;
   },
 
   // Feedback components
   alert(props: AlertProps): Component {
-    return makeComponent("alert", props as unknown as Record<string, unknown>);
+    return makeComponent("alert", props);
   },
 
   loader(props: LoaderProps): Component {
-    return makeComponent("loader", props as unknown as Record<string, unknown>);
+    return makeComponent("loader", props);
   },
 
   progress(props: ProgressProps): Component {
-    return makeComponent("progress", props as unknown as Record<string, unknown>);
+    return makeComponent("progress", props);
   },
 
   // Action helpers
@@ -154,5 +201,18 @@ export const ui = {
 
   setStateBatch(entries: Array<{ key: string; value: unknown }>): SetStateBatchAction {
     return { type: "set-state-batch", entries };
+  },
+
+  validate(input: unknown): { success: true; data: App } | { success: false; errors: string[] } {
+    try {
+      const data = validateSchema(input);
+      return { success: true, data };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const errors = message.includes('\n')
+        ? message.split('\n').slice(1).map(l => l.replace(/^\s*-\s*/, '').trim()).filter(Boolean)
+        : [message];
+      return { success: false, errors };
+    }
   },
 };

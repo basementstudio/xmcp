@@ -34,7 +34,7 @@ export function Alert({
   };
 
   return (
-    <BaseAlert variant={variant} className={className}>
+    <BaseAlert variant={variant} className={className} aria-live={variant === "error" ? "assertive" : "polite"}>
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <AlertTitle>{titles[variant] ?? titles.info}</AlertTitle>

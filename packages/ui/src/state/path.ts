@@ -32,8 +32,10 @@ export function setByPath<T extends Record<string, unknown>>(
     const part = parts[i];
     const existing = cursor[part];
     const next =
-      existing && typeof existing === "object" && !Array.isArray(existing)
-        ? { ...(existing as Record<string, unknown>) }
+      existing && typeof existing === "object"
+        ? Array.isArray(existing)
+          ? /^\d+$/.test(parts[i + 1]) ? ([...existing] as unknown as Record<string, unknown>) : {}
+          : { ...(existing as Record<string, unknown>) }
         : {};
     cursor[part] = next;
     cursor = next;

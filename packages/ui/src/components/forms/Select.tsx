@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   useUiState,
   useUiDispatch,
@@ -21,6 +21,7 @@ interface SelectComponentProps extends SelectProps {
 }
 
 export function Select({ label, stateKey, options, placeholder, className, actions }: SelectComponentProps) {
+  const id = useId();
   const value = useUiState(stateKey);
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
@@ -37,9 +38,9 @@ export function Select({ label, stateKey, options, placeholder, className, actio
 
   return (
     <div className="flex flex-col gap-1.5">
-      {label ? <Label>{label}</Label> : null}
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
       <BaseSelect value={value != null ? String(value) : undefined} onValueChange={handleChange}>
-        <SelectTrigger className={className}>
+        <SelectTrigger id={id} className={className}>
           <SelectValue placeholder={placeholder ?? "Select an option"} />
         </SelectTrigger>
         <SelectContent>

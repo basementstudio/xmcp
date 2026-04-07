@@ -63,7 +63,8 @@ function tryParseJson(value: unknown): unknown {
   }
   try {
     return JSON.parse(trimmed);
-  } catch {
+  } catch (e) {
+    console.warn(`Failed to parse JSON in tool result: ${(e as Error).message}`);
     return value;
   }
 }
@@ -107,26 +108,25 @@ export async function executeAction(
 
       try {
         const resolvedArgs = resolveArgs(callAction.args, state, eventValue);
-        const result = await client.callTool({
-          name: callAction.tool,
-          arguments: resolvedArgs,
-        });
+        const timeoutMs = 30_000;
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Tool call "${callAction.tool}" timed out after ${timeoutMs}ms`)), timeoutMs)
+        );
+        const result = await Promise.race([
+          client.callTool({ name: callAction.tool, arguments: resolvedArgs }),
+          timeoutPromise,
+        ]);
 
         dispatch({
           type: "SET_STATE",
           key: callAction.resultKey,
           value: normalizeToolResult(result),
         });
-        if (getByPath(state, "errorMessage") !== undefined) {
-          dispatch({ type: "SET_STATE", key: "errorMessage", value: null });
-        }
+        dispatch({ type: "SET_ERROR", actionId, error: null });
         dispatch({ type: "SET_LOADING", actionId, loading: false });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         dispatch({ type: "SET_ERROR", actionId, error: message });
-        if (getByPath(state, "errorMessage") !== undefined) {
-          dispatch({ type: "SET_STATE", key: "errorMessage", value: message });
-        }
         dispatch({ type: "SET_LOADING", actionId, loading: false });
       }
 

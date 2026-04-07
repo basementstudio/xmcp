@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   useUiDispatch,
   useUiState,
@@ -14,6 +14,7 @@ interface CheckboxComponentProps extends CheckboxProps {
 }
 
 export function Checkbox({ label, stateKey, className, actions }: CheckboxComponentProps) {
+  const id = useId();
   const checked = !!useUiState(stateKey);
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
@@ -31,8 +32,8 @@ export function Checkbox({ label, stateKey, className, actions }: CheckboxCompon
 
   return (
     <div className={["flex items-center gap-3", className].filter(Boolean).join(" ")}>
-      <BaseCheckbox checked={checked} onCheckedChange={handleChange} />
-      {label ? <Label>{label}</Label> : null}
+      <BaseCheckbox id={id} checked={checked} onCheckedChange={handleChange} />
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
     </div>
   );
 }

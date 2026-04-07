@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   useUiDispatch,
   useUiState,
@@ -14,6 +14,7 @@ interface SwitchComponentProps extends SwitchProps {
 }
 
 export function Switch({ label, stateKey, className, actions }: SwitchComponentProps) {
+  const id = useId();
   const checked = !!useUiState(stateKey);
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
@@ -30,8 +31,8 @@ export function Switch({ label, stateKey, className, actions }: SwitchComponentP
 
   return (
     <div className={["flex items-center justify-between gap-3", className].filter(Boolean).join(" ")}>
-      {label ? <Label>{label}</Label> : null}
-      <BaseSwitch checked={checked} onCheckedChange={handleChange} />
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
+      <BaseSwitch id={id} checked={checked} onCheckedChange={handleChange} />
     </div>
   );
 }

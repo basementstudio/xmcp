@@ -1,13 +1,13 @@
 import type { ComponentType } from "../schema/types.js";
 import type { ComponentType as ReactComponentType } from "react";
 
-const registry = new Map<ComponentType, ReactComponentType<any>>();
+const registry = new Map<ComponentType, ReactComponentType<Record<string, unknown>>>();
 
-export function registerComponent(type: ComponentType, component: ReactComponentType<any>) {
+export function registerComponent(type: ComponentType, component: ReactComponentType<Record<string, unknown>>) {
   registry.set(type, component);
 }
 
-export function getComponent(type: ComponentType): ReactComponentType<any> | undefined {
+export function getComponent(type: ComponentType): ReactComponentType<Record<string, unknown>> | undefined {
   return registry.get(type);
 }
 
@@ -33,24 +33,27 @@ import { Alert } from "./feedback/Alert.js";
 import { Loader } from "./feedback/Loader.js";
 import { Progress } from "./feedback/Progress.js";
 
-registerComponent("grid", Grid);
-registerComponent("card", Card);
-registerComponent("tabs", Tabs);
-registerComponent("separator", Separator);
-registerComponent("table", Table);
-registerComponent("stat-card", StatCard);
-registerComponent("text", Text);
-registerComponent("badge", Badge);
-registerComponent("image", Image);
-registerComponent("link", Link);
-registerComponent("input", Input);
-registerComponent("textarea", Textarea);
-registerComponent("select", Select);
-registerComponent("button", Button);
-registerComponent("checkbox", Checkbox);
-registerComponent("switch", Switch);
-registerComponent("alert", Alert);
-registerComponent("loader", Loader);
-registerComponent("progress", Progress);
+const r = (type: ComponentType, c: ReactComponentType<never>) =>
+  registerComponent(type, c as ReactComponentType<Record<string, unknown>>);
+
+r("grid", Grid);
+r("card", Card);
+r("tabs", Tabs);
+r("separator", Separator);
+r("table", Table);
+r("stat-card", StatCard);
+r("text", Text);
+r("badge", Badge);
+r("image", Image);
+r("link", Link);
+r("input", Input);
+r("textarea", Textarea);
+r("select", Select);
+r("button", Button);
+r("checkbox", Checkbox);
+r("switch", Switch);
+r("alert", Alert);
+r("loader", Loader);
+r("progress", Progress);
 
 export { registry };

@@ -58,12 +58,13 @@ export function App({ schema, className }: AppProps) {
       return h;
     };
 
-    const sendRequest = async (method: string, params?: any): Promise<any> => {
+    const sendRequest = async (method: string, params?: Record<string, unknown>): Promise<unknown> => {
       let res: Response;
       try {
         res = await fetch(mcpUrl, {
           method: "POST",
           headers: getHeaders(),
+          signal: AbortSignal.timeout(30_000),
           body: JSON.stringify({
             jsonrpc: "2.0",
             method,
@@ -72,10 +73,14 @@ export function App({ schema, className }: AppProps) {
           }),
         });
       } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          throw new Error("MCP request timed out after 30s");
+        }
+        if (error instanceof TypeError) {
+          throw new Error("Failed to reach MCP endpoint");
+        }
         const message = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `Failed to reach MCP endpoint "${mcpUrl}". Check widget CSP/connect domains and endpoint routing. Original error: ${message}`,
-        );
+        throw new Error(message);
       }
 
       // Capture session ID from response headers
@@ -90,28 +95,32 @@ export function App({ schema, className }: AppProps) {
         );
       }
       // Parse SSE or JSON response
-      let json: any;
+      let json: Record<string, unknown> | undefined;
       if (text.trim().startsWith("{")) {
-        json = JSON.parse(text);
+        json = JSON.parse(text) as Record<string, unknown>;
       } else {
         // SSE format: extract data lines, find the one with our id
         const dataLines = text.split("\n").filter((l: string) => l.startsWith("data:"));
         for (const line of dataLines) {
           try {
-            const parsed = JSON.parse(line.slice(5).trim());
+            const parsed = JSON.parse(line.slice(5).trim()) as Record<string, unknown>;
             if (parsed.id || parsed.result || parsed.error) {
               json = parsed;
               break;
             }
           } catch {}
         }
-        if (!json && dataLines.length > 0) {
-          json = JSON.parse(dataLines[dataLines.length - 1].slice(5).trim());
+        if (!json) {
+          const preview = text.length > 200 ? `${text.slice(0, 200)}...` : text;
+          throw new Error(`No valid MCP response found in SSE stream. Raw: ${preview}`);
         }
       }
 
       if (!json) throw new Error("Empty response from MCP server");
-      if (json.error) throw new Error(json.error.message || "MCP request failed");
+      if (json.error) {
+        const err = json.error as Record<string, unknown>;
+        throw new Error((err.message as string) || "MCP request failed");
+      }
       return json.result;
     };
 
@@ -140,7 +149,7 @@ export function App({ schema, className }: AppProps) {
         return sendRequest("tools/call", {
           name: params.name,
           arguments: params.arguments ?? {},
-        });
+        }) as Promise<{ content: unknown }>;
       },
     };
   }, [schema.mcpServerUrl, schema.mcpHeaders]);

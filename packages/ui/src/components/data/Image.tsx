@@ -28,6 +28,8 @@ export function Image({
     );
   }
 
+  const hasAlt = alt != null && alt !== "";
+
   return (
     <img
       src={resolvedSrc}
@@ -38,6 +40,7 @@ export function Image({
         "rounded-[calc(var(--radius)-0.2rem)]",
         className,
       )}
+      {...(!hasAlt ? { role: "presentation" as const, "aria-hidden": true } : {})}
     />
   );
 }

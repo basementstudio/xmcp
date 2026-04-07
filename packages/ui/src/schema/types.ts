@@ -223,3 +223,25 @@ export interface LinkProps {
   external?: boolean;
   className?: string;
 }
+
+export type PropsMap = {
+  grid: GridProps;
+  card: CardProps;
+  tabs: TabsProps;
+  table: TableProps;
+  "stat-card": StatCardProps;
+  text: TextProps;
+  image: ImageProps;
+  link: LinkProps;
+  input: InputProps;
+  textarea: TextareaProps;
+  select: SelectProps;
+  button: ButtonProps;
+  badge: BadgeProps;
+  separator: SeparatorProps;
+  checkbox: CheckboxProps;
+  switch: SwitchProps;
+  alert: AlertProps;
+  loader: LoaderProps;
+  progress: ProgressProps;
+};

@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from "react";
+import React, { useId, useRef, useCallback } from "react";
 import {
   useUiDispatch,
   useUiState,
@@ -21,6 +21,7 @@ export function Textarea({
   className,
   actions,
 }: TextareaComponentProps) {
+  const id = useId();
   const value = useUiState(stateKey);
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
@@ -42,8 +43,9 @@ export function Textarea({
 
   return (
     <div className="flex flex-col gap-1.5">
-      {label ? <Label>{label}</Label> : null}
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
       <BaseTextarea
+        id={id}
         rows={rows}
         value={value != null ? String(value) : ""}
         onChange={handleChange}

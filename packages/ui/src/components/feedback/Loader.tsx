@@ -8,7 +8,11 @@ export function Loader({ loadingKey, label, className }: LoaderProps) {
 
   if (!isLoading) return null;
 
-  return <BaseLoader label={label} className={["justify-center py-8", className].filter(Boolean).join(" ")} />;
+  return (
+    <div role="status" aria-live="polite">
+      <BaseLoader label={label} className={["justify-center py-8", className].filter(Boolean).join(" ")} />
+    </div>
+  );
 }
 
 export default Loader;
