@@ -130,18 +130,26 @@ export class ClientComponentCompiler {
   window.addEventListener("message", (event) => {
     if (event.source !== window.parent && event.source !== null) return;
     const method = event.data?.method;
-    const supportedMethod =
+    const isInputNotification =
       method === "ui/notifications/tool-input" ||
       method === "tool-input" ||
-      method === "mcp-apps:tool-input";
+      method === "mcp-apps:tool-input" ||
+      method === "ui/notifications/tool-input-partial";
 
-    if (!supportedMethod) return;
+    const isResultNotification = method === "ui/notifications/tool-result";
 
-    const args =
-      event.data?.params?.arguments ??
-      event.data?.params?.input ??
-      event.data?.arguments ??
-      {};
+    if (!isInputNotification && !isResultNotification) return;
+
+    const args = isResultNotification
+      ? event.data?.params?.structuredContent?.args ??
+        event.data?.params?.arguments ??
+        event.data?.params?.input ??
+        event.data?.arguments ??
+        {}
+      : event.data?.params?.arguments ??
+        event.data?.params?.input ??
+        event.data?.arguments ??
+        {};
 
     render(args);
   });

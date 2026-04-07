@@ -8,6 +8,8 @@ import { InferSchema, type ToolMetadata } from "xmcp";
 import { z } from "zod";
 
 const DEFAULT_MCP_SERVER_URL = "http://localhost:6274";
+type PreviewMode = "strict" | "progressive" | "raw";
+type StrictFallback = "spinner" | "raw";
 
 export const metadata: ToolMetadata = {
   name: "renderJson",
@@ -50,193 +52,175 @@ Key props per type:
 Actions: { type:"call-tool", tool, args, resultKey } | { type:"set-state", key, value }
 Templates: {{stateKey}} resolves from state, {{event.value}} for onChange.
 
+Important typing rules:
+- Numeric props must be JSON numbers, never strings.
+- Use "gap": 16, not "gap": "16".
+- Use "columns": 3, not "columns": "3".
+- Use "padding": 24, "rows": 4, and "max": 100 as numbers when provided.
+- Only use strings for text content, className, URLs, labels, and similar text fields.
+
+Valid example:
+{
+  "title": "Example App",
+  "mcpServerUrl": "https://mcp.openai.com",
+  "root": {
+    "type": "grid",
+    "props": { "columns": 1, "gap": 24 },
+    "children": [
+      {
+        "type": "card",
+        "props": { "title": "Weather", "padding": 24 },
+        "children": [
+          { "type": "text", "props": { "content": "Hello", "variant": "body" } }
+        ]
+      }
+    ]
+  }
+}
+
 DO NOT use types like "page", "stack", "divider", "list", "hero" — they do not exist and will cause errors.`,
     ),
 };
 
 function createDefaultJsonApp(): AppSchema {
   return {
-    title: "JSON Renderer",
-    description: "This app is rendered from a plain JSON object rather than the direct React component surface.",
+    title: "Preview",
     mcpServerUrl: DEFAULT_MCP_SERVER_URL,
     theme: "dark",
-    themeTokens: {
-      background: "215 36% 10%",
-      card: "217 43% 12%",
-      border: "199 52% 24%",
-      input: "199 52% 24%",
-      primary: "190 95% 54%",
-      primaryForeground: "222 47% 11%",
-      accent: "160 84% 39%",
-      accentForeground: "210 40% 98%",
-      ring: "190 95% 54%",
-      radius: "1.15rem",
-    },
-    state: {
-      mode: "Generative JSON",
-      source: "Inline schema object",
-      interactions: "None",
-      status: "Static demo",
-      notes: "JSON apps can now set app-level theme tokens and still use per-component overrides only where needed.",
-      emailOptIn: true,
-      compactMode: false,
-      rows: [
-        {
-          component: "card",
-          category: "layout",
-          state: "stable",
-          note: "Top-level content sections are declared directly in JSON.",
-        },
-        {
-          component: "stat-card",
-          category: "data",
-          state: "stable",
-          note: "Summary metrics can be driven by plain state keys.",
-        },
-        {
-          component: "table",
-          category: "data",
-          state: "stable",
-          note: "Structured rows render without any action wiring.",
-        },
-        {
-          component: "text",
-          category: "content",
-          state: "stable",
-          note: "Template strings read values directly from state.",
-        },
-      ],
-    },
+    state: {},
     root: {
       type: "grid",
-      props: { columns: 1, gap: 24 },
-      children: [
-        {
-          type: "card",
-          props: {
-            title: "Generated JSON App",
-            description: "A direct schema object rendered by App.",
-            className: "shadow-[0_20px_50px_rgba(8,47,73,0.28)]",
-          },
-          children: [
-            {
-              type: "text",
-              props: {
-                variant: "body",
-                className: "text-slate-200",
-                content:
-                  "Pass a complete AppSchema JSON object to replace this built-in app. Required fields are title, mcpServerUrl, and root. The app-level brand colors here come from themeTokens.",
-              },
-            },
-            {
-              type: "badge",
-              props: {
-                label: "JSON First-Class",
-                className: "bg-cyan-400 text-slate-950",
-              },
-            },
-            {
-              type: "separator",
-              props: {
-                className: "my-4 bg-[hsl(var(--border))]",
-              },
-            },
-            {
-              type: "text",
-              props: {
-                variant: "caption",
-                className: "text-sky-300",
-                content:
-                  "This built-in demo is intentionally action-free so the schema shape is easier to inspect.",
-              },
-            },
-            {
-              type: "textarea",
-              props: {
-                label: "Schema Notes",
-                stateKey: "notes",
-                rows: 4,
-                className: "border-cyan-800/70 bg-cyan-950/20 text-cyan-50",
-              },
-            },
-            {
-              type: "checkbox",
-              props: {
-                label: "Email me renderer updates",
-                stateKey: "emailOptIn",
-                className: "mt-1",
-              },
-            },
-            {
-              type: "switch",
-              props: {
-                label: "Compact mode",
-                stateKey: "compactMode",
-                className: "rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))] px-4 py-3",
-              },
-            },
-          ],
-        },
-        {
-          type: "grid",
-          props: { columns: 4, gap: 16 },
-          children: [
-            {
-              type: "stat-card",
-              props: {
-                label: "Authoring Mode",
-                valueKey: "mode",
-                className: "shadow-[0_18px_40px_rgba(2,132,199,0.12)]",
-              },
-            },
-            {
-              type: "stat-card",
-              props: {
-                label: "Schema Input",
-                valueKey: "source",
-                className: "shadow-[0_18px_40px_rgba(2,132,199,0.12)]",
-              },
-            },
-            {
-              type: "stat-card",
-              props: {
-                label: "Interactions",
-                valueKey: "interactions",
-                className: "shadow-[0_18px_40px_rgba(2,132,199,0.12)]",
-              },
-            },
-            {
-              type: "stat-card",
-              props: {
-                label: "State",
-                valueKey: "status",
-                className: "shadow-[0_18px_40px_rgba(2,132,199,0.12)]",
-              },
-            },
-          ],
-        },
-        {
-          type: "table",
-          props: {
-            dataKey: "rows",
-            className: "shadow-[0_20px_50px_rgba(8,47,73,0.2)]",
-            columns: [
-              { key: "component", label: "Component" },
-              { key: "category", label: "Category" },
-              { key: "state", label: "State" },
-              { key: "note", label: "Note" },
-            ],
-          },
-        },
-      ],
+      props: { columns: 1, gap: 0 },
+      children: [],
     },
   };
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function deepMerge<T>(target: T, source: unknown): T {
+  if (Array.isArray(target) && Array.isArray(source)) {
+    return source as T;
+  }
+
+  if (isPlainObject(target) && isPlainObject(source)) {
+    const merged: Record<string, unknown> = { ...target };
+
+    for (const [key, value] of Object.entries(source)) {
+      const targetValue = merged[key];
+      if (Array.isArray(value)) {
+        merged[key] = value;
+      } else if (isPlainObject(value) && isPlainObject(targetValue)) {
+        merged[key] = deepMerge(targetValue, value);
+      } else {
+        merged[key] = value;
+      }
+    }
+
+    return merged as T;
+  }
+
+  return source as T;
+}
+
+function completeJsonCandidate(input: string) {
+  let output = input;
+  const stack: string[] = [];
+  let inString = false;
+  let escaping = false;
+
+  for (const char of input) {
+    if (inString) {
+      if (escaping) {
+        escaping = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaping = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = false;
+      }
+
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{") {
+      stack.push("}");
+      continue;
+    }
+
+    if (char === "[") {
+      stack.push("]");
+      continue;
+    }
+
+    if (char === "}" || char === "]") {
+      if (stack[stack.length - 1] === char) {
+        stack.pop();
+      }
+    }
+  }
+
+  if (inString) {
+    output += '"';
+  }
+
+  output = output.replace(/[\s,:]+$/, "");
+  output += stack.reverse().join("");
+  return output;
+}
+
+function tryParseProgressiveJson(input: string): unknown {
+  for (let cut = input.length; cut > 0; cut -= 1) {
+    const candidate = completeJsonCandidate(input.slice(0, cut));
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+function tryBuildPreviewSchema(parsedInput: unknown): AppSchema | null {
+  if (!isPlainObject(parsedInput)) {
+    return null;
+  }
+
+  const root = parsedInput.root;
+  if (!isPlainObject(root) || typeof root.type !== "string") {
+    return null;
+  }
+
+  const hasUserStructure =
+    Array.isArray(root.children) && root.children.length > 0;
+
+  if (!hasUserStructure) {
+    return null;
+  }
+
+  try {
+    return validateSchema(deepMerge(createDefaultJsonApp(), parsedInput));
+  } catch {
+    return null;
+  }
+}
+
 function renderErrorState(title: string, body: string, details?: string) {
   return (
-    <div className="min-h-screen bg-slate-950 px-6 py-10 font-sans text-slate-100">
-      <div className="mx-auto max-w-3xl rounded-2xl border border-red-900/60 bg-red-950/30 p-8 shadow-2xl shadow-red-950/20">
+    <div className="rounded-2xl border border-red-900/60 bg-red-950/30 p-8 shadow-2xl shadow-red-950/20">
         <p className="mb-2 text-sm uppercase tracking-[0.18em] text-red-300">
           JSON Renderer Error
         </p>
@@ -247,7 +231,51 @@ function renderErrorState(title: string, body: string, details?: string) {
             {details}
           </pre>
         ) : null}
+    </div>
+  );
+}
+
+function renderLoading() {
+  return (
+    <div className="flex min-h-[28rem] items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 font-sans text-slate-100">
+      <div className="flex flex-col items-center gap-4">
+        <svg className="h-8 w-8 animate-spin text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <p className="text-sm text-slate-400">Building your UI...</p>
       </div>
+    </div>
+  );
+}
+
+function renderRawState(schemaJson: string) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950/95 p-6 shadow-2xl shadow-slate-950/40">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-slate-100">Raw stream</p>
+          <p className="text-xs text-slate-400">
+            Showing the incoming schema text exactly as received.
+          </p>
+        </div>
+        <span className="rounded-full border border-cyan-800/70 bg-cyan-950/40 px-3 py-1 text-xs text-cyan-200">
+          {schemaJson.length} chars
+        </span>
+      </div>
+      <pre className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-200">
+        {schemaJson}
+      </pre>
+    </div>
+  );
+}
+
+function renderFrame(
+  children: React.ReactNode,
+) {
+  return (
+    <div className="bg-slate-950 px-6 py-10 font-sans text-slate-100">
+      <div className="mx-auto max-w-6xl">{children}</div>
     </div>
   );
 }
@@ -255,51 +283,113 @@ function renderErrorState(title: string, body: string, details?: string) {
 export default function handler({
   schemaJson,
 }: InferSchema<typeof schema>) {
-  // If no schema provided, show the default demo app
-  if (!schemaJson?.trim()) {
-    const validated = validateSchema(createDefaultJsonApp());
-    return (
-      <App
-        schema={validated}
-        className="mx-auto max-w-6xl py-10"
-      />
-    );
-  }
+  const [mode, setMode] = React.useState<PreviewMode>("progressive");
+  const [strictFallback, setStrictFallback] =
+    React.useState<StrictFallback>("spinner");
+  const [lastProgressiveSnapshot, setLastProgressiveSnapshot] = React.useState<{
+    source: string;
+    schema: AppSchema;
+  } | null>(null);
 
-  // Try to parse the incoming JSON — during streaming it may be incomplete
+  const trimmedSchemaJson = schemaJson?.trim() ?? "";
+
   let parsedInput: unknown;
-  try {
-    parsedInput = JSON.parse(schemaJson);
-  } catch {
-    // Incomplete JSON during streaming — show a loading indicator
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center font-sans text-slate-100">
-        <div className="flex flex-col items-center gap-4">
-          <svg className="h-8 w-8 animate-spin text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <p className="text-sm text-slate-400">Building your UI...</p>
-        </div>
-      </div>
+  let parseError = false;
+
+  if (trimmedSchemaJson) {
+    try {
+      parsedInput = JSON.parse(trimmedSchemaJson);
+    } catch {
+      parseError = true;
+    }
+  }
+
+  let validatedSchema: AppSchema | null = null;
+  let validationMessage: string | null = null;
+
+  if (!parseError && parsedInput !== undefined) {
+    try {
+      validatedSchema = validateSchema(parsedInput);
+    } catch (error) {
+      validationMessage = error instanceof Error ? error.message : String(error);
+    }
+  }
+
+  const repairedPartialInput =
+    trimmedSchemaJson && !validatedSchema
+      ? tryParseProgressiveJson(trimmedSchemaJson)
+      : parsedInput;
+  const progressiveSchema = tryBuildPreviewSchema(repairedPartialInput);
+
+  React.useEffect(() => {
+    if (
+      progressiveSchema &&
+      trimmedSchemaJson &&
+      trimmedSchemaJson !== lastProgressiveSnapshot?.source
+    ) {
+      setLastProgressiveSnapshot({
+        source: trimmedSchemaJson,
+        schema: progressiveSchema,
+      });
+    }
+  }, [progressiveSchema, trimmedSchemaJson, lastProgressiveSnapshot?.source]);
+
+  if (mode === "raw") {
+    return renderFrame(
+      trimmedSchemaJson ? renderRawState(trimmedSchemaJson) : renderLoading(),
     );
   }
 
-  try {
-    const validated = validateSchema(parsedInput);
+  if (!trimmedSchemaJson) {
+    return renderFrame(
+      strictFallback === "raw" && trimmedSchemaJson
+        ? renderRawState(trimmedSchemaJson)
+        : renderLoading(),
+    );
+  }
 
-    return (
+  if (validatedSchema) {
+    return renderFrame(
       <App
-        schema={validated}
-        className="mx-auto max-w-6xl py-10"
-      />
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return renderErrorState(
-      "Invalid App Schema",
-      "The JSON parsed successfully, but it did not match the @xmcp-dev/ui app schema contract. The most common missing fields are mcpServerUrl and root.",
-      message,
+        schema={validatedSchema}
+        className="mx-auto max-w-6xl min-h-0 py-10"
+      />,
     );
   }
+
+  if (mode === "progressive" && progressiveSchema) {
+    return renderFrame(
+      <App
+        schema={progressiveSchema}
+        className="mx-auto max-w-6xl min-h-0 py-10"
+      />,
+    );
+  }
+
+  if (mode === "progressive" && lastProgressiveSnapshot) {
+    return renderFrame(
+      <App
+        schema={lastProgressiveSnapshot.schema}
+        className="mx-auto max-w-6xl min-h-0 py-10"
+      />,
+    );
+  }
+
+  if (parseError) {
+    return renderFrame(
+      strictFallback === "raw"
+        ? renderRawState(trimmedSchemaJson)
+        : renderLoading(),
+    );
+  }
+
+  return renderFrame(
+    strictFallback === "raw"
+      ? renderRawState(trimmedSchemaJson)
+      : renderErrorState(
+          "Invalid App Schema",
+          "The JSON parsed successfully, but it did not match the @xmcp-dev/ui app schema contract. The most common missing fields are mcpServerUrl and root.",
+          validationMessage ?? undefined,
+        ),
+  );
 }
