@@ -9,18 +9,20 @@ import { RuntimeProvider } from "./RuntimeContext.js";
 export interface AppProps {
   schema: AppSchema;
   className?: string;
+  inheritTheme?: boolean;
 }
 
 function AppBody({
   schema,
   className,
+  inheritTheme = false,
 }: AppProps) {
   const theme = useTheme();
 
   return (
     <div
       className={cn(uiShellClassName, "p-6", className)}
-      style={theme.style}
+      style={inheritTheme ? undefined : theme.style}
     >
       {schema.title && (
         <h1 className="mb-6 text-3xl font-bold tracking-tight text-[hsl(var(--foreground))]">
@@ -32,7 +34,7 @@ function AppBody({
   );
 }
 
-export function App({ schema, className }: AppProps) {
+export function App({ schema, className, inheritTheme = false }: AppProps) {
   const idRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
@@ -157,12 +159,20 @@ export function App({ schema, className }: AppProps) {
   return (
     <RuntimeProvider client={mcpClient}>
       <StateProvider initialState={schema.state}>
-        <ThemeProvider
-          mode={schema.theme === "light" ? "light" : "dark"}
-          themeTokens={schema.themeTokens}
-        >
-          <AppBody schema={schema} className={className} />
-        </ThemeProvider>
+        {inheritTheme ? (
+          <AppBody
+            schema={schema}
+            className={className}
+            inheritTheme={inheritTheme}
+          />
+        ) : (
+          <ThemeProvider
+            mode={schema.theme === "light" ? "light" : "dark"}
+            themeTokens={schema.themeTokens}
+          >
+            <AppBody schema={schema} className={className} />
+          </ThemeProvider>
+        )}
       </StateProvider>
     </RuntimeProvider>
   );

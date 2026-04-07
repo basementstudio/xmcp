@@ -1,0 +1,258 @@
+---
+title: "UI rendering"
+metadataTitle: "UI Rendering | xmcp Documentation"
+publishedAt: "2026-04-07"
+summary: "Use the packaged `renderJson` path from `@xmcp-dev/ui` for schema-driven MCP app rendering."
+description: "Learn the default `@xmcp-dev/ui` rendering flow: the packaged `renderJson` tool contract, the `Rendered` preview component, Tailwind setup, and the built-in validation and theme behavior."
+---
+
+## Overview
+
+`@xmcp-dev/ui` is the schema-driven UI package for xmcp MCP apps.
+
+It supports three levels of control: the packaged `renderJson` tool contract, the `Rendered` preview component, and the low-level `App` renderer for fully custom flows.
+
+For most projects, the packaged path is the right place to start. You only need to move down to `Rendered` or `App` when you want to take ownership of more of the rendering flow.
+
+## Quickstart
+
+This is the recommended default path.
+
+Import the package stylesheet once:
+
+```css title="src/app/globals.css"
+@import "tailwindcss";
+@import "@xmcp-dev/ui/styles.css";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, sans-serif;
+}
+```
+
+Expose a tiny local `render-json` tool:
+
+```tsx title="src/tools/render-json.tsx"
+import { createRenderJsonTool } from "@xmcp-dev/ui";
+
+const renderJsonTool = createRenderJsonTool();
+
+export const metadata = renderJsonTool.metadata;
+export const schema = renderJsonTool.schema;
+export default renderJsonTool.handler;
+```
+
+The normal tool input stays simple:
+
+```json
+{
+  "schemaJson": "{ \"title\": \"Example App\", \"mcpServerUrl\": \"https://example.com\", \"root\": { \"type\": \"grid\", \"props\": { \"columns\": 1, \"gap\": 16 }, \"children\": [] } }"
+}
+```
+
+Once this is in place, the package handles the normal schema-driven rendering flow for you.
+
+## When should you use each path?
+
+Not every project needs the same level of control. The right path depends on how much of the rendering flow you want to own.
+
+**Use `createRenderJsonTool()`** when you want the normal MCP server path. This is the recommended default. The package provides the tool contract, the `schemaJson` guidance, the preview engine, and the default fallback behavior.
+
+**Use `Rendered`** when you want a custom tool wrapper but still want the same built-in preview engine. This is the middle ground when the packaged tool contract is too opinionated, but you do not want to rebuild parsing, repair, validation, and theme fallback yourself.
+
+**Use `App`** when you want a fully custom renderer. This is the escape hatch for projects that want to own the full preview pipeline, including parsing, validation, loading states, and theme policy.
+
+<Callout variant="info">
+  Start with `createRenderJsonTool()`. Move to `Rendered` only when you need a
+  custom tool wrapper, and move to `App` only when you want full control over
+  the rendering pipeline.
+</Callout>
+
+## What the packaged path does for you
+
+The packaged `renderJson` path renders through `Rendered`. It is designed to be safe for model-generated UI and to keep the common case simple.
+
+By default, it uses progressive previewing, light mode, and the `zinc` preset. While the model is still streaming, it can attempt partial JSON recovery instead of waiting for the full payload.
+
+It also hardens common failure cases. Numeric `image.width`, `image.height`, and `table.columns[].width` values are normalized into CSS strings. Low-contrast inline `themeTokens` are rejected and replaced with the packaged preset theme. When a valid preview already exists, progressive mode keeps that last good UI instead of flashing back to a loading state.
+
+That means the server author controls defaults, while the LLM usually only needs to supply `schemaJson`.
+
+## Packaged Tool Contract
+
+If you want the exact package defaults with no local wrapper logic, you can re-export the packaged contract directly:
+
+```tsx title="src/tools/render-json.tsx"
+import {
+  renderJsonHandler,
+  renderJsonMetadata,
+  renderJsonSchema,
+} from "@xmcp-dev/ui";
+
+export const metadata = renderJsonMetadata;
+export const schema = renderJsonSchema;
+export default renderJsonHandler;
+```
+
+If you want different defaults without changing the overall path, pass config to `createRenderJsonTool()`:
+
+```tsx title="src/tools/render-json.tsx"
+import { createRenderJsonTool } from "@xmcp-dev/ui";
+
+const renderJsonTool = createRenderJsonTool({
+  previewMode: "strict",
+  themeMode: "light",
+  themePreset: "slate",
+  defaultMcpServerUrl: "https://example.com",
+});
+
+export const metadata = renderJsonTool.metadata;
+export const schema = renderJsonTool.schema;
+export default renderJsonTool.handler;
+```
+
+Current config surface:
+
+- `previewMode?: "strict" | "progressive" | "raw"`
+- `themeMode?: "light" | "dark"`
+- `themePreset?: "zinc" | "slate" | "stone" | "gray" | "neutral"`
+- `defaultMcpServerUrl?: string`
+
+## Tailwind And Stylesheet Setup
+
+`@xmcp-dev/ui` components are Tailwind-styled, but consumers no longer need to point Tailwind at package internals directly.
+
+Installed package example:
+
+```css title="src/app/globals.css"
+@import "tailwindcss";
+@import "@xmcp-dev/ui/styles.css";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, sans-serif;
+}
+```
+
+`@xmcp-dev/ui/styles.css` owns the Tailwind package scanning internally.
+
+You also do not need to copy old preset theme CSS blocks into your app for the packaged renderer path.
+
+## Using `Rendered`
+
+Use this when you want your own tool definition but still want the built-in preview engine.
+
+```tsx title="src/tools/render-dashboard.tsx"
+import { Rendered } from "@xmcp-dev/ui";
+import { z } from "zod";
+
+export const schema = {
+  schemaJson: z.string().optional(),
+};
+
+export const metadata = {
+  name: "renderDashboard",
+  description: "Preview an AppSchema with server-owned defaults.",
+};
+
+export default function renderDashboard({
+  schemaJson,
+}: {
+  schemaJson?: string;
+}) {
+  return (
+    <Rendered
+      schemaJson={schemaJson}
+      previewMode="progressive"
+      themeMode="light"
+      themePreset="zinc"
+      defaultMcpServerUrl="https://example.com"
+    />
+  );
+}
+```
+
+`Rendered` keeps the same core preview behavior as the packaged path:
+
+1. trims and parses `schemaJson`
+2. resolves the effective theme mode
+3. normalizes known safe sizing mistakes
+4. validates complete JSON as an `AppSchema`
+5. tries partial JSON repair for progressive preview
+6. drops low-contrast inline `themeTokens`
+7. keeps the last good preview in progressive mode
+8. renders through `App`
+
+That makes it a good middle ground when you want your own tool contract but do not want to rebuild the preview engine.
+
+## Using `App` directly
+
+Use this when you want to own the full preview pipeline.
+
+```tsx title="src/tools/render-strict-app.tsx"
+import { App, validateSchema } from "@xmcp-dev/ui";
+import { z } from "zod";
+
+export const schema = {
+  schemaJson: z.string().optional(),
+};
+
+export const metadata = {
+  name: "renderStrictApp",
+  description: "Render a validated AppSchema with custom server-side behavior.",
+};
+
+export default function renderStrictApp({
+  schemaJson,
+}: {
+  schemaJson?: string;
+}) {
+  if (!schemaJson?.trim()) {
+    return <div>Waiting for schema JSON...</div>;
+  }
+
+  try {
+    const parsed = JSON.parse(schemaJson);
+    const appSchema = validateSchema(parsed);
+    return <App schema={appSchema} />;
+  } catch (error) {
+    return <pre>{error instanceof Error ? error.message : String(error)}</pre>;
+  }
+}
+```
+
+When you use `App` directly, you are responsible for the rest of the pipeline:
+
+- JSON parsing
+- partial repair or streaming behavior
+- schema normalization
+- validation fallback rules
+- loading and error states
+- theme handling
+- contrast protection for generated `themeTokens`
+
+This is the right choice when you want deep customization and do not want the package making preview decisions for you.
+
+## Theme Behavior
+
+### `Rendered`
+
+`Rendered` applies package-owned defaults:
+
+- default theme mode is `light`
+- default preset is `zinc`
+- low-contrast inline `themeTokens` are rejected
+- fallback preset theme is applied automatically
+
+### `App`
+
+`App` renders the schema you give it:
+
+- valid `themeTokens` are applied directly
+- no extra contrast guard is added unless you add it
+- if you want host-owned theme variables, render with `inheritTheme`
+
+That makes `Rendered` safer for model-generated themes, while `App` is better when you want direct control.
+
+## References
+
+- [CSS](/docs/core-concepts/css)
+- [Tools](/docs/core-concepts/tools)

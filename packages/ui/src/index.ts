@@ -1,5 +1,12 @@
 // Main renderer component
 export { App } from "./renderer/App.js";
+export { Rendered } from "./preview/index.js";
+export {
+  createRenderJsonTool,
+  renderJsonHandler,
+  renderJsonMetadata,
+  renderJsonSchema,
+} from "./tool/render-json.js";
 
 // DSL builder
 export { ui } from "./dsl/index.js";
@@ -18,6 +25,12 @@ export type {
   ThemeTokens,
   ThemeDefinition,
 } from "./react/theme.js";
+export type {
+  RenderedProps,
+  RenderedPreviewMode,
+  RenderedThemePreset,
+} from "./preview/index.js";
+export type { RenderJsonToolConfig } from "./tool/render-json.js";
 
 // Human-authored React component surface
 export {
