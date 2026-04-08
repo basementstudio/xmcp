@@ -11,6 +11,7 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { createSamplingToolRegistry } from "./sampling-tool-registry";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 
 export type ToolFile = {
@@ -58,8 +59,9 @@ export async function configureServer(
   resourceModules: Map<string, ResourceFile>
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
+  const samplingToolRegistry = createSamplingToolRegistry();
 
-  addToolsToServer(server, toolModules);
+  addToolsToServer(server, toolModules, samplingToolRegistry);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
   return server;

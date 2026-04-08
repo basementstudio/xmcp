@@ -456,6 +456,112 @@ export default async function getData() {
 }
 ```
 
+## Sampling From Tools
+
+Tool handlers can request MCP sampling directly through `extra.sample()`.
+Use it when a tool needs a model-generated follow-up, either as a simple
+completion or as a tool-enabled flow that can call back into local xmcp tools.
+If the connected client does not implement MCP sampling,
+`extra.sample()` throws an error instead of silently degrading.
+
+### Sampling behavior in HTTP examples
+
+- With MCP-compatible clients, `extra.sample()` runs the full
+  `sampling/createMessage` flow.
+- With MCPJam, `sampling/createMessage` is not supported today and returns
+  `-32601 Method not found`, so the HTTP example tools catch that case and
+  return deterministic fallback responses instead of failing.
+
+Treat a compatible HTTP MCP client as the proof that real sampling works.
+Treat MCPJam as proof that the example degrades gracefully when sampling is not
+implemented by the client.
+
+```typescript title="src/tools/summarize-with-sample.ts"
+import { z } from "zod";
+import {
+  getSampleContext,
+  type InferSchema,
+  type ToolExtraArguments,
+} from "xmcp";
+
+export const schema = {
+  topic: z.string().describe("Topic to summarize"),
+};
+
+export const outputSchema = {
+  summary: z.string(),
+};
+
+export const metadata = {
+  name: "summarize_with_sample",
+  description: "Demonstrates extra.sample() without tool use",
+};
+
+export default async function summarizeWithSample(
+  { topic }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const result = await extra.sample({
+    messages: [
+      {
+        role: "user",
+        content: {
+          type: "text",
+          text: `Write a concise summary about ${topic}.`,
+        },
+      },
+    ],
+    maxTokens: 300,
+  });
+
+  return getSampleContext(result) || "The client did not return text content.";
+}
+```
+
+Because `outputSchema` has a single field, xmcp will also mirror that string
+into structured output as `structuredContent.summary`.
+
+The runnable HTTP example under
+[`examples/http-transport/README.md`](https://github.com/basementstudio/xmcp/blob/canary/examples/http-transport/README.md)
+keeps that fallback local to the demo tools so inspector flows can still
+complete end-to-end while keeping the behavior explicit.
+
+When you pass `tools`, xmcp resolves the named local tools, forwards their
+definitions to the client, executes any returned `tool_use` blocks, and
+continues the `tool_use -> tool_result -> continue` loop until the model
+finishes or `maxSteps` is reached.
+
+```typescript title="src/tools/research-topic.ts"
+const result = await extra.sample({
+  messages: [
+    {
+      role: "user",
+      content: {
+        type: "text",
+        text: `Research ${topic} using the local tools and give me a short answer.`,
+      },
+    },
+  ],
+  tools: ["search_docs"],
+  toolChoice: { mode: "required" },
+  maxTokens: 500,
+  maxSteps: 4,
+});
+```
+
+Sampling replies can come back as one block or several blocks. When tools are
+enabled, those blocks can also include `tool_use` entries. Use
+`getSampleContext(result)` when you just want the text to return from your
+handler, or `getSampleContentBlocks(result)` when you need the raw blocks.
+
+A runnable HTTP example lives under
+[`examples/http-transport/README.md`](https://github.com/basementstudio/xmcp/blob/canary/examples/http-transport/README.md),
+with the sampling tools in
+[`summarize-with-sample.ts`](https://github.com/basementstudio/xmcp/blob/canary/examples/http-transport/src/tools/summarize-with-sample.ts),
+[`research-topic.ts`](https://github.com/basementstudio/xmcp/blob/canary/examples/http-transport/src/tools/research-topic.ts),
+and
+[`search-docs.ts`](https://github.com/basementstudio/xmcp/blob/canary/examples/http-transport/src/tools/search-docs.ts).
+
 ## Troubleshooting
 
 ### Tool Loading Errors

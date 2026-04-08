@@ -1,5 +1,14 @@
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
+import type {
+  CreateMessageRequestParams,
+  CreateMessageResult,
+  CreateMessageResultWithTools,
+  ModelPreferences,
+  SamplingMessage,
+  SamplingMessageContentBlock,
+  ToolChoice,
+} from "@modelcontextprotocol/sdk/types";
 import { UIMetadata } from "./ui-meta";
 
 export interface ToolAnnotations {
@@ -31,9 +40,57 @@ export interface ToolMetadata {
 }
 
 type CompatibleZodType = z.ZodTypeAny | ZodTypeV4<unknown>;
+type InferCompatibleType<T> = T extends z.ZodTypeAny
+  ? z.infer<T>
+  : T extends ZodTypeV4<unknown>
+    ? inferV4<T>
+    : never;
 
 export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
+export type SampleMessage = SamplingMessage;
+export type SampleContent = SamplingMessageContentBlock;
+export type SampleModelPreferences = ModelPreferences;
+export type SampleToolChoice = ToolChoice;
+export type SampleToolSelection = "all" | readonly string[];
+export type SampleResult = CreateMessageResult | CreateMessageResultWithTools;
+
+type SampleRequestBase = Omit<CreateMessageRequestParams, "tools" | "toolChoice"> & {
+  /**
+   * Maximum number of tool-execution rounds to run before aborting.
+   * Only applies when `tools` are enabled.
+   */
+  maxSteps?: number;
+};
+
+export type SampleRequest =
+  | (SampleRequestBase & {
+      tools?: never;
+      toolChoice?: never;
+    })
+  | (SampleRequestBase & {
+      /**
+       * Local xmcp tool names to expose to the model, or `"all"` to expose
+       * every registered tool in the current server.
+       */
+      tools: SampleToolSelection;
+      toolChoice?: ToolChoice;
+    });
+
+export interface ToolRequestOptions {
+  /** Progress notification callback */
+  onprogress?: (progress: any) => void;
+  /** Abort signal for cancelling the request */
+  signal?: AbortSignal;
+  /** Request timeout in milliseconds */
+  timeout?: number;
+  /** Whether receiving progress notifications resets the timeout */
+  resetTimeoutOnProgress?: boolean;
+  /** Maximum total time to wait for a response */
+  maxTotalTimeout?: number;
+  /** Additional transport-specific options */
+  [key: string]: unknown;
+}
 
 // The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @modelcontextprotocol/sdk but fully resolved to avoid external type dependencies.
 /**
@@ -81,24 +138,23 @@ export interface ToolExtraArguments {
   sendNotification: (notification: any) => Promise<void>;
 
   /** Sends a request that relates to the current request being handled */
-  sendRequest: <U extends z.ZodType<object>>(
+  sendRequest: <U extends CompatibleZodType>(
     request: any,
     resultSchema: U,
-    options?: {
-      /** Progress notification callback */
-      onprogress?: (progress: any) => void;
-      /** Abort signal for cancelling the request */
-      signal?: AbortSignal;
-      /** Request timeout in milliseconds */
-      timeout?: number;
-      /** Whether receiving progress notifications resets the timeout */
-      resetTimeoutOnProgress?: boolean;
-      /** Maximum total time to wait for a response */
-      maxTotalTimeout?: number;
-      /** Additional transport-specific options */
-      [key: string]: unknown;
-    }
-  ) => Promise<z.infer<U>>;
+    options?: ToolRequestOptions
+  ) => Promise<InferCompatibleType<U>>;
+
+  /**
+   * Requests LLM sampling from the connected MCP client.
+   *
+   * When `tools` are provided, xmcp resolves those local tool names,
+   * executes any returned `tool_use` blocks, and continues the
+   * `tool_use -> tool_result -> continue` loop automatically.
+   */
+  sample: (
+    request: SampleRequest,
+    options?: ToolRequestOptions
+  ) => Promise<SampleResult>;
 }
 
 export type InferSchema<T extends Record<string, unknown>> = {

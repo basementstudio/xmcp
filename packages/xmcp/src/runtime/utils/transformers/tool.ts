@@ -5,7 +5,10 @@ import {
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
+import type { ToolExtraArguments } from "@/types/tool";
+import { createToolExtraArguments } from "../sampling";
 import { validateContent } from "../validators";
+import type { SamplingToolRegistry } from "../sampling-tool-registry";
 
 function validateAgainstOutputSchema(
   data: Record<string, unknown>,
@@ -49,7 +52,7 @@ export type UserToolResponse =
 
 export type UserToolHandler = (
   args: ZodRawShape,
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+  extra: ToolExtraArguments
 ) =>
   | UserToolResponse
   | Promise<UserToolResponse>;
@@ -90,13 +93,19 @@ export function transformToolHandler(
   handler: UserToolHandler,
   meta?: Record<string, any>,
   outputSchema?: ZodRawShape,
-  toolName = "unknown-tool"
+  toolName = "unknown-tool",
+  samplingToolRegistry?: SamplingToolRegistry
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response: any = handler(args, extra);
+    const toolExtra = createToolExtraArguments(
+      extra,
+      toolName,
+      samplingToolRegistry
+    );
+    let response: any = handler(args, toolExtra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {

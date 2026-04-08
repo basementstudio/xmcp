@@ -7,6 +7,8 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  SampleRequest,
+  SampleResult,
   InferSchema,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
@@ -19,6 +21,11 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export {
+  getSampleContext,
+  getSampleContentBlocks,
+  getSampleTextContent,
+} from "./utils/sample-result";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 
