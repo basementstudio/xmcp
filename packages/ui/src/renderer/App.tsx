@@ -9,7 +9,7 @@ import { ComponentRenderer } from "./ComponentRenderer.js";
 import { ThemeProvider, useTheme, uiShellClassName } from "../react/theme.js";
 import { cn } from "../react/utils.js";
 import { RuntimeProvider } from "./RuntimeContext.js";
-import { useMcpApp } from "./use-mcp-host-bridge.js";
+import { useMcpApp } from "./use-mcp-app.js";
 
 export interface AppProps {
   schema: AppSchema;

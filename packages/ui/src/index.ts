@@ -131,11 +131,11 @@ export {
   useMcpApp,
   useMcpHostBridge,
   useAutoMcpAppSize,
-} from "./renderer/use-mcp-host-bridge.js";
+} from "./renderer/use-mcp-app.js";
 export type {
   UseMcpAppResult,
   UseMcpHostBridgeResult,
-} from "./renderer/use-mcp-host-bridge.js";
+} from "./renderer/use-mcp-app.js";
 
 // Component registry (for extending with custom components)
 export { registerComponent, getComponent } from "./components/registry.js";
