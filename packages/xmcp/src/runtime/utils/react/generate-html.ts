@@ -1,3 +1,9 @@
+import {
+  INITIALIZE_METHOD,
+  INITIALIZED_METHOD,
+  MCP_APPS_PROTOCOL_VERSION,
+} from "../mcp-app-protocol";
+
 export function generateUIHTML(
   componentCode: string,
   css: string | undefined
@@ -16,11 +22,13 @@ export function generateUIHTML(
     window.parent.postMessage({
       jsonrpc: "2.0",
       id: nextId++,
-      method: "ui/initialize",
+      method: ${JSON.stringify(INITIALIZE_METHOD)},
       params: {
-        appCapabilities: {},
+        appCapabilities: {
+          availableDisplayModes: ["inline", "fullscreen", "pip"]
+        },
         appInfo: { name: "xmcp React Widget", version: "1.0.0" },
-        protocolVersion: "2025-06-18"
+        protocolVersion: ${JSON.stringify(MCP_APPS_PROTOCOL_VERSION)}
       }
     }, "*");
 
@@ -33,7 +41,7 @@ export function generateUIHTML(
       if (data?.result?.hostContext && data?.id === 1) {
         window.parent.postMessage({
           jsonrpc: "2.0",
-          method: "ui/notifications/initialized",
+          method: ${JSON.stringify(INITIALIZED_METHOD)},
           params: {}
         }, "*");
       }

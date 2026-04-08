@@ -127,6 +127,15 @@ export {
   useUiLoading,
   useUiError,
 } from "./renderer/StateProvider.js";
+export {
+  useMcpApp,
+  useMcpHostBridge,
+  useAutoMcpAppSize,
+} from "./renderer/use-mcp-host-bridge.js";
+export type {
+  UseMcpAppResult,
+  UseMcpHostBridgeResult,
+} from "./renderer/use-mcp-host-bridge.js";
 
 // Component registry (for extending with custom components)
 export { registerComponent, getComponent } from "./components/registry.js";

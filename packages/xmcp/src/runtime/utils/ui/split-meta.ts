@@ -10,7 +10,7 @@ export interface SplitMetadata {
 /**
  * Tool-specific metadata keys in nested format
  */
-const TOOL_META_KEYS_NESTED = ["ui/resourceUri"];
+const TOOL_META_KEYS_NESTED = ["ui/resourceUri", "resourceUri", "visibility"];
 
 /**
  * Resource-specific metadata keys in nested format
@@ -19,8 +19,11 @@ const RESOURCE_META_KEYS_NESTED = [
   "prefersBorder",
   "domain",
   "csp",
+  "permissions",
   "connectDomains",
   "resourceDomains",
+  "frameDomains",
+  "baseUriDomains",
 ];
 
 /**

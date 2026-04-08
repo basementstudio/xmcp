@@ -19,6 +19,7 @@ export interface RenderedProps {
   themeMode?: ThemeMode;
   themePreset?: RenderedThemePreset;
   defaultMcpServerUrl?: string;
+  transportMode?: "http" | "host" | "auto";
 }
 
 interface RenderSnapshot {
@@ -704,6 +705,7 @@ function renderSchemaPreview(
   resolvedThemeMode: ThemeMode,
   themePreset: RenderedThemePreset,
   className?: string,
+  transportMode: RenderedProps["transportMode"] = "http",
 ) {
   const sanitized = sanitizeRenderableSchema(schema, resolvedThemeMode);
 
@@ -718,6 +720,7 @@ function renderSchemaPreview(
         schema={sanitized.schema}
         className={className ?? "mx-auto max-w-6xl min-h-0 p-0 m-0"}
         inheritTheme={sanitized.usePresetTheme}
+        transportMode={transportMode}
       />,
       sanitized.usePresetTheme
         ? createTheme(
@@ -736,6 +739,7 @@ export function Rendered({
   themeMode = "light",
   themePreset = "zinc",
   defaultMcpServerUrl = DEFAULT_MCP_SERVER_URL,
+  transportMode = "http",
 }: RenderedProps) {
   const lastGoodSnapshotRef = React.useRef<RenderSnapshot | null>(null);
   const trimmedSchemaJson = schemaJson?.trim() ?? "";
@@ -796,6 +800,7 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
+      transportMode,
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -807,6 +812,7 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
+      transportMode,
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -819,6 +825,7 @@ export function Rendered({
         schema={snapshot.schema}
         className={className ?? "mx-auto max-w-6xl min-h-0 p-0 m-0"}
         inheritTheme={snapshot.usePresetTheme}
+        transportMode={transportMode}
       />,
       snapshot.usePresetTheme
         ? createTheme(

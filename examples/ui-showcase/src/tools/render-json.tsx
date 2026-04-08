@@ -1,6 +1,8 @@
 import { createRenderJsonTool } from "@xmcp-dev/ui";
 
-const renderJsonTool = createRenderJsonTool();
+const renderJsonTool = createRenderJsonTool({
+  transportMode: "host",
+});
 
 export const metadata = renderJsonTool.metadata;
 export const schema = renderJsonTool.schema;

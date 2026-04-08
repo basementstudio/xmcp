@@ -40,11 +40,19 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./host-bridge": {
+      "types": "./dist/host-bridge.d.ts",
+      "import": "./dist/host-bridge.js",
+      "require": "./dist/host-bridge.js",
+      "default": "./dist/host-bridge.js"
+    },
     "./cloudflare": {
       "types": "./dist/cloudflare.d.ts",
+      "import": "./dist/cloudflare.js",
       "require": "./dist/cloudflare.js",
       "default": "./dist/cloudflare.js"
     },
@@ -52,6 +60,9 @@
   },
   "typesVersions": {
     "*": {
+      "host-bridge": [
+        "dist/host-bridge.d.ts"
+      ],
       "cloudflare": [
         "dist/cloudflare.d.ts"
       ]

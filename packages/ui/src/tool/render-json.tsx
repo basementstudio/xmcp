@@ -12,6 +12,7 @@ export interface RenderJsonToolConfig {
   themeMode?: ThemeMode;
   themePreset?: RenderedThemePreset;
   defaultMcpServerUrl?: string;
+  transportMode?: "http" | "host" | "auto";
 }
 
 const renderJsonSchemaDescription = `AppSchema JSON string. For the full reference, read the skill://xmcp-ui/schema-reference resource.
@@ -92,6 +93,7 @@ export function createRenderJsonTool(config: RenderJsonToolConfig = {}) {
       themeMode={config.themeMode}
       themePreset={config.themePreset}
       defaultMcpServerUrl={config.defaultMcpServerUrl}
+      transportMode={config.transportMode}
     />
   );
 

@@ -95,7 +95,10 @@ export function normalizeToolResult(result: unknown): unknown {
 export async function executeAction(
   action: Action,
   state: Record<string, unknown>,
-  client: { callTool: (params: { name: string; arguments: Record<string, string> }) => Promise<{ content: unknown }> },
+  client: {
+    callTool: (params: { name: string; arguments: Record<string, string> }) => Promise<unknown>;
+    openLink?: (url: string) => Promise<void>;
+  },
   dispatch: Dispatch<UiAction>,
   eventValue?: unknown,
 ): Promise<void> {
@@ -147,7 +150,11 @@ export async function executeAction(
     case "open-link": {
       const linkAction = action as OpenLinkAction;
       const resolvedUrl = resolveTemplate(linkAction.url, state, eventValue);
-      window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+      if (client.openLink) {
+        await client.openLink(resolvedUrl);
+      } else {
+        window.open(resolvedUrl, "_blank", "noopener,noreferrer");
+      }
       break;
     }
 

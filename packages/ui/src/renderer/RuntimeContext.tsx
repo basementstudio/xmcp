@@ -1,10 +1,34 @@
 import React, { createContext, useContext } from "react";
+import type {
+  McpHostCallToolParams,
+  McpHostCapabilities,
+  McpHostContext,
+  McpHostMessageResult,
+  McpHostModelContextResult,
+  McpHostReadResourceResult,
+  McpHostRequestDisplayModeResult,
+  McpHostSendMessageParams,
+  McpHostToolResult,
+  McpUiDisplayMode,
+  McpHostUpdateModelContextParams,
+  McpHostContainerDimensions,
+} from "xmcp/host-bridge";
 
 export interface McpClient {
-  callTool: (params: {
-    name: string;
-    arguments?: Record<string, unknown>;
-  }) => Promise<{ content: unknown }>;
+  callTool: (params: McpHostCallToolParams) => Promise<McpHostToolResult>;
+  openLink?: (url: string) => Promise<void>;
+  requestDisplayMode?: (
+    mode: McpUiDisplayMode
+  ) => Promise<McpHostRequestDisplayModeResult>;
+  readResource?: (uri: string) => Promise<McpHostReadResourceResult>;
+  sendMessage?: (params: McpHostSendMessageParams) => Promise<McpHostMessageResult>;
+  updateModelContext?: (
+    params: McpHostUpdateModelContextParams
+  ) => Promise<McpHostModelContextResult>;
+  notifySizeChanged?: (params: McpHostContainerDimensions) => Promise<void>;
+  hostContext?: McpHostContext | null;
+  hostCapabilities?: McpHostCapabilities | null;
+  isConnected?: boolean;
 }
 
 const RuntimeClientContext = createContext<McpClient | null>(null);

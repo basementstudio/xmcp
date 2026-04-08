@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   AppShell,
   Badge,
   Button,
@@ -9,289 +12,272 @@ import {
   CardHeader,
   CardTitle,
   Grid,
-  Input,
-  Label,
   PageDescription,
   PageEyebrow,
   PageHeader,
   PageTitle,
   Separator,
-  Alert,
-  AlertTitle,
-  AlertDescription,
+  StatCard,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  useAutoMcpAppSize,
+  useMcpApp,
 } from "@xmcp-dev/ui";
-import { type ToolMetadata } from "xmcp";
-import { useMcpBridge } from "../lib/mcp-bridge";
+import { type ToolMetadata, type McpUiDisplayMode } from "xmcp";
 
 export const metadata: ToolMetadata = {
   name: "hostThemeDemo",
   description:
-    "Host theme adaptation — MCP Apps can detect and adapt to the host's theme (dark/light mode, CSS variables, fonts, safe areas)",
+    "Host-Aware Workspace demo for MCP Apps: host context, CSS variables, view modes, safe areas, and size reporting.",
 };
 
-const HOST_CSS_VARS = [
-  { variable: "--color-background-primary", description: "Primary background" },
-  { variable: "--color-background-secondary", description: "Secondary background" },
-  { variable: "--color-text-primary", description: "Primary text" },
-  { variable: "--color-text-secondary", description: "Secondary text" },
-  { variable: "--color-border-primary", description: "Primary border" },
-  { variable: "--font-sans", description: "Sans-serif font" },
-  { variable: "--font-mono", description: "Monospace font" },
+const DEMO_VARIABLES = [
+  "--color-background-primary",
+  "--color-background-secondary",
+  "--color-text-primary",
+  "--color-border-primary",
+  "--font-sans",
+  "--font-mono",
 ];
 
-function HostContextCard({ hostContext }: { hostContext: Record<string, unknown> | null }) {
-  if (!hostContext) {
-    return (
-      <Card className="border-amber-900/60 bg-amber-950/20">
-        <CardHeader>
-          <CardTitle>Host Context</CardTitle>
-          <CardDescription>
-            No host context available. When running inside a compatible host
-            (Claude, ChatGPT, VS Code), the host sends its theme, display mode,
-            and safe area insets during initialization.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert variant="warning" className="border-amber-800/60">
-            <AlertTitle>Standalone Mode</AlertTitle>
-            <AlertDescription>
-              Connect this MCP server to a host to see live theme data. The host
-              sends <code>McpUiHostContext</code> during the{" "}
-              <code>ui/initialize</code> handshake and updates via{" "}
-              <code>ui/hostContextChanged</code>.
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="border-emerald-900/60 bg-emerald-950/10">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Live Host Context</CardTitle>
-          <Badge className="bg-emerald-600 text-white">Connected</Badge>
-        </div>
-        <CardDescription>
-          Received from the host during initialization. Updates live via{" "}
-          <code>ui/hostContextChanged</code>.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <pre className="overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
-          {JSON.stringify(hostContext, null, 2)}
-        </pre>
-      </CardContent>
-    </Card>
-  );
-}
-
 export default function handler() {
-  const bridge = useMcpBridge();
+  const {
+    hostContext,
+    hostCapabilities,
+    requestDisplayMode,
+    isConnected,
+  } = useMcpApp();
+  const [expanded, setExpanded] = useState(false);
+  const [modeError, setModeError] = useState<string | null>(null);
+  const layoutRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
-  const detectedTheme = bridge.hostContext?.theme ?? "unknown";
-  const displayMode = bridge.hostContext?.displayMode ?? "unknown";
-  const safeArea = bridge.hostContext?.safeAreaInsets as
-    | { top: number; right: number; bottom: number; left: number }
-    | undefined;
+  useAutoMcpAppSize(layoutRef);
+
+  const availableModes: McpUiDisplayMode[] = hostContext?.availableDisplayModes ?? [
+    "inline",
+    "fullscreen",
+    "pip",
+  ];
+  const cssValues = useMemo(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+    const styles = getComputedStyle(document.documentElement);
+    return DEMO_VARIABLES.map((name) => ({
+      name,
+      value: styles.getPropertyValue(name).trim() || "—",
+    }));
+  }, [hostContext]);
+
+  const safeArea = hostContext?.safeAreaInsets;
+  const currentMode = hostContext?.displayMode ?? "inline";
+  const theme = hostContext?.theme ?? "unknown";
+  const container = hostContext?.containerDimensions;
+
+  const requestMode = async (mode: "inline" | "fullscreen" | "pip") => {
+    setModeError(null);
+    try {
+      await requestDisplayMode(mode);
+    } catch (error) {
+      setModeError(
+        error instanceof Error ? error.message : `Failed to request ${mode}`
+      );
+    }
+  };
 
   return (
     <AppShell>
       <PageHeader>
-        <PageEyebrow>MCP Apps Capabilities</PageEyebrow>
-        <PageTitle>Host Theme Adaptation</PageTitle>
+        <PageEyebrow>MCP Apps Pattern</PageEyebrow>
+        <PageTitle>Host-Aware Workspace</PageTitle>
         <PageDescription>
-          MCP Apps receive the host's theme during initialization — dark/light
-          mode, CSS variables, fonts, and safe area insets. Your UI can adapt to
-          look native in any host.
+          This example treats host context as real layout and styling input:
+          granted view modes, safe areas, available host tokens, and an
+          auto-sized panel that reports dimensions back to the host.
         </PageDescription>
       </PageHeader>
 
-      <div className="mx-auto grid max-w-5xl gap-6">
-        {/* Detection status */}
-        <Grid columns={3} gap={12}>
-          <Card className="border-slate-700 bg-slate-950/90">
-            <CardContent className="space-y-2 p-6">
-              <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                Theme
-              </p>
-              <Badge
-                className={
-                  detectedTheme === "dark"
-                    ? "bg-slate-700 text-slate-200"
-                    : detectedTheme === "light"
-                      ? "bg-white text-slate-900"
-                      : "bg-amber-700 text-white"
-                }
+      <div ref={layoutRef} className="mx-auto grid max-w-6xl gap-6">
+        <Grid columns={4} gap={12}>
+          <StatCard
+            label="Theme"
+            value={theme}
+            detail="Host-provided appearance"
+            className="border-[hsl(var(--border))] bg-[hsl(var(--card))]"
+          />
+          <StatCard
+            label="Mode"
+            value={String(currentMode)}
+            detail={`Available: ${availableModes.join(", ")}`}
+            className="border-[color:color-mix(in_oklab,hsl(var(--border))_65%,rgb(124,58,237)_35%)] bg-[hsl(var(--card))]"
+          />
+          <StatCard
+            label="Container"
+            value={container ? `${container.width ?? "?"}×${container.height ?? "?"}` : "unknown"}
+            detail="From host context"
+            className="border-[color:color-mix(in_oklab,hsl(var(--border))_65%,rgb(6,182,212)_35%)] bg-[hsl(var(--card))]"
+          />
+          <StatCard
+            label="Auto Size"
+            value={hostCapabilities ? "Enabled" : "Passive"}
+            detail="ResizeObserver sends size changes"
+            className="border-[color:color-mix(in_oklab,hsl(var(--border))_65%,rgb(16,185,129)_35%)] bg-[hsl(var(--card))]"
+          />
+        </Grid>
+
+        {!isConnected ? (
+          <Alert variant="warning" className="border-amber-900/60">
+            <AlertTitle>Standalone mode</AlertTitle>
+            <AlertDescription>
+              This demo still renders, but it is most useful inside a host that
+              sends theme, view mode, and container updates.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {modeError ? (
+          <Alert variant="error" className="border-red-900/60">
+            <AlertTitle>View mode request failed</AlertTitle>
+            <AlertDescription>{modeError}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <Card className="border-[color:color-mix(in_oklab,hsl(var(--border))_60%,rgb(124,58,237)_40%)] bg-[linear-gradient(180deg,color-mix(in_oklab,hsl(var(--card))_92%,rgb(124,58,237)_8%),hsl(var(--card)))]">
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <CardTitle>Viewport Controls</CardTitle>
+                <CardDescription>
+                  Ask the host for inline, fullscreen, or picture-in-picture.
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="border-violet-400/40 text-violet-500 dark:text-violet-300">
+                current={String(currentMode)}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-3">
+            {availableModes.map((mode) => (
+              <Button
+                key={mode}
+                onClick={() => void requestMode(mode)}
+                variant={mode === currentMode ? "primary" : "secondary"}
               >
-                {detectedTheme}
-              </Badge>
+                Request {mode}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Grid columns={2} gap={16}>
+          <Card className="border-[color:color-mix(in_oklab,hsl(var(--border))_60%,rgb(6,182,212)_40%)] bg-[linear-gradient(180deg,color-mix(in_oklab,hsl(var(--card))_92%,rgb(6,182,212)_8%),hsl(var(--card)))]">
+            <CardHeader>
+              <CardTitle>Resize-Aware Panel</CardTitle>
+              <CardDescription>
+                Toggle this panel to trigger <code>ui/notifications/size-changed</code>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                ref={panelRef}
+                className="rounded-xl border border-cyan-500/30 bg-[hsl(var(--background))] p-5 transition-all"
+                style={{
+                  minHeight: expanded ? 280 : 140,
+                  paddingTop: safeArea?.top ? 20 + safeArea.top : 20,
+                  paddingBottom: safeArea?.bottom ? 20 + safeArea.bottom : 20,
+                }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-cyan-600 dark:text-cyan-300">
+                      Host-aware layout panel
+                    </p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Safe area top={safeArea?.top ?? 0}, right={safeArea?.right ?? 0},
+                      bottom={safeArea?.bottom ?? 0}, left={safeArea?.left ?? 0}
+                    </p>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setExpanded((current) => !current)}
+                  >
+                    {expanded ? "Collapse" : "Expand"}
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          <Card className="border-slate-700 bg-slate-950/90">
-            <CardContent className="space-y-2 p-6">
-              <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                Display Mode
-              </p>
-              <Badge variant="outline" className="border-slate-600">
-                {displayMode}
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-slate-700 bg-slate-950/90">
-            <CardContent className="space-y-2 p-6">
-              <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                Safe Area
-              </p>
-              <Badge variant="outline" className="border-slate-600">
-                {safeArea
-                  ? `${safeArea.top} ${safeArea.right} ${safeArea.bottom} ${safeArea.left}`
-                  : "none"}
-              </Badge>
+
+          <Card className="border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+            <CardHeader>
+              <CardTitle>Host Context</CardTitle>
+              <CardDescription>
+                Keep one raw panel so developers can map their host’s payload to
+                the visual behavior.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="max-h-[300px] overflow-auto rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4 text-xs text-[hsl(var(--foreground))]">
+                {JSON.stringify(hostContext, null, 2)}
+              </pre>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Raw host context */}
-        <HostContextCard hostContext={bridge.hostContext as Record<string, unknown> | null} />
+        <Separator className="bg-slate-800" />
 
-        {/* CSS variables reference */}
-        <Card className="border-cyan-900/60 bg-[linear-gradient(180deg,rgba(8,145,178,0.1),rgba(2,6,23,0.92))]">
-          <CardHeader>
-            <CardTitle>Host CSS Variables</CardTitle>
-            <CardDescription>
-              The MCP Apps spec defines standard CSS variables that hosts provide.
-              Apps can use these to match the host's visual style.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table className="rounded-lg border border-slate-800">
-              <TableHeader>
-                <TableRow className="bg-cyan-950/20 hover:bg-cyan-950/20">
-                  <TableHead className="text-cyan-300">Variable</TableHead>
-                  <TableHead className="text-cyan-300">Description</TableHead>
-                  <TableHead className="text-cyan-300">Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {HOST_CSS_VARS.map((v) => {
-                  const computedValue =
-                    typeof window !== "undefined"
-                      ? getComputedStyle(document.documentElement)
-                          .getPropertyValue(v.variable)
-                          .trim() || "—"
-                      : "—";
-                  return (
-                    <TableRow key={v.variable}>
-                      <TableCell className="font-mono text-xs text-slate-300">
-                        {v.variable}
+        <Grid columns={2} gap={16}>
+          <Card className="border-[color:color-mix(in_oklab,hsl(var(--border))_60%,rgb(16,185,129)_40%)] bg-[hsl(var(--card))]">
+            <CardHeader>
+              <CardTitle>Computed CSS Variables</CardTitle>
+              <CardDescription>
+                Read the live host tokens that are currently affecting the UI.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table className="rounded-lg border border-[hsl(var(--border))]">
+                <TableHeader>
+                  <TableRow className="bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]">
+                    <TableHead>Variable</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cssValues.map((variable) => (
+                    <TableRow key={variable.name}>
+                      <TableCell className="font-mono text-xs text-[hsl(var(--foreground))]">
+                        {variable.name}
                       </TableCell>
-                      <TableCell className="text-[hsl(var(--muted-foreground))]">
-                        {v.description}
-                      </TableCell>
-                      <TableCell className="text-cyan-400">
-                        {computedValue}
+                      <TableCell className="text-[hsl(var(--foreground))]">
+                        {variable.value}
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
 
-        {/* Side-by-side comparison */}
-        <Card className="border-violet-900/60 bg-slate-950/90">
-          <CardHeader>
-            <CardTitle>Theme Comparison</CardTitle>
-            <CardDescription>
-              Same components rendered with the xmcp theme (left) vs what
-              they'd look like with host-provided tokens (right).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Grid columns={2} gap={16}>
-              <div className="space-y-3 rounded-lg border border-slate-700 bg-slate-900/50 p-4">
-                <p className="text-xs font-medium uppercase tracking-wider text-violet-400">
-                  xmcp Theme
-                </p>
-                <Button>Primary Button</Button>
-                <Button variant="secondary">Secondary</Button>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Input field</Label>
-                  <Input placeholder="Themed input" />
-                </div>
-                <div className="flex gap-2">
-                  <Badge>Default</Badge>
-                  <Badge variant="secondary">Secondary</Badge>
-                </div>
-              </div>
-              <div
-                className="space-y-3 rounded-lg border border-slate-700 p-4"
-                style={{
-                  backgroundColor: "var(--color-background-primary, hsl(var(--background)))",
-                  color: "var(--color-text-primary, hsl(var(--foreground)))",
-                }}
-              >
-                <p className="text-xs font-medium uppercase tracking-wider text-cyan-400">
-                  Host Theme (if available)
-                </p>
-                <Button>Primary Button</Button>
-                <Button variant="secondary">Secondary</Button>
-                <div className="flex flex-col gap-1.5">
-                  <Label>Input field</Label>
-                  <Input placeholder="Host-themed input" />
-                </div>
-                <div className="flex gap-2">
-                  <Badge>Default</Badge>
-                  <Badge variant="secondary">Secondary</Badge>
-                </div>
-              </div>
-            </Grid>
-          </CardContent>
-        </Card>
-
-        {/* Code example */}
-        <Card className="border-slate-700 bg-slate-950/60">
-          <CardHeader>
-            <CardTitle>Implementation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-400">
-{`// Detect host theme during initialization
-app.connect();
-
-// Initial theme from hostContext
-app.ontoolresult = (result) => {
-  // result includes hostContext with theme info
-};
-
-// React to theme changes
-app.onhostcontextchanged = (ctx) => {
-  document.documentElement.dataset.theme = ctx.theme;
-  // Apply CSS variables from ctx.styles
-};
-
-// Use host CSS variables in your styles
-.my-component {
-  background: var(--color-background-primary);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
-}
-
-// Or use data-theme selectors
-[data-theme="dark"] .card { background: #1a1a2e; }
-[data-theme="light"] .card { background: #ffffff; }`}
-            </pre>
-          </CardContent>
-        </Card>
+          <Card className="border-[hsl(var(--border))] bg-[hsl(var(--card))]">
+            <CardHeader>
+              <CardTitle>Host Capabilities</CardTitle>
+              <CardDescription>
+                The bridge state is more useful when the app surfaces what the
+                host claims to support.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="max-h-[300px] overflow-auto rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4 text-xs text-[hsl(var(--foreground))]">
+                {JSON.stringify(hostCapabilities, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        </Grid>
       </div>
     </AppShell>
   );

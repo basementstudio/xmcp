@@ -3,7 +3,7 @@ import { type ToolMetadata } from "xmcp";
 export const metadata: ToolMetadata = {
   name: "serverStats",
   description:
-    "Returns live server metrics. Used as a backend data source by the live-tool-demo and polling-dashboard showcase tools.",
+    "Returns live server metrics. Used by the ui showcase MCP App demos as a backend data source.",
 };
 
 let requestCounter = 0;

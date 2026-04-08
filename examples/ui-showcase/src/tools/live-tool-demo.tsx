@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   AppShell,
   Badge,
   Button,
@@ -9,24 +12,29 @@ import {
   CardHeader,
   CardTitle,
   Grid,
-  Loader,
   PageDescription,
   PageEyebrow,
   PageHeader,
   PageTitle,
+  Progress,
   Separator,
   StatCard,
-  Alert,
-  AlertTitle,
-  AlertDescription,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  useMcpApp,
 } from "@xmcp-dev/ui";
-import { type ToolMetadata } from "xmcp";
-import { useMcpBridge, parseToolResult } from "../lib/mcp-bridge";
+import { type ToolMetadata, type McpUiDisplayMode } from "xmcp";
+import { parseToolResult } from "../lib/tool-result";
 
 export const metadata: ToolMetadata = {
   name: "liveToolDemo",
   description:
-    "Demonstrates live MCP tool calling — the core MCP Apps capability. The UI calls serverStats through the host and displays results.",
+    "Ops Console demo for MCP Apps: tool calling, polling, host connection state, and granted view modes in one operator workflow.",
 };
 
 interface ServerStats {
@@ -40,174 +48,330 @@ interface ServerStats {
   requestCount: number;
 }
 
+interface HistoryEntry extends ServerStats {
+  receivedAt: string;
+}
+
+const POLL_INTERVAL_MS = 2500;
+const MAX_HISTORY = 6;
+
 export default function handler() {
-  const bridge = useMcpBridge();
+  const {
+    callTool,
+    requestDisplayMode,
+    hostContext,
+    hostCapabilities,
+    isConnected,
+  } = useMcpApp();
   const [stats, setStats] = useState<ServerStats | null>(null);
+  const [rawResult, setRawResult] = useState<unknown>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [polling, setPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [callCount, setCallCount] = useState(0);
+  const [lastModeResult, setLastModeResult] = useState<string | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const availableModes: McpUiDisplayMode[] = hostContext?.availableDisplayModes ?? [
+    "inline",
+    "fullscreen",
+    "pip",
+  ];
+  const currentMode = hostContext?.displayMode ?? "inline";
 
   const fetchStats = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const result = await bridge.callTool("serverStats");
+      const result = await callTool("serverStats");
+      setRawResult(result);
       const parsed = parseToolResult<ServerStats>(result);
-      if (parsed) {
-        setStats(parsed);
-        setCallCount((c) => c + 1);
+
+      if (!parsed) {
+        throw new Error("Tool returned an unreadable payload");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to call tool");
+
+      setStats(parsed);
+      setHistory((previous) => [
+        {
+          ...parsed,
+          receivedAt: new Date().toLocaleTimeString(),
+        },
+        ...previous,
+      ].slice(0, MAX_HISTORY));
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error ? nextError.message : "Failed to call tool"
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!polling) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    void fetchStats();
+    intervalRef.current = setInterval(() => {
+      void fetchStats();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [polling]);
+
+  const memoryPercent = useMemo(() => {
+    if (!stats || stats.heapTotalMb === 0) return 0;
+    return Math.round((stats.memoryUsageMb / stats.heapTotalMb) * 100);
+  }, [stats]);
+
+  const requestMode = async (mode: "inline" | "fullscreen" | "pip") => {
+    setError(null);
+    try {
+      const result = await requestDisplayMode(mode);
+      setLastModeResult(result.mode);
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : `Failed to request ${mode}`
+      );
     }
   };
 
   return (
     <AppShell>
       <PageHeader>
-        <PageEyebrow>MCP Apps Capabilities</PageEyebrow>
-        <PageTitle>Live Tool Calling</PageTitle>
+        <PageEyebrow>MCP Apps Pattern</PageEyebrow>
+        <PageTitle>Ops Console</PageTitle>
         <PageDescription>
-          The core MCP Apps value prop — your UI calls tools on the MCP server
-          through the host, and renders the results. No separate API needed.
+          This is the main operator-style example: tool calls, live polling,
+          host-aware view modes, and a debugging panel for raw tool responses.
         </PageDescription>
       </PageHeader>
 
-      <div className="mx-auto grid max-w-5xl gap-6">
-        {/* Connection status */}
-        <Card className="border-slate-700 bg-slate-950/90">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Bridge Status</CardTitle>
-              <Badge
-                className={
-                  bridge.isConnected
-                    ? "bg-emerald-600 text-white"
-                    : "bg-amber-600 text-white"
-                }
-              >
-                {bridge.isConnected ? "Connected to Host" : "Standalone Mode"}
-              </Badge>
-            </div>
-            <CardDescription>
-              {bridge.isConnected
-                ? "Connected via MCP Apps postMessage bridge. Tool calls are proxied through the host."
-                : "Not running inside an MCP Apps host. Tool calls require a compatible host (Claude, ChatGPT, basic-host)."}
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="mx-auto grid max-w-6xl gap-6">
+        <Grid columns={4} gap={12}>
+          <StatCard
+            label="Host Bridge"
+            value={isConnected ? "Connected" : "Standalone"}
+            detail={
+              isConnected
+                ? "Tool calls route through the host"
+                : "Host-only actions may fail outside supported clients"
+            }
+            className="border-emerald-900/50 bg-slate-950/90"
+          />
+          <StatCard
+            label="Current Mode"
+            value={String(currentMode)}
+            detail={
+              lastModeResult
+                ? `Last granted: ${lastModeResult}`
+                : "Request fullscreen or PiP from the panel below"
+            }
+            className="border-violet-900/50 bg-slate-950/90"
+          />
+          <StatCard
+            label="Polling"
+            value={polling ? "Live" : "Paused"}
+            detail={`${POLL_INTERVAL_MS / 1000}s interval`}
+            className="border-cyan-900/50 bg-slate-950/90"
+          />
+          <StatCard
+            label="Tool Calls"
+            value={String(history.length)}
+            detail="Recent requests captured in history"
+            className="border-amber-900/50 bg-slate-950/90"
+          />
+        </Grid>
 
-        {/* Call button */}
-        <Card className="border-cyan-900/60 bg-[linear-gradient(180deg,rgba(8,145,178,0.12),rgba(2,6,23,0.92))]">
+        <Card className="border-cyan-900/60 bg-[linear-gradient(180deg,rgba(8,145,178,0.14),rgba(2,6,23,0.92))]">
           <CardHeader>
-            <CardTitle>Call Server Tool</CardTitle>
-            <CardDescription>
-              Click the button to call the <code>serverStats</code> tool via the
-              MCP Apps bridge. The request goes: App → Host → Server → Host →
-              App.
-            </CardDescription>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <CardTitle>Controls</CardTitle>
+                <CardDescription>
+                  Refresh data, toggle polling, and request a larger host-owned
+                  viewport when you need more room.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3">
+                <Badge
+                  className={
+                    polling
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-700 text-slate-200"
+                  }
+                >
+                  {polling ? "Polling" : "Manual"}
+                </Badge>
+                <Badge variant="outline" className="border-cyan-800 text-cyan-300">
+                  tools.call={hostCapabilities?.serverTools?.call ? "yes" : "unknown"}
+                </Badge>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Button onClick={fetchStats} disabled={loading}>
-                {loading ? "Calling..." : "Call serverStats"}
+          <CardContent className="space-y-5">
+            <div className="flex flex-wrap items-center gap-3">
+              <Button onClick={() => void fetchStats()} disabled={loading}>
+                {loading ? "Calling serverStats..." : "Refresh metrics"}
               </Button>
-              <Badge variant="outline" className="border-cyan-800 text-cyan-400">
-                {callCount} calls made
-              </Badge>
+              <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-2">
+                <span className="text-sm text-[hsl(var(--muted-foreground))]">
+                  Live polling
+                </span>
+                <Switch
+                  checked={polling}
+                  onCheckedChange={(checked: boolean) => setPolling(checked)}
+                />
+              </div>
+              {availableModes.map((mode) => (
+                <Button
+                  key={mode}
+                  variant="secondary"
+                  onClick={() => void requestMode(mode)}
+                >
+                  Request {mode}
+                </Button>
+              ))}
             </div>
 
-            {loading && <Loader label="Waiting for tool response..." />}
+            <Separator className="bg-slate-800" />
 
-            {error && (
-              <Alert variant="error" className="border-red-900/60">
-                <AlertTitle>Tool Call Failed</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              Uses <code>tools/call</code> plus <code>ui/request-display-mode</code>.
+              The host decides whether fullscreen or PiP is allowed.
+            </p>
           </CardContent>
         </Card>
 
-        {/* Results */}
-        {stats && (
+        {error ? (
+          <Alert variant="error" className="border-red-900/60">
+            <AlertTitle>Console Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        {stats ? (
           <>
             <Grid columns={4} gap={12}>
               <StatCard
                 label="Uptime"
                 value={`${stats.uptime}s`}
-                detail="Server process uptime"
+                detail={stats.timestamp}
                 className="border-emerald-900/40"
               />
               <StatCard
                 label="Memory"
-                value={`${stats.memoryUsageMb}MB`}
-                detail={`of ${stats.heapTotalMb}MB heap`}
+                value={`${stats.memoryUsageMb} MB`}
+                detail={`Heap ${stats.heapTotalMb} MB`}
                 className="border-cyan-900/40"
               />
               <StatCard
-                label="CPU Load"
+                label="CPU"
                 value={`${stats.cpuLoadPercent}%`}
-                detail="Simulated metric"
+                detail="Synthetic load metric"
                 className="border-violet-900/40"
               />
               <StatCard
-                label="Connections"
-                value={String(stats.activeConnections)}
-                detail={`${stats.requestsPerMinute} req/min`}
+                label="Requests / Min"
+                value={stats.requestsPerMinute}
+                detail={`${stats.activeConnections} active connections`}
                 className="border-amber-900/40"
               />
             </Grid>
 
             <Card className="border-slate-700 bg-slate-950/90">
               <CardHeader>
-                <CardTitle>Raw Response</CardTitle>
-                <CardDescription>
-                  The JSON returned by the <code>serverStats</code> tool at{" "}
-                  {new Date(stats.timestamp).toLocaleTimeString()}.
-                </CardDescription>
+                <CardTitle>Resource Utilization</CardTitle>
               </CardHeader>
-              <CardContent>
-                <pre className="overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
-                  {JSON.stringify(stats, null, 2)}
-                </pre>
+              <CardContent className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">Memory</span>
+                    <span className="text-cyan-400">{memoryPercent}%</span>
+                  </div>
+                  <Progress value={memoryPercent} />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">CPU</span>
+                    <span className="text-violet-400">{stats.cpuLoadPercent}%</span>
+                  </div>
+                  <Progress value={stats.cpuLoadPercent} />
+                </div>
               </CardContent>
             </Card>
           </>
-        )}
+        ) : null}
 
-        {/* How it works */}
-        <Card className="border-slate-700 bg-slate-950/60">
-          <CardHeader>
-            <CardTitle>How It Works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-5 gap-3 text-center text-xs">
-              {["App UI", "→ postMessage →", "Host (Claude)", "→ MCP →", "Server"].map(
-                (step, i) => (
-                  <div
-                    key={i}
-                    className={
-                      i % 2 === 0
-                        ? "rounded-lg border border-slate-700 bg-slate-900/70 p-3 font-medium text-slate-200"
-                        : "flex items-center justify-center text-[hsl(var(--muted-foreground))]"
-                    }
-                  >
-                    {step}
-                  </div>
-                )
-              )}
-            </div>
-            <Separator className="my-4 bg-slate-800" />
-            <p className="text-xs text-[hsl(var(--muted-foreground))]">
-              The app sends a <code>tools/call</code> JSON-RPC request via{" "}
-              <code>window.parent.postMessage</code>. The host intercepts it,
-              forwards it to the MCP server, and returns the response back to the
-              app. No direct server connection needed.
-            </p>
-          </CardContent>
-        </Card>
+        <Grid columns={2} gap={16}>
+          <Card className="border-slate-700 bg-slate-950/90">
+            <CardHeader>
+              <CardTitle>Recent Poll History</CardTitle>
+              <CardDescription>
+                The latest serverStats calls captured by the console.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table className="rounded-lg border border-slate-800">
+                <TableHeader>
+                  <TableRow className="bg-slate-900/70 hover:bg-slate-900/70">
+                    <TableHead>Fetched</TableHead>
+                    <TableHead>CPU</TableHead>
+                    <TableHead>Memory</TableHead>
+                    <TableHead>RPM</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {history.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-[hsl(var(--muted-foreground))]">
+                        No tool calls yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    history.map((entry) => (
+                      <TableRow key={`${entry.timestamp}-${entry.requestCount}`}>
+                        <TableCell>{entry.receivedAt}</TableCell>
+                        <TableCell>{entry.cpuLoadPercent}%</TableCell>
+                        <TableCell>{entry.memoryUsageMb} MB</TableCell>
+                        <TableCell>{entry.requestsPerMinute}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-700 bg-slate-950/90">
+            <CardHeader>
+              <CardTitle>Raw Tool Result</CardTitle>
+              <CardDescription>
+                Keep one debugging surface in the example so it is still useful
+                when adapting the code for your own app.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="max-h-[340px] overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
+                {rawResult ? JSON.stringify(rawResult, null, 2) : "Call serverStats to inspect the MCP payload."}
+              </pre>
+            </CardContent>
+          </Card>
+        </Grid>
       </div>
     </AppShell>
   );

@@ -1,15 +1,21 @@
 import React, { useMemo, useRef } from "react";
 import type { App as AppSchema } from "../schema/types.js";
+import type {
+  McpHostCallToolParams,
+  McpHostToolResult,
+} from "xmcp/host-bridge";
 import { StateProvider } from "./StateProvider.js";
 import { ComponentRenderer } from "./ComponentRenderer.js";
 import { ThemeProvider, useTheme, uiShellClassName } from "../react/theme.js";
 import { cn } from "../react/utils.js";
 import { RuntimeProvider } from "./RuntimeContext.js";
+import { useMcpApp } from "./use-mcp-host-bridge.js";
 
 export interface AppProps {
   schema: AppSchema;
   className?: string;
   inheritTheme?: boolean;
+  transportMode?: "http" | "host" | "auto";
 }
 
 function AppBody({
@@ -34,7 +40,13 @@ function AppBody({
   );
 }
 
-export function App({ schema, className, inheritTheme = false }: AppProps) {
+export function App({
+  schema,
+  className,
+  inheritTheme = false,
+  transportMode = "http",
+}: AppProps) {
+  const mcpApp = useMcpApp();
   const idRef = useRef(0);
   const sessionIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
@@ -60,7 +72,10 @@ export function App({ schema, className, inheritTheme = false }: AppProps) {
       return h;
     };
 
-    const sendRequest = async (method: string, params?: Record<string, unknown>): Promise<unknown> => {
+    const sendRequest = async <T,>(
+      method: string,
+      params?: Record<string, unknown>
+    ): Promise<T> => {
       let res: Response;
       try {
         res = await fetch(mcpUrl, {
@@ -123,7 +138,7 @@ export function App({ schema, className, inheritTheme = false }: AppProps) {
         const err = json.error as Record<string, unknown>;
         throw new Error((err.message as string) || "MCP request failed");
       }
-      return json.result;
+      return json.result as T;
     };
 
     const initialize = async () => {
@@ -146,18 +161,57 @@ export function App({ schema, className, inheritTheme = false }: AppProps) {
     };
 
     return {
-      callTool: async (params: { name: string; arguments?: Record<string, unknown> }) => {
+      callTool: async (params: McpHostCallToolParams) => {
         await initialize();
-        return sendRequest("tools/call", {
+        return sendRequest<McpHostToolResult>("tools/call", {
           name: params.name,
           arguments: params.arguments ?? {},
-        }) as Promise<{ content: unknown }>;
+        });
       },
     };
   }, [schema.mcpServerUrl, schema.mcpHeaders]);
 
+  const hostClient = useMemo(
+    () => ({
+      callTool: async (params: McpHostCallToolParams) => {
+        return mcpApp.callTool(params.name, params.arguments);
+      },
+      openLink: mcpApp.openLink,
+      requestDisplayMode: mcpApp.requestDisplayMode,
+      readResource: mcpApp.readResource,
+      sendMessage: mcpApp.sendMessage,
+      updateModelContext: mcpApp.updateModelContext,
+      notifySizeChanged: mcpApp.notifySizeChanged,
+      hostContext: mcpApp.hostContext,
+      hostCapabilities: mcpApp.hostCapabilities,
+      isConnected: mcpApp.isConnected,
+    }),
+    [mcpApp]
+  );
+
+  const runtimeClient = useMemo(() => {
+    if (transportMode === "host") {
+      return hostClient;
+    }
+    if (transportMode === "auto" && mcpApp.isConnected) {
+      return hostClient;
+    }
+    return {
+      ...mcpClient,
+      openLink: mcpApp.openLink,
+      requestDisplayMode: mcpApp.requestDisplayMode,
+      readResource: mcpApp.readResource,
+      sendMessage: mcpApp.sendMessage,
+      updateModelContext: mcpApp.updateModelContext,
+      notifySizeChanged: mcpApp.notifySizeChanged,
+      hostContext: mcpApp.hostContext,
+      hostCapabilities: mcpApp.hostCapabilities,
+      isConnected: mcpApp.isConnected,
+    };
+  }, [hostClient, mcpApp, mcpClient, transportMode]);
+
   return (
-    <RuntimeProvider client={mcpClient}>
+    <RuntimeProvider client={runtimeClient}>
       <StateProvider initialState={schema.state}>
         {inheritTheme ? (
           <AppBody
