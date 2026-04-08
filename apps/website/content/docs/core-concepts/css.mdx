@@ -83,14 +83,16 @@ export default function handler() {
 
 ## UI package
 
-If you want a schema-driven UI layer on top of xmcp, use `@xmcp-dev/ui`.
+If you want a schema-driven UI layer or React MCP App helpers on top of xmcp,
+use `@xmcp-dev/ui`.
 
 It gives you:
 
 - a packaged `renderJson` tool contract for schema-driven MCP app rendering
 - a packaged `Rendered` preview component for custom tool wrappers
 - an `App` renderer for fully custom rendering flows
-- a package-owned stylesheet import so consumers do not need to point Tailwind at package internals directly
+- `useMcpApp()` and `useAutoMcpAppSize()` for handwritten React MCP Apps
+- a package-owned stylesheet import so you do not need to point Tailwind at package internals directly
 
 Minimal CSS setup:
 
@@ -103,7 +105,7 @@ Minimal CSS setup:
 }
 ```
 
-That import is important because `@xmcp-dev/ui` components are Tailwind-styled. The package stylesheet owns the internal Tailwind scanning so app authors no longer need a manual `@source` entry that points into `node_modules` or a monorepo path.
+That import is important because `@xmcp-dev/ui` components are Tailwind-styled. The package stylesheet handles the internal Tailwind scanning, so you do not need a manual `@source` entry that points into `node_modules` or a monorepo path.
 
 Minimal tool setup:
 
@@ -122,6 +124,14 @@ With this setup, the normal path is:
 - import the package stylesheet once in `globals.css`
 - expose a tiny local `render-json` tool
 - let the package own parsing, progressive preview, validation hardening, and theme fallback
+
+If the same schema-driven app should run through an MCP App host, use:
+
+```tsx
+const renderJsonTool = createRenderJsonTool({
+  transportMode: "host",
+});
+```
 
 <Callout variant="info">
   The full `@xmcp-dev/ui` rendering flow, customization levels, and theme

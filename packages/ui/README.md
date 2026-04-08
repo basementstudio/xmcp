@@ -1,15 +1,15 @@
 # `@xmcp-dev/ui`
 
-Schema-driven UI primitives and preview tooling for xmcp MCP servers.
+Schema-driven UI primitives and MCP App helpers for `xmcp`.
 
 ## What You Get
 
-`@xmcp-dev/ui` now ships two default paths:
+`@xmcp-dev/ui` supports two related use cases:
 
-- A packaged `renderJson` tool contract for the normal MCP server use case
-- A packaged `Rendered` preview component for custom tools that still want the built-in preview behavior
+- schema-driven UI with `renderJson`, `Rendered`, and `App`
+- custom React MCP Apps with `useMcpApp()`
 
-Main exports for the default path:
+Main exports:
 
 - `createRenderJsonTool`
 - `renderJsonMetadata`
@@ -17,17 +17,14 @@ Main exports for the default path:
 - `renderJsonHandler`
 - `Rendered`
 - `App`
+- `useMcpApp`
+- `useMcpHostBridge`
+- `useAutoMcpAppSize`
 
-For most servers, the easiest path is:
+## Default Schema-Driven Path
 
-1. Install `@xmcp-dev/ui`
-2. Add a tiny local `render-json` tool file
-3. Import the package stylesheet
-4. Let the package own the preview behavior
-
-## Default Path
-
-The local tool file can stay intentionally small:
+For most servers, the easiest schema-driven path is still a tiny local
+`render-json` tool file:
 
 ```tsx
 import { createRenderJsonTool } from "@xmcp-dev/ui";
@@ -39,7 +36,8 @@ export const schema = renderJsonTool.schema;
 export default renderJsonTool.handler;
 ```
 
-If you want the package defaults with no wrapper logic at all, you can also re-export the packaged pieces directly:
+If you want the package defaults with no wrapper logic, you can also
+re-export the packaged pieces directly:
 
 ```tsx
 import {
@@ -53,14 +51,6 @@ export const schema = renderJsonSchema;
 export default renderJsonHandler;
 ```
 
-The LLM only passes one argument:
-
-```json
-{
-  "schemaJson": "{ \"title\": \"Example App\", \"mcpServerUrl\": \"https://example.com\", \"root\": { \"type\": \"grid\", \"props\": { \"columns\": 1, \"gap\": 16 }, \"children\": [] } }"
-}
-```
-
 The package owns:
 
 - the `renderJson` tool metadata
@@ -69,9 +59,94 @@ The package owns:
 - progressive preview behavior
 - default theme selection and fallback handling
 
-## Tailwind Setup
+## Host-Backed Schema Apps
 
-The components are Tailwind-styled, but consumers no longer need to point Tailwind at package internals directly.
+If the same schema-driven app should call tools and host APIs through the MCP
+App host, use host-backed transport:
+
+```tsx
+import { createRenderJsonTool } from "@xmcp-dev/ui";
+
+const renderJsonTool = createRenderJsonTool({
+  transportMode: "host",
+});
+
+export const metadata = renderJsonTool.metadata;
+export const schema = renderJsonTool.schema;
+export default renderJsonTool.handler;
+```
+
+`transportMode` is also available on `Rendered` and `App`.
+
+Available values:
+
+- `http` for direct MCP HTTP transport
+- `host` for MCP App host transport
+- `auto` to prefer the host when connected and fall back otherwise
+
+## Custom React MCP Apps
+
+For handwritten React MCP Apps, `useMcpApp()` is the recommended API:
+
+```tsx
+import { Button, useMcpApp } from "@xmcp-dev/ui";
+
+export default function Demo() {
+  const { callTool, requestDisplayMode, isConnected } = useMcpApp();
+
+  return (
+    <Button
+      onClick={async () => {
+        if (isConnected) {
+          await requestDisplayMode("fullscreen");
+        }
+
+        await callTool("serverStats");
+      }}
+    >
+      Run tool
+    </Button>
+  );
+}
+```
+
+`useMcpApp()` exposes the MCP App runtime surface:
+
+- `callTool`
+- `openLink`
+- `requestDisplayMode`
+- `readResource`
+- `sendMessage`
+- `updateModelContext`
+- `logMessage`
+- `notifySizeChanged`
+- `isConnected`
+- `hostContext`
+- `hostCapabilities`
+
+`useMcpHostBridge()` still exists and returns the same shape, but `useMcpApp()`
+is the recommended public hook.
+
+## Auto Size Reporting
+
+If your host supports app size notifications, `useAutoMcpAppSize()` wires a
+`ResizeObserver` to your root element and emits `ui/notifications/size-changed`
+automatically:
+
+```tsx
+import { useRef } from "react";
+import { AppShell, useAutoMcpAppSize } from "@xmcp-dev/ui";
+
+export default function Demo() {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useAutoMcpAppSize(rootRef);
+
+  return <AppShell ref={rootRef}>...</AppShell>;
+}
+```
+
+## Tailwind Setup
 
 Minimal example:
 
@@ -84,66 +159,30 @@ Minimal example:
 }
 ```
 
-`@xmcp-dev/ui/styles.css` owns the Tailwind `@source` wiring for the package.
+`@xmcp-dev/ui/styles.css` handles the Tailwind `@source` wiring for the package,
+so you do not need to point Tailwind at package internals directly.
 
-The old preset theme CSS blocks are also no longer required for the packaged preview path.
+## When To Use Each Surface
 
-## Built-In Preview Behavior
+Use `createRenderJsonTool()` when you want the normal schema-driven path.
 
-`createRenderJsonTool()` renders through `Rendered`, which currently does all of this out of the box:
+Use `Rendered` when you want your own tool wrapper but still want the built-in
+preview engine.
 
-- default preview mode is `progressive`
-- default theme mode is `light`
-- default preset is shadcn-style `zinc`
-- normalizes numeric `image.width`, `image.height`, and `table.columns[].width` into CSS strings
-- tries partial JSON recovery while the model is still streaming
-- keeps the last good preview in progressive mode instead of flashing back to loading
-- rejects low-contrast inline `themeTokens` and falls back to the packaged preset theme
+Use `App` when you want to own the rendering pipeline directly.
 
-The tool input stays the same:
+Use `useMcpApp()` when you are building a handwritten React MCP App that should
+talk to the host.
 
-- `schemaJson?: string`
+If you are not using `@xmcp-dev/ui`, the host runtime is available from `xmcp`:
 
-The rest is server-owned, not LLM-owned.
-
-## Server-Owned Defaults
-
-If you want different defaults without rewriting the tool contract, use `createRenderJsonTool(config)`:
-
-```tsx
-import { createRenderJsonTool } from "@xmcp-dev/ui";
-
-const renderJsonTool = createRenderJsonTool({
-  previewMode: "strict",
-  themeMode: "light",
-  themePreset: "slate",
-  defaultMcpServerUrl: "https://example.com",
-});
-
-export const metadata = renderJsonTool.metadata;
-export const schema = renderJsonTool.schema;
-export default renderJsonTool.handler;
+```ts
+import { createMcpHostBridge } from "xmcp/host-bridge";
 ```
 
-Available config:
+Use the `xmcp/host-bridge` import path for the MCP App host bridge.
 
-- `previewMode?: "strict" | "progressive" | "raw"`
-- `themeMode?: "light" | "dark"`
-- `themePreset?: "zinc" | "slate" | "stone" | "gray" | "neutral"`
-- `defaultMcpServerUrl?: string`
-
-## When To Go Custom
-
-Use the packaged tool when you want the normal path.
-
-Use `Rendered` directly when you want your own tool wrapper but still want the built-in preview engine.
-
-Use `App` directly when you want to own parsing, validation, theme policy, loading states, and progressive behavior yourself.
-
-The full customization guide is here:
+## Related Docs
 
 - [Custom Renderers](/Users/0xkoller/xmcp/xmcp/docs/ui/custom-renderers.md)
-
-The showcase example that uses the packaged tool contract is here:
-
 - [ui-showcase README](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/README.md)

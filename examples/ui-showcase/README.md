@@ -1,29 +1,51 @@
-# ui-showcase
+# `ui-showcase`
 
-This example shows the default `@xmcp-dev/ui` path.
+This example is an MCP Apps showcase for `xmcp` and `@xmcp-dev/ui`.
 
-The `render-json` tool is intentionally tiny:
+The example app is organized around a small set of realistic MCP App patterns:
 
-- it uses `createRenderJsonTool()`
-- the package owns the long tool description
-- the package owns the preview behavior
-- the LLM only passes `schemaJson`
+- `showcase` for the landing page and learning path
+- `liveToolDemo` for an ops-console style tool-calling app
+- `hostThemeDemo` for host context, view modes, and auto-size behavior
+- `resourceComposerDemo` for `resources/read`, `ui/message`, and `ui/update-model-context`
+- `schemaAppDemo` for schema-driven UI running with host-backed transport
+- `renderJson` as the small raw schema reference tool
 
-Relevant files:
+The showcase includes a focused set of tools and one MCP resource used by the
+resource/composer demo.
 
+## What This Example Demonstrates
+
+- handwritten React MCP Apps with `useMcpApp()`
+- schema-driven apps with `createRenderJsonTool()`
+- host-backed transport for schema-driven rendering
+- host-aware behavior like display modes, host context, and size reporting
+- resource reads, host messaging, and model-context updates
+
+## Relevant Files
+
+- [showcase.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/showcase.tsx)
+- [live-tool-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/live-tool-demo.tsx)
+- [host-theme-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/host-theme-demo.tsx)
+- [resource-composer-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/resource-composer-demo.tsx)
+- [schema-app-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/schema-app-demo.tsx)
 - [render-json.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/render-json.tsx)
+- [mcp-app-playbook.ts](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/resources/(docs)/mcp-app-playbook.ts)
 - [globals.css](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/globals.css)
 
-What this example demonstrates:
+## Start Here
 
-- minimal local tool setup
-- package-owned stylesheet import
-- package-owned theme presets and preview behavior
+If you want the intended tour, open the tools in this order:
 
-For the quick start and default path:
+1. `showcase`
+2. `liveToolDemo`
+3. `hostThemeDemo`
+4. `resourceComposerDemo`
+5. `schemaAppDemo`
+
+Use `renderJson` afterward when you want a smaller schema-driven reference.
+
+## Related Docs
 
 - [packages/ui/README.md](/Users/0xkoller/xmcp/xmcp/packages/ui/README.md)
-
-For deep customization:
-
 - [Custom Renderers](/Users/0xkoller/xmcp/xmcp/docs/ui/custom-renderers.md)
