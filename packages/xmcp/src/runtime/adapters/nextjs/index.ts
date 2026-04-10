@@ -10,6 +10,8 @@ import {
 } from "./handler/server-lifecycle";
 import { createIncomingMessage } from "./handler/request-converter";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { randomUUID } from "node:crypto";
 
 const BODY_SIZE_LIMIT = "10mb";
 
@@ -23,35 +25,40 @@ export async function xmcpHandler(request: Request): Promise<Response> {
     return createMethodNotAllowedResponse();
   }
 
-  return nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
-    try {
-      // Initialize server and transport
-      const lifecycle = await createServerLifecycle(BODY_SIZE_LIMIT);
+  const id = randomUUID();
+  const requestHeaders = Object.fromEntries(request.headers.entries());
 
-      // Setup cleanup handlers
-      setupCleanupHandlers(res, lifecycle);
+  return httpRequestContextProvider({ id, headers: requestHeaders }, () => {
+    return nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
+      try {
+        // Initialize server and transport
+        const lifecycle = await createServerLifecycle(BODY_SIZE_LIMIT);
 
-      // Parse request body
-      const bodyContent = await request.json();
+        // Setup cleanup handlers
+        setupCleanupHandlers(res, lifecycle);
 
-      // Convert Web Request to Node.js IncomingMessage
-      const incomingRequest = createIncomingMessage({
-        method: request.method,
-        url: request.url,
-        headers: Object.fromEntries(request.headers.entries()),
-        auth: request.auth,
-      });
+        // Parse request body
+        const bodyContent = await request.json();
 
-      // Handle request through transport
-      await lifecycle.transport.handleRequest(
-        incomingRequest,
-        res,
-        bodyContent
-      );
-    } catch (error) {
-      console.error("[Next.js MCP] Error handling MCP request:", error);
-      sendInternalServerError(res);
-    }
+        // Convert Web Request to Node.js IncomingMessage
+        const incomingRequest = createIncomingMessage({
+          method: request.method,
+          url: request.url,
+          headers: requestHeaders,
+          auth: request.auth,
+        });
+
+        // Handle request through transport
+        await lifecycle.transport.handleRequest(
+          incomingRequest,
+          res,
+          bodyContent
+        );
+      } catch (error) {
+        console.error("[Next.js MCP] Error handling MCP request:", error);
+        sendInternalServerError(res);
+      }
+    });
   });
 }
 

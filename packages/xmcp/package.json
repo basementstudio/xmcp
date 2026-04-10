@@ -43,6 +43,11 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./headers": {
+      "types": "./dist/runtime/headers.d.ts",
+      "require": "./dist/runtime/headers.js",
+      "default": "./dist/runtime/headers.js"
+    },
     "./cloudflare": {
       "types": "./dist/cloudflare.d.ts",
       "require": "./dist/cloudflare.js",
@@ -52,6 +57,9 @@
   },
   "typesVersions": {
     "*": {
+      "headers": [
+        "dist/runtime/headers.d.ts"
+      ],
       "cloudflare": [
         "dist/cloudflare.d.ts"
       ]
