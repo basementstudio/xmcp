@@ -120,14 +120,19 @@ async function main() {
     }
 
     const { runCreate } = await import("./commands/create.js");
-    const outputPath = await runCreate({
+    const result = await runCreate({
       type: subcommand as "tool" | "resource" | "prompt",
       name: positional[0],
       preset: typeof options.preset === "string" ? options.preset : undefined,
       directory: typeof options.dir === "string" ? options.dir : undefined,
     });
 
-    console.log(`Created ${subcommand} -> ${outputPath}`);
+    if (result.status === "skipped") {
+      console.log(`Skipped ${subcommand} -> ${result.outputPath} (already exists)`);
+      return;
+    }
+
+    console.log(`Created ${subcommand} -> ${result.outputPath}`);
     return;
   }
 

@@ -14,6 +14,11 @@ export interface CreateOptions {
   directory?: string;
 }
 
+export interface CreateResult {
+  status: "created" | "skipped";
+  outputPath: string;
+}
+
 const DEFAULT_DIRECTORIES: Record<CreateType, string> = {
   tool: "src/tools",
   resource: "src/resources",
@@ -23,7 +28,7 @@ const DEFAULT_DIRECTORIES: Record<CreateType, string> = {
 const VALID_TYPES: CreateType[] = ["tool", "resource", "prompt"];
 const VALID_PRESETS: ScaffoldPreset[] = ["standard", "react"];
 
-export async function runCreate(options: CreateOptions): Promise<string> {
+export async function runCreate(options: CreateOptions): Promise<CreateResult> {
   const type = normalizeType(options.type);
   const name = await resolveName(options.name, type);
 
@@ -48,11 +53,13 @@ export async function runCreate(options: CreateOptions): Promise<string> {
 
   if (existingOutputPath) {
     const relativeExistingPath = path.relative(process.cwd(), existingOutputPath);
-    console.log(`Skipped ${relativeExistingPath} (already exists)`);
-    return relativeExistingPath;
+    return {
+      status: "skipped",
+      outputPath: relativeExistingPath,
+    };
   }
 
-  const preset = await resolvePreset(options.preset);
+  const preset = await resolvePreset(options.preset, type);
   const extension = type === "tool" && preset === "react" ? ".tsx" : ".ts";
   const outputPath = path.join(targetDir, `${fileName}${extension}`);
   const relativeOutputPath = path.relative(process.cwd(), outputPath);
@@ -60,7 +67,10 @@ export async function runCreate(options: CreateOptions): Promise<string> {
   const content = buildTemplate({ type, name: rawFileName, preset });
   fs.writeFileSync(outputPath, content);
 
-  return relativeOutputPath;
+  return {
+    status: "created",
+    outputPath: relativeOutputPath,
+  };
 }
 
 function findExistingOutputPath({
@@ -112,11 +122,13 @@ async function resolveName(name: string | undefined, type: CreateType) {
 }
 
 async function resolvePreset(
-  preset: string | undefined
+  preset: string | undefined,
+  type: CreateType
 ): Promise<ScaffoldPreset> {
   if (typeof preset === "string" && preset.trim()) {
     const normalizedPreset = preset.trim().toLowerCase();
     if (VALID_PRESETS.includes(normalizedPreset as ScaffoldPreset)) {
+      validatePresetForType(normalizedPreset as ScaffoldPreset, type);
       return normalizedPreset as ScaffoldPreset;
     }
 
@@ -135,12 +147,19 @@ async function resolvePreset(
   }
 
   if (VALID_PRESETS.includes(answer as ScaffoldPreset)) {
+    validatePresetForType(answer as ScaffoldPreset, type);
     return answer as ScaffoldPreset;
   }
 
   throw new Error(
     `Invalid preset "${answer}". Valid presets: ${VALID_PRESETS.join(", ")}`
   );
+}
+
+function validatePresetForType(preset: ScaffoldPreset, type: CreateType) {
+  if (preset === "react" && type !== "tool") {
+    throw new Error(`Preset "react" is only supported for tools.`);
+  }
 }
 
 async function prompt(message: string) {
