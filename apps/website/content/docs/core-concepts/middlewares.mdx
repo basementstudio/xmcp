@@ -94,3 +94,7 @@ export default async function whoami() {
 ```
 
 If you're writing custom Express middleware, attach validated auth to `req.auth` before calling `next()`. xmcp will expose that value through `xmcp/auth`.
+
+This is also the supported bridge when you configure native OAuth with `oauth.middleware = false`.
+
+For a runnable end-to-end example, start `pnpm --dir examples/auth-native-oauth-custom-middleware dev`.

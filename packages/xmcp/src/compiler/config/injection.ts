@@ -4,6 +4,7 @@ import {
   getResolvedHttpConfig,
   getResolvedCorsConfig,
   getResolvedPathsConfig,
+  getResolvedOAuthConfig,
   getResolvedTemplateConfig,
   getResolvedExperimentalConfig,
   getResolvedTypescriptConfig,
@@ -49,6 +50,16 @@ export function injectCorsVariables(httpConfig: ResolvedHttpConfig) {
 }
 
 export type CorsVariables = ReturnType<typeof injectCorsVariables>;
+
+export function injectOAuthVariables(userConfig: XmcpConfigOutputSchema) {
+  const oauthConfig = getResolvedOAuthConfig(userConfig);
+
+  return {
+    OAUTH_CONFIG: oauthConfig ? JSON.stringify(oauthConfig) : "undefined",
+  };
+}
+
+export type OAuthVariables = ReturnType<typeof injectOAuthVariables>;
 
 export function injectPathsVariables(userConfig: XmcpConfigOutputSchema) {
   const pathsConfig = getResolvedPathsConfig(userConfig);
@@ -201,6 +212,7 @@ export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
+  | OAuthVariables
   | PathsVariables
   | StdioVariables
   | TemplateVariables

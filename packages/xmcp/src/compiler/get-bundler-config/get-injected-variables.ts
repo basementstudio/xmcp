@@ -2,6 +2,7 @@ import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { compilerContext } from "../compiler-context";
 import {
   injectCorsVariables,
+  injectOAuthVariables,
   InjectedVariables,
   injectHttpVariables,
   injectPathsVariables,
@@ -26,6 +27,7 @@ export function getInjectedVariables(
   const resolvedHttpConfig = getResolvedHttpConfig(xmcpConfig.http);
   const httpVariables = injectHttpVariables(xmcpConfig.http, mode);
   const corsVariables = injectCorsVariables(resolvedHttpConfig);
+  const oauthVariables = injectOAuthVariables(xmcpConfig);
   const pathsVariables = injectPathsVariables(xmcpConfig);
   const stdioVariables = injectStdioVariables(xmcpConfig.stdio);
   const templateVariables = injectTemplateVariables(xmcpConfig);
@@ -36,6 +38,7 @@ export function getInjectedVariables(
   return {
     ...httpVariables,
     ...corsVariables,
+    ...oauthVariables,
     ...pathsVariables,
     ...stdioVariables,
     ...templateVariables,

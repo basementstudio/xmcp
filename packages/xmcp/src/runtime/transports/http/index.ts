@@ -1,5 +1,6 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
+import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "@/types/middleware";
 import {
   CorsConfig,
@@ -17,6 +18,7 @@ dotenv.config();
 const httpConfig = HTTP_CONFIG as ResolvedHttpConfig;
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 const templateConfig = TEMPLATE_CONFIG as TemplateConfig;
+const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
 
 // middleware
 const middleware = INJECTED_MIDDLEWARE as () =>
@@ -67,6 +69,7 @@ async function main() {
         createServer,
         options,
         corsOptions,
+        oauthConfig,
         providers
       );
 

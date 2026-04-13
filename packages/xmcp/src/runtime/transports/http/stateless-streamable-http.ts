@@ -20,6 +20,8 @@ import homeTemplate from "../../templates/home";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
+import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
+import { OAuthProxy } from "../../../auth/oauth/factory";
 import { Provider } from "@/runtime/middlewares/utils";
 import {
   httpRequestContextProvider,
@@ -94,6 +96,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
 // Stateless HTTP Transport wrapper
 export class StatelessStreamableHTTPTransport {
   private app: Express;
+  private providerRouter = express.Router();
   private server: http.Server;
   private port: number;
   private endpoint: string;
@@ -101,7 +104,10 @@ export class StatelessStreamableHTTPTransport {
   private options: HttpTransportOptions;
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
+  private oauthConfig?: OAuthProxyConfig;
+  private oauthProxy?: OAuthProxy;
   private providers: Provider[] | undefined;
+  private providersInitialized = false;
   private sessions = new Map<
     string,
     {
@@ -114,6 +120,7 @@ export class StatelessStreamableHTTPTransport {
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
+    oauthConfig?: OAuthProxyConfig,
     providers?: Provider[]
   ) {
     this.options = {
@@ -126,15 +133,22 @@ export class StatelessStreamableHTTPTransport {
     this.debug = options.debug ?? false;
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
+    this.oauthConfig = oauthConfig;
     this.providers = providers;
 
     // Setup JSON parsing middleware FIRST
     this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
+    this.app.use(
+      express.urlencoded({
+        extended: false,
+        limit: this.options.bodySizeLimit || "10mb",
+      })
+    );
 
     this.setupInitialRoutes();
     this.setupInitialMiddleware();
 
-    this.setupProviders();
+    this.app.use(this.providerRouter);
 
     this.setupEndpointRoute();
   }
@@ -145,18 +159,36 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
-  private setupProviders(): void {
+  private async setupProviders(): Promise<void> {
+    if (this.providersInitialized) {
+      return;
+    }
+
+    if (this.oauthConfig) {
+      this.oauthProxy = await createOAuthProxy({
+        ...this.oauthConfig,
+        mcpEndpoint: this.endpoint,
+      });
+      this.providerRouter.use(this.oauthProxy.router);
+
+      if (this.oauthProxy.middleware) {
+        this.providerRouter.use(this.oauthProxy.middleware);
+      }
+    }
+
     if (this.providers) {
       for (const provider of this.providers) {
         if (provider.router) {
-          this.app.use(provider.router);
+          this.providerRouter.use(provider.router);
         }
 
         if (provider.middleware) {
-          this.app.use(provider.middleware);
+          this.providerRouter.use(provider.middleware);
         }
       }
     }
+
+    this.providersInitialized = true;
   }
 
   private setupInitialMiddleware(): void {
@@ -344,6 +376,8 @@ export class StatelessStreamableHTTPTransport {
   }
 
   public async start(): Promise<void> {
+    await this.setupProviders();
+
     const host = this.options.host || "127.0.0.1";
     const port = await findAvailablePort(this.port, host);
 

@@ -10,6 +10,12 @@ export {
   type StdioTransportConfig,
 } from "./transport/stdio";
 export {
+  oauthConfigSchema,
+  oauthEndpointsSchema,
+  oauthEndpointOverridesSchema,
+  type OAuthConfig,
+} from "./oauth";
+export {
   experimentalConfigSchema,
   type ExperimentalConfig,
   type AdapterConfig,

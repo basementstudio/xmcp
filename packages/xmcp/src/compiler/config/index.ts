@@ -2,6 +2,7 @@ import { z } from "zod/v3";
 import {
   stdioTransportConfigSchema,
   httpTransportConfigSchema,
+  oauthConfigSchema,
   experimentalConfigSchema,
   pathsConfigSchema,
   templateConfigSchema,
@@ -16,6 +17,7 @@ import type { RspackOptions } from "@rspack/core";
 export const configSchema = z.object({
   stdio: stdioTransportConfigSchema.optional(),
   http: httpTransportConfigSchema.optional(),
+  oauth: oauthConfigSchema.optional(),
   experimental: experimentalConfigSchema.optional(),
   paths: pathsConfigSchema.optional(),
   bundler: bundlerConfigSchema.optional(),
@@ -55,6 +57,7 @@ export type {
   StdioTransportConfig,
   CorsConfig,
   ExperimentalConfig,
+  OAuthConfig,
   PathsConfig,
   BundlerConfig,
   TemplateConfig,
