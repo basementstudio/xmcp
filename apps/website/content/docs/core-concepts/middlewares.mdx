@@ -73,7 +73,7 @@ export default async function search({ query }: InferSchema<typeof schema>) {
 
 ## Accessing auth context
 
-Use the `xmcp/auth` module to read validated auth information from the current request in tools, prompts, or resources.
+Use the `xmcp/auth` module to read auth information that has been attached to the current request context. This is useful when your adapter or custom middleware validates auth and stores it on the request.
 
 ```typescript title="src/tools/whoami.ts"
 import { auth } from "xmcp/auth";
@@ -93,4 +93,4 @@ export default async function whoami() {
 }
 ```
 
-If you're writing custom Express middleware, attach validated auth to `req.auth` before calling `next()`. xmcp will expose that value through `xmcp/auth` and tool `extra.authInfo`.
+If you're writing custom Express middleware, attach validated auth to `req.auth` before calling `next()`. xmcp will expose that value through `xmcp/auth`.

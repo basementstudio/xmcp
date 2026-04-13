@@ -21,13 +21,6 @@ import type {
 } from "./types.js";
 
 const FETCH_TIMEOUT_MS = 10000;
-type RequestAuthInfo = {
-  token: string;
-  clientId: string;
-  scopes: string[];
-  expiresAt?: number;
-  extra?: Record<string, unknown>;
-};
 
 export function clerkProvider(config: config): Middleware {
   if (!config.secretKey) {
@@ -166,16 +159,6 @@ function clerkMiddleware(config: config): RequestHandler {
       }
 
       const session = claimsToSession(result.claims);
-      (req as Request & { auth?: RequestAuthInfo }).auth = {
-        token,
-        clientId: result.claims.azp ?? config.clerkDomain,
-        scopes: [],
-        expiresAt: result.claims.exp,
-        extra: {
-          claims: result.claims,
-          session,
-        },
-      };
 
       providerSessionContext({ session }, () => {
         next();
