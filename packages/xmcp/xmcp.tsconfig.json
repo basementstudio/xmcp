@@ -25,6 +25,7 @@
     "src/types/injected.d.ts",
     "src/cloudflare.ts",
     "src/index.ts",
+    "src/runtime/auth.ts",
     "src/runtime/headers.ts",
   ],
 }

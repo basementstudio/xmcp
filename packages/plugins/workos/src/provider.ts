@@ -11,6 +11,13 @@ import type { config, OAuthProtectedResourceMetadata, OAuthAuthorizationServerMe
 import { verifyWorkOSToken, claimsToSession, extractBearerToken } from "./jwt.js";
 import { getAuthKitBaseUrl } from "./utils.js";
 import { WorkOS } from "@workos-inc/node";
+type RequestAuthInfo = {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  extra?: Record<string, unknown>;
+};
 
 export function workosProvider(config: config): Middleware {
   if (!config.apiKey) {
@@ -149,6 +156,16 @@ function workosMiddleware(config: config): RequestHandler {
       }
 
       const session = claimsToSession(result.claims);
+      (req as Request & { auth?: RequestAuthInfo }).auth = {
+        token,
+        clientId: config.clientId,
+        scopes: [],
+        expiresAt: result.claims.exp,
+        extra: {
+          claims: result.claims,
+          session,
+        },
+      };
 
       contextProviderSession(
         {

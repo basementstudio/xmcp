@@ -4,6 +4,7 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 // cors config
 const corsOrigin = HTTP_CORS_ORIGIN as string;
@@ -19,7 +20,8 @@ const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
 export async function xmcpHandler(req: Request, res: Response) {
   return new Promise((resolve) => {
     const id = randomUUID();
-    httpRequestContextProvider({ id, headers: req.headers }, async () => {
+    const auth = (req as Request & { auth?: AuthInfo }).auth;
+    httpRequestContextProvider({ id, headers: req.headers, auth }, async () => {
       try {
         setHeaders(
           res,

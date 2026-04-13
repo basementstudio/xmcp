@@ -21,7 +21,10 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  httpRequestContextProvider,
+  setHttpRequestContext,
+} from "@/runtime/contexts/http-request-context";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
@@ -196,7 +199,8 @@ export class StatelessStreamableHTTPTransport {
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
-      httpRequestContextProvider({ id, headers: req.headers }, () => {
+      const auth = (req as Request & { auth?: AuthInfo }).auth;
+      httpRequestContextProvider({ id, headers: req.headers, auth }, () => {
         next();
       });
     });
@@ -230,6 +234,9 @@ export class StatelessStreamableHTTPTransport {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       this.log(`${req.method} ${req.path}`);
 
+      setHttpRequestContext({
+        auth: (req as Request & { auth?: AuthInfo }).auth,
+      });
       this.extractAndStoreToolName(req);
 
       await this.handleStatelessRequest(req, res);

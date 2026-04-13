@@ -21,6 +21,7 @@ interface RuntimeRoot {
 
 // Node.js runtime roots (express, nextjs adapters + transports)
 const runtimeRoots: RuntimeRoot[] = [
+  { name: "auth", path: "auth" },
   { name: "headers", path: "headers" },
   { name: "stdio", path: "transports/stdio" },
   { name: "http", path: "transports/http" },

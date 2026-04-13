@@ -19,6 +19,13 @@ import { createVerifier, extractBearerToken } from "./jwt.js";
 import { isToolPermissionDefined, userHasToolPermission } from "./permissions.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
+type RequestAuthInfo = {
+  token: string;
+  clientId: string;
+  scopes: string[];
+  expiresAt?: number;
+  extra?: Record<string, unknown>;
+};
 
 export function auth0Provider(config: Config): Middleware {
   if (!config.domain) {
@@ -201,6 +208,20 @@ function auth0Middleware(
         }
         return;
       }
+      (req as Request & { auth?: RequestAuthInfo }).auth = {
+        token: result.authInfo.token,
+        clientId: result.authInfo.clientId,
+        scopes: [...result.authInfo.scopes],
+        ...(result.authInfo.expiresAt !== undefined && {
+          expiresAt: result.authInfo.expiresAt,
+        }),
+        extra: {
+          ...(result.authInfo.permissions && {
+            permissions: [...result.authInfo.permissions],
+          }),
+          user: result.authInfo.user,
+        },
+      };
       providerSessionContext({ authInfo: result.authInfo }, () => {
         next();
       });
