@@ -29,7 +29,7 @@ export function createOAuthRouter(config: OAuthRouterConfig): Router {
 
   router.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type, Authorization, Accept, mcp-protocol-version"
@@ -279,6 +279,24 @@ export function createOAuthMiddleware(
 ) {
   const protectedPath = normalizeProtectedPath(options.protectedPath ?? "/mcp");
   const resourceMetadataPath = getProtectedResourceMetadataPath(protectedPath);
+  const sendOAuthError = (
+    req: Request,
+    res: Response,
+    status: number,
+    body: OAuthError,
+    authenticateHeader?: string
+  ) => {
+    if (authenticateHeader) {
+      res.setHeader("WWW-Authenticate", authenticateHeader);
+    }
+
+    if (req.method === "HEAD") {
+      res.status(status).end();
+      return;
+    }
+
+    res.status(status).json(body);
+  };
 
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!matchesProtectedPath(req.path, protectedPath)) {
@@ -290,21 +308,23 @@ export function createOAuthMiddleware(
       const authHeader = req.header("Authorization");
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.setHeader(
-          "WWW-Authenticate",
+        sendOAuthError(
+          req,
+          res,
+          401,
+          {
+            error: "invalid_token",
+            error_description: "Missing or malformed Authorization header",
+          },
           `Bearer resource_metadata="${resourceMetadataPath}"`
         );
-        res.status(401).json({
-          error: "invalid_token",
-          error_description: "Missing or malformed Authorization header",
-        });
         return;
       }
 
       const token = authHeader.slice("Bearer ".length).trim();
 
       if (!token) {
-        res.status(401).json({
+        sendOAuthError(req, res, 401, {
           error: "invalid_token",
           error_description: "Missing access token",
         });
@@ -327,11 +347,13 @@ export function createOAuthMiddleware(
       next();
     } catch (error) {
       const oauthError = extractOAuthError(error);
-      res.setHeader(
-        "WWW-Authenticate",
+      sendOAuthError(
+        req,
+        res,
+        401,
+        oauthError,
         `Bearer error="${oauthError.error}", error_description="${oauthError.error_description ?? "Invalid token"}", resource_metadata="${resourceMetadataPath}"`
       );
-      res.status(401).json(oauthError);
     }
   };
 }

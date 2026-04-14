@@ -27,9 +27,13 @@ export default config;
 
 By default xmcp performs issuer discovery against `/.well-known/oauth-authorization-server` and falls back to `/.well-known/openid-configuration`. Use `oauth.endpoints` only when you need to override missing or non-standard provider metadata.
 
+The protected resource identity defaults to the configured MCP endpoint URL, not just the server origin. For the default HTTP transport that means the OAuth `resource` is `http://host:port/mcp`, and xmcp also serves endpoint-scoped resource metadata at `/.well-known/oauth-protected-resource/mcp`.
+
 When the built-in middleware validates a token, your tools can read the normalized auth context through `xmcp/auth`.
 
 If you want to keep the OAuth metadata/routes but use your own request verification, set `oauth.middleware` to `false` and provide custom validation in `src/middleware.ts`.
+
+During clean client bootstrap, MCP clients may probe the MCP endpoint directly before initialization. xmcp answers unauthenticated requests with a bearer challenge that links back to the endpoint-scoped protected-resource metadata.
 
 If you are migrating from `experimental.oauth`, move the same object to `oauth`. The compatibility alias still works for now, but the stable key takes precedence when both are defined.
 

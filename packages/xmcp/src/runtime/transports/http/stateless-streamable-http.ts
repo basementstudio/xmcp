@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { StreamableHTTPServerTransport as SdkStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types";
 import express, {
   Express,
   Request,
@@ -295,6 +294,7 @@ export class StatelessStreamableHTTPTransport {
     try {
       const sessionId = this.getSessionId(req);
       let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
+      let ephemeralLifecycle = false;
 
       res.on("finish", () => {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
@@ -303,26 +303,35 @@ export class StatelessStreamableHTTPTransport {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
 
-      if (!lifecycle) {
-        if (sessionId || req.method !== "POST" || !isInitializeRequest(req.body)) {
-          res.status(400).json({
-            jsonrpc: "2.0",
-            error: {
-              code: -32000,
-              message: "Bad Request: No valid session ID provided",
-            },
-            id: null,
-          });
-          return;
-        }
-
-        lifecycle = await this.createSessionLifecycle();
+      if (sessionId && !lifecycle) {
+        res.status(404).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32001,
+            message: "Session not found",
+          },
+          id: null,
+        });
+        return;
       }
 
-      await lifecycle.transport.handleRequest(req, res, req.body);
+      if (!lifecycle) {
+        lifecycle = await this.createSessionLifecycle();
+        ephemeralLifecycle = true;
+      }
 
-      if (!sessionId && lifecycle.transport.sessionId) {
-        this.sessions.set(lifecycle.transport.sessionId, lifecycle);
+      try {
+        await lifecycle.transport.handleRequest(req, res, req.body);
+      } finally {
+        if (!sessionId && lifecycle.transport.sessionId) {
+          this.sessions.set(lifecycle.transport.sessionId, lifecycle);
+          ephemeralLifecycle = false;
+        }
+
+        if (ephemeralLifecycle) {
+          await lifecycle.transport.close();
+          await lifecycle.server.close();
+        }
       }
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
