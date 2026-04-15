@@ -1,148 +1,107 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, Children } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import * as React from "react";
 
-export function TestimonialsCarousel({ children }: { children: React.ReactNode }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const isResetting = useRef(false);
-  const childCount = Children.count(children);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
-  const getCardDistance = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return 360;
-    const card = el.querySelector<HTMLElement>(":scope > *");
-    return (card?.offsetWidth ?? 340) + 20;
-  }, []);
+export function TestimonialsCarousel({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const items = React.Children.toArray(children);
+  const [api, setApi] = React.useState<CarouselApi>();
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [isPausedByInteraction, setIsPausedByInteraction] =
+    React.useState(false);
+  const resumeTimerRef = React.useRef<NodeJS.Timeout | null>(null);
 
-  const getSetWidth = useCallback(() => {
-    return getCardDistance() * childCount;
-  }, [getCardDistance, childCount]);
+  const pauseAutoPlay = React.useCallback(() => {
+    setIsPausedByInteraction(true);
 
-  // Start at the middle set
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollLeft = getSetWidth();
-  }, [getSetWidth]);
-
-  // Reset scroll position when reaching the cloned edges
-  const handleScroll = useCallback(() => {
-    if (isResetting.current) return;
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const setWidth = getSetWidth();
-
-    if (el.scrollLeft <= 0) {
-      isResetting.current = true;
-      el.style.scrollBehavior = "auto";
-      el.scrollLeft += setWidth;
-      el.style.scrollBehavior = "";
-      isResetting.current = false;
-    } else if (el.scrollLeft >= setWidth * 2) {
-      isResetting.current = true;
-      el.style.scrollBehavior = "auto";
-      el.scrollLeft -= setWidth;
-      el.style.scrollBehavior = "";
-      isResetting.current = false;
-    }
-  }, [getSetWidth]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
-  const scroll = useCallback((direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollBy({
-      left: direction === "left" ? -getCardDistance() : getCardDistance(),
-      behavior: "smooth",
-    });
-  }, [getCardDistance]);
-
-  const pauseAutoPlay = useCallback(() => {
-    setIsAutoPlaying(false);
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = null;
-    }
     if (resumeTimerRef.current) {
       clearTimeout(resumeTimerRef.current);
     }
+
     resumeTimerRef.current = setTimeout(() => {
-      setIsAutoPlaying(true);
+      setIsPausedByInteraction(false);
     }, 5000);
   }, []);
 
-  // Auto-scroll
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-
-    autoPlayTimerRef.current = setInterval(() => {
-      scroll("right");
-    }, 5000);
-
+  React.useEffect(() => {
     return () => {
-      if (autoPlayTimerRef.current) {
-        clearInterval(autoPlayTimerRef.current);
-        autoPlayTimerRef.current = null;
+      if (resumeTimerRef.current) {
+        clearTimeout(resumeTimerRef.current);
       }
     };
-  }, [isAutoPlaying, scroll]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
-      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-    };
   }, []);
 
-  const handleArrowClick = (direction: "left" | "right") => {
-    scroll(direction);
-    pauseAutoPlay();
-  };
+  React.useEffect(() => {
+    if (!api || items.length < 2 || isHovered || isPausedByInteraction) return;
+
+    const autoPlayTimer = setInterval(() => {
+      api.scrollNext();
+    }, 5000);
+
+    return () => clearInterval(autoPlayTimer);
+  }, [api, isHovered, isPausedByInteraction, items.length]);
+
+  React.useEffect(() => {
+    if (!api) return;
+
+    api.on("pointerDown", pauseAutoPlay);
+
+    return () => {
+      api.off("pointerDown", pauseAutoPlay);
+    };
+  }, [api, pauseAutoPlay]);
 
   return (
-    <div className="col-span-12 flex items-center gap-4">
-      <button
-        onClick={() => handleArrowClick("left")}
-        className="hidden md:flex items-center justify-center w-8 h-8 flex-shrink-0 rounded-full border border-brand-neutral-500 bg-brand-black hover:border-brand-neutral-300 transition-colors"
-        aria-label="Scroll left"
+    <div className="col-span-12">
+      <Carousel
+        setApi={setApi}
+        opts={{
+          align: "start",
+          loop: items.length > 1,
+        }}
+        className="w-full md:px-12"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        <ChevronLeft className="w-4 h-4 text-brand-white" />
-      </button>
-      <div
-        className="relative overflow-hidden flex-1"
-        onMouseEnter={() => pauseAutoPlay()}
-        onMouseLeave={() => setIsAutoPlaying(true)}
-      >
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-brand-black to-transparent z-10 pointer-events-none" />
-        <div
-          ref={scrollRef}
-          className="flex gap-[20px] overflow-x-auto pb-4 px-16 scrollbar-hide scroll-smooth snap-x snap-mandatory"
-        >
-          {children}
-          {children}
-          {children}
-        </div>
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-brand-black to-transparent z-10 pointer-events-none" />
-      </div>
-      <button
-        onClick={() => handleArrowClick("right")}
-        className="hidden md:flex items-center justify-center w-8 h-8 flex-shrink-0 rounded-full border border-brand-neutral-500 bg-brand-black hover:border-brand-neutral-300 transition-colors"
-        aria-label="Scroll right"
-      >
-        <ChevronRight className="w-4 h-4 text-brand-white" />
-      </button>
+        <CarouselContent className="-ml-0 md:-ml-5">
+          {items.map((child, index) => (
+            <CarouselItem
+              key={index}
+              className="pl-0 md:basis-1/2 md:pl-5 lg:basis-1/3"
+            >
+              {child}
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        {items.length > 1 ? (
+          <>
+            <CarouselPrevious
+              variant="secondary"
+              size="icon-sm"
+              className="left-0 hidden h-8 w-8 min-w-0 -translate-y-1/2 rounded-full border-brand-neutral-500 bg-brand-black text-brand-white hover:border-brand-neutral-300 hover:bg-brand-black disabled:opacity-40 disabled:hover:border-brand-neutral-500 md:flex"
+              onPointerDownCapture={pauseAutoPlay}
+            />
+            <CarouselNext
+              variant="secondary"
+              size="icon-sm"
+              className="right-0 hidden h-8 w-8 min-w-0 -translate-y-1/2 rounded-full border-brand-neutral-500 bg-brand-black text-brand-white hover:border-brand-neutral-300 hover:bg-brand-black disabled:opacity-40 disabled:hover:border-brand-neutral-500 md:flex"
+              onPointerDownCapture={pauseAutoPlay}
+            />
+          </>
+        ) : null}
+      </Carousel>
     </div>
   );
 }

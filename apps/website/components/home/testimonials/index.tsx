@@ -2,6 +2,7 @@ import { Tag } from "@/components/ui/tag";
 import { fetchTestimonials } from "@/basehub";
 import { TestimonialsCarousel } from "./carousel";
 import Image from "next/image";
+import Link from "next/link";
 
 interface TestimonialProps {
   _title: string;
@@ -14,7 +15,7 @@ interface TestimonialProps {
 }
 
 export async function HomeTestimonials() {
-  const testimonials = await fetchTestimonials();
+  const testimonials = (await fetchTestimonials()) as TestimonialProps[];
 
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
@@ -26,23 +27,26 @@ export async function HomeTestimonials() {
               Loved by developers
             </h2>
           </div>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
-            See what developers are saying about building with xmcp.
-          </p>
         </div>
       </div>
       <TestimonialsCarousel>
         {testimonials.map((testimonial, index) => (
-          <TestimonialCard key={index} {...(testimonial as TestimonialProps)} />
+          <TestimonialCard key={index} {...testimonial} />
         ))}
       </TestimonialsCarousel>
     </div>
   );
 }
 
-const TestimonialCard = ({ _title, handle, tagline, position, logo }: TestimonialProps) => {
+const TestimonialCard = ({
+  _title,
+  handle,
+  tagline,
+  position,
+  logo,
+}: TestimonialProps) => {
   return (
-    <div className="flex flex-col p-4 rounded-xs border border-brand-neutral-500 hover:bg-black hover:border-brand-neutral-300 transition-colors duration-200 w-[calc(50%-10px)] min-w-[300px] flex-shrink-0 snap-start">
+    <div className="flex h-full min-h-[220px] flex-col rounded-xs border border-brand-neutral-500 p-4 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
         &ldquo;{tagline}&rdquo;
       </p>
@@ -59,14 +63,14 @@ const TestimonialCard = ({ _title, handle, tagline, position, logo }: Testimonia
           ) : null}
         </div>
         <div className="flex flex-col">
-          <a
+          <Link
             href={`https://x.com/${handle.replace(/^@/, "")}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-white text-sm font-medium hover:text-brand-neutral-100 transition-colors"
           >
             {handle.startsWith("@") ? handle : `@${handle}`}
-          </a>
+          </Link>
           {position && (
             <span className="text-brand-neutral-200 text-xs">{position}</span>
           )}
