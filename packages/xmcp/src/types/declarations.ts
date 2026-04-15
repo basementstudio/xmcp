@@ -2,6 +2,10 @@ declare module "xmcp/headers" {
   export const headers: typeof import("../runtime/headers").headers;
 }
 
+declare module "xmcp/auth" {
+  export const auth: typeof import("../runtime/auth").auth;
+}
+
 declare module "xmcp/plugins/x402" {
   export const isPaidHandler: typeof import("../plugins/x402/index").isPaidHandler;
   export const getX402Registry: typeof import("../plugins/x402/index").getX402Registry;

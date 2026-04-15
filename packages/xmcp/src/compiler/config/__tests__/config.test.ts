@@ -169,6 +169,34 @@ describe("Config System - Resolution Functions", () => {
 
     assert.equal(resolved.adapter, "express");
   });
+
+  it("should reject oauth config in xmcp.config.ts", () => {
+    assert.throws(
+      () =>
+        configSchema.parse({
+          oauth: {
+            issuerUrl: "https://auth.example.com",
+            baseUrl: "https://mcp.example.com",
+          },
+        }),
+      /never/
+    );
+  });
+
+  it("should reject experimental.oauth config in xmcp.config.ts", () => {
+    assert.throws(
+      () =>
+        configSchema.parse({
+          experimental: {
+            oauth: {
+              issuerUrl: "https://auth.example.com",
+              baseUrl: "https://mcp.example.com",
+            },
+          },
+        }),
+      /never/
+    );
+  });
 });
 
 describe("Config System - Injection Functions", () => {

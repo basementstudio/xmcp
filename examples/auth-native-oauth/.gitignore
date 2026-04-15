@@ -1,0 +1,4 @@
+.xmcp
+dist
+node_modules
+provider/dist

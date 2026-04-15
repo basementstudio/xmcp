@@ -41,7 +41,7 @@ export function clerkProvider(config: config): Middleware {
   return {
     middleware: clerkMiddleware(config),
     router: clerkRouter(config),
-  };
+  } as unknown as Middleware;
 }
 
 function clerkRouter(config: config): Router {

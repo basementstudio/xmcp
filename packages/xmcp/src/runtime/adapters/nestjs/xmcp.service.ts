@@ -11,6 +11,7 @@ import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 import type { CorsConfig } from "@/compiler/config";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
@@ -42,7 +43,11 @@ export class XmcpService implements OnModuleInit, OnModuleDestroy {
 
     return new Promise((resolve) => {
       httpRequestContextProvider(
-        { id: requestId, headers: req.headers },
+        {
+          id: requestId,
+          headers: req.headers,
+          auth: (req as Request & { auth?: AuthInfo }).auth,
+        },
         async () => {
           try {
             setHeaders(res, corsConfig, req.headers.origin);

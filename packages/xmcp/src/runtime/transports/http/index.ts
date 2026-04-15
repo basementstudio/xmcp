@@ -48,13 +48,15 @@ async function main() {
 
   // process the middleware file content splitting into providers (middlewares and/or routers) preserving sequence
   if (middleware) {
-    const middlewareModule = await middleware();
-    if (middlewareModule && middlewareModule.default) {
-      const defaultExport = middlewareModule.default;
+      const middlewareModule = await middleware();
+      if (middlewareModule && middlewareModule.default) {
+        const defaultExport = middlewareModule.default;
 
-      providers = processProviders(defaultExport);
+        providers = await processProviders(defaultExport, {
+          endpoint: options.endpoint ?? "/mcp",
+        });
+      }
     }
-  }
 
   httpTransportContextProvider(
     {

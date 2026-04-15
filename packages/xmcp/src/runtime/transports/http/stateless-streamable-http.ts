@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { StreamableHTTPServerTransport as SdkStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types";
 import express, {
   Express,
   Request,
@@ -21,7 +20,10 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  httpRequestContextProvider,
+  setHttpRequestContext,
+} from "@/runtime/contexts/http-request-context";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
@@ -91,6 +93,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
 // Stateless HTTP Transport wrapper
 export class StatelessStreamableHTTPTransport {
   private app: Express;
+  private providerRouter = express.Router();
   private server: http.Server;
   private port: number;
   private endpoint: string;
@@ -99,6 +102,7 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
+  private providersInitialized = false;
   private sessions = new Map<
     string,
     {
@@ -127,11 +131,18 @@ export class StatelessStreamableHTTPTransport {
 
     // Setup JSON parsing middleware FIRST
     this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
+    this.app.use(
+      express.urlencoded({
+        extended: false,
+        limit: this.options.bodySizeLimit || "10mb",
+      })
+    );
 
     this.setupInitialRoutes();
     this.setupInitialMiddleware();
 
-    this.setupProviders();
+    this.app.use(this.providerRouter);
+    this.app.use(this.syncAuthContextFromRequest);
 
     this.setupEndpointRoute();
   }
@@ -142,18 +153,24 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
-  private setupProviders(): void {
+  private async setupProviders(): Promise<void> {
+    if (this.providersInitialized) {
+      return;
+    }
+
     if (this.providers) {
       for (const provider of this.providers) {
         if (provider.router) {
-          this.app.use(provider.router);
+          this.providerRouter.use(provider.router);
         }
 
         if (provider.middleware) {
-          this.app.use(provider.middleware);
+          this.providerRouter.use(provider.middleware);
         }
       }
     }
+
+    this.providersInitialized = true;
   }
 
   private setupInitialMiddleware(): void {
@@ -196,7 +213,8 @@ export class StatelessStreamableHTTPTransport {
     // isolate requests context
     this.app.use((req: Request, _res: Response, next: NextFunction) => {
       const id = randomUUID();
-      httpRequestContextProvider({ id, headers: req.headers }, () => {
+      const auth = (req as Request & { auth?: AuthInfo }).auth;
+      httpRequestContextProvider({ id, headers: req.headers, auth }, () => {
         next();
       });
     });
@@ -229,12 +247,22 @@ export class StatelessStreamableHTTPTransport {
   private setupEndpointRoute(): void {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       this.log(`${req.method} ${req.path}`);
-
       this.extractAndStoreToolName(req);
 
       await this.handleStatelessRequest(req, res);
     });
   }
+
+  private syncAuthContextFromRequest = (
+    req: Request,
+    _res: Response,
+    next: NextFunction
+  ): void => {
+    setHttpRequestContext({
+      auth: (req as Request & { auth?: AuthInfo }).auth,
+    });
+    next();
+  };
 
   private extractAndStoreToolName(req: Request): void {
     try {
@@ -256,6 +284,7 @@ export class StatelessStreamableHTTPTransport {
     try {
       const sessionId = this.getSessionId(req);
       let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
+      let ephemeralLifecycle = false;
 
       res.on("finish", () => {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
@@ -264,26 +293,35 @@ export class StatelessStreamableHTTPTransport {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
 
-      if (!lifecycle) {
-        if (sessionId || req.method !== "POST" || !isInitializeRequest(req.body)) {
-          res.status(400).json({
-            jsonrpc: "2.0",
-            error: {
-              code: -32000,
-              message: "Bad Request: No valid session ID provided",
-            },
-            id: null,
-          });
-          return;
-        }
-
-        lifecycle = await this.createSessionLifecycle();
+      if (sessionId && !lifecycle) {
+        res.status(404).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32001,
+            message: "Session not found",
+          },
+          id: null,
+        });
+        return;
       }
 
-      await lifecycle.transport.handleRequest(req, res, req.body);
+      if (!lifecycle) {
+        lifecycle = await this.createSessionLifecycle();
+        ephemeralLifecycle = true;
+      }
 
-      if (!sessionId && lifecycle.transport.sessionId) {
-        this.sessions.set(lifecycle.transport.sessionId, lifecycle);
+      try {
+        await lifecycle.transport.handleRequest(req, res, req.body);
+      } finally {
+        if (!sessionId && lifecycle.transport.sessionId) {
+          this.sessions.set(lifecycle.transport.sessionId, lifecycle);
+          ephemeralLifecycle = false;
+        }
+
+        if (ephemeralLifecycle) {
+          await lifecycle.transport.close();
+          await lifecycle.server.close();
+        }
       }
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
@@ -337,6 +375,8 @@ export class StatelessStreamableHTTPTransport {
   }
 
   public async start(): Promise<void> {
+    await this.setupProviders();
+
     const host = this.options.host || "127.0.0.1";
     const port = await findAvailablePort(this.port, host);
 

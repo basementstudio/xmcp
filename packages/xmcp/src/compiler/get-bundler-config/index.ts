@@ -147,6 +147,7 @@ export function getRspackConfig(
       },
       alias: {
         ...nodeBuiltinAliases,
+        "xmcp/auth": path.resolve(processFolder, ".xmcp/auth.js"),
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
         "xmcp/plugins/x402":
