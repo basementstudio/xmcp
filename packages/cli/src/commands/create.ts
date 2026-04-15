@@ -194,11 +194,10 @@ function buildTemplate({
 
 function buildToolTemplate(name: string) {
   const functionName = toIdentifier(name);
-  const title = pascalCase(name);
   const safeName = toFileSafeName(name);
 
   return `import { z } from "zod";
-import { type ToolMetadata, type InferSchema } from "xmcp";
+import { type ToolMetadata } from "xmcp";
 
 export const schema = {
   // Add your parameters here
@@ -208,16 +207,9 @@ export const schema = {
 export const metadata: ToolMetadata = {
   name: "${safeName}",
   description: "TODO: Add description",
-  annotations: {
-    title: "${title}",
-    readOnlyHint: true,
-    destructiveHint: false,
-    idempotentHint: true,
-  },
 };
 
-export default function ${functionName}(params: InferSchema<typeof schema>) {
-  void params;
+export default function ${functionName}() {
   // TODO: Implement your tool logic here
   return "Hello from ${safeName}!";
 }
@@ -285,7 +277,7 @@ function buildPromptTemplate(name: string) {
   const safeName = toFileSafeName(name);
 
   return `import { z } from "zod";
-import { type InferSchema, type PromptMetadata } from "xmcp";
+import { type PromptMetadata } from "xmcp";
 
 export const schema = {
   // Add your parameters here
@@ -299,8 +291,7 @@ export const metadata: PromptMetadata = {
   role: "user",
 };
 
-export default function ${functionName}(params: InferSchema<typeof schema>) {
-  void params;
+export default function ${functionName}() {
   // TODO: Implement your prompt logic here
   return "Your prompt content here";
 }

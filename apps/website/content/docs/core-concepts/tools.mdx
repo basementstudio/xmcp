@@ -533,3 +533,42 @@ If the file exists but does not export a default handler, startup will log:
   exports. Invalid implementations and real import/syntax errors still surface
   as normal runtime errors.
 </Callout>
+
+## CLI Scaffolding
+
+You can use the CLI to scaffold tools, resources, and prompts.
+
+### Create a tool
+
+```bash
+xmcp create tool my-tool
+```
+
+### Create a resource
+
+```bash
+xmcp create resource my-resource
+```
+
+### Create a prompt
+
+```bash
+xmcp create prompt my-prompt
+```
+
+### Output
+
+Each command creates a starter file in the default directory for that primitive:
+
+- `xmcp create tool my-tool` → `src/tools/my-tool.ts`
+- `xmcp create resource my-resource` → `src/resources/my-resource.ts`
+- `xmcp create prompt my-prompt` → `src/prompts/my-prompt.ts`
+
+The generated file already includes the basic exports you need to continue:
+
+- tools: `schema`, `metadata`, and a default function
+- resources: `metadata` and a default function
+- prompts: `schema`, `metadata`, and a default function
+
+So instead of starting from an empty file, you get a ready-to-edit template with placeholder descriptions and example return values.
+
