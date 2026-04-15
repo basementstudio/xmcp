@@ -21,13 +21,24 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  httpRequestContextProvider,
+  setHttpRequestContext,
+} from "@/runtime/contexts/http-request-context";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import type { McpClientInfo } from "@/types/client-info";
+
+interface SessionLifecycle {
+  server: McpServer;
+  transport: SdkStreamableHTTPServerTransport;
+  clientInfo?: McpClientInfo;
+}
 
 // Global type declarations for tool name context
 declare global {
@@ -99,13 +110,7 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
-  private sessions = new Map<
-    string,
-    {
-      server: McpServer;
-      transport: SdkStreamableHTTPServerTransport;
-    }
-  >();
+  private sessions = new Map<string, SessionLifecycle>();
 
   constructor(
     createServerFn: () => Promise<McpServer>,
@@ -254,8 +259,10 @@ export class StatelessStreamableHTTPTransport {
     res: Response
   ): Promise<void> {
     try {
+      const requestClientInfo = extractClientInfoFromMessages(req.body);
       const sessionId = this.getSessionId(req);
       let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
+      let clientInfo = requestClientInfo;
 
       res.on("finish", () => {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
@@ -265,7 +272,11 @@ export class StatelessStreamableHTTPTransport {
       });
 
       if (!lifecycle) {
-        if (sessionId || req.method !== "POST" || !isInitializeRequest(req.body)) {
+        if (
+          sessionId ||
+          req.method !== "POST" ||
+          !isInitializeRequest(req.body)
+        ) {
           res.status(400).json({
             jsonrpc: "2.0",
             error: {
@@ -280,10 +291,24 @@ export class StatelessStreamableHTTPTransport {
         lifecycle = await this.createSessionLifecycle();
       }
 
+      if (!clientInfo) {
+        clientInfo = lifecycle.clientInfo;
+      }
+
+      setHttpRequestContext({ clientInfo });
+
       await lifecycle.transport.handleRequest(req, res, req.body);
 
       if (!sessionId && lifecycle.transport.sessionId) {
-        this.sessions.set(lifecycle.transport.sessionId, lifecycle);
+        this.sessions.set(lifecycle.transport.sessionId, {
+          ...lifecycle,
+          clientInfo,
+        });
+      } else if (sessionId && lifecycle.transport.sessionId) {
+        this.sessions.set(lifecycle.transport.sessionId, {
+          ...lifecycle,
+          clientInfo,
+        });
       }
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
@@ -307,15 +332,10 @@ export class StatelessStreamableHTTPTransport {
       return header[0];
     }
 
-    return typeof header === "string" && header.length > 0
-      ? header
-      : undefined;
+    return typeof header === "string" && header.length > 0 ? header : undefined;
   }
 
-  private async createSessionLifecycle(): Promise<{
-    server: McpServer;
-    transport: SdkStreamableHTTPServerTransport;
-  }> {
+  private async createSessionLifecycle(): Promise<SessionLifecycle> {
     const server = await this.createServerFn();
     const transport = new SdkStreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),

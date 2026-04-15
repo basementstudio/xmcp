@@ -6,6 +6,7 @@ import {
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
+import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
@@ -52,9 +53,7 @@ export type UserToolResponse =
 export type UserToolHandler = (
   args: ZodRawShape,
   extra: ToolExtraArguments
-) =>
-  | UserToolResponse
-  | Promise<UserToolResponse>;
+) => UserToolResponse | Promise<UserToolResponse>;
 
 /**
  * Type for the transformed handler that the MCP server expects
@@ -75,8 +74,17 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
 function createToolExtraArguments(
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ): ToolExtraArguments {
+  let clientInfo = undefined;
+
+  try {
+    clientInfo = getHttpRequestContext().clientInfo;
+  } catch {
+    // no request context available (for example, stdio transport)
+  }
+
   return {
     ...(extra as ToolExtraArguments),
+    clientInfo,
     elicit: (request, options) =>
       elicitFromTool(extra as ToolExtraArguments, request, options),
   };
