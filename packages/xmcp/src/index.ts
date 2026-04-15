@@ -1,5 +1,9 @@
 import dotenv from "dotenv";
-export type { Middleware, WebMiddleware, WebMiddlewareContext } from "./types/middleware";
+export type {
+  Middleware,
+  WebMiddleware,
+  WebMiddlewareContext,
+} from "./types/middleware";
 dotenv.config();
 
 export type {
@@ -10,6 +14,7 @@ export type {
   InferSchema,
   ElicitResult,
 } from "./types/tool";
+export type { McpClientInfo } from "./types/client-info";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";

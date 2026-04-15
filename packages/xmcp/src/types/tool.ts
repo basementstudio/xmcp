@@ -2,6 +2,7 @@ import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
 import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/sdk/types";
 import { UIMetadata } from "./ui-meta";
+import type { McpClientInfo } from "./client-info";
 
 export interface ToolAnnotations {
   /** Human-readable title for the tool */
@@ -119,7 +120,8 @@ export interface ElicitUrlRequest {
 
 export type ElicitRequest = ElicitFormRequest | ElicitUrlRequest;
 
-// The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @modelcontextprotocol/sdk but fully resolved to avoid external type dependencies.
+// The ToolExtraArguments type is based on Parameters<ToolCallback<undefined>>[0]
+// from @modelcontextprotocol/sdk, with xmcp-specific extensions.
 /**
  * Extra arguments passed to MCP tool functions.
  */
@@ -160,6 +162,9 @@ export interface ToolExtraArguments {
     /** The headers of the request */
     headers: Record<string, string | string[] | undefined>;
   };
+
+  /** MCP client metadata from initialize.params.clientInfo, when available */
+  clientInfo?: McpClientInfo;
 
   /** Sends a notification that relates to the current request being handled */
   sendNotification: (notification: any) => Promise<void>;
