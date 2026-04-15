@@ -17,6 +17,14 @@ export function TestimonialsCarousel({
   children: React.ReactNode;
 }) {
   const items = React.Children.toArray(children);
+  const loopItems = React.useMemo(() => {
+    if (items.length <= 1) return items;
+    if (items.length >= 6) return items;
+
+    const repeatCount = Math.ceil(6 / items.length);
+
+    return Array.from({ length: repeatCount }, () => items).flat();
+  }, [items]);
   const [api, setApi] = React.useState<CarouselApi>();
   const [isHovered, setIsHovered] = React.useState(false);
   const [isPausedByInteraction, setIsPausedByInteraction] =
@@ -44,14 +52,15 @@ export function TestimonialsCarousel({
   }, []);
 
   React.useEffect(() => {
-    if (!api || items.length < 2 || isHovered || isPausedByInteraction) return;
+    if (!api || loopItems.length < 2 || isHovered || isPausedByInteraction)
+      return;
 
     const autoPlayTimer = setInterval(() => {
       api.scrollNext();
     }, 5000);
 
     return () => clearInterval(autoPlayTimer);
-  }, [api, isHovered, isPausedByInteraction, items.length]);
+  }, [api, isHovered, isPausedByInteraction, loopItems.length]);
 
   React.useEffect(() => {
     if (!api) return;
@@ -71,15 +80,15 @@ export function TestimonialsCarousel({
           align: "start",
           loop: items.length > 1,
         }}
-        className="w-full md:px-12"
+        className="w-full px-2 md:px-14 lg:px-16"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <CarouselContent className="-ml-0 md:-ml-5">
-          {items.map((child, index) => (
+        <CarouselContent className="pl-px -ml-0 gap-0 md:gap-6">
+          {loopItems.map((child, index) => (
             <CarouselItem
               key={index}
-              className="pl-0 md:basis-1/2 md:pl-5 lg:basis-1/3"
+              className="pl-0 md:basis-[calc((100%-1.5rem)/2)] lg:basis-[calc((100%-3rem)/3)]"
             >
               {child}
             </CarouselItem>
