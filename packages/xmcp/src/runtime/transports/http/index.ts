@@ -1,6 +1,5 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
-import { OAuthConfigOptions } from "../../../auth/oauth/types";
 import { Middleware } from "@/types/middleware";
 import {
   CorsConfig,
@@ -18,7 +17,6 @@ dotenv.config();
 const httpConfig = HTTP_CONFIG as ResolvedHttpConfig;
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 const templateConfig = TEMPLATE_CONFIG as TemplateConfig;
-const oauthConfig = OAUTH_CONFIG as OAuthConfigOptions | undefined;
 
 // middleware
 const middleware = INJECTED_MIDDLEWARE as () =>
@@ -50,13 +48,15 @@ async function main() {
 
   // process the middleware file content splitting into providers (middlewares and/or routers) preserving sequence
   if (middleware) {
-    const middlewareModule = await middleware();
-    if (middlewareModule && middlewareModule.default) {
-      const defaultExport = middlewareModule.default;
+      const middlewareModule = await middleware();
+      if (middlewareModule && middlewareModule.default) {
+        const defaultExport = middlewareModule.default;
 
-      providers = processProviders(defaultExport);
+        providers = await processProviders(defaultExport, {
+          endpoint: options.endpoint ?? "/mcp",
+        });
+      }
     }
-  }
 
   httpTransportContextProvider(
     {
@@ -69,7 +69,6 @@ async function main() {
         createServer,
         options,
         corsOptions,
-        oauthConfig,
         providers
       );
 

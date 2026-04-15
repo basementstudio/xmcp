@@ -7,7 +7,6 @@ import {
   corsConfigSchema,
   experimentalConfigSchema,
   DEFAULT_PATHS,
-  oauthConfigSchema,
 } from "./schemas";
 import type { z } from "zod/v3";
 import type { XmcpConfigOutputSchema } from "./index";
@@ -149,55 +148,8 @@ export function getResolvedTemplateConfig(
 
 export type ResolvedExperimentalConfig = Pick<
   z.output<typeof experimentalConfigSchema>,
-  "adapter" | "oauth"
+  "adapter"
 >;
-
-export type ResolvedOAuthConfig = z.output<typeof oauthConfigSchema> | null;
-
-const emittedOAuthWarnings = new Set<string>();
-
-function warnOnce(message: string) {
-  if (emittedOAuthWarnings.has(message)) {
-    return;
-  }
-
-  emittedOAuthWarnings.add(message);
-  console.warn(message);
-}
-
-function getOAuthSourceConfig(
-  userConfig: XmcpConfigOutputSchema
-): ResolvedOAuthConfig {
-  const stableOauth =
-    userConfig?.oauth && typeof userConfig.oauth === "object"
-      ? oauthConfigSchema.parse(userConfig.oauth)
-      : null;
-  const experimentalOauth =
-    userConfig?.experimental?.oauth &&
-    typeof userConfig.experimental.oauth === "object"
-      ? oauthConfigSchema.parse(userConfig.experimental.oauth)
-      : null;
-
-  if (stableOauth && experimentalOauth) {
-    warnOnce(
-      "[xmcp] Both oauth and experimental.oauth are configured. The stable oauth config takes precedence."
-    );
-    return stableOauth;
-  }
-
-  if (stableOauth) {
-    return stableOauth;
-  }
-
-  if (experimentalOauth) {
-    warnOnce(
-      "[xmcp] experimental.oauth is deprecated and will be removed in a future release. Move this configuration to the top-level oauth key."
-    );
-    return experimentalOauth;
-  }
-
-  return null;
-}
 
 export function getResolvedExperimentalConfig(
   userConfig: XmcpConfigOutputSchema
@@ -205,17 +157,7 @@ export function getResolvedExperimentalConfig(
   const experimental = userConfig?.experimental;
   return {
     adapter: experimental?.adapter,
-    oauth:
-      experimental?.oauth && typeof experimental.oauth === "object"
-        ? oauthConfigSchema.parse(experimental.oauth)
-        : undefined,
   };
-}
-
-export function getResolvedOAuthConfig(
-  userConfig: XmcpConfigOutputSchema
-): ResolvedOAuthConfig {
-  return getOAuthSourceConfig(userConfig);
 }
 
 export function getResolvedTypescriptConfig(

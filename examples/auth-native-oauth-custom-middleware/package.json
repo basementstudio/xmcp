@@ -1,6 +1,6 @@
 {
   "name": "Native OAuth Custom Middleware HTTP",
-  "description": "Demonstrates xmcp native OAuth routes with custom request verification on the HTTP transport",
+  "description": "Demonstrates xmcp native OAuth routes with stateless custom JWT verification on the HTTP transport",
   "keywords": [
     "oauth",
     "http",

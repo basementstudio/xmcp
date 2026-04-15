@@ -1,15 +1,14 @@
-import { RequestHandler } from "express";
 import { ProxyOAuthServerProvider } from "./providers/proxy-provider";
 import { createOAuthRouter, createOAuthMiddleware } from "./router";
-import { MemoryOAuthStorage } from "./storage/memory-storage";
-import { ProxyOAuthProviderConfig, OAuthRouterConfig, OAuthProxyConfig } from "./types";
+import {
+  ProxyOAuthProviderConfig,
+  OAuthRouterConfig,
+  OAuthProxyConfig,
+  OAuthProxy,
+  NativeOAuthMiddlewareConfig,
+} from "./types";
 import { resolveOAuthConfig } from "./resolve-config";
-
-export interface OAuthProxy {
-  provider: ProxyOAuthServerProvider;
-  router: RequestHandler;
-  middleware?: RequestHandler;
-}
+import { MiddlewareProviderFactory } from "@/types/middleware";
 
 export async function createOAuthProxy(
   config: OAuthProxyConfig
@@ -17,7 +16,6 @@ export async function createOAuthProxy(
   const resolvedConfig = await resolveOAuthConfig(config);
   const providerConfig: ProxyOAuthProviderConfig = {
     endpoints: resolvedConfig.endpoints,
-    storage: config.storage || new MemoryOAuthStorage(),
     issuerUrl: resolvedConfig.issuerUrl,
     baseUrl: resolvedConfig.baseUrl,
     resourceUrl: resolvedConfig.resourceUrl,
@@ -46,5 +44,23 @@ export async function createOAuthProxy(
             protectedPath: config.mcpEndpoint,
           })
         : undefined,
+  };
+}
+
+export function nativeOAuthMiddleware(
+  config: NativeOAuthMiddlewareConfig
+): MiddlewareProviderFactory {
+  return {
+    async resolve(context) {
+      const proxy = await createOAuthProxy({
+        ...config,
+        mcpEndpoint: context.endpoint,
+      });
+
+      return {
+        router: proxy.router,
+        middleware: proxy.middleware,
+      };
+    },
   };
 }

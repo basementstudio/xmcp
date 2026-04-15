@@ -1,3 +1,5 @@
+import type { Router } from "express";
+
 export interface AccessToken {
   token: string;
   clientId: string;
@@ -33,20 +35,8 @@ export interface TokenResponse {
   scope?: string;
 }
 
-export interface OAuthStorage {
-  tokens: TokenStorage;
-}
-
-export interface TokenStorage {
-  getToken(token: string): Promise<AccessToken | null>;
-  saveToken(token: AccessToken): Promise<void>;
-  deleteToken(token: string): Promise<void>;
-  deleteTokensByClient(clientId: string): Promise<void>;
-}
-
 export interface ProxyOAuthProviderConfig {
   endpoints: OAuthEndpoints;
-  storage?: OAuthStorage;
   issuerUrl: string;
   baseUrl: string;
   resourceUrl: string;
@@ -104,7 +94,7 @@ export interface RevokeParams {
   client_secret?: string;
 }
 
-export interface OAuthConfigOptions {
+export interface NativeOAuthMiddlewareConfig {
   endpoints?: OAuthEndpointOverrides;
   issuerUrl: string;
   baseUrl: string;
@@ -119,8 +109,9 @@ export interface OAuthConfigOptions {
   audience?: OAuthAudience;
 }
 
-export interface OAuthProxyConfig extends OAuthConfigOptions {
-  storage?: OAuthStorage;
+export type OAuthConfigOptions = NativeOAuthMiddlewareConfig;
+
+export interface OAuthProxyConfig extends NativeOAuthMiddlewareConfig {
   mcpEndpoint?: string;
 }
 
@@ -153,4 +144,10 @@ export interface ResolvedOAuthConfig {
   introspectionClientSecret?: string;
   audience: OAuthAudience;
   providerMetadata: OAuthProviderMetadata;
+}
+
+export interface OAuthProxy {
+  provider: ProxyOAuthServerProvider;
+  router: Router;
+  middleware?: import("express").RequestHandler;
 }

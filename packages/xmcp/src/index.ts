@@ -18,7 +18,11 @@ export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
-export type { OAuthConfigOptions } from "./auth/oauth";
+export { nativeOAuthMiddleware } from "./auth/oauth";
+export type {
+  NativeOAuthMiddlewareConfig,
+  OAuthConfigOptions,
+} from "./auth/oauth";
 
 export { createContext } from "./utils/context";
 

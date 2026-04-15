@@ -34,8 +34,6 @@ declare const HTTP_CONFIG: Omit<
 
 declare const HTTP_CORS_CONFIG: import("../compiler/config").CorsConfig;
 
-declare const OAUTH_CONFIG: import("../auth/oauth").OAuthConfigOptions | undefined;
-
 declare const TEMPLATE_CONFIG: import("../compiler/config").TemplateConfig;
 
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };

@@ -19,8 +19,6 @@ import homeTemplate from "../../templates/home";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
-import { createOAuthProxy, type OAuthProxyConfig } from "../../../auth/oauth";
-import { OAuthProxy } from "../../../auth/oauth/factory";
 import { Provider } from "@/runtime/middlewares/utils";
 import {
   httpRequestContextProvider,
@@ -103,8 +101,6 @@ export class StatelessStreamableHTTPTransport {
   private options: HttpTransportOptions;
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
-  private oauthConfig?: OAuthProxyConfig;
-  private oauthProxy?: OAuthProxy;
   private providers: Provider[] | undefined;
   private providersInitialized = false;
   private sessions = new Map<
@@ -119,7 +115,6 @@ export class StatelessStreamableHTTPTransport {
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
-    oauthConfig?: OAuthProxyConfig,
     providers?: Provider[]
   ) {
     this.options = {
@@ -132,7 +127,6 @@ export class StatelessStreamableHTTPTransport {
     this.debug = options.debug ?? false;
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
-    this.oauthConfig = oauthConfig;
     this.providers = providers;
 
     // Setup JSON parsing middleware FIRST
@@ -148,6 +142,7 @@ export class StatelessStreamableHTTPTransport {
     this.setupInitialMiddleware();
 
     this.app.use(this.providerRouter);
+    this.app.use(this.syncAuthContextFromRequest);
 
     this.setupEndpointRoute();
   }
@@ -161,18 +156,6 @@ export class StatelessStreamableHTTPTransport {
   private async setupProviders(): Promise<void> {
     if (this.providersInitialized) {
       return;
-    }
-
-    if (this.oauthConfig) {
-      this.oauthProxy = await createOAuthProxy({
-        ...this.oauthConfig,
-        mcpEndpoint: this.endpoint,
-      });
-      this.providerRouter.use(this.oauthProxy.router);
-
-      if (this.oauthProxy.middleware) {
-        this.providerRouter.use(this.oauthProxy.middleware);
-      }
     }
 
     if (this.providers) {
@@ -264,15 +247,22 @@ export class StatelessStreamableHTTPTransport {
   private setupEndpointRoute(): void {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       this.log(`${req.method} ${req.path}`);
-
-      setHttpRequestContext({
-        auth: (req as Request & { auth?: AuthInfo }).auth,
-      });
       this.extractAndStoreToolName(req);
 
       await this.handleStatelessRequest(req, res);
     });
   }
+
+  private syncAuthContextFromRequest = (
+    req: Request,
+    _res: Response,
+    next: NextFunction
+  ): void => {
+    setHttpRequestContext({
+      auth: (req as Request & { auth?: AuthInfo }).auth,
+    });
+    next();
+  };
 
   private extractAndStoreToolName(req: Request): void {
     try {

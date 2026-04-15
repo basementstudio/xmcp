@@ -1,10 +1,10 @@
 # Native OAuth HTTP Example
 
-This example demonstrates xmcp native OAuth on the core HTTP transport with the stable `oauth` config, built-in bearer-token middleware, and a real local OAuth provider.
+This example demonstrates xmcp native OAuth on the core HTTP transport through `src/middleware.ts`, built-in bearer-token middleware, and a real local OAuth provider.
 
 ## What it shows
 
-- top-level `oauth` serving resource metadata and authorization-server metadata
+- `nativeOAuthMiddleware(...)` serving resource metadata and authorization-server metadata
 - issuer discovery resolving authorization, token, registration, revocation, introspection, and JWKS metadata from the local provider
 - a real local OAuth provider process with authorization code + PKCE, token, JWKS, introspection, revoke, and dynamic client registration
 - built-in native OAuth middleware validating JWT access tokens through the discovered JWKS endpoint
@@ -21,6 +21,8 @@ pnpm --dir examples/auth-native-oauth dev
 The MCP server runs on `http://127.0.0.1:3004`.
 
 The embedded OAuth provider runs on `http://127.0.0.1:4404`.
+
+OAuth is mounted from [src/middleware.ts](/Users/0xkoller/xmcp/xmcp/examples/auth-native-oauth/src/middleware.ts), not from `xmcp.config.ts`.
 
 ## Important endpoints
 
@@ -79,6 +81,8 @@ curl -X POST http://127.0.0.1:3004/oauth2/token \
 ```
 
 The returned `access_token` is a signed JWT. The MCP server validates it through the provider JWKS endpoint discovered from the issuer metadata.
+
+xmcp does not keep a local token cache for this flow. Each authenticated request is verified statelessly against the discovered provider metadata.
 
 Clients may probe `http://127.0.0.1:3004/mcp` directly during OAuth bootstrap. xmcp responds with a bearer challenge that points at endpoint-scoped protected-resource metadata for `/mcp`.
 

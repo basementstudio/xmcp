@@ -4,6 +4,7 @@
     "module": "commonjs",
     "baseUrl": ".",
     "paths": {
+      "jose": ["../../node_modules/.pnpm/jose@6.1.3/node_modules/jose"],
       "xmcp": ["../../packages/xmcp/src/index.ts"],
       "xmcp/auth": ["../../packages/xmcp/src/runtime/auth.ts"],
       "@/*": ["../../packages/xmcp/src/*"]

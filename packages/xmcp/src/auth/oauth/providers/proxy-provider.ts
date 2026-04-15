@@ -8,9 +8,7 @@ import {
   RevokeParams,
   TokenResponse,
   OAuthError,
-  OAuthStorage,
 } from "../types";
-import { MemoryOAuthStorage } from "../storage/memory-storage";
 
 type IntrospectionResponse = {
   active?: boolean;
@@ -25,11 +23,9 @@ type IntrospectionResponse = {
 
 export class ProxyOAuthServerProvider implements IProxyOAuthServerProvider {
   private config: ProxyOAuthProviderConfig;
-  private storage: OAuthStorage;
 
   constructor(config: ProxyOAuthProviderConfig) {
     this.config = config;
-    this.storage = config.storage || new MemoryOAuthStorage();
   }
 
   get endpoints() {
@@ -37,11 +33,6 @@ export class ProxyOAuthServerProvider implements IProxyOAuthServerProvider {
   }
 
   async verifyAccessToken(token: string): Promise<AccessToken> {
-    const storedToken = await this.storage.tokens.getToken(token);
-    if (storedToken) {
-      return storedToken;
-    }
-
     return await this.verifyTokenWithProvider(token);
   }
 
@@ -139,18 +130,7 @@ export class ProxyOAuthServerProvider implements IProxyOAuthServerProvider {
       }
 
       if (tokenData.access_token) {
-        const accessToken: AccessToken = {
-          token: tokenData.access_token,
-          clientId: client_id,
-          scopes: tokenData.scope ? tokenData.scope.split(" ").filter(Boolean) : [],
-          expiresAt: tokenData.expires_in
-            ? new Date(Date.now() + tokenData.expires_in * 1000)
-            : undefined,
-          refreshToken: tokenData.refresh_token,
-          resource: new URL(this.config.resourceUrl),
-        };
-
-        await this.storage.tokens.saveToken(accessToken);
+        return tokenData as TokenResponse;
       }
 
       return tokenData as TokenResponse;
@@ -164,8 +144,6 @@ export class ProxyOAuthServerProvider implements IProxyOAuthServerProvider {
 
   async revoke(params: RevokeParams): Promise<void> {
     const { token, token_type_hint, client_id, client_secret } = params;
-
-    await this.storage.tokens.deleteToken(token);
 
     if (this.config.endpoints.revocationUrl) {
       const response = await fetch(this.config.endpoints.revocationUrl, {

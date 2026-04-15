@@ -140,7 +140,7 @@ function renderConsentPage(params: {
   <body>
     <main>
       <h1>Authorize ${client.clientName}</h1>
-      <p>Update the identity below before approving. The values you submit will flow through introspection and into the MCP <code>whoami</code> tool.</p>
+      <p>Update the identity below before approving. The values you submit will be minted into the access token and will appear in the MCP <code>whoami</code> tool.</p>
       <ul>
         <li>Redirect URI: <code>${redirectUri}</code></li>
         <li>Scopes: <code>${scope || DEFAULT_SCOPES.join(" ")}</code></li>

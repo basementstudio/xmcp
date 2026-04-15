@@ -8,12 +8,10 @@ import {
   getResolvedTypescriptConfig,
   getResolvedExperimentalConfig,
   getResolvedCorsConfig,
-  getResolvedOAuthConfig,
 } from "../utils";
 import {
   injectHttpVariables,
   injectCorsVariables,
-  injectOAuthVariables,
   injectPathsVariables,
   injectTemplateVariables,
   injectTypescriptVariables,
@@ -172,64 +170,32 @@ describe("Config System - Resolution Functions", () => {
     assert.equal(resolved.adapter, "express");
   });
 
-  it("should resolve oauth config with defaults", () => {
-    const config = configSchema.parse({
-      oauth: {
-        issuerUrl: "https://auth.example.com",
-        baseUrl: "https://mcp.example.com",
-        endpoints: {
-          authorizationUrl: "https://auth.example.com/authorize",
-          tokenUrl: "https://auth.example.com/token",
-          registerUrl: "https://auth.example.com/register",
-        },
-      },
-    });
-
-    const resolved = getResolvedOAuthConfig(config);
-    assert.notEqual(resolved, null);
-    if (resolved) {
-      assert.equal(resolved.pathPrefix, "/oauth2");
-      assert.equal(resolved.middleware, true);
-      assert.deepEqual(resolved.defaultScopes, ["openid", "profile", "email"]);
-    }
+  it("should reject oauth config in xmcp.config.ts", () => {
+    assert.throws(
+      () =>
+        configSchema.parse({
+          oauth: {
+            issuerUrl: "https://auth.example.com",
+            baseUrl: "https://mcp.example.com",
+          },
+        }),
+      /never/
+    );
   });
 
-  it("should prefer stable oauth over experimental.oauth", () => {
-    const warnings: string[] = [];
-    const originalWarn = console.warn;
-    console.warn = (message: string) => warnings.push(message);
-
-    try {
-      const config = configSchema.parse({
-        oauth: {
-          issuerUrl: "https://stable.example.com",
-          baseUrl: "https://mcp.example.com",
-          endpoints: {
-            authorizationUrl: "https://stable.example.com/authorize",
-            tokenUrl: "https://stable.example.com/token",
-            registerUrl: "https://stable.example.com/register",
-          },
-        },
-        experimental: {
-          oauth: {
-            issuerUrl: "https://deprecated.example.com",
-            baseUrl: "https://mcp.example.com",
-            endpoints: {
-              authorizationUrl: "https://deprecated.example.com/authorize",
-              tokenUrl: "https://deprecated.example.com/token",
-              registerUrl: "https://deprecated.example.com/register",
+  it("should reject experimental.oauth config in xmcp.config.ts", () => {
+    assert.throws(
+      () =>
+        configSchema.parse({
+          experimental: {
+            oauth: {
+              issuerUrl: "https://auth.example.com",
+              baseUrl: "https://mcp.example.com",
             },
           },
-        },
-      });
-
-      const resolved = getResolvedOAuthConfig(config);
-      assert.notEqual(resolved, null);
-      assert.equal(resolved?.issuerUrl, "https://stable.example.com");
-      assert.equal(warnings.length > 0, true);
-    } finally {
-      console.warn = originalWarn;
-    }
+        }),
+      /never/
+    );
   });
 });
 
@@ -258,27 +224,6 @@ describe("Config System - Injection Functions", () => {
       const cors = JSON.parse(variables.HTTP_CORS_CONFIG);
       assert.equal(cors.origin, "*");
     }
-  });
-
-  it("should inject oauth variables", () => {
-    const config = configSchema.parse({
-      oauth: {
-        issuerUrl: "https://auth.example.com",
-        baseUrl: "https://mcp.example.com",
-        endpoints: {
-          authorizationUrl: "https://auth.example.com/authorize",
-          tokenUrl: "https://auth.example.com/token",
-          registerUrl: "https://auth.example.com/register",
-        },
-        middleware: false,
-      },
-    });
-
-    const variables = injectOAuthVariables(config);
-    assert.notEqual(variables.OAUTH_CONFIG, undefined);
-    const oauth = JSON.parse(variables.OAUTH_CONFIG);
-    assert.equal(oauth.middleware, false);
-    assert.equal(oauth.pathPrefix, "/oauth2");
   });
 
   it("should inject all path variables when paths are configured", () => {

@@ -6,7 +6,25 @@ export type RequestHandlerAndRouter = {
   router: Router;
 };
 
-export type Middleware = RequestHandler | RequestHandlerAndRouter;
+export type ResolvedMiddlewareProvider = {
+  middleware?: RequestHandler;
+  router?: Router;
+};
+
+export type MiddlewareProviderFactoryContext = {
+  endpoint: string;
+};
+
+export type MiddlewareProviderFactory = {
+  resolve: (
+    context: MiddlewareProviderFactoryContext
+  ) => Promise<ResolvedMiddlewareProvider | void>;
+};
+
+export type Middleware =
+  | RequestHandler
+  | RequestHandlerAndRouter
+  | MiddlewareProviderFactory;
 
 export type WebMiddlewareContext = {
   auth?: AuthInfo;

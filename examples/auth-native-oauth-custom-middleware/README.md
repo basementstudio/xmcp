@@ -1,14 +1,14 @@
 # Native OAuth Custom Middleware Example
 
-This example demonstrates xmcp native OAuth routes with `oauth.middleware: false` and a real local OAuth provider.
+This example demonstrates xmcp native OAuth routes mounted from `src/middleware.ts` with `middleware: false`, custom JWT middleware, and a real local OAuth provider.
 
 ## What it shows
 
-- xmcp still serves native OAuth metadata and proxy routes through the stable top-level `oauth` config
+- xmcp still serves native OAuth metadata and proxy routes through `nativeOAuthMiddleware(...)`
 - a real local OAuth provider process handles authorization code + PKCE, token, JWKS, introspection, revoke, and dynamic client registration
-- bearer-token verification happens entirely in `src/middleware.ts` through the provider introspection endpoint
+- bearer-token verification happens entirely in `src/middleware.ts` through the provider JWKS endpoint
 - a consent form where you can change the user identity before issuing the token
-- resource/audience values are preserved through the OAuth proxy so introspection stays aligned with the MCP resource server
+- resource/audience values are preserved through the OAuth proxy so JWT verification stays aligned with the MCP resource server
 - custom middleware attaches normalized auth to `req.auth`
 - the `whoami` tool reads that auth through `xmcp/auth`
 
@@ -22,6 +22,8 @@ The MCP server runs on `http://127.0.0.1:3005`.
 
 The embedded OAuth provider runs on `http://127.0.0.1:4405`.
 
+OAuth is mounted from [src/middleware.ts](/Users/0xkoller/xmcp/xmcp/examples/auth-native-oauth-custom-middleware/src/middleware.ts), not from `xmcp.config.ts`.
+
 ## Important endpoints
 
 - `GET http://127.0.0.1:3005/.well-known/oauth-protected-resource`
@@ -29,7 +31,6 @@ The embedded OAuth provider runs on `http://127.0.0.1:4405`.
 - `GET http://127.0.0.1:3005/.well-known/oauth-authorization-server`
 - `GET http://127.0.0.1:3005/oauth2/authorize`
 - `POST http://127.0.0.1:3005/oauth2/token`
-- `POST http://127.0.0.1:4405/introspect`
 - `GET http://127.0.0.1:4405/.well-known/jwks.json`
 - `POST http://127.0.0.1:3005/mcp`
 
@@ -77,11 +78,13 @@ curl -X POST http://127.0.0.1:3005/oauth2/token \
   -d "resource=http://127.0.0.1:3005/mcp"
 ```
 
-Unlike the built-in example, the resulting access token is not accepted by xmcp directly. `src/middleware.ts` calls the provider introspection endpoint, maps the response to `req.auth`, and then tools read it through `xmcp/auth`.
+Unlike the built-in example, the resulting access token is not accepted by xmcp directly. `src/middleware.ts` verifies the JWT against the provider JWKS, maps the claims to `req.auth`, and then tools read it through `xmcp/auth`.
+
+That verification stays stateless as well. xmcp does not persist exchanged tokens between requests.
 
 Clients may also probe `http://127.0.0.1:3005/mcp` directly during OAuth bootstrap. xmcp responds with a bearer challenge that points at endpoint-scoped protected-resource metadata for `/mcp`.
 
-The profile values you entered on the consent page are returned by introspection and show up in the `whoami` tool response.
+The profile values you entered on the consent page are embedded in the JWT and show up in the `whoami` tool response.
 
 ## Example MCP client config
 
