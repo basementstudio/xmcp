@@ -17,7 +17,7 @@ export default async function extraArguments(
   _: unknown,
   extra: ToolExtraArguments
 ) {
-  const extraArguments = JSON.stringify(extra); // to render a readable string
+  const extraArguments = JSON.stringify(extra, null, 2); // to render a readable string
 
   return `Your extra arguments are: ${extraArguments}`;
 }

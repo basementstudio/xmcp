@@ -365,6 +365,7 @@ export default async function whoami(
   extra: ToolExtraArguments
 ) {
   const authInfo = extra.authInfo;
+  const clientInfo = extra.clientInfo;
 
   if (!authInfo) {
     return "Not authenticated";
@@ -374,6 +375,8 @@ export default async function whoami(
     {
       clientId: authInfo.clientId,
       scopes: authInfo.scopes,
+      clientName: clientInfo?.name,
+      clientVersion: clientInfo?.version,
     },
     null,
     2
