@@ -1,0 +1,122 @@
+---
+title: "Fastify"
+metadataTitle: "Usage with Fastify | xmcp Documentation"
+publishedAt: "2026-04-16"
+summary: "Learn how to use xmcp with Fastify to build and deploy MCP servers."
+description: "Run an xmcp MCP server on Fastify. Works on any Node.js deployment target including AWS Lambda."
+---
+
+## Installation
+
+`xmcp` can work on top of your existing Fastify project. To get started, run the following command in your project directory:
+
+```bash
+npx init-xmcp@latest
+```
+
+After setting up the project, your build command should look like this:
+
+```json
+{
+  "scripts": {
+    "build": "xmcp build && tsc"
+  }
+}
+```
+
+`xmcp build` bundles your tools into `.xmcp/adapter`.
+
+## Usage
+
+Install Fastify and register the MCP handler on your server:
+
+```bash
+npm install fastify
+```
+
+```typescript
+import Fastify from "fastify";
+import { xmcpHandler } from "@xmcp/adapter";
+
+const app = Fastify({ logger: false });
+
+app.post("/mcp", xmcpHandler);
+app.get("/mcp", xmcpHandler); // required for SSE / streaming clients
+
+await app.listen({ port: 3000 });
+```
+
+<Callout variant="info">
+  For browser-origin clients, add CORS and preflight handling at the Fastify app
+  level (e.g. `@fastify/cors`). The `xmcpHandler` handles the MCP endpoint only
+  — it does not register an OPTIONS route.
+</Callout>
+
+## AWS Lambda
+
+Use `@fastify/aws-lambda` as the Lambda bridge:
+
+```bash
+npm install fastify @fastify/aws-lambda
+```
+
+```typescript
+import Fastify from "fastify";
+import awsLambdaFastify from "@fastify/aws-lambda";
+import { xmcpHandler } from "@xmcp/adapter";
+
+const app = Fastify({ logger: false });
+
+app.post("/mcp", xmcpHandler);
+
+export const handler = awsLambdaFastify(app);
+```
+
+The default buffered form (`awsLambdaFastify(app)`) works for all JSON-RPC POST requests (`initialize`, `tools/call`, etc.). GET/SSE is not supported in buffered mode — see the streaming form below.
+
+### SSE support on Lambda
+
+To support SSE via `GET /mcp`, use a Lambda Function URL with `InvokeMode: RESPONSE_STREAM` and switch to the streaming form:
+
+```typescript
+import Fastify from "fastify";
+import awsLambdaFastify from "@fastify/aws-lambda";
+import { xmcpHandler } from "@xmcp/adapter";
+import { promisify } from "node:util";
+import stream from "node:stream";
+
+const pipeline = promisify(stream.pipeline);
+const app = Fastify({ logger: false });
+
+app.post("/mcp", xmcpHandler);
+app.get("/mcp", xmcpHandler);
+
+const proxy = awsLambdaFastify(app, { payloadAsStream: true });
+
+export const handler = awslambda.streamifyResponse(
+  async (event, responseStream, context) => {
+    const { meta, stream: bodyStream } = await proxy(event, context);
+    responseStream = awslambda.HttpResponseStream.from(responseStream, meta);
+    await pipeline(bodyStream, responseStream);
+  }
+);
+```
+
+<Callout variant="info">
+  `middleware.ts` is not supported in adapter mode.
+</Callout>
+
+## xmcp.config.ts
+
+```typescript
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+  experimental: {
+    adapter: "fastify",
+  },
+};
+
+export default config;
+```

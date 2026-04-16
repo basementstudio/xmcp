@@ -23,6 +23,8 @@ export enum AdapterType {
   NONE = "none",
   EXPRESS = "express",
   NEXTJS = "nextjs",
+  NESTJS = "nestjs",
+  FASTIFY = "fastify",
 }
 
 type EventPayload = {
