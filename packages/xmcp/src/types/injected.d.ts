@@ -51,6 +51,11 @@ declare const HTTP_CORS_MAX_AGE: number;
 declare const HTTP_DEBUG: boolean;
 declare const HTTP_BODY_SIZE_LIMIT: string;
 
+// ─── DefinePlugin — tool discovery config ────────────────────────────────────
+
+/** Enable list for overriding tools with enabled: false (union of config include + enable) */
+declare const INJECTED_TOOLS_ENABLE: string[] | undefined;
+
 // ─── DefinePlugin — runtime flags ─────────────────────────────────────────────
 
 declare const IS_CLOUDFLARE: boolean;

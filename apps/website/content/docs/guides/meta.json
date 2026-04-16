@@ -1,6 +1,6 @@
 {
   "title": "Guides",
-  "pages": ["xmcp-mcp-server", "authentication", "monetization"],
+  "pages": ["xmcp-mcp-server", "authentication", "monetization", "dynamic-tool-discovery"],
   "defaultOpen": true,
   "root": true
 }

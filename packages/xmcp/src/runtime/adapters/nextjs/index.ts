@@ -9,12 +9,9 @@ import {
   setupCleanupHandlers,
 } from "./handler/server-lifecycle";
 import { createIncomingMessage } from "./handler/request-converter";
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
-import {
-  setHttpRequestContext,
-} from "@/runtime/contexts/http-request-context";
+import { setHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 const BODY_SIZE_LIMIT = "10mb";
@@ -35,38 +32,41 @@ export async function xmcpHandler(request: Request): Promise<Response> {
   return httpRequestContextProvider(
     { id, headers: requestHeaders, clientInfo: undefined },
     () => {
-    return nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
-      try {
-        // Initialize server and transport
-        const lifecycle = await createServerLifecycle(BODY_SIZE_LIMIT);
+      return nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
+        try {
+          // Initialize server and transport
+          const lifecycle = await createServerLifecycle(
+            BODY_SIZE_LIMIT,
+            request.auth
+          );
 
-        // Setup cleanup handlers
-        setupCleanupHandlers(res, lifecycle);
+          // Setup cleanup handlers
+          setupCleanupHandlers(res, lifecycle);
 
-        // Parse request body
-        const bodyContent = await request.json();
-        const clientInfo = extractClientInfoFromMessages(bodyContent);
-        setHttpRequestContext({ clientInfo });
+          // Parse request body
+          const bodyContent = await request.json();
+          const clientInfo = extractClientInfoFromMessages(bodyContent);
+          setHttpRequestContext({ clientInfo });
 
-        // Convert Web Request to Node.js IncomingMessage
-        const incomingRequest = createIncomingMessage({
-          method: request.method,
-          url: request.url,
-          headers: requestHeaders,
-          auth: request.auth,
-        });
+          // Convert Web Request to Node.js IncomingMessage
+          const incomingRequest = createIncomingMessage({
+            method: request.method,
+            url: request.url,
+            headers: requestHeaders,
+            auth: request.auth,
+          });
 
-        // Handle request through transport
-        await lifecycle.transport.handleRequest(
-          incomingRequest,
-          res,
-          bodyContent
-        );
-      } catch (error) {
-        console.error("[Next.js MCP] Error handling MCP request:", error);
-        sendInternalServerError(res);
-      }
-    });
+          // Handle request through transport
+          await lifecycle.transport.handleRequest(
+            incomingRequest,
+            res,
+            bodyContent
+          );
+        } catch (error) {
+          console.error("[Next.js MCP] Error handling MCP request:", error);
+          sendInternalServerError(res);
+        }
+      });
     }
   );
 }

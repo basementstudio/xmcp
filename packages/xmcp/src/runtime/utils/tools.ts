@@ -9,6 +9,8 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { debugWarn } from "./debug";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -38,11 +40,105 @@ export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annot
   }
 }
 
-/** Loads tools and injects them into the server */
-export function addToolsToServer(
-  server: McpServer,
+/** Determines if a tool should be registered based on its metadata and auth context */
+export function shouldRegisterTool(
+  metadata: ToolMetadata,
+  authInfo?: AuthInfo,
+  includedInConfig?: boolean
+): boolean {
+  // enabled: false disables the tool unless overridden by config include/enable
+  if (metadata.enabled === false && !includedInConfig) return false;
+  // requiresAuth (explicit or implied by requiredScopes)
+  if (
+    (metadata.requiresAuth || (metadata.requiredScopes?.length ?? 0) > 0) &&
+    !authInfo
+  )
+    return false;
+  // requiredScopes — ALL must match
+  if (metadata.requiredScopes && metadata.requiredScopes.length > 0) {
+    if (
+      !metadata.requiredScopes.every((s) =>
+        (authInfo!.scopes ?? []).includes(s)
+      )
+    )
+      return false;
+  }
+  return true;
+}
+
+/** Resolves tool dependencies iteratively. Returns the set of tool names that passed. */
+export function resolveDependencies(
+  candidates: Map<string, ToolMetadata>,
+  passedFilter: Set<string>
+): Set<string> {
+  const resolved = new Set<string>();
+
+  // Tools with no dependencies pass immediately
+  for (const [name, meta] of candidates) {
+    if (
+      passedFilter.has(name) &&
+      (!meta.dependsOn || meta.dependsOn.length === 0)
+    ) {
+      resolved.add(name);
+    }
+  }
+
+  // Iterative resolution for tools with dependencies
+  let changed = true;
+  const maxIterations = candidates.size;
+  let iteration = 0;
+
+  while (changed && iteration < maxIterations) {
+    changed = false;
+    iteration++;
+    for (const [name, meta] of candidates) {
+      if (resolved.has(name)) continue;
+      if (!passedFilter.has(name)) continue;
+      if (meta.dependsOn?.every((dep) => resolved.has(dep))) {
+        resolved.add(name);
+        changed = true;
+      }
+    }
+  }
+
+  // Warn about unresolved tools (circular deps or missing deps).
+  // Names are gated behind XMCP_DEBUG to avoid leaking hidden tool identities.
+  for (const [name, meta] of candidates) {
+    if (passedFilter.has(name) && !resolved.has(name) && meta.dependsOn?.length) {
+      const missing = meta.dependsOn.filter((d) => !resolved.has(d));
+      debugWarn(
+        `[xmcp] Tool "${name}" excluded: unresolved dependencies [${missing.join(", ")}]`
+      );
+    }
+  }
+
+  return resolved;
+}
+
+export type ToolRegistryEntry = {
+  path: string;
+  toolModule: ToolFile;
+  toolConfig: ToolMetadata;
+};
+
+/** Auth-invariant tool data precomputed once at startup. */
+export type ToolRegistry = {
+  entries: Map<string, ToolRegistryEntry>;
+};
+
+/**
+ * Build an auth-invariant registry of tools keyed by canonical name.
+ *
+ * Runs once at startup (cached in server.ts for HTTP transports). Extracts
+ * metadata, applies defaults, and runs the defense-in-depth duplicate check.
+ * Duplicates here indicate a miscompiled bundle — build-time
+ * `assertNoDuplicateToolNames` (tool-discovery.ts) is the authoritative gate.
+ */
+export function prepareToolRegistry(
   toolModules: Map<string, ToolFile>
-): McpServer {
+): ToolRegistry {
+  const entries = new Map<string, ToolRegistryEntry>();
+
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
 
@@ -51,11 +147,54 @@ export function addToolsToServer(
       description: "No description provided",
     };
 
-    const { default: handler, metadata, schema, outputSchema } = toolModule;
-
+    const { metadata } = toolModule;
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
+
+    const existing = entries.get(toolConfig.name);
+    if (existing) {
+      debugWarn(
+        `[xmcp] Duplicate tool name collision at runtime: "${toolConfig.name}" in "${existing.path}" and "${path}"`
+      );
+      return;
+    }
+
+    entries.set(toolConfig.name, { path, toolModule, toolConfig });
+  });
+
+  return { entries };
+}
+
+/**
+ * Per-request: apply the auth/scope/enabled filter over a precomputed
+ * registry, resolve dependencies, and register the survivors on the server.
+ */
+export function registerToolsForRequest(
+  server: McpServer,
+  registry: ToolRegistry,
+  authInfo?: AuthInfo,
+  enableList?: string[]
+): McpServer {
+  const passedFilter = new Set<string>();
+  const candidates = new Map<string, ToolMetadata>();
+
+  for (const [name, entry] of registry.entries) {
+    const includedInConfig = enableList?.includes(name) ?? false;
+    if (!shouldRegisterTool(entry.toolConfig, authInfo, includedInConfig)) {
+      continue;
+    }
+    passedFilter.add(name);
+    candidates.set(name, entry.toolConfig);
+  }
+
+  const resolved = resolveDependencies(candidates, passedFilter);
+
+  for (const [name, data] of registry.entries) {
+    if (!resolved.has(name)) continue;
+
+    const { path, toolModule, toolConfig } = data;
+    const { default: handler, schema, outputSchema } = toolModule;
 
     // Register paid tools in x402 registry if plugin is installed
     if (isPaidHandler(handler)) {
@@ -177,7 +316,21 @@ export function addToolsToServer(
       toolConfigFormatted,
       transformedHandler
     );
-  });
+  }
 
   return server;
+}
+
+/**
+ * Back-compat shim. Prefer `prepareToolRegistry` + `registerToolsForRequest`
+ * when the registry can be cached across requests.
+ */
+export function addToolsToServer(
+  server: McpServer,
+  toolModules: Map<string, ToolFile>,
+  authInfo?: AuthInfo,
+  enableList?: string[]
+): McpServer {
+  const registry = prepareToolRegistry(toolModules);
+  return registerToolsForRequest(server, registry, authInfo, enableList);
 }

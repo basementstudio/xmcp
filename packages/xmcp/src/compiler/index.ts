@@ -7,6 +7,7 @@ import {
   generateToolsExportCode,
   generateToolsTypesCode,
 } from "./generate-tools-code";
+import { resolveToolEntries } from "./tool-discovery";
 import fs from "fs";
 import { rootFolder, runtimeFolderPath } from "@/utils/constants";
 import { createFolder } from "@/utils/fs-utils";
@@ -34,10 +35,7 @@ import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
-import {
-  addWatchedPath,
-  removeWatchedPath,
-} from "./watcher-recovery";
+import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -445,18 +443,23 @@ async function generateCode({
 }: {
   rebuildClientBundles?: boolean;
 } = {}) {
-  const { clientBundles: currentClientBundles } = compilerContext.getContext();
+  const { clientBundles: currentClientBundles, toolPaths } =
+    compilerContext.getContext();
   const clientBundles =
     rebuildClientBundles || currentClientBundles === undefined
       ? await buildClientBundles()
       : currentClientBundles;
+  const toolEntries = await resolveToolEntries(toolPaths);
 
   // Store in context for import map generation
   compilerContext.setContext({ clientBundles });
 
   // Generate import map code (includes client bundles)
-  const fileContent = generateImportCode();
-  writeFileIfChanged(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+  const fileContent = generateImportCode(toolEntries);
+  writeFileIfChanged(
+    path.join(runtimeFolderPath, "import-map.js"),
+    fileContent
+  );
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
@@ -466,9 +469,9 @@ async function generateCode({
   // only generating tools files for nextjs adapter mode
   const { xmcpConfig } = compilerContext.getContext();
   if (xmcpConfig?.experimental?.adapter === "nextjs") {
-    const toolsCode = generateToolsExportCode();
+    const toolsCode = generateToolsExportCode(toolEntries);
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.js"), toolsCode);
-    const typesCode = generateToolsTypesCode();
+    const typesCode = generateToolsTypesCode(toolEntries);
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
   }
 }

@@ -107,13 +107,13 @@ export class StatelessStreamableHTTPTransport {
   private endpoint: string;
   private debug: boolean;
   private options: HttpTransportOptions;
-  private createServerFn: () => Promise<McpServer>;
+  private createServerFn: (authInfo?: AuthInfo) => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
   private sessions = new Map<string, SessionLifecycle>();
 
   constructor(
-    createServerFn: () => Promise<McpServer>,
+    createServerFn: (authInfo?: AuthInfo) => Promise<McpServer>,
     options: HttpTransportOptions = {},
     corsConfig: CorsConfig = corsConfigSchema.parse({}),
     providers?: Provider[]
@@ -255,7 +255,7 @@ export class StatelessStreamableHTTPTransport {
   }
 
   private async handleStatelessRequest(
-    req: Request,
+    req: Request & { auth?: AuthInfo },
     res: Response
   ): Promise<void> {
     try {
@@ -288,7 +288,7 @@ export class StatelessStreamableHTTPTransport {
           return;
         }
 
-        lifecycle = await this.createSessionLifecycle();
+        lifecycle = await this.createSessionLifecycle(req.auth);
       }
 
       if (!clientInfo) {
@@ -335,8 +335,10 @@ export class StatelessStreamableHTTPTransport {
     return typeof header === "string" && header.length > 0 ? header : undefined;
   }
 
-  private async createSessionLifecycle(): Promise<SessionLifecycle> {
-    const server = await this.createServerFn();
+  private async createSessionLifecycle(
+    authInfo?: AuthInfo
+  ): Promise<SessionLifecycle> {
+    const server = await this.createServerFn(authInfo);
     const transport = new SdkStreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
     });

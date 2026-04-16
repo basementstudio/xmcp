@@ -1,29 +1,24 @@
-import { compilerContext } from "./compiler-context";
+import type { ResolvedToolEntry } from "./tool-discovery";
 
 // this is an experimental feature
 // currently it's only used for the nextjs adapter & is manually generated to resolve the async imports
 // this prevents the tools from being an async function that needs to resolve first, instead it just returns the array
 
-export function generateToolsExportCode(): string {
-  const { toolPaths } = compilerContext.getContext();
-
-  const importStatements = Array.from(toolPaths)
-    .map((p, index) => {
-      const path = p.replace(/\\/g, "/");
-      const relativePath = `../${path}`;
+export function generateToolsExportCode(toolEntries: ResolvedToolEntry[]): string {
+  const importStatements = toolEntries
+    .map(({ path }, index) => {
+      const normalizedPath = path.replace(/\\/g, "/");
+      const relativePath = `../${normalizedPath}`;
       return `import * as tool${index} from "${relativePath}";`;
     })
     .join("\n");
 
-  const toolsArray = Array.from(toolPaths)
-    .map((p, index) => {
-      const path = p.replace(/\\/g, "/");
-      const fileName = path.split("/").pop() || path;
-      const defaultName = fileName.replace(/\.[^/.]+$/, "");
-
+  const toolsArray = toolEntries
+    .map(({ path, canonicalName }, index) => {
+      const normalizedPath = path.replace(/\\/g, "/");
       return `{
-          path: "${path}",
-          name: "${defaultName}",
+          path: "${normalizedPath}",
+          name: "${canonicalName}",
           module: tool${index}
         }`;
     })
@@ -115,14 +110,8 @@ export async function getTools() {
 export const tools = await getTools();`;
 }
 
-export function generateToolsTypesCode(): string {
-  const { toolPaths } = compilerContext.getContext();
-
-  const toolNames = Array.from(toolPaths).map((p) => {
-    const path = p.replace(/\\/g, "/");
-    const fileName = path.split("/").pop() || path;
-    return fileName.replace(/\.[^/.]+$/, "");
-  });
+export function generateToolsTypesCode(toolEntries: ResolvedToolEntry[]): string {
+  const toolNames = toolEntries.map((entry) => entry.canonicalName);
 
   const toolNamesUnion =
     toolNames.length > 0

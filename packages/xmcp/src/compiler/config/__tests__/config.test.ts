@@ -376,6 +376,63 @@ describe("Config System - Edge Cases", () => {
   });
 });
 
+describe("Config System - Tools Config", () => {
+  it("should accept tools config with include only", () => {
+    const parsed = configSchema.parse({
+      tools: { include: ["tool-a", "tool-b"] },
+    });
+    assert.deepEqual(parsed.tools?.include, ["tool-a", "tool-b"]);
+    assert.equal(parsed.tools?.exclude, undefined);
+  });
+
+  it("should accept tools config with exclude only", () => {
+    const parsed = configSchema.parse({
+      tools: { exclude: ["tool-c"] },
+    });
+    assert.deepEqual(parsed.tools?.exclude, ["tool-c"]);
+    assert.equal(parsed.tools?.include, undefined);
+  });
+
+  it("should accept tools config with enable only", () => {
+    const parsed = configSchema.parse({
+      tools: { enable: ["experimental"] },
+    });
+    assert.deepEqual(parsed.tools?.enable, ["experimental"]);
+  });
+
+  it("should accept tools config with exclude + enable", () => {
+    const parsed = configSchema.parse({
+      tools: { exclude: ["debug"], enable: ["experimental"] },
+    });
+    assert.deepEqual(parsed.tools?.exclude, ["debug"]);
+    assert.deepEqual(parsed.tools?.enable, ["experimental"]);
+  });
+
+  it("should reject tools config with both include and exclude", () => {
+    assert.throws(() => {
+      configSchema.parse({
+        tools: { include: ["a"], exclude: ["b"] },
+      });
+    });
+  });
+
+  it("should accept empty tools config", () => {
+    const parsed = configSchema.parse({ tools: {} });
+    assert.equal(parsed.tools?.include, undefined);
+    assert.equal(parsed.tools?.exclude, undefined);
+  });
+
+  it("should accept config without tools", () => {
+    const parsed = configSchema.parse({});
+    assert.equal(parsed.tools, undefined);
+  });
+
+  it("should accept empty include array", () => {
+    const parsed = configSchema.parse({ tools: { include: [] } });
+    assert.deepEqual(parsed.tools?.include, []);
+  });
+});
+
 describe("Config System - Backward Compatibility", () => {
   it("should accept boolean http config (backward compatible)", () => {
     const resolved = getResolvedHttpConfig(true);

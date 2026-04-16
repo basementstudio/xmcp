@@ -33,6 +33,25 @@ export function getInjectedVariables(
   const adapterVariables = injectAdapterVariables(xmcpConfig);
   const typescriptVariables = injectTypescriptVariables(xmcpConfig);
 
+  // Compute enable list for runtime (union of include + enable arrays)
+  const toolsConfig = xmcpConfig.tools;
+  const enableList = [
+    ...(toolsConfig?.include ?? []),
+    ...(toolsConfig?.enable ?? []),
+  ];
+
+  // Warn if a tool is in both exclude and enable (exclude wins at build time)
+  if (toolsConfig?.exclude && toolsConfig?.enable) {
+    const excludeSet = new Set(toolsConfig.exclude);
+    for (const name of toolsConfig.enable) {
+      if (excludeSet.has(name)) {
+        console.warn(
+          `[xmcp] Warning: tool "${name}" is in both 'exclude' and 'enable'. It will be excluded at build time and the enable override will have no effect.`
+        );
+      }
+    }
+  }
+
   return {
     ...httpVariables,
     ...corsVariables,
@@ -42,5 +61,7 @@ export function getInjectedVariables(
     ...serverInfoVariables,
     ...adapterVariables,
     ...typescriptVariables,
+    INJECTED_TOOLS_ENABLE:
+      enableList.length > 0 ? JSON.stringify(enableList) : "undefined",
   };
 }
