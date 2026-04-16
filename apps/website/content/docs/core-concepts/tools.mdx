@@ -254,7 +254,7 @@ export default async function calculate({
 
 Tool handlers also receive an `extra` argument. Use `extra.elicit()` when you want the client to collect a small piece of user input before the tool continues.
 
-When your server is called over HTTP and the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`).
+When the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`). This is available for HTTP transports and stdio (after initialization completes).
 
 ```typescript title="src/tools/preview-elicitation.ts"
 import { type ToolExtraArguments, type ToolMetadata } from "xmcp";
@@ -573,4 +573,3 @@ The generated file already includes the basic exports you need to continue:
 - prompts: `schema`, `metadata`, and a default function
 
 So instead of starting from an empty file, you get a ready-to-edit template with placeholder descriptions and example return values.
-
