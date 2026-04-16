@@ -1,5 +1,6 @@
 import type { JsonRpcMessage } from "@/runtime/transports/http/base-streamable-http";
 import type { McpClientInfo } from "@/types/client-info";
+import type { Implementation } from "@modelcontextprotocol/sdk/types";
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -37,6 +38,12 @@ const parseClientInfoCandidate = (
   }
 
   return result;
+};
+
+export const mapImplementationToClientInfo = (
+  implementation: Implementation | undefined
+): McpClientInfo | undefined => {
+  return parseClientInfoCandidate(implementation);
 };
 
 export const extractClientInfoFromMessage = (
