@@ -1,10 +1,8 @@
 import { XmcpConfig } from "xmcp";
 
 const config: XmcpConfig = {
-  http: {
-    port: 3002,
-  },
-  /** 
+  http: true,
+  /**
    * Custom bundler configuration
    * @param config - The Rspack configuration
    * @returns The Rspack configuration

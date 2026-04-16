@@ -35,10 +35,7 @@ import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
-import {
-  addWatchedPath,
-  removeWatchedPath,
-} from "./watcher-recovery";
+import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
 const { version: XMCP_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -131,13 +128,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: async (filePath) => {
         addWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
+        }
+      },
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode({ rebuildClientBundles: false });
         }
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(promptPaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
         }
       },
     });
@@ -155,13 +157,18 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       onAdd: async (filePath) => {
         addWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
+        }
+      },
+      onChange: async () => {
+        if (compilerStarted) {
+          await generateCode({ rebuildClientBundles: false });
         }
       },
       onUnlink: async (filePath) => {
         removeWatchedPath(resourcePaths, filePath);
         if (compilerStarted) {
-          await generateCode();
+          await generateCode({ rebuildClientBundles: false });
         }
       },
     });
@@ -431,10 +438,17 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
  * Generates all runtime code and builds client bundles if needed
  * This centralizes all code generation logic including client bundle building
  */
-async function generateCode() {
-  // Build client bundles first (if there are React components)
-  const clientBundles = await buildClientBundles();
-  const { toolPaths } = compilerContext.getContext();
+async function generateCode({
+  rebuildClientBundles = true,
+}: {
+  rebuildClientBundles?: boolean;
+} = {}) {
+  const { clientBundles: currentClientBundles, toolPaths } =
+    compilerContext.getContext();
+  const clientBundles =
+    rebuildClientBundles || currentClientBundles === undefined
+      ? await buildClientBundles()
+      : currentClientBundles;
   const toolEntries = await resolveToolEntries(toolPaths);
 
   // Store in context for import map generation
@@ -442,7 +456,10 @@ async function generateCode() {
 
   // Generate import map code (includes client bundles)
   const fileContent = generateImportCode(toolEntries);
-  writeFileIfChanged(path.join(runtimeFolderPath, "import-map.js"), fileContent);
+  writeFileIfChanged(
+    path.join(runtimeFolderPath, "import-map.js"),
+    fileContent
+  );
 
   // Generate runtime exports for global access
   const runtimeExportsCode = generateEnvCode();
