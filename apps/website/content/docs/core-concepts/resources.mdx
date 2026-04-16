@@ -101,3 +101,34 @@ The default export function that performs the actual work.
 
 - **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
 - **Returns**: MCP-compatible response with content type.
+
+## Troubleshooting
+
+### Resource Loading Errors
+
+When `xmcp` starts, it loads every file under your resources directory.
+
+- Empty resource files are skipped with a friendly warning
+- Files without a `default` export are skipped with a friendly warning
+- Real syntax or import errors still fail normally so you can see the full stack trace
+
+For example, if `src/resources/(drafts)/latest.ts` is empty, startup will log:
+
+```txt
+[xmcp] Failed to load resource file: src/resources/(drafts)/latest.ts
+   -> File is empty.
+[xmcp] 1 resource skipped due to empty files or missing default exports
+```
+
+If the file exists but does not export a default handler, startup will log:
+
+```txt
+[xmcp] Failed to load resource file: src/resources/(drafts)/latest.ts
+   -> File does not export a default resource handler.
+```
+
+<Callout variant="info">
+  Friendly handling is intentionally limited to empty files and missing default
+  exports. Invalid implementations and real import/syntax errors still surface
+  as normal runtime errors.
+</Callout>

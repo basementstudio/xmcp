@@ -17,24 +17,17 @@ export default async function getUser({ userId }: InferSchema<typeof schema>) {
   try {
     const user = usersStore.findOne(userId);
 
-    return {
-      content: [
-        {
-          type: "text",
-          text: JSON.stringify(
-            {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              createdAt: user.createdAt.toISOString(),
-              updatedAt: user.updatedAt.toISOString(),
-            },
-            null,
-            2
-          ),
-        },
-      ],
-    };
+    return JSON.stringify(
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      },
+      null,
+      2
+    );
   } catch {
     return {
       content: [{ type: "text", text: `User with ID "${userId}" not found.` }],

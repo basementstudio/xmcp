@@ -15,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.14.0]
 
     steps:
       - name: Checkout code
@@ -34,6 +34,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@^11.5.1
+
+      - name: Show publish tool versions
+        run: |
+          node --version
+          npm --version
+          pnpm --version
 
       - name: Extract version from release tag
         id: version
@@ -116,8 +125,6 @@ jobs:
           echo "✅ init-xmcp CLI build verified"
 
       - name: Publish xmcp package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/xmcp
           echo "Publishing xmcp package with tag: ${{ steps.npm_tag.outputs.tag }}"
@@ -125,8 +132,6 @@ jobs:
           echo "✅ Successfully published xmcp@${{ steps.version.outputs.version }} with tag ${{ steps.npm_tag.outputs.tag }}"
 
       - name: Publish create-xmcp-app package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/create-xmcp-app
           echo "Publishing create-xmcp-app package with tag: ${{ steps.npm_tag.outputs.tag }}"
@@ -134,8 +139,6 @@ jobs:
           echo "✅ Successfully published create-xmcp-app@${{ steps.version.outputs.version }} with tag ${{ steps.npm_tag.outputs.tag }}"
 
       - name: Publish init-xmcp package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/init-xmcp
           echo "Publishing init-xmcp package with tag: ${{ steps.npm_tag.outputs.tag }}"

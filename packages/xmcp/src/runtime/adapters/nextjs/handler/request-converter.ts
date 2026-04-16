@@ -10,6 +10,25 @@ export interface RequestConversionOptions {
   auth?: AuthInfo;
 }
 
+function toRawHeaders(headers: IncomingHttpHeaders): string[] {
+  const rawHeaders: string[] = [];
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (value === undefined) continue;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        rawHeaders.push(key, item);
+      }
+      continue;
+    }
+
+    rawHeaders.push(key, value);
+  }
+
+  return rawHeaders;
+}
+
 /**
  * Creates a Node.js IncomingMessage from Web Request options.
  * This adapter enables the MCP SDK to work with Web Request objects.
@@ -37,6 +56,7 @@ export function createIncomingMessage(
   req.method = method;
   req.url = url;
   req.headers = headers;
+  req.rawHeaders = toRawHeaders(headers);
 
   // Set auth if available (can be set by middleware)
   if (auth) {

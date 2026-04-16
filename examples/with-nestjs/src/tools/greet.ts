@@ -13,7 +13,5 @@ export const metadata: ToolMetadata = {
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const result = `Hello, ${name}! Welcome to the NestJS + XMCP example.`;
 
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return result;
 }

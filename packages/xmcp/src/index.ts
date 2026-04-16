@@ -11,6 +11,7 @@ export type {
   SampleRequest,
   SampleResult,
   InferSchema,
+  ElicitResult,
 } from "./types/tool";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
@@ -30,6 +31,7 @@ export {
 } from "./utils/sample-result";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
+export { UrlElicitationRequiredError } from "@modelcontextprotocol/sdk/types";
 
 export {
   createHTTPClient,

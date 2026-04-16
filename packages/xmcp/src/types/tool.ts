@@ -4,6 +4,7 @@ import type {
   CreateMessageRequestParams,
   CreateMessageResult,
   CreateMessageResultWithTools,
+  ElicitResult as McpElicitResult,
   ModelPreferences,
   SamplingMessage,
   SamplingMessageContentBlock,
@@ -40,14 +41,16 @@ export interface ToolMetadata {
 }
 
 type CompatibleZodType = z.ZodTypeAny | ZodTypeV4<unknown>;
-type InferCompatibleType<T> = T extends z.ZodTypeAny
-  ? z.infer<T>
-  : T extends ZodTypeV4<unknown>
-    ? inferV4<T>
-    : never;
+type InferCompatibleZodType<T extends CompatibleZodType> =
+  T extends z.ZodTypeAny
+    ? z.infer<T>
+    : T extends ZodTypeV4<unknown>
+      ? inferV4<T>
+      : never;
 
 export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
+export type ElicitResult = McpElicitResult;
 export type SampleMessage = SamplingMessage;
 export type SampleContent = SamplingMessageContentBlock;
 export type SampleMessageContentInput =
@@ -103,6 +106,67 @@ export interface ToolRequestOptions {
   [key: string]: unknown;
 }
 
+type ElicitStringFormat = "date" | "uri" | "email" | "date-time";
+
+interface ElicitFieldBase {
+  title?: string;
+  description?: string;
+}
+
+export interface ElicitStringField extends ElicitFieldBase {
+  type: "string";
+  minLength?: number;
+  maxLength?: number;
+  format?: ElicitStringFormat;
+  default?: string;
+}
+
+export interface ElicitEnumField extends ElicitFieldBase {
+  type: "string";
+  enum: string[];
+  enumNames?: string[];
+  default?: string;
+}
+
+export interface ElicitBooleanField extends ElicitFieldBase {
+  type: "boolean";
+  default?: boolean;
+}
+
+export interface ElicitNumberField extends ElicitFieldBase {
+  type: "number" | "integer";
+  minimum?: number;
+  maximum?: number;
+  default?: number;
+}
+
+export type ElicitFormField =
+  | ElicitStringField
+  | ElicitEnumField
+  | ElicitBooleanField
+  | ElicitNumberField;
+
+export interface ElicitFormSchema {
+  type: "object";
+  properties: Record<string, ElicitFormField>;
+  required?: string[];
+}
+
+export interface ElicitFormRequest {
+  mode?: "form";
+  message: string;
+  requestedSchema: ElicitFormSchema;
+}
+
+export interface ElicitUrlRequest {
+  mode: "url";
+  message: string;
+  url: string;
+  elicitationId: string;
+}
+
+export type ElicitRequest = ElicitFormRequest | ElicitUrlRequest;
+
 // The ToolExtraArguments type is equivalent to Parameters<ToolCallback<undefined>>[0] from @modelcontextprotocol/sdk but fully resolved to avoid external type dependencies.
 /**
  * Extra arguments passed to MCP tool functions.
@@ -153,8 +217,13 @@ export interface ToolExtraArguments {
     request: any,
     resultSchema: U,
     options?: ToolRequestOptions
-  ) => Promise<InferCompatibleType<U>>;
+  ) => Promise<InferCompatibleZodType<U>>;
 
+  /** Requests user input from the connected client */
+  elicit: (
+    request: ElicitRequest,
+    options?: ToolRequestOptions
+  ) => Promise<ElicitResult>;
 }
 
 export type InferSchema<T extends Record<string, unknown>> = {

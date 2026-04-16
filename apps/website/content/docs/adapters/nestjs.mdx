@@ -24,11 +24,7 @@ npx init-xmcp@latest
 
 On initialization, you'll see the following prompts:
 
-<TerminalPrompt>
-  {
-    "? Tools directory path: (tools)"
-  }
-</TerminalPrompt>
+<TerminalPrompt>{"? Tools directory path: (tools)"}</TerminalPrompt>
 
 The package manager and framework will be detected automatically.
 
@@ -56,21 +52,22 @@ After setting up the project, update your `package.json` scripts:
 <Callout variant="info">
   Before using the `@xmcp/adapter` import, you need to:
 
-  1. Run `npx xmcp build` to generate the `.xmcp` folder
-  2. Update your `tsconfig.json` to include the path mapping and the `.xmcp` folder:
+1. Run `npx xmcp build` to generate the `.xmcp` folder
+2. Update your `tsconfig.json` to include the path mapping and the `.xmcp` folder:
 
-  ```json title="tsconfig.json"
-  {
-    "compilerOptions": {
-      "paths": {
-        "@xmcp/*": ["./.xmcp/*"]
-      }
-    },
-    "include": ["src/**/*", "xmcp-env.d.ts", ".xmcp/**/*"]
-  }
-  ```
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "paths": {
+      "@xmcp/*": ["./.xmcp/*"]
+    }
+  },
+  "include": ["src/**/*", "xmcp-env.d.ts", ".xmcp/**/*"]
+}
+```
 
-  After these steps, TypeScript errors will be resolved.
+After these steps, TypeScript errors will be resolved.
+
 </Callout>
 
 ## Project Structure
@@ -175,7 +172,7 @@ export class McpController extends xmcpController {}
 To change the route, simply modify the `@Controller` argument:
 
 ```typescript
-@Controller("api/v1/mcp")  // Now accessible at /api/v1/mcp
+@Controller("api/v1/mcp") // Now accessible at /api/v1/mcp
 export class McpController extends xmcpController {}
 ```
 
@@ -256,7 +253,8 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
 When you run `xmcp dev` or `xmcp build`, xmcp automatically discovers this file and registers it as an MCP tool. No additional configuration needed.
 
 <Callout variant="info">
-  For more details on creating tools, schemas, and metadata, see the [Tools documentation](/docs/core-concepts/tools).
+  For more details on creating tools, schemas, and metadata, see the [Tools
+  documentation](/docs/core-concepts/tools).
 </Callout>
 
 ## Authentication
@@ -330,18 +328,18 @@ export class XmcpModule {}
 
 ### Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `verifyToken` | `(token: string) => Promise<AuthInfo> \| AuthInfo` | Required | Verify the token and return auth info |
-| `required` | `boolean` | `false` | If true, requests without tokens are rejected |
+| Option        | Type                                               | Default  | Description                                   |
+| ------------- | -------------------------------------------------- | -------- | --------------------------------------------- |
+| `verifyToken` | `(token: string) => Promise<AuthInfo> \| AuthInfo` | Required | Verify the token and return auth info         |
+| `required`    | `boolean`                                          | `false`  | If true, requests without tokens are rejected |
 
 The `verifyToken` function receives the Bearer token (without the "Bearer " prefix) and should return:
 
 ```typescript
 interface AuthInfo {
-  clientId: string;      // User/client identifier
-  scopes: string[];      // Permissions/scopes
-  expiresAt?: number;    // Token expiration (Unix timestamp)
+  clientId: string; // User/client identifier
+  scopes: string[]; // Permissions/scopes
+  expiresAt?: number; // Token expiration (Unix timestamp)
   extra?: Record<string, unknown>; // Additional custom data
 }
 ```
@@ -369,22 +367,17 @@ export default async function whoami(
   const authInfo = extra.authInfo;
 
   if (!authInfo) {
-    return {
-      content: [{ type: "text", text: "Not authenticated" }],
-    };
+    return "Not authenticated";
   }
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify({
-          clientId: authInfo.clientId,
-          scopes: authInfo.scopes,
-        }, null, 2),
-      },
-    ],
-  };
+  return JSON.stringify(
+    {
+      clientId: authInfo.clientId,
+      scopes: authInfo.scopes,
+    },
+    null,
+    2
+  );
 }
 ```
 
@@ -416,6 +409,7 @@ This error occurs when the `.xmcp` directory hasn't been generated yet.
 If TypeScript can't resolve `@xmcp/*` imports:
 
 1. Ensure `tsconfig.json` has the path mapping:
+
    ```json
    {
      "compilerOptions": {

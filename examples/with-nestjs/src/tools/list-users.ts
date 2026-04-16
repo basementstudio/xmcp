@@ -13,9 +13,7 @@ export default async function listUsers() {
   const users = usersStore.findAll();
 
   if (users.length === 0) {
-    return {
-      content: [{ type: "text", text: "No users found in the system." }],
-    };
+    return "No users found in the system.";
   }
 
   const userList = users
@@ -25,12 +23,5 @@ export default async function listUsers() {
     )
     .join("\n");
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: `Found ${users.length} user(s):\n\n${userList}`,
-      },
-    ],
-  };
+  return `Found ${users.length} user(s):\n\n${userList}`;
 }

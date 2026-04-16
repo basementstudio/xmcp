@@ -24,9 +24,5 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   // so it won't interfere with the MCP protocol.
   console.log("greet called with:", { name });
 
-  const result = `Hello, ${name}!`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}!`;
 }

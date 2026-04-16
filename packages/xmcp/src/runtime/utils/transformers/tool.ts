@@ -6,6 +6,7 @@ import {
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
+import { elicitFromTool } from "../elicitation";
 import { bindSamplingContext, clearSamplingContext } from "../sampling";
 import { validateContent } from "../validators";
 import type { SamplingToolRegistry } from "../sampling-tool-registry";
@@ -73,6 +74,16 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
   );
 }
 
+function createToolExtraArguments(
+  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+): ToolExtraArguments {
+  return {
+    ...(extra as ToolExtraArguments),
+    elicit: (request, options) =>
+      elicitFromTool(extra as ToolExtraArguments, request, options),
+  };
+}
+
 /**
  * Transforms a user's tool handler into an MCP-compatible handler.
  *
@@ -100,7 +111,8 @@ export function transformToolHandler(
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    bindSamplingContext(extra, {
+    const toolExtra = createToolExtraArguments(extra);
+    bindSamplingContext(toolExtra as any, {
       currentToolName: toolName,
       samplingToolRegistry,
     });
@@ -108,14 +120,14 @@ export function transformToolHandler(
     let response: any;
 
     try {
-      response = handler(args, extra as ToolExtraArguments);
+      response = handler(args, toolExtra);
 
       // only await if it's actually a promise
       if (response instanceof Promise) {
         response = await response;
       }
     } finally {
-      clearSamplingContext(extra);
+      clearSamplingContext(toolExtra as any);
     }
 
     if (typeof response === "string" || typeof response === "number") {
