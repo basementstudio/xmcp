@@ -50,12 +50,23 @@ export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
 export type SampleMessage = SamplingMessage;
 export type SampleContent = SamplingMessageContentBlock;
+export type SampleMessageContentInput =
+  | SampleContent
+  | readonly SampleContent[]
+  | string;
+export type SampleMessageInput = Omit<SampleMessage, "content"> & {
+  content: SampleMessageContentInput;
+};
 export type SampleModelPreferences = ModelPreferences;
 export type SampleToolChoice = ToolChoice;
 export type SampleToolSelection = "all" | readonly string[];
 export type SampleResult = CreateMessageResult | CreateMessageResultWithTools;
 
-type SampleRequestBase = Omit<CreateMessageRequestParams, "tools" | "toolChoice"> & {
+type SampleRequestBase = Omit<
+  CreateMessageRequestParams,
+  "messages" | "tools" | "toolChoice"
+> & {
+  messages: readonly SampleMessageInput[];
   /**
    * Maximum number of tool-execution rounds to run before aborting.
    * Only applies when `tools` are enabled.
@@ -144,17 +155,6 @@ export interface ToolExtraArguments {
     options?: ToolRequestOptions
   ) => Promise<InferCompatibleType<U>>;
 
-  /**
-   * Requests LLM sampling from the connected MCP client.
-   *
-   * When `tools` are provided, xmcp resolves those local tool names,
-   * executes any returned `tool_use` blocks, and continues the
-   * `tool_use -> tool_result -> continue` loop automatically.
-   */
-  sample: (
-    request: SampleRequest,
-    options?: ToolRequestOptions
-  ) => Promise<SampleResult>;
 }
 
 export type InferSchema<T extends Record<string, unknown>> = {

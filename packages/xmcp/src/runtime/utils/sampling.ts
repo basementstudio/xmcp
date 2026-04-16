@@ -10,9 +10,11 @@ import {
   type ToolUseContent,
 } from "@modelcontextprotocol/sdk/types";
 import type {
+  SampleContent,
+  SampleMessage,
+  SampleMessageContentInput,
   SampleRequest,
   SampleResult,
-  ToolExtraArguments,
   ToolRequestOptions,
 } from "@/types/tool";
 import {
@@ -21,10 +23,15 @@ import {
   type SamplingToolRegistry,
 } from "./sampling-tool-registry";
 
-const DEFAULT_SAMPLE_MAX_STEPS = 8;
-
 type SamplingExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
 type SamplingResponse = CreateMessageResult | CreateMessageResultWithTools;
+
+type SamplingContext = {
+  currentToolName?: string;
+  samplingToolRegistry?: SamplingToolRegistry;
+};
+
+const samplingContexts = new WeakMap<SamplingExtra, SamplingContext>();
 
 function asArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
@@ -81,6 +88,34 @@ function toSamplingMessage(response: SamplingResponse) {
     content: response.content,
     _meta: response._meta,
   };
+}
+
+function toTextBlock(text: string): Extract<SampleContent, { type: "text" }> {
+  return {
+    type: "text",
+    text,
+  };
+}
+
+function normalizeMessageContent(
+  content: SampleMessageContentInput
+): SampleMessage["content"] {
+  if (typeof content === "string") {
+    return toTextBlock(content);
+  }
+
+  if (Array.isArray(content)) {
+    return [...content];
+  }
+
+  return content as SampleMessage["content"];
+}
+
+function normalizeMessages(messages: SampleRequest["messages"]): SampleMessage[] {
+  return messages.map((message) => ({
+    ...message,
+    content: normalizeMessageContent(message.content),
+  }));
 }
 
 function extractToolUses(response: CreateMessageResultWithTools): ToolUseContent[] {
@@ -145,20 +180,50 @@ async function sendSamplingRequest(
   }
 }
 
-export async function sampleFromClient(
+function getSamplingContext(extra: SamplingExtra): SamplingContext {
+  const context = samplingContexts.get(extra);
+
+  if (!context) {
+    throw new Error(
+      "sample() can only be called from inside an xmcp tool handler."
+    );
+  }
+
+  return context;
+}
+
+export function bindSamplingContext(
+  extra: SamplingExtra,
+  context: SamplingContext
+): void {
+  samplingContexts.set(extra, context);
+}
+
+export function clearSamplingContext(extra: SamplingExtra): void {
+  samplingContexts.delete(extra);
+}
+
+export async function sample(
   extra: SamplingExtra,
   request: SampleRequest,
-  options?: ToolRequestOptions,
-  currentToolName?: string,
-  samplingToolRegistry?: SamplingToolRegistry
+  options?: ToolRequestOptions
 ): Promise<SampleResult> {
-  const { tools: toolSelection, maxSteps = DEFAULT_SAMPLE_MAX_STEPS, ...params } =
-    request;
+  const { currentToolName, samplingToolRegistry } = getSamplingContext(extra);
+  const {
+    tools: toolSelection,
+    maxSteps,
+    messages: inputMessages,
+    ...params
+  } = request;
+  const messages = normalizeMessages(inputMessages);
 
   if (!toolSelection) {
     return sendSamplingRequest(
       extra,
-      params,
+      {
+        ...params,
+        messages,
+      },
       CreateMessageResultSchema,
       options
     );
@@ -183,7 +248,7 @@ export async function sampleFromClient(
     resolvedTools.map((tool) => [tool.definition.name, tool] as const)
   );
 
-  let messages = [...params.messages];
+  let currentMessages = [...messages];
   let step = 0;
 
   while (true) {
@@ -191,7 +256,7 @@ export async function sampleFromClient(
       extra,
       {
         ...params,
-        messages,
+        messages: currentMessages,
         tools: resolvedTools.map((tool) => tool.definition),
       },
       CreateMessageResultWithToolsSchema,
@@ -204,7 +269,7 @@ export async function sampleFromClient(
       return response;
     }
 
-    if (step >= maxSteps) {
+    if (typeof maxSteps === "number" && step >= maxSteps) {
       throw new Error(
         `Sampling exceeded the configured maxSteps (${maxSteps}).`
       );
@@ -216,8 +281,8 @@ export async function sampleFromClient(
       toolResults.push(await executeToolUse(toolUse, extra, toolMap));
     }
 
-    messages = [
-      ...messages,
+    currentMessages = [
+      ...currentMessages,
       toSamplingMessage(response),
       {
         role: "user",
@@ -227,23 +292,4 @@ export async function sampleFromClient(
 
     step += 1;
   }
-}
-
-export function createToolExtraArguments(
-  extra: SamplingExtra,
-  currentToolName?: string,
-  samplingToolRegistry?: SamplingToolRegistry
-): ToolExtraArguments {
-  return Object.assign({}, extra, {
-    sendRequest: (request: any, resultSchema: any, options?: ToolRequestOptions) =>
-      extra.sendRequest(request, resultSchema, options),
-    sample: (request: SampleRequest, options?: ToolRequestOptions) =>
-      sampleFromClient(
-        extra,
-        request,
-        options,
-        currentToolName,
-        samplingToolRegistry
-      ),
-  }) as ToolExtraArguments;
 }

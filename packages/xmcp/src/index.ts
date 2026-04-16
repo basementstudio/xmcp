@@ -7,6 +7,7 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  SampleMessageInput,
   SampleRequest,
   SampleResult,
   InferSchema,
@@ -21,6 +22,7 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export { sample } from "./runtime/utils/sampling";
 export {
   getSampleContext,
   getSampleContentBlocks,

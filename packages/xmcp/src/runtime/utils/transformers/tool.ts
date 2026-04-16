@@ -6,7 +6,7 @@ import {
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
-import { createToolExtraArguments } from "../sampling";
+import { bindSamplingContext, clearSamplingContext } from "../sampling";
 import { validateContent } from "../validators";
 import type { SamplingToolRegistry } from "../sampling-tool-registry";
 
@@ -100,16 +100,22 @@ export function transformToolHandler(
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    const toolExtra = createToolExtraArguments(
-      extra,
-      toolName,
-      samplingToolRegistry
-    );
-    let response: any = handler(args, toolExtra);
+    bindSamplingContext(extra, {
+      currentToolName: toolName,
+      samplingToolRegistry,
+    });
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
+    let response: any;
+
+    try {
+      response = handler(args, extra as ToolExtraArguments);
+
+      // only await if it's actually a promise
+      if (response instanceof Promise) {
+        response = await response;
+      }
+    } finally {
+      clearSamplingContext(extra);
     }
 
     if (typeof response === "string" || typeof response === "number") {
