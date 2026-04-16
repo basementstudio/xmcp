@@ -10,6 +10,28 @@ function pathToIdentifier(path: string): string {
   return path.replace(/[^a-zA-Z0-9]/g, "_");
 }
 
+/** Warn on unknown tool names referenced by include/exclude/enable. */
+function warnOnUnknownToolNames(
+  toolEntries: ResolvedToolEntry[],
+  toolsConfig: ToolsConfig
+): void {
+  const knownNames = new Set(toolEntries.map((e) => e.canonicalName));
+  const fields = ["enable", "include", "exclude"] as const;
+  for (const field of fields) {
+    const names = toolsConfig[field];
+    if (!names) continue;
+    for (const name of names) {
+      if (!knownNames.has(name)) {
+        const known =
+          knownNames.size > 0 ? [...knownNames].join(", ") : "(none)";
+        console.warn(
+          `[xmcp] Warning: tools.${field} references unknown tool "${name}". Known tools: ${known}`
+        );
+      }
+    }
+  }
+}
+
 /** Filter tool paths based on include/exclude config */
 function filterToolPaths(
   toolEntries: ResolvedToolEntry[],
@@ -17,6 +39,8 @@ function filterToolPaths(
 ): Set<string> {
   const toolPaths = new Set(toolEntries.map((entry) => entry.path));
   if (!toolsConfig) return toolPaths;
+
+  warnOnUnknownToolNames(toolEntries, toolsConfig);
 
   if (toolsConfig.include) {
     const includeSet = new Set(toolsConfig.include);
@@ -35,6 +59,9 @@ function filterToolPaths(
     const filtered = new Set<string>();
     for (const entry of toolEntries) {
       if (!excludeSet.has(entry.canonicalName)) filtered.add(entry.path);
+    }
+    if (filtered.size === 0 && toolPaths.size > 0) {
+      console.warn("[xmcp] Warning: tools.exclude removed every tool");
     }
     return filtered;
   }

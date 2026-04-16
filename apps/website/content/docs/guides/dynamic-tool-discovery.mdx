@@ -178,6 +178,10 @@ export default config;
 Tools in the `include` list also override `enabled: false`. This is how operators can opt in to disabled-by-default tools.
 
 <Callout variant="info">
+  `include` implies `enable`. Listing a tool in `include` activates it even if its metadata sets `enabled: false` — you don't need to also add it to `enable`. `include` is both an allowlist and a default-on override.
+</Callout>
+
+<Callout variant="info">
   `include`, `exclude`, and `enable` match the tool's public name from `metadata.name`, not the source filename.
 </Callout>
 
@@ -234,6 +238,44 @@ const config = {
 };
 ```
 
-## STDIO transport
+## Auth on STDIO
 
-STDIO runs locally on the user's machine and has no authentication mechanism. Tools with `requiresAuth` or `requiredScopes` are automatically hidden since no auth context exists. Tools using `enabled` and `dependsOn` work normally.
+STDIO runs locally on the user's machine and has no per-request authentication mechanism. Tools with `requiresAuth: true` or `requiredScopes` are automatically hidden since no auth context exists. Tools using `enabled` and `dependsOn` work normally.
+
+When xmcp boots a transport without `authInfo` and auth-gated tools exist, it prints a one-time startup warning so misconfigured HTTP servers don't silently hide tools. The message shows a count, not the tool names — names are only printed when `XMCP_DEBUG=1` is set.
+
+If you need auth-gated tools, run xmcp over HTTP and provide `authInfo` from your transport's middleware (Express, NestJS, Next.js, Cloudflare Workers all support this).
+
+## Debugging hidden tools
+
+For security, xmcp never names filtered tools in regular logs — that would let an operator enumerate hidden tool identities from stderr. In development you can opt in to verbose diagnostics by setting the `XMCP_DEBUG` environment variable:
+
+```bash
+XMCP_DEBUG=1 pnpm dev
+```
+
+This enables:
+
+- Names of tools skipped because of unresolved `dependsOn` targets.
+- Names of auth-gated tools skipped when a transport provides no `authInfo`.
+- Details on runtime duplicate-name collisions (build-time duplicate detection already covers this case with full file paths; the runtime check is defense-in-depth).
+
+`XMCP_DEBUG` is off by default and should stay off in production.
+
+## Configuration validation
+
+xmcp validates tool references and the dependency graph at build time so problems surface before your server ships.
+
+### Warnings
+
+- **Unknown tool names in `enable` / `include` / `exclude`** — xmcp prints a warning listing the unknown name alongside the names it actually discovered. This catches typos and stale entries after a file rename.
+- **Empty result from `include` or `exclude`** — if your filter removes every tool, xmcp warns rather than silently shipping a zero-tool bundle.
+- **Non-string `requiredScopes` entries** — ignored at runtime, flagged at build time.
+
+### Build errors
+
+The following stop the build and must be fixed:
+
+- **Duplicate tool names** — two files resolving to the same `metadata.name`.
+- **Missing `dependsOn` targets** — a tool declares a dependency on a name that does not exist.
+- **Cycles in `dependsOn`** — xmcp reports the cycle participants (e.g., `a → b → a`).

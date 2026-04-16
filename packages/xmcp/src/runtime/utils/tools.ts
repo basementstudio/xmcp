@@ -10,6 +10,7 @@ import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { debugWarn } from "./debug";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -100,11 +101,12 @@ export function resolveDependencies(
     }
   }
 
-  // Warn about unresolved tools (circular deps or missing deps)
+  // Warn about unresolved tools (circular deps or missing deps).
+  // Names are gated behind XMCP_DEBUG to avoid leaking hidden tool identities.
   for (const [name, meta] of candidates) {
     if (passedFilter.has(name) && !resolved.has(name) && meta.dependsOn?.length) {
       const missing = meta.dependsOn.filter((d) => !resolved.has(d));
-      console.warn(
+      debugWarn(
         `[xmcp] Tool "${name}" excluded: unresolved dependencies [${missing.join(", ")}]`
       );
     }
@@ -113,20 +115,29 @@ export function resolveDependencies(
   return resolved;
 }
 
-/** Loads tools and injects them into the server, applying filtering */
-export function addToolsToServer(
-  server: McpServer,
-  toolModules: Map<string, ToolFile>,
-  authInfo?: AuthInfo,
-  enableList?: string[]
-): McpServer {
-  // --- Pass 1: Build tool configs and evaluate per-tool filters ---
-  const passedFilter = new Set<string>();
-  const candidates = new Map<string, ToolMetadata>();
-  const toolData = new Map<
-    string,
-    { path: string; toolModule: ToolFile; toolConfig: ToolMetadata }
-  >();
+export type ToolRegistryEntry = {
+  path: string;
+  toolModule: ToolFile;
+  toolConfig: ToolMetadata;
+};
+
+/** Auth-invariant tool data precomputed once at startup. */
+export type ToolRegistry = {
+  entries: Map<string, ToolRegistryEntry>;
+};
+
+/**
+ * Build an auth-invariant registry of tools keyed by canonical name.
+ *
+ * Runs once at startup (cached in server.ts for HTTP transports). Extracts
+ * metadata, applies defaults, and runs the defense-in-depth duplicate check.
+ * Duplicates here indicate a miscompiled bundle — build-time
+ * `assertNoDuplicateToolNames` (tool-discovery.ts) is the authoritative gate.
+ */
+export function prepareToolRegistry(
+  toolModules: Map<string, ToolFile>
+): ToolRegistry {
+  const entries = new Map<string, ToolRegistryEntry>();
 
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -137,35 +148,49 @@ export function addToolsToServer(
     };
 
     const { metadata } = toolModule;
-
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
 
-    const includedInConfig = enableList?.includes(toolConfig.name) ?? false;
-
-    if (!shouldRegisterTool(toolConfig, authInfo, includedInConfig)) {
-      return; // skip this tool
-    }
-
-    // Warn on duplicate tool names
-    const existing = toolData.get(toolConfig.name);
+    const existing = entries.get(toolConfig.name);
     if (existing) {
-      throw new Error(
-        `[xmcp] Duplicate tool name "${toolConfig.name}" found in "${existing.path}" and "${path}". Rename one tool or remove one file.`
+      debugWarn(
+        `[xmcp] Duplicate tool name collision at runtime: "${toolConfig.name}" in "${existing.path}" and "${path}"`
       );
+      return;
     }
 
-    passedFilter.add(toolConfig.name);
-    candidates.set(toolConfig.name, toolConfig);
-    toolData.set(toolConfig.name, { path, toolModule, toolConfig });
+    entries.set(toolConfig.name, { path, toolModule, toolConfig });
   });
 
-  // --- Pass 2: Resolve dependencies ---
+  return { entries };
+}
+
+/**
+ * Per-request: apply the auth/scope/enabled filter over a precomputed
+ * registry, resolve dependencies, and register the survivors on the server.
+ */
+export function registerToolsForRequest(
+  server: McpServer,
+  registry: ToolRegistry,
+  authInfo?: AuthInfo,
+  enableList?: string[]
+): McpServer {
+  const passedFilter = new Set<string>();
+  const candidates = new Map<string, ToolMetadata>();
+
+  for (const [name, entry] of registry.entries) {
+    const includedInConfig = enableList?.includes(name) ?? false;
+    if (!shouldRegisterTool(entry.toolConfig, authInfo, includedInConfig)) {
+      continue;
+    }
+    passedFilter.add(name);
+    candidates.set(name, entry.toolConfig);
+  }
+
   const resolved = resolveDependencies(candidates, passedFilter);
 
-  // --- Pass 3: Register surviving tools ---
-  for (const [name, data] of toolData) {
+  for (const [name, data] of registry.entries) {
     if (!resolved.has(name)) continue;
 
     const { path, toolModule, toolConfig } = data;
@@ -294,4 +319,18 @@ export function addToolsToServer(
   }
 
   return server;
+}
+
+/**
+ * Back-compat shim. Prefer `prepareToolRegistry` + `registerToolsForRequest`
+ * when the registry can be cached across requests.
+ */
+export function addToolsToServer(
+  server: McpServer,
+  toolModules: Map<string, ToolFile>,
+  authInfo?: AuthInfo,
+  enableList?: string[]
+): McpServer {
+  const registry = prepareToolRegistry(toolModules);
+  return registerToolsForRequest(server, registry, authInfo, enableList);
 }
