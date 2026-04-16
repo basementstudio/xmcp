@@ -1,5 +1,9 @@
 import dotenv from "dotenv";
-export type { Middleware, WebMiddleware, WebMiddlewareContext } from "./types/middleware";
+export type {
+  Middleware,
+  WebMiddleware,
+  WebMiddlewareContext,
+} from "./types/middleware";
 dotenv.config();
 
 export type {
@@ -8,9 +12,11 @@ export type {
   ToolOutputSchema,
   ToolExtraArguments,
   InferSchema,
+  ElicitResult,
 } from "./types/tool";
 export type { Logger } from "./runtime/utils/logger";
 export { logger } from "./runtime/utils/logger";
+export type { McpClientInfo } from "./types/client-info";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
@@ -23,6 +29,7 @@ export { jwtAuthMiddleware } from "./auth/jwt";
 export { createContext } from "./utils/context";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
+export { UrlElicitationRequiredError } from "@modelcontextprotocol/sdk/types";
 
 export {
   createHTTPClient,

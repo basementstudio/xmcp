@@ -22,9 +22,6 @@ export const metadata: ToolMetadata = {
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const headersList = headers();
-  const result = `Hello, ${name}! Your HOST header is ${headersList["host"]}`;
 
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}! Your HOST header is ${headersList["host"]}`;
 }

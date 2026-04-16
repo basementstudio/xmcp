@@ -1,12 +1,43 @@
 # @xmcp-dev/cli
 
-CLI tool for generating typed clients from xmcp MCP servers external connections.
+CLI tool for generating typed clients and scaffolding xmcp primitives.
 
 ## Usage
 
 ```bash
 npx @xmcp-dev/cli generate [options]
+npx @xmcp-dev/cli create <tool|resource|prompt> [name] [options]
 ```
+
+## Scaffolding
+
+Create starter files that follow xmcp conventions:
+
+```bash
+npx @xmcp-dev/cli create tool get-weather
+npx @xmcp-dev/cli create tool weather-widget --preset react
+npx @xmcp-dev/cli create resource app-config
+npx @xmcp-dev/cli create prompt review-code
+```
+
+### Create options
+
+- `-d, --dir <path>`: Override the output directory
+- `-p, --preset <preset>`: Template preset (`standard` or `react`)
+
+Defaults:
+
+- tools -> `src/tools`
+- resources -> `src/resources`
+- prompts -> `src/prompts`
+
+Notes:
+
+- If `name` is omitted in interactive mode, the CLI prompts for it.
+- In non-interactive mode, omitting `name` exits with an error.
+- If `--preset` is omitted, the CLI uses `standard`.
+- `react` is supported only for `tool` scaffolds and generates a `.tsx` file.
+- Existing files are not overwritten; the CLI skips them instead.
 
 ## Client Configuration
 

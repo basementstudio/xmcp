@@ -15,7 +15,7 @@
     "@ai-sdk/openai": "^2.0.80",
     "@ai-sdk/react": "^2.0.109",
     "ai": "^5.0.108",
-    "next": "^16.1.7",
+    "next": "^16.2.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "xmcp": "workspace:*",
@@ -28,7 +28,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.1.7",
+    "eslint-config-next": "16.2.3",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
   }

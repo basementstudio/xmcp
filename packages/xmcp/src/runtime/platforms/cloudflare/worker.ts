@@ -1,6 +1,7 @@
 import { createServer } from "@/runtime/utils/server";
 import { WebStatelessHttpTransport } from "@/runtime/transports/http/web-stateless-http";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 import homeTemplate from "../../templates/home";
 
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
@@ -48,9 +49,7 @@ async function resolveWebMiddleware(): Promise<WebMiddleware[]> {
   return resolvedMiddlewarePromise;
 }
 
-function normalizeWebMiddleware(
-  defaultExport: unknown
-): WebMiddleware[] {
+function normalizeWebMiddleware(defaultExport: unknown): WebMiddleware[] {
   if (Array.isArray(defaultExport)) {
     return defaultExport.filter(isWebMiddleware);
   }
@@ -65,9 +64,7 @@ function normalizeWebMiddleware(
     "middleware" in defaultExport &&
     typeof (defaultExport as { middleware?: unknown }).middleware === "function"
   ) {
-    return [
-      (defaultExport as { middleware: WebMiddleware }).middleware,
-    ];
+    return [(defaultExport as { middleware: WebMiddleware }).middleware];
   }
 
   return [];
@@ -122,6 +119,11 @@ async function handleMcpRequest(
   authInfo?: AuthInfo
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
+  const requestPayload = await request
+    .clone()
+    .json()
+    .catch(() => undefined);
+  const clientInfo = extractClientInfoFromMessages(requestPayload);
 
   // Use the http request context provider to maintain request isolation
   return new Promise<Response>((resolve) => {
@@ -131,43 +133,46 @@ async function handleMcpRequest(
       headers[key] = value;
     });
 
-    httpRequestContextProvider({ id: requestId, headers }, async () => {
-      let server: Awaited<ReturnType<typeof createServer>> | null = null;
-      let transport: WebStatelessHttpTransport | null = null;
+    httpRequestContextProvider(
+      { id: requestId, headers, clientInfo },
+      async () => {
+        let server: Awaited<ReturnType<typeof createServer>> | null = null;
+        let transport: WebStatelessHttpTransport | null = null;
 
-      try {
-        server = await createServer();
-        transport = new WebStatelessHttpTransport(httpConfig.debug);
+        try {
+          server = await createServer();
+          transport = new WebStatelessHttpTransport(httpConfig.debug);
 
-        await server.connect(transport);
-        const response = await transport.handleRequest(request, authInfo);
+          await server.connect(transport);
+          const response = await transport.handleRequest(request, authInfo);
 
-        resolve(addCorsHeaders(response, requestOrigin));
-      } catch (error) {
-        console.error("[Cloudflare-MCP] Error handling MCP request:", error);
-        const errorResponse = new Response(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: -32603,
-              message: "Internal server error",
-            },
-            id: null,
-          }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-        resolve(addCorsHeaders(errorResponse, requestOrigin));
-      } finally {
-        if (server && transport) {
-          ctx.waitUntil(
-            Promise.allSettled([transport.close(), server.close()])
+          resolve(addCorsHeaders(response, requestOrigin));
+        } catch (error) {
+          console.error("[Cloudflare-MCP] Error handling MCP request:", error);
+          const errorResponse = new Response(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              error: {
+                code: -32603,
+                message: "Internal server error",
+              },
+              id: null,
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
           );
+          resolve(addCorsHeaders(errorResponse, requestOrigin));
+        } finally {
+          if (server && transport) {
+            ctx.waitUntil(
+              Promise.allSettled([transport.close(), server.close()])
+            );
+          }
         }
       }
-    });
+    );
   });
 }
 
