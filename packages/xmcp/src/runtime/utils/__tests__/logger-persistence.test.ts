@@ -57,3 +57,9 @@ test("logging/setLevel persists for later requests on the same session", async (
     },
   ]);
 });
+
+test("logger is a safe no-op outside xmcp handler context", () => {
+  assert.doesNotThrow(() => {
+    logger.info("outside-context", "test-logger");
+  });
+});

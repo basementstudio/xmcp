@@ -2,7 +2,7 @@
 title: "Logging"
 metadataTitle: "Logging | xmcp Documentation"
 publishedAt: "2026-03-17"
-summary: "Send structured log messages from your MCP server to connected clients."
+summary: "Send structured log messages from xmcp handlers to connected clients."
 description: "The logging capability lets your tools, prompts, and resources send structured log messages to clients. Clients can control verbosity via log levels, and messages are automatically filtered based on the client's preference."
 ---
 
@@ -43,7 +43,7 @@ export default async function syncData({ source }: InferSchema<typeof schema>) {
 }
 ```
 
-No need to accept `extra` as a parameter, `logger` automatically resolves the current server session from async context.
+No need to accept `extra` as a parameter, `logger` automatically resolves the current server session from async context while the handler is executing.
 
 ## Log Levels
 
@@ -77,9 +77,9 @@ Clients can send a `logging/setLevel` request to control which messages they rec
 
 If no level has been set by the client, all messages are sent.
 
-## Works Everywhere
+## Handler Support
 
-Logging is available in all handler types:
+Logging is available in all xmcp handler types:
 
 ```typescript title="src/prompts/analyze.ts"
 import { logger } from "xmcp";
@@ -98,3 +98,5 @@ export default async function status(args: any) {
   return "System OK";
 }
 ```
+
+Calls made outside an active xmcp tool, prompt, or resource handler are ignored.

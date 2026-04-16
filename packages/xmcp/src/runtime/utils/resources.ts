@@ -270,9 +270,14 @@ export function addResourcesToServer(
     const transformedHandler = transformResourceHandler(
       handler,
       path,
-      resourceSchema,
-      server
+      resourceSchema
     );
+
+    const wrappedHandler = (uri: URL, extra: any) =>
+      loggerContextProvider(
+        { server, sessionId: extra.sessionId },
+        () => transformedHandler(uri, extra)
+      );
 
     if (resourceInfo.type === "direct") {
       // register as a direct resource (static composed URI)
@@ -280,7 +285,7 @@ export function addResourcesToServer(
         resourceConfig.name as string,
         uri,
         resourceConfig,
-        transformedHandler
+        wrappedHandler
       );
     } else {
       // register as a resource template (dynamic URI with parameters)

@@ -9,6 +9,7 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import { loggerContextProvider } from "./logger";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -150,13 +151,18 @@ export function addToolsToServer(
         },
       });
     } else {
-      transformedHandler = transformToolHandler(
+      const baseHandler = transformToolHandler(
         handler,
         meta,
         toolOutputSchema,
-        toolConfig.name,
-        server
+        toolConfig.name
       );
+
+      transformedHandler = (args: any, extra: any) =>
+        loggerContextProvider(
+          { server, sessionId: extra.sessionId },
+          () => baseHandler(args, extra)
+        );
     }
 
     const toolConfigFormatted = {

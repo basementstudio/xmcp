@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index";
 import { Implementation } from "@modelcontextprotocol/sdk/types";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
@@ -53,6 +54,7 @@ export const injectedResources = INJECTED_RESOURCES as Record<
 >;
 
 export const INJECTED_CONFIG = SERVER_INFO as Implementation;
+export const INJECTED_SERVER_OPTIONS = SERVER_OPTIONS as ServerOptions;
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -94,9 +96,7 @@ export async function loadResources() {
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG, {
-    capabilities: { logging: {} },
-  });
+  const server = new McpServer(INJECTED_CONFIG, INJECTED_SERVER_OPTIONS);
   const toolModulesPromise = loadTools();
   const promptModulesPromise = loadPrompts();
   const resourceModulesPromise = loadResources();

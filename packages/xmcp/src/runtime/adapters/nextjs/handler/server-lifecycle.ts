@@ -4,6 +4,7 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import {
   configureServer,
   INJECTED_CONFIG,
+  INJECTED_SERVER_OPTIONS,
   loadPrompts,
   loadResources,
   loadTools,
@@ -46,9 +47,7 @@ export async function initializeMcpServer(): Promise<McpServer> {
     resourceModulesPromise,
   ]);
 
-  const server = new McpServer(INJECTED_CONFIG, {
-    capabilities: { logging: {} },
-  });
+  const server = new McpServer(INJECTED_CONFIG, INJECTED_SERVER_OPTIONS);
 
   await configureServer(server, toolModules, promptModules, resourceModules);
 

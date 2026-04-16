@@ -119,6 +119,14 @@ const loggerCtx = createContext<LoggerContext>({
 
 export const loggerContextProvider = loggerCtx.provider;
 
+function getLoggerContext(): LoggerContext | undefined {
+  try {
+    return loggerCtx.getContext();
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * Importable logger that resolves server/sessionId from async context.
  * Use inside any tool, prompt, or resource handler:
@@ -132,7 +140,9 @@ export const logger: Logger = {} as Logger;
 
 for (const level of LOG_LEVELS) {
   logger[level] = (data: unknown, loggerName?: string) => {
-    const ctx = loggerCtx.getContext();
+    const ctx = getLoggerContext();
+    if (!ctx) return;
+
     const sessionId = resolveSessionId(ctx.sessionId);
     if (!shouldLog(level, sessionId)) return;
 
