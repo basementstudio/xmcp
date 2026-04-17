@@ -5,6 +5,9 @@ import {
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
+import type { ToolExtraArguments } from "@/types/tool";
+import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
+import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
 function validateAgainstOutputSchema(
@@ -49,10 +52,8 @@ export type UserToolResponse =
 
 export type UserToolHandler = (
   args: ZodRawShape,
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
-) =>
-  | UserToolResponse
-  | Promise<UserToolResponse>;
+  extra: ToolExtraArguments
+) => UserToolResponse | Promise<UserToolResponse>;
 
 /**
  * Type for the transformed handler that the MCP server expects
@@ -68,6 +69,25 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
     typeof meta === "object" &&
     Object.keys(meta).some((key) => key.startsWith("ui/"))
   );
+}
+
+function createToolExtraArguments(
+  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+): ToolExtraArguments {
+  let clientInfo = undefined;
+
+  try {
+    clientInfo = getHttpRequestContext().clientInfo;
+  } catch {
+    // no request context available (for example, stdio transport)
+  }
+
+  return {
+    ...(extra as ToolExtraArguments),
+    clientInfo,
+    elicit: (request, options) =>
+      elicitFromTool(extra as ToolExtraArguments, request, options),
+  };
 }
 
 /**
@@ -96,7 +116,8 @@ export function transformToolHandler(
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    let response: any = handler(args, extra);
+    const toolExtra = createToolExtraArguments(extra);
+    let response: any = handler(args, toolExtra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {

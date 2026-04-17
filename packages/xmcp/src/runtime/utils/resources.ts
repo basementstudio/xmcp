@@ -14,14 +14,6 @@ import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
 
-// Client bundles can be injected at compile time for Cloudflare Workers
-// This variable is defined by DefinePlugin at compile time
-declare const INJECTED_CLIENT_BUNDLES:
-  | Record<string, { js: string; css?: string }>
-  | undefined;
-
-declare const IS_CLOUDFLARE: boolean;
-
 /**
  * Get the appropriate pathToToolName function based on runtime environment.
  * - For Cloudflare (INJECTED_CLIENT_BUNDLES defined): Use djb2 hash

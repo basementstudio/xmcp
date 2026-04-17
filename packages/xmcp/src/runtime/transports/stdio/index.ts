@@ -50,9 +50,7 @@ class StdioTransport {
   }
 }
 
-// @ts-expect-error: injected by compiler
 const debug = STDIO_CONFIG.debug || false;
-// @ts-expect-error: injected by compiler
 const silent = STDIO_CONFIG.silent || false;
 
 if (silent) {

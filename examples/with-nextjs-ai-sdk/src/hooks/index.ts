@@ -2,4 +2,4 @@
  * Export all custom hooks
  */
 
-export { useTools } from './useTools';
+export { useTools } from './use-tools';

@@ -37,11 +37,7 @@ export const metadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const result = `Hello, ${name}!`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}!`;
 }
 ```
 
@@ -254,6 +250,59 @@ export default async function calculate({
 }
 ```
 
+### Elicitation
+
+Tool handlers also receive an `extra` argument. Use `extra.elicit()` when you want the client to collect a small piece of user input before the tool continues.
+
+When your server is called over HTTP and the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`).
+
+```typescript title="src/tools/preview-elicitation.ts"
+import { type ToolExtraArguments, type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "preview-elicitation",
+  description: "Preview a basic extra.elicit() flow in MCPJam",
+  annotations: {
+    title: "Preview elicitation",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default async function previewElicitation(
+  _: any,
+  extra: ToolExtraArguments
+) {
+  const result = await extra.elicit({
+    message: "Choose a deployment target",
+    requestedSchema: {
+      type: "object",
+      properties: {
+        environment: {
+          type: "string",
+          title: "Environment",
+          enum: ["staging", "production"],
+          enumNames: ["Staging", "Production"],
+          default: "staging",
+        },
+      },
+      required: ["environment"],
+    },
+  });
+
+  return JSON.stringify(result, null, 2);
+}
+```
+
+#### Quick check with MCPJam
+
+1. From the repo root, run `pnpm --dir examples/http-transport dev`.
+2. In another terminal, run `npx @mcpjam/inspector@latest`.
+3. Connect MCPJam to `http://127.0.0.1:3001/mcp`.
+4. Call `preview-elicitation`.
+5. MCPJam opens a small form with an environment select. Accepting returns `action: "accept"` plus `content.environment`. Cancel or decline returns the matching `action`.
+
 ### 2. Template Literal Handlers
 
 Return HTML directly to create interactive widgets. xmcp automatically generates
@@ -455,3 +504,73 @@ export default async function getData() {
   };
 }
 ```
+
+## Troubleshooting
+
+### Tool Loading Errors
+
+When `xmcp` starts, it loads every file under your tools directory.
+
+- Empty tool files are skipped with a friendly warning
+- Files without a `default` export are skipped with a friendly warning
+- Real syntax or import errors still fail normally so you can see the full stack trace
+
+For example, if `src/tools/draft.ts` is empty, startup will log:
+
+```txt
+[xmcp] Failed to load tool file: src/tools/draft.ts
+   -> File is empty.
+[xmcp] 1 tool skipped due to empty files or missing default exports
+```
+
+If the file exists but does not export a default handler, startup will log:
+
+```txt
+[xmcp] Failed to load tool file: src/tools/draft.ts
+   -> File does not export a default tool handler.
+```
+
+<Callout variant="info">
+  Friendly handling is intentionally limited to empty files and missing default
+  exports. Invalid implementations and real import/syntax errors still surface
+  as normal runtime errors.
+</Callout>
+
+## CLI Scaffolding
+
+You can use the CLI to scaffold tools, resources, and prompts.
+
+### Create a tool
+
+```bash
+xmcp create tool my-tool
+```
+
+### Create a resource
+
+```bash
+xmcp create resource my-resource
+```
+
+### Create a prompt
+
+```bash
+xmcp create prompt my-prompt
+```
+
+### Output
+
+Each command creates a starter file in the default directory for that primitive:
+
+- `xmcp create tool my-tool` → `src/tools/my-tool.ts`
+- `xmcp create resource my-resource` → `src/resources/my-resource.ts`
+- `xmcp create prompt my-prompt` → `src/prompts/my-prompt.ts`
+
+The generated file already includes the basic exports you need to continue:
+
+- tools: `schema`, `metadata`, and a default function
+- resources: `metadata` and a default function
+- prompts: `schema`, `metadata`, and a default function
+
+So instead of starting from an empty file, you get a ready-to-edit template with placeholder descriptions and example return values.
+

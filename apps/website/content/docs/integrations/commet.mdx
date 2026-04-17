@@ -1,0 +1,236 @@
+---
+title: "Commet"
+metadataTitle: "Usage with Commet | xmcp Documentation"
+publishedAt: "2026-04-02"
+summary: "Add subscription-aware billing, feature gating, and usage tracking to your xmcp server with Commet"
+description: "Add subscription-aware billing, feature gating, and usage tracking to your xmcp server with Commet"
+---
+
+## Overview
+
+The Commet plugin enables subscription-aware billing for your xmcp server using [Commet](https://commet.co/go/partner/?c=xmcp). Your tools get full context: which plan the customer is on, what features they can access, how much usage remains, and automatic consumption tracking.
+
+- **Feature-level gating**: Tool A is free, Tool B is Pro, Tool C is Enterprise
+- **Usage tracking**: report units or AI tokens, your plan's consumption model handles the rest
+- **Rich context**: your tools know the customer's plan, remaining quota, and limits
+- **Full billing**: invoices, proration, checkout, customer portal
+- **Taxes and compliance**: Commet handles everything as Merchant of Record
+
+## Installation
+
+Install the Commet plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/commet",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/commet",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/commet",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/commet",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Commet Setup
+
+Follow these steps to configure your billing product before integrating the plugin:
+
+1. **Create an account** at [commet.co/templates/xmcp](https://commet.co/go/partner/templates/xmcp?c=xmcp)
+2. **Copy your API Key** (`ck_xxx`) from Settings > API Keys
+3. **Create a Product** from the dashboard. This represents your xmcp server
+4. **Define your Plans** (e.g., Free, Pro, Enterprise). Each plan includes a set of features
+5. **Add Features** to each plan. Choose the type per feature:
+   - **Boolean**: on/off access (e.g., `export`, `custom-branding`)
+   - **Metered**: usage-based with included quotas and optional overage pricing (e.g., `ai_generate` with 1000 included units)
+6. **Set pricing** for each plan: monthly/yearly intervals, per-seat, or flat rate
+
+<Callout variant="info">
+  Use the sandbox environment (`ck_test_xxx`) during development. Switch to your production key when you're ready to go live.
+</Callout>
+
+## Configuration
+
+Register the Commet provider in your middleware:
+
+```typescript title="src/middleware.ts"
+import { commetProvider } from "@xmcp-dev/commet";
+
+export default commetProvider({
+  apiKey: process.env.COMMET_API_KEY!,
+  environment: "sandbox",
+});
+```
+
+### Configuration Options
+
+- `apiKey`: Your Commet API key (starts with `ck_`)
+- `environment`: Defaults to the SDK's default environment
+- `customerHeader`: HTTP header name for the customer identifier (defaults to `"customer-key"`)
+
+<Callout variant="info">
+  Customer identity is provided via the `customer-key` header (or the established header name you configure in `customerHeader`). This is the same ID you use when creating customers in Commet.
+</Callout>
+
+## Access the client
+
+The `getClient()` function gives you access to the full [`@commet/node` SDK](https://commet.co/go/partner/docs?c=xmcp), allowing you to leverage all Commet features in your MCP tools. The `getCustomerId()` function returns the customer ID extracted from the request header.
+
+### Example: Feature gating
+
+Use the SDK to gate tools behind boolean features:
+
+```typescript title="src/tools/export-tool.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getClient, getCustomerId } from "@xmcp-dev/commet";
+
+export const schema = {
+  format: z.enum(["csv", "json", "pdf"]).describe("Export format"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "export",
+  description: "Export data in multiple formats, Pro plan only",
+};
+
+export default async function exportData({
+  format,
+}: InferSchema<typeof schema>) {
+  const client = getClient();
+  const customerId = getCustomerId();
+  const { data } = await client.customer(customerId).features.check("export");
+
+  if (!data?.allowed) {
+    return "Your plan does not include this feature.";
+  }
+
+  return `Exported data as ${format}`;
+}
+```
+
+### Example: Usage tracking
+
+Track metered consumption with the SDK:
+
+```typescript title="src/tools/ai-generate.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getClient, getCustomerId } from "@xmcp-dev/commet";
+
+export const schema = {
+  prompt: z.string().describe("The prompt to generate content from"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "ai_generate",
+  description: "Generate content with AI, tracks 1 unit per call",
+};
+
+export default async function aiGenerate({
+  prompt,
+}: InferSchema<typeof schema>) {
+  const client = getClient();
+  const customerId = getCustomerId();
+
+  const { data } = await client.customer(customerId).features.check("ai_generate");
+
+  if (!data?.allowed) {
+    return "Your plan does not include this feature.";
+  }
+
+  await client.usage.track({
+    feature: "ai_generate",
+    customerId,
+    value: 1,
+  });
+
+  return `Generated content for: "${prompt}"`;
+}
+```
+
+### Example: AI token tracking
+
+Track per-model token consumption:
+
+```typescript title="src/tools/ai-chat.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { getClient, getCustomerId } from "@xmcp-dev/commet";
+
+export const schema = {
+  prompt: z.string().describe("The prompt to send to the AI model"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "ai_chat",
+  description: "Chat with AI, tracks token consumption per model",
+};
+
+export default async function aiChat({
+  prompt,
+}: InferSchema<typeof schema>) {
+  const client = getClient();
+  const customerId = getCustomerId();
+
+  const { data } = await client.customer(customerId).features.check("ai_chat");
+
+  if (!data?.allowed) {
+    return "Your plan does not include this feature.";
+  }
+
+  await client.usage.track({
+    feature: "ai_chat",
+    customerId,
+    model: "anthropic/claude-haiku-4.5",
+    inputTokens: 1200,
+    outputTokens: 340,
+  });
+
+  return `Response to: "${prompt}"`;
+}
+```
+
+### Example: Billing portal
+
+Get the customer's billing portal URL for upgrade and management flows:
+
+```typescript title="src/tools/manage-billing.ts"
+import type { ToolMetadata } from "xmcp";
+import { getClient, getCustomerId } from "@xmcp-dev/commet";
+
+export const metadata: ToolMetadata = {
+  name: "manage-billing",
+  description: "Get the customer's billing portal link",
+};
+
+export default async function manageBilling(): Promise<string> {
+  const client = getClient();
+  const customerId = getCustomerId();
+  const response = await client.customer(customerId).portal.getUrl();
+
+  if (!response.success || !response.data) {
+    return "Unable to retrieve billing portal.";
+  }
+
+  return `Manage your subscription: ${response.data.portalUrl}`;
+}
+```
+
+## Example
+
+See the full working example with free, gated, metered, and AI token tools in the [`commet-http` example](https://github.com/basementstudio/xmcp/tree/canary/examples/commet-http).

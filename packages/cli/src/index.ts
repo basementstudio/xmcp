@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-import { runGenerate } from "./commands/generate.js";
 
 interface ParsedArgs {
   command?: string;
+  subcommand?: string;
+  positional: string[];
   options: Record<string, string | boolean | undefined>;
   helpRequested: boolean;
 }
@@ -13,29 +14,37 @@ Usage:
   npx @xmcp-dev/cli <command> [options]
 
 Commands:
-  generate            Generate a typed remote tool client file
+  generate                     Generate typed remote tool client files
+  create <type> [name]         Scaffold a new tool, resource, or prompt
 
-Options:
-  -o, --out <path>    Output directory (default: src/generated)
-  -c, --clients <path>  Path to clients config (default: src/clients.ts)
-  -h, --help          Show this help message
+Generate options:
+  -o, --out <path>             Output directory (default: src/generated)
+  -c, --clients <path>         Path to clients config (default: src/clients.ts)
 
-Scaffolding:
-  Use "npx xmcp create" to scaffold new tools, resources, prompts, and widgets.
-  Example: npx xmcp create tool weather
+Create options:
+  -d, --dir <path>             Output directory override
+  -p, --preset <preset>        Template preset: standard | react
+
+Global options:
+  -h, --help                   Show this help message
 `;
 
 function parseArgs(argv: string[]): ParsedArgs {
-  const [, , maybeCommand, ...rest] = argv;
+  const [, , maybeCommand, maybeSubcommand, ...rest] = argv;
   const options: Record<string, string | boolean> = {};
+  const positional: string[] = [];
   let helpRequested = false;
 
-  const positionalCommand =
+  const command =
     maybeCommand && !maybeCommand.startsWith("-") ? maybeCommand : undefined;
-  const args = positionalCommand ? rest : [maybeCommand, ...rest];
+  const commandArgs = command
+    ? [maybeSubcommand, ...rest]
+    : [maybeCommand, maybeSubcommand, ...rest];
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
+  let subcommand: string | undefined;
+
+  for (let i = 0; i < commandArgs.length; i++) {
+    const arg = commandArgs[i];
     if (!arg) continue;
 
     switch (arg) {
@@ -45,19 +54,33 @@ function parseArgs(argv: string[]): ParsedArgs {
         break;
       case "-o":
       case "--out":
-        options.out = args[++i];
+        options.out = commandArgs[++i];
         break;
       case "-c":
       case "--clients":
-        options.clients = args[++i];
+        options.clients = commandArgs[++i];
+        break;
+      case "-d":
+      case "--dir":
+        options.dir = commandArgs[++i];
+        break;
+      case "-p":
+      case "--preset":
+        options.preset = commandArgs[++i];
         break;
       default:
-        // ignore unknown flags for now
+        if (!arg.startsWith("-")) {
+          if (!subcommand) {
+            subcommand = arg;
+          } else {
+            positional.push(arg);
+          }
+        }
         break;
     }
   }
 
-  return { command: positionalCommand, options, helpRequested };
+  return { command, subcommand, positional, options, helpRequested };
 }
 
 function printHelp() {
@@ -65,7 +88,9 @@ function printHelp() {
 }
 
 async function main() {
-  const { command, options, helpRequested } = parseArgs(process.argv);
+  const { command, subcommand, positional, options, helpRequested } = parseArgs(
+    process.argv
+  );
 
   if (!command || helpRequested || command === "help") {
     printHelp();
@@ -75,18 +100,45 @@ async function main() {
     return;
   }
 
-  if (command !== "generate") {
-    console.error(`Unknown command "${command}".\n`);
-    printHelp();
-    process.exit(1);
+  if (command === "generate") {
+    const { runGenerate } = await import("./commands/generate.js");
+
+    await runGenerate({
+      out: typeof options.out === "string" ? options.out : undefined,
+      clientsFile:
+        typeof options.clients === "string" ? options.clients : undefined,
+    });
     return;
   }
 
-  await runGenerate({
-    out: typeof options.out === "string" ? options.out : undefined,
-    clientsFile:
-      typeof options.clients === "string" ? options.clients : undefined,
-  });
+  if (command === "create") {
+    if (!subcommand) {
+      console.error("Missing create type.\n");
+      printHelp();
+      process.exit(1);
+      return;
+    }
+
+    const { runCreate } = await import("./commands/create.js");
+    const result = await runCreate({
+      type: subcommand as "tool" | "resource" | "prompt",
+      name: positional[0],
+      preset: typeof options.preset === "string" ? options.preset : undefined,
+      directory: typeof options.dir === "string" ? options.dir : undefined,
+    });
+
+    if (result.status === "skipped") {
+      console.log(`Skipped ${subcommand} -> ${result.outputPath} (already exists)`);
+      return;
+    }
+
+    console.log(`Created ${subcommand} -> ${result.outputPath}`);
+    return;
+  }
+
+  console.error(`Unknown command "${command}".\n`);
+  printHelp();
+  process.exit(1);
 }
 
 main().catch((error) => {
