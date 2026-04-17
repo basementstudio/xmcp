@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
-  fetchExampleBySlug,
-  fetchExampleReadme,
-  fetchExamplesAndTemplates,
-} from "@/app/examples/utils/github";
+  fetchTemplateBySlug,
+  fetchTemplateReadme,
+  fetchTemplates,
+} from "@/app/templates/utils/github";
 import {
   formatRepositoryLabel,
   humanizeMetadataName,
@@ -13,87 +13,72 @@ import {
   normalizeDisplayLabel,
   rankRelatedItems,
   stripLeadingHeading,
-} from "@/app/examples/utils/detail";
-import { buildDeployOptions } from "@/app/examples/utils/deploy";
-import { ExampleBreadcrumb } from "@/components/examples/detail/breadcrumb";
-import { ExampleDetailHeader } from "@/components/examples/detail/header";
-import { RelatedExamples } from "@/components/examples/detail/related-items";
-import { ExampleReadmeContent } from "@/components/examples/detail/readme-content";
-import { ExampleDetailSidebar } from "@/components/examples/detail/sidebar";
+} from "@/app/templates/utils/detail";
+import { buildDeployOptions } from "@/app/templates/utils/deploy";
+import { TemplateBreadcrumb } from "@/components/templates/detail/breadcrumb";
+import { TemplateDetailHeader } from "@/components/templates/detail/header";
+import { RelatedTemplates } from "@/components/templates/detail/related-items";
+import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
+import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
 import { getBaseUrl } from "@/lib/base-url";
-import { resolveExamplePreviewImage } from "@/lib/example-preview-image";
+import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
 
 export const revalidate = 1800; // 30 minutes
 
 const baseUrl = getBaseUrl();
 
-type ExampleDetailPageProps = {
+type TemplateDetailPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
 
 export async function generateStaticParams() {
-  const items = await fetchExamplesAndTemplates();
-  const seen = new Map<string, string>();
-
-  for (const item of items) {
-    const existing = seen.get(item.slug);
-    if (existing) {
-      console.warn(
-        `[examples] slug collision: "${item.slug}" exists as both ${existing} and ${item.type}`
-      );
-    } else {
-      seen.set(item.slug, item.type);
-    }
-  }
-
-  return [
-    ...new Map(items.map((item) => [item.slug, { slug: item.slug }])).values(),
-  ];
+  const items = await fetchTemplates();
+  return items.map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata(
-  props: ExampleDetailPageProps
+  props: TemplateDetailPageProps
 ): Promise<Metadata> {
   const params = await props.params;
-  const example = await fetchExampleBySlug(params.slug);
+  const template = await fetchTemplateBySlug(params.slug);
 
-  if (!example) {
+  if (!template) {
     return {
-      title: "Example not found - xmcp",
-      description: "The requested example could not be found.",
+      title: "Template not found - xmcp",
+      description: "The requested template could not be found.",
     };
   }
 
-  const canonical = `${baseUrl}/examples/${example.slug}`;
-  const metadataName = humanizeMetadataName(example.name);
-  const metadataTitle = `${metadataName} | xmcp Examples`;
+  const canonical = `${baseUrl}/templates/${template.slug}`;
+  const metadataName = humanizeMetadataName(template.name);
+  const metadataTitle = `${metadataName} | xmcp Templates`;
   const metadataKeywords = Array.from(
     new Set(
       [
-        ...(example.metadataKeywords ?? []),
-        ...(example.tags ?? []),
-        example.category,
+        ...(template.metadataKeywords ?? []),
+        ...(template.tags ?? []),
+        template.category,
       ].filter(Boolean)
     )
   ) as string[];
 
   return {
     title: metadataTitle,
-    description: example.description,
+    description: template.description,
     keywords: metadataKeywords,
     alternates: { canonical },
     openGraph: {
       title: metadataTitle,
-      description: example.description,
+      description: template.description,
       url: canonical,
       siteName: "xmcp",
       type: "website",
-      images: example.previewUrl
+      images: template.previewUrl
         ? [
             {
-              url: example.previewUrl,
+              url: template.previewUrl,
               width: 1200,
               height: 630,
             },
@@ -103,40 +88,42 @@ export async function generateMetadata(
     twitter: {
       card: "summary_large_image",
       title: metadataTitle,
-      description: example.description,
-      images: example.previewUrl ? [example.previewUrl] : undefined,
+      description: template.description,
+      images: template.previewUrl ? [template.previewUrl] : undefined,
     },
   };
 }
 
-export default async function ExampleDetailPage(props: ExampleDetailPageProps) {
+export default async function TemplateDetailPage(
+  props: TemplateDetailPageProps
+) {
   const params = await props.params;
-  const items = await fetchExamplesAndTemplates();
-  const example = items.find((item) => item.slug === params.slug) ?? null;
+  const items = await fetchTemplates();
+  const template = items.find((item) => item.slug === params.slug) ?? null;
 
-  if (!example) {
+  if (!template) {
     notFound();
   }
 
-  const readmeContent = await fetchExampleReadme(example);
-  const moreExamples = rankRelatedItems(example, items);
-  const deployOptions = buildDeployOptions(example);
-  const pageUrl = `${baseUrl}/examples/${example.slug}`;
-  const shareMessage = `Check out ${example.name} on xmcp`;
+  const readmeContent = await fetchTemplateReadme(template);
+  const moreTemplates = rankRelatedItems(template, items);
+  const deployOptions = buildDeployOptions(template);
+  const pageUrl = `${baseUrl}/templates/${template.slug}`;
+  const shareMessage = `Check out ${template.name} on xmcp`;
   const xShareUrl = `https://www.x.com/intent/post?text=${encodeURIComponent(
     shareMessage
   )}&url=${encodeURIComponent(pageUrl)}`;
   const categoryItems = Array.from(
     new Set([
-      ...(example.category && !isTypeLabel(example.category)
-        ? [example.category]
+      ...(template.category && !isTypeLabel(template.category)
+        ? [template.category]
         : []),
-      ...(example.tags ?? []).filter((tag) => !isTypeLabel(tag)),
+      ...(template.tags ?? []).filter((tag) => !isTypeLabel(tag)),
     ])
   );
-  const previewImage = resolveExamplePreviewImage(example);
-  const displayName = normalizeDisplayLabel(example.name);
-  const repositoryLabel = formatRepositoryLabel(example.repositoryUrl);
+  const previewImage = resolveTemplatePreviewImage(template);
+  const displayName = normalizeDisplayLabel(template.name);
+  const repositoryLabel = formatRepositoryLabel(template.repositoryUrl);
   const fallbackReadme = `# README not found
 
 Add a README.md to this template to show content here.`;
@@ -144,14 +131,14 @@ Add a README.md to this template to show content here.`;
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
-      <ExampleBreadcrumb name={displayName} />
+      <TemplateBreadcrumb name={displayName} />
 
       <div className="space-y-4 md:space-y-6">
-        <ExampleDetailHeader
+        <TemplateDetailHeader
           name={displayName}
-          description={example.description}
-          demoUrl={example.demoUrl}
-          replitUrl={example.replitUrl}
+          description={template.description}
+          demoUrl={template.demoUrl}
+          replitUrl={template.replitUrl}
           deployOptions={deployOptions}
         />
 
@@ -160,7 +147,7 @@ Add a README.md to this template to show content here.`;
             {!previewImage.isFallback ? (
               <Image
                 src={previewImage.src}
-                alt={`${example.name} preview`}
+                alt={`${template.name} preview`}
                 fill
                 sizes="100vw"
                 className="object-cover"
@@ -169,7 +156,7 @@ Add a README.md to this template to show content here.`;
             ) : (
               <Image
                 src={previewImage.src}
-                alt={`${example.name} preview`}
+                alt={`${template.name} preview`}
                 fill
                 sizes="100vw"
                 unoptimized
@@ -197,8 +184,8 @@ Add a README.md to this template to show content here.`;
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <ExampleDetailSidebar
-          example={example}
+        <TemplateDetailSidebar
+          template={template}
           repositoryLabel={repositoryLabel}
           categoryItems={categoryItems}
           pageUrl={pageUrl}
@@ -206,11 +193,11 @@ Add a README.md to this template to show content here.`;
         />
 
         <section className="lg:col-span-9 space-y-6 pl-8 border-l border-brand-neutral-500">
-          <ExampleReadmeContent source={bodyContent} />
+          <TemplateReadmeContent source={bodyContent} />
         </section>
       </div>
 
-      <RelatedExamples items={moreExamples} />
+      <RelatedTemplates items={moreTemplates} />
     </main>
   );
 }

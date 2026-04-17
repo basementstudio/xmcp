@@ -47,6 +47,16 @@ const nextConfig: NextConfig = {
         destination: "/docs/configuration/bundler",
         permanent: true,
       },
+      {
+        source: "/examples",
+        destination: "/templates",
+        permanent: true,
+      },
+      {
+        source: "/examples/:slug",
+        destination: "/templates/:slug",
+        permanent: true,
+      },
     ];
   },
 };

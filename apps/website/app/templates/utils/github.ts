@@ -1,9 +1,6 @@
-import { EXAMPLES_REVALIDATE_SECONDS } from "./constants";
+import { TEMPLATES_REVALIDATE_SECONDS } from "./constants";
 
-export type ExampleType = "example" | "template";
-
-export type ExampleItem = {
-  type: ExampleType;
+export type TemplateItem = {
   slug: string;
   name: string;
   description: string;
@@ -26,8 +23,6 @@ export type ExampleItem = {
 
 export const BRANCH = "main";
 
-const XMCP_REPO = "basementstudio/xmcp";
-const XMCP_BRANCH = "main";
 const TEMPLATES_REPO = "xmcp-dev/templates";
 const TEMPLATES_BRANCH = BRANCH;
 
@@ -36,17 +31,6 @@ type RepoContentItem = {
   name: string;
   path: string;
   content?: string;
-};
-
-type PackageMeta = {
-  name?: string;
-  description?: string;
-  keywords?: string[];
-  homepage?: string;
-  demoUrl?: string;
-  deployUrl?: string;
-  replitUrl?: string;
-  readmePath?: string;
 };
 
 type TemplateMeta = {
@@ -95,17 +79,14 @@ async function fetchRepoContents(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
+      next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
     });
 
-    if (!response.ok) {
-      return null;
-    }
+    if (!response.ok) return null;
 
     const data = (await response.json()) as RepoContentItem[];
     return Array.isArray(data) ? data : null;
-  } catch (error) {
-    console.error(`Error fetching directory ${repo}/${path}:`, error);
+  } catch {
     return null;
   }
 }
@@ -118,22 +99,17 @@ async function fetchRepoFileJson<T = unknown>(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
+      next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
     });
 
-    if (!response.ok) {
-      return null;
-    }
+    if (!response.ok) return null;
 
     const data = (await response.json()) as RepoContentItem;
-    if (!data.content) {
-      return null;
-    }
+    if (!data.content) return null;
 
     const decoded = Buffer.from(data.content, "base64").toString("utf-8");
     return JSON.parse(decoded) as T;
-  } catch (error) {
-    console.error(`Error fetching JSON ${repo}/${path}:`, error);
+  } catch {
     return null;
   }
 }
@@ -146,21 +122,16 @@ async function fetchRepoFileText(
   try {
     const response = await fetch(buildApiContentsUrl(repo, path, ref), {
       headers: getGitHubHeaders(),
-      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
+      next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
     });
 
-    if (!response.ok) {
-      return null;
-    }
+    if (!response.ok) return null;
 
     const data = (await response.json()) as RepoContentItem;
-    if (!data.content) {
-      return null;
-    }
+    if (!data.content) return null;
 
     return Buffer.from(data.content, "base64").toString("utf-8");
-  } catch (error) {
-    console.error(`Error fetching text ${repo}/${path}:`, error);
+  } catch {
     return null;
   }
 }
@@ -172,16 +143,13 @@ async function fetchRawFileText(
 ): Promise<string | null> {
   try {
     const response = await fetch(buildRawUrl(repo, path, ref), {
-      next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
+      next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
     });
 
-    if (!response.ok) {
-      return null;
-    }
+    if (!response.ok) return null;
 
     return await response.text();
-  } catch (error) {
-    console.error(`Error fetching raw text ${repo}/${path}:`, error);
+  } catch {
     return null;
   }
 }
@@ -197,10 +165,13 @@ async function findPreviewPath(
     return await Promise.any(
       extensions.map(async (ext) => {
         const candidate = `${templateSlug}/.config/preview.${ext}`;
-        const response = await fetch(buildApiContentsUrl(repo, candidate, ref), {
-          headers: getGitHubHeaders(),
-          next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
-        });
+        const response = await fetch(
+          buildApiContentsUrl(repo, candidate, ref),
+          {
+            headers: getGitHubHeaders(),
+            next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
+          }
+        );
         if (!response.ok) throw new Error("not found");
         return candidate;
       })
@@ -239,50 +210,12 @@ function resolveTemplateImageUrl(
   return buildRawUrl(repo, `${templateSlug}/${candidate}`, ref);
 }
 
-async function fetchRepoExamples(): Promise<ExampleItem[]> {
-  const contents = await fetchRepoContents(XMCP_REPO, "examples", XMCP_BRANCH);
-
-  if (!contents) {
-    return [];
-  }
-
-  const directories = contents.filter((item) => item.type === "dir");
-
-  const examples = await Promise.all(
-    directories.map(async (dir) => {
-      const packageMeta = await fetchRepoFileJson<PackageMeta>(
-        XMCP_REPO,
-        `examples/${dir.name}/package.json`,
-        XMCP_BRANCH
-      );
-
-      return {
-        type: "example" as const,
-        slug: dir.name,
-        name: packageMeta?.name ?? dir.name,
-        description: packageMeta?.description ?? `Example: ${dir.name}`,
-        repositoryUrl: buildTreeUrl(XMCP_REPO, `examples/${dir.name}`, XMCP_BRANCH),
-        path: dir.path,
-        sourceRepo: XMCP_REPO,
-        sourceBranch: XMCP_BRANCH,
-        category: "example",
-        tags: packageMeta?.keywords ?? [],
-        primaryFilterTag: packageMeta?.keywords?.[0],
-        metadataKeywords: packageMeta?.keywords ?? [],
-        websiteUrl: packageMeta?.homepage,
-        demoUrl: packageMeta?.demoUrl,
-        deployUrl: packageMeta?.deployUrl,
-        replitUrl: packageMeta?.replitUrl,
-        readmePath: packageMeta?.readmePath,
-      };
-    })
+export async function fetchTemplates(): Promise<TemplateItem[]> {
+  const contents = await fetchRepoContents(
+    TEMPLATES_REPO,
+    "",
+    TEMPLATES_BRANCH
   );
-
-  return examples;
-}
-
-async function fetchTemplates(): Promise<ExampleItem[]> {
-  const contents = await fetchRepoContents(TEMPLATES_REPO, "", TEMPLATES_BRANCH);
 
   if (!contents) {
     return [];
@@ -318,8 +251,7 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
       ) as string[];
       const primaryFilterTag = meta?.category ?? tags[0];
 
-      return {
-        type: "template" as const,
+      const item: TemplateItem = {
         slug: dir.name,
         name: meta?.name ?? dir.name,
         description: meta?.description ?? dir.name,
@@ -340,51 +272,30 @@ async function fetchTemplates(): Promise<ExampleItem[]> {
           ? metaImageUrl
           : previewPath
             ? buildRawUrl(TEMPLATES_REPO, previewPath, TEMPLATES_BRANCH)
-          : undefined,
+            : undefined,
         readmePath: meta?.readme?.path,
       };
+
+      return item;
     })
   );
 
   return templates;
 }
 
-export async function fetchExamplesAndTemplates(): Promise<ExampleItem[]> {
-  const [examples, templates] = await Promise.all([
-    fetchRepoExamples(),
-    fetchTemplates(),
-  ]);
-
-  return [...examples, ...templates];
-}
-
-export async function fetchExample(
-  type: ExampleType,
+export async function fetchTemplateBySlug(
   slug: string
-): Promise<ExampleItem | null> {
-  const items = await fetchExamplesAndTemplates();
-  return items.find((item) => item.type === type && item.slug === slug) ?? null;
+): Promise<TemplateItem | null> {
+  const items = await fetchTemplates();
+  return items.find((item) => item.slug === slug) ?? null;
 }
 
-export async function fetchExampleBySlug(
-  slug: string
-): Promise<ExampleItem | null> {
-  const items = await fetchExamplesAndTemplates();
-  const matches = items.filter((item) => item.slug === slug);
-
-  if (matches.length === 0) return null;
-  if (matches.length > 1) {
-    console.warn(`[fetchExampleBySlug] slug collision detected for "${slug}"`);
-  }
-  return matches[0] ?? null;
-}
-
-export async function fetchExampleReadme(
-  example: ExampleItem
+export async function fetchTemplateReadme(
+  template: TemplateItem
 ): Promise<string | null> {
-  const basePath = example.path.replace(/^\/+/, "");
-  const configuredPath = example.readmePath
-    ? `${basePath}/${example.readmePath.replace(/^\/+/, "")}`
+  const basePath = template.path.replace(/^\/+/, "");
+  const configuredPath = template.readmePath
+    ? `${basePath}/${template.readmePath.replace(/^\/+/, "")}`
     : undefined;
   const defaultReadmePath = `${basePath}/README.md`;
 
@@ -395,13 +306,15 @@ export async function fetchExampleReadme(
   try {
     return await Promise.any(
       candidatePaths.flatMap((path) => [
-        fetchRepoFileText(example.sourceRepo, path, example.sourceBranch).then(
-          (result) => {
-            if (!result) throw new Error("not found");
-            return result;
-          }
-        ),
-        fetchRawFileText(example.sourceRepo, path, example.sourceBranch).then(
+        fetchRepoFileText(
+          template.sourceRepo,
+          path,
+          template.sourceBranch
+        ).then((result) => {
+          if (!result) throw new Error("not found");
+          return result;
+        }),
+        fetchRawFileText(template.sourceRepo, path, template.sourceBranch).then(
           (result) => {
             if (!result) throw new Error("not found");
             return result;
@@ -417,9 +330,7 @@ export async function fetchExampleReadme(
 export async function getRepoStars(repoUrl: string): Promise<string> {
   try {
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/?\#]+)/);
-    if (!match) {
-      return "0";
-    }
+    if (!match) return "0";
 
     const [, owner, repo] = match;
     const cleanRepo = repo.replace(/\.git$/, "");
@@ -428,23 +339,18 @@ export async function getRepoStars(repoUrl: string): Promise<string> {
       `https://api.github.com/repos/${owner}/${cleanRepo}`,
       {
         headers: getGitHubHeaders(),
-        next: { revalidate: EXAMPLES_REVALIDATE_SECONDS },
+        next: { revalidate: TEMPLATES_REVALIDATE_SECONDS },
       }
     );
 
-    if (!response.ok) {
-      return "0";
-    }
+    if (!response.ok) return "0";
 
     const { stargazers_count } = await response.json();
     return kFormatter(stargazers_count);
-  } catch (error) {
-    console.error("Error fetching GitHub stars:", error);
+  } catch {
     return "0";
   }
 }
-
-let _tokenWarningEmitted = false;
 
 function getGitHubHeaders() {
   const headers: Record<string, string> = {
@@ -453,11 +359,6 @@ function getGitHubHeaders() {
 
   if (process.env.GITHUB_TOKEN) {
     headers.Authorization = `token ${process.env.GITHUB_TOKEN}`;
-  } else if (!_tokenWarningEmitted) {
-    _tokenWarningEmitted = true;
-    console.warn(
-      "[examples] GITHUB_TOKEN is not set — GitHub API requests are limited to 60/hour"
-    );
   }
 
   return headers;

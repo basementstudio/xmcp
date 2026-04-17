@@ -1,17 +1,18 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { ExampleItem } from "@/app/examples/utils/github";
-import { ExampleShareActions } from "@/components/examples/share-actions";
+import type { TemplateItem } from "@/app/templates/utils/github";
+import { slugifyCategory } from "@/app/templates/utils/slug";
+import { TemplateShareActions } from "@/components/templates/share-actions";
 import { Tag } from "@/components/ui/tag";
 
-export function ExampleDetailSidebar({
-  example,
+export function TemplateDetailSidebar({
+  template,
   repositoryLabel,
   categoryItems,
   pageUrl,
   xShareUrl,
 }: {
-  example: ExampleItem;
+  template: TemplateItem;
   repositoryLabel: string;
   categoryItems: string[];
   pageUrl: string;
@@ -21,7 +22,7 @@ export function ExampleDetailSidebar({
     <aside className="lg:col-span-3 space-y-8">
       <InfoCard label="GitHub Repo">
         <Link
-          href={example.repositoryUrl}
+          href={template.repositoryUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
@@ -30,28 +31,28 @@ export function ExampleDetailSidebar({
         </Link>
       </InfoCard>
 
-      {(example.demoUrl || example.websiteUrl) && (
+      {(template.demoUrl || template.websiteUrl) && (
         <InfoCard label="Website link">
           <Link
-            href={example.demoUrl || example.websiteUrl!}
+            href={template.demoUrl || template.websiteUrl!}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-brand-white text-brand-neutral-50 underline underline-offset-2"
           >
-            {example.demoUrl || example.websiteUrl}
+            {template.demoUrl || template.websiteUrl}
           </Link>
         </InfoCard>
       )}
 
-      {example.replitUrl && (
+      {template.replitUrl && (
         <InfoCard label="Remix on Replit">
           <Link
-            href={example.replitUrl}
+            href={template.replitUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
           >
-            {example.replitUrl}
+            {template.replitUrl}
           </Link>
         </InfoCard>
       )}
@@ -63,7 +64,7 @@ export function ExampleDetailSidebar({
               <Tag
                 key={tag}
                 text={tag}
-                href={`/examples?category=${encodeURIComponent(tag)}`}
+                href={`/templates/category/${slugifyCategory(tag)}`}
                 interactive
                 className="bg-brand-neutral-600"
               />
@@ -73,9 +74,9 @@ export function ExampleDetailSidebar({
       )}
 
       <InfoCard label="Share">
-        <ExampleShareActions
+        <TemplateShareActions
           pageUrl={pageUrl}
-          repositoryUrl={example.repositoryUrl}
+          repositoryUrl={template.repositoryUrl}
           xShareUrl={xShareUrl}
         />
       </InfoCard>
@@ -83,13 +84,7 @@ export function ExampleDetailSidebar({
   );
 }
 
-function InfoCard({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function InfoCard({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs tracking-wide text-brand-neutral-100">{label}</p>

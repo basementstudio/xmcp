@@ -1,5 +1,8 @@
-import type { ExampleItem } from "./github";
-import type { DeployOption, DeployProvider } from "@/components/examples/deploy-dropdown";
+import type { TemplateItem } from "./github";
+import type {
+  DeployOption,
+  DeployProvider,
+} from "@/components/templates/deploy-dropdown";
 
 const PROVIDER_MAP = {
   vercel: "Vercel",
@@ -15,7 +18,7 @@ type MappedProvider = keyof typeof PROVIDER_MAP;
 
 type DeployProviderConfig = {
   label: string;
-  buildHref: (example: ExampleItem) => string;
+  buildHref: (template: TemplateItem) => string;
 };
 
 const DEPLOY_PROVIDER_CONFIG = {
@@ -29,30 +32,30 @@ const DEPLOY_PROVIDER_CONFIG = {
   },
 } satisfies Record<"vercel" | "alpic", DeployProviderConfig>;
 
-export function buildDeployOptions(example: ExampleItem): DeployOption[] {
+export function buildDeployOptions(template: TemplateItem): DeployOption[] {
   const options: DeployOption[] = Object.entries(DEPLOY_PROVIDER_CONFIG).map(
     ([provider, config]) => ({
       label: config.label,
-      href: config.buildHref(example),
+      href: config.buildHref(template),
       provider: provider as keyof typeof DEPLOY_PROVIDER_CONFIG,
     })
   );
 
   options.push({
     label: "Replit",
-    href: example.replitUrl ?? "#",
+    href: template.replitUrl ?? "#",
     provider: "replit",
-    disabled: !example.replitUrl,
+    disabled: !template.replitUrl,
   });
 
-  if (example.deployUrl) {
-    const provider = getProviderFromUrl(example.deployUrl);
+  if (template.deployUrl) {
+    const provider = getProviderFromUrl(template.deployUrl);
     const hrefs = new Set(options.map((option) => option.href));
 
-    if (!hrefs.has(example.deployUrl)) {
+    if (!hrefs.has(template.deployUrl)) {
       options.push({
         label: getProviderLabel(provider),
-        href: example.deployUrl,
+        href: template.deployUrl,
         provider,
       });
     }
@@ -61,29 +64,29 @@ export function buildDeployOptions(example: ExampleItem): DeployOption[] {
   return options;
 }
 
-function buildVercelCloneUrl(example: ExampleItem) {
+function buildVercelCloneUrl(template: TemplateItem) {
   return buildCloneUrl(
     "https://vercel.com/new/clone",
     "repository-url",
-    example
+    template
   );
 }
 
-function buildAlpicCloneUrl(example: ExampleItem) {
-  return buildCloneUrl("https://app.alpic.ai/new/clone", "repositoryUrl", example);
-}
-
-function buildReplitCloneUrl(example: ExampleItem) {
-  return buildCloneUrl("https://replit.com/github", "url", example);
+function buildAlpicCloneUrl(template: TemplateItem) {
+  return buildCloneUrl(
+    "https://app.alpic.ai/new/clone",
+    "repositoryUrl",
+    template
+  );
 }
 
 function buildCloneUrl(
   baseUrl: string,
   paramName: string,
-  example: ExampleItem
+  template: TemplateItem
 ) {
-  const folderPath = example.path.replace(/^\/+/, "");
-  const repoWithBranch = `https://github.com/${example.sourceRepo}/tree/${example.sourceBranch}/${folderPath}`;
+  const folderPath = template.path.replace(/^\/+/, "");
+  const repoWithBranch = `https://github.com/${template.sourceRepo}/tree/${template.sourceBranch}/${folderPath}`;
   const search = new URLSearchParams({
     [paramName]: repoWithBranch,
   });
@@ -100,7 +103,11 @@ function getProviderFromUrl(url: string): DeployProvider {
     }
   })();
 
-  return (Object.keys(PROVIDER_MAP) as MappedProvider[]).find((key) => host.includes(key)) ?? "other";
+  return (
+    (Object.keys(PROVIDER_MAP) as MappedProvider[]).find((key) =>
+      host.includes(key)
+    ) ?? "other"
+  );
 }
 
 function getProviderLabel(provider: DeployProvider) {

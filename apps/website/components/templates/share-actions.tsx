@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 type ShareTarget = "github" | "page";
 
-export function ExampleShareActions({
+export function TemplateShareActions({
   pageUrl,
   repositoryUrl,
   xShareUrl,

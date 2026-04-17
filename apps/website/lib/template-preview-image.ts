@@ -4,21 +4,21 @@ type PreviewFallbackInput = {
   tags?: string[];
 };
 
-const GLOBAL_FALLBACK_SRC = "/examples/fallback.svg";
-const NEXTJS_FALLBACK_SRC = "/examples/nextjs.svg";
+const GLOBAL_FALLBACK_SRC = "/templates/fallback.svg";
+const NEXTJS_FALLBACK_SRC = "/templates/nextjs.svg";
 
 const PROVIDER_FALLBACKS: Record<string, string> = {
-  auth0: "/examples/auth0.svg",
-  betterauth: "/examples/betterauth.svg",
-  clerk: "/examples/clerk.svg",
-  cloudflare: "/examples/cloudflare.svg",
-  express: "/examples/express.svg",
-  nestjs: "/examples/nestjs.svg",
+  auth0: "/templates/auth0.svg",
+  betterauth: "/templates/betterauth.svg",
+  clerk: "/templates/clerk.svg",
+  cloudflare: "/templates/cloudflare.svg",
+  express: "/templates/express.svg",
+  nestjs: "/templates/nestjs.svg",
   nextjs: NEXTJS_FALLBACK_SRC,
-  polar: "/examples/polar.svg",
-  react: "/examples/react.svg",
-  tailwind: "/examples/tailwind.svg",
-  workos: "/examples/workos.svg",
+  polar: "/templates/polar.svg",
+  react: "/templates/react.svg",
+  tailwind: "/templates/tailwind.svg",
+  workos: "/templates/workos.svg",
 };
 
 const PROVIDER_ALIASES: Record<string, keyof typeof PROVIDER_FALLBACKS> = {
@@ -30,7 +30,10 @@ const PROVIDER_ALIASES: Record<string, keyof typeof PROVIDER_FALLBACKS> = {
 };
 
 function normalizeProviderLabel(value: string) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
 }
 
 function resolveProviderFallback(
@@ -44,7 +47,8 @@ function resolveProviderFallback(
 
     const normalized = normalizeProviderLabel(rawCandidate);
     const mappedProvider =
-      PROVIDER_ALIASES[normalized] ?? (normalized as keyof typeof PROVIDER_FALLBACKS);
+      PROVIDER_ALIASES[normalized] ??
+      (normalized as keyof typeof PROVIDER_FALLBACKS);
     const fallback = PROVIDER_FALLBACKS[mappedProvider];
 
     if (fallback) {
@@ -55,7 +59,7 @@ function resolveProviderFallback(
   return undefined;
 }
 
-export function resolveExamplePreviewImage({
+export function resolveTemplatePreviewImage({
   previewUrl,
   category,
   tags,
@@ -68,7 +72,8 @@ export function resolveExamplePreviewImage({
     };
   }
 
-  const fallbackSrc = resolveProviderFallback(category, tags) ?? GLOBAL_FALLBACK_SRC;
+  const fallbackSrc =
+    resolveProviderFallback(category, tags) ?? GLOBAL_FALLBACK_SRC;
 
   return {
     src: fallbackSrc,

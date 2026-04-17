@@ -62,7 +62,7 @@ async function ReadmePre(props: ComponentProps<"pre">) {
   return renderHighlightedCodeBlock(content.trimEnd(), lang);
 }
 
-export function ExampleReadmeContent({ source }: { source: string }) {
+export function TemplateReadmeContent({ source }: { source: string }) {
   return (
     <div className="prose prose-invert max-w-none">
       <MDXRemote

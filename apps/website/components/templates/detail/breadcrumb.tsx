@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Icons } from "@/components/icons";
 
-export function ExampleBreadcrumb({ name }: { name: string }) {
+export function TemplateBreadcrumb({ name }: { name: string }) {
   return (
     <div className="text-sm text-brand-neutral-200 flex items-center gap-1 mb-2">
       <Link
-        href="/examples"
+        href="/templates"
         className="hover:text-brand-white text-brand-neutral-100"
       >
         Templates

@@ -1,4 +1,4 @@
-import type { ExampleItem } from "./github";
+import type { TemplateItem } from "./github";
 
 export function stripLeadingHeading(markdown: string) {
   const lines = markdown.split("\n");
@@ -11,7 +11,9 @@ export function stripLeadingHeading(markdown: string) {
   const isAtx = /^#{1,6}\s+/.test(line);
   const isSetextEquals = /^=+$/.test(next.trim());
   const isSetextDashes =
-    /^-{2,}$/.test(next.trim()) && !/^\s/.test(line) && line.trim().split(/\s+/).length <= 10;
+    /^-{2,}$/.test(next.trim()) &&
+    !/^\s/.test(line) &&
+    line.trim().split(/\s+/).length <= 10;
   const isSetext = next.trim().length > 0 && (isSetextEquals || isSetextDashes);
 
   if (!isAtx && !isSetext) return markdown;
@@ -28,7 +30,7 @@ export function stripLeadingHeading(markdown: string) {
 
 export function isTypeLabel(value: string) {
   const normalized = value.trim().toLowerCase();
-  return normalized === "example" || normalized === "template";
+  return normalized === "template" || normalized === "templates";
 }
 
 export function normalizeDisplayLabel(value: string) {
@@ -68,9 +70,9 @@ export function formatRepositoryLabel(repositoryUrl: string) {
   return match ? match[1] : repositoryUrl;
 }
 
-export function rankRelatedItems(current: ExampleItem, items: ExampleItem[]) {
+export function rankRelatedItems(current: TemplateItem, items: TemplateItem[]) {
   return items
-    .filter((item) => item.type !== current.type || item.slug !== current.slug)
+    .filter((item) => item.slug !== current.slug)
     .map((item) => ({
       item,
       score: getSuggestionScore(current, item),
@@ -96,7 +98,7 @@ function normalizeForMatch(value?: string) {
   return value?.trim().toLowerCase() ?? "";
 }
 
-function getSuggestionScore(current: ExampleItem, candidate: ExampleItem) {
+function getSuggestionScore(current: TemplateItem, candidate: TemplateItem) {
   let score = 0;
 
   const currentCategory = normalizeForMatch(current.category);

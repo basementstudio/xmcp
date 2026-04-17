@@ -1,7 +1,8 @@
 import { Metadata } from "next";
 import { getBaseUrl } from "@/lib/base-url";
-import { fetchExamplesAndTemplates } from "@/app/examples/utils/github";
-import { ExamplesPageContent } from "@/components/examples/page-content";
+import { fetchTemplates } from "@/app/templates/utils/github";
+import { TemplatesListing } from "@/components/templates/listing";
+import { collectUniqueCategories } from "@/app/templates/utils/categories";
 
 export const dynamic = "force-static";
 export const revalidate = 1800; // 30 minutes
@@ -9,60 +10,49 @@ export const revalidate = 1800; // 30 minutes
 const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
-  title: "Examples - xmcp",
+  title: "Templates - xmcp",
   description:
-    "Explore examples and templates to get started with xmcp. Learn from real-world implementations and best practices.",
+    "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
   alternates: {
-    canonical: `${baseUrl}/examples`,
+    canonical: `${baseUrl}/templates`,
   },
   openGraph: {
-    title: "Examples & templates - xmcp",
+    title: "Templates - xmcp",
     description:
-      "Explore examples and templates to get started with xmcp. Learn from real-world implementations and best practices.",
+      "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    url: `${baseUrl}/examples`,
+    url: `${baseUrl}/templates`,
     images: {
-      url: `${baseUrl}/api/og/examples`,
+      url: `${baseUrl}/api/og/templates`,
       width: 1200,
       height: 630,
     },
   },
   twitter: {
     card: "summary_large_image",
-    title: "Examples & templates - xmcp",
+    title: "Templates - xmcp",
     description:
-      "Explore examples and templates to get started with xmcp. Learn from real-world implementations and best practices.",
+      "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
     images: {
-      url: `${baseUrl}/api/og/examples`,
+      url: `${baseUrl}/api/og/templates`,
       width: 1200,
       height: 630,
     },
   },
 };
 
-type ExamplesPageSearchParams = {
-  category?: string | string[];
-};
-
-export default async function ExamplesPage({
-  searchParams,
-}: {
-  searchParams?: Promise<ExamplesPageSearchParams> | ExamplesPageSearchParams;
-}) {
-  const resolvedSearchParams = await Promise.resolve(searchParams ?? {});
-  const categoryParam = resolvedSearchParams.category;
-  const initialCategoryFilter = Array.isArray(categoryParam)
-    ? categoryParam[0]
-    : categoryParam;
-  const examples = await fetchExamplesAndTemplates();
+export default async function TemplatesPage() {
+  const templates = await fetchTemplates();
+  const categories = collectUniqueCategories(templates);
 
   return (
     <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
-      <ExamplesPageContent
-        examples={examples}
-        initialCategoryFilter={initialCategoryFilter}
+      <TemplatesListing
+        templates={templates}
+        categories={categories}
+        currentCategory={null}
       />
     </main>
   );

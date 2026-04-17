@@ -1,9 +1,12 @@
 import Link from "next/link";
-import type { DeployOption } from "@/components/examples/deploy-dropdown";
-import { DeployDropdown, ReplitMarkIcon } from "@/components/examples/deploy-dropdown";
+import type { DeployOption } from "@/components/templates/deploy-dropdown";
+import {
+  DeployDropdown,
+  ReplitMarkIcon,
+} from "@/components/templates/deploy-dropdown";
 import { Button } from "@/components/ui/button";
 
-export function ExampleDetailHeader({
+export function TemplateDetailHeader({
   name,
   description,
   demoUrl,

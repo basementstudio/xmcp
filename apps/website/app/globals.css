@@ -387,3 +387,54 @@ input[type="email"] {
     display: none;
   }
 }
+
+@property --fade-left {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-right {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.edge-fade-x {
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black var(--fade-left),
+    black calc(100% - var(--fade-right)),
+    transparent 100%
+  );
+  animation:
+    edge-fade-reveal-left linear,
+    edge-fade-reveal-right linear;
+  animation-timeline: scroll(self inline), scroll(self inline);
+  animation-range:
+    0 40px,
+    calc(100% - 40px) 100%;
+}
+
+.edge-fade-x::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes edge-fade-reveal-left {
+  to {
+    --fade-left: 40px;
+  }
+}
+
+@keyframes edge-fade-reveal-right {
+  from {
+    --fade-right: 40px;
+  }
+  to {
+    --fade-right: 0px;
+  }
+}
