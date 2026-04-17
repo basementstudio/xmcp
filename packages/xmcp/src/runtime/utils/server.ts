@@ -12,6 +12,11 @@ import { addResourcesToServer } from "./resources";
 import { addNotificationsToServer } from "./notifications";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
+import {
+  loadResourceModules,
+  reportResourceLoadIssues,
+} from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 import type { NotificationsConfig } from "@/types/notification";
 
@@ -53,7 +58,9 @@ const injectedNotifications = INJECTED_NOTIFICATIONS as
   | (() => Promise<{ default?: NotificationsConfig }>)
   | undefined;
 
-export const INJECTED_CONFIG = SERVER_INFO as Implementation;
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & {
+  instructions?: string;
+};
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -79,28 +86,20 @@ export async function loadTools() {
   return toolModules;
 }
 
-export function loadPrompts() {
-  const promptModules = new Map<string, PromptFile>();
-
-  const promptPromises = Object.keys(injectedPrompts).map((path) =>
-    injectedPrompts[path]().then((promptModule) => {
-      promptModules.set(path, promptModule);
-    })
+export async function loadPrompts() {
+  const { promptModules, skippedPrompts } = await loadPromptModules(
+    injectedPrompts
   );
-
-  return [promptPromises, promptModules] as const;
+  reportPromptLoadIssues(skippedPrompts);
+  return promptModules;
 }
 
-export function loadResources() {
-  const resourceModules = new Map<string, ResourceFile>();
-
-  const resourcePromises = Object.keys(injectedResources).map((path) =>
-    injectedResources[path]().then((resourceModule) => {
-      resourceModules.set(path, resourceModule);
-    })
+export async function loadResources() {
+  const { resourceModules, skippedResources } = await loadResourceModules(
+    injectedResources
   );
-
-  return [resourcePromises, resourceModules] as const;
+  reportResourceLoadIssues(skippedResources);
+  return resourceModules;
 }
 
 export async function loadNotificationsConfig(): Promise<
@@ -112,19 +111,19 @@ export async function loadNotificationsConfig(): Promise<
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG);
+  const { instructions, ...serverInfo } = INJECTED_CONFIG;
+  const server = new McpServer(serverInfo, { instructions });
   const toolModulesPromise = loadTools();
-  const [promptPromises, promptModules] = loadPrompts();
-  const [resourcePromises, resourceModules] = loadResources();
+  const promptModulesPromise = loadPrompts();
+  const resourceModulesPromise = loadResources();
   const notificationsConfigPromise = loadNotificationsConfig();
-  await Promise.all([
-    toolModulesPromise,
-    ...promptPromises,
-    ...resourcePromises,
-    notificationsConfigPromise,
-  ]);
-  const toolModules = await toolModulesPromise;
-  const notificationsConfig = await notificationsConfigPromise;
+  const [toolModules, promptModules, resourceModules, notificationsConfig] =
+    await Promise.all([
+      toolModulesPromise,
+      promptModulesPromise,
+      resourceModulesPromise,
+      notificationsConfigPromise,
+    ]);
   return configureServer(
     server,
     toolModules,

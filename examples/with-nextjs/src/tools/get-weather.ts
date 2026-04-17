@@ -22,32 +22,16 @@ export default async function getWeather() {
   const alertsData = await makeNWSRequest<AlertsResponse>(alertsUrl);
 
   if (!alertsData) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: "Failed to retrieve alerts data",
-        },
-      ],
-    };
+    return "Failed to retrieve alerts data";
   }
 
   const features = alertsData.features || [];
   if (features.length === 0) {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `No active alerts for ${stateCode}`,
-        },
-      ],
-    };
+    return `No active alerts for ${stateCode}`;
   }
 
   const formattedAlerts = features.map(formatAlert);
   const alertsText = `Active alerts for ${stateCode}:\n\n${formattedAlerts.join("\n")}`;
 
-  return {
-    content: [{ type: "text", text: alertsText }],
-  };
+  return alertsText;
 }
