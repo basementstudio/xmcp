@@ -236,11 +236,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-<<<<<<< HEAD
-        version: 0.6.5(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13)
-=======
         version: 0.6.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13)
->>>>>>> canary
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -920,11 +916,7 @@ importers:
         version: 5.1.0(esbuild@0.27.1)
       xmcp:
         specifier: latest
-<<<<<<< HEAD
-        version: 0.6.5(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.27.1))(zod@4.1.13)
-=======
         version: 0.6.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.27.1))(zod@4.1.13)
->>>>>>> canary
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -1082,10 +1074,6 @@ importers:
       react-router-dom:
         specifier: ^7.13.0
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-    optionalDependencies:
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
     devDependencies:
       '@types/better-sqlite3':
         specifier: ^7.6.13
@@ -1138,6 +1126,10 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../../xmcp
+    optionalDependencies:
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
 
   packages/plugins/clerk:
     dependencies:
@@ -8890,13 +8882,8 @@ packages:
       react-dom:
         optional: true
 
-<<<<<<< HEAD
-  xmcp@0.6.5:
-    resolution: {integrity: sha512-0bqADWeaKYLGMrijUKpiLbx1UsgLKYdVyLZwgZ/98aNm8HBAGksNMbpcBsyoXE8lMAlzyJb4v6y2kBCWicEa2g==}
-=======
   xmcp@0.6.6:
     resolution: {integrity: sha512-IPFF/CaRmj/LFFAJRfy0I1RJPM8+Jq7fSuyY1hBt1fCRUOy5krne54hjBkN44NKnSVI6MDS/NqMJZ34JUNsumw==}
->>>>>>> canary
     hasBin: true
     peerDependencies:
       react: '>=19.0.0'
@@ -13213,7 +13200,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -13234,7 +13221,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.1(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -17577,11 +17564,7 @@ snapshots:
       - supports-color
       - webpack
 
-<<<<<<< HEAD
-  xmcp@0.6.5(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.27.1))(zod@4.1.13):
-=======
   xmcp@0.6.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.27.1))(zod@4.1.13):
->>>>>>> canary
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.1.13)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
@@ -17600,11 +17583,7 @@ snapshots:
       - supports-color
       - webpack
 
-<<<<<<< HEAD
-  xmcp@0.6.5(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13):
-=======
   xmcp@0.6.6(@swc/helpers@0.5.15)(postcss@8.5.6)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13):
->>>>>>> canary
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.1.13)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
