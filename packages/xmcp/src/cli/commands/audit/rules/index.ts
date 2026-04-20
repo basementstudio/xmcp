@@ -6,10 +6,16 @@ import handler002 from "./security/handler-002-eval";
 import handler003 from "./security/handler-003-fs-path";
 import handler004 from "./security/handler-004-fetch-ssrf";
 import handler005 from "./security/handler-005-sql-concat";
+import handler006 from "./security/handler-006-spawn-shell-option";
+import handler007 from "./security/handler-007-token-passthrough";
+import handler008 from "./security/handler-008-handler-returns-env";
 import mcp001 from "./security/mcp-001-missing-auth-check";
 import mcp002 from "./security/mcp-002-resource-traversal";
 import mcp003 from "./security/mcp-003-prompt-injection-handler";
 import mcp005 from "./security/mcp-005-stdio-shell-chars";
+import mcp006 from "./security/mcp-006-stdout-write-in-stdio";
+import mcp008 from "./security/mcp-008-dynamic-tool-metadata";
+import mcp009 from "./security/mcp-009-tool-metadata-mutated";
 import meta002 from "./security/meta-002-prompt-injection";
 import meta003 from "./security/meta-003-unicode-evasion";
 import config001 from "./security/config-001-cors-credentials";
@@ -43,7 +49,7 @@ import perf003 from "./performance/perf-003-tool-sprawl";
 import perf004 from "./performance/perf-004-duplicate-descriptions";
 
 export const ALL_RULES: Rule[] = [
-  // Security — 18 static
+  // Security — 24 static
   secret001,
   secret002,
   supply001,
@@ -54,10 +60,16 @@ export const ALL_RULES: Rule[] = [
   handler003,
   handler004,
   handler005,
+  handler006,
+  handler007,
+  handler008,
   mcp001,
   mcp002,
   mcp003,
   mcp005,
+  mcp006,
+  mcp008,
+  mcp009,
   config001,
   config002,
   config003,

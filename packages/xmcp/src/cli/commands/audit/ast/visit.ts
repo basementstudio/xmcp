@@ -66,17 +66,20 @@ export function findNamedExport(
 }
 
 /**
- * Collects identifier names bound by the first parameter of a function.
+ * Collects identifier names bound by a parameter of a function. Defaults to
+ * the first parameter (the tool input payload); pass paramIndex=1 to pick up
+ * the second parameter (e.g. the `extra` object that carries authInfo).
  * Handles simple destructuring `({ name, other }) => {}` and plain `name => {}`.
  */
 export function collectHandlerParamBindings(
-  fn: ts.FunctionLikeDeclaration
+  fn: ts.FunctionLikeDeclaration,
+  paramIndex = 0
 ): Set<string> {
   const bindings = new Set<string>();
-  const firstParam = fn.parameters[0];
-  if (!firstParam) return bindings;
+  const param = fn.parameters[paramIndex];
+  if (!param) return bindings;
 
-  const { name } = firstParam;
+  const { name } = param;
   if (ts.isIdentifier(name)) {
     bindings.add(name.text);
     return bindings;
