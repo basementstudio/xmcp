@@ -24,6 +24,7 @@ const rule: Rule = {
       "auth middleware, the server exposes tools anonymously. This is rare " +
       "enough to flag high severity — use --disable-rule when auth lives " +
       "in a reverse proxy.",
+    projectScope: true,
     examples: {
       bad: "http: true,  // + no auth middleware imported anywhere",
       good:

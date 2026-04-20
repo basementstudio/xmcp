@@ -15,6 +15,7 @@
   "summary": {
     "total": 3,
     "suppressed": 1,
+    "baselined": 0,
     "bySeverity": {
       "critical": 1,
       "high": 0,

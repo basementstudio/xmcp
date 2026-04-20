@@ -17,6 +17,7 @@ const rule: Rule = {
       "Without rate limiting a single authenticated caller can exhaust " +
       "the server or the LLM provider quota. A reasonable default belongs " +
       "in the config next to auth.",
+    projectScope: true,
     examples: {
       bad: "http: { port: 3000 }",
       good:

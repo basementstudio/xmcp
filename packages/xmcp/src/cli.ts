@@ -154,6 +154,22 @@ program
   .option("--no-deps", "Skip dependency vulnerability scan")
   .option("-o, --output <file>", "Write report to a file")
   .option("--ci", "CI mode: no colors, imply --fail-on high")
+  .option(
+    "--baseline [file]",
+    "Filter out findings present in the baseline file (default: .xmcp-audit-baseline.json)"
+  )
+  .option(
+    "--update-baseline",
+    "Write current findings to the baseline file and exit"
+  )
+  .option(
+    "--since <ref>",
+    "Scan only files changed between <ref> and HEAD (file-scope rules; project-scope rules still see the full project)"
+  )
+  .option(
+    "--changed",
+    "Scan only files changed in the working tree (staged + unstaged + untracked)"
+  )
   .action(async (maybePath: string | undefined, options) => {
     const { runAudit } = await import("./cli/commands/audit");
     const result = await runAudit({
@@ -167,6 +183,15 @@ program
       noDeps: options.deps === false,
       output: options.output,
       ci: options.ci,
+      baseline:
+        options.baseline === true
+          ? ""
+          : typeof options.baseline === "string"
+            ? options.baseline
+            : undefined,
+      updateBaseline: options.updateBaseline === true,
+      since: typeof options.since === "string" ? options.since : undefined,
+      changed: options.changed === true,
     });
     process.exit(result.exitCode);
   });

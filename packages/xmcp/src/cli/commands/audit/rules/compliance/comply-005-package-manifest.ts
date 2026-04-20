@@ -13,6 +13,7 @@ const rule: Rule = {
     rationale:
       "MCP server manifests require `name` and `version` for registry " +
       "publication and for clients to identify the server.",
+    projectScope: true,
     examples: {
       bad: '{ "scripts": { "dev": "xmcp dev" } }',
       good: '{ "name": "my-server", "version": "0.1.0" }',

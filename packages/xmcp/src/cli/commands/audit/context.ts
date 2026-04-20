@@ -10,11 +10,13 @@ import type {
 } from "./types";
 import { clearParseCache, parseFile } from "./ast/parse";
 import { parseSuppressions } from "./suppression";
+import { loadAuditConfig } from "./config";
 
 export interface BuildContextOptions {
   projectRoot: string;
   activeConcerns: Set<Concern>;
   noDeps?: boolean;
+  changedFiles?: Set<string> | null;
 }
 
 export async function buildScanContext(
@@ -72,6 +74,8 @@ export async function buildScanContext(
     ...(xmcpConfigFile ? [xmcpConfigFile] : []),
   ]);
 
+  const auditConfig = loadAuditConfig(xmcpConfigFile, jsonConfig);
+
   return {
     projectRoot,
     xmcpConfigPresent,
@@ -88,6 +92,8 @@ export async function buildScanContext(
     packageManager,
     gitignoreContent,
     suppressions,
+    auditConfig,
+    changedFiles: options.changedFiles ?? null,
     activeConcerns: options.activeConcerns,
     noDeps: options.noDeps ?? false,
   };
@@ -136,6 +142,11 @@ function readJsonConfigIfPresent(projectRoot: string): {
     tools?: boolean | string;
     prompts?: boolean | string;
     resources?: boolean | string;
+  };
+  audit?: {
+    ignore?: unknown;
+    severity?: unknown;
+    failOn?: unknown;
   };
 } | null {
   const jsonPath = path.join(projectRoot, "xmcp.config.json");

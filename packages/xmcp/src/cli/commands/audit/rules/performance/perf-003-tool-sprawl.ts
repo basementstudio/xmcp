@@ -16,6 +16,7 @@ const rule: Rule = {
       "tools the choice distribution flattens. Past 50 it's noticeably " +
       "unreliable. Group related tools into a single multi-modal tool or " +
       "split the server.",
+    projectScope: true,
     examples: {
       bad: "60 files under src/tools/",
       good:

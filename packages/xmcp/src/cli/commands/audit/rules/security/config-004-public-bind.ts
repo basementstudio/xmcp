@@ -20,6 +20,7 @@ const rule: Rule = {
       "A hardcoded 0.0.0.0 bind means the server listens on every " +
       "interface in every environment — including laptops on a public " +
       "network. Gate it on an environment variable instead.",
+    projectScope: true,
     examples: {
       bad: 'http: { host: "0.0.0.0" }',
       good: 'http: { host: process.env.HOST ?? "127.0.0.1" }',

@@ -33,6 +33,12 @@ export interface RuleMetadata {
   rationale: string;
   examples: RuleExample;
   heuristic?: boolean;
+  /**
+   * True for rules that reason about the whole project (manifest, config,
+   * cross-file collisions). Incremental scans (`--since` / `--changed`) keep
+   * these running regardless of which files changed.
+   */
+  projectScope?: boolean;
 }
 
 export interface Finding {
@@ -60,6 +66,21 @@ export interface SuppressionDirective {
   reason?: string;
 }
 
+export type AuditSeverityOverride = Severity | "off";
+
+export interface AuditIgnoreRuleScoped {
+  rule: string;
+  paths: string[];
+}
+
+export type AuditIgnoreEntry = string | AuditIgnoreRuleScoped;
+
+export interface AuditConfig {
+  ignore: AuditIgnoreEntry[];
+  severity: Record<string, AuditSeverityOverride>;
+  failOn: Severity | null;
+}
+
 export interface ScanContext {
   projectRoot: string;
   xmcpConfigPresent: boolean;
@@ -76,6 +97,8 @@ export interface ScanContext {
   packageManager: "npm" | "pnpm" | "yarn" | null;
   gitignoreContent: string | null;
   suppressions: Map<string, SuppressionDirective[]>;
+  auditConfig: AuditConfig;
+  changedFiles: Set<string> | null;
   activeConcerns: Set<Concern>;
   noDeps: boolean;
 }
@@ -96,6 +119,10 @@ export interface AuditRunOptions {
   noDeps?: boolean;
   output?: string;
   ci?: boolean;
+  baseline?: string;
+  updateBaseline?: boolean;
+  since?: string;
+  changed?: boolean;
 }
 
 export interface AuditReport {
@@ -103,5 +130,7 @@ export interface AuditReport {
   activeConcerns: Concern[];
   findings: Finding[];
   suppressed: number;
+  baselined: number;
+  resolvedFailOn: Severity | null;
   durationMs: number;
 }

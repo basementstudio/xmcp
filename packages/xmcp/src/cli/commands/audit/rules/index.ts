@@ -16,6 +16,7 @@ import mcp005 from "./security/mcp-005-stdio-shell-chars";
 import mcp006 from "./security/mcp-006-stdout-write-in-stdio";
 import mcp008 from "./security/mcp-008-dynamic-tool-metadata";
 import mcp009 from "./security/mcp-009-tool-metadata-mutated";
+import mcp011 from "./security/mcp-011-resource-uri";
 import meta002 from "./security/meta-002-prompt-injection";
 import meta003 from "./security/meta-003-unicode-evasion";
 import config001 from "./security/config-001-cors-credentials";
@@ -32,15 +33,19 @@ import comply002 from "./compliance/comply-002-resource-mime";
 import comply003 from "./compliance/comply-003-prompt-arguments";
 import comply004 from "./compliance/comply-004-description-length";
 import comply005 from "./compliance/comply-005-package-manifest";
+import config005 from "./compliance/config-005-server-info";
+import mcp010 from "./compliance/mcp-010-elicit-unchecked";
 
 // Quality
 import schema001 from "./quality/schema-001-no-any";
 import schema002 from "./quality/schema-002-describe";
 import schema003 from "./quality/schema-003-missing-schema";
 import schema004 from "./quality/schema-004-unbounded-string";
+import schema005 from "./quality/schema-005-output-contract";
 import metaDestructive from "./quality/meta-001-destructive-hint";
 import metaMissingDesc from "./quality/meta-004-missing-description";
 import mcp004 from "./quality/mcp-004-tool-name-collision";
+import mcp012 from "./quality/mcp-012-description-args";
 
 // Performance
 import perf001 from "./performance/perf-001-sync-io";
@@ -70,24 +75,29 @@ export const ALL_RULES: Rule[] = [
   mcp006,
   mcp008,
   mcp009,
+  mcp011,
   config001,
   config002,
   config003,
   config004,
-  // Compliance — 5
+  // Compliance — 7
   comply001,
   comply002,
   comply003,
   comply004,
   comply005,
-  // Quality — 7
+  config005,
+  mcp010,
+  // Quality — 9
   schema001,
   schema002,
   schema003,
   schema004,
+  schema005,
   metaDestructive,
   metaMissingDesc,
   mcp004,
+  mcp012,
   // Performance — 4
   perf001,
   perf002,

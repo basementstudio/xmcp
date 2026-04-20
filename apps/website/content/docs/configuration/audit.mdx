@@ -1,0 +1,50 @@
+---
+title: "Audit"
+metadataTitle: "Audit Configuration | xmcp Documentation"
+publishedAt: "2026-04-20"
+summary: "Configure xmcp audit — ignore paths, override rule severity, set fail thresholds."
+description: "Project-wide settings for the xmcp audit CLI: ignore globs, per-rule severity overrides, and fail-on defaults."
+---
+
+The `audit` config block tunes `xmcp audit` for the project — ignore paths, override per-rule severity, and set the default fail threshold. All fields are optional; omitting the block preserves default behavior.
+
+## Example
+
+```typescript title="xmcp.config.ts"
+const config = {
+  audit: {
+    ignore: [
+      "src/generated/**",
+      { rule: "XMCP-PERF-002", paths: ["src/tools/legacy/**"] },
+    ],
+    severity: {
+      "XMCP-SCHEMA-004": "off",
+      "XMCP-META-001": "high",
+    },
+    failOn: "high",
+  },
+};
+
+export default config;
+```
+
+## `ignore`
+
+Suppress findings by path. Each entry is either a glob string (matches every rule on that path) or `{ rule, paths }` (matches only the given rule on the given paths). Globs are matched against paths relative to the project root and use POSIX separators.
+
+## `severity`
+
+Map a rule ID to a new severity (`critical`, `high`, `medium`, `low`, `info`) or to `"off"` to disable the rule. Precedence: CLI `--enable-rule` wins over `"off"`; CLI `--disable-rule` always disables.
+
+## `failOn`
+
+Default threshold for the non-zero exit code. Overridden by the CLI `--fail-on` flag. Values: `critical`, `high` (default), `medium`, `low`, `info`.
+
+## Inline suppressions
+
+For one-off suppressions, use a comment next to the finding:
+
+```typescript
+// xmcp-audit-ignore-next-line XMCP-SCHEMA-001 payload is truly opaque here
+payload: z.any(),
+```

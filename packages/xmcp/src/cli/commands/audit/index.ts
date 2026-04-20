@@ -7,6 +7,13 @@ import { renderJson } from "./reporters/json";
 import { renderSarif } from "./reporters/sarif";
 import { ALL_RULES, getRule } from "./rules";
 import {
+  DEFAULT_BASELINE_PATH,
+  loadBaseline,
+  partitionByBaseline,
+  writeBaseline,
+} from "./baseline";
+import { listChangedFiles } from "./git";
+import {
   ALL_CONCERNS,
   SEVERITY_ORDER,
   type AuditReport,
@@ -48,18 +55,67 @@ export async function runAudit(
     ? new Set(options.enableRule)
     : undefined;
 
+  if (options.since !== undefined && options.changed) {
+    process.stderr.write(
+      chalk.red("--since and --changed are mutually exclusive\n")
+    );
+    return { exitCode: 2 };
+  }
+
+  const projectRoot = path.resolve(options.path);
+  const changedFiles =
+    options.since !== undefined || options.changed
+      ? listChangedFiles({
+          projectRoot,
+          since: options.since,
+          changed: options.changed,
+        })
+      : null;
+  if (
+    (options.since !== undefined || options.changed) &&
+    changedFiles === null
+  ) {
+    process.stderr.write(
+      chalk.yellow("Not a git repository — scanning all files\n")
+    );
+  }
+
   const report = await runScan({
-    projectRoot: path.resolve(options.path),
+    projectRoot,
     activeConcerns: concerns,
     disabledRules: disableSet,
     enabledRules: enableSet,
     noDeps: options.noDeps,
+    changedFiles,
   });
+
+  if (options.updateBaseline) {
+    const target = path.resolve(
+      projectRoot,
+      options.baseline ?? DEFAULT_BASELINE_PATH
+    );
+    writeBaseline(target, report.findings, projectRoot, TOOL_VERSION);
+    process.stdout.write(
+      `Baseline written to ${path.relative(projectRoot, target)} (${report.findings.length} findings)\n`
+    );
+    return { exitCode: 0 };
+  }
+
+  const baseline = resolveBaseline(options, projectRoot);
+  let working: AuditReport = report;
+  if (baseline) {
+    const { fresh, baselined } = partitionByBaseline(
+      report.findings,
+      baseline,
+      projectRoot
+    );
+    working = { ...report, findings: fresh, baselined: baselined.length };
+  }
 
   const minSeverity = options.severity ?? "info";
   const filtered: AuditReport = {
-    ...report,
-    findings: report.findings.filter(
+    ...working,
+    findings: working.findings.filter(
       (f) => SEVERITY_ORDER[f.severity] >= SEVERITY_ORDER[minSeverity]
     ),
   };
@@ -72,12 +128,27 @@ export async function runAudit(
     process.stdout.write(rendered);
   }
 
-  const failOn = options.failOn ?? "high";
+  const failOn = options.failOn ?? report.resolvedFailOn ?? "high";
   const shouldFail = filtered.findings.some(
     (f) => SEVERITY_ORDER[f.severity] >= SEVERITY_ORDER[failOn]
   );
 
   return { exitCode: shouldFail ? 1 : 0 };
+}
+
+function resolveBaseline(options: AuditRunOptions, projectRoot: string) {
+  if (options.baseline === undefined) return null;
+  const relative = options.baseline || DEFAULT_BASELINE_PATH;
+  const target = path.resolve(projectRoot, relative);
+  const baseline = loadBaseline(target);
+  if (!baseline) {
+    process.stderr.write(
+      chalk.yellow(
+        `Baseline not found at ${relative} — treating all findings as fresh\n`
+      )
+    );
+  }
+  return baseline;
 }
 
 function renderByFormat(

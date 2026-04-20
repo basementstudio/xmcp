@@ -32,9 +32,8 @@ export function renderTerminal(
 
   const { findings } = report;
   if (findings.length === 0) {
-    return `${chalk.green("✓")} No findings.${
-      report.suppressed > 0 ? ` (${report.suppressed} suppressed)` : ""
-    }\n`;
+    const tail = summarizeHidden(report);
+    return `${chalk.green("✓")} No findings.${tail ? ` (${tail})` : ""}\n`;
   }
 
   const sorted = [...findings].sort(compareFindings);
@@ -81,11 +80,15 @@ function renderSummary(report: AuditReport): string {
     parts.push(SEVERITY_BADGE[sev](`${counts[sev]} ${sev}`));
   });
   const summary = `${report.findings.length} finding${report.findings.length === 1 ? "" : "s"} (${parts.join(", ")})`;
-  const suppressed =
-    report.suppressed > 0
-      ? chalk.dim(` • ${report.suppressed} suppressed`)
-      : "";
-  return `${summary}${suppressed}`;
+  const tail = summarizeHidden(report);
+  return `${summary}${tail ? chalk.dim(` • ${tail}`) : ""}`;
+}
+
+function summarizeHidden(report: AuditReport): string {
+  const bits: string[] = [];
+  if (report.suppressed > 0) bits.push(`${report.suppressed} suppressed`);
+  if (report.baselined > 0) bits.push(`${report.baselined} baselined`);
+  return bits.join(", ");
 }
 
 function countBySeverity(findings: Finding[]): Record<Severity, number> {

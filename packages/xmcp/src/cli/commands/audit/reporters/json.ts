@@ -13,6 +13,7 @@ export interface JsonReport {
   summary: {
     total: number;
     suppressed: number;
+    baselined: number;
     bySeverity: Record<Severity, number>;
     byConcern: Record<Concern, number>;
   };
@@ -43,6 +44,7 @@ export function renderJson(
     summary: {
       total: relativized.length,
       suppressed: report.suppressed,
+      baselined: report.baselined,
       bySeverity: countBy(relativized, (f) => f.severity, [
         "critical",
         "high",

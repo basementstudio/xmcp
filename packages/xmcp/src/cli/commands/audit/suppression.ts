@@ -1,4 +1,6 @@
-import type { Finding, SuppressionDirective } from "./types";
+import path from "node:path";
+import { matchesGlob } from "./config";
+import type { AuditConfig, Finding, SuppressionDirective } from "./types";
 
 const SAME_LINE = /\/\/\s*xmcp-audit-ignore\s+([A-Z0-9*-]+)(?:\s+(.*))?/;
 const NEXT_LINE =
@@ -45,4 +47,26 @@ export function isSuppressed(
       d.line === finding.line &&
       (d.ruleId === "*" || d.ruleId === finding.ruleId)
   );
+}
+
+export function isIgnoredByConfig(
+  finding: Finding,
+  projectRoot: string,
+  auditConfig: AuditConfig
+): boolean {
+  if (auditConfig.ignore.length === 0) return false;
+  const relative = toPosix(path.relative(projectRoot, finding.file));
+  for (const entry of auditConfig.ignore) {
+    if (typeof entry === "string") {
+      if (matchesGlob(entry, relative)) return true;
+      continue;
+    }
+    if (entry.rule !== finding.ruleId) continue;
+    if (entry.paths.some((p) => matchesGlob(p, relative))) return true;
+  }
+  return false;
+}
+
+function toPosix(p: string): string {
+  return p.split(path.sep).join("/");
 }

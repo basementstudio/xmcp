@@ -31,6 +31,7 @@ const rule: Rule = {
       "The model picks tools by similarity of the request to each " +
       "description. Near-duplicates flatten the signal; selection becomes " +
       "essentially random between the colliding tools.",
+    projectScope: true,
     examples: {
       bad:
         '// tool A description: "Create a new user in the database"\n' +

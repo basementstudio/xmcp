@@ -14,6 +14,8 @@ const report: AuditReport = {
   activeConcerns: ["security", "compliance", "quality", "performance"],
   durationMs: 42,
   suppressed: 1,
+  baselined: 0,
+  resolvedFailOn: null,
   findings: [
     {
       ruleId: "XMCP-HANDLER-001",

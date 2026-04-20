@@ -35,6 +35,7 @@ const rule: Rule = {
       "When an xmcp tool shares a name with a well-known built-in (e.g., " +
       "`read_file` in Claude Desktop), clients may shadow one or the " +
       "other unpredictably. The LLM also tends to confuse them.",
+    projectScope: true,
     examples: {
       bad: 'export const metadata = { name: "read_file", description: "Read a file" };',
       good: 'export const metadata = { name: "read_project_file", description: "Read a project file" };',

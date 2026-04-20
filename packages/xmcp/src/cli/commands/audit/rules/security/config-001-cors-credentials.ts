@@ -22,6 +22,7 @@ const rule: Rule = {
       "Browsers reject this combination. Beyond that, it advertises that " +
       "the server is willing to echo credentials to any origin — a loud " +
       "misconfiguration.",
+    projectScope: true,
     examples: {
       bad: 'http: { cors: { origin: "*", credentials: true } }',
       good: 'http: { cors: { origin: ["https://app.example.com"], credentials: true } }',
