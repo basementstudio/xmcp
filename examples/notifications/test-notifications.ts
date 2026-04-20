@@ -11,6 +11,37 @@
 
 const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:3001/mcp";
 
+let sessionId: string | undefined;
+
+function buildHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "application/json, text/event-stream",
+  };
+  if (sessionId) headers["mcp-session-id"] = sessionId;
+  return headers;
+}
+
+function captureSessionId(res: Response) {
+  const sid = res.headers.get("mcp-session-id");
+  if (sid && !sessionId) sessionId = sid;
+}
+
+async function parseResponse(res: Response) {
+  const ct = res.headers.get("content-type") ?? "";
+  if (ct.includes("text/event-stream")) {
+    const text = await res.text();
+    const dataLine = text
+      .split("\n")
+      .find((line) => line.startsWith("data:"));
+    return dataLine ? JSON.parse(dataLine.slice(5).trim()) : null;
+  }
+  if (ct.includes("application/json")) {
+    return res.json();
+  }
+  return null;
+}
+
 async function sendJsonRpc(
   method: string,
   params?: Record<string, unknown>,
@@ -25,15 +56,13 @@ async function sendJsonRpc(
 
   const res = await fetch(SERVER_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers: buildHeaders(),
     body: JSON.stringify(body),
   });
+  captureSessionId(res);
 
   if (id !== undefined) {
-    return res.json();
+    return parseResponse(res);
   }
   return { status: res.status };
 }
@@ -41,13 +70,11 @@ async function sendJsonRpc(
 async function sendBatch(messages: Record<string, unknown>[]) {
   const res = await fetch(SERVER_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers: buildHeaders(),
     body: JSON.stringify(messages),
   });
-  return res.json();
+  captureSessionId(res);
+  return parseResponse(res);
 }
 
 async function main() {
@@ -115,14 +142,29 @@ async function main() {
     "   Expected: [notification] Task task-1: completed - All items processed\n"
   );
 
-  // 6. Custom notification
-  console.log("6. Sending custom/my-event...");
-  await sendJsonRpc("custom/my-event", {
-    foo: "bar",
-  });
-  console.log(
-    '   Expected: [notification] Custom event received: { foo: "bar" }\n'
+  // 6. Call the ping tool — the tool itself calls track("tool_invoked", ...)
+  console.log("6. Calling ping tool twice (each invocation tracks itself)...");
+  await sendJsonRpc(
+    "tools/call",
+    { name: "ping", arguments: {} },
+    10
   );
+  await sendJsonRpc(
+    "tools/call",
+    { name: "ping", arguments: {} },
+    11
+  );
+  console.log(
+    '   Expected: [analytics] "tool_invoked" (count=1, count=2) from tool runs\n'
+  );
+
+  // 7. Fire the same event externally — counter keeps climbing on the shared tracker
+  console.log("7. Sending app/analytics-event to extend the same counter...");
+  await sendJsonRpc("app/analytics-event", {
+    name: "tool_invoked",
+    properties: { source: "external-client" },
+  });
+  console.log('   Expected: [analytics] "tool_invoked" (count=3)\n');
 
   console.log("All notifications sent. Check the server terminal for output.");
 }

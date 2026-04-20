@@ -1,4 +1,5 @@
 import { type ToolMetadata } from "xmcp";
+import { track } from "../analytics";
 
 export const metadata: ToolMetadata = {
   name: "ping",
@@ -6,5 +7,6 @@ export const metadata: ToolMetadata = {
 };
 
 export default function ping() {
+  track("tool_invoked", { tool: "ping" });
   return "pong";
 }

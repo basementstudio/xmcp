@@ -1,4 +1,5 @@
 import { defineNotifications } from "xmcp";
+import { track } from "./analytics";
 
 export default defineNotifications({
   initialized: async () => {
@@ -27,8 +28,11 @@ export default defineNotifications({
     );
   },
 
-  // Custom notification methods are also supported
-  "custom/my-event": async (params) => {
-    console.log("[notification] Custom event received:", params);
+  // Custom notification: track an app-level analytics event.
+  // Shares the same tracker as tool invocations, so both paths
+  // contribute to one running count per event name.
+  "app/analytics-event": async (params) => {
+    const name = typeof params.name === "string" ? params.name : "unknown";
+    track(name, params.properties as Record<string, unknown> | undefined);
   },
 });
