@@ -165,6 +165,7 @@ export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
     version,
     description: templateConfig.description,
     icons,
+    instructions: templateConfig.instructions,
   };
 
   return {
