@@ -1,14 +1,35 @@
 ---
 title: "Audit"
-metadataTitle: "Audit Configuration | xmcp Documentation"
+metadataTitle: "Audit | xmcp Documentation"
 publishedAt: "2026-04-20"
-summary: "Configure xmcp audit — ignore paths, override rule severity, set fail thresholds."
-description: "Project-wide settings for the xmcp audit CLI: ignore globs, per-rule severity overrides, and fail-on defaults."
+summary: "Static audit for MCP servers — security, compliance, quality, and performance checks."
+description: "The xmcp audit CLI runs a static analysis pass over your MCP server. Configure ignores, severity overrides, and baselines from xmcp.config.ts."
 ---
 
-The `audit` config block tunes `xmcp audit` for the project — ignore paths, override per-rule severity, and set the default fail threshold. All fields are optional; omitting the block preserves default behavior.
+`xmcp audit` runs a static analysis pass over your MCP server and surfaces security, compliance, quality, and performance issues — things like hardcoded secrets, `z.any()` in tool schemas, confused-deputy token passthrough, or a tool description that drifted from its schema.
 
-## Example
+## Commands
+
+```bash
+xmcp audit                      # scan the project
+xmcp audit:list-rules           # list every rule, grouped by concern
+xmcp audit:explain <rule-id>    # rationale + bad/good examples for one rule
+```
+
+Common flags:
+
+| Flag                             | Purpose                                                                                                                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--format terminal\|json\|sarif` | Output format — SARIF integrates with GitHub code scanning.                                                            |
+| `--severity <level>`             | Minimum severity to show (`info`, `low`, `medium`, `high`, `critical`).                                                |
+| `--fail-on <level>`              | Exit 1 if any finding is at or above this level (default `high`).                                                      |
+| `--baseline [file]`              | Only fail on findings not already in the baseline. Pair with `--update-baseline` to write one.                         |
+| `--since <ref>` / `--changed`    | Only scan files changed since a git ref / in the working tree. Project-wide rules still run against the whole project. |
+| `--ci`                           | No colors; implies `--fail-on high`.                                                                                   |
+
+## Configuration
+
+Every audit setting is optional. Omit the `audit` block and you get the defaults.
 
 ```typescript title="xmcp.config.ts"
 const config = {
@@ -28,23 +49,21 @@ const config = {
 export default config;
 ```
 
-## `ignore`
+- **`ignore`** — glob string (matches every rule on that path) or `{ rule, paths }` (matches only the given rule on the given paths). POSIX separators, relative to the project root.
+- **`severity`** — remap a rule to a different level, or `"off"` to disable it entirely.
+- **`failOn`** — default threshold for a non-zero exit code. Overridden by CLI `--fail-on`.
 
-Suppress findings by path. Each entry is either a glob string (matches every rule on that path) or `{ rule, paths }` (matches only the given rule on the given paths). Globs are matched against paths relative to the project root and use POSIX separators.
-
-## `severity`
-
-Map a rule ID to a new severity (`critical`, `high`, `medium`, `low`, `info`) or to `"off"` to disable the rule. Precedence: CLI `--enable-rule` wins over `"off"`; CLI `--disable-rule` always disables.
-
-## `failOn`
-
-Default threshold for the non-zero exit code. Overridden by the CLI `--fail-on` flag. Values: `critical`, `high` (default), `medium`, `low`, `info`.
-
-## Inline suppressions
-
-For one-off suppressions, use a comment next to the finding:
+For one-off suppressions, annotate the line instead:
 
 ```typescript
 // xmcp-audit-ignore-next-line XMCP-SCHEMA-001 payload is truly opaque here
 payload: z.any(),
 ```
+
+## Rules
+
+The full rule catalog — IDs, severities, rationale, and detection logic — lives in the repo:
+
+[packages/xmcp/src/cli/commands/audit/rules](https://github.com/basementstudio/xmcp/tree/main/packages/xmcp/src/cli/commands/audit/rules)
+
+Rules are grouped by concern: `security`, `compliance`, `quality`, `performance`. Run `xmcp audit:list-rules` for a local listing, or `xmcp audit:explain <rule-id>` to see the rationale and examples for any single rule.
