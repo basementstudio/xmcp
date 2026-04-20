@@ -1,0 +1,16 @@
+security
+  src/tools/shell.ts
+     critical  exec() argument derives from handler input — command injection [XMCP-HANDLER-001]:15:3
+      → Use execFile with an argv array
+
+compliance
+  package.json
+    low package.json is missing: version [XMCP-COMPLY-005]:1:1
+      → Add the required fields to package.json
+
+performance
+  src/tools/shell.ts
+    medium readFileSync() blocks the event loop in a handler [XMCP-PERF-001]:20:16
+      → Use the async equivalent from "node:fs/promises"
+
+3 findings ( 1 critical , 1 medium, 1 low) • 1 suppressed

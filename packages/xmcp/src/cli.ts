@@ -76,9 +76,7 @@ program
                 await buildCloudflareOutput();
               } catch (error) {
                 console.error(
-                  chalk.red(
-                    "❌ Failed to create Cloudflare output structure:"
-                  ),
+                  chalk.red("❌ Failed to create Cloudflare output structure:"),
                   error
                 );
               }
@@ -120,6 +118,84 @@ program
       );
       process.exit(1);
     }
+  });
+
+const parseList = (value: string): string[] =>
+  value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+program
+  .command("audit [path]")
+  .description("Run a static audit on an xmcp project")
+  .option(
+    "--concern <names>",
+    "Comma-separated concerns: security,compliance,quality,performance",
+    parseList
+  )
+  .option(
+    "-f, --format <format>",
+    "Output format: terminal|json|sarif",
+    "terminal"
+  )
+  .option(
+    "-s, --severity <level>",
+    "Minimum severity: info|low|medium|high|critical",
+    "info"
+  )
+  .option(
+    "--fail-on <level>",
+    "Exit 1 if findings at or above this level",
+    "high"
+  )
+  .option("--disable-rule <ids>", "Comma-separated rule IDs to skip", parseList)
+  .option("--enable-rule <ids>", "Exclusive allowlist of rule IDs", parseList)
+  .option("--no-deps", "Skip dependency vulnerability scan")
+  .option("-o, --output <file>", "Write report to a file")
+  .option("--ci", "CI mode: no colors, imply --fail-on high")
+  .action(async (maybePath: string | undefined, options) => {
+    const { runAudit } = await import("./cli/commands/audit");
+    const result = await runAudit({
+      path: maybePath ?? process.cwd(),
+      concern: options.concern,
+      format: options.format,
+      severity: options.severity,
+      failOn: options.failOn,
+      disableRule: options.disableRule,
+      enableRule: options.enableRule,
+      noDeps: options.deps === false,
+      output: options.output,
+      ci: options.ci,
+    });
+    process.exit(result.exitCode);
+  });
+
+program
+  .command("audit:list-rules")
+  .description("List all available audit rules")
+  .option(
+    "--concern <names>",
+    "Filter by concerns: security,compliance,quality,performance",
+    parseList
+  )
+  .option("-f, --format <format>", "Output format: terminal|json", "terminal")
+  .action(async (options) => {
+    const { runListRules } = await import("./cli/commands/audit");
+    const result = await runListRules({
+      concern: options.concern,
+      format: options.format,
+    });
+    process.exit(result.exitCode);
+  });
+
+program
+  .command("audit:explain <rule-id>")
+  .description("Explain a single audit rule with rationale and examples")
+  .action(async (ruleId: string) => {
+    const { runExplain } = await import("./cli/commands/audit");
+    const result = await runExplain(ruleId);
+    process.exit(result.exitCode);
   });
 
 program.parse();

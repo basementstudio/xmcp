@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "tool": {
+    "name": "xmcp-audit",
+    "version": "0.0.0-test"
+  },
+  "projectRoot": "/tmp/audit-fixture",
+  "activeConcerns": [
+    "security",
+    "compliance",
+    "quality",
+    "performance"
+  ],
+  "durationMs": 42,
+  "summary": {
+    "total": 3,
+    "suppressed": 1,
+    "bySeverity": {
+      "critical": 1,
+      "high": 0,
+      "medium": 1,
+      "low": 1,
+      "info": 0
+    },
+    "byConcern": {
+      "security": 1,
+      "compliance": 1,
+      "quality": 0,
+      "performance": 1
+    }
+  },
+  "findings": [
+    {
+      "ruleId": "XMCP-HANDLER-001",
+      "severity": "critical",
+      "concern": "security",
+      "message": "exec() argument derives from handler input — command injection",
+      "file": "src/tools/shell.ts",
+      "line": 15,
+      "column": 3,
+      "suggestion": "Use execFile with an argv array"
+    },
+    {
+      "ruleId": "XMCP-PERF-001",
+      "severity": "medium",
+      "concern": "performance",
+      "message": "readFileSync() blocks the event loop in a handler",
+      "file": "src/tools/shell.ts",
+      "line": 20,
+      "column": 16,
+      "suggestion": "Use the async equivalent from \"node:fs/promises\""
+    },
+    {
+      "ruleId": "XMCP-COMPLY-005",
+      "severity": "low",
+      "concern": "compliance",
+      "message": "package.json is missing: version",
+      "file": "package.json",
+      "line": 1,
+      "column": 1,
+      "suggestion": "Add the required fields to package.json"
+    }
+  ]
+}

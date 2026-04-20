@@ -1,0 +1,192 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "xmcp-audit",
+          "version": "0.0.0-test",
+          "informationUri": "https://xmcp.dev",
+          "rules": [
+            {
+              "id": "XMCP-HANDLER-001",
+              "name": "child-process-with-user-input",
+              "shortDescription": {
+                "text": "Tool handlers must not pass handler parameters to child_process APIs"
+              },
+              "fullDescription": {
+                "text": "exec/spawn with user input is the canonical command-injection vector. An MCP client can craft arguments that break out of the shell context and run arbitrary commands on the server host."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "concern": "security",
+                "tags": [
+                  "security"
+                ],
+                "security-severity": "9.8"
+              },
+              "help": {
+                "text": "exec/spawn with user input is the canonical command-injection vector. An MCP client can craft arguments that break out of the shell context and run arbitrary commands on the server host.",
+                "markdown": "exec/spawn with user input is the canonical command-injection vector. An MCP client can craft arguments that break out of the shell context and run arbitrary commands on the server host.\n\n**Bad**\n```ts\nimport { exec } from \"node:child_process\";\nexport default async ({ host }) => exec(`ping ${host}`);\n```\n\n**Good**\n```ts\nimport { execFile } from \"node:child_process\";\nexport default async ({ host }) => execFile(\"ping\", [host]);\n```"
+              }
+            },
+            {
+              "id": "XMCP-COMPLY-005",
+              "name": "package-manifest-missing-fields",
+              "shortDescription": {
+                "text": "package.json must have a name and version to publish an MCP server"
+              },
+              "fullDescription": {
+                "text": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "concern": "compliance",
+                "tags": [
+                  "compliance"
+                ],
+                "security-severity": "3"
+              },
+              "help": {
+                "text": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server.",
+                "markdown": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server.\n\n**Bad**\n```ts\n{ \"scripts\": { \"dev\": \"xmcp dev\" } }\n```\n\n**Good**\n```ts\n{ \"name\": \"my-server\", \"version\": \"0.1.0\" }\n```"
+              }
+            },
+            {
+              "id": "XMCP-PERF-001",
+              "name": "sync-io-in-handler",
+              "shortDescription": {
+                "text": "Tool, prompt, or resource handlers must not use synchronous fs APIs"
+              },
+              "fullDescription": {
+                "text": "Synchronous I/O blocks Node's event loop. When multiple tool calls run concurrently on the same server, a single readFileSync stalls every in-flight request."
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "concern": "performance",
+                "tags": [
+                  "performance"
+                ],
+                "security-severity": "5.5"
+              },
+              "help": {
+                "text": "Synchronous I/O blocks Node's event loop. When multiple tool calls run concurrently on the same server, a single readFileSync stalls every in-flight request.",
+                "markdown": "Synchronous I/O blocks Node's event loop. When multiple tool calls run concurrently on the same server, a single readFileSync stalls every in-flight request.\n\n**Bad**\n```ts\nimport { readFileSync } from \"fs\";\nexport default async () => readFileSync(\"data.json\", \"utf8\");\n```\n\n**Good**\n```ts\nimport { readFile } from \"fs/promises\";\nexport default async () => await readFile(\"data.json\", \"utf8\");\n```"
+              }
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "workingDirectory": {
+            "uri": "file:///tmp/audit-fixture"
+          }
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "XMCP-HANDLER-001",
+          "level": "error",
+          "message": {
+            "text": "exec() argument derives from handler input — command injection"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/tools/shell.ts"
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 3
+                }
+              }
+            }
+          ],
+          "properties": {
+            "concern": "security",
+            "severity": "critical"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "Use execFile with an argv array"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "XMCP-PERF-001",
+          "level": "warning",
+          "message": {
+            "text": "readFileSync() blocks the event loop in a handler"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/tools/shell.ts"
+                },
+                "region": {
+                  "startLine": 20,
+                  "startColumn": 16
+                }
+              }
+            }
+          ],
+          "properties": {
+            "concern": "performance",
+            "severity": "medium"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "Use the async equivalent from \"node:fs/promises\""
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "XMCP-COMPLY-005",
+          "level": "note",
+          "message": {
+            "text": "package.json is missing: version"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package.json"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "properties": {
+            "concern": "compliance",
+            "severity": "low"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "Add the required fields to package.json"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

