@@ -183,6 +183,22 @@ export interface ToolExtraArguments {
   ) => Promise<ElicitResult>;
 }
 
+/** Content block returned by a widget tool's optional `serverHandler`. */
+export type ToolContentBlock = { type: "text"; text: string };
+
+/**
+ * Optional export on a React widget tool. When present, its return value
+ * populates `content[]` in the tool-call result — so the model sees real
+ * data on the turn that invoked the widget, not an empty string.
+ */
+export type WidgetServerHandler<TArgs = Record<string, unknown>> = (
+  args: TArgs,
+  extra: ToolExtraArguments
+) =>
+  | ToolContentBlock[]
+  | string
+  | Promise<ToolContentBlock[] | string>;
+
 export type InferSchema<T extends Record<string, unknown>> = {
   [K in keyof T]: T[K] extends z.ZodTypeAny
     ? z.infer<T[K]>

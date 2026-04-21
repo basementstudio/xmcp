@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { Implementation } from "@modelcontextprotocol/sdk/types";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
-import { ToolMetadata } from "@/types/tool";
+import { ToolMetadata, WidgetServerHandler } from "@/types/tool";
 import { PromptMetadata } from "@/types/prompt";
 import { UserToolHandler } from "./transformers/tool";
 import { UserPromptHandler } from "./transformers/prompt";
@@ -23,6 +23,12 @@ export type ToolFile = {
   schema: ZodRawShape;
   outputSchema?: ZodRawShape;
   default: UserToolHandler;
+  /**
+   * Optional server-side handler for React widget tools. When present, its
+   * return value populates `content[]` in the tool-call result so the model
+   * can reference real data on the invoking turn.
+   */
+  serverHandler?: WidgetServerHandler;
 };
 
 export type PromptFile = {
