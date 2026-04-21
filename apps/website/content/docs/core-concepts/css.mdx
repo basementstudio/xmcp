@@ -81,63 +81,6 @@ export default function handler() {
 }
 ```
 
-## UI package
-
-If you want a schema-driven UI layer or React MCP App helpers on top of xmcp,
-use `@xmcp-dev/ui`.
-
-It gives you:
-
-- a packaged `renderJson` tool contract for schema-driven MCP app rendering
-- a packaged `Rendered` preview component for custom tool wrappers
-- an `App` renderer for fully custom rendering flows
-- `useMcpApp()` and `useAutoMcpAppSize()` for handwritten React MCP Apps
-- a package-owned stylesheet import so you do not need to point Tailwind at package internals directly
-
-Minimal CSS setup:
-
-```css
-@import "tailwindcss";
-@import "@xmcp-dev/ui/styles.css";
-
-@theme {
-  --font-sans: "Geist", ui-sans-serif, sans-serif;
-}
-```
-
-That import is important because `@xmcp-dev/ui` components are Tailwind-styled. The package stylesheet handles the internal Tailwind scanning, so you do not need a manual `@source` entry that points into `node_modules` or a monorepo path.
-
-Minimal tool setup:
-
-```tsx
-import { createRenderJsonTool } from "@xmcp-dev/ui";
-
-const renderJsonTool = createRenderJsonTool();
-
-export const metadata = renderJsonTool.metadata;
-export const schema = renderJsonTool.schema;
-export default renderJsonTool.handler;
-```
-
-With this setup, the normal path is:
-
-- import the package stylesheet once in `globals.css`
-- expose a tiny local `render-json` tool
-- let the package own parsing, progressive preview, validation hardening, and theme fallback
-
-If the same schema-driven app should run through an MCP App host, use:
-
-```tsx
-const renderJsonTool = createRenderJsonTool({
-  transportMode: "host",
-});
-```
-
-<Callout variant="info">
-  The full `@xmcp-dev/ui` rendering flow, customization levels, and theme
-  behavior are documented in [UI rendering](/docs/guides/ui-rendering).
-</Callout>
-
 ## CSS
 
 Write standard CSS to style your components without any framework or tooling.
@@ -210,5 +153,3 @@ export default function handler() {
 ## Summary
 
 Pick the approach that fits your project. You can also mix them, for example, use Tailwind for layout and CSS Modules for component-specific styles.
-
-If you're building schema-driven MCP app UIs, `@xmcp-dev/ui` is the package-owned path that sits on top of these styling options and uses the same `globals.css` entrypoint.
