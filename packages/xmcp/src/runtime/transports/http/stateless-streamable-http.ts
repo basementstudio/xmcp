@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { StreamableHTTPServerTransport as SdkStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types";
 import express, {
   Express,
   Request,
@@ -8,8 +10,7 @@ import express, {
 } from "express";
 import http, { IncomingMessage, ServerResponse } from "http";
 import { randomUUID } from "node:crypto";
-import getRawBody from "raw-body";
-import contentType from "content-type";
+import type { TransportSendOptions } from "@modelcontextprotocol/sdk/shared/transport";
 import {
   BaseHttpServerTransport,
   JsonRpcMessage,
@@ -20,113 +21,72 @@ import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  httpRequestContextProvider,
+  setHttpRequestContext,
+} from "@/runtime/contexts/http-request-context";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import type { McpClientInfo } from "@/types/client-info";
+
+interface SessionLifecycle {
+  server: McpServer;
+  transport: SdkStreamableHTTPServerTransport;
+  clientInfo?: McpClientInfo;
+}
 
 // Global type declarations for tool name context
 declare global {
   var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
 
-// no session management, POST only
+// Stateless node transport that delegates protocol handling to the MCP SDK.
 export class StatelessHttpServerTransport extends BaseHttpServerTransport {
-  debug: boolean;
-  bodySizeLimit: string;
-  private _started: boolean = false;
-  private _singleResponseCollectors: Map<
-    string,
-    {
-      res: ServerResponse;
-      requestIds: Set<string | number>;
-      responses: JsonRpcMessage[];
-      expectedCount: number;
-    }
-  > = new Map();
-  private _requestToCollectorMapping: Map<string | number, string> = new Map();
+  private readonly debug: boolean;
+  private readonly transport: SdkStreamableHTTPServerTransport;
 
-  constructor(debug: boolean, bodySizeLimit: string) {
+  constructor(debug: boolean, _bodySizeLimit: string) {
     super();
     this.debug = debug;
-    this.bodySizeLimit = bodySizeLimit;
+    this.transport = new SdkStreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+
+    this.transport.onmessage = (message, extra) => {
+      this.onmessage?.(message as JsonRpcMessage, extra);
+    };
+    this.transport.onerror = (error) => {
+      this.onerror?.(error);
+    };
+    this.transport.onclose = () => {
+      this.onclose?.();
+    };
   }
 
-  // avoid restarting
-  // sort of singleton
-  async start(): Promise<void> {
-    if (this._started) {
-      throw new Error("Transport already started");
+  private log(message: string, ...args: unknown[]): void {
+    if (this.debug) {
+      console.log(`[StatelessHTTP] ${message}`, ...args);
     }
-    this._started = true;
+  }
+
+  async start(): Promise<void> {
+    await this.transport.start();
   }
 
   async close(): Promise<void> {
-    this._singleResponseCollectors?.forEach((collector) => {
-      if (!collector.res.headersSent) {
-        collector.res.writeHead(503).end(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: -32000,
-              message: "Service unavailable: Server shutting down",
-            },
-            id: null,
-          })
-        );
-      }
-    });
-    this._singleResponseCollectors?.clear();
-    this._requestToCollectorMapping?.clear();
+    await this.transport.close();
   }
 
-  async send(message: JsonRpcMessage): Promise<void> {
-    const requestId = message.id;
-
-    if (requestId === undefined || requestId === null) {
-      // In stateless mode, we can't handle notifications without request IDs
-      if (this.debug) {
-        console.log("[StatelessHTTP] Dropping notification without request ID");
-      }
-      return;
-    }
-
-    const collectorId = this._requestToCollectorMapping?.get(requestId);
-    if (collectorId) {
-      const collector = this._singleResponseCollectors?.get(collectorId);
-      if (
-        collector &&
-        (message.result !== undefined || message.error !== undefined)
-      ) {
-        collector.responses.push(message);
-        collector.requestIds.delete(requestId);
-
-        if (collector.requestIds.size === 0) {
-          const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-          };
-
-          const responseBody =
-            collector.responses.length === 1
-              ? collector.responses[0]
-              : collector.responses;
-
-          collector.res
-            .writeHead(200, headers)
-            .end(JSON.stringify(responseBody));
-
-          this._singleResponseCollectors?.delete(collectorId);
-          for (const response of collector.responses) {
-            if (response.id !== undefined && response.id !== null) {
-              this._requestToCollectorMapping?.delete(response.id);
-            }
-          }
-        }
-      }
-    }
+  async send(
+    message: JsonRpcMessage,
+    options?: TransportSendOptions
+  ): Promise<void> {
+    await this.transport.send(message as any, options);
   }
 
   async handleRequest(
@@ -134,139 +94,8 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
-    // Only support POST in stateless mode
-    if (req.method !== "POST") {
-      res.writeHead(405).end(
-        JSON.stringify({
-          jsonrpc: "2.0",
-          error: {
-            code: -32000,
-            message: "Method not allowed.",
-          },
-          id: null,
-        })
-      );
-      return;
-    }
-
-    await this.handlePOST(req, res, parsedBody);
-  }
-
-  private async handlePOST(
-    req: IncomingMessage & { auth?: AuthInfo },
-    res: ServerResponse,
-    parsedBody?: unknown
-  ): Promise<void> {
-    try {
-      const acceptHeader = req.headers.accept;
-      const acceptsJson = acceptHeader?.includes("application/json");
-
-      if (!acceptsJson) {
-        res.writeHead(406).end(
-          JSON.stringify({
-            jsonrpc: "2.0",
-            error: {
-              code: -32000,
-              message: "Not Acceptable: Client must accept application/json",
-            },
-            id: null,
-          })
-        );
-        return;
-      }
-
-      let rawMessage;
-      if (parsedBody !== undefined) {
-        rawMessage = parsedBody;
-      } else {
-        const ct = req.headers["content-type"];
-        if (!ct || !ct.includes("application/json")) {
-          res.writeHead(415).end(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              error: {
-                code: -32000,
-                message:
-                  "Unsupported Media Type: Content-Type must be application/json",
-              },
-              id: null,
-            })
-          );
-          return;
-        }
-
-        const parsedCt = contentType.parse(ct);
-        const body = await getRawBody(req, {
-          limit: this.bodySizeLimit,
-          encoding: parsedCt.parameters.charset ?? "utf-8",
-        });
-        rawMessage = JSON.parse(body.toString());
-      }
-
-      const messages: JsonRpcMessage[] = Array.isArray(rawMessage)
-        ? rawMessage
-        : [rawMessage];
-
-      const hasRequests = messages.some(
-        (msg) => msg.method && msg.id !== undefined
-      );
-
-      if (!hasRequests) {
-        // Handle notifications (no response expected)
-        res.writeHead(202).end();
-        return;
-      }
-
-      // Handle requests that expect responses
-      const requestIds = messages
-        .filter((msg) => msg.method && msg.id !== undefined)
-        .map((msg) => msg.id!);
-
-      if (requestIds.length === 0) {
-        res.writeHead(202).end();
-        return;
-      }
-
-      const responseCollector: JsonRpcMessage[] = [];
-      const expectedResponses = requestIds.length;
-
-      const collectorId = randomUUID();
-      this._singleResponseCollectors =
-        this._singleResponseCollectors || new Map();
-      this._singleResponseCollectors.set(collectorId, {
-        res,
-        requestIds: new Set(requestIds),
-        responses: responseCollector,
-        expectedCount: expectedResponses,
-      });
-
-      for (const requestId of requestIds) {
-        this._requestToCollectorMapping =
-          this._requestToCollectorMapping || new Map();
-        this._requestToCollectorMapping.set(requestId, collectorId);
-      }
-
-      const authInfo: AuthInfo | undefined = req.auth;
-
-      // MCP SDK transport interface mandatory
-      for (const message of messages) {
-        if (this.onmessage) {
-          this.onmessage(message, { authInfo });
-        }
-      }
-    } catch (error) {
-      res.writeHead(400).end(
-        JSON.stringify({
-          jsonrpc: "2.0",
-          error: {
-            code: -32700,
-            message: "Parse error",
-            data: String(error),
-          },
-          id: null,
-        })
-      );
-    }
+    this.log(`${req.method} ${req.url ?? req.headers.host ?? "/mcp"}`);
+    await this.transport.handleRequest(req, res, parsedBody);
   }
 }
 
@@ -281,6 +110,7 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
+  private sessions = new Map<string, SessionLifecycle>();
 
   constructor(
     createServerFn: () => Promise<McpServer>,
@@ -345,7 +175,7 @@ export class StatelessStreamableHTTPTransport {
       res.status(200).json({
         status: "ok",
         transport: "streamable-http",
-        mode: "stateless",
+        mode: "session",
       });
     });
 
@@ -429,27 +259,57 @@ export class StatelessStreamableHTTPTransport {
     res: Response
   ): Promise<void> {
     try {
-      // Create new instances for complete isolation
-      const server = await this.createServerFn();
-      const transport = new StatelessHttpServerTransport(
-        this.debug,
-        this.options.bodySizeLimit || "10mb"
-      );
+      const requestClientInfo = extractClientInfoFromMessages(req.body);
+      const sessionId = this.getSessionId(req);
+      let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
+      let clientInfo = requestClientInfo;
 
-      // cleanup when request/connection closes
-      res.on("close", () => {
-        transport.close();
-        server.close();
-        global.__XMCP_CURRENT_TOOL_NAME = undefined;
-      });
-
-      // clean up
       res.on("finish", () => {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
+      res.on("close", () => {
+        global.__XMCP_CURRENT_TOOL_NAME = undefined;
+      });
 
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
+      if (!lifecycle) {
+        if (
+          sessionId ||
+          req.method !== "POST" ||
+          !isInitializeRequest(req.body)
+        ) {
+          res.status(400).json({
+            jsonrpc: "2.0",
+            error: {
+              code: -32000,
+              message: "Bad Request: No valid session ID provided",
+            },
+            id: null,
+          });
+          return;
+        }
+
+        lifecycle = await this.createSessionLifecycle();
+      }
+
+      if (!clientInfo) {
+        clientInfo = lifecycle.clientInfo;
+      }
+
+      setHttpRequestContext({ clientInfo });
+
+      await lifecycle.transport.handleRequest(req, res, req.body);
+
+      if (!sessionId && lifecycle.transport.sessionId) {
+        this.sessions.set(lifecycle.transport.sessionId, {
+          ...lifecycle,
+          clientInfo,
+        });
+      } else if (sessionId && lifecycle.transport.sessionId) {
+        this.sessions.set(lifecycle.transport.sessionId, {
+          ...lifecycle,
+          clientInfo,
+        });
+      }
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
       if (!res.headersSent) {
@@ -463,6 +323,37 @@ export class StatelessStreamableHTTPTransport {
         });
       }
     }
+  }
+
+  private getSessionId(req: Request): string | undefined {
+    const header = req.headers["mcp-session-id"];
+
+    if (Array.isArray(header)) {
+      return header[0];
+    }
+
+    return typeof header === "string" && header.length > 0 ? header : undefined;
+  }
+
+  private async createSessionLifecycle(): Promise<SessionLifecycle> {
+    const server = await this.createServerFn();
+    const transport = new SdkStreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+    });
+
+    transport.onclose = () => {
+      const sessionId = transport.sessionId;
+
+      if (sessionId) {
+        this.sessions.delete(sessionId);
+      }
+
+      void server.close();
+    };
+
+    await server.connect(transport);
+
+    return { server, transport };
   }
 
   public async start(): Promise<void> {
@@ -485,6 +376,13 @@ export class StatelessStreamableHTTPTransport {
 
   public shutdown(): void {
     this.log("Shutting down server");
+
+    for (const { server, transport } of this.sessions.values()) {
+      void transport.close();
+      void server.close();
+    }
+
+    this.sessions.clear();
     this.server.close();
     process.exit(0);
   }

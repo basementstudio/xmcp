@@ -11,7 +11,12 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
-import { registerUISkillResource } from "./ui-skill-resource";
+import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
+import {
+  loadResourceModules,
+  reportResourceLoadIssues,
+} from "./resource-loader";
+import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -32,26 +37,22 @@ export type ResourceFile = {
   default: UserResourceHandler;
 };
 
-// @ts-expect-error: injected by compiler
 export const injectedTools = INJECTED_TOOLS as Record<
   string,
   () => Promise<ToolFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedPrompts = INJECTED_PROMPTS as Record<
   string,
   () => Promise<PromptFile>
 >;
 
-// @ts-expect-error: injected by compiler
 export const injectedResources = INJECTED_RESOURCES as Record<
   string,
   () => Promise<ResourceFile>
 >;
 
-// @ts-expect-error: injected by compiler
-export const INJECTED_CONFIG = SERVER_INFO as Implementation;
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -66,53 +67,41 @@ export async function configureServer(
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
-  registerUISkillResource(server);
   return server;
 }
 
-export function loadTools() {
-  const toolModules = new Map<string, ToolFile>();
-
-  const toolPromises = Object.keys(injectedTools).map((path) =>
-    injectedTools[path]().then((toolModule) => {
-      toolModules.set(path, toolModule);
-    })
-  );
-
-  return [toolPromises, toolModules] as const;
+export async function loadTools() {
+  const { toolModules, skippedTools } = await loadToolModules(injectedTools);
+  reportToolLoadIssues(skippedTools);
+  return toolModules;
 }
 
-export function loadPrompts() {
-  const promptModules = new Map<string, PromptFile>();
-
-  const promptPromises = Object.keys(injectedPrompts).map((path) =>
-    injectedPrompts[path]().then((promptModule) => {
-      promptModules.set(path, promptModule);
-    })
+export async function loadPrompts() {
+  const { promptModules, skippedPrompts } = await loadPromptModules(
+    injectedPrompts
   );
-
-  return [promptPromises, promptModules] as const;
+  reportPromptLoadIssues(skippedPrompts);
+  return promptModules;
 }
 
-export function loadResources() {
-  const resourceModules = new Map<string, ResourceFile>();
-
-  const resourcePromises = Object.keys(injectedResources).map((path) =>
-    injectedResources[path]().then((resourceModule) => {
-      resourceModules.set(path, resourceModule);
-    })
+export async function loadResources() {
+  const { resourceModules, skippedResources } = await loadResourceModules(
+    injectedResources
   );
-
-  return [resourcePromises, resourceModules] as const;
+  reportResourceLoadIssues(skippedResources);
+  return resourceModules;
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG);
-  const [toolPromises, toolModules] = loadTools();
-  const [promptPromises, promptModules] = loadPrompts();
-  const [resourcePromises, resourceModules] = loadResources();
-  await Promise.all(toolPromises);
-  await Promise.all(promptPromises);
-  await Promise.all(resourcePromises);
+  const { instructions, ...serverInfo } = INJECTED_CONFIG;
+  const server = new McpServer(serverInfo, { instructions });
+  const toolModulesPromise = loadTools();
+  const promptModulesPromise = loadPrompts();
+  const resourceModulesPromise = loadResources();
+  const [toolModules, promptModules, resourceModules] = await Promise.all([
+    toolModulesPromise,
+    promptModulesPromise,
+    resourceModulesPromise,
+  ]);
   return configureServer(server, toolModules, promptModules, resourceModules);
 }
