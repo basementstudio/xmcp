@@ -51,13 +51,7 @@ export function addToolsToServer(
       description: "No description provided",
     };
 
-    const {
-      default: handler,
-      metadata,
-      schema,
-      outputSchema,
-      serverHandler,
-    } = toolModule;
+    const { default: handler, metadata, schema, outputSchema } = toolModule;
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
@@ -148,28 +142,13 @@ export function addToolsToServer(
     let transformedHandler;
 
     if (isReactFile(path) && uiWidget) {
-      transformedHandler = async (args: any, extra: any) => {
-        let content: Array<{ type: "text"; text: string }> = [
-          { type: "text", text: "" },
-        ];
-        if (typeof serverHandler === "function") {
-          try {
-            const result = await serverHandler(args, extra);
-            if (typeof result === "string") {
-              content = [{ type: "text", text: result }];
-            } else if (Array.isArray(result) && result.length > 0) {
-              content = result;
-            }
-          } catch {
-            // Fall through to empty content so the widget still renders.
-          }
-        }
-        return {
-          content,
-          _meta: meta,
-          structuredContent: { args },
-        };
-      };
+      transformedHandler = async (args: any, extra: any) => ({
+        content: [{ type: "text", text: "" }],
+        _meta: meta,
+        structuredContent: {
+          args,
+        },
+      });
     } else {
       transformedHandler = transformToolHandler(
         handler,
