@@ -1,6 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { mapNpmOutput, mapPnpmOutput, mapYarnOutput } from "../deps";
+import {
+  runDepsAudit,
+  mapNpmOutput,
+  mapPnpmOutput,
+  mapYarnOutput,
+} from "../deps";
+import type { ScanContext } from "../types";
 
 describe("deps adapters", () => {
   it("maps npm audit --json output into advisories", () => {
@@ -80,5 +86,39 @@ describe("deps adapters", () => {
     assert.deepEqual(mapNpmOutput("not json"), []);
     assert.deepEqual(mapPnpmOutput("not json"), []);
     assert.deepEqual(mapYarnOutput("not json\n"), []);
+  });
+
+  it("returns an execution-error finding when the audit subprocess cannot start", async () => {
+    const findings = await runDepsAudit({
+      projectRoot: "/path/that/does/not/exist",
+      xmcpConfigPresent: false,
+      xmcpConfigFile: null,
+      toolsDir: null,
+      promptsDir: null,
+      resourcesDir: null,
+      tools: [],
+      prompts: [],
+      resources: [],
+      allSourceFiles: [],
+      packageJson: null,
+      packageJsonPath: null,
+      packageManager: "pnpm",
+      gitignoreContent: null,
+      suppressions: new Map(),
+      auditConfig: {
+        ignore: [],
+        severity: {},
+        failOn: null,
+      },
+      changedFiles: null,
+      activeConcerns: new Set(["security"]),
+      noDeps: false,
+      strictExecutionErrors: true,
+    } satisfies ScanContext);
+
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].ruleId, "XMCP-DEPS-001");
+    assert.equal(findings[0].severity, "high");
+    assert.equal(findings[0].metadata?.executionError, true);
   });
 });

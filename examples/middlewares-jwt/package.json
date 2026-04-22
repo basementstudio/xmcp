@@ -6,6 +6,7 @@
     "authentication"
   ],
   "scripts": {
+    "audit": "xmcp audit --no-heuristics --no-deps --fail-on high",
     "build": "xmcp build",
     "dev": "xmcp dev",
     "start": "node dist/http.js"

@@ -37,8 +37,36 @@ npx init-xmcp@latest
 ⊹ **Hot Reloading** - Instant development feedback\
 ⊹ **Middlewares** - Toolkit for shipping authentication and custom middlewares\
 ⊹ **Extensible Configuration** - Customizable configuration for your MCP server\
+⊹ **Static Audit** - Security, compliance, quality, and performance checks for MCP servers\
 ⊹ **Deploy Anywhere** - Flexible deployment across any platform\
 ⊹ **Vercel Support** - Zero-configuration deployment with Vercel
+
+## Audit
+
+`xmcp` includes a static audit CLI for catching common MCP problems before they
+ship: hardcoded secrets, unsafe handler patterns, schema drift, metadata
+mistakes, and more.
+
+```bash
+xmcp audit
+xmcp audit --no-heuristics --no-deps --fail-on high
+xmcp build --audit
+```
+
+For CI, prefer the deterministic blocking subset:
+
+```bash
+xmcp audit --no-heuristics --no-deps --fail-on high --format json
+```
+
+For code-scanning integrations, emit SARIF:
+
+```bash
+xmcp audit --format sarif --output audit.sarif
+```
+
+See the full audit documentation at
+[xmcp.dev/docs/configuration/audit](https://xmcp.dev/docs/configuration/audit).
 
 ## Learn more
 

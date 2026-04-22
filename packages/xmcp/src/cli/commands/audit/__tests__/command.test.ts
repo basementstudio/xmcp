@@ -63,6 +63,35 @@ describe("audit command behavior", () => {
 
     assert.equal(result.exitCode, 2);
   });
+
+  it("writes a baseline and filters existing findings on a follow-up run", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "xmcp-audit-baseline-"));
+    const baseline = path.join(dir, "baseline.json");
+    const output = path.join(dir, "audit.json");
+    const projectRoot = path.join(FIXTURES, "vulnerable-project");
+
+    const baselineResult = await runAudit({
+      path: projectRoot,
+      noDeps: true,
+      baseline,
+      updateBaseline: true,
+    });
+    assert.equal(baselineResult.exitCode, 0);
+    assert.ok(fs.existsSync(baseline), "baseline file should be written");
+
+    const result = await runAudit({
+      path: projectRoot,
+      format: "json",
+      noDeps: true,
+      baseline,
+      output,
+    });
+
+    assert.equal(result.exitCode, 0);
+    const payload = JSON.parse(fs.readFileSync(output, "utf8"));
+    assert.equal(payload.summary.total, 0);
+    assert.ok(payload.summary.baselined > 0);
+  });
 });
 
 describe("source cli smoke", () => {
@@ -77,6 +106,26 @@ describe("source cli smoke", () => {
     );
     const payload = JSON.parse(stdout);
     assert.ok(payload.rules.length > 0);
+    assert.deepEqual(
+      Object.keys(payload.rules[0]).sort(),
+      ["concern", "description", "heuristic", "id", "name", "severity"].sort()
+    );
+  });
+
+  it("explains a rule with rationale and examples", () => {
+    const stdout = execFileSync(
+      "node",
+      ["--import", "tsx", CLI_PATH, "audit:explain", "XMCP-HANDLER-001"],
+      {
+        cwd: PACKAGE_ROOT,
+        encoding: "utf8",
+      }
+    );
+
+    assert.match(stdout, /XMCP-HANDLER-001/);
+    assert.match(stdout, /Why/);
+    assert.match(stdout, /Bad/);
+    assert.match(stdout, /Good/);
   });
 
   it("fails build preflight before bundling on audit findings", () => {

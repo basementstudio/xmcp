@@ -38,6 +38,14 @@ jobs:
       - name: Build main packages only
         run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
 
+      - name: Run xmcp audit test suite
+        run: pnpm --dir packages/xmcp test:audit
+
+      - name: Dogfood deterministic audit on example canaries
+        run: |
+          pnpm --dir examples/middlewares-array run audit
+          pnpm --dir examples/middlewares-jwt run audit
+
       - name: Lint packages (if available)
         run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp || echo "No lint script available, skipping..."
 

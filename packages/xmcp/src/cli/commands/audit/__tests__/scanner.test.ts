@@ -2,7 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { runScan } from "../scanner";
-import { ALL_CONCERNS } from "../types";
+import { ALL_RULES } from "../rules";
+import { ALL_CONCERNS, type Rule } from "../types";
 
 const FIXTURES = path.join(__dirname, "fixtures");
 
@@ -204,5 +205,82 @@ describe("xmcp audit config block", () => {
       report.suppressed >= 1,
       "config ignores should count as suppressed"
     );
+  });
+});
+
+describe("xmcp audit execution errors", () => {
+  it("turns thrown rule checks into execution-error findings", async () => {
+    const rule: Rule = {
+      meta: {
+        id: "XMCP-TEST-EXECUTION-ERROR",
+        name: "test-execution-error",
+        description: "Synthetic rule failure for test coverage",
+        severity: "high",
+        concern: "quality",
+        rationale: "Used to verify rule execution-error handling.",
+        examples: {
+          bad: "throw new Error('boom')",
+          good: "return []",
+        },
+      },
+      check() {
+        throw new Error("boom");
+      },
+    };
+
+    ALL_RULES.push(rule);
+    try {
+      const report = await runScan({
+        projectRoot: path.join(FIXTURES, "clean-project"),
+        activeConcerns: new Set(["quality"]),
+        enabledRules: new Set([rule.meta.id]),
+        noDeps: true,
+      });
+
+      assert.equal(report.findings.length, 1);
+      assert.equal(report.findings[0].ruleId, rule.meta.id);
+      assert.equal(report.findings[0].severity, "info");
+      assert.equal(report.findings[0].metadata?.executionError, true);
+    } finally {
+      ALL_RULES.pop();
+    }
+  });
+
+  it("escalates thrown rule checks in strict execution mode", async () => {
+    const rule: Rule = {
+      meta: {
+        id: "XMCP-TEST-STRICT-EXECUTION-ERROR",
+        name: "test-strict-execution-error",
+        description: "Synthetic strict rule failure for test coverage",
+        severity: "high",
+        concern: "quality",
+        rationale: "Used to verify strict execution-error handling.",
+        examples: {
+          bad: "throw new Error('boom')",
+          good: "return []",
+        },
+      },
+      check() {
+        throw new Error("boom");
+      },
+    };
+
+    ALL_RULES.push(rule);
+    try {
+      const report = await runScan({
+        projectRoot: path.join(FIXTURES, "clean-project"),
+        activeConcerns: new Set(["quality"]),
+        enabledRules: new Set([rule.meta.id]),
+        noDeps: true,
+        strictExecutionErrors: true,
+      });
+
+      assert.equal(report.findings.length, 1);
+      assert.equal(report.findings[0].ruleId, rule.meta.id);
+      assert.equal(report.findings[0].severity, "high");
+      assert.equal(report.findings[0].metadata?.executionError, true);
+    } finally {
+      ALL_RULES.pop();
+    }
   });
 });
