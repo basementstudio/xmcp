@@ -17,6 +17,8 @@ import mcp006 from "./security/mcp-006-stdout-write-in-stdio";
 import mcp008 from "./security/mcp-008-dynamic-tool-metadata";
 import mcp009 from "./security/mcp-009-tool-metadata-mutated";
 import mcp011 from "./security/mcp-011-resource-uri";
+import mcp013 from "./security/mcp-013-elicit-sensitive-form";
+import mcp014 from "./security/mcp-014-elicit-unsafe-url";
 import meta002 from "./security/meta-002-prompt-injection";
 import meta003 from "./security/meta-003-unicode-evasion";
 import config001 from "./security/config-001-cors-credentials";
@@ -26,6 +28,7 @@ import config004 from "./security/config-004-public-bind";
 import secret001 from "./security/secret-001-hardcoded";
 import secret002 from "./security/secret-002-env-leak";
 import supply001 from "./security/supply-001-install-scripts";
+import handler009 from "./security/handler-009-raw-error-leak";
 
 // Compliance
 import comply001 from "./compliance/comply-001-identifier-shape";
@@ -42,16 +45,21 @@ import schema002 from "./quality/schema-002-describe";
 import schema003 from "./quality/schema-003-missing-schema";
 import schema004 from "./quality/schema-004-unbounded-string";
 import schema005 from "./quality/schema-005-output-contract";
+import schema006 from "./quality/schema-006-structured-without-output-schema";
 import metaDestructive from "./quality/meta-001-destructive-hint";
 import metaMissingDesc from "./quality/meta-004-missing-description";
+import meta005 from "./quality/meta-005-readonly-mismatch";
+import meta006 from "./quality/meta-006-openworld-mismatch";
 import mcp004 from "./quality/mcp-004-tool-name-collision";
 import mcp012 from "./quality/mcp-012-description-args";
+import resource001 from "./quality/resource-001-param-schema-drift";
 
 // Performance
 import perf001 from "./performance/perf-001-sync-io";
 import perf002 from "./performance/perf-002-oversized-description";
 import perf003 from "./performance/perf-003-tool-sprawl";
 import perf004 from "./performance/perf-004-duplicate-descriptions";
+import perf005 from "./performance/perf-005-json-stringify-content";
 
 export const ALL_RULES: Rule[] = [
   // Security — 24 static
@@ -68,6 +76,7 @@ export const ALL_RULES: Rule[] = [
   handler006,
   handler007,
   handler008,
+  handler009,
   mcp001,
   mcp002,
   mcp003,
@@ -76,6 +85,8 @@ export const ALL_RULES: Rule[] = [
   mcp008,
   mcp009,
   mcp011,
+  mcp013,
+  mcp014,
   config001,
   config002,
   config003,
@@ -94,15 +105,20 @@ export const ALL_RULES: Rule[] = [
   schema003,
   schema004,
   schema005,
+  schema006,
   metaDestructive,
   metaMissingDesc,
+  meta005,
+  meta006,
   mcp004,
   mcp012,
+  resource001,
   // Performance — 4
   perf001,
   perf002,
   perf003,
   perf004,
+  perf005,
 ];
 
 export function getRule(id: string): Rule | undefined {
