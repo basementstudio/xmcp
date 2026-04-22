@@ -621,37 +621,6 @@ importers:
         specifier: ^4.1.18
         version: 4.1.18
 
-  examples/mcp-apps-demo-conf:
-    dependencies:
-      react:
-        specifier: ^19.2.3
-        version: 19.2.4
-      react-dom:
-        specifier: ^19.2.3
-        version: 19.2.4(react@19.2.4)
-      xmcp:
-        specifier: workspace:*
-        version: link:../../packages/xmcp
-      zod:
-        specifier: ^4.0.10
-        version: 4.1.13
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4.1.17
-        version: 4.1.17
-      '@types/react':
-        specifier: ^19.2.7
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      postcss:
-        specifier: ^8.5.6
-        version: 8.5.6
-      tailwindcss:
-        specifier: ^4.1.18
-        version: 4.1.18
-
   examples/mcp-ui:
     dependencies:
       '@mcp-ui/server':
@@ -1107,6 +1076,10 @@ importers:
       react-router-dom:
         specifier: ^7.13.0
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+    optionalDependencies:
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
     devDependencies:
       '@types/better-sqlite3':
         specifier: ^7.6.13
@@ -1159,10 +1132,6 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../../xmcp
-    optionalDependencies:
-      pg:
-        specifier: ^8.16.3
-        version: 8.16.3
 
   packages/plugins/clerk:
     dependencies:
@@ -13215,7 +13184,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1)):
+  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -13236,7 +13205,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.1(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.1(jiti@2.6.1))
+      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.1(jiti@2.6.1)))(eslint@9.39.1(jiti@2.6.1))
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3

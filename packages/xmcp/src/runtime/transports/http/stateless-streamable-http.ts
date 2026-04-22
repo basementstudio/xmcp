@@ -1,6 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { StreamableHTTPServerTransport as SdkStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types";
 import express, {
   Express,
   Request,
@@ -32,13 +31,6 @@ import {
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
-import type { McpClientInfo } from "@/types/client-info";
-
-interface SessionLifecycle {
-  server: McpServer;
-  transport: SdkStreamableHTTPServerTransport;
-  clientInfo?: McpClientInfo;
-}
 
 // Global type declarations for tool name context
 declare global {
@@ -110,7 +102,6 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
-  private sessions = new Map<string, SessionLifecycle>();
 
   constructor(
     createServerFn: () => Promise<McpServer>,
@@ -175,7 +166,7 @@ export class StatelessStreamableHTTPTransport {
       res.status(200).json({
         status: "ok",
         transport: "streamable-http",
-        mode: "session",
+        mode: "stateless",
       });
     });
 
@@ -260,56 +251,25 @@ export class StatelessStreamableHTTPTransport {
   ): Promise<void> {
     try {
       const requestClientInfo = extractClientInfoFromMessages(req.body);
-      const sessionId = this.getSessionId(req);
-      let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
-      let clientInfo = requestClientInfo;
+      const server = await this.createServerFn();
+      const transport = new StatelessHttpServerTransport(
+        this.debug,
+        this.options.bodySizeLimit || "10mb"
+      );
 
       res.on("finish", () => {
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
       res.on("close", () => {
+        void transport.close();
+        void server.close();
         global.__XMCP_CURRENT_TOOL_NAME = undefined;
       });
 
-      if (!lifecycle) {
-        if (
-          sessionId ||
-          req.method !== "POST" ||
-          !isInitializeRequest(req.body)
-        ) {
-          res.status(400).json({
-            jsonrpc: "2.0",
-            error: {
-              code: -32000,
-              message: "Bad Request: No valid session ID provided",
-            },
-            id: null,
-          });
-          return;
-        }
+      setHttpRequestContext({ clientInfo: requestClientInfo });
 
-        lifecycle = await this.createSessionLifecycle();
-      }
-
-      if (!clientInfo) {
-        clientInfo = lifecycle.clientInfo;
-      }
-
-      setHttpRequestContext({ clientInfo });
-
-      await lifecycle.transport.handleRequest(req, res, req.body);
-
-      if (!sessionId && lifecycle.transport.sessionId) {
-        this.sessions.set(lifecycle.transport.sessionId, {
-          ...lifecycle,
-          clientInfo,
-        });
-      } else if (sessionId && lifecycle.transport.sessionId) {
-        this.sessions.set(lifecycle.transport.sessionId, {
-          ...lifecycle,
-          clientInfo,
-        });
-      }
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
     } catch (error) {
       console.error("[HTTP-server] Error handling MCP request:", error);
       if (!res.headersSent) {
@@ -323,37 +283,6 @@ export class StatelessStreamableHTTPTransport {
         });
       }
     }
-  }
-
-  private getSessionId(req: Request): string | undefined {
-    const header = req.headers["mcp-session-id"];
-
-    if (Array.isArray(header)) {
-      return header[0];
-    }
-
-    return typeof header === "string" && header.length > 0 ? header : undefined;
-  }
-
-  private async createSessionLifecycle(): Promise<SessionLifecycle> {
-    const server = await this.createServerFn();
-    const transport = new SdkStreamableHTTPServerTransport({
-      sessionIdGenerator: () => randomUUID(),
-    });
-
-    transport.onclose = () => {
-      const sessionId = transport.sessionId;
-
-      if (sessionId) {
-        this.sessions.delete(sessionId);
-      }
-
-      void server.close();
-    };
-
-    await server.connect(transport);
-
-    return { server, transport };
   }
 
   public async start(): Promise<void> {
@@ -376,13 +305,6 @@ export class StatelessStreamableHTTPTransport {
 
   public shutdown(): void {
     this.log("Shutting down server");
-
-    for (const { server, transport } of this.sessions.values()) {
-      void transport.close();
-      void server.close();
-    }
-
-    this.sessions.clear();
     this.server.close();
     process.exit(0);
   }
