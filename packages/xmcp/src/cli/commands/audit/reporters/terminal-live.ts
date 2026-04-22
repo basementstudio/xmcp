@@ -19,6 +19,17 @@ const SEVERITY_BADGE: Record<Severity, (text: string) => string> = {
   info: (t) => chalk.gray(t),
 };
 
+// Pads the visible badge width in the finding body so the message column
+// stays stable across severities. The bg-red ` critical ` badge is 10 chars;
+// everything else is a bare word, so we pad to match.
+const SEVERITY_BODY_PAD: Record<Severity, string> = {
+  critical: "",
+  high: "      ",
+  medium: "    ",
+  low: "       ",
+  info: "      ",
+};
+
 export interface LiveReporter {
   handleEvent(event: ScannerEvent): void;
   finish(report: AuditReport): void;
@@ -151,10 +162,11 @@ export function createLiveReporter(options: LiveReporterOptions): LiveReporter {
 
 function formatFindingBody(finding: Finding): string {
   const badge = SEVERITY_BADGE[finding.severity](finding.severity);
+  const pad = SEVERITY_BODY_PAD[finding.severity];
   const location =
     finding.line !== undefined ? `:${finding.line}:${finding.column ?? 1}` : "";
   const lines = [
-    `     ${badge}  ${finding.message}`,
+    `     ${badge}${pad}  ${finding.message}`,
     `       ${chalk.dim(`${finding.ruleId}${location}`)}`,
   ];
   if (finding.suggestion) {
