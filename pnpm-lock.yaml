@@ -1393,6 +1393,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
+      log-update:
+        specifier: ^6
+        version: 6.1.0
       memfs:
         specifier: ^4.51.1
         version: 4.51.1

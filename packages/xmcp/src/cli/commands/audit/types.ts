@@ -137,3 +137,40 @@ export interface AuditReport {
   resolvedFailOn: Severity | null;
   durationMs: number;
 }
+
+export type ScannerEvent =
+  | {
+      type: "scan:start";
+      totalRules: number;
+      files: number;
+      concerns: Concern[];
+      startedAt: number;
+    }
+  | {
+      type: "rule:start";
+      ruleId: string;
+      concern: Concern;
+      index: number;
+      total: number;
+    }
+  | {
+      type: "rule:complete";
+      ruleId: string;
+      concern: Concern;
+      index: number;
+      total: number;
+      findingsInRule: number;
+      durationMs: number;
+    }
+  | { type: "finding"; finding: Finding; ruleId: string }
+  | { type: "deps:start"; packageManager: "npm" | "pnpm" | "yarn" }
+  | {
+      type: "deps:complete";
+      findingsInPhase: number;
+      durationMs: number;
+    }
+  | {
+      type: "deps:skipped";
+      reason: "no-pm" | "no-security-concern" | "disabled";
+    }
+  | { type: "scan:complete"; durationMs: number; totalFindings: number };

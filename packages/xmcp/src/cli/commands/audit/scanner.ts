@@ -9,6 +9,7 @@ import {
   type Finding,
   type Rule,
   type ScanContext,
+  type ScannerEvent,
   type Severity,
 } from "./types";
 
@@ -21,6 +22,7 @@ export interface ScannerOptions {
   noDeps?: boolean;
   strictExecutionErrors?: boolean;
   changedFiles?: Set<string> | null;
+  onEvent?: (event: ScannerEvent) => void;
 }
 
 export async function runScan(options: ScannerOptions): Promise<AuditReport> {
@@ -35,6 +37,11 @@ export async function runScan(options: ScannerOptions): Promise<AuditReport> {
 
   const selected = selectRules(ALL_RULES, ctx, options);
   const ruleById = new Map(selected.map((r) => [r.meta.id, r] as const));
+
+  if (options.onEvent) {
+    return runScanWithEvents(start, ctx, selected, ruleById, options);
+  }
+
   const staticFindings = selected.flatMap((rule) => safeCheck(rule, ctx));
   const depsFindings = await runDepsIfNeeded(ctx);
   const raw = [...staticFindings, ...depsFindings]
@@ -62,6 +69,122 @@ export async function runScan(options: ScannerOptions): Promise<AuditReport> {
     baselined: 0,
     resolvedFailOn: ctx.auditConfig.failOn,
     durationMs: Date.now() - start,
+  };
+}
+
+async function runScanWithEvents(
+  start: number,
+  ctx: ScanContext,
+  selected: Rule[],
+  ruleById: Map<string, Rule>,
+  options: ScannerOptions
+): Promise<AuditReport> {
+  const onEvent = options.onEvent!;
+  const total = selected.length;
+  const files = ctx.tools.length + ctx.prompts.length + ctx.resources.length;
+
+  onEvent({
+    type: "scan:start",
+    totalRules: total,
+    files,
+    concerns: ALL_CONCERNS.filter((c) => ctx.activeConcerns.has(c)),
+    startedAt: start,
+  });
+
+  let suppressed = 0;
+  const findings: Finding[] = [];
+
+  for (let i = 0; i < selected.length; i++) {
+    const rule = selected[i];
+    onEvent({
+      type: "rule:start",
+      ruleId: rule.meta.id,
+      concern: rule.meta.concern,
+      index: i,
+      total,
+    });
+
+    const ruleStart = Date.now();
+    const raw = safeCheck(rule, ctx);
+    let keptInRule = 0;
+
+    for (const f of raw) {
+      if (!isFindingInScope(f, ctx, ruleById)) continue;
+      const finding = applySeverityOverride(f, ctx);
+      if (
+        isSuppressed(finding, ctx.suppressions) ||
+        isIgnoredByConfig(finding, ctx.projectRoot, ctx.auditConfig)
+      ) {
+        suppressed += 1;
+        continue;
+      }
+      findings.push(finding);
+      keptInRule += 1;
+      onEvent({ type: "finding", finding, ruleId: rule.meta.id });
+    }
+
+    onEvent({
+      type: "rule:complete",
+      ruleId: rule.meta.id,
+      concern: rule.meta.concern,
+      index: i,
+      total,
+      findingsInRule: keptInRule,
+      durationMs: Date.now() - ruleStart,
+    });
+
+    // Yield to the event loop so the live renderer can repaint between rules.
+    // This is a signal-based yield, not a timed delay.
+    await new Promise<void>((resolve) => setImmediate(resolve));
+  }
+
+  if (ctx.noDeps) {
+    onEvent({ type: "deps:skipped", reason: "disabled" });
+  } else if (!ctx.activeConcerns.has("security")) {
+    onEvent({ type: "deps:skipped", reason: "no-security-concern" });
+  } else if (!ctx.packageManager) {
+    onEvent({ type: "deps:skipped", reason: "no-pm" });
+  } else {
+    const depsStart = Date.now();
+    onEvent({ type: "deps:start", packageManager: ctx.packageManager });
+    const depsFindings = await runDepsAudit(ctx);
+    let depsKept = 0;
+    for (const f of depsFindings) {
+      if (!isFindingInScope(f, ctx, ruleById)) continue;
+      const finding = applySeverityOverride(f, ctx);
+      if (
+        isSuppressed(finding, ctx.suppressions) ||
+        isIgnoredByConfig(finding, ctx.projectRoot, ctx.auditConfig)
+      ) {
+        suppressed += 1;
+        continue;
+      }
+      findings.push(finding);
+      depsKept += 1;
+      onEvent({ type: "finding", finding, ruleId: finding.ruleId });
+    }
+    onEvent({
+      type: "deps:complete",
+      findingsInPhase: depsKept,
+      durationMs: Date.now() - depsStart,
+    });
+  }
+
+  const durationMs = Date.now() - start;
+  onEvent({
+    type: "scan:complete",
+    durationMs,
+    totalFindings: findings.length,
+  });
+
+  return {
+    projectRoot: ctx.projectRoot,
+    activeConcerns: ALL_CONCERNS.filter((c) => ctx.activeConcerns.has(c)),
+    findings,
+    suppressed,
+    baselined: 0,
+    resolvedFailOn: ctx.auditConfig.failOn,
+    durationMs,
   };
 }
 

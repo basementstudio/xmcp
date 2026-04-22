@@ -1,17 +1,24 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
+import ciInfo from "ci-info";
 import { xmcpLogo, yellowArrow } from "../../../utils/cli-icons";
 import { runScan } from "./scanner";
 import { renderTerminal } from "./reporters/terminal";
 import { renderJson } from "./reporters/json";
 import { renderSarif } from "./reporters/sarif";
+import {
+  createLiveReporter,
+  type LiveReporter,
+} from "./reporters/terminal-live";
 import { ALL_RULES, getRule } from "./rules";
 import {
   DEFAULT_BASELINE_PATH,
+  fingerprintFinding,
   loadBaseline,
   partitionByBaseline,
   writeBaseline,
+  type BaselineFile,
 } from "./baseline";
 import { listChangedFiles } from "./git";
 import {
@@ -20,6 +27,7 @@ import {
   type AuditReport,
   type AuditRunOptions,
   type Concern,
+  type ScannerEvent,
   type Severity,
 } from "./types";
 
@@ -90,6 +98,29 @@ export async function runAudit(
     );
   }
 
+  const minSeverity: Severity = options.severity ?? "info";
+
+  const useInteractive =
+    format === "terminal" &&
+    options.ci !== true &&
+    !options.output &&
+    !options.updateBaseline &&
+    process.stdout.isTTY === true &&
+    !ciInfo.isCI &&
+    process.env.NO_COLOR !== "1" &&
+    process.env.TERM !== "dumb";
+
+  let reporter: LiveReporter | null = null;
+  let liveBaseline: BaselineFile | null = null;
+  if (useInteractive) {
+    liveBaseline = resolveBaseline(options, projectRoot);
+    reporter = createLiveReporter({ projectRoot });
+  }
+
+  const onEvent: ((event: ScannerEvent) => void) | undefined = reporter
+    ? buildLiveFilter(reporter, liveBaseline, projectRoot, minSeverity)
+    : undefined;
+
   const report = await runScan({
     projectRoot,
     activeConcerns: concerns,
@@ -100,6 +131,7 @@ export async function runAudit(
     strictExecutionErrors:
       options.strictExecutionErrors === true || options.ci === true,
     changedFiles,
+    onEvent,
   });
 
   if (options.updateBaseline) {
@@ -114,7 +146,9 @@ export async function runAudit(
     return { exitCode: 0 };
   }
 
-  const baseline = resolveBaseline(options, projectRoot);
+  const baseline = reporter
+    ? liveBaseline
+    : resolveBaseline(options, projectRoot);
   let working: AuditReport = report;
   if (baseline) {
     const { fresh, baselined } = partitionByBaseline(
@@ -125,7 +159,6 @@ export async function runAudit(
     working = { ...report, findings: fresh, baselined: baselined.length };
   }
 
-  const minSeverity = options.severity ?? "info";
   const filtered: AuditReport = {
     ...working,
     findings: working.findings.filter(
@@ -133,12 +166,15 @@ export async function runAudit(
     ),
   };
 
-  const rendered = renderByFormat(filtered, format, options.ci === true);
-
-  if (options.output) {
-    fs.writeFileSync(options.output, rendered);
+  if (reporter) {
+    reporter.finish(filtered);
   } else {
-    process.stdout.write(rendered);
+    const rendered = renderByFormat(filtered, format, options.ci === true);
+    if (options.output) {
+      fs.writeFileSync(options.output, rendered);
+    } else {
+      process.stdout.write(rendered);
+    }
   }
 
   const failOn =
@@ -326,6 +362,27 @@ function indent(text: string, spaces: number): string {
     .split("\n")
     .map((l) => prefix + l)
     .join("\n");
+}
+
+function buildLiveFilter(
+  reporter: LiveReporter,
+  baseline: BaselineFile | null,
+  projectRoot: string,
+  minSeverity: Severity
+): (event: ScannerEvent) => void {
+  const known = baseline
+    ? new Set(baseline.entries.map((e) => e.fingerprint))
+    : null;
+  const minOrder = SEVERITY_ORDER[minSeverity];
+  return (event) => {
+    if (event.type === "finding") {
+      if (SEVERITY_ORDER[event.finding.severity] < minOrder) return;
+      if (known && known.has(fingerprintFinding(event.finding, projectRoot))) {
+        return;
+      }
+    }
+    reporter.handleEvent(event);
+  };
 }
 
 function renderSeverity(severity: Severity | "dynamic"): string {

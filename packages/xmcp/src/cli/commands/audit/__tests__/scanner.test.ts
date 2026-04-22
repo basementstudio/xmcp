@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { runScan } from "../scanner";
 import { ALL_RULES } from "../rules";
-import { ALL_CONCERNS, type Rule } from "../types";
+import { ALL_CONCERNS, type Rule, type ScannerEvent } from "../types";
 
 const FIXTURES = path.join(__dirname, "fixtures");
 
@@ -243,6 +243,75 @@ describe("xmcp audit execution errors", () => {
       assert.equal(report.findings[0].metadata?.executionError, true);
     } finally {
       ALL_RULES.pop();
+    }
+  });
+
+  it("emits findings identically through the event-emission path", async () => {
+    const batch = await runScan({
+      projectRoot: path.join(FIXTURES, "vulnerable-project"),
+      activeConcerns: new Set(ALL_CONCERNS),
+      noDeps: true,
+    });
+
+    const events: ScannerEvent[] = [];
+    const live = await runScan({
+      projectRoot: path.join(FIXTURES, "vulnerable-project"),
+      activeConcerns: new Set(ALL_CONCERNS),
+      noDeps: true,
+      onEvent: (e) => events.push(e),
+    });
+
+    const batchIds = [...batch.findings]
+      .map((f) => `${f.ruleId}|${f.file}|${f.line ?? 0}`)
+      .sort();
+    const liveIds = [...live.findings]
+      .map((f) => `${f.ruleId}|${f.file}|${f.line ?? 0}`)
+      .sort();
+    assert.deepEqual(
+      liveIds,
+      batchIds,
+      "event-emission path should produce the same findings as the batch path"
+    );
+
+    const firstEvent = events[0];
+    const lastEvent = events[events.length - 1];
+    assert.equal(firstEvent.type, "scan:start");
+    assert.equal(lastEvent.type, "scan:complete");
+
+    const findingEvents = events.filter((e) => e.type === "finding");
+    assert.equal(
+      findingEvents.length,
+      live.findings.length,
+      "one finding event per emitted finding"
+    );
+
+    const ruleStarts = events.filter((e) => e.type === "rule:start");
+    const ruleCompletes = events.filter((e) => e.type === "rule:complete");
+    assert.equal(
+      ruleStarts.length,
+      ruleCompletes.length,
+      "every rule:start has a matching rule:complete"
+    );
+    // Total indexing is contiguous.
+    ruleStarts.forEach((e, i) => {
+      if (e.type !== "rule:start") return;
+      assert.equal(e.index, i);
+    });
+  });
+
+  it("emits deps:skipped when --no-deps is set", async () => {
+    const events: ScannerEvent[] = [];
+    await runScan({
+      projectRoot: path.join(FIXTURES, "clean-project"),
+      activeConcerns: new Set(["security"]),
+      noDeps: true,
+      onEvent: (e) => events.push(e),
+    });
+
+    const depsSkipped = events.find((e) => e.type === "deps:skipped");
+    assert.ok(depsSkipped, "deps:skipped should fire when noDeps is true");
+    if (depsSkipped?.type === "deps:skipped") {
+      assert.equal(depsSkipped.reason, "disabled");
     }
   });
 

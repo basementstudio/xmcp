@@ -110,6 +110,7 @@
     "is-wsl": "^3.1.0",
     "json5": "^2.2.3",
     "jsonwebtoken": "^9.0.3",
+    "log-update": "^6",
     "memfs": "^4.51.1",
     "raw-body": "^3.0.2",
     "reflect-metadata": "^0.2.2",
