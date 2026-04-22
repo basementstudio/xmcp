@@ -48,6 +48,14 @@ ship: hardcoded secrets, unsafe handler patterns, schema drift, metadata
 mistakes, and more.
 
 ```bash
+npx xmcp audit
+npx xmcp audit:list-rules
+npx xmcp audit:explain XMCP-HANDLER-001
+```
+
+If `xmcp` is already installed in your project, the equivalent commands are:
+
+```bash
 xmcp audit
 xmcp audit --no-heuristics --no-deps --fail-on high
 xmcp build --audit
@@ -64,6 +72,16 @@ For code-scanning integrations, emit SARIF:
 ```bash
 xmcp audit --format sarif --output audit.sarif
 ```
+
+If you want to test the audit UX manually, there are two purpose-built
+playgrounds in `examples/`:
+
+- `examples/audit-clean` for the passing, quiet path
+- `examples/audit-findings` for the intentionally noisy demo path
+
+Those example folders use `pnpm run ...` scripts only as monorepo shortcuts so
+they exercise the local workspace build of `xmcp`. They are not the primary
+user-facing workflow.
 
 See the full audit documentation at
 [xmcp.dev/docs/configuration/audit](https://xmcp.dev/docs/configuration/audit).

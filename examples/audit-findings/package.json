@@ -1,0 +1,21 @@
+{
+  "name": "Audit Findings Playground",
+  "description": "Purpose-built finding-rich project for xmcp audit demos",
+  "keywords": [
+    "audit",
+    "playground"
+  ],
+  "scripts": {
+    "audit:demo": "xmcp audit --no-heuristics --no-deps --fail-on critical --disable-rule XMCP-HANDLER-001",
+    "audit:strict": "xmcp audit --no-heuristics --no-deps --fail-on high",
+    "audit:json": "xmcp audit --no-heuristics --no-deps --format json",
+    "audit:rules": "xmcp audit:list-rules",
+    "audit:explain": "xmcp audit:explain XMCP-MCP-006",
+    "build": "xmcp build",
+    "dev": "xmcp dev"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

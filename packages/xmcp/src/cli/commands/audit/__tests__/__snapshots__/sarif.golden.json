@@ -34,6 +34,30 @@
               }
             },
             {
+              "id": "XMCP-CONFIG-002",
+              "name": "http-transport-without-auth-middleware",
+              "shortDescription": {
+                "text": "HTTP transport enabled without any built-in auth middleware imported"
+              },
+              "fullDescription": {
+                "text": "If http is true in xmcp.config and nothing under src/ imports an auth middleware, the server exposes tools anonymously. This is rare enough to flag high severity — use --disable-rule when auth lives in a reverse proxy."
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "concern": "security",
+                "tags": [
+                  "security"
+                ],
+                "security-severity": "8.5"
+              },
+              "help": {
+                "text": "If http is true in xmcp.config and nothing under src/ imports an auth middleware, the server exposes tools anonymously. This is rare enough to flag high severity — use --disable-rule when auth lives in a reverse proxy.",
+                "markdown": "If http is true in xmcp.config and nothing under src/ imports an auth middleware, the server exposes tools anonymously. This is rare enough to flag high severity — use --disable-rule when auth lives in a reverse proxy.\n\n**Bad**\n```ts\nhttp: true,  // + no auth middleware imported anywhere\n```\n\n**Good**\n```ts\nimport { apiKeyAuthMiddleware } from \"xmcp\";\n// or jwtAuthMiddleware\n```"
+              }
+            },
+            {
               "id": "XMCP-COMPLY-005",
               "name": "package-manifest-missing-fields",
               "shortDescription": {
@@ -55,6 +79,30 @@
               "help": {
                 "text": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server.",
                 "markdown": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server.\n\n**Bad**\n```ts\n{ \"scripts\": { \"dev\": \"xmcp dev\" } }\n```\n\n**Good**\n```ts\n{ \"name\": \"my-server\", \"version\": \"0.1.0\" }\n```"
+              }
+            },
+            {
+              "id": "XMCP-SCHEMA-004",
+              "name": "unbounded-zod-string",
+              "shortDescription": {
+                "text": "zod string fields should cap length with .max()"
+              },
+              "fullDescription": {
+                "text": "An unbounded string field lets a caller paste megabytes of text into the handler. That wastes the model's context budget and gives an attacker cheap amplification for other abuses."
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "concern": "quality",
+                "tags": [
+                  "quality"
+                ],
+                "security-severity": "3"
+              },
+              "help": {
+                "text": "An unbounded string field lets a caller paste megabytes of text into the handler. That wastes the model's context budget and gives an attacker cheap amplification for other abuses.",
+                "markdown": "An unbounded string field lets a caller paste megabytes of text into the handler. That wastes the model's context budget and gives an attacker cheap amplification for other abuses.\n\n**Bad**\n```ts\nname: z.string().describe(\"...\")\n```\n\n**Good**\n```ts\nname: z.string().max(200).describe(\"...\")\n```"
               }
             },
             {
@@ -125,6 +173,37 @@
           ]
         },
         {
+          "ruleId": "XMCP-CONFIG-002",
+          "level": "error",
+          "message": {
+            "text": "HTTP transport is enabled but no xmcp auth middleware is imported in src/"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "xmcp.config.ts"
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 3
+                }
+              }
+            }
+          ],
+          "properties": {
+            "concern": "security",
+            "severity": "high"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "Import apiKeyAuthMiddleware or jwtAuthMiddleware from \"xmcp\", or disable this rule if auth is terminated upstream"
+              }
+            }
+          ]
+        },
+        {
           "ruleId": "XMCP-PERF-001",
           "level": "warning",
           "message": {
@@ -182,6 +261,37 @@
             {
               "description": {
                 "text": "Add the required fields to package.json"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "XMCP-SCHEMA-004",
+          "level": "note",
+          "message": {
+            "text": "Schema field \"name\" is an unbounded z.string()"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/tools/shell.ts"
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 3
+                }
+              }
+            }
+          ],
+          "properties": {
+            "concern": "quality",
+            "severity": "low"
+          },
+          "fixes": [
+            {
+              "description": {
+                "text": "Add .max(N) to cap input length"
               }
             }
           ]

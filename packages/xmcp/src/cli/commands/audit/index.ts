@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
+import { xmcpLogo, yellowArrow } from "../../../utils/cli-icons";
 import { runScan } from "./scanner";
 import { renderTerminal } from "./reporters/terminal";
 import { renderJson } from "./reporters/json";
@@ -222,20 +223,28 @@ export async function runListRules(options: {
   }
 
   const lines: string[] = [];
+  lines.push(
+    `${xmcpLogo} ${chalk.bold("Audit Rules")} ${chalk.dim(`${rules.length} total`)}`
+  );
+  lines.push(
+    chalk.dim(
+      "Heuristic rules are marked with * and may produce false positives."
+    )
+  );
+  lines.push("");
   for (const c of ALL_CONCERNS) {
     const bucket = byConcern.get(c);
     if (!bucket || bucket.length === 0) continue;
-    lines.push(chalk.bold.underline(c));
+    lines.push(chalk.bold.underline(c) + chalk.dim(` (${bucket.length})`));
     for (const r of bucket) {
       const sev = typeof r.meta.severity === "string" ? r.meta.severity : "?";
-      const heuristic = r.meta.heuristic ? chalk.yellow(" ·heuristic") : "";
+      const heuristic = r.meta.heuristic ? chalk.yellow(" *") : "";
       lines.push(
         `  ${chalk.cyan(r.meta.id.padEnd(20))} ${chalk.dim(sev.padEnd(9))} ${r.meta.description}${heuristic}`
       );
     }
     lines.push("");
   }
-  lines.push(chalk.dim(`${rules.length} rule${rules.length === 1 ? "" : "s"}`));
 
   process.stdout.write(lines.join("\n") + "\n");
   return { exitCode: 0 };
@@ -250,11 +259,13 @@ export async function runExplain(ruleId: string): Promise<RunAuditResult> {
 
   const { meta } = rule;
   const lines = [
+    `${xmcpLogo} ${chalk.bold("Audit Rule")}`,
+    "",
     chalk.bold(meta.id) + "  " + chalk.dim(meta.name),
-    `${chalk.bold("Severity:")} ${meta.severity}`,
-    `${chalk.bold("Concern:")}  ${meta.concern}`,
+    `${chalk.bold("Severity")} ${renderSeverity(meta.severity)}`,
+    `${chalk.bold("Concern")}  ${meta.concern}`,
     meta.heuristic
-      ? chalk.yellow("(heuristic — may have false positives)")
+      ? chalk.yellow("* Heuristic rule — may have false positives")
       : "",
     "",
     chalk.bold("Description"),
@@ -268,6 +279,10 @@ export async function runExplain(ruleId: string): Promise<RunAuditResult> {
     "",
     chalk.bold("Good"),
     indent(meta.examples.good, 2),
+    "",
+    chalk.dim(
+      `${yellowArrow} Use xmcp audit --enable-rule ${meta.id} to isolate this rule during testing.`
+    ),
   ].filter(Boolean);
 
   process.stdout.write(lines.join("\n") + "\n");
@@ -311,6 +326,15 @@ function indent(text: string, spaces: number): string {
     .split("\n")
     .map((l) => prefix + l)
     .join("\n");
+}
+
+function renderSeverity(severity: Severity | "dynamic"): string {
+  if (severity === "dynamic") return chalk.magenta("dynamic");
+  if (severity === "critical") return chalk.bgRed.white.bold(" critical ");
+  if (severity === "high") return chalk.red.bold("high");
+  if (severity === "medium") return chalk.yellow("medium");
+  if (severity === "low") return chalk.blue("low");
+  return chalk.gray("info");
 }
 
 export type { AuditRunOptions, Concern, Severity };

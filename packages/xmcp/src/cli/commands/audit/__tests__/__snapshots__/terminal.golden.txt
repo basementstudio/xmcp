@@ -1,16 +1,33 @@
-security
-  src/tools/shell.ts
-     critical  exec() argument derives from handler input — command injection [XMCP-HANDLER-001]:15:3
-      → Use execFile with an argv array
+ XMCP  Audit Report static MCP checks
+✖ 5 findings  1 critical  1 high 1 medium 2 low
+Hidden: 1 suppressed, 2 baselined
 
-compliance
-  package.json
-    low package.json is missing: version [XMCP-COMPLY-005]:1:1
-      → Add the required fields to package.json
+security 2 findings across 2 files
+  ◆ src/tools/shell.ts
+     critical  exec() argument derives from handler input — command injection
+      XMCP-HANDLER-001:15:3
+      ❯ Use execFile with an argv array
+  ◆ xmcp.config.ts
+    high HTTP transport is enabled but no xmcp auth middleware is imported in src/
+      XMCP-CONFIG-002:4:3
+      ❯ Import apiKeyAuthMiddleware or jwtAuthMiddleware from "xmcp", or disable this rule if auth is terminated upstream
 
-performance
-  src/tools/shell.ts
-    medium readFileSync() blocks the event loop in a handler [XMCP-PERF-001]:20:16
-      → Use the async equivalent from "node:fs/promises"
+compliance 1 finding across 1 file
+  ◆ package.json
+    low package.json is missing: version
+      XMCP-COMPLY-005:1:1
+      ❯ Add the required fields to package.json
 
-3 findings ( 1 critical , 1 medium, 1 low) • 1 suppressed
+quality 1 finding across 1 file
+  ◆ src/tools/shell.ts
+    low Schema field "name" is an unbounded z.string()
+      XMCP-SCHEMA-004:6:3
+      ❯ Add .max(N) to cap input length
+
+performance 1 finding across 1 file
+  ◆ src/tools/shell.ts
+    medium readFileSync() blocks the event loop in a handler
+      XMCP-PERF-001:20:16
+      ❯ Use the async equivalent from "node:fs/promises"
+
+✖ 5 findings ( 1 critical , 1 high, 1 medium, 2 low) • 1 suppressed, 2 baselined

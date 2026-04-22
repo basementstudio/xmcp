@@ -14,7 +14,7 @@ const report: AuditReport = {
   activeConcerns: ["security", "compliance", "quality", "performance"],
   durationMs: 42,
   suppressed: 1,
-  baselined: 0,
+  baselined: 2,
   resolvedFailOn: null,
   findings: [
     {
@@ -28,6 +28,18 @@ const report: AuditReport = {
       suggestion: "Use execFile with an argv array",
     },
     {
+      ruleId: "XMCP-CONFIG-002",
+      severity: "high",
+      concern: "security",
+      message:
+        "HTTP transport is enabled but no xmcp auth middleware is imported in src/",
+      file: "/tmp/audit-fixture/xmcp.config.ts",
+      line: 4,
+      column: 3,
+      suggestion:
+        'Import apiKeyAuthMiddleware or jwtAuthMiddleware from "xmcp", or disable this rule if auth is terminated upstream',
+    },
+    {
       ruleId: "XMCP-COMPLY-005",
       severity: "low",
       concern: "compliance",
@@ -36,6 +48,16 @@ const report: AuditReport = {
       line: 1,
       column: 1,
       suggestion: "Add the required fields to package.json",
+    },
+    {
+      ruleId: "XMCP-SCHEMA-004",
+      severity: "low",
+      concern: "quality",
+      message: 'Schema field "name" is an unbounded z.string()',
+      file: "/tmp/audit-fixture/src/tools/shell.ts",
+      line: 6,
+      column: 3,
+      suggestion: "Add .max(N) to cap input length",
     },
     {
       ruleId: "XMCP-PERF-001",
@@ -50,10 +72,25 @@ const report: AuditReport = {
   ],
 };
 
+const cleanReport: AuditReport = {
+  projectRoot: "/tmp/audit-fixture",
+  activeConcerns: ["security", "compliance", "quality", "performance"],
+  durationMs: 15,
+  suppressed: 1,
+  baselined: 1,
+  resolvedFailOn: null,
+  findings: [],
+};
+
 describe("reporters", () => {
   it("terminal output matches snapshot", () => {
     const actual = renderTerminal(report, { useColor: false });
     expectSnapshot(actual, "terminal.golden.txt");
+  });
+
+  it("terminal clean output matches snapshot", () => {
+    const actual = renderTerminal(cleanReport, { useColor: false });
+    expectSnapshot(actual, "terminal-clean.golden.txt");
   });
 
   it("json output matches snapshot", () => {
@@ -61,9 +98,9 @@ describe("reporters", () => {
     expectSnapshot(actual, "json.golden.json");
     const parsed = JSON.parse(actual);
     assert.equal(parsed.schemaVersion, "1.0");
-    assert.equal(parsed.summary.total, 3);
+    assert.equal(parsed.summary.total, 5);
     assert.equal(parsed.summary.bySeverity.critical, 1);
-    assert.equal(parsed.summary.byConcern.security, 1);
+    assert.equal(parsed.summary.byConcern.security, 2);
   });
 
   it("sarif output matches snapshot", () => {
@@ -71,7 +108,7 @@ describe("reporters", () => {
     expectSnapshot(actual, "sarif.golden.json");
     const parsed = JSON.parse(actual);
     assert.equal(parsed.version, "2.1.0");
-    assert.equal(parsed.runs[0].results.length, 3);
+    assert.equal(parsed.runs[0].results.length, 5);
     assert.equal(parsed.runs[0].results[0].level, "error");
     assert.ok(
       parsed.runs[0].tool.driver.rules.some(

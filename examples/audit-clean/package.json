@@ -1,0 +1,21 @@
+{
+  "name": "Audit Clean Playground",
+  "version": "0.0.1",
+  "description": "Purpose-built clean project for xmcp audit demos",
+  "keywords": [
+    "audit",
+    "playground"
+  ],
+  "scripts": {
+    "audit": "xmcp audit --no-heuristics --no-deps --fail-on high",
+    "audit:json": "xmcp audit --no-heuristics --no-deps --format json",
+    "audit:rules": "xmcp audit:list-rules",
+    "audit:explain": "xmcp audit:explain XMCP-HANDLER-001",
+    "build": "xmcp build",
+    "dev": "xmcp dev"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

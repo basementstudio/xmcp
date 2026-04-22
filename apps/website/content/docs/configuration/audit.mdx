@@ -8,6 +8,16 @@ description: "The xmcp audit CLI runs a static analysis pass over your MCP serve
 
 `xmcp audit` runs a static analysis pass over your MCP server and surfaces security, compliance, quality, and performance issues — things like hardcoded secrets, `z.any()` in tool schemas, confused-deputy token passthrough, or a tool description that drifted from its schema.
 
+The primary public usage is:
+
+```bash
+npx xmcp audit
+npx xmcp audit:list-rules
+npx xmcp audit:explain XMCP-HANDLER-001
+```
+
+If `xmcp` is already installed in your project, you can drop the `npx` prefix.
+
 ## Commands
 
 ```bash
@@ -89,6 +99,33 @@ Recommended rollout:
 - Use `--no-heuristics --no-deps` for fast, predictable blocking checks.
 - Use SARIF for scheduled scans or security dashboards.
 - Add baselines only when an existing codebase needs staged adoption.
+
+## Playgrounds
+
+The repo includes two purpose-built playgrounds for trying the audit UX end to
+end:
+
+- `examples/audit-clean` — deterministic pass path for smoke-testing the CLI.
+- `examples/audit-findings` — intentionally noisy output for demos, screenshots,
+  and rule tuning.
+
+Try them with:
+
+```bash
+npx xmcp audit
+npx xmcp audit:list-rules
+npx xmcp audit:explain XMCP-HANDLER-001
+```
+
+Inside this monorepo, the example folders also expose `pnpm run ...` scripts as
+local-dev shortcuts so they exercise the workspace version of `xmcp` instead of
+the published npm package:
+
+```bash
+pnpm --dir examples/audit-clean run audit
+pnpm --dir examples/audit-findings run audit:demo
+pnpm --dir examples/audit-findings run audit:strict
+```
 
 ## Rules
 

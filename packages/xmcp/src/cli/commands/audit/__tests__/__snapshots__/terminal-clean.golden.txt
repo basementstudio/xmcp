@@ -1,0 +1,4 @@
+ XMCP  Audit Report static MCP checks
+✔ No findings.
+Deterministic checks completed without security, compliance, quality, or performance findings.
+Hidden: 1 suppressed, 1 baselined

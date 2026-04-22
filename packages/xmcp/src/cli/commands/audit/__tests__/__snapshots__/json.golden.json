@@ -13,20 +13,20 @@
   ],
   "durationMs": 42,
   "summary": {
-    "total": 3,
+    "total": 5,
     "suppressed": 1,
-    "baselined": 0,
+    "baselined": 2,
     "bySeverity": {
       "critical": 1,
-      "high": 0,
+      "high": 1,
       "medium": 1,
-      "low": 1,
+      "low": 2,
       "info": 0
     },
     "byConcern": {
-      "security": 1,
+      "security": 2,
       "compliance": 1,
-      "quality": 0,
+      "quality": 1,
       "performance": 1
     }
   },
@@ -40,6 +40,16 @@
       "line": 15,
       "column": 3,
       "suggestion": "Use execFile with an argv array"
+    },
+    {
+      "ruleId": "XMCP-CONFIG-002",
+      "severity": "high",
+      "concern": "security",
+      "message": "HTTP transport is enabled but no xmcp auth middleware is imported in src/",
+      "file": "xmcp.config.ts",
+      "line": 4,
+      "column": 3,
+      "suggestion": "Import apiKeyAuthMiddleware or jwtAuthMiddleware from \"xmcp\", or disable this rule if auth is terminated upstream"
     },
     {
       "ruleId": "XMCP-PERF-001",
@@ -60,6 +70,16 @@
       "line": 1,
       "column": 1,
       "suggestion": "Add the required fields to package.json"
+    },
+    {
+      "ruleId": "XMCP-SCHEMA-004",
+      "severity": "low",
+      "concern": "quality",
+      "message": "Schema field \"name\" is an unbounded z.string()",
+      "file": "src/tools/shell.ts",
+      "line": 6,
+      "column": 3,
+      "suggestion": "Add .max(N) to cap input length"
     }
   ]
 }
