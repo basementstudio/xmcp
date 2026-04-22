@@ -101,6 +101,7 @@ export interface ScanContext {
   changedFiles: Set<string> | null;
   activeConcerns: Set<Concern>;
   noDeps: boolean;
+  strictExecutionErrors: boolean;
 }
 
 export interface Rule {
@@ -116,9 +117,11 @@ export interface AuditRunOptions {
   failOn?: Severity;
   disableRule?: string[];
   enableRule?: string[];
+  noHeuristics?: boolean;
   noDeps?: boolean;
   output?: string;
   ci?: boolean;
+  strictExecutionErrors?: boolean;
   baseline?: string;
   updateBaseline?: boolean;
   since?: string;

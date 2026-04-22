@@ -14,6 +14,7 @@ description: "The xmcp audit CLI runs a static analysis pass over your MCP serve
 xmcp audit                      # scan the project
 xmcp audit:list-rules           # list every rule, grouped by concern
 xmcp audit:explain <rule-id>    # rationale + bad/good examples for one rule
+xmcp build --audit              # run deterministic audit checks before bundling
 ```
 
 Common flags:
@@ -23,6 +24,7 @@ Common flags:
 | `--format terminal\|json\|sarif` | Output format — SARIF integrates with GitHub code scanning.                                                            |
 | `--severity <level>`             | Minimum severity to show (`info`, `low`, `medium`, `high`, `critical`).                                                |
 | `--fail-on <level>`              | Exit 1 if any finding is at or above this level (default `high`).                                                      |
+| `--no-heuristics`                | Skip heuristic rules for deterministic automation and build preflights.                                                |
 | `--baseline [file]`              | Only fail on findings not already in the baseline. Pair with `--update-baseline` to write one.                         |
 | `--since <ref>` / `--changed`    | Only scan files changed since a git ref / in the working tree. Project-wide rules still run against the whole project. |
 | `--ci`                           | No colors; implies `--fail-on high`.                                                                                   |
@@ -59,6 +61,34 @@ For one-off suppressions, annotate the line instead:
 // xmcp-audit-ignore-next-line XMCP-SCHEMA-001 payload is truly opaque here
 payload: z.any(),
 ```
+
+## Build preflight
+
+Use `xmcp build --audit` to run the deterministic audit subset before bundling. This preflight skips dependency audit and heuristic rules, then aborts the build if findings meet the configured threshold.
+
+Use it when you want framework users to catch obvious security, schema, and config issues locally before the compiler starts work.
+
+## CI/CD
+
+`xmcp audit` is designed to fit downstream MCP project pipelines.
+
+For a blocking PR gate, prefer deterministic static checks only:
+
+```bash
+xmcp audit --no-heuristics --no-deps --fail-on high --format json
+```
+
+For scheduled security scans or code-scanning integrations, prefer SARIF and keep dependency audit enabled:
+
+```bash
+xmcp audit --format sarif --output audit.sarif
+```
+
+Recommended rollout:
+
+- Use `--no-heuristics --no-deps` for fast, predictable blocking checks.
+- Use SARIF for scheduled scans or security dashboards.
+- Add baselines only when an existing codebase needs staged adoption.
 
 ## Rules
 

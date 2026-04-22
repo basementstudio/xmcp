@@ -17,7 +17,9 @@ export interface ScannerOptions {
   activeConcerns: Set<Concern>;
   disabledRules?: Set<string>;
   enabledRules?: Set<string>;
+  noHeuristics?: boolean;
   noDeps?: boolean;
+  strictExecutionErrors?: boolean;
   changedFiles?: Set<string> | null;
 }
 
@@ -29,6 +31,7 @@ export async function runScan(options: ScannerOptions): Promise<AuditReport> {
     noDeps: options.noDeps,
     changedFiles: options.changedFiles,
   });
+  ctx.strictExecutionErrors = options.strictExecutionErrors ?? false;
 
   const selected = selectRules(ALL_RULES, ctx, options);
   const ruleById = new Map(selected.map((r) => [r.meta.id, r] as const));
@@ -96,10 +99,13 @@ function safeCheck(rule: Rule, ctx: ScanContext): Finding[] {
     return [
       {
         ruleId: rule.meta.id,
-        severity: "info",
+        severity: ctx.strictExecutionErrors ? "high" : "info",
         concern: rule.meta.concern,
         message: `${rule.meta.id} failed to execute`,
         file: ctx.projectRoot,
+        metadata: {
+          executionError: true,
+        },
       },
     ];
   }
@@ -113,6 +119,7 @@ function selectRules(
   return rules.filter((rule) => {
     if (!ctx.activeConcerns.has(rule.meta.concern)) return false;
     if (options.disabledRules?.has(rule.meta.id)) return false;
+    if (options.noHeuristics && rule.meta.heuristic) return false;
     if (options.enabledRules) {
       return options.enabledRules.has(rule.meta.id);
     }

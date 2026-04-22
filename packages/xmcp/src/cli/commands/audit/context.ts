@@ -96,6 +96,7 @@ export async function buildScanContext(
     changedFiles: options.changedFiles ?? null,
     activeConcerns: options.activeConcerns,
     noDeps: options.noDeps ?? false,
+    strictExecutionErrors: false,
   };
 }
 

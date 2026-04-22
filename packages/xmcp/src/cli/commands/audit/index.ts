@@ -22,8 +22,7 @@ import {
   type Severity,
 } from "./types";
 
-// Kept in sync with packages/xmcp/package.json#version on release.
-const TOOL_VERSION = "0.0.3";
+const { version: TOOL_VERSION } = require("../../../../package.json");
 
 export interface RunAuditResult {
   exitCode: 0 | 1 | 2;
@@ -54,6 +53,16 @@ export async function runAudit(
   const enableSet = options.enableRule
     ? new Set(options.enableRule)
     : undefined;
+  const unknownRuleIds = findUnknownRuleIds([
+    ...(disableSet ? [...disableSet] : []),
+    ...(enableSet ? [...enableSet] : []),
+  ]);
+  if (unknownRuleIds.length > 0) {
+    process.stderr.write(
+      chalk.red(`Unknown rule ID(s): ${unknownRuleIds.join(", ")}\n`)
+    );
+    return { exitCode: 2 };
+  }
 
   if (options.since !== undefined && options.changed) {
     process.stderr.write(
@@ -85,7 +94,10 @@ export async function runAudit(
     activeConcerns: concerns,
     disabledRules: disableSet,
     enabledRules: enableSet,
+    noHeuristics: options.noHeuristics,
     noDeps: options.noDeps,
+    strictExecutionErrors:
+      options.strictExecutionErrors === true || options.ci === true,
     changedFiles,
   });
 
@@ -128,10 +140,17 @@ export async function runAudit(
     process.stdout.write(rendered);
   }
 
-  const failOn = options.failOn ?? report.resolvedFailOn ?? "high";
+  const failOn =
+    options.ci === true
+      ? "high"
+      : (options.failOn ?? report.resolvedFailOn ?? "high");
   const shouldFail = filtered.findings.some(
     (f) => SEVERITY_ORDER[f.severity] >= SEVERITY_ORDER[failOn]
   );
+
+  if (hasExecutionErrors(working)) {
+    return { exitCode: 2 };
+  }
 
   return { exitCode: shouldFail ? 1 : 0 };
 }
@@ -273,6 +292,17 @@ function isValidFormat(
   format: string
 ): format is "terminal" | "json" | "sarif" {
   return format === "terminal" || format === "json" || format === "sarif";
+}
+
+function hasExecutionErrors(report: AuditReport): boolean {
+  return report.findings.some(
+    (finding) => finding.metadata?.executionError === true
+  );
+}
+
+function findUnknownRuleIds(ruleIds: string[]): string[] {
+  const known = new Set(ALL_RULES.map((rule) => rule.meta.id));
+  return [...new Set(ruleIds)].filter((ruleId) => !known.has(ruleId));
 }
 
 function indent(text: string, spaces: number): string {

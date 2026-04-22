@@ -1,25 +1,24 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { compile } from "./compiler";
-import { buildVercelOutput } from "./platforms/build-vercel-output";
-import { buildCloudflareOutput } from "./platforms/build-cloudflare-output";
 import chalk from "chalk";
 import { xmcpLogo } from "./utils/cli-icons";
-import {
-  compilerContext,
-  compilerContextProvider,
-} from "./compiler/compiler-context";
 import { runCreate, type CreateType } from "./cli/commands/create";
+
+const { version } = require("../package.json");
 
 const program = new Command();
 
-program.name("xmcp").description("The MCP framework CLI").version("0.0.1");
+program.name("xmcp").description("The MCP framework CLI").version(version);
 
 program
   .command("dev")
   .description("Start development mode")
   .option("--cf", "Enable Cloudflare Workers output in development")
   .action(async (options) => {
+    const [{ compile }, { compilerContextProvider }] = await Promise.all([
+      import("./compiler"),
+      import("./compiler/compiler-context"),
+    ]);
     console.log(`${xmcpLogo} Starting development mode...`);
     const isCloudflareDev = options.cf || process.env.CF_PAGES === "1";
     await compilerContextProvider(
@@ -40,10 +39,31 @@ program
   .description("Build for production")
   .option("--vercel", "Build for Vercel deployment")
   .option("--cf", "Build for Cloudflare Workers deployment")
+  .option("--audit", "Run a static audit before bundling")
   .action(async (options) => {
     console.log(`${xmcpLogo} Building for production...`);
     const isVercelBuild = options.vercel || process.env.VERCEL === "1";
     const isCloudflareBuild = options.cf || process.env.CF_PAGES === "1";
+
+    if (options.audit === true) {
+      const { runAudit } = await import("./cli/commands/audit");
+      const auditResult = await runAudit({
+        path: process.cwd(),
+        format: "terminal",
+        noDeps: true,
+        noHeuristics: true,
+        strictExecutionErrors: true,
+      });
+      if (auditResult.exitCode !== 0) {
+        process.exit(auditResult.exitCode);
+      }
+    }
+
+    const [{ compile }, { compilerContext, compilerContextProvider }] =
+      await Promise.all([
+        import("./compiler"),
+        import("./compiler/compiler-context"),
+      ]);
 
     await compilerContextProvider(
       {
@@ -56,6 +76,11 @@ program
       async () => {
         await compile({
           onBuild: async () => {
+            const [{ buildVercelOutput }, { buildCloudflareOutput }] =
+              await Promise.all([
+                import("./platforms/build-vercel-output"),
+                import("./platforms/build-cloudflare-output"),
+              ]);
             const { xmcpConfig } = compilerContext.getContext();
             const isUsingAdapter = !!xmcpConfig?.experimental?.adapter;
 
@@ -151,6 +176,7 @@ program
   )
   .option("--disable-rule <ids>", "Comma-separated rule IDs to skip", parseList)
   .option("--enable-rule <ids>", "Exclusive allowlist of rule IDs", parseList)
+  .option("--no-heuristics", "Skip heuristic rules for deterministic scans")
   .option("--no-deps", "Skip dependency vulnerability scan")
   .option("-o, --output <file>", "Write report to a file")
   .option("--ci", "CI mode: no colors, imply --fail-on high")
@@ -180,9 +206,11 @@ program
       failOn: options.failOn,
       disableRule: options.disableRule,
       enableRule: options.enableRule,
+      noHeuristics: options.heuristics === false,
       noDeps: options.deps === false,
       output: options.output,
       ci: options.ci,
+      strictExecutionErrors: options.ci === true,
       baseline:
         options.baseline === true
           ? ""

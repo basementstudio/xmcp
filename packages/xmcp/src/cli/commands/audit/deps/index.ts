@@ -31,10 +31,13 @@ export async function runDepsAudit(ctx: ScanContext): Promise<Finding[]> {
     return [
       {
         ruleId: "XMCP-DEPS-001",
-        severity: "info",
+        severity: ctx.strictExecutionErrors ? "high" : "info",
         concern: "security",
         message: `Dependency audit skipped: ${describeError(err)}`,
         file: lockfile,
+        metadata: {
+          executionError: true,
+        },
       },
     ];
   }
@@ -86,7 +89,36 @@ function runAudit(
   manager: "npm" | "pnpm" | "yarn",
   cwd: string
 ): Promise<string> {
-  const [cmd, ...args] = auditCommand(manager);
+  if (manager === "yarn") {
+    return runYarnAudit(cwd);
+  }
+  return runAuditCommand(auditCommand(manager), cwd, manager);
+}
+
+async function runYarnAudit(cwd: string): Promise<string> {
+  try {
+    return await runAuditCommand(
+      ["yarn", "npm", "audit", "--json"],
+      cwd,
+      "yarn"
+    );
+  } catch (err) {
+    const message = describeError(err);
+    const shouldFallback =
+      message.includes("Unknown Syntax Error") ||
+      message.includes("Unsupported option name") ||
+      message.includes("Command not found");
+    if (!shouldFallback) throw err;
+    return runAuditCommand(["yarn", "audit", "--json"], cwd, "yarn");
+  }
+}
+
+function runAuditCommand(
+  command: string[],
+  cwd: string,
+  manager: "npm" | "pnpm" | "yarn"
+): Promise<string> {
+  const [cmd, ...args] = command;
   return new Promise((resolve, reject) => {
     const proc = spawn(cmd, args, { cwd, shell: false });
     let stdout = "";
@@ -116,8 +148,6 @@ function runAudit(
 function auditCommand(manager: "npm" | "pnpm" | "yarn"): string[] {
   if (manager === "npm") return ["npm", "audit", "--json"];
   if (manager === "pnpm") return ["pnpm", "audit", "--json"];
-  // yarn v2+ uses `yarn npm audit --json`; v1 uses `yarn audit --json`.
-  // Both paths are tried — v2 command first, fallback to v1 if argument error.
   return ["yarn", "npm", "audit", "--json"];
 }
 
