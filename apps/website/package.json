@@ -6,7 +6,8 @@
     "dev": "xmcp dev & basehub dev & next dev",
     "build": "xmcp build && basehub && next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "sync-audit-rules": "tsx scripts/sync-audit-rules.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.80",

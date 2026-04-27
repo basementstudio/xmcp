@@ -1,0 +1,21 @@
+{
+  "name": "Audit Perf & Quality Demo",
+  "description": "Tools intentionally violating xmcp performance and quality rules — fixture for `xmcp audit`.",
+  "keywords": [
+    "audit",
+    "performance",
+    "quality"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "audit": "xmcp audit --no-deps",
+    "audit:perf": "xmcp audit --no-deps --concern performance",
+    "audit:quality": "xmcp audit --no-deps --concern quality",
+    "audit:json": "xmcp audit --no-deps --format json"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
