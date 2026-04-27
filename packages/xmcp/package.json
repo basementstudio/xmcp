@@ -50,6 +50,11 @@
       "require": "./dist/host-bridge.js",
       "default": "./dist/host-bridge.js"
     },
+    "./headers": {
+      "types": "./dist/runtime/headers.d.ts",
+      "require": "./dist/runtime/headers.js",
+      "default": "./dist/runtime/headers.js"
+    },
     "./cloudflare": {
       "types": "./dist/cloudflare.d.ts",
       "import": "./dist/cloudflare.js",
@@ -62,6 +67,9 @@
     "*": {
       "host-bridge": [
         "dist/host-bridge.d.ts"
+      ],
+      "headers": [
+        "dist/runtime/headers.d.ts"
       ],
       "cloudflare": [
         "dist/cloudflare.d.ts"

@@ -48,7 +48,7 @@
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
   "dependencies": {
-    "better-auth": "1.4.5",
+    "better-auth": "1.4.9",
     "express": "^4.22.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -62,7 +62,7 @@
     "@types/pg": "^8.15.6",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.22",
     "chalk": "^5.6.2",
     "cross-env": "^7.0.3",
@@ -71,7 +71,7 @@
     "tailwindcss": "^3.4.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21",
+    "vite": "^6.4.2",
     "xmcp": "workspace:*"
   },
   "peerDependencies": {

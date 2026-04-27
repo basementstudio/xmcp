@@ -11,11 +11,10 @@ import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 import type { CorsConfig } from "@/compiler/config";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
-// @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
-// @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as {
   port: number;
   host: string;
@@ -43,8 +42,10 @@ export class XmcpService implements OnModuleInit, OnModuleDestroy {
     this.logger.debug(`Request ${requestId} started`);
 
     return new Promise((resolve) => {
+      const clientInfo = extractClientInfoFromMessages(req.body);
+
       httpRequestContextProvider(
-        { id: requestId, headers: req.headers },
+        { id: requestId, headers: req.headers, clientInfo },
         async () => {
           try {
             setHeaders(res, corsConfig, req.headers.origin);

@@ -21,6 +21,7 @@
   },
   "include": [
     "src/types/adapter.d.ts",
+    "src/types/injected.d.ts",
     "src/cloudflare.ts",
     "src/host-bridge.ts",
     "src/index.ts",

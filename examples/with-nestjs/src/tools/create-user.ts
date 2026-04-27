@@ -34,21 +34,14 @@ export default async function createUser({
 
   const user = usersStore.create({ name, email });
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: `User created successfully!\n\n${JSON.stringify(
-          {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            createdAt: user.createdAt.toISOString(),
-          },
-          null,
-          2
-        )}`,
-      },
-    ],
-  };
+  return `User created successfully!\n\n${JSON.stringify(
+    {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString(),
+    },
+    null,
+    2
+  )}`;
 }

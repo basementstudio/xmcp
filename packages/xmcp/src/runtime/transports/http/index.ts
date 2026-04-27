@@ -14,15 +14,11 @@ dotenv.config();
 // by the time this is run, the config is already parsed and injected as object
 // the injection handles the boolean case
 
-// @ts-expect-error: injected by compiler
 const httpConfig = HTTP_CONFIG as ResolvedHttpConfig;
-// @ts-expect-error: injected by compiler
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
-// @ts-expect-error: injected by compiler
 const templateConfig = TEMPLATE_CONFIG as TemplateConfig;
 
 // middleware
-// @ts-expect-error: injected by compiler
 const middleware = INJECTED_MIDDLEWARE as () =>
   | Promise<{
       default: Middleware | Middleware[];

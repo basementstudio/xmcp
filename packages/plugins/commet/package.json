@@ -1,0 +1,55 @@
+{
+  "name": "@xmcp-dev/commet",
+  "description": "Commet integration for xmcp — subscription-aware billing, feature gating, and usage tracking",
+  "version": "0.1.0",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "contributors": [
+    {
+      "name": "Decker Urbano",
+      "url": "https://github.com/decker-dev"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "commet",
+    "billing",
+    "monetization",
+    "mcp",
+    "usage-tracking",
+    "feature-gating"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/commet"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@commet/node": "^1.9.0",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*"
+  },
+  "peerDependencies": {
+    "xmcp": "workspace:*"
+  }
+}

@@ -33,7 +33,7 @@ export function generateToolsExportCode(): string {
 
 ${importStatements}
 
-/** 
+/**
  * Runtime-accessible tools function that works from any context.
  * Generated at build time - always up to date with discovered tools.
  * @returns {Promise<ToolRegistry>}
@@ -65,7 +65,7 @@ export async function getTools() {
         if (!("parse" in val) || typeof val.parse !== "function") return false;
         return true;
       });
-      
+
       if (isValidSchema) {
         toolSchema = schema;
       } else {
@@ -89,10 +89,8 @@ export async function getTools() {
       }
     }
 
-    // Make sure tools has annotations with a title
-    if (toolConfig.annotations === undefined) {
-      toolConfig.annotations = {};
-    }
+    // Make sure tools has annotations with a title — shallow copy to avoid mutating shared objects
+    toolConfig.annotations = { ...(toolConfig.annotations ?? {}) };
     if (toolConfig.annotations.title === undefined) {
       toolConfig.annotations.title = toolConfig.name;
     }

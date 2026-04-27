@@ -5,6 +5,7 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 ## Features
 
 ### NestJS Features
+
 - **Configuration Management** - `@nestjs/config` with typed configuration
 - **Validation Pipeline** - Global `ValidationPipe` with `class-validator`
 - **Exception Handling** - Custom `HttpExceptionFilter` for consistent error responses
@@ -12,6 +13,7 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 - **Module Architecture** - Feature module pattern with the Users domain
 
 ### XMCP Features
+
 - Full MCP integration at `/mcp` endpoint
 - Automatic tool, prompt, and resource discovery
 - Tools that interact with application data (Users)
@@ -19,6 +21,7 @@ This example demonstrates a **professional, production-ready** NestJS applicatio
 - Hot reload in development mode
 
 ### XMCP NestJS Integration
+
 - **Lifecycle Hooks** - `XmcpService` implements `OnModuleInit` and `OnModuleDestroy` for proper initialization/shutdown logging
 - **Exception Filter** - `McpExceptionFilter` is scaffolded locally for customizable JSON-RPC error handling
 - **Structured Logging** - All XMCP internal logs use NestJS `Logger`, automatically inheriting your app's logging configuration
@@ -119,6 +122,7 @@ pnpm dev
 ```
 
 This command runs both:
+
 - `xmcp dev` - Watches for changes in tools/prompts/resources and rebuilds
 - `nest start --watch` - Runs NestJS with hot reload
 
@@ -136,14 +140,14 @@ pnpm start
 
 ## Available Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check with memory indicators |
-| `/users` | GET | List all users (REST) |
-| `/users` | POST | Create a new user (REST) |
-| `/users/:id` | GET | Get user by ID (REST) |
-| `/users/:id` | DELETE | Delete user by ID (REST) |
-| `/mcp` | POST | MCP JSON-RPC endpoint |
+| Endpoint     | Method | Description                         |
+| ------------ | ------ | ----------------------------------- |
+| `/health`    | GET    | Health check with memory indicators |
+| `/users`     | GET    | List all users (REST)               |
+| `/users`     | POST   | Create a new user (REST)            |
+| `/users/:id` | GET    | Get user by ID (REST)               |
+| `/users/:id` | DELETE | Delete user by ID (REST)            |
+| `/mcp`       | POST   | MCP JSON-RPC endpoint               |
 
 ## Testing the Application
 
@@ -260,8 +264,8 @@ Uses `@nestjs/config` with typed configuration:
 ```typescript
 // src/config/configuration.ts
 export default () => ({
-  port: parseInt(process.env.PORT || '3000', 10),
-  nodeEnv: process.env.NODE_ENV || 'development',
+  port: parseInt(process.env.PORT || "3000", 10),
+  nodeEnv: process.env.NODE_ENV || "development",
   apiKey: process.env.API_KEY,
 });
 ```
@@ -362,9 +366,7 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function myTool({ input }: InferSchema<typeof schema>) {
-  return {
-    content: [{ type: "text", text: `Result: ${input}` }],
-  };
+  return `Result: ${input}`;
 }
 ```
 
