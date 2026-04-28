@@ -162,6 +162,24 @@ Minimal example:
 `@xmcp-dev/ui/styles.css` handles the Tailwind `@source` wiring for the package,
 so you do not need to point Tailwind at package internals directly.
 
+## Existing Project Init
+
+After installing the package in an existing xmcp project, scaffold the starter
+files explicitly:
+
+```bash
+npx @xmcp-dev/ui init
+```
+
+The init command adds `src/globals.css`, `postcss.config.mjs`, a `renderJson`
+tool, and a small handwritten React MCP App. It updates missing dependencies in
+`package.json`, but it does not run install for you.
+
+Useful options:
+
+- `--dry-run` to preview changes
+- `--force` to replace existing starter files
+
 ## When To Use Each Surface
 
 Use `createRenderJsonTool()` when you want the normal schema-driven path.

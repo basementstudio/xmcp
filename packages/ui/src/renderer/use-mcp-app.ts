@@ -3,6 +3,7 @@ import {
   createMcpHostBridge,
   type McpHostCallToolParams,
   type McpHostBridge,
+  type McpHostBridgeState,
   type McpHostCapabilities,
   type McpHostContainerDimensions,
   type McpHostContext,
@@ -26,7 +27,9 @@ export interface UseMcpHostBridgeResult {
   ) => Promise<McpHostRequestDisplayModeResult>;
   openLink: (url: string) => Promise<void>;
   readResource: (uri: string) => Promise<McpHostReadResourceResult>;
-  sendMessage: (params: McpHostSendMessageParams) => Promise<McpHostMessageResult>;
+  sendMessage: (
+    params: McpHostSendMessageParams
+  ) => Promise<McpHostMessageResult>;
   updateModelContext: (
     params: McpHostUpdateModelContextParams
   ) => Promise<McpHostModelContextResult>;
@@ -48,7 +51,7 @@ export function useMcpHostBridge(): UseMcpHostBridgeResult {
   const [state, setState] = useState(() => bridge.getState());
 
   useEffect(() => {
-    const unsubscribe = bridge.subscribe((nextState) => {
+    const unsubscribe = bridge.subscribe((nextState: McpHostBridgeState) => {
       setState(nextState);
     });
 
@@ -80,9 +83,7 @@ export function useMcpApp(): UseMcpAppResult {
   return useMcpHostBridge();
 }
 
-export function useAutoMcpAppSize(
-  elementRef: RefObject<Element | null>
-) {
+export function useAutoMcpAppSize(elementRef: RefObject<Element | null>) {
   const { isConnected, notifySizeChanged } = useMcpApp();
 
   useEffect(() => {
