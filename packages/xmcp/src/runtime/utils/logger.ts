@@ -35,31 +35,15 @@ const LOG_LEVELS: LogLevel[] = [
 ];
 const LOG_LEVEL_SET = new Set<LogLevel>(LOG_LEVELS);
 
-const SESSION_LOG_LEVEL_TTL_MS = 30 * 60 * 1000;
-const sessionLogLevels = new Map<
-  string,
-  { level: LogLevel; expiresAt: number }
->();
-
-function cleanupExpiredSessionLogLevels(now: number): void {
-  for (const [sessionId, entry] of sessionLogLevels.entries()) {
-    if (entry.expiresAt <= now) {
-      sessionLogLevels.delete(sessionId);
-    }
-  }
-}
+const sessionLogLevels = new Map<string, LogLevel>();
 
 export function setLogLevel(level: LogLevel, sessionId?: string): void {
-  if (!sessionId) {
-    return;
-  }
-
-  const now = Date.now();
-  cleanupExpiredSessionLogLevels(now);
-  sessionLogLevels.set(sessionId, {
-    level,
-    expiresAt: now + SESSION_LOG_LEVEL_TTL_MS,
-  });
+  // No sessionId means the request is from a transport that can't correlate
+  // future requests (e.g. stateless HTTP without a client-supplied
+  // mcp-session-id). Storing under a synthetic key would silently leak across
+  // unrelated clients, so the level is simply not persisted.
+  if (!sessionId) return;
+  sessionLogLevels.set(sessionId, level);
 }
 
 export function isLogLevel(value: unknown): value is LogLevel {
@@ -67,21 +51,8 @@ export function isLogLevel(value: unknown): value is LogLevel {
 }
 
 function getCurrentLogLevel(sessionId?: string): LogLevel {
-  if (!sessionId) {
-    return "debug";
-  }
-
-  const now = Date.now();
-  cleanupExpiredSessionLogLevels(now);
-
-  const entry = sessionLogLevels.get(sessionId);
-  if (!entry) {
-    return "debug";
-  }
-
-  // Sliding TTL: keep active sessions alive.
-  entry.expiresAt = now + SESSION_LOG_LEVEL_TTL_MS;
-  return entry.level;
+  if (!sessionId) return "debug";
+  return sessionLogLevels.get(sessionId) ?? "debug";
 }
 
 function shouldLog(level: LogLevel, sessionId?: string): boolean {
@@ -127,23 +98,22 @@ function getLoggerContext(): LoggerContext | undefined {
   }
 }
 
-/**
- * Importable logger that resolves server/sessionId from async context.
- * Use inside any tool, prompt, or resource handler:
- *
- * ```ts
- * import { logger } from "xmcp";
- * logger.info("hello", "my-tool");
- * ```
- */
-export const logger: Logger = {} as Logger;
+type LoggerMethod = (data: unknown, loggerName?: string) => void;
 
-for (const level of LOG_LEVELS) {
-  logger[level] = (data: unknown, loggerName?: string) => {
+function makeLoggerMethod(level: LogLevel): LoggerMethod {
+  return (data, loggerName) => {
+    // Dropping undefined keeps the wire payload well-formed: JSON.stringify
+    // would otherwise omit `data`, producing a notification missing the
+    // field the spec says is required.
+    if (data === undefined) return;
+
     const ctx = getLoggerContext();
     if (!ctx) return;
 
     const sessionId = resolveSessionId(ctx.sessionId);
+    // Short-circuit before the SDK serializes the notification. The SDK runs
+    // its own filter inside sendLoggingMessage, but only after building the
+    // JSON-RPC message — bailing here keeps the hot path cheap.
     if (!shouldLog(level, sessionId)) return;
 
     try {
@@ -151,8 +121,41 @@ for (const level of LOG_LEVELS) {
         { level, logger: loggerName, data },
         sessionId
       );
-    } catch {
-      // Logging must never crash the caller.
+    } catch (err) {
+      // Logging must never crash the caller. In development surface the
+      // failure on stderr so circular refs / BigInt / unserialisable values
+      // don't disappear silently. stderr (not console.warn) avoids the
+      // valerules hook and is safe in stdio mode.
+      if (process.env.NODE_ENV !== "production") {
+        const message = err instanceof Error ? err.message : String(err);
+        process.stderr.write(
+          `[xmcp logger] dropped ${level} message from ${loggerName ?? "<anonymous>"}: ${message}\n`
+        );
+      }
     }
   };
 }
+
+/**
+ * Importable logger that resolves server/sessionId from async context.
+ * Use inside any tool, prompt, or resource handler:
+ *
+ * ```ts
+ * import { logger } from "xmcp";
+ * logger.warning("hello", "my-tool");
+ * ```
+ */
+// Using Record<LogLevel, ...> rather than a runtime loop so the compiler
+// errors if a level is added to LogLevel and not wired up here.
+const loggerMethods: Record<LogLevel, LoggerMethod> = {
+  debug: makeLoggerMethod("debug"),
+  info: makeLoggerMethod("info"),
+  notice: makeLoggerMethod("notice"),
+  warning: makeLoggerMethod("warning"),
+  error: makeLoggerMethod("error"),
+  critical: makeLoggerMethod("critical"),
+  alert: makeLoggerMethod("alert"),
+  emergency: makeLoggerMethod("emergency"),
+};
+
+export const logger: Logger = loggerMethods;

@@ -49,16 +49,16 @@ No need to accept `extra` as a parameter, `logger` automatically resolves the cu
 
 The logging levels follow [RFC 5424](https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1) severity levels, from least to most severe:
 
-| Method        | Description                      | Example Use Case           |
-| ------------- | -------------------------------- | -------------------------- |
-| `debug`       | Detailed debugging information   | Function entry/exit points |
-| `info`        | General informational messages   | Operation progress updates |
-| `notice`      | Normal but significant events    | Configuration changes      |
-| `warning`     | Warning conditions               | Deprecated feature usage   |
-| `error`       | Error conditions                 | Operation failures         |
-| `critical`    | Critical conditions              | System component failures  |
-| `alert`       | Action must be taken immediately | Data corruption detected   |
-| `emergency`   | System is unusable               | Complete system failure    |
+| Method      | Description                      | Example Use Case           |
+| ----------- | -------------------------------- | -------------------------- |
+| `debug`     | Detailed debugging information   | Function entry/exit points |
+| `info`      | General informational messages   | Operation progress updates |
+| `notice`    | Normal but significant events    | Configuration changes      |
+| `warning`   | Warning conditions               | Deprecated feature usage   |
+| `error`     | Error conditions                 | Operation failures         |
+| `critical`  | Critical conditions              | System component failures  |
+| `alert`     | Action must be taken immediately | Data corruption detected   |
+| `emergency` | System is unusable               | Complete system failure    |
 
 ## Sending a Message
 
@@ -76,6 +76,25 @@ logger.info(data: unknown, loggerName?: string): void
 Clients can send a `logging/setLevel` request to control which messages they receive. When a client sets the level to `"warning"`, only messages at `warning` severity and above are delivered; `debug`, `info`, and `notice` messages are silently dropped.
 
 If no level has been set by the client, all messages are sent.
+
+### Transport behavior
+
+The level is associated with a session. How that session is identified depends on the transport:
+
+| Transport                                                   | How the level is correlated to subsequent requests                                                                                                                                                         |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stdio`                                                     | Implicitly tied to the stdio process lifetime — the level is honored as long as the server is running.                                                                                                     |
+| HTTP stateless (Node, Cloudflare Workers, Express, Next.js) | Tied to the `mcp-session-id` request header. Clients must include the same header on every subsequent request for the level to apply. Without the header, the level only affects the request that sets it. |
+
+xmcp does not currently ship a stateful streamable HTTP transport.
+
+#### Multi-instance HTTP deployments
+
+Per-session levels are stored in memory on the process that handled `logging/setLevel`. If you deploy xmcp behind a load balancer with multiple workers, configure sticky routing on the `mcp-session-id` header so subsequent requests from the same client land on the same instance — otherwise the level set on instance A is invisible to instance B and filtering reverts to the permissive default for that request.
+
+#### stdio: prefer `logger` over `console.log`
+
+stdio uses stdout for the JSON-RPC channel. A `console.log` from inside a handler corrupts the stream and breaks the connection unless you set `stdio.silent: true` in `xmcp.config.ts` (which redirects all `console.*` to stderr). Using `logger.X()` is always safe — it sends a `notifications/message` over the protocol instead of writing to stdout.
 
 ## Handler Support
 
