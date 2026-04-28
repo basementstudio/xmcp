@@ -121,6 +121,7 @@ export function getRspackConfig(
     output: {
       filename: outputFilename,
       path: outputPath,
+      globalObject: "globalThis",
       ...(isCloudflare
         ? {
             library: { type: "module" },

@@ -7,6 +7,7 @@ import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
+import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
 import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
@@ -79,7 +80,15 @@ function createToolExtraArguments(
   try {
     clientInfo = getHttpRequestContext().clientInfo;
   } catch {
-    // no request context available (for example, stdio transport)
+    // no HTTP request context available (for example, stdio transport)
+  }
+
+  if (!clientInfo) {
+    try {
+      clientInfo = getClientInfoContext().clientInfo;
+    } catch {
+      // no client info context available
+    }
   }
 
   return {

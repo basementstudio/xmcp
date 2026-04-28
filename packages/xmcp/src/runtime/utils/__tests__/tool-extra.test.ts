@@ -5,6 +5,7 @@ import {
   type UserToolResponse,
 } from "../transformers/tool";
 import { httpRequestContextProvider } from "../../contexts/http-request-context";
+import { clientInfoContextProvider } from "../../contexts/client-info-context";
 
 type MinimalExtra = {
   signal: AbortSignal;
@@ -104,6 +105,44 @@ test("transformToolHandler leaves clientInfo undefined when request has no initi
       {
         type: "text",
         text: '{"hasClientInfo":false}',
+      },
+    ],
+  });
+});
+
+test("transformToolHandler uses stdio clientInfo context as fallback", async () => {
+  const transformedHandler = transformToolHandler((_args, extra) => {
+    return {
+      structuredContent: {
+        clientInfoName: extra.clientInfo?.name,
+        clientInfoVersion: extra.clientInfo?.version,
+      },
+    };
+  });
+
+  const result = await new Promise<UserToolResponse>((resolve, reject) => {
+    clientInfoContextProvider(
+      {
+        clientInfo: {
+          name: "opencode",
+          version: "1.2.3",
+        },
+      },
+      () => {
+        invokeHandler(transformedHandler, "rpc-3").then(resolve).catch(reject);
+      }
+    );
+  });
+
+  assert.deepStrictEqual(result, {
+    structuredContent: {
+      clientInfoName: "opencode",
+      clientInfoVersion: "1.2.3",
+    },
+    content: [
+      {
+        type: "text",
+        text: '{"clientInfoName":"opencode","clientInfoVersion":"1.2.3"}',
       },
     ],
   });

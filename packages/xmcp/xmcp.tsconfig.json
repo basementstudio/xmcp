@@ -20,10 +20,10 @@
     "emitDecoratorMetadata": true,
   },
   "include": [
-    "src/types/declarations.d.ts",
     "src/types/adapter.d.ts",
     "src/types/injected.d.ts",
     "src/cloudflare.ts",
+    "src/host-bridge.ts",
     "src/index.ts",
     "src/runtime/headers.ts",
   ],

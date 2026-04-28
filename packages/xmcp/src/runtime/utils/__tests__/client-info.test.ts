@@ -3,6 +3,7 @@ import assert from "node:assert";
 import {
   extractClientInfoFromMessage,
   extractClientInfoFromMessages,
+  mapImplementationToClientInfo,
 } from "../client-info";
 
 test("extractClientInfoFromMessage returns undefined for non-initialize methods", () => {
@@ -76,5 +77,23 @@ test("extractClientInfoFromMessages supports batch requests", () => {
   assert.deepStrictEqual(result, {
     name: "opencode",
     version: "1.2.3",
+  });
+});
+
+test("mapImplementationToClientInfo maps SDK implementation shape", () => {
+  const result = mapImplementationToClientInfo({
+    name: "claude-code",
+    version: "2.1.0",
+    title: "Claude Code",
+    websiteUrl: "https://claude.ai",
+    description: "CLI coding agent",
+  });
+
+  assert.deepStrictEqual(result, {
+    name: "claude-code",
+    version: "2.1.0",
+    title: "Claude Code",
+    websiteUrl: "https://claude.ai",
+    description: "CLI coding agent",
   });
 });
