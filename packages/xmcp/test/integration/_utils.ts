@@ -9,6 +9,18 @@ const PACKAGE_ROOT = path.resolve(__dirname, "..", "..");
 const FIXTURES_DIR = path.join(PACKAGE_ROOT, "test", "fixtures");
 const CLI_PATH = path.join(PACKAGE_ROOT, "dist", "cli.js");
 
+// Grace window for SIGTERM → SIGKILL during test cleanup. 5s lets the http
+// and stdio entries flush in-flight responses without dragging the suite out.
+const SIGTERM_GRACE_MS = 5_000;
+
+// Hard ceiling for the http server to print its `running on http://…:PORT`
+// startup line. 20s covers cold starts on shared CI runners.
+const SERVER_STARTUP_TIMEOUT_MS = 20_000;
+
+// Hard ceiling for a single JSON-RPC reply over stdio. 10s is well above any
+// real round-trip and short enough to fail fast when the server hangs.
+const STDIO_REQUEST_TIMEOUT_MS = 10_000;
+
 export interface ServerHandle {
   child: ChildProcess;
   port: number;
@@ -132,7 +144,7 @@ export async function spawnHttpServer(
       child.kill("SIGTERM");
       await Promise.race([
         once(child, "exit"),
-        new Promise((resolve) => setTimeout(resolve, 5_000)),
+        new Promise((resolve) => setTimeout(resolve, SIGTERM_GRACE_MS)),
       ]);
       if (child.exitCode === null) {
         child.kill("SIGKILL");
@@ -171,10 +183,10 @@ async function readBoundPort(child: ChildProcess): Promise<number> {
       child.off("exit", onExit);
       reject(
         new Error(
-          `Server did not report a bound port within 20s. Output:\n${buffer}`
+          `Server did not report a bound port within ${SERVER_STARTUP_TIMEOUT_MS}ms. Output:\n${buffer}`
         )
       );
-    }, 20_000).unref();
+    }, SERVER_STARTUP_TIMEOUT_MS).unref();
   });
 }
 
@@ -285,11 +297,11 @@ export async function spawnStdioClient(
             pending.delete(message.id);
             reject(
               new Error(
-                `stdio request id=${message.id} method=${message.method} timed out after 10s`
+                `stdio request id=${message.id} method=${message.method} timed out after ${STDIO_REQUEST_TIMEOUT_MS}ms`
               )
             );
           }
-        }, 10_000);
+        }, STDIO_REQUEST_TIMEOUT_MS);
         timer.unref();
         child.stdin!.write(
           JSON.stringify({ jsonrpc: "2.0", ...message }) + "\n"
@@ -305,7 +317,7 @@ export async function spawnStdioClient(
       child.kill("SIGTERM");
       await Promise.race([
         once(child, "exit"),
-        new Promise((resolve) => setTimeout(resolve, 5_000)),
+        new Promise((resolve) => setTimeout(resolve, SIGTERM_GRACE_MS)),
       ]);
       if (child.exitCode === null) {
         child.kill("SIGKILL");

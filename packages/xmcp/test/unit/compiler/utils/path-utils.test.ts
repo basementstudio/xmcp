@@ -123,6 +123,10 @@ test("pathToToolName - real world scenario with collision prevention", () => {
   expect(new Set([basicCalc, advancedCalc, scientificCalc]).size).toBe(3);
 });
 
+// TODO(canary): pins current behaviour — `tools//x.tsx` → `tools__x_<hash>`.
+// Realistic on Windows (`tools\\x.tsx` normalizes to `tools//x.tsx`) and with
+// trailing-slash `paths` config. Decide on canary whether to collapse
+// consecutive separators in `normalizeAndGetBaseName`. See test/ROADMAP.md §2.2.
 test("pathToToolName - empty path segments produce consecutive underscores", () => {
   expect(pathToToolName("tools//calculator.tsx")).toMatch(
     /^tools__calculator_[a-f0-9]{6}$/

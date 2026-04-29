@@ -44,40 +44,47 @@ The current branch ships:
 
 ---
 
-## Phase 2 — Hygiene cleanup [S, ~1h]
+## Phase 2 — Hygiene cleanup [DONE]
 
-Carry-overs surfaced during the foundation review.
+Carry-overs surfaced during the foundation review. Shipped: 2.1 (magic timeouts extracted) and 2.2 (canary TODO recorded inline). 2.3 (lint reactivation) deferred to a structural PR — see below.
 
-### 2.1 Rule 3 — extract magic timeouts
+### 2.1 Rule 3 — extract magic timeouts [DONE]
 
-`packages/xmcp/test/integration/_utils.ts` has four raw `setTimeout(..., N)` literals (lines 135, 169, 283, 308). The Stop hook flags them.
-
-Hoist to named constants at the top of the file with one-line "why this number" comments:
+`packages/xmcp/test/integration/_utils.ts` had four raw `setTimeout(..., N)` literals. Hoisted to three named constants at the top of the file with WHY comments:
 
 ```ts
-// Grace window for SIGTERM → SIGKILL during test cleanup.
-const SIGTERM_GRACE_MS = 5_000;
-// Hard ceiling for the http server to print its bound-port log line.
-const SERVER_STARTUP_TIMEOUT_MS = 20_000;
-// Hard ceiling for a JSON-RPC reply over stdio.
-const STDIO_REQUEST_TIMEOUT_MS = 10_000;
+const SIGTERM_GRACE_MS = 5_000;            // SIGTERM → SIGKILL grace
+const SERVER_STARTUP_TIMEOUT_MS = 20_000;  // http startup-line ceiling
+const STDIO_REQUEST_TIMEOUT_MS = 10_000;   // stdio JSON-RPC reply ceiling
 ```
 
-Replace each literal accordingly.
+The two embedded error strings ("within 20s", "after 10s") were also templated off the constants so they can't drift. Stop hook (`bash .claude/hooks/valerules-check.sh`) exits 0 on the diff. Suite still 174/174 green.
 
-**Verify:** `bash .claude/hooks/valerules-check.sh` exits 0.
+### 2.2 path-utils empty-segment behaviour [CANARY TODO]
 
-### 2.2 path-utils empty-segment behaviour
+`test/unit/compiler/utils/path-utils.test.ts:126` asserts `tools__calculator` (double underscore) for `"tools//calculator.tsx"`. The behaviour comes from `src/runtime/utils/path-to-tool-name.ts` — `normalizeAndGetBaseName` runs `path.replace(/\\/g, "/")` then `withoutExtension.replace(/\//g, "_")` without first deduping consecutive `/`. Each empty segment becomes its own `_`.
 
-`test/unit/compiler/utils/path-utils.test.ts` now asserts `tools__calculator` (double underscore) for `"tools//calculator.tsx"`. The original test asserted single underscore. The current behaviour comes from `src/runtime/utils/path-to-tool-name.ts`'s `normalizeAndGetBaseName` which doesn't dedupe consecutive separators.
+**How it can actually surface (not just a synthetic test input):**
 
-**Action:** open a GitHub issue: "`pathToToolName('tools//x.tsx')` produces double underscore — intentional?" — let the maintainer decide. Don't fix the impl in a test PR.
+1. **Windows paths.** `tools\\calculator.tsx` (escaped backslash from JSON, env vars, or string concat) normalizes to `tools//calculator.tsx` → `tools__calculator_<hash>`.
+2. **Trailing-slash config.** A `paths: { tools: "src/tools/" }` entry concatenated with a slash-prefixed glob result yields `src/tools//calculator.tsx`.
+3. **Manual string concat over `path.join`.** Any caller that builds paths with `+` instead of `node:path`.
 
-### 2.3 Lint reactivation (optional)
+Two real call sites are exposed: `compiler/index.ts:427` (`reactToolPath`) and `runtime/utils/resources.ts:107` (`autoResource.toolPath`).
+
+**Fix on canary** (out of scope for this Phase 2 PR — left as a TODO for the maintainer):
+
+- Decide: collapse consecutive separators, or keep current behaviour as a stable hash input?
+- If collapsing: dedupe `/+` to `/` in `normalizeAndGetBaseName` *before* the underscore replace. Update the test at `path-utils.test.ts:126` to assert the new single-underscore output. Note this changes generated tool names for any user currently hitting the edge case — call it out in the changelog.
+- If keeping: rename the test (e.g. "consecutive separators are preserved as consecutive underscores — stable, intentional") and add a `// stable: don't normalize` comment in `path-to-tool-name.ts`.
+
+A `TODO(canary)` marker has been added at `test/unit/compiler/utils/path-utils.test.ts:126` pointing back here so the next person touching the test sees it.
+
+### 2.3 Lint reactivation (optional) [DEFERRED]
 
 `packages/xmcp/.eslintrc.js` uses legacy format; `packages/eslint-config-custom/eslint.config.js` uses flat config. They don't bridge cleanly — `pnpm exec eslint` fails at the package level today. The CI lint job currently runs `pnpm turbo lint --filter=xmcp` but xmcp has no `lint` script, so it's a no-op.
 
-**Action:** consolidate on flat config OR drop the requirement until consolidated. Either way is structural and may need a separate PR.
+**Status:** deferred to its own structural PR — out of scope for the Phase 2 hygiene cleanup. Two paths when it lands: consolidate on flat config, or drop the CI lint job until consolidated.
 
 ---
 
