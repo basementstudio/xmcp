@@ -28,6 +28,14 @@ Tests live under `test/` rather than `src/__tests__/` so the npm tarball stays c
 
 Integration tests spawn the built `dist/cli.js`, so run `pnpm build` first (or use turbo: `pnpm test` from the repo root chains build → test automatically).
 
+The performance suite (`test/integration/perf.test.ts`) is gated on `PERF=1` and skipped otherwise — perf signals are too noisy on shared PR runners. Run it explicitly when you want it:
+
+```bash
+PERF=1 pnpm test:integration -- integration/perf.test.ts
+```
+
+It's a catastrophic-regression detector (fixed absolute ceilings: 30s build, 15s http cold start), not a drift tracker — see the comment at the top of the file for the rationale and tuning notes.
+
 ### Reporters: local vs CI
 
 The vitest config switches reporters based on `process.env.CI`:
