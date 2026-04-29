@@ -1,20 +1,22 @@
-import assert from "node:assert/strict";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { beforeEach, afterEach, describe, it } from "node:test";
 
-function runCli(args: string[], cwd: string, env: NodeJS.ProcessEnv = {}) {
-  return spawnSync(
-    "node",
-    [path.join(process.cwd(), "dist/index.js"), ...args],
-    {
-      cwd,
-      encoding: "utf8",
-      env: { ...process.env, XMCP_CLI_TEST_MODE: "1", ...env },
-    }
-  );
+const PACKAGE_ROOT = path.resolve(__dirname, "..", "..");
+const CLI_ENTRY = path.join(PACKAGE_ROOT, "dist", "index.js");
+
+function runCli(
+  args: string[],
+  cwd: string,
+  env: NodeJS.ProcessEnv = {}
+) {
+  return spawnSync("node", [CLI_ENTRY, ...args], {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, XMCP_CLI_TEST_MODE: "1", ...env },
+  });
 }
 
 function writeClientsFile(dir: string, contents: string) {
@@ -42,8 +44,8 @@ describe("xmcp-dev/cli generate", () => {
   it("errors when no clients.ts is present", () => {
     const result = runCli(["generate"], tempDir);
 
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /No clients found/);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/No clients found/);
   });
 
   it("generates from clients.ts (http entry)", () => {
@@ -56,11 +58,11 @@ describe("xmcp-dev/cli generate", () => {
 
     const result = runCli(["generate"], tempDir);
 
-    assert.equal(result.status, 0);
+    expect(result.status).toBe(0);
     const index = readGeneratedFile(tempDir, "client.index.ts");
     const client = readGeneratedFile(tempDir, "client.remote.ts");
-    assert.match(index, /generatedClients/);
-    assert.match(client, /clientRemote/);
+    expect(index).toMatch(/generatedClients/);
+    expect(client).toMatch(/clientRemote/);
   });
 
   it("continues generating other clients when one fetch fails", () => {
@@ -76,14 +78,14 @@ describe("xmcp-dev/cli generate", () => {
       XMCP_CLI_TEST_FAIL_CLIENTS: "bad",
     });
 
-    assert.equal(result.status, 0);
+    expect(result.status).toBe(0);
     const index = readGeneratedFile(tempDir, "client.index.ts");
     const badClient = readGeneratedFile(tempDir, "client.bad.ts");
     const goodClient = readGeneratedFile(tempDir, "client.good.ts");
 
-    assert.equal(badClient, "");
-    assert.notEqual(goodClient, "");
-    assert.match(index, /clientGood/);
-    assert.ok(!index.includes("clientBad"));
+    expect(badClient).toBe("");
+    expect(goodClient).not.toBe("");
+    expect(index).toMatch(/clientGood/);
+    expect(index).not.toContain("clientBad");
   });
 });

@@ -40,7 +40,9 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist",
     "pretest": "pnpm run build",
-    "test": "tsx --test __tests__/*.test.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "CI=1 vitest run"
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
@@ -50,6 +52,7 @@
   "devDependencies": {
     "@types/node": "^22.19.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
   }
 }

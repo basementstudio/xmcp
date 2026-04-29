@@ -1,9 +1,8 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
-import assert from "node:assert";
-import path from "path";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import path from "node:path";
+import os from "node:os";
 import fs from "fs-extra";
-import os from "os";
-import { updateTsConfig } from "../helpers/update-tsconfig.js";
+import { updateTsConfig } from "../../src/helpers/update-tsconfig.js";
 
 describe("updateTsConfig", () => {
   let tempDir: string;
@@ -37,12 +36,12 @@ describe("updateTsConfig", () => {
 
     const updated = fs.readJsonSync(tsconfigPath);
 
-    assert.strictEqual(updated.compilerOptions.strict, true);
-    assert.deepStrictEqual(updated.compilerOptions.paths["@app/*"], ["./src/*"]);
-    assert.deepStrictEqual(updated.compilerOptions.paths["@xmcp/*"], ["./.xmcp/*"]);
-    assert.deepStrictEqual(updated.exclude, ["dist"]);
-    assert.ok(updated.include.includes("src"));
-    assert.ok(updated.include.includes("xmcp-env.d.ts"));
+    expect(updated.compilerOptions.strict).toBe(true);
+    expect(updated.compilerOptions.paths["@app/*"]).toEqual(["./src/*"]);
+    expect(updated.compilerOptions.paths["@xmcp/*"]).toEqual(["./.xmcp/*"]);
+    expect(updated.exclude).toEqual(["dist"]);
+    expect(updated.include).toContain("src");
+    expect(updated.include).toContain("xmcp-env.d.ts");
   });
 
   it("creates compilerOptions and paths when missing", () => {
@@ -53,8 +52,7 @@ describe("updateTsConfig", () => {
 
     const updated = fs.readJsonSync(tsconfigPath);
 
-    assert.deepStrictEqual(updated.compilerOptions.paths["@xmcp/*"], ["./.xmcp/*"]);
-    assert.ok(updated.include.includes("xmcp-env.d.ts"));
+    expect(updated.compilerOptions.paths["@xmcp/*"]).toEqual(["./.xmcp/*"]);
+    expect(updated.include).toContain("xmcp-env.d.ts");
   });
 });
-
