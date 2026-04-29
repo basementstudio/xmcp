@@ -1,0 +1,56 @@
+name: Examples & CLI smoke
+
+# Slow CLI/example smoke tests. Off the PR critical path — runs only on push
+# to main/canary. Use `gh workflow run examples.yml` to dispatch manually.
+on:
+  push:
+    branches: [main, canary]
+  workflow_dispatch:
+
+jobs:
+  cli-smoke:
+    name: CLI smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+
+      - name: xmcp CLI is executable
+        run: |
+          cd packages/xmcp
+          node dist/cli.js --help > /dev/null
+
+      - name: create-xmcp-app scaffolds a project
+        run: |
+          set -e
+          TEST_DIR=$(mktemp -d)
+          pnpm --filter=create-xmcp-app pack
+          PACK_FILE=$(ls packages/create-xmcp-app/create-xmcp-app-*.tgz)
+          npm install -g "$PACK_FILE"
+          cd "$TEST_DIR"
+          create-xmcp-app test-project --yes --use-npm
+          test -d test-project
+
+      - name: init-xmcp adds xmcp to a project
+        run: |
+          set -e
+          TEST_DIR=$(mktemp -d)
+          pnpm --filter=init-xmcp pack
+          PACK_FILE=$(ls packages/init-xmcp/init-xmcp-*.tgz)
+          npm install -g "$PACK_FILE"
+          cd "$TEST_DIR"
+          init-xmcp test-init-project --yes --nextjs
+          test -d test-init-project

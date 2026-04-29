@@ -1,19 +1,18 @@
-import { describe, it } from "node:test";
-import assert from "node:assert";
+import { describe, it, expect } from "vitest";
 import {
   splitUIMetaNested,
   isToolMetaKeyNested,
   isResourceMetaKeyNested,
   type SplitMetadata,
-} from "../split-meta";
+} from "@/runtime/utils/ui/split-meta";
 
 describe("splitUIMetaNested", () => {
   describe("Basic Functionality", () => {
     it("should return empty toolMeta and resourceMeta for empty input", () => {
       const result = splitUIMetaNested({});
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle metadata without ui key", () => {
@@ -23,11 +22,11 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         someKey: "someValue",
         anotherKey: 123,
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle metadata with empty ui object", () => {
@@ -36,8 +35,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({});
     });
   });
 
@@ -50,12 +49,12 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should preserve ui/resourceUri with various URI formats", () => {
@@ -73,11 +72,7 @@ describe("splitUIMetaNested", () => {
         };
         const result = splitUIMetaNested(meta);
 
-        assert.deepStrictEqual(
-          result.toolMeta.ui?.["ui/resourceUri"],
-          uri,
-          `Failed for URI: ${uri}`
-        );
+        expect(result.toolMeta.ui?.["ui/resourceUri"]).toBe(uri);
       }
     });
 
@@ -89,12 +84,12 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           visibility: ["model", "app"],
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
   });
 
@@ -107,8 +102,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: true,
         },
@@ -123,8 +118,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           domain: "https://weather-widget.example.com",
         },
@@ -144,8 +139,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.weather.com"],
@@ -168,8 +163,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           permissions: {
             camera: {},
@@ -182,15 +177,21 @@ describe("splitUIMetaNested", () => {
     it("should split connectDomains to resourceMeta", () => {
       const meta = {
         ui: {
-          connectDomains: ["https://api.openweathermap.org", "wss://realtime.service.com"],
+          connectDomains: [
+            "https://api.openweathermap.org",
+            "wss://realtime.service.com",
+          ],
         },
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
-          connectDomains: ["https://api.openweathermap.org", "wss://realtime.service.com"],
+          connectDomains: [
+            "https://api.openweathermap.org",
+            "wss://realtime.service.com",
+          ],
         },
       });
     });
@@ -198,15 +199,21 @@ describe("splitUIMetaNested", () => {
     it("should split resourceDomains to resourceMeta", () => {
       const meta = {
         ui: {
-          resourceDomains: ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"],
+          resourceDomains: [
+            "https://cdn.jsdelivr.net",
+            "https://*.cloudflare.com",
+          ],
         },
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
-          resourceDomains: ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"],
+          resourceDomains: [
+            "https://cdn.jsdelivr.net",
+            "https://*.cloudflare.com",
+          ],
         },
       });
     });
@@ -225,8 +232,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: true,
           domain: "https://my-widget.example.com",
@@ -255,12 +262,12 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: true,
           domain: "https://weather-widget.example.com",
@@ -273,7 +280,6 @@ describe("splitUIMetaNested", () => {
     });
 
     it("should handle complete SEP-1865 tool metadata example", () => {
-      // Example from SEP-1865 specification
       const meta = {
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard-template",
@@ -281,16 +287,15 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard-template",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle complete SEP-1865 resource metadata example", () => {
-      // Example from SEP-1865 specification
       const meta = {
         ui: {
           csp: {
@@ -302,8 +307,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.openweathermap.org"],
@@ -325,13 +330,13 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           unknownKey: "someValue",
           anotherUnknown: { nested: true },
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should put unknown keys alongside known tool keys", () => {
@@ -343,13 +348,13 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://my-app/widget",
           customExtension: "customValue",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle mixed known and unknown keys", () => {
@@ -362,13 +367,13 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://my-app/widget",
           customToolProperty: "value",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: false,
         },
@@ -385,12 +390,12 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         timestamp: "2025-11-10T15:30:00Z",
         source: "weather-api",
         version: "1.0.0",
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should preserve non-ui metadata alongside ui metadata", () => {
@@ -404,14 +409,14 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://my-app/widget",
         },
         timestamp: "2025-11-10T15:30:00Z",
         source: "weather-api",
       });
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: true,
         },
@@ -419,7 +424,6 @@ describe("splitUIMetaNested", () => {
     });
 
     it("should handle _meta pattern from SEP-1865", () => {
-      // Test the _meta pattern used in tool results
       const _meta = {
         ui: {
           csp: {
@@ -433,11 +437,11 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(_meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         timestamp: "2025-11-10T15:30:00Z",
         source: "weather-api",
       });
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.example.com"],
@@ -456,11 +460,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta as any);
 
-      // ui is not an object, so the check `typeof meta.ui === "object"` fails
-      // and the ui key is not processed. Since non-ui keys go to toolMeta
-      // via the second loop, but the second loop skips `ui` key, result is empty.
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle ui key that is null", () => {
@@ -469,10 +470,8 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta as any);
 
-      // null passes `typeof meta.ui === "object"` but fails Object.entries iteration
-      // The second loop skips `ui` key, so result is empty
-      assert.deepStrictEqual(result.toolMeta, {});
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.toolMeta).toEqual({});
+      expect(result.resourceMeta).toEqual({});
     });
 
     it("should handle ui key that is an array", () => {
@@ -481,8 +480,7 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta as any);
 
-      // Arrays are objects in JS, but the iteration will work differently
-      assert.deepStrictEqual(result.toolMeta.ui, {
+      expect(result.toolMeta.ui).toEqual({
         "0": "not",
         "1": "an",
         "2": "object",
@@ -505,8 +503,7 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      // csp is a resource key, so entire object goes to resourceMeta
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.example.com"],
@@ -529,7 +526,7 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           prefersBorder: false,
         },
@@ -545,7 +542,7 @@ describe("splitUIMetaNested", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           connectDomains: [],
           resourceDomains: [],
@@ -564,90 +561,95 @@ describe("splitUIMetaNested", () => {
       };
       const result: SplitMetadata = splitUIMetaNested(meta);
 
-      assert.ok("toolMeta" in result);
-      assert.ok("resourceMeta" in result);
-      assert.strictEqual(typeof result.toolMeta, "object");
-      assert.strictEqual(typeof result.resourceMeta, "object");
+      expect("toolMeta" in result).toBe(true);
+      expect("resourceMeta" in result).toBe(true);
+      expect(typeof result.toolMeta).toBe("object");
+      expect(typeof result.resourceMeta).toBe("object");
     });
   });
 });
 
 describe("isToolMetaKeyNested", () => {
   it("should return true for ui/resourceUri", () => {
-    assert.strictEqual(isToolMetaKeyNested("ui/resourceUri"), true);
+    expect(isToolMetaKeyNested("ui/resourceUri")).toBe(true);
   });
 
   it("should return false for resource metadata keys", () => {
-    assert.strictEqual(isToolMetaKeyNested("prefersBorder"), false);
-    assert.strictEqual(isToolMetaKeyNested("domain"), false);
-    assert.strictEqual(isToolMetaKeyNested("csp"), false);
-    assert.strictEqual(isToolMetaKeyNested("connectDomains"), false);
-    assert.strictEqual(isToolMetaKeyNested("resourceDomains"), false);
+    expect(isToolMetaKeyNested("prefersBorder")).toBe(false);
+    expect(isToolMetaKeyNested("domain")).toBe(false);
+    expect(isToolMetaKeyNested("csp")).toBe(false);
+    expect(isToolMetaKeyNested("connectDomains")).toBe(false);
+    expect(isToolMetaKeyNested("resourceDomains")).toBe(false);
   });
 
   it("should return false for unknown keys", () => {
-    assert.strictEqual(isToolMetaKeyNested("unknownKey"), false);
-    assert.strictEqual(isToolMetaKeyNested("customProperty"), false);
-    assert.strictEqual(isToolMetaKeyNested(""), false);
+    expect(isToolMetaKeyNested("unknownKey")).toBe(false);
+    expect(isToolMetaKeyNested("customProperty")).toBe(false);
+    expect(isToolMetaKeyNested("")).toBe(false);
   });
 
   it("should be case-sensitive", () => {
-    assert.strictEqual(isToolMetaKeyNested("ui/resourceUri"), true);
-    assert.strictEqual(isToolMetaKeyNested("UI/RESOURCEURI"), false);
-    assert.strictEqual(isToolMetaKeyNested("Ui/ResourceUri"), false);
+    expect(isToolMetaKeyNested("ui/resourceUri")).toBe(true);
+    expect(isToolMetaKeyNested("UI/RESOURCEURI")).toBe(false);
+    expect(isToolMetaKeyNested("Ui/ResourceUri")).toBe(false);
   });
 });
 
 describe("isResourceMetaKeyNested", () => {
   it("should return true for prefersBorder", () => {
-    assert.strictEqual(isResourceMetaKeyNested("prefersBorder"), true);
+    expect(isResourceMetaKeyNested("prefersBorder")).toBe(true);
   });
 
   it("should return true for domain", () => {
-    assert.strictEqual(isResourceMetaKeyNested("domain"), true);
+    expect(isResourceMetaKeyNested("domain")).toBe(true);
   });
 
   it("should return true for csp", () => {
-    assert.strictEqual(isResourceMetaKeyNested("csp"), true);
+    expect(isResourceMetaKeyNested("csp")).toBe(true);
   });
 
   it("should return true for connectDomains", () => {
-    assert.strictEqual(isResourceMetaKeyNested("connectDomains"), true);
+    expect(isResourceMetaKeyNested("connectDomains")).toBe(true);
   });
 
   it("should return true for resourceDomains", () => {
-    assert.strictEqual(isResourceMetaKeyNested("resourceDomains"), true);
+    expect(isResourceMetaKeyNested("resourceDomains")).toBe(true);
   });
 
   it("should return false for tool metadata keys", () => {
-    assert.strictEqual(isResourceMetaKeyNested("ui/resourceUri"), false);
+    expect(isResourceMetaKeyNested("ui/resourceUri")).toBe(false);
   });
 
   it("should return false for unknown keys", () => {
-    assert.strictEqual(isResourceMetaKeyNested("unknownKey"), false);
-    assert.strictEqual(isResourceMetaKeyNested("customProperty"), false);
-    assert.strictEqual(isResourceMetaKeyNested(""), false);
+    expect(isResourceMetaKeyNested("unknownKey")).toBe(false);
+    expect(isResourceMetaKeyNested("customProperty")).toBe(false);
+    expect(isResourceMetaKeyNested("")).toBe(false);
   });
 
   it("should be case-sensitive", () => {
-    assert.strictEqual(isResourceMetaKeyNested("prefersBorder"), true);
-    assert.strictEqual(isResourceMetaKeyNested("PrefersBorder"), false);
-    assert.strictEqual(isResourceMetaKeyNested("PREFERSBORDER"), false);
+    expect(isResourceMetaKeyNested("prefersBorder")).toBe(true);
+    expect(isResourceMetaKeyNested("PrefersBorder")).toBe(false);
+    expect(isResourceMetaKeyNested("PREFERSBORDER")).toBe(false);
 
-    assert.strictEqual(isResourceMetaKeyNested("connectDomains"), true);
-    assert.strictEqual(isResourceMetaKeyNested("ConnectDomains"), false);
+    expect(isResourceMetaKeyNested("connectDomains")).toBe(true);
+    expect(isResourceMetaKeyNested("ConnectDomains")).toBe(false);
   });
 });
 
 describe("SEP-1865 Protocol Compliance", () => {
   describe("UIResource Metadata Splitting", () => {
     it("should correctly handle UIResourceMeta structure", () => {
-      // Full UIResourceMeta as defined in SEP-1865
       const meta = {
         ui: {
           csp: {
-            connectDomains: ["https://api.weather.com", "wss://realtime.service.com"],
-            resourceDomains: ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"],
+            connectDomains: [
+              "https://api.weather.com",
+              "wss://realtime.service.com",
+            ],
+            resourceDomains: [
+              "https://cdn.jsdelivr.net",
+              "https://*.cloudflare.com",
+            ],
           },
           domain: "https://weather-widget.example.com",
           prefersBorder: true,
@@ -655,35 +657,38 @@ describe("SEP-1865 Protocol Compliance", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      // All these should go to resourceMeta per SEP-1865
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
-            connectDomains: ["https://api.weather.com", "wss://realtime.service.com"],
-            resourceDomains: ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"],
+            connectDomains: [
+              "https://api.weather.com",
+              "wss://realtime.service.com",
+            ],
+            resourceDomains: [
+              "https://cdn.jsdelivr.net",
+              "https://*.cloudflare.com",
+            ],
           },
           domain: "https://weather-widget.example.com",
           prefersBorder: true,
         },
       });
-      assert.deepStrictEqual(result.toolMeta, {});
+      expect(result.toolMeta).toEqual({});
     });
   });
 
   describe("Tool Metadata with ui/resourceUri", () => {
     it("should correctly handle Tool _meta with ui/resourceUri", () => {
-      // Tool metadata as defined in SEP-1865
       const toolMeta = {
         "ui/resourceUri": "ui://weather-server/dashboard-template",
       };
 
-      // When wrapped in ui key for nested format
       const meta = {
         ui: toolMeta,
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard-template",
         },
@@ -693,7 +698,6 @@ describe("SEP-1865 Protocol Compliance", () => {
 
   describe("Resource Content Metadata Splitting", () => {
     it("should split resources/read response _meta correctly", () => {
-      // From SEP-1865 resources/read response example
       const contentMeta = {
         ui: {
           csp: {
@@ -705,7 +709,7 @@ describe("SEP-1865 Protocol Compliance", () => {
       };
       const result = splitUIMetaNested(contentMeta);
 
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.openweathermap.org"],
@@ -714,13 +718,12 @@ describe("SEP-1865 Protocol Compliance", () => {
           prefersBorder: true,
         },
       });
-      assert.deepStrictEqual(result.toolMeta, {});
+      expect(result.toolMeta).toEqual({});
     });
   });
 
   describe("HostContext Metadata (Not Split)", () => {
     it("should preserve non-ui metadata that might come from HostContext", () => {
-      // HostContext fields from SEP-1865 should be preserved in toolMeta
       const meta = {
         theme: "dark",
         displayMode: "inline",
@@ -730,14 +733,13 @@ describe("SEP-1865 Protocol Compliance", () => {
       };
       const result = splitUIMetaNested(meta);
 
-      assert.deepStrictEqual(result.toolMeta, meta);
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.toolMeta).toEqual(meta);
+      expect(result.resourceMeta).toEqual({});
     });
   });
 
   describe("Tool Result _meta Splitting", () => {
     it("should handle tool result _meta with mixed content", () => {
-      // From SEP-1865 tool result example
       const toolResultMeta = {
         timestamp: "2025-11-10T15:30:00Z",
         source: "weather-api",
@@ -747,26 +749,22 @@ describe("SEP-1865 Protocol Compliance", () => {
       };
       const result = splitUIMetaNested(toolResultMeta);
 
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         timestamp: "2025-11-10T15:30:00Z",
         source: "weather-api",
         ui: {
           "ui/resourceUri": "ui://weather/display",
         },
       });
-      assert.deepStrictEqual(result.resourceMeta, {});
+      expect(result.resourceMeta).toEqual({});
     });
   });
 
   describe("Combined Tool and Resource Registration", () => {
     it("should handle metadata for both tool and associated resource", () => {
-      // When a tool references a resource, we need to split the metadata
-      // for proper association
       const combinedMeta = {
         ui: {
-          // Tool-specific: tells the host which UI resource to use
           "ui/resourceUri": "ui://weather-server/dashboard",
-          // Resource-specific: CSP and display preferences for the resource
           csp: {
             connectDomains: ["https://api.weather.com"],
             resourceDomains: ["https://cdn.example.com"],
@@ -774,21 +772,18 @@ describe("SEP-1865 Protocol Compliance", () => {
           prefersBorder: true,
           domain: "https://weather.example.com",
         },
-        // Non-UI metadata
         version: "2.0.0",
       };
       const result = splitUIMetaNested(combinedMeta);
 
-      // Tool gets: ui/resourceUri and non-UI metadata
-      assert.deepStrictEqual(result.toolMeta, {
+      expect(result.toolMeta).toEqual({
         ui: {
           "ui/resourceUri": "ui://weather-server/dashboard",
         },
         version: "2.0.0",
       });
 
-      // Resource gets: CSP, domain, and display preferences
-      assert.deepStrictEqual(result.resourceMeta, {
+      expect(result.resourceMeta).toEqual({
         ui: {
           csp: {
             connectDomains: ["https://api.weather.com"],

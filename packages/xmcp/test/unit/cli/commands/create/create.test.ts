@@ -1,9 +1,8 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { beforeEach, afterEach, describe, it } from "node:test";
-import { runCreate, type CreateType } from "../index";
+import { beforeEach, afterEach, describe, it, expect } from "vitest";
+import { runCreate } from "@/cli/commands/create";
 
 function readCreatedFile(dir: string, relativePath: string) {
   const filePath = path.join(dir, relativePath);
@@ -29,36 +28,36 @@ describe("xmcp create command", () => {
     await runCreate({ type: "tool", name: "my-tool" });
 
     const content = readCreatedFile(tempDir, "src/tools/my-tool.ts");
-    assert.match(content, /export const metadata: ToolMetadata/);
-    assert.match(content, /name: "my-tool"/);
-    assert.match(content, /export default function myTool/);
+    expect(content).toMatch(/export const metadata: ToolMetadata/);
+    expect(content).toMatch(/name: "my-tool"/);
+    expect(content).toMatch(/export default function myTool/);
   });
 
   it("creates a resource in default directory", async () => {
     await runCreate({ type: "resource", name: "user-data" });
 
     const content = readCreatedFile(tempDir, "src/resources/user-data.ts");
-    assert.match(content, /export const metadata: ResourceMetadata/);
-    assert.match(content, /name: "user-data"/);
-    assert.match(content, /export default function userData/);
+    expect(content).toMatch(/export const metadata: ResourceMetadata/);
+    expect(content).toMatch(/name: "user-data"/);
+    expect(content).toMatch(/export default function userData/);
   });
 
   it("creates a prompt in default directory", async () => {
     await runCreate({ type: "prompt", name: "code-review" });
 
     const content = readCreatedFile(tempDir, "src/prompts/code-review.ts");
-    assert.match(content, /export const metadata: PromptMetadata/);
-    assert.match(content, /name: "code-review"/);
-    assert.match(content, /export default function codeReview/);
+    expect(content).toMatch(/export const metadata: PromptMetadata/);
+    expect(content).toMatch(/name: "code-review"/);
+    expect(content).toMatch(/export default function codeReview/);
   });
 
   it("creates a widget with .tsx extension", async () => {
     await runCreate({ type: "widget", name: "dashboard" });
 
     const content = readCreatedFile(tempDir, "src/tools/dashboard.tsx");
-    assert.match(content, /import.*useState.*from "react"/);
-    assert.match(content, /export const metadata: ToolMetadata/);
-    assert.match(content, /export default function dashboard/);
+    expect(content).toMatch(/import.*useState.*from "react"/);
+    expect(content).toMatch(/export const metadata: ToolMetadata/);
+    expect(content).toMatch(/export default function dashboard/);
   });
 
   it("creates in custom directory with dir option", async () => {
@@ -69,22 +68,21 @@ describe("xmcp create command", () => {
     });
 
     const content = readCreatedFile(tempDir, "lib/custom-tools/custom.ts");
-    assert.match(content, /export const metadata: ToolMetadata/);
+    expect(content).toMatch(/export const metadata: ToolMetadata/);
   });
 
   it("creates in nested path from name", async () => {
     await runCreate({ type: "tool", name: "api/users/get-user" });
 
     const content = readCreatedFile(tempDir, "src/tools/api/users/get-user.ts");
-    assert.match(content, /name: "get-user"/);
-    assert.match(content, /export default function getUser/);
+    expect(content).toMatch(/name: "get-user"/);
+    expect(content).toMatch(/export default function getUser/);
   });
 
   it("errors when file already exists", async () => {
     await runCreate({ type: "tool", name: "existing" });
 
-    await assert.rejects(
-      async () => runCreate({ type: "tool", name: "existing" }),
+    await expect(runCreate({ type: "tool", name: "existing" })).rejects.toThrow(
       /File already exists/
     );
   });
@@ -93,7 +91,7 @@ describe("xmcp create command", () => {
     await runCreate({ type: "tool", name: "myAwesomeTool" });
 
     const content = readCreatedFile(tempDir, "src/tools/my-awesome-tool.ts");
-    assert.match(content, /name: "my-awesome-tool"/);
-    assert.match(content, /export default function myAwesomeTool/);
+    expect(content).toMatch(/name: "my-awesome-tool"/);
+    expect(content).toMatch(/export default function myAwesomeTool/);
   });
 });

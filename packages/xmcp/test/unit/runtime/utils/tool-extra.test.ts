@@ -1,11 +1,10 @@
-import { test } from "node:test";
-import assert from "node:assert";
+import { test, expect } from "vitest";
 import {
   transformToolHandler,
   type UserToolResponse,
-} from "../transformers/tool";
-import { httpRequestContextProvider } from "../../contexts/http-request-context";
-import { clientInfoContextProvider } from "../../contexts/client-info-context";
+} from "@/runtime/utils/transformers/tool";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { clientInfoContextProvider } from "@/runtime/contexts/client-info-context";
 
 type MinimalExtra = {
   signal: AbortSignal;
@@ -61,7 +60,7 @@ test("transformToolHandler forwards clientInfo through tool extra arguments", as
     );
   });
 
-  assert.deepStrictEqual(result, {
+  expect(result).toEqual({
     structuredContent: {
       clientInfoName: "cursor",
       clientInfoVersion: "0.50.1",
@@ -97,7 +96,7 @@ test("transformToolHandler leaves clientInfo undefined when request has no initi
     );
   });
 
-  assert.deepStrictEqual(result, {
+  expect(result).toEqual({
     structuredContent: {
       hasClientInfo: false,
     },
@@ -134,7 +133,7 @@ test("transformToolHandler uses stdio clientInfo context as fallback", async () 
     );
   });
 
-  assert.deepStrictEqual(result, {
+  expect(result).toEqual({
     structuredContent: {
       clientInfoName: "opencode",
       clientInfoVersion: "1.2.3",

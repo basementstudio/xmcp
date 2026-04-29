@@ -45,6 +45,7 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
   constructor(debug: boolean, _bodySizeLimit: string) {
     super();
     this.debug = debug;
+    // Stateless contract — see test/integration/http-stateless.test.ts.
     this.transport = new SdkStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

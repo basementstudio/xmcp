@@ -9,6 +9,13 @@
     "lint": {
       "outputs": []
     },
+    "typecheck": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": [],
+      "dependsOn": ["^build"]
+    },
     "dev": {
       "cache": false
     },

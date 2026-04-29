@@ -37,13 +37,18 @@
     "build:all": "turbo run build",
     "lint": "turbo run lint --filter=xmcp --filter=create-xmcp-app",
     "lint:all": "turbo run lint",
-    "ci": "pnpm run build && pnpm run lint && pnpm run test:ci",
-    "ci:build-only": "pnpm run build && pnpm run lint && pnpm run test:build",
-    "test:ci": "pnpm run test:build && pnpm run test:cli",
-    "test:ci:skip-cli": "pnpm run test:build && pnpm run test:cli --skip",
-    "test:build": "scripts/test-build.sh",
-    "test:cli": "scripts/test-cli.sh",
-    "test:cli:skip": "scripts/test-cli.sh --skip",
+    "test": "turbo run test --filter=xmcp",
+    "test:all": "turbo run test",
+    "test:watch": "pnpm --filter=xmcp test:watch",
+    "test:ui": "pnpm --filter=xmcp test:ui",
+    "test:unit": "pnpm --filter=xmcp test:unit",
+    "test:integration": "pnpm --filter=xmcp test:integration",
+    "test:coverage": "pnpm --filter=xmcp test:coverage",
+    "test:ci": "pnpm --filter=xmcp test:ci",
+    "typecheck": "turbo run typecheck --filter=xmcp",
+    "typecheck:all": "turbo run typecheck",
+    "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "ci": "pnpm run typecheck && pnpm run lint && pnpm run test",
     "clean": "turbo run clean && rm -rf node_modules/.cache",
     "reset": "rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
@@ -93,6 +98,6 @@
   },
   "packageManager": "pnpm@10.8.1",
   "engines": {
-    "node": "20.x"
+    "node": ">=20"
   }
 }
