@@ -77,11 +77,30 @@ function findForbiddenStateFields(
       const className = node.name.text;
       for (const member of node.members) {
         if (!ts.isPropertyDeclaration(member)) continue;
-        if (!member.type) continue;
-        const typeText = member.type.getText(sourceFile);
+        // A field offends if EITHER its declared type or its initializer
+        // expression names a forbidden state type. Initializer-inferred
+        // fields (e.g. `private sessions = new Map()` with no annotation)
+        // would otherwise slip past a type-only check.
+        const annotationText = member.type?.getText(sourceFile);
+        const initializerText = member.initializer?.getText(sourceFile);
+        if (!annotationText && !initializerText) continue;
         for (const forbidden of FORBIDDEN_STATE_TYPES) {
-          const re = new RegExp(`\\b${forbidden}\\b`);
-          if (!re.test(typeText)) continue;
+          // Annotations: bare type-name match (`Map<string, X>`, `Set<X>`).
+          // Initializers: only `new <type>(...)` — avoids false positives on
+          // identifiers like `someMap`, method calls like `arr.map(...)`,
+          // or string literals that happen to contain the word.
+          const annotationRe = new RegExp(`\\b${forbidden}\\b`);
+          const initializerRe = new RegExp(`\\bnew\\s+${forbidden}\\b`);
+          let signal: string | undefined;
+          if (annotationText && annotationRe.test(annotationText)) {
+            signal = annotationText;
+          } else if (
+            initializerText &&
+            initializerRe.test(initializerText)
+          ) {
+            signal = initializerText;
+          }
+          if (!signal) continue;
           if (
             options.allowRequestScoped &&
             fieldHasRequestScopedMarker(member, source)
@@ -91,7 +110,7 @@ function findForbiddenStateFields(
           offenders.push({
             className,
             field: member.name.getText(sourceFile),
-            type: typeText,
+            type: signal,
           });
         }
       }
