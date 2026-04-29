@@ -91,7 +91,9 @@
     "test:integration": "vitest run test/integration",
     "test:coverage": "vitest run --coverage",
     "test:ci": "CI=1 vitest run",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
@@ -123,6 +125,8 @@
     "cross-env": "^7.0.3",
     "del": "^7.1.0",
     "dotenv": "^16.6.1",
+    "eslint": "^9.39.1",
+    "eslint-config-custom": "workspace:^",
     "express": "^4.22.1",
     "fs-extra": "^11.3.2",
     "glob": "^11.1.0",
