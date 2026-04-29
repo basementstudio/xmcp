@@ -38,6 +38,18 @@ export default defineConfig({
         "bundler/**",
         "test/**",
       ],
+      // Regression floor pinned at the current baseline minus ~2 points
+      // (capture: 16.4% statements / 13.49% branches / 16% functions /
+      // 16.38% lines). Numbers look low because most of src/ is exercised
+      // by integration tests that spawn separate node processes — those
+      // don't show up in v8 coverage of the test process. Raise as new
+      // unit tests land; recapture with `pnpm test:coverage`.
+      thresholds: {
+        statements: 14,
+        branches: 11,
+        functions: 14,
+        lines: 14,
+      },
     },
   },
   resolve: {

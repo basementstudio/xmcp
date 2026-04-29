@@ -35,11 +35,16 @@ jobs:
         run: pnpm prettier:check
 
   test:
-    name: Test (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        # Skip windows-latest for now — slow + flaky on shared runners and
+        # most xmcp users don't ship from Windows. Revisit if path-separator
+        # bugs surface. The cross-platform.yml workflow still smokes the CLI
+        # on Windows so we're not flying blind.
+        os: [ubuntu-latest, macos-latest]
         node-version: [20.x, 22.x]
     steps:
       - uses: actions/checkout@v4
@@ -93,6 +98,35 @@ jobs:
             exit 1
           fi
           echo "Tarball clean — no test files."
+
+  coverage:
+    # Non-blocking: surfaces coverage regressions (vitest threshold violations
+    # become a non-zero exit) without gating PRs while the baseline catches
+    # up. Promote to a required check by removing `continue-on-error` once
+    # coverage is meaningfully higher than the floor in vitest.config.ts.
+    name: Coverage (non-blocking)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run coverage
+        working-directory: packages/xmcp
+        run: pnpm test:coverage
 
   package-integrity:
     name: Package integrity

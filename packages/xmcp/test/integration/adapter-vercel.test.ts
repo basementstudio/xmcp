@@ -3,6 +3,22 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { buildFixture, fixturePath } from "./_utils";
 
+async function listFilesSorted(rootDir: string): Promise<string[]> {
+  const entries = await fs.readdir(rootDir, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  return entries
+    .filter((e) => e.isFile())
+    .map((e) =>
+      path
+        .relative(rootDir, path.join(e.parentPath ?? e.path, e.name))
+        .split(path.sep)
+        .join("/")
+    )
+    .sort();
+}
+
 // `xmcp build --vercel` produces a Vercel Build Output v3 directory at
 // `.vercel/output/`. The pieces we pin here are the contract Vercel reads:
 // the function entrypoint and its `.vc-config.json` runtime descriptor.
@@ -52,5 +68,12 @@ describe("adapter — vercel", () => {
       "utf8"
     );
     expect(fnEntry.length).toBeGreaterThan(0);
+
+    // Snapshot the full .vercel/output/ tree so any layout drift (added
+    // chunks, renamed entry, missing config) is caught even if the explicit
+    // assertions above still pass. Update with `pnpm test -u` when the
+    // change is intentional.
+    const tree = await listFilesSorted(outputDir);
+    expect(tree).toMatchSnapshot();
   }, 90_000);
 });

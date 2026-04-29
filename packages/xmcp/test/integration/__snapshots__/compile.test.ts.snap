@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compile() — fixture builds > basic-tools > dist/ tree matches snapshot 1`] = `
+[
+  "18.js",
+  "http.js",
+  "stdio.js",
+]
+`;
+
+exports[`compile() — fixture builds > custom-paths > dist/ tree matches snapshot 1`] = `
+[
+  "404.js",
+  "stdio.js",
+]
+`;
+
+exports[`compile() — fixture builds > empty-paths > dist/ tree matches snapshot 1`] = `
+[
+  "http.js",
+  "stdio.js",
+]
+`;

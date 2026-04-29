@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`adapter — vercel > emits the expected .vercel/output structure 1`] = `
+[
+  "config.json",
+  "functions/api/index.func/.vc-config.json",
+  "functions/api/index.func/18.js",
+  "functions/api/index.func/index.js",
+  "functions/api/index.func/package.json",
+]
+`;

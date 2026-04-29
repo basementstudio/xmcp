@@ -1,7 +1,29 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import path from "node:path";
+import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { buildFixture } from "./_utils";
+
+// Snapshot the file tree of `dist/` (or any output dir) as a sorted list of
+// relative paths. Catches accidental additions/removals/renames in the
+// compiler's output shape — e.g. a new chunk filename, a renamed entry, a
+// dropped runtime helper. Update with `pnpm test -u` when the change is
+// intentional.
+async function snapshotFileTree(rootDir: string): Promise<string[]> {
+  const entries = await fs.readdir(rootDir, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  return entries
+    .filter((e) => e.isFile())
+    .map((e) =>
+      path
+        .relative(rootDir, path.join(e.parentPath ?? e.path, e.name))
+        .split(path.sep)
+        .join("/")
+    )
+    .sort();
+}
 
 describe("compile() — fixture builds", () => {
   describe("basic-tools", () => {
@@ -24,6 +46,11 @@ describe("compile() — fixture builds", () => {
       const stdout = result.stdoutChunks.join("");
       expect(stdout).toMatch(/Registered 1 tool/);
     });
+
+    it("dist/ tree matches snapshot", async () => {
+      const tree = await snapshotFileTree(result.distDir);
+      expect(tree).toMatchSnapshot();
+    });
   });
 
   describe("empty-paths", () => {
@@ -45,6 +72,11 @@ describe("compile() — fixture builds", () => {
     it("reports no tools/prompts/resources registered", () => {
       const stdout = result.stdoutChunks.join("");
       expect(stdout).toMatch(/No tools, prompts, or resources registered/);
+    });
+
+    it("dist/ tree matches snapshot", async () => {
+      const tree = await snapshotFileTree(result.distDir);
+      expect(tree).toMatchSnapshot();
     });
   });
 
@@ -70,6 +102,11 @@ describe("compile() — fixture builds", () => {
     it("registers the tool from the custom lib/tools path", () => {
       const stdout = result.stdoutChunks.join("");
       expect(stdout).toMatch(/Registered 1 tool/);
+    });
+
+    it("dist/ tree matches snapshot", async () => {
+      const tree = await snapshotFileTree(result.distDir);
+      expect(tree).toMatchSnapshot();
     });
   });
 });
