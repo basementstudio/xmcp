@@ -36,10 +36,11 @@ const WATCHER_REBUILD_TIMEOUT_MS = 15_000;
 // disconnect). 30s covers cold node start + spawn-rx wrapper overhead on CI.
 const INSPECTOR_TIMEOUT_MS = 30_000;
 
-// Inspector lives at the workspace root, not in packages/xmcp — installing it
-// inside the xmcp package shifts the SDK's peer-resolved zod from v4 to v3,
-// which breaks tools/call against fixtures that import zod v4. Resolve via
-// node module lookup from this file's location so it walks up to the root.
+// Resolve the inspector CLI entry via node module lookup so it works whether
+// the package is hoisted to the workspace root or installed locally under
+// packages/xmcp/node_modules/. tools/call against zod-v4 fixtures must keep
+// working in both layouts — verify with the inspector-driven blocks in
+// http-stateless.test.ts and stdio-transport.test.ts if you touch this.
 const INSPECTOR_CLI_ENTRY = path.join(
   path.dirname(
     createRequire(__filename).resolve(
@@ -96,17 +97,43 @@ function ensureCliBuilt(): void {
   }
 }
 
-export async function buildFixture(name: string): Promise<BuildResult> {
+export interface BuildFixtureOptions {
+  /**
+   * Extra CLI args appended after `build` (e.g. `["--vercel"]`, `["--cf"]`).
+   * The default is no flags — a plain production build of the fixture.
+   */
+  args?: string[];
+  /**
+   * Extra paths under the fixture directory to clean before building.
+   * `dist` is always cleaned. Use this for adapter outputs like `.vercel`.
+   */
+  cleanPaths?: string[];
+}
+
+export async function buildFixture(
+  name: string,
+  options: BuildFixtureOptions = {}
+): Promise<BuildResult> {
   ensureCliBuilt();
   const fixtureDir = fixturePath(name);
   const distDir = path.join(fixtureDir, "dist");
   await fs.rm(distDir, { recursive: true, force: true });
+  for (const extra of options.cleanPaths ?? []) {
+    await fs.rm(path.join(fixtureDir, extra), {
+      recursive: true,
+      force: true,
+    });
+  }
 
-  const child = spawn(process.execPath, [CLI_PATH, "build"], {
-    cwd: fixtureDir,
-    env: { ...process.env, NODE_ENV: "production" },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const child = spawn(
+    process.execPath,
+    [CLI_PATH, "build", ...(options.args ?? [])],
+    {
+      cwd: fixtureDir,
+      env: { ...process.env, NODE_ENV: "production" },
+      stdio: ["ignore", "pipe", "pipe"],
+    }
+  );
 
   const stdoutChunks: string[] = [];
   const stderrChunks: string[] = [];

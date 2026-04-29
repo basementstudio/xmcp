@@ -1,0 +1,4 @@
+dist/
+.xmcp/
+.vercel/
+node_modules/

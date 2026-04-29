@@ -1384,6 +1384,15 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  packages/xmcp/test/fixtures/cloudflare-output:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../..
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+
   packages/xmcp/test/fixtures/custom-paths:
     dependencies:
       xmcp:
@@ -1398,6 +1407,15 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../../..
+
+  packages/xmcp/test/fixtures/vercel-output:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../..
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
 
 packages:
 
