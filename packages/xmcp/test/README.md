@@ -73,11 +73,6 @@ Each fixture is a self-contained xmcp app: `package.json` (no install needed —
 
 Loader edge cases (empty files, missing default exports, non-function defaults) are covered in unit tests at `test/unit/runtime/utils/{tool,resource,prompt}-loader.test.ts` rather than via fixtures.
 
-## Roadmap
-
-- **MCP Inspector CLI** (`@modelcontextprotocol/inspector`) is a future addition — the latest version pins `@modelcontextprotocol/sdk@^1.29.0`, but xmcp is still on `^1.26.0`. When the SDK bumps, drive the integration tests through the inspector for protocol-level coverage.
-- File-watcher coverage (PR #248 regressions) is queued for a follow-up — the dev mode doesn't expose a clean programmatic hook today.
-
 ## Adding a test
 
 - Unit: drop a `*.test.ts` under `test/unit/<mirror path>/`. Import source via the `@/` alias (configured in `vitest.config.ts`).

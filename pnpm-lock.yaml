@@ -1272,6 +1272,9 @@ importers:
         specifier: ^3.25.76 || ^4.0.0
         version: 4.1.13
     devDependencies:
+      '@modelcontextprotocol/inspector':
+        specifier: ^0.21.2
+        version: 0.21.2(@types/node@22.19.2)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(typescript@5.9.3)
       '@nestjs/common':
         specifier: ^11.1.12
         version: 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)

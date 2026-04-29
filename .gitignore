@@ -46,3 +46,6 @@ bundle-*.json
 bundle-*.html
 
 # cursor
+
+# local-only test roadmap (untracked but kept on disk)
+packages/xmcp/test/ROADMAP.md
