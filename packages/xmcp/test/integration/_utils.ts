@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
+import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -20,6 +21,15 @@ const SERVER_STARTUP_TIMEOUT_MS = 20_000;
 // Hard ceiling for a single JSON-RPC reply over stdio. 10s is well above any
 // real round-trip and short enough to fail fast when the server hangs.
 const STDIO_REQUEST_TIMEOUT_MS = 10_000;
+
+// Hard ceiling for `xmcp dev` to chokidar-ready + first rspack build. 30s
+// covers cold CI runners that are also installing transitive deps elsewhere.
+const WATCHER_FIRST_BUILD_TIMEOUT_MS = 30_000;
+
+// Hard ceiling for a single incremental rebuild triggered by a file event.
+// 15s is well above the ~200–600ms typical rebuild and short enough to fail
+// fast when chokidar misses an event (which is the regression we test for).
+const WATCHER_REBUILD_TIMEOUT_MS = 15_000;
 
 export interface ServerHandle {
   child: ChildProcess;
@@ -324,4 +334,184 @@ export async function spawnStdioClient(
       }
     },
   };
+}
+
+export interface DevServerHandle {
+  child: ChildProcess;
+  tempDir: string;
+  /**
+   * Resolve when the next successful rebuild after this call completes.
+   * Each invocation waits for one fresh "Compiled in" line on stdout.
+   */
+  waitForRebuild(): Promise<void>;
+  /** Joined stdout collected since spawn — surfaced in failure messages. */
+  stdout(): string;
+  stop(): Promise<void>;
+}
+
+export interface SpawnDevOptions {
+  /** Reuse an existing temp dir (e.g. for restart tests). */
+  tempDir?: string;
+}
+
+/**
+ * Spawn `xmcp dev` against an isolated copy of a fixture and return a handle
+ * that lets tests await the next successful rebuild. The first build is
+ * awaited inline so callers always get a ready watcher.
+ */
+export async function spawnDevServer(
+  fixtureName: string,
+  options: SpawnDevOptions = {}
+): Promise<DevServerHandle> {
+  ensureCliBuilt();
+  const tempDir = options.tempDir ?? (await prepareDevTempDir(fixtureName));
+
+  const child = spawn(process.execPath, [CLI_PATH, "dev"], {
+    cwd: tempDir,
+    env: { ...process.env, NODE_ENV: "development" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  let buildCount = 0;
+  type Waiter = {
+    target: number;
+    resolve: () => void;
+    reject: (err: Error) => void;
+    timer: NodeJS.Timeout;
+  };
+  const waiters: Waiter[] = [];
+  const stdoutChunks: string[] = [];
+  const stderrChunks: string[] = [];
+  let pendingLine = "";
+
+  const flushWaiters = () => {
+    for (let i = waiters.length - 1; i >= 0; i--) {
+      const w = waiters[i]!;
+      if (buildCount >= w.target) {
+        clearTimeout(w.timer);
+        waiters.splice(i, 1);
+        w.resolve();
+      }
+    }
+  };
+
+  const onLine = (line: string) => {
+    if (line.includes("Compiled in")) {
+      buildCount += 1;
+      flushWaiters();
+    }
+  };
+
+  child.stdout!.on("data", (chunk: Buffer) => {
+    const text = chunk.toString("utf8");
+    stdoutChunks.push(text);
+    pendingLine += text;
+    let nl: number;
+    while ((nl = pendingLine.indexOf("\n")) >= 0) {
+      onLine(pendingLine.slice(0, nl));
+      pendingLine = pendingLine.slice(nl + 1);
+    }
+  });
+  child.stderr!.on("data", (chunk: Buffer) => {
+    stderrChunks.push(chunk.toString("utf8"));
+  });
+
+  child.on("exit", (code, signal) => {
+    if (waiters.length === 0) return;
+    const why = `xmcp dev exited (code=${code} signal=${signal ?? "none"}) before the awaited rebuild.\nstdout:\n${stdoutChunks.join("")}stderr:\n${stderrChunks.join("")}`;
+    for (const w of waiters.splice(0)) {
+      clearTimeout(w.timer);
+      w.reject(new Error(why));
+    }
+  });
+
+  const awaitBuild = (target: number, timeoutMs: number) =>
+    new Promise<void>((resolve, reject) => {
+      if (buildCount >= target) {
+        resolve();
+        return;
+      }
+      const timer = setTimeout(() => {
+        const idx = waiters.findIndex((w) => w.timer === timer);
+        if (idx >= 0) waiters.splice(idx, 1);
+        reject(
+          new Error(
+            `xmcp dev did not reach build #${target} within ${timeoutMs}ms (current: ${buildCount}).\nstdout:\n${stdoutChunks.join("")}stderr:\n${stderrChunks.join("")}`
+          )
+        );
+      }, timeoutMs);
+      timer.unref();
+      waiters.push({ target, resolve, reject, timer });
+    });
+
+  await awaitBuild(1, WATCHER_FIRST_BUILD_TIMEOUT_MS);
+
+  return {
+    child,
+    tempDir,
+    stdout: () => stdoutChunks.join(""),
+    waitForRebuild() {
+      return awaitBuild(buildCount + 1, WATCHER_REBUILD_TIMEOUT_MS);
+    },
+    async stop() {
+      if (child.exitCode !== null || child.signalCode !== null) return;
+      const exited = once(child, "exit");
+      child.kill("SIGTERM");
+      const sigkillTimer = setTimeout(() => {
+        if (child.exitCode === null && child.signalCode === null) {
+          child.kill("SIGKILL");
+        }
+      }, SIGTERM_GRACE_MS);
+      sigkillTimer.unref();
+      try {
+        await exited;
+      } finally {
+        clearTimeout(sigkillTimer);
+      }
+    },
+  };
+}
+
+/**
+ * Copy a fixture into a fresh tempdir and rewire its node_modules so the
+ * symlinks (which are workspace-relative in the original location) resolve
+ * absolutely from the new path.
+ */
+async function prepareDevTempDir(fixtureName: string): Promise<string> {
+  const src = fixturePath(fixtureName);
+  const tempDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), `xmcp-dev-${fixtureName}-`)
+  );
+
+  await fs.cp(src, tempDir, {
+    recursive: true,
+    filter: (entry) => {
+      const base = path.basename(entry);
+      return base !== "node_modules" && base !== "dist" && base !== ".xmcp";
+    },
+  });
+
+  const srcNodeModules = path.join(src, "node_modules");
+  if (existsSync(srcNodeModules)) {
+    const destNodeModules = path.join(tempDir, "node_modules");
+    await fs.mkdir(destNodeModules, { recursive: true });
+    for (const entry of await fs.readdir(srcNodeModules, {
+      withFileTypes: true,
+    })) {
+      const srcEntry = path.join(srcNodeModules, entry.name);
+      const destEntry = path.join(destNodeModules, entry.name);
+      const stat = await fs.lstat(srcEntry);
+      if (stat.isSymbolicLink()) {
+        const linkTarget = await fs.readlink(srcEntry);
+        const absoluteTarget = path.resolve(srcNodeModules, linkTarget);
+        await fs.symlink(absoluteTarget, destEntry);
+      } else if (stat.isDirectory()) {
+        // Symlink rather than deep-copy — fixtures share the workspace's
+        // hoisted dependencies and we don't want to duplicate them.
+        await fs.symlink(srcEntry, destEntry);
+      }
+    }
+  }
+
+  return tempDir;
 }

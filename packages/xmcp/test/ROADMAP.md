@@ -88,9 +88,19 @@ A `TODO(canary)` marker has been added at `test/unit/compiler/utils/path-utils.t
 
 ---
 
-## Phase 3 — Unit coverage gaps [M, ~3h]
+## Phase 3 — Unit coverage gaps [DONE]
 
 High-leverage source-level coverage for code that's churned. Pure unit, no fixtures.
+
+Shipped: 36 new tests across 5 files. Suite now 210/210, ~8s.
+
+- `test/unit/auth/jwt.test.ts` — 8 cases (valid round-trip, expired, malformed, wrong-secret, issuer mismatch, missing/non-Bearer/empty header).
+- `test/unit/auth/api-key.test.ts` — 9 cases (static match/miss, missing header, custom `headerName`, default-header isolation, custom validator pass/fail, mutually-exclusive and missing-config throws).
+- `test/unit/runtime/headers.test.ts` — 7 cases. The missing-context throw test is kept first in the file: `httpRequestContextProvider` sets a globalThis fallback that persists once any provider has run, so the throw case has to execute before any `withHeaders()` call.
+- `test/unit/compiler/config/zod-cross-version.test.ts` — 5 cases pinning that `zod/v3` and `zod/v4` are both resolvable, identical user-tool shapes parse under both, and v4 raw-shape entries expose `.parse` (the surface `transformers/tool.ts` walks).
+- `test/unit/compiler/config/cors-defaults.test.ts` — 7 cases pinning PR #552: `mcp-session-id` + `mcp-protocol-version` always present in default `allowedHeaders`/`exposedHeaders`, augmented (deduped) on user arrays, string-form left untouched.
+
+Note: `makeReq`/`makeRes` are duplicated inline across the two auth test files (~30 lines each). Only two consumers today and Phase 3 brief said "pure unit, no fixtures" — easy to lift to `test/unit/auth/_helpers.ts` when the next auth test lands.
 
 ### 3.1 Auth middleware
 
@@ -142,29 +152,27 @@ Refactor the AST helper into `_utils.ts` so both files share one walker.
 
 ---
 
-## Phase 5 — File watcher [M, ~4h]
+## Phase 5 — File watcher [DONE]
 
-Pin PR #248 (file deletion regression) and PR #40 (recovery on restart).
+Pinned PR #248 (file deletion regression) and PR #40 (recovery on restart). Suite now 215/215, ~8s.
 
-### 5.1 Programmatic dev hook (may need source change)
+### 5.1 Programmatic dev hook — no source change
 
-The current `compile()` in `src/compiler/index.ts` doesn't expose a clean way to drive watch mode programmatically. Options:
+Took the spawn-and-parse path. `compile()` already prints `${greenCheck} Compiled in ${ms}ms` after every successful build (`src/compiler/index.ts:397-399`), so the existing marker is the rebuild signal. New helper `spawnDevServer(fixtureName, { tempDir? })` in `test/integration/_utils.ts` copies the fixture into an isolated tempdir, rewires `node_modules` symlinks to absolute paths, spawns `xmcp dev`, and exposes `waitForRebuild()` that resolves on the next "Compiled in" line. Two named timeouts (rule #3): `WATCHER_FIRST_BUILD_TIMEOUT_MS = 30_000` (cold first build), `WATCHER_REBUILD_TIMEOUT_MS = 15_000` (incremental).
 
-- Add a `compile({ watch: true, onRebuild?: cb })` option that fires the callback after each successful rebuild. Surgical change, follows review rule #4.
-- OR: spawn `xmcp dev` and parse stdout for rebuild markers.
-
-Prefer the option that requires less source change.
+Caveat surfaced and fixed during implementation: a SIGTERM-killed child has `child.exitCode === null` and `child.signalCode === "SIGTERM"`. The original `spawnHttpServer` / `spawnStdioClient` only check `exitCode`, which is technically a bug but doesn't bite them because they never `await once(child, "exit")` after issuing SIGKILL. The new `spawnDevServer.stop()` registers the exit promise once up front and schedules SIGKILL via an unref'd timer — that pattern is now the safe template if we ever revisit the older helpers.
 
 ### 5.2 Tests
 
-- `test/integration/file-watcher.test.ts` — copy `basic-tools` to a temp dir, start watch mode, perform:
-  - Add a new tool file → assert it appears in the regenerated import map.
-  - Modify a tool file → assert recompile.
-  - Delete a tool file → assert it disappears (regression for #248).
-  - Restart watch mode → assert state recovers (regression for #40).
-- Use `vi.waitFor(() => …)` for polling — never raw `setTimeout`.
+- `test/integration/file-watcher.test.ts` — five sequential cases against an isolated copy of `basic-tools`:
+  - First build emits an import-map referencing the seed tool.
+  - Add a new tool file → import-map regenerated to include it.
+  - Modify an existing tool file → recompile fires.
+  - Delete the added tool → import-map drops it (regression for PR #248).
+  - Restart watch mode in the same tempdir → import-map matches on-disk truth (regression for PR #40).
+- No raw `setTimeout` in the test bodies — every wait is `await server.waitForRebuild()`.
 
-**Verify:** test fails if you intentionally break the watcher's unlink handling in `src/utils/file-watcher.ts` (or wherever the deletion path lives).
+**Verified:** sabotaging `src/utils/file-watcher.ts` to drop the `unlink` listener makes the deletion test fail with `xmcp dev did not reach build #4 within 15000ms (current: 3)` — the regression bites, then I reverted.
 
 ---
 
