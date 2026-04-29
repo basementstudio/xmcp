@@ -38,6 +38,43 @@ The vitest config switches reporters based on `process.env.CI`:
 
 A hook or pre-commit script that wants quiet output can run `CI=1 pnpm test` (same as the `test:ci` script).
 
+## Per-example build sweep (CI only)
+
+`.github/workflows/examples.yml` has an `examples-build` matrix job that compiles every committed `examples/*` project against the workspace `xmcp`. It's the safety net for "did my change break an example?" — something the unit + integration suite doesn't catch because no example is a fixture.
+
+**When it runs:**
+
+- Every push to `canary` and `main`.
+- PRs labeled `full-examples` (apply via `gh pr edit --add-label full-examples`). Default PRs do not run it.
+- Manual dispatch: `gh workflow run examples.yml`.
+
+**What it does, per matrix cell:** `pnpm install` → `pnpm turbo build --filter=xmcp` → `pnpm exec xmcp build` (with `--cf` for `cloudflare-workers`) → optional framework build (`next build` for nextjs-class, `nest build` for nestjs-class) → `test -e <expected-artifact>`.
+
+We invoke `xmcp build` directly rather than each example's `pnpm build` script because some scripts chain non-terminating steps (e.g. `examples/with-express` ends with `tsx src/index.ts`, which runs the server forever).
+
+**Adding an example:**
+
+1. Add the project under `examples/<name>/` and commit it (the matrix is hand-maintained, not auto-discovered — keeps signal explicit).
+2. Add one row to `examples-build.strategy.matrix.example` in `.github/workflows/examples.yml`:
+
+   ```yaml
+   - { name: <name>, class: <class>, artifact: <relative-path> }
+   ```
+
+   `class` is one of `http` (`dist/http.js`), `stdio` (`dist/stdio.js`), `cf` (`worker.js`), `nextjs` (`.next`), `nestjs` (`dist/main.js`), `express` (`.xmcp/adapter-express.js`).
+
+3. Validate locally:
+
+   ```bash
+   diff \
+     <(python3 -c "import yaml; print('\n'.join(sorted(e['name'] for e in yaml.safe_load(open('.github/workflows/examples.yml'))['jobs']['examples-build']['strategy']['matrix']['example'])))") \
+     <(git ls-files examples/ | awk -F/ '{print $2}' | sort -u)
+   ```
+
+   Expected: no output (matrix matches the committed example set exactly).
+
+**Out of scope (deferred to follow-ups):** runtime smoke (boot + `tools/list`), examples not committed to git (`audit-*`, `auth-native-oauth`, `logging`, `mpp-*`, `notifications`, `observability-*`, `ui-showcase`, `code-mode-http`, `dynamic-tool-discovery`, `openapi-code-mode`), Node 22.x coverage on examples.
+
 ## The HTTP transport stateless contract
 
 `integration/http-stateless.test.ts` enforces two layers:
