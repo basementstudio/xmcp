@@ -89,6 +89,26 @@ export function fixturePath(name: string): string {
   return path.join(FIXTURES_DIR, name);
 }
 
+// Sorted, POSIX-style relative file list for vitest `toMatchSnapshot()`. Pins
+// the file tree of a build output dir so accidental additions/removals/renames
+// (new chunk, dropped runtime helper, renamed entry) get caught by snapshot
+// diff. Update with `pnpm test -u` when the change is intentional.
+export async function snapshotFileTree(rootDir: string): Promise<string[]> {
+  const entries = await fs.readdir(rootDir, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  return entries
+    .filter((e) => e.isFile())
+    .map((e) =>
+      path
+        .relative(rootDir, path.join(e.parentPath ?? e.path, e.name))
+        .split(path.sep)
+        .join("/")
+    )
+    .sort();
+}
+
 function ensureCliBuilt(): void {
   if (!existsSync(CLI_PATH)) {
     throw new Error(

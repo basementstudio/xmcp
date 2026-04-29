@@ -1,0 +1,35 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`adapter — 'express' > emits .xmcp/adapter-<mode>.js + .xmcp/adapter/index.{js,d.ts} 1`] = `
+[
+  "adapter-express.js",
+  "adapter/18.index.js",
+  "adapter/index.d.ts",
+  "adapter/index.js",
+  "headers.js",
+  "import-map.js",
+]
+`;
+
+exports[`adapter — 'nestjs' > emits .xmcp/adapter-<mode>.js + .xmcp/adapter/index.{js,d.ts} 1`] = `
+[
+  "adapter-nestjs.js",
+  "adapter/18.index.js",
+  "adapter/index.d.ts",
+  "adapter/index.js",
+  "headers.js",
+  "import-map.js",
+]
+`;
+
+exports[`adapter — 'nextjs' > emits .xmcp/adapter-<mode>.js + .xmcp/adapter/index.{js,d.ts} 1`] = `
+[
+  "adapter-nextjs.js",
+  "adapter/index.d.ts",
+  "adapter/index.js",
+  "headers.js",
+  "import-map.js",
+  "tools.d.ts",
+  "tools.js",
+]
+`;

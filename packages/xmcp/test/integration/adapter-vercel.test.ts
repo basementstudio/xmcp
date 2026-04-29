@@ -1,23 +1,7 @@
 import { describe, it, expect } from "vitest";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { buildFixture, fixturePath } from "./_utils";
-
-async function listFilesSorted(rootDir: string): Promise<string[]> {
-  const entries = await fs.readdir(rootDir, {
-    recursive: true,
-    withFileTypes: true,
-  });
-  return entries
-    .filter((e) => e.isFile())
-    .map((e) =>
-      path
-        .relative(rootDir, path.join(e.parentPath ?? e.path, e.name))
-        .split(path.sep)
-        .join("/")
-    )
-    .sort();
-}
+import { buildFixture, fixturePath, snapshotFileTree } from "./_utils";
 
 // `xmcp build --vercel` produces a Vercel Build Output v3 directory at
 // `.vercel/output/`. The pieces we pin here are the contract Vercel reads:
@@ -73,7 +57,7 @@ describe("adapter — vercel", () => {
     // chunks, renamed entry, missing config) is caught even if the explicit
     // assertions above still pass. Update with `pnpm test -u` when the
     // change is intentional.
-    const tree = await listFilesSorted(outputDir);
+    const tree = await snapshotFileTree(outputDir);
     expect(tree).toMatchSnapshot();
   }, 90_000);
 });

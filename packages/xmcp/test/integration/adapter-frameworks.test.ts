@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { buildFixture, fixturePath } from "./_utils";
+import { buildFixture, fixturePath, snapshotFileTree } from "./_utils";
 
 // Smoke coverage for the three framework adapter modes (`experimental.adapter`
 // = "express" | "nestjs" | "nextjs"). The xmcp build emits a runtime shim at
@@ -72,6 +72,11 @@ describe.each(ADAPTER_MODES)(
           `expected ${mode} adapter to expose ${name}`
         ).toMatch(new RegExp(`\\b${name}\\b`));
       }
+
+      // Snapshot the .xmcp/ tree per mode so adapter bundle drift surfaces
+      // even when the explicit-name assertions above still pass.
+      const xmcpTree = await snapshotFileTree(xmcpDir);
+      expect(xmcpTree).toMatchSnapshot();
     }, 90_000);
   }
 );

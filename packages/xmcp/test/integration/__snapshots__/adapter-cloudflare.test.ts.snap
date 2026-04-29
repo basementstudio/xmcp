@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`adapter — cloudflare > emits worker.js and wrangler.jsonc at the fixture root 1`] = `
+[
+  "cloudflare/worker.js",
+  "headers.js",
+  "http.js",
+  "import-map.js",
+]
+`;

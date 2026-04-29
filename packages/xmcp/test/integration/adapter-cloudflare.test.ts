@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { buildFixture, fixturePath } from "./_utils";
+import { buildFixture, fixturePath, snapshotFileTree } from "./_utils";
 
 // `xmcp build --cf` writes the bundled Workers entry to `<root>/worker.js`
 // and a wrangler config to `<root>/wrangler.jsonc` (only if the user does
@@ -39,5 +39,12 @@ describe("adapter — cloudflare", () => {
     const wrangler = await fs.readFile(wranglerPath, "utf8");
     expect(wrangler).toMatch(/"main":\s*"worker\.js"/);
     expect(wrangler).toMatch(/"compatibility_flags":\s*\[\s*"nodejs_compat"\s*\]/);
+
+    // Snapshot the .xmcp/ build tree so accidental drift in the cloudflare
+    // bundle layout (added chunks, renamed entry) is caught even when the
+    // explicit assertions above still pass. Update with `pnpm test -u` when
+    // the change is intentional.
+    const xmcpTree = await snapshotFileTree(path.join(fixtureDir, ".xmcp"));
+    expect(xmcpTree).toMatchSnapshot();
   }, 90_000);
 });
