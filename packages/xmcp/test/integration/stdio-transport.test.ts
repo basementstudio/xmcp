@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { buildFixture, spawnStdioClient, type StdioClient } from "./_utils";
+import path from "node:path";
+import {
+  buildFixture,
+  fixturePath,
+  inspectorCli,
+  spawnStdioClient,
+  type StdioClient,
+} from "./_utils";
 
 describe("stdio transport — basic-tools fixture", () => {
   let client: StdioClient;
@@ -56,5 +63,38 @@ describe("stdio transport — basic-tools fixture", () => {
       content: Array<{ type: string; text: string }>;
     };
     expect(result.content[0]?.text).toBe("echo: ping");
+  });
+
+  // Inspector-driven layer: free protocol-conformance coverage from the
+  // canonical MCP client. Direct stdio tests above pin response shape; these
+  // pin that the published inspector CLI can drive the same server.
+  describe("via @modelcontextprotocol/inspector --cli", () => {
+    const stdioEntry = path.join(
+      fixturePath("basic-tools"),
+      "dist",
+      "stdio.js"
+    );
+
+    it("tools/list returns the echo tool", async () => {
+      const result = await inspectorCli<{ tools: { name: string }[] }>({
+        transport: "stdio",
+        entry: stdioEntry,
+        method: "tools/list",
+      });
+      expect(result.tools.map((t) => t.name)).toContain("echo");
+    });
+
+    it("tools/call echo returns the message", async () => {
+      const result = await inspectorCli<{
+        content: Array<{ type: string; text: string }>;
+      }>({
+        transport: "stdio",
+        entry: stdioEntry,
+        method: "tools/call",
+        toolName: "echo",
+        toolArgs: { message: "via-inspector" },
+      });
+      expect(result.content[0]?.text).toBe("echo: via-inspector");
+    });
   });
 });

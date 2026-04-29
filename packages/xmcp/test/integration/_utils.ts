@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
+import { createRequire } from "node:module";
 import { createServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -30,6 +31,25 @@ const WATCHER_FIRST_BUILD_TIMEOUT_MS = 30_000;
 // 15s is well above the ~200–600ms typical rebuild and short enough to fail
 // fast when chokidar misses an event (which is the regression we test for).
 const WATCHER_REBUILD_TIMEOUT_MS = 15_000;
+
+// Hard ceiling for one inspector CLI round-trip (connect → request → reply →
+// disconnect). 30s covers cold node start + spawn-rx wrapper overhead on CI.
+const INSPECTOR_TIMEOUT_MS = 30_000;
+
+// Inspector lives at the workspace root, not in packages/xmcp — installing it
+// inside the xmcp package shifts the SDK's peer-resolved zod from v4 to v3,
+// which breaks tools/call against fixtures that import zod v4. Resolve via
+// node module lookup from this file's location so it walks up to the root.
+const INSPECTOR_CLI_ENTRY = path.join(
+  path.dirname(
+    createRequire(__filename).resolve(
+      "@modelcontextprotocol/inspector/package.json"
+    )
+  ),
+  "cli",
+  "build",
+  "cli.js"
+);
 
 export interface ServerHandle {
   child: ChildProcess;
@@ -514,4 +534,132 @@ async function prepareDevTempDir(fixtureName: string): Promise<string> {
   }
 
   return tempDir;
+}
+
+export interface InspectorCliBaseOptions {
+  method: string;
+  toolName?: string;
+  toolArgs?: Record<string, string | number | boolean>;
+  headers?: Record<string, string>;
+}
+
+export interface InspectorStdioOptions extends InspectorCliBaseOptions {
+  transport: "stdio";
+  /** Path to the stdio entry; invoked as `node <entry>`. */
+  entry: string;
+  cwd?: string;
+}
+
+export interface InspectorHttpOptions extends InspectorCliBaseOptions {
+  transport: "http";
+  /** Full MCP endpoint URL, e.g. `http://127.0.0.1:1234/mcp`. */
+  url: string;
+}
+
+export type InspectorCliOptions = InspectorStdioOptions | InspectorHttpOptions;
+
+/**
+ * Drive an MCP server through `@modelcontextprotocol/inspector --cli` and
+ * return the parsed JSON result the inspector prints on success. Gives us
+ * free protocol-conformance coverage on top of direct fetch / stdio tests.
+ *
+ * The wrapper script swallows the inner CLI's non-zero exit code (it always
+ * exits 0 when the request is rejected), so failure is detected by markers
+ * in the captured output rather than by `child.exitCode`.
+ */
+export async function inspectorCli<T = unknown>(
+  options: InspectorCliOptions
+): Promise<T> {
+  const args = [INSPECTOR_CLI_ENTRY, "--cli"];
+
+  if (options.transport === "stdio") {
+    args.push("node", options.entry);
+  } else {
+    args.push(options.url, "--transport", "http");
+  }
+
+  args.push("--method", options.method);
+  if (options.toolName) args.push("--tool-name", options.toolName);
+  if (options.toolArgs) {
+    for (const [k, v] of Object.entries(options.toolArgs)) {
+      args.push(
+        "--tool-arg",
+        `${k}=${typeof v === "string" ? v : JSON.stringify(v)}`
+      );
+    }
+  }
+  if (options.headers) {
+    for (const [k, v] of Object.entries(options.headers)) {
+      args.push("--header", `${k}: ${v}`);
+    }
+  }
+
+  const child = spawn(process.execPath, args, {
+    cwd:
+      options.transport === "stdio"
+        ? (options.cwd ?? process.cwd())
+        : process.cwd(),
+    env: process.env,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  let stdout = "";
+  let stderr = "";
+  child.stdout!.on("data", (b: Buffer) => (stdout += b.toString("utf8")));
+  child.stderr!.on("data", (b: Buffer) => (stderr += b.toString("utf8")));
+
+  const timer = setTimeout(() => {
+    child.kill("SIGKILL");
+  }, INSPECTOR_TIMEOUT_MS);
+  timer.unref();
+  try {
+    await once(child, "exit");
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (/Failed to connect|Failed with exit code/i.test(stdout + stderr)) {
+    throw new Error(
+      `inspector --cli ${options.method} reported failure.\nstdout:\n${stdout}\nstderr:\n${stderr}`
+    );
+  }
+
+  // The inner CLI prints exactly one JSON document via JSON.stringify(result, null, 2).
+  // Find the last balanced JSON object in stdout — robust to any preamble the
+  // wrapper might emit on a future inspector version.
+  const parsed = extractTrailingJson(stdout);
+  if (parsed === undefined) {
+    throw new Error(
+      `inspector --cli ${options.method} produced no parseable JSON.\nstdout:\n${stdout}\nstderr:\n${stderr}`
+    );
+  }
+  return parsed as T;
+}
+
+function extractTrailingJson(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Walk backwards for the last top-level `{...}` block.
+    const end = trimmed.lastIndexOf("}");
+    if (end === -1) return undefined;
+    let depth = 0;
+    for (let i = end; i >= 0; i--) {
+      const ch = trimmed[i];
+      if (ch === "}") depth += 1;
+      else if (ch === "{") {
+        depth -= 1;
+        if (depth === 0) {
+          try {
+            return JSON.parse(trimmed.slice(i, end + 1));
+          } catch {
+            return undefined;
+          }
+        }
+      }
+    }
+    return undefined;
+  }
 }

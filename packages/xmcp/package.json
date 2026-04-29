@@ -94,7 +94,7 @@
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@rspack/core": "^1.6.7",
     "jose": "^6.1.3",
     "postcss-loader": "^8.2.0",

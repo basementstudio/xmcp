@@ -54,6 +54,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.21.2",
     "eslint-config-custom": "workspace:^",
     "prettier": "^3.7.4",
     "turbo": "^2.6.3"
@@ -74,7 +75,7 @@
       "cookie@<1.1.1": "1.1.1",
       "lodash@<4.18.1": "4.18.1",
       "file-type@>=13.0.0 <21.3.2": "21.3.2",
-      "@modelcontextprotocol/sdk@<1.26.0": "1.26.0",
+      "@modelcontextprotocol/sdk@<1.29.0": "1.29.0",
       "flatted@<3.4.2": "3.4.2",
       "undici@>=7.0.0 <7.24.0": "7.24.0",
       "kysely@>=0.26.0 <0.28.14": "0.28.14",
