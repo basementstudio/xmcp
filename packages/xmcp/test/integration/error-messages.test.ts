@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import { realpathSync } from "node:fs";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 
@@ -144,23 +145,26 @@ describe("xmcp build messages for malformed inputs", () => {
  * wording, "for tools does not exist" framing).
  */
 function normalize(output: string, stagingDir: string): string {
-  // /private prefix on macOS — strip BEFORE the staging-dir replacement
-  // so /private/var/folders/.../staged → /var/folders/.../staged →
-  // <staging>.
-  const realStagingDir = stagingDir.replace(/^\/private\//, "/");
+  // On macOS, child processes resolve their cwd through realpath, so build
+  // error messages contain the resolved path (e.g. /private/tmp/...) while
+  // mkdtemp() returns the unresolved path (/tmp/...). os.tmpdir() can root
+  // under either /tmp or /var/folders depending on TMPDIR — substitute both
+  // forms before any other path-stripping kicks in.
+  const resolvedStagingDir = realpathSync(stagingDir);
   return (
     output
       // Strip ANSI color codes.
       // eslint-disable-next-line no-control-regex
       .replace(/?\[[0-9;]*m/g, "")
-      .replace(/\/private(\/var\/folders\/)/g, "$1")
+      .replace(new RegExp(escapeRegExp(resolvedStagingDir), "g"), "<staging>")
       .replace(new RegExp(escapeRegExp(stagingDir), "g"), "<staging>")
-      .replace(new RegExp(escapeRegExp(realStagingDir), "g"), "<staging>")
       // Strip wall-clock build durations ("Compiled in 123ms").
       .replace(/in \d+(?:\.\d+)?ms/g, "in <ms>ms")
       // Strip absolute paths anywhere else (e.g. node_modules, tmp).
       .replace(/\/[^\s'"`]+\/node_modules\//g, "<nm>/")
+      .replace(/\/private\/var\/folders\/[^\s'"`]+/g, "<tmp>")
       .replace(/\/var\/folders\/[^\s'"`]+/g, "<tmp>")
+      .replace(/\/private\/tmp\/[^\s'"`]+/g, "<tmp>")
       .replace(/\/tmp\/[^\s'"`]+/g, "<tmp>")
       .replace(/\r\n/g, "\n")
       .trim()
