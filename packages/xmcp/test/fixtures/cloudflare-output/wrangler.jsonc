@@ -4,7 +4,7 @@
   // Docs: https://developers.cloudflare.com/workers/wrangler/configuration/
   "name": "cloudflare-output",
   "main": "worker.js",
-  "compatibility_date": "2026-04-29",
+  "compatibility_date": "2026-04-30",
   "compatibility_flags": ["nodejs_compat"],
 
   // Observability (Workers Logs)
