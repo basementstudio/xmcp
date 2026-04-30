@@ -23,6 +23,15 @@ export default defineConfig({
     globalSetup: ["./test/global-setup.ts"],
     testTimeout: 30_000,
     hookTimeout: 90_000,
+    // Type-level tests live in test/types/*.test-d.ts. These are tsc errors,
+    // not runtime assertions: they fail the build when a public type signature
+    // breaks. Always-on so accidental changes to the published surface bite
+    // immediately, not at the next user bug report.
+    typecheck: {
+      enabled: true,
+      include: ["test/types/**/*.test-d.ts"],
+      tsconfig: "./tsconfig.test.json",
+    },
     // Integration tests share fixture dist directories — running them in
     // parallel forks racing rm/build steps. Serializing is fast enough
     // here (~8s) and avoids the whole class of race.

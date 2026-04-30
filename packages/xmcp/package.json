@@ -89,6 +89,7 @@
     "test:ui": "vitest --ui",
     "test:unit": "vitest run test/unit",
     "test:integration": "vitest run test/integration",
+    "test:types": "vitest --typecheck.only run",
     "test:coverage": "vitest run --coverage",
     "test:ci": "CI=1 vitest run",
     "typecheck": "tsc --noEmit -p .",
