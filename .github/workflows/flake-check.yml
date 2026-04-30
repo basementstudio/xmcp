@@ -1,0 +1,52 @@
+name: Flake check
+
+# Re-runs the full xmcp test suite N times on canary push to surface
+# non-deterministic tests (port races, watcher timing, JSON-RPC reply
+# ordering — anything that spawns subprocesses can flake). Off the PR
+# critical path: matrix runs would 5x the cost of every PR.
+#
+# A test that passes 4/5 attempts here is a flake — fix it or quarantine
+# it. The standard PR `test` job catches deterministic regressions; this
+# job catches the ones that hide.
+on:
+  push:
+    branches: [main, canary]
+    paths:
+      - "packages/xmcp/**"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: flake-check-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flake:
+    name: Suite attempt ${{ matrix.attempt }}
+    runs-on: ubuntu-latest
+    # `fail-fast: false` — we want every attempt's outcome on display so
+    # a 4/5 result is visible as "one cell red, four green" rather than
+    # "the first failure cancelled the rest".
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp (integration tests need dist/cli.js)
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run tests
+        run: pnpm test

@@ -1,0 +1,58 @@
+name: Examples runtime smoke
+
+# Phase 8.2 follow-up to .github/workflows/examples.yml. Where that
+# workflow asserts every example BUILDS against the workspace xmcp,
+# this one asserts a representative subset actually BOOTS and answers
+# `tools/list`. A regression that breaks the runtime entry (wrong
+# import path, broken JSON-RPC framing, missing tool registration)
+# lands here, not in production.
+#
+# Off the PR critical path — runs on canary/main push and on opt-in
+# PRs labeled `full-examples`. Each cell builds + boots + roundtrips
+# (~5–10s); doing this for every PR would cost 10x the test suite.
+on:
+  push:
+    branches: [main, canary]
+    paths:
+      - "packages/xmcp/**"
+      - "examples/**"
+      - "pnpm-lock.yaml"
+  pull_request:
+    types: [labeled, synchronize]
+  workflow_dispatch:
+
+concurrency:
+  group: examples-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Runtime smoke (HTTP/stdio examples)
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'full-examples'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp (smoke spawns examples that link the workspace dist)
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run runtime smoke
+        env:
+          EXAMPLES_SMOKE: "1"
+        working-directory: packages/xmcp
+        run: pnpm exec vitest run test/integration/examples-runtime-smoke.test.ts

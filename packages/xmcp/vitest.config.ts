@@ -48,17 +48,25 @@ export default defineConfig({
         "test/**",
       ],
       // Regression floor pinned at the current baseline minus ~2 points
-      // (capture: 16.4% statements / 13.49% branches / 16% functions /
-      // 16.38% lines). Numbers look low because most of src/ is exercised
+      // (capture: 17.55% statements / 14.54% branches / 17.33% functions /
+      // 17.42% lines). Numbers look low because most of src/ is exercised
       // by integration tests that spawn separate node processes — those
-      // don't show up in v8 coverage of the test process. Enforced by
-      // the `coverage` job in .github/workflows/ci.yml. Raise as new unit
-      // tests land; recapture with `pnpm test:coverage`.
+      // don't show up in v8 coverage of the test process.
+      //
+      // Several files in src/telemetry/events (post-payload, detached-flush,
+      // tracker) and src/telemetry/storage are intentionally not unit-tested:
+      // they spawn detached processes, post to external endpoints with retry,
+      // or do disk IO that would require heavy mocking with little payoff.
+      // They surface in coverage at 0% by design — counted in the floor so
+      // someone adding indirect coverage gets credit for it.
+      //
+      // Enforced by the `coverage` job in .github/workflows/ci.yml. Raise
+      // as new unit tests land; recapture with `pnpm test:coverage`.
       thresholds: {
-        statements: 14,
-        branches: 11,
-        functions: 14,
-        lines: 14,
+        statements: 15.5,
+        branches: 12.5,
+        functions: 15.3,
+        lines: 15.4,
       },
     },
   },

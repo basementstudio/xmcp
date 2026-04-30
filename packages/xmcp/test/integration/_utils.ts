@@ -134,8 +134,56 @@ export async function buildFixture(
   name: string,
   options: BuildFixtureOptions = {}
 ): Promise<BuildResult> {
+  return buildAt(fixturePath(name), options);
+}
+
+export interface RunCliResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+}
+
+/**
+ * Spawn the built CLI with arbitrary args. Used by argv-parsing tests
+ * that just want the exit code and the captured streams — no fixture,
+ * no build cleanup, no cwd. Caller may set `cwd` for commands that read
+ * config from a directory (e.g. `xmcp build` would, but `--help` won't).
+ */
+export async function runCli(
+  args: string[],
+  options: { cwd?: string; env?: NodeJS.ProcessEnv } = {}
+): Promise<RunCliResult> {
   ensureCliBuilt();
-  const fixtureDir = fixturePath(name);
+  const child = spawn(process.execPath, [CLI_PATH, ...args], {
+    cwd: options.cwd ?? PACKAGE_ROOT,
+    env: { ...process.env, ...(options.env ?? {}) },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const stdoutChunks: string[] = [];
+  const stderrChunks: string[] = [];
+  child.stdout?.on("data", (b: Buffer) =>
+    stdoutChunks.push(b.toString("utf8"))
+  );
+  child.stderr?.on("data", (b: Buffer) =>
+    stderrChunks.push(b.toString("utf8"))
+  );
+  const [exitCode] = (await once(child, "exit")) as [number | null];
+  return {
+    exitCode: exitCode ?? -1,
+    stdout: stdoutChunks.join(""),
+    stderr: stderrChunks.join(""),
+  };
+}
+
+/**
+ * Run `xmcp build` against an absolute directory. Used by error-path tests
+ * that stage a fixture into a tempdir and mutate it before building.
+ */
+export async function buildAt(
+  fixtureDir: string,
+  options: BuildFixtureOptions = {}
+): Promise<BuildResult> {
+  ensureCliBuilt();
   const distDir = path.join(fixtureDir, "dist");
   await fs.rm(distDir, { recursive: true, force: true });
   for (const extra of options.cleanPaths ?? []) {
@@ -192,12 +240,27 @@ export async function spawnHttpServer(
       `Fixture not built: ${httpEntry} missing. Call buildFixture("${fixtureName}") first.`
     );
   }
+  return spawnHttpEntry(httpEntry, options);
+}
+
+/**
+ * Spawn an HTTP server from an absolute `dist/http.js`-style entry. Used
+ * by example-runtime-smoke tests that build under examples/<name>/dist
+ * rather than test/fixtures/<name>/dist.
+ */
+export async function spawnHttpEntry(
+  entryPath: string,
+  options: SpawnHttpOptions = {}
+): Promise<ServerHandle> {
+  if (!existsSync(entryPath)) {
+    throw new Error(`HTTP entry not found: ${entryPath}`);
+  }
 
   const startPort = options.startPort ?? (await findFreePort());
   const endpoint = options.endpoint ?? "/mcp";
 
-  const child = spawn(process.execPath, [httpEntry], {
-    cwd: distDir,
+  const child = spawn(process.execPath, [entryPath], {
+    cwd: path.dirname(entryPath),
     env: {
       ...process.env,
       ...options.env,
@@ -323,9 +386,20 @@ export async function spawnStdioClient(
       `Fixture not built: ${entry} missing. Call buildFixture("${fixtureName}") first.`
     );
   }
+  return spawnStdioEntry(entry);
+}
 
-  const child = spawn(process.execPath, [entry], {
-    cwd: distDir,
+/**
+ * Spawn the stdio entry from an absolute `dist/stdio.js` path. Used by
+ * example-runtime-smoke tests.
+ */
+export async function spawnStdioEntry(entryPath: string): Promise<StdioClient> {
+  if (!existsSync(entryPath)) {
+    throw new Error(`stdio entry not found: ${entryPath}`);
+  }
+
+  const child = spawn(process.execPath, [entryPath], {
+    cwd: path.dirname(entryPath),
     env: process.env,
     stdio: ["pipe", "pipe", "pipe"],
   });
@@ -542,8 +616,13 @@ export async function spawnDevServer(
 /**
  * Copy a fixture into a fresh tempdir and rewire its node_modules so the
  * symlinks (which are workspace-relative in the original location) resolve
- * absolutely from the new path.
+ * absolutely from the new path. Public so error-path tests can mutate a
+ * staged copy without touching the source fixture.
  */
+export async function stageFixture(fixtureName: string): Promise<string> {
+  return prepareDevTempDir(fixtureName);
+}
+
 async function prepareDevTempDir(fixtureName: string): Promise<string> {
   const src = fixturePath(fixtureName);
   const tempDir = await fs.mkdtemp(

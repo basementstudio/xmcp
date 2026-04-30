@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`xmcp build messages for malformed inputs > tool file with no default export (exits-zero) 1`] = `
+"XMCP  Building for production...
+✔ Built STDIO server
+✔ Built HTTP server
+✔ Registered 1 tool
+✔ Compiled in <ms>ms"
+`;
+
+exports[`xmcp build messages for malformed inputs > tool schema is not a Zod object (exits-zero) 1`] = `
+"XMCP  Building for production...
+✔ Built STDIO server
+✔ Built HTTP server
+✔ Registered 1 tool
+✔ Compiled in <ms>ms"
+`;
+
+exports[`xmcp build messages for malformed inputs > tools directory does not exist (fails) 1`] = `
+"XMCP  Building for production...
+
+The path set in xmcp.config.ts for tools does not exist: <staging>/src/tools.
+        If you're not using this folder, set the tools path to false"
+`;
+
+exports[`xmcp build messages for malformed inputs > tools path resolves to a file, not a directory (exits-zero) 1`] = `
+"XMCP  Building for production...
+✔ Built STDIO server
+✔ Built HTTP server
+✔ Registered 1 tool
+✔ Compiled in <ms>ms"
+`;
