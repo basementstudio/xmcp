@@ -1,0 +1,44 @@
+name: Perf
+
+# Catastrophic-regression detector for build / cold-start time. Off the PR
+# critical path — the perf test is too noisy on shared PR runners (see the
+# `PERF_ENABLED` gate in test/integration/perf.test.ts). Runs on push to
+# canary/main only and on manual dispatch.
+on:
+  push:
+    branches: [main, canary]
+    paths:
+      - "packages/xmcp/**"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
+
+concurrency:
+  group: perf-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  perf:
+    name: Perf (basic-tools build + http cold start)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp (integration tests need dist/cli.js)
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run perf test
+        env:
+          PERF: "1"
+        working-directory: packages/xmcp
+        run: pnpm exec vitest run test/integration/perf.test.ts

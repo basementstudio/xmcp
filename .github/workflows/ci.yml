@@ -100,13 +100,13 @@ jobs:
           echo "Tarball clean — no test files."
 
   coverage:
-    # Non-blocking: surfaces coverage regressions (vitest threshold violations
-    # become a non-zero exit) without gating PRs while the baseline catches
-    # up. Promote to a required check by removing `continue-on-error` once
-    # coverage is meaningfully higher than the floor in vitest.config.ts.
-    name: Coverage (non-blocking)
+    # Required check. Vitest threshold violations exit non-zero and fail CI.
+    # Floor in vitest.config.ts sits ~2 points below the captured baseline
+    # (16.4 / 13.49 / 16 / 16.38) so a small unit-test refactor can dip
+    # without breaking CI, but a real regression in unit-level coverage
+    # still bites. Recapture and raise the floor when unit coverage rises.
+    name: Coverage
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
