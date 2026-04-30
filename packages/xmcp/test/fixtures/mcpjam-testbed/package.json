@@ -1,0 +1,12 @@
+{
+  "name": "@xmcp-fixtures/mcpjam-testbed",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "xmcp build"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

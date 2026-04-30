@@ -5,7 +5,12 @@ import { buildFixture } from "./integration/_utils";
 // other's dist via the rm-dist preamble. compile.test.ts re-runs builds to
 // inspect output; other tests just trust the dist is present.
 export default async function setup() {
-  for (const name of ["basic-tools", "empty-paths", "custom-paths"] as const) {
+  for (const name of [
+    "basic-tools",
+    "empty-paths",
+    "custom-paths",
+    "mcpjam-testbed",
+  ] as const) {
     const result = await buildFixture(name);
     if (result.exitCode !== 0) {
       throw new Error(

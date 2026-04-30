@@ -45,6 +45,8 @@
     "test:integration": "pnpm --filter=xmcp test:integration",
     "test:coverage": "pnpm --filter=xmcp test:coverage",
     "test:ci": "pnpm --filter=xmcp test:ci",
+    "e2e:fast": "pnpm --filter=xmcp e2e:fast",
+    "e2e:full": "pnpm --filter=xmcp e2e:full",
     "typecheck": "turbo run typecheck --filter=xmcp",
     "typecheck:all": "turbo run typecheck",
     "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
@@ -54,7 +56,6 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "devDependencies": {
-    "@modelcontextprotocol/inspector": "^0.21.2",
     "eslint-config-custom": "workspace:^",
     "prettier": "^3.7.4",
     "turbo": "^2.6.3"

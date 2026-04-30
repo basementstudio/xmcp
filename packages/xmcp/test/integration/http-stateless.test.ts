@@ -4,7 +4,8 @@ import fs from "node:fs/promises";
 import * as ts from "typescript";
 import {
   buildFixture,
-  inspectorCli,
+  mcpjamToolsCall,
+  mcpjamToolsList,
   spawnHttpServer,
   postJsonRpc,
   type ServerHandle,
@@ -94,10 +95,7 @@ function findForbiddenStateFields(
           let signal: string | undefined;
           if (annotationText && annotationRe.test(annotationText)) {
             signal = annotationText;
-          } else if (
-            initializerText &&
-            initializerRe.test(initializerText)
-          ) {
+          } else if (initializerText && initializerRe.test(initializerText)) {
             signal = initializerText;
           }
           if (!signal) continue;
@@ -268,30 +266,25 @@ describe("HTTP transport — stateless contract", () => {
       }
     });
 
-    // Inspector-driven layer: drives the same live server through the
-    // canonical MCP client. Direct fetch above asserts header shape and
+    // mcpjam-driven layer: drives the same live server through a real
+    // external MCP client. Direct fetch above asserts header shape and
     // statelessness; these assert end-to-end protocol conformance.
-    describe("via @modelcontextprotocol/inspector --cli", () => {
-      it("tools/list returns the echo tool", async () => {
-        const result = await inspectorCli<{ tools: { name: string }[] }>({
+    describe("via @mcpjam/cli", () => {
+      it("tools list returns the echo tool", async () => {
+        const result = await mcpjamToolsList({
           transport: "http",
           url: server.url,
-          method: "tools/list",
         });
         expect(result.tools.map((t) => t.name)).toContain("echo");
       });
 
-      it("tools/call echo returns the message", async () => {
-        const result = await inspectorCli<{
-          content: Array<{ type: string; text: string }>;
-        }>({
-          transport: "http",
-          url: server.url,
-          method: "tools/call",
-          toolName: "echo",
-          toolArgs: { message: "via-inspector-http" },
-        });
-        expect(result.content[0]?.text).toBe("echo: via-inspector-http");
+      it("tools call echo returns the message", async () => {
+        const result = await mcpjamToolsCall(
+          { transport: "http", url: server.url },
+          "echo",
+          { message: "via-mcpjam-http" }
+        );
+        expect(result.content[0]?.text).toBe("echo: via-mcpjam-http");
       });
     });
   });

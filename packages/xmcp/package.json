@@ -92,6 +92,8 @@
     "test:types": "vitest --typecheck.only run",
     "test:coverage": "vitest run --coverage",
     "test:ci": "CI=1 vitest run",
+    "e2e:fast": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts -t fast",
+    "e2e:full": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts",
     "typecheck": "tsc --noEmit -p .",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
@@ -105,7 +107,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@modelcontextprotocol/inspector": "^0.21.2",
+    "@mcpjam/cli": "3.3.3",
     "@nestjs/common": "^11.1.12",
     "@types/async-retry": "^1.4.9",
     "@types/content-type": "^1.1.9",

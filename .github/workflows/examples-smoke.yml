@@ -56,3 +56,35 @@ jobs:
           EXAMPLES_SMOKE: "1"
         working-directory: packages/xmcp
         run: pnpm exec vitest run test/integration/examples-runtime-smoke.test.ts
+
+  mcpjam-e2e-full:
+    name: mcpjam e2e (full sweep)
+    runs-on: ubuntu-latest
+    # Same gating as smoke: canary/main push, manual dispatch, or PRs
+    # labeled `full-e2e`. Drives both fixtures through every mcpjam
+    # subcommand (tools, resources, prompts) on stdio and http.
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'full-e2e'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp (e2e spawns built fixtures that link workspace dist)
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run mcpjam full e2e sweep
+        working-directory: packages/xmcp
+        run: pnpm e2e:full

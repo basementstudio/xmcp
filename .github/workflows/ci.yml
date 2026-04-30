@@ -66,6 +66,15 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      # Fast e2e subset — drives the built fixtures through @mcpjam/cli
+      # (a real third-party MCP client) on each PR. Catches regressions in
+      # the full client→server lifecycle that the in-process suite misses.
+      # The full sweep with resource/prompt coverage runs on canary/main
+      # via examples-smoke.yml.
+      - name: e2e fast subset (mcpjam)
+        working-directory: packages/xmcp
+        run: pnpm e2e:fast
+
   pack-check:
     name: Pack hygiene (no test files in tarball)
     runs-on: ubuntu-latest

@@ -32,25 +32,21 @@ const WATCHER_FIRST_BUILD_TIMEOUT_MS = 30_000;
 // fast when chokidar misses an event (which is the regression we test for).
 const WATCHER_REBUILD_TIMEOUT_MS = 15_000;
 
-// Hard ceiling for one inspector CLI round-trip (connect → request → reply →
-// disconnect). 30s covers cold node start + spawn-rx wrapper overhead on CI.
-const INSPECTOR_TIMEOUT_MS = 30_000;
+// Hard ceiling for one mcpjam CLI round-trip (spawn → connect → request →
+// reply → disconnect). 30s covers cold node start + connect handshake on CI.
+const MCPJAM_CLI_TIMEOUT_MS = 30_000;
 
-// Resolve the inspector CLI entry via node module lookup so it works whether
+// Resolve the mcpjam CLI entry via node module lookup so it works whether
 // the package is hoisted to the workspace root or installed locally under
-// packages/xmcp/node_modules/. tools/call against zod-v4 fixtures must keep
-// working in both layouts — verify with the inspector-driven blocks in
-// http-stateless.test.ts and stdio-transport.test.ts if you touch this.
-const INSPECTOR_CLI_ENTRY = path.join(
-  path.dirname(
-    createRequire(__filename).resolve(
-      "@modelcontextprotocol/inspector/package.json"
-    )
-  ),
-  "cli",
-  "build",
-  "cli.js"
-);
+// packages/xmcp/node_modules/. mcpjam's package.json declares `bin.mcpjam =
+// dist/index.js`; we resolve that path and spawn it directly with node so we
+// don't pay the npx download cost on every test.
+const MCPJAM_CLI_ENTRY = (() => {
+  const pkgJsonPath = createRequire(__filename).resolve(
+    "@mcpjam/cli/package.json"
+  );
+  return path.join(path.dirname(pkgJsonPath), "dist", "index.js");
+})();
 
 export interface ServerHandle {
   child: ChildProcess;
@@ -662,68 +658,60 @@ async function prepareDevTempDir(fixtureName: string): Promise<string> {
   return tempDir;
 }
 
-export interface InspectorCliBaseOptions {
-  method: string;
-  toolName?: string;
-  toolArgs?: Record<string, string | number | boolean>;
-  headers?: Record<string, string>;
+export type McpjamTarget =
+  | { transport: "stdio"; command: string; args?: string[]; cwd?: string }
+  | { transport: "http"; url: string; headers?: Record<string, string> };
+
+export interface McpjamRunOptions {
+  /** Override the default 30s timeout for slow targets. */
+  timeoutMs?: number;
 }
 
-export interface InspectorStdioOptions extends InspectorCliBaseOptions {
-  transport: "stdio";
-  /** Path to the stdio entry; invoked as `node <entry>`. */
-  entry: string;
-  cwd?: string;
+interface McpjamSpawnOptions extends McpjamRunOptions {
+  subcommand: string[];
+  extraArgs?: string[];
+  target: McpjamTarget;
 }
-
-export interface InspectorHttpOptions extends InspectorCliBaseOptions {
-  transport: "http";
-  /** Full MCP endpoint URL, e.g. `http://127.0.0.1:1234/mcp`. */
-  url: string;
-}
-
-export type InspectorCliOptions = InspectorStdioOptions | InspectorHttpOptions;
 
 /**
- * Drive an MCP server through `@modelcontextprotocol/inspector --cli` and
- * return the parsed JSON result the inspector prints on success. Gives us
- * free protocol-conformance coverage on top of direct fetch / stdio tests.
+ * Drive an MCP server through `@mcpjam/cli` and return the parsed JSON
+ * payload it prints on stdout. Replaces the legacy inspector wrapper —
+ * mcpjam exits non-zero on failure (no marker scan needed) and emits
+ * structured JSON for every subcommand under `--format json --quiet`.
  *
- * The wrapper script swallows the inner CLI's non-zero exit code (it always
- * exits 0 when the request is rejected), so failure is detected by markers
- * in the captured output rather than by `child.exitCode`.
+ * Stderr is allowed to contain advisory warnings (e.g. "server does not
+ * advertise resources capability"); we only fail on non-zero exit or
+ * unparseable stdout.
  */
-export async function inspectorCli<T = unknown>(
-  options: InspectorCliOptions
-): Promise<T> {
-  const args = [INSPECTOR_CLI_ENTRY, "--cli"];
+async function runMcpjam<T = unknown>(options: McpjamSpawnOptions): Promise<T> {
+  const args = [
+    MCPJAM_CLI_ENTRY,
+    "--format",
+    "json",
+    "--quiet",
+    "--no-telemetry",
+    ...options.subcommand,
+    ...(options.extraArgs ?? []),
+  ];
 
-  if (options.transport === "stdio") {
-    args.push("node", options.entry);
-  } else {
-    args.push(options.url, "--transport", "http");
-  }
-
-  args.push("--method", options.method);
-  if (options.toolName) args.push("--tool-name", options.toolName);
-  if (options.toolArgs) {
-    for (const [k, v] of Object.entries(options.toolArgs)) {
-      args.push(
-        "--tool-arg",
-        `${k}=${typeof v === "string" ? v : JSON.stringify(v)}`
-      );
+  if (options.target.transport === "stdio") {
+    args.push("--transport", "stdio", "--command", options.target.command);
+    if (options.target.args && options.target.args.length > 0) {
+      args.push("--args", ...options.target.args);
     }
-  }
-  if (options.headers) {
-    for (const [k, v] of Object.entries(options.headers)) {
-      args.push("--header", `${k}: ${v}`);
+  } else {
+    args.push("--transport", "http", "--url", options.target.url);
+    if (options.target.headers) {
+      for (const [k, v] of Object.entries(options.target.headers)) {
+        args.push("--header", `${k}: ${v}`);
+      }
     }
   }
 
   const child = spawn(process.execPath, args, {
     cwd:
-      options.transport === "stdio"
-        ? (options.cwd ?? process.cwd())
+      options.target.transport === "stdio"
+        ? (options.target.cwd ?? process.cwd())
         : process.cwd(),
     env: process.env,
     stdio: ["ignore", "pipe", "pipe"],
@@ -734,32 +722,191 @@ export async function inspectorCli<T = unknown>(
   child.stdout!.on("data", (b: Buffer) => (stdout += b.toString("utf8")));
   child.stderr!.on("data", (b: Buffer) => (stderr += b.toString("utf8")));
 
+  const timeoutMs = options.timeoutMs ?? MCPJAM_CLI_TIMEOUT_MS;
+  let timedOut = false;
   const timer = setTimeout(() => {
+    timedOut = true;
     child.kill("SIGKILL");
-  }, INSPECTOR_TIMEOUT_MS);
+  }, timeoutMs);
   timer.unref();
+  let exitCode: number | null = null;
   try {
-    await once(child, "exit");
+    [exitCode] = (await once(child, "exit")) as [number | null];
   } finally {
     clearTimeout(timer);
   }
 
-  if (/Failed to connect|Failed with exit code/i.test(stdout + stderr)) {
+  const label = options.subcommand.join(" ");
+
+  if (timedOut) {
     throw new Error(
-      `inspector --cli ${options.method} reported failure.\nstdout:\n${stdout}\nstderr:\n${stderr}`
+      `mcpjam ${label} timed out after ${timeoutMs}ms.\nstdout:\n${stdout}\nstderr:\n${stderr}`
     );
   }
 
-  // The inner CLI prints exactly one JSON document via JSON.stringify(result, null, 2).
-  // Find the last balanced JSON object in stdout — robust to any preamble the
-  // wrapper might emit on a future inspector version.
   const parsed = extractTrailingJson(stdout);
+  if (exitCode !== 0) {
+    const detail =
+      parsed && typeof parsed === "object" && "error" in (parsed as object)
+        ? JSON.stringify((parsed as { error: unknown }).error)
+        : stderr.trim() || "(no stderr)";
+    throw new Error(
+      `mcpjam ${label} exited ${exitCode}: ${detail}\nstdout:\n${stdout}`
+    );
+  }
+
   if (parsed === undefined) {
     throw new Error(
-      `inspector --cli ${options.method} produced no parseable JSON.\nstdout:\n${stdout}\nstderr:\n${stderr}`
+      `mcpjam ${label} produced no parseable JSON.\nstdout:\n${stdout}\nstderr:\n${stderr}`
     );
   }
   return parsed as T;
+}
+
+export interface McpjamDoctorReport {
+  status: "ready" | "failed" | string;
+  connection: { status: string; detail?: string };
+  capabilities: Record<string, unknown>;
+  tools: Array<{ name: string; description?: string }>;
+  resources: Array<{ uri: string; name?: string }>;
+  prompts: Array<{ name: string; description?: string }>;
+  checks: Record<string, { status: string; detail?: string }>;
+  error: unknown;
+}
+
+export interface McpjamToolsListResult {
+  tools: Array<{ name: string; description?: string }>;
+}
+
+export interface McpjamToolCallResult {
+  content: Array<{ type: string; text?: string }>;
+  isError?: boolean;
+}
+
+export interface McpjamResourcesListResult {
+  resources: Array<{ uri: string; name?: string }>;
+}
+
+export interface McpjamResourceReadResult {
+  content: {
+    contents: Array<{ uri: string; mimeType?: string; text?: string }>;
+  };
+}
+
+export interface McpjamPromptsListResult {
+  prompts: Array<{ name: string; description?: string }>;
+}
+
+export interface McpjamPromptGetResult {
+  content: {
+    description?: string;
+    messages: Array<{ role: string; content: { type: string; text?: string } }>;
+  };
+}
+
+export function mcpjamDoctor(
+  target: McpjamTarget,
+  options: McpjamRunOptions = {}
+): Promise<McpjamDoctorReport> {
+  return runMcpjam<McpjamDoctorReport>({
+    subcommand: ["server", "doctor"],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamToolsList(
+  target: McpjamTarget,
+  options: McpjamRunOptions = {}
+): Promise<McpjamToolsListResult> {
+  return runMcpjam<McpjamToolsListResult>({
+    subcommand: ["tools", "list"],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamToolsCall(
+  target: McpjamTarget,
+  toolName: string,
+  toolArgs: Record<string, unknown> = {},
+  options: McpjamRunOptions = {}
+): Promise<McpjamToolCallResult> {
+  return runMcpjam<McpjamToolCallResult>({
+    subcommand: ["tools", "call"],
+    extraArgs: [
+      "--tool-name",
+      toolName,
+      "--tool-args",
+      JSON.stringify(toolArgs),
+    ],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamResourcesList(
+  target: McpjamTarget,
+  options: McpjamRunOptions = {}
+): Promise<McpjamResourcesListResult> {
+  return runMcpjam<McpjamResourcesListResult>({
+    subcommand: ["resources", "list"],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamResourceRead(
+  target: McpjamTarget,
+  uri: string,
+  options: McpjamRunOptions = {}
+): Promise<McpjamResourceReadResult> {
+  return runMcpjam<McpjamResourceReadResult>({
+    subcommand: ["resources", "read"],
+    extraArgs: ["--resource-uri", uri],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamPromptsList(
+  target: McpjamTarget,
+  options: McpjamRunOptions = {}
+): Promise<McpjamPromptsListResult> {
+  return runMcpjam<McpjamPromptsListResult>({
+    subcommand: ["prompts", "list"],
+    target,
+    ...options,
+  });
+}
+
+export function mcpjamPromptGet(
+  target: McpjamTarget,
+  promptName: string,
+  promptArgs: Record<string, unknown> = {},
+  options: McpjamRunOptions = {}
+): Promise<McpjamPromptGetResult> {
+  return runMcpjam<McpjamPromptGetResult>({
+    subcommand: ["prompts", "get"],
+    extraArgs: [
+      "--prompt-name",
+      promptName,
+      "--prompt-args",
+      JSON.stringify(promptArgs),
+    ],
+    target,
+    ...options,
+  });
+}
+
+/** Build a stdio target pointing at a fixture's built dist/stdio.js entry. */
+export function mcpjamStdioTarget(fixtureName: string): McpjamTarget {
+  const entry = path.join(fixturePath(fixtureName), "dist", "stdio.js");
+  return {
+    transport: "stdio",
+    command: process.execPath,
+    args: [entry],
+  };
 }
 
 function extractTrailingJson(text: string): unknown {

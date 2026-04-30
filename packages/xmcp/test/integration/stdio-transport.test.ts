@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import path from "node:path";
 import {
   buildFixture,
-  fixturePath,
-  inspectorCli,
+  mcpjamStdioTarget,
+  mcpjamToolsCall,
+  mcpjamToolsList,
   spawnStdioClient,
   type StdioClient,
 } from "./_utils";
@@ -65,36 +65,22 @@ describe("stdio transport — basic-tools fixture", () => {
     expect(result.content[0]?.text).toBe("echo: ping");
   });
 
-  // Inspector-driven layer: free protocol-conformance coverage from the
-  // canonical MCP client. Direct stdio tests above pin response shape; these
-  // pin that the published inspector CLI can drive the same server.
-  describe("via @modelcontextprotocol/inspector --cli", () => {
-    const stdioEntry = path.join(
-      fixturePath("basic-tools"),
-      "dist",
-      "stdio.js"
-    );
+  // mcpjam-driven layer: free protocol-conformance coverage from a real
+  // third-party MCP client. Direct stdio tests above pin response shape;
+  // these pin that an external CLI can drive the same server end to end.
+  describe("via @mcpjam/cli", () => {
+    const target = mcpjamStdioTarget("basic-tools");
 
-    it("tools/list returns the echo tool", async () => {
-      const result = await inspectorCli<{ tools: { name: string }[] }>({
-        transport: "stdio",
-        entry: stdioEntry,
-        method: "tools/list",
-      });
+    it("tools list returns the echo tool", async () => {
+      const result = await mcpjamToolsList(target);
       expect(result.tools.map((t) => t.name)).toContain("echo");
     });
 
-    it("tools/call echo returns the message", async () => {
-      const result = await inspectorCli<{
-        content: Array<{ type: string; text: string }>;
-      }>({
-        transport: "stdio",
-        entry: stdioEntry,
-        method: "tools/call",
-        toolName: "echo",
-        toolArgs: { message: "via-inspector" },
+    it("tools call echo returns the message", async () => {
+      const result = await mcpjamToolsCall(target, "echo", {
+        message: "via-mcpjam",
       });
-      expect(result.content[0]?.text).toBe("echo: via-inspector");
+      expect(result.content[0]?.text).toBe("echo: via-mcpjam");
     });
   });
 });

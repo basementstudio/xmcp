@@ -6,7 +6,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import {
-  inspectorCli,
+  mcpjamToolsList,
   spawnHttpEntry,
   spawnStdioEntry,
   type ServerHandle,
@@ -103,16 +103,13 @@ describe.skipIf(!SMOKE_ENABLED)(
           ).toBe(true);
           const server = await spawnHttpEntry(entry);
           handles.push(server);
-          // inspectorCli runs the canonical MCP init handshake before
+          // mcpjam runs the canonical MCP init handshake before
           // calling tools/list, which is what real clients do. Direct
           // POST to the streamable-http endpoint without that fails.
           try {
-            const list = await inspectorCli<{
-              tools: Array<{ name: string }>;
-            }>({
+            const list = await mcpjamToolsList({
               transport: "http",
               url: server.url,
-              method: "tools/list",
             });
             const names = list.tools.map((t) => t.name);
             for (const expected of ex.expectedTools) {
@@ -159,8 +156,7 @@ describe.skipIf(!SMOKE_ENABLED)(
           };
           assertToolsListResult(list, ex);
         }
-      }, // Each cell does a real build + boot + roundtrip. Allow ~60s.
-      60_000);
+      }, 60_000); // Each cell does a real build + boot + roundtrip. Allow ~60s.
     }
   }
 );
