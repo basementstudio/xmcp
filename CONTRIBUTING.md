@@ -38,6 +38,12 @@ Follow the templates to report issues or request features.
 
 If you're adding a new feature, please consider adding an example to the `examples` directory. This will help us test the feature and ensure it works as expected.
 
+## CI
+
+Default PR CI builds and tests `xmcp` itself. It does **not** rebuild every project under `examples/` — that sweep runs only on push to `canary`/`main`.
+
+If your change touches the compiler, runtime, or anything an example imports, opt the PR into the full sweep by adding the **`full-examples`** label. The `examples-build` matrix will rebuild all 30 committed examples and report each one as a separate check.
+
 ## Questions
 
 For help, use [Discord](https://discord.gg/d9a7JBBxV9). For security issues, email [security@xmcp.dev](mailto:security@xmcp.dev).
