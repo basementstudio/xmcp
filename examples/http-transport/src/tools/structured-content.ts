@@ -1,4 +1,15 @@
 import { z } from "zod";
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "structured-content",
+  description: "Return structured weather data with temperature, conditions, and humidity",
+  annotations: {
+    title: "Structured Content",
+    readOnlyHint: true,
+    idempotentHint: true,
+  },
+};
 
 export const outputSchema = {
   temperature: z.number(),

@@ -10,6 +10,7 @@ import {
   compilerContextProvider,
 } from "./compiler/compiler-context";
 import { runCreate, type CreateType } from "./cli/commands/create";
+import { runValidate } from "./cli/commands/validate";
 
 const program = new Command();
 
@@ -121,5 +122,29 @@ program
       process.exit(1);
     }
   });
+
+program
+  .command("validate")
+  .description("Check tool, resource, and prompt files for common issues")
+  .option("--tools <dir>", "Override tools directory")
+  .option("--resources <dir>", "Override resources directory")
+  .option("--prompts <dir>", "Override prompts directory")
+  .action(
+    async (options: {
+      tools?: string;
+      resources?: string;
+      prompts?: string;
+    }) => {
+      const summary = await runValidate({
+        tools: options.tools,
+        prompts: options.prompts,
+        resources: options.resources,
+      });
+
+      if (summary.totalErrors > 0) {
+        process.exit(1);
+      }
+    }
+  );
 
 program.parse();

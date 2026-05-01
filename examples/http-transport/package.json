@@ -7,7 +7,8 @@
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",
-    "start": "node dist/http.js"
+    "start": "node dist/http.js",
+    "validate": "xmcp validate"
   },
   "dependencies": {
     "xmcp": "workspace:*",
