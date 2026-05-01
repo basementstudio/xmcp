@@ -1,6 +1,11 @@
 {
   "title": "Guides",
-  "pages": ["xmcp-mcp-server", "authentication", "monetization"],
+  "pages": [
+    "xmcp-mcp-server",
+    "ui-rendering",
+    "authentication",
+    "monetization"
+  ],
   "defaultOpen": true,
   "root": true
 }
