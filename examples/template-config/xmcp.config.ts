@@ -5,6 +5,7 @@ const config: XmcpConfig = {
   template: {
     name: "Custom xmcp server",
     description: "You can modify this description in the xmcp.config.ts file.",
+    icons: [{ src: "./xmcp.svg" }],
 
     // Custom home page - can be inline HTML or a file path
     // Option 1: Inline HTML string

@@ -220,6 +220,14 @@ export default {
 
     // Home page (no auth required)
     if (pathname === "/" && request.method === "GET") {
+      if (templateConfig.homePage) {
+        const response = new Response(templateConfig.homePage, {
+          status: 200,
+          headers: { "Content-Type": "text/html" },
+        });
+        return addCorsHeaders(response, requestOrigin);
+      }
+
       const html = homeTemplate(
         mcpEndpoint,
         templateConfig.name,
