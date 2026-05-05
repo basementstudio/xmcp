@@ -49,6 +49,14 @@ const ICONS = {
       </defs>
     </svg>
   `,
+  plug: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 2v4" />
+      <path d="M13 2v4" />
+      <path d="M5 6h10v3a5 5 0 0 1-5 5 5 5 0 0 1-5-5V6z" fill="none" />
+      <path d="M10 14v4" />
+    </svg>
+  `,
   codex: `
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <g clip-path="url(#codex)">
@@ -66,6 +74,7 @@ const ICONS = {
 const styles = String.raw`
   :root {
     color-scheme: dark;
+    background: #000000;
     --brand-white: #f7f7f7;
     --brand-neutral-50: #dbdbdb;
     --brand-neutral-100: #a8a8a8;
@@ -83,14 +92,19 @@ const styles = String.raw`
     box-sizing: border-box;
   }
 
+  html,
+  body {
+    background-color: #000000;
+  }
+
   body {
     margin: 0;
     min-height: 100vh;
-    background: #050505;
     color: var(--brand-white);
     font-family: "Geist Sans", "Inter", "SF Pro Display", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+
 
   a {
     color: inherit;
@@ -98,17 +112,17 @@ const styles = String.raw`
   }
 
   main {
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 2rem 2rem 4rem;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 20px;
+    gap: 24px;
   }
 
   .section {
     grid-column: 1 / -1;
-    padding: 2rem 0;
+    padding: 0;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
     gap: 20px;
@@ -197,7 +211,7 @@ const styles = String.raw`
     gap: 1rem;
     min-height: 60px;
     border: 1px solid var(--brand-neutral-600);
-    background: rgba(5, 5, 5, 0.85);
+    background: #000000;
     padding: 1.25rem 1.5rem;
     border-radius: 2px;
     color: var(--brand-white);
@@ -211,7 +225,7 @@ const styles = String.raw`
   .connection-card:hover,
   .connection-card:focus-visible {
     border-color: var(--brand-neutral-400);
-    background: rgba(15, 15, 15, 0.85);
+    background: #000000;
   }
 
   .connection-card:focus-visible {
@@ -227,7 +241,7 @@ const styles = String.raw`
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--brand-neutral-600);
+    background: transparent;
     flex-shrink: 0;
   }
 
@@ -237,105 +251,11 @@ const styles = String.raw`
     color: var(--brand-white);
   }
 
-  .background-icon {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    color: var(--brand-neutral-600);
-  }
-
-  .background-icon svg {
-    position: absolute;
-    width: 120px;
-    height: auto;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: currentColor;
-  }
-
-  .card-label {
-    position: relative;
-    z-index: 2;
-    color: var(--brand-white);
-  }
-
-  .code-block {
-    position: relative;
-    width: 100%;
-    margin-top: 1.25rem;
-  }
-
-  .code-block pre {
-    margin: 0;
-    border-radius: 0;
-    border: 1px solid var(--brand-neutral-500);
-    background: rgba(8, 8, 8, 0.9);
-    padding: 1.5rem;
-    overflow-x: auto;
-  }
-
-  .code-block code {
-    font-family: "Geist Mono", "SFMono-Regular", "Consolas", monospace;
-    color: var(--brand-white);
-    font-size: 0.85rem;
-    line-height: 1.6;
-    display: block;
-    white-space: pre;
-  }
-
-  .copy-snippet-btn {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    border: none;
-    background: rgba(0, 0, 0, 0.8);
-    color: var(--brand-neutral-50);
-    border-radius: 0;
-    cursor: pointer;
-    transition: color 0.2s ease, background 0.2s ease;
-    z-index: 10;
-  }
-
-  .copy-snippet-btn:hover,
-  .copy-snippet-btn:focus-visible {
-    color: var(--brand-white);
-    background: rgba(0, 0, 0, 0.95);
-    outline: none;
-  }
-
-  .copy-snippet-btn svg {
-    width: 16px;
-    height: 16px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-
-  .copy-snippet-btn svg.hidden {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  .copy-snippet-btn svg.visible {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  .card-inner {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-  }
-
   .toast {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: rgba(8, 8, 8, 0.95);
+    background: #000000;
     border: 1px solid var(--brand-neutral-500);
     border-radius: 0;
     padding: 0.75rem 1.25rem;
@@ -362,36 +282,367 @@ const styles = String.raw`
     clip: rect(0, 0, 0, 0);
     border: 0;
   }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .hero-icon {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    align-self: baseline;
+  }
+
+  .hero-icon img,
+  .hero-icon svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .hero-top .display {
+    margin: 0;
+  }
+
+  .hero-top .meta-pill {
+    margin-left: auto;
+  }
+
+  .hero-bottom {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .hero-bottom .lead {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hero-bottom .actions-row {
+    display: contents;
+  }
+
+  .hero-bottom .dropdown {
+    margin-left: auto;
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border: 1px dashed var(--brand-neutral-400);
+    background: transparent;
+    color: var(--brand-neutral-100);
+    font-family: "Geist Mono", "SFMono-Regular", "Consolas", monospace;
+    font-size: 0.75rem;
+    border-radius: 0;
+  }
+
+  .actions-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .action-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 120px;
+    height: 36px;
+    padding: 0 0.75rem;
+    border: 1px solid var(--brand-white);
+    background: transparent;
+    color: var(--brand-white);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .action-btn:hover,
+  .action-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+  }
+
+  .action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .action-btn--primary {
+    background: var(--brand-white);
+    color: var(--brand-black);
+    border-color: var(--brand-white);
+  }
+
+  .action-btn--primary:hover,
+  .action-btn--primary:focus-visible {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .action-btn--primary svg,
+  .action-btn--primary svg * {
+    stroke: var(--brand-black);
+  }
+
+  .dropdown {
+    position: relative;
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 260px;
+    border: 1px solid var(--brand-neutral-500);
+    background: #000000;
+    padding: 6px;
+    z-index: 20;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dropdown[data-open="true"] .dropdown-menu {
+    display: flex;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--brand-white);
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  .dropdown-item:hover,
+  .dropdown-item:focus-visible {
+    background: var(--brand-neutral-600);
+    outline: none;
+  }
+
+  .dropdown-item .icon-badge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dropdown-item .icon-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--brand-neutral-500);
+    margin-bottom: 1rem;
+  }
+
+  .tab {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--brand-neutral-100);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .tab:hover {
+    color: var(--brand-white);
+  }
+
+  .tab[aria-selected="true"] {
+    color: var(--brand-white);
+    border-bottom-color: var(--brand-white);
+  }
+
+  .tab-panel[hidden] {
+    display: none;
+  }
+
+  .capability-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+    min-height: 0;
+    padding: 1rem 1.25rem;
+    cursor: default;
+  }
+
+  .capability-card {
+    border: 1px solid var(--brand-neutral-600);
+    background: #000000;
+    transition: border-color 0.2s ease;
+  }
+
+  .capability-card:hover {
+    border-color: var(--brand-neutral-400);
+  }
+
+  .capability-name {
+    font-family: "Geist Mono", "SFMono-Regular", "Consolas", monospace;
+    font-size: 0.9rem;
+    color: var(--brand-white);
+    word-break: break-word;
+  }
+
+  .capability-desc {
+    font-size: 0.85rem;
+    color: var(--brand-neutral-100);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .capability-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+  }
+
+  .capability-badge {
+    font-size: 0.625rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border: 1px dashed var(--brand-neutral-400);
+    background: transparent;
+    color: var(--brand-neutral-100);
+    border-radius: 0;
+  }
+
+  .capability-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .capability-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 960px) {
+    .capability-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .pagination {
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .pagination[data-active="true"] {
+    display: flex;
+  }
+
+  .pagination-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    min-width: 32px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--brand-neutral-400);
+    background: transparent;
+    color: var(--brand-white);
+    font-family: inherit;
+    font-size: 0.85rem;
+    line-height: 1;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .pagination-btn:hover:not([disabled]),
+  .pagination-btn:focus-visible:not([disabled]) {
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+  }
+
+  .pagination-btn[disabled] {
+    color: var(--brand-neutral-300);
+    border-color: var(--brand-neutral-500);
+    cursor: not-allowed;
+  }
+
+  .pagination-indicator {
+    font-family: "Geist Mono", "SFMono-Regular", "Consolas", monospace;
+    font-size: 0.75rem;
+    color: var(--brand-neutral-100);
+    padding: 0.25rem 0.5rem;
+    border: 1px dashed var(--brand-neutral-400);
+    background: transparent;
+  }
+
+  .capability-card[hidden] {
+    display: none;
+  }
 `;
 
 const createClientScript = (
   endpoint: string,
-  serverName: string | undefined,
-  serverDescription: string | undefined
+  serverName: string | undefined
 ) => `
   (() => {
     const templateConfig = ${JSON.stringify({
       endpoint,
       serverName: serverName ?? null,
-      serverDescription: serverDescription ?? null,
     })};
 
-    const elements = {
-      name: document.getElementById("server-name"),
-      description: document.getElementById("server-description"),
-      grid: document.getElementById("connection-grid"),
-      remoteSnippet: document.getElementById("remote-snippet"),
-      copyRemoteButton: document.getElementById("copy-remote-snippet"),
-      copyIcon: document.getElementById("copy-icon"),
-      checkIcon: document.getElementById("check-icon"),
-      toast: document.getElementById("toast"),
-    };
+    const toast = document.getElementById("toast");
+    const dropdown = document.getElementById("connect-dropdown");
+    const trigger = document.getElementById("connect-trigger");
+    const menu = document.getElementById("connect-menu");
+    const getUrlButton = document.getElementById("get-url-btn");
 
     const resolvedName =
       (templateConfig.serverName && templateConfig.serverName.trim()) || "xmcp server";
-    const resolvedDescription =
-      (templateConfig.serverDescription && templateConfig.serverDescription.trim()) ||
-      "${FALLBACK_DESCRIPTION}";
     const endpointPath =
       (templateConfig.endpoint && templateConfig.endpoint.trim()) || "/";
     const normalizedEndpoint = endpointPath.startsWith("/")
@@ -405,50 +656,35 @@ const createClientScript = (
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "") || "xmcp-server";
 
-    if (elements.name) {
-      elements.name.textContent = resolvedName;
-    }
-
-    if (elements.description) {
-      elements.description.textContent = resolvedDescription;
-    }
-
     const icons = ${JSON.stringify(ICONS)};
 
     const connectionOptions = [
       {
         label: "Cursor",
-        type: "copy",
         snippet: \`{
     "\${identifier}": {
       "url": "\${serverUrl}"
     }
   }\`,
-        description: "Copy Cursor connection config",
         icon: "cursor",
       },
       {
         label: "Claude Code",
-        type: "copy",
         snippet: \`claude mcp add --transport http "\${identifier}" \\\\\\n    "\${serverUrl}"\`,
-        description: "Copy CLI snippet for Claude Code",
         icon: "claude",
       },
       {
         label: "Claude Desktop",
-        type: "copy",
         snippet: \`{
     "\${identifier}": {
       "command": "npx",
       "args": ["-y", "mcp-remote", "\${serverUrl}"]
     }
   }\`,
-        description: "Copy Claude Desktop setup command",
         icon: "claude",
       },
       {
         label: "Windsurf",
-        type: "copy",
         snippet: \`"\${identifier}": {
   "command": "npx",
   "args": [
@@ -456,131 +692,197 @@ const createClientScript = (
     "\${serverUrl}"
   ]
 }\`,
-        description: "Copy Windsurf attach command",
         icon: "windsurf",
       },
       {
         label: "Gemini CLI",
-        type: "copy",
         snippet: \`gemini mcp add --transport http "\${identifier}" "\${serverUrl}"\`,
-        description: "Copy Gemini CLI link command",
         icon: "gemini",
       },
       {
         label: "Codex",
-        type: "copy",
         snippet: \`[mcp_servers.\${identifier}]
 command = "npx"
 args = ["-y", "mcp-remote", "\${serverUrl}"]\`,
-        description: "Copy Codex connect command",
         icon: "codex",
+      },
+      {
+        label: "Standard",
+        snippet: JSON.stringify(
+          { command: "npx", args: ["mcp-remote", serverUrl] },
+          null,
+          2
+        ),
+        icon: "plug",
       },
     ];
 
-    if (elements.remoteSnippet) {
-      const remoteSnippet = JSON.stringify(
-        {
-          command: "npx",
-          args: ["mcp-remote", serverUrl],
-        },
-        null,
-        2
-      );
-      elements.remoteSnippet.textContent = remoteSnippet;
+    function setDropdownOpen(open) {
+      if (!dropdown || !trigger) return;
+      dropdown.dataset.open = open ? "true" : "false";
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
     }
 
-    if (elements.copyRemoteButton) {
-      elements.copyRemoteButton.addEventListener("click", () => {
-        const snippet = elements.remoteSnippet?.textContent || "";
-        copyText(snippet)
-          .then((success) => {
-            if (success) {
-              // Animate icon change
-              if (elements.copyIcon && elements.checkIcon) {
-                elements.copyIcon.classList.remove("visible");
-                elements.copyIcon.classList.add("hidden");
-                elements.checkIcon.classList.remove("hidden");
-                elements.checkIcon.classList.add("visible");
-
-                // Reset after 2 seconds
-                setTimeout(() => {
-                  elements.copyIcon?.classList.remove("hidden");
-                  elements.copyIcon?.classList.add("visible");
-                  elements.checkIcon?.classList.remove("visible");
-                  elements.checkIcon?.classList.add("hidden");
-                }, 2000);
-              }
-            } else {
-              showToast("Unable to copy. Please copy manually.");
-            }
-          })
-          .catch(() => {
-            showToast("Unable to copy. Please copy manually.");
-          });
-      });
-    }
-
-    if (elements.grid) {
-      elements.grid.innerHTML = "";
+    if (menu) {
       connectionOptions.forEach((option) => {
-        const isCopy = option.type === "copy";
-        const card = document.createElement(isCopy ? "button" : "a");
-        card.className = "connection-card";
-        if (isCopy) {
-          card.type = "button";
-        } else {
-          card.href = option.href;
-          card.target = "_blank";
-          card.rel = "noreferrer";
-        }
-
-        const inner = document.createElement("span");
-        inner.className = "card-inner";
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "dropdown-item";
+        item.setAttribute("role", "menuitem");
 
         const iconBadge = document.createElement("span");
         iconBadge.className = "icon-badge";
-        iconBadge.innerHTML = icons[option.icon] || "";
+        iconBadge.setAttribute("aria-hidden", "true");
+        iconBadge.innerHTML = (option.icon && icons[option.icon]) || "";
 
         const label = document.createElement("span");
-        label.className = "card-label";
         label.textContent = option.label;
 
-        inner.appendChild(iconBadge);
-        inner.appendChild(label);
-        card.appendChild(inner);
+        item.appendChild(iconBadge);
+        item.appendChild(label);
 
-        const backgroundIcon = document.createElement("span");
-        backgroundIcon.className = "background-icon";
-        backgroundIcon.innerHTML = icons[option.icon] || "";
-        card.appendChild(backgroundIcon);
+        item.addEventListener("click", async () => {
+          setDropdownOpen(false);
+          const success = await copyText(option.snippet);
+          showToast(
+            success
+              ? \`\${option.label} snippet copied to clipboard.\`
+              : "Unable to copy. Please copy manually."
+          );
+        });
 
-        if (isCopy) {
-          card.addEventListener("click", () => {
-            copyText(option.snippet)
-              .then((success) => {
-                showToast(
-                  success
-                    ? \`\${option.label} connection method copied to clipboard.\`
-                    : "Unable to copy. Please copy manually."
-                );
-              })
-              .catch(() => {
-                showToast("Unable to copy. Please copy manually.");
-              });
-          });
-        }
-
-        elements.grid?.appendChild(card);
+        menu.appendChild(item);
       });
     }
 
+    if (trigger) {
+      trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const isOpen = dropdown?.dataset.open === "true";
+        setDropdownOpen(!isOpen);
+      });
+    }
+
+    document.addEventListener("click", (event) => {
+      if (!dropdown) return;
+      if (!dropdown.contains(event.target)) setDropdownOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setDropdownOpen(false);
+    });
+
+    if (getUrlButton) {
+      getUrlButton.addEventListener("click", async () => {
+        const success = await copyText(serverUrl);
+        showToast(
+          success
+            ? "MCP URL copied to clipboard."
+            : "Unable to copy. Please copy manually."
+        );
+      });
+    }
+
+    const tabs = Array.from(document.querySelectorAll("[data-tab]"));
+    const panels = Array.from(document.querySelectorAll("[data-panel]"));
+
+    const paginationState = new Map();
+
+    function applyPagination(grid, pageIndex) {
+      const pageSize = parseInt(grid.getAttribute("data-page-size") || "9", 10);
+      const cards = Array.from(grid.children);
+      const totalPages = Math.max(1, Math.ceil(cards.length / pageSize));
+      const clamped = Math.min(Math.max(pageIndex, 0), totalPages - 1);
+      const start = clamped * pageSize;
+      const end = start + pageSize;
+
+      cards.forEach((card, i) => {
+        if (i >= start && i < end) {
+          card.removeAttribute("hidden");
+        } else {
+          card.setAttribute("hidden", "");
+        }
+      });
+
+      const panel = grid.closest("[data-panel]");
+      const panelId = panel?.getAttribute("data-panel");
+      if (!panelId) return clamped;
+
+      const pager = document.querySelector(
+        '[data-pagination-for="' + panelId + '"]'
+      );
+      if (!pager) return clamped;
+
+      const needsPager = cards.length > pageSize;
+      pager.dataset.active = needsPager ? "true" : "false";
+
+      if (needsPager) {
+        const indicator = pager.querySelector("[data-page-indicator]");
+        const prev = pager.querySelector("[data-page-prev]");
+        const next = pager.querySelector("[data-page-next]");
+        if (indicator) indicator.textContent = (clamped + 1) + " / " + totalPages;
+        if (prev) prev.toggleAttribute("disabled", clamped === 0);
+        if (next) next.toggleAttribute("disabled", clamped >= totalPages - 1);
+      }
+
+      return clamped;
+    }
+
+    function renderPanelPagination(panelId, pageIndex) {
+      const panel = document.querySelector('[data-panel="' + panelId + '"]');
+      if (!panel) return;
+      const grid = panel.querySelector("[data-paginate]");
+      if (!grid) return;
+      const next = applyPagination(grid, pageIndex ?? paginationState.get(panelId) ?? 0);
+      paginationState.set(panelId, next);
+    }
+
+    document.querySelectorAll("[data-pagination-for]").forEach((pager) => {
+      const panelId = pager.getAttribute("data-pagination-for");
+      if (!panelId) return;
+      const prev = pager.querySelector("[data-page-prev]");
+      const next = pager.querySelector("[data-page-next]");
+      prev?.addEventListener("click", () => {
+        renderPanelPagination(panelId, (paginationState.get(panelId) ?? 0) - 1);
+      });
+      next?.addEventListener("click", () => {
+        renderPanelPagination(panelId, (paginationState.get(panelId) ?? 0) + 1);
+      });
+    });
+
+    panels.forEach((panel) => {
+      const id = panel.getAttribute("data-panel");
+      if (id) renderPanelPagination(id, 0);
+    });
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.getAttribute("data-tab");
+        tabs.forEach((t) =>
+          t.setAttribute(
+            "aria-selected",
+            t.getAttribute("data-tab") === target ? "true" : "false"
+          )
+        );
+        panels.forEach((panel) => {
+          if (panel.getAttribute("data-panel") === target) {
+            panel.removeAttribute("hidden");
+          } else {
+            panel.setAttribute("hidden", "");
+          }
+        });
+        if (target) renderPanelPagination(target, 0);
+      });
+    });
+
+    // Long enough to read a short copy-confirmation, short enough to not linger.
+    const TOAST_VISIBLE_MS = 2400;
+
     function showToast(message) {
-      if (!elements.toast) return;
-      elements.toast.textContent = message;
-      elements.toast.classList.add("show");
-      setTimeout(() => {
-        elements.toast && elements.toast.classList.remove("show");
-      }, 2400);
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), TOAST_VISIBLE_MS);
     }
 
     async function copyText(text) {
@@ -614,10 +916,264 @@ args = ["-y", "mcp-remote", "\${serverUrl}"]\`,
   })();
 `;
 
+export type HomeIcon = {
+  src: string;
+  mimeType?: string;
+};
+
+export type HomeToolEntry = {
+  name: string;
+  description?: string;
+  annotations?: {
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
+};
+
+export type HomePromptEntry = {
+  name: string;
+  title?: string;
+  description?: string;
+};
+
+export type HomeResourceEntry = {
+  name: string;
+  title?: string;
+  description?: string;
+  mimeType?: string;
+};
+
+export type HomeServerMeta = {
+  version?: string;
+  icons?: HomeIcon[];
+  instructions?: string;
+  tools?: HomeToolEntry[];
+  prompts?: HomePromptEntry[];
+  resources?: HomeResourceEntry[];
+};
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const renderToolBadges = (
+  annotations: HomeToolEntry["annotations"]
+): string => {
+  if (!annotations) return "";
+  const labels: string[] = [];
+  if (annotations.readOnlyHint) labels.push("read-only");
+  if (annotations.destructiveHint) labels.push("destructive");
+  if (annotations.idempotentHint) labels.push("idempotent");
+  if (annotations.openWorldHint) labels.push("open-world");
+  if (labels.length === 0) return "";
+  return `<div class="capability-badges">${labels
+    .map((label) => `<span class="capability-badge">${escapeHtml(label)}</span>`)
+    .join("")}</div>`;
+};
+
+const renderCapabilityCard = (
+  name: string,
+  description: string | undefined,
+  badges: string
+): string => `
+            <div class="connection-card capability-card">
+              <span class="capability-name">${escapeHtml(name)}</span>
+              ${
+                description
+                  ? `<p class="capability-desc">${escapeHtml(description)}</p>`
+                  : ""
+              }
+              ${badges}
+            </div>`;
+
+const renderCapabilitySection = (
+  heading: string,
+  copy: string,
+  cards: string[]
+): string => {
+  if (cards.length === 0) return "";
+  return `
+      <section class="section">
+        <div class="section-content">
+          <div class="section-header">
+            <h2 class="heading-2 text-gradient">${escapeHtml(heading)}</h2>
+            <p class="body-text">${escapeHtml(copy)}</p>
+          </div>
+          <div class="connection-grid">${cards.join("")}</div>
+        </div>
+      </section>`;
+};
+
+const renderHero = (
+  serverName: string | undefined,
+  serverDescription: string | undefined,
+  meta: HomeServerMeta
+): string => {
+  const icon = meta.icons?.[0];
+  const iconHtml = icon
+    ? `<span class="hero-icon" aria-hidden="true"><img src="${escapeHtml(
+        icon.src
+      )}" alt="" /></span>`
+    : "";
+  const versionHtml = meta.version
+    ? `<span class="meta-pill">v${escapeHtml(meta.version)}</span>`
+    : "";
+
+  return `
+      <section class="section">
+        <div class="section-content">
+          <div class="hero">
+            <div class="hero-top">
+              ${iconHtml}
+              <h2 id="server-name" class="display text-gradient">${escapeHtml(
+                serverName || "xmcp server"
+              )}</h2>
+              ${versionHtml}
+            </div>
+            <div class="hero-bottom">
+              <p id="server-description" class="lead">${escapeHtml(
+                serverDescription || FALLBACK_DESCRIPTION
+              )}</p>
+              ${renderActions()}
+            </div>
+          </div>
+        </div>
+      </section>`;
+};
+
+const renderInstructions = (meta: HomeServerMeta): string => {
+  const instructions = meta.instructions?.trim();
+  if (!instructions) return "";
+  return `
+      <section class="section">
+        <div class="section-content">
+          <p class="body-text">${escapeHtml(instructions)}</p>
+        </div>
+      </section>`;
+};
+
+const COPY_ICON_SVG = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="5.25" y="3" width="7.5" height="9.5" rx="1" stroke="currentColor" stroke-width="1.25" /><path d="M3.25 10.75V2.75H9.75" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+
+const CHEVRON_SVG = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3.5 5.25L7 8.75L10.5 5.25" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" /></svg>`;
+
+const TAB_ICONS: Record<string, string> = {
+  tools: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0-.83-.83-2.17 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>`,
+  prompts: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  resources: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`,
+};
+
+const renderActions = (): string => `
+                <div class="actions-row">
+                  <div class="dropdown" id="connect-dropdown" data-open="false">
+                    <button
+                      type="button"
+                      class="action-btn"
+                      id="connect-trigger"
+                      aria-haspopup="menu"
+                      aria-expanded="false"
+                    >
+                      <span>Connect to</span>
+                      ${CHEVRON_SVG}
+                    </button>
+                    <div
+                      class="dropdown-menu"
+                      id="connect-menu"
+                      role="menu"
+                      aria-labelledby="connect-trigger"
+                    ></div>
+                  </div>
+                  <button type="button" class="action-btn action-btn--primary" id="get-url-btn">
+                    ${COPY_ICON_SVG}
+                    <span>Get MCP URL</span>
+                  </button>
+                </div>`;
+
+const renderCapabilities = (meta: HomeServerMeta): string => {
+  const toolsCards = (meta.tools ?? []).map((tool) =>
+    renderCapabilityCard(
+      tool.name,
+      tool.description,
+      renderToolBadges(tool.annotations)
+    )
+  );
+  const promptsCards = (meta.prompts ?? []).map((prompt) =>
+    renderCapabilityCard(
+      prompt.name,
+      prompt.description ?? prompt.title,
+      ""
+    )
+  );
+  const resourcesCards = (meta.resources ?? []).map((resource) =>
+    renderCapabilityCard(
+      resource.name,
+      resource.description ?? resource.title,
+      resource.mimeType
+        ? `<div class="capability-badges"><span class="capability-badge">${escapeHtml(
+            resource.mimeType
+          )}</span></div>`
+        : ""
+    )
+  );
+
+  const panels: { id: string; label: string; cards: string[] }[] = [
+    { id: "tools", label: "Tools", cards: toolsCards },
+    { id: "prompts", label: "Prompts", cards: promptsCards },
+    { id: "resources", label: "Resources", cards: resourcesCards },
+  ].filter((p) => p.cards.length > 0);
+
+  if (panels.length === 0) return "";
+
+  const tabs = panels
+    .map(
+      (panel, index) =>
+        `<button
+              type="button"
+              class="tab"
+              role="tab"
+              data-tab="${panel.id}"
+              aria-selected="${index === 0 ? "true" : "false"}"
+            >${TAB_ICONS[panel.id] ?? ""}<span>${escapeHtml(panel.label)}</span><span class="capability-badge">${panel.cards.length}</span></button>`
+    )
+    .join("");
+
+  const panelHtml = panels
+    .map(
+      (panel, index) => `
+            <div
+              class="tab-panel"
+              role="tabpanel"
+              data-panel="${panel.id}"
+              ${index === 0 ? "" : "hidden"}
+            >
+              <div class="capability-grid" data-paginate data-page-size="9">${panel.cards.join("")}</div>
+              <div class="pagination" data-pagination-for="${panel.id}" role="navigation" aria-label="${escapeHtml(panel.label)} pagination">
+                <button type="button" class="pagination-btn" data-page-prev aria-label="Previous page">Prev</button>
+                <span class="pagination-indicator" data-page-indicator>1 / 1</span>
+                <button type="button" class="pagination-btn" data-page-next aria-label="Next page">Next</button>
+              </div>
+            </div>`
+    )
+    .join("");
+
+  return `
+      <section class="section">
+        <div class="section-content">
+          <div class="tabs" role="tablist">${tabs}</div>${panelHtml}
+        </div>
+      </section>`;
+};
+
 const homeTemplate = (
   endpoint: string,
   serverName: string | undefined,
-  serverDescription: string | undefined
+  serverDescription: string | undefined,
+  serverMeta: HomeServerMeta = {}
 ) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -644,100 +1200,13 @@ ${styles}
   </head>
   <body>
     <main class="template-layout">
-      <section class="section">
-        <div class="section-content">
-          <div class="section-header">
-            <h2 id="server-name" class="display text-gradient">xmcp server</h2>
-            <p id="server-description" class="lead">
-              ${serverDescription || FALLBACK_DESCRIPTION}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-content">
-          <div class="section-header">
-            <h2 class="heading-2 text-gradient">Connect to a client</h2>
-            <p class="body-text">
-              Select your preferred way to connect to your MCP server.
-            </p>
-          </div>
-          <div id="connection-grid" class="connection-grid" aria-live="polite"></div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-content">
-          <div class="section-header">
-            <h2 class="heading-2 text-gradient">Standard connection</h2>
-            <p class="body-text">
-              For clients not listed above, you can use the following connection method.
-            </p>
-          </div>
-          <div class="code-block">
-            <button
-              type="button"
-              class="copy-snippet-btn"
-              id="copy-remote-snippet"
-              aria-label="Copy standard connection method"
-            >
-              <span class="sr-only">Copy standard connection method</span>
-              <svg
-                id="copy-icon"
-                class="visible"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <rect
-                  x="5.25"
-                  y="3"
-                  width="7.5"
-                  height="9.5"
-                  rx="1"
-                  stroke="currentColor"
-                  stroke-width="1.25"
-                />
-                <path
-                  d="M3.25 10.75V2.75H9.75"
-                  stroke="currentColor"
-                  stroke-width="1.25"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <svg
-                id="check-icon"
-                class="hidden"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-                style="position: absolute;"
-              >
-                <path
-                  d="M13.5 4L6 11.5L2.5 8"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-        </svg>
-            </button>
-            <pre><code id="remote-snippet"></code></pre>
-          </div>
-    </div>
-      </section>
+${renderHero(serverName, serverDescription, serverMeta)}
+${renderInstructions(serverMeta)}
+${renderCapabilities(serverMeta)}
     </main>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script>
-${createClientScript(endpoint, serverName, serverDescription)}
+${createClientScript(endpoint, serverName)}
     </script>
   </body>
 </html>

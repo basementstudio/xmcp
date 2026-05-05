@@ -15,7 +15,14 @@ import {
   JsonRpcMessage,
   HttpTransportOptions,
 } from "./base-streamable-http";
-import homeTemplate from "../../templates/home";
+import homeTemplate, { HomeServerMeta } from "../../templates/home";
+import {
+  INJECTED_CONFIG,
+  loadPrompts,
+  loadResources,
+  loadTools,
+} from "../../utils/server";
+import { pathToName } from "../../utils/tools";
 import { greenCheck } from "../../../utils/cli-icons";
 import { findAvailablePort } from "../../../utils/port-utils";
 import { cors } from "./cors";
@@ -102,6 +109,7 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
+  private homeMetaPromise: Promise<HomeServerMeta> | undefined;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
@@ -138,6 +146,61 @@ export class StatelessStreamableHTTPTransport {
     }
   }
 
+  private getHomeServerMeta(): Promise<HomeServerMeta> {
+    if (!this.homeMetaPromise) {
+      this.homeMetaPromise = (async (): Promise<HomeServerMeta> => {
+        const [toolModules, promptModules, resourceModules] = await Promise.all(
+          [loadTools(), loadPrompts(), loadResources()]
+        );
+
+        const tools = Array.from(toolModules.entries()).map(([path, mod]) => {
+          const meta = mod.metadata ?? ({} as typeof mod.metadata);
+          return {
+            name: meta.name ?? pathToName(path),
+            description: meta.description,
+            annotations: meta.annotations,
+          };
+        });
+
+        const prompts = Array.from(promptModules.entries()).map(
+          ([path, mod]) => {
+            const meta = mod.metadata ?? ({} as typeof mod.metadata);
+            return {
+              name: meta.name ?? pathToName(path),
+              title: meta.title,
+              description: meta.description,
+            };
+          }
+        );
+
+        const resources = Array.from(resourceModules.entries()).map(
+          ([path, mod]) => {
+            const meta = mod.metadata ?? ({} as typeof mod.metadata);
+            return {
+              name: meta.name ?? pathToName(path),
+              title: meta.title,
+              description: meta.description,
+              mimeType: meta.mimeType,
+            };
+          }
+        );
+
+        return {
+          version: INJECTED_CONFIG.version,
+          icons: INJECTED_CONFIG.icons,
+          instructions: INJECTED_CONFIG.instructions,
+          tools,
+          prompts,
+          resources,
+        };
+      })().catch((error) => {
+        console.error("[xmcp home] failed to load metadata:", error);
+        return {};
+      });
+    }
+    return this.homeMetaPromise;
+  }
+
   private setupProviders(): void {
     if (this.providers) {
       for (const provider of this.providers) {
@@ -170,7 +233,7 @@ export class StatelessStreamableHTTPTransport {
       });
     });
 
-    this.app.get("/", (_req: Request, res: Response) => {
+    this.app.get("/", async (_req: Request, res: Response) => {
       const customHomePage = this.options.template?.homePage;
 
       if (customHomePage) {
@@ -178,11 +241,14 @@ export class StatelessStreamableHTTPTransport {
         return;
       }
 
+      const serverMeta = await this.getHomeServerMeta();
+
       res.send(
         homeTemplate(
           this.endpoint,
           this.options.template?.name,
-          this.options.template?.description
+          this.options.template?.description,
+          serverMeta
         )
       );
     });
