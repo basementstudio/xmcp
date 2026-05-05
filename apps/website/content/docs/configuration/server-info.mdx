@@ -93,9 +93,7 @@ const config: XmcpConfig = {
 
 ## Home Page
 
-When `homePage` is not provided, xmcp serves a default MCP console at the `/` endpoint of your HTTP server. The console shows server health, server info, MCP capabilities, available tools, resources, resource templates, and prompts. It also lets you test tool calls directly through the configured MCP endpoint.
-
-Customize the HTML page served at `/` by setting `homePage`.
+Customize the HTML page served at the `/` endpoint of your HTTP server.
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
@@ -109,4 +107,4 @@ const config: XmcpConfig = {
 };
 ```
 
-The custom page fully replaces the default console.
+When `homePage` is not provided, xmcp serves a default landing page with your server name and description.

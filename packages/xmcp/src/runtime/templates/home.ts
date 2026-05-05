@@ -1,31 +1,67 @@
 const FALLBACK_DESCRIPTION = "This MCP server was bootstrapped with xmcp.";
-const TOAST_TIMEOUT_MS = 2400;
 
 const ICONS = {
-  tool: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.4 3.2 4.9 5.7l1.8 1.8 2.5-2.5a3.8 3.8 0 0 1 5 4.8l-2.8-2.8-2.4 2.4 2.8 2.8a3.8 3.8 0 0 1-4.8-5L4.5 9.7l5.8 5.8 2.5-2.5a5.2 5.2 0 0 0-7-6.9Z" fill="currentColor"/></svg>',
-  resource: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5A1.5 1.5 0 0 1 5.5 2h6.2L16 6.3v10.2a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 16.5v-13Zm7 0V7h3.5L11 3.5ZM6.5 10h7v1.4h-7V10Zm0 3h5.5v1.4H6.5V13Z" fill="currentColor"/></svg>',
-  template: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-11Zm2 1v3h10v-3H5Zm0 5v4.5h4v-4.5H5Zm6 0v4.5h4v-4.5h-4Z" fill="currentColor"/></svg>',
-  prompt: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3h12a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 16 14h-4.8L7 17v-3H4a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 4 3Zm1.5 3.2 2.4 2.3-2.4 2.3 1 1.1 3.6-3.4-3.6-3.4-1 1.1Zm5 4.2h4v-1.5h-4v1.5Z" fill="currentColor"/></svg>',
-  health: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2 3.5 4.6v4.8c0 4 2.7 7.5 6.5 8.6 3.8-1.1 6.5-4.6 6.5-8.6V4.6L10 2Zm3.4 6.6-4.1 4.1-2.4-2.4 1-1 1.4 1.4 3.1-3.1 1 1Z" fill="currentColor"/></svg>',
-  mcp: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6.2 4.2a4.2 4.2 0 0 1 5.9 0l.6.6-1.1 1.1-.6-.6a2.6 2.6 0 0 0-3.7 0L5.2 7.4a2.6 2.6 0 0 0 0 3.7l.6.6-1.1 1.1-.6-.6a4.2 4.2 0 0 1 0-5.9l2.1-2.1Zm2.2 10 .6.6a2.6 2.6 0 0 0 3.7 0l2.1-2.1a2.6 2.6 0 0 0 0-3.7l-.6-.6 1.1-1.1.6.6a4.2 4.2 0 0 1 0 5.9l-2.1 2.1a4.2 4.2 0 0 1-5.9 0l-.6-.6 1.1-1.1Zm-.3-3.4 2.7-2.7 1.1 1.1-2.7 2.7-1.1-1.1Z" fill="currentColor"/></svg>',
-  capabilities: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5 12 7l4.8.5-3.6 3.2 1 4.8L10 13.1l-4.2 2.4 1-4.8-3.6-3.2L8 7l2-4.5Z" fill="currentColor"/></svg>',
-  completion: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 5A1.5 1.5 0 0 1 5 3.5h10A1.5 1.5 0 0 1 16.5 5v7A1.5 1.5 0 0 1 15 13.5h-3.8L8 16v-2.5H5A1.5 1.5 0 0 1 3.5 12V5Zm3 1.5v1.4h7V6.5h-7Zm0 3v1.4H11V9.5H6.5Z" fill="currentColor"/></svg>',
-  logging: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h12v13H4v-13Zm2 2v1.4h8V5.5H6Zm0 3.2v1.4h8V8.7H6Zm0 3.2v1.4h5.6v-1.4H6Z" fill="currentColor"/></svg>',
-  task: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 3.5h9A1.5 1.5 0 0 1 16 5v10a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 15V5a1.5 1.5 0 0 1 1.5-1.5Zm1 3v1.4h7V6.5h-7Zm0 3.2v1.4h7V9.7h-7Zm0 3.2v1.4h4.2v-1.4H6.5Z" fill="currentColor"/></svg>',
-  experimental: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 2.8h6v1.4h-1v3.1l3.4 5.9A2.6 2.6 0 0 1 13.1 17H6.9a2.6 2.6 0 0 1-2.3-3.8L8 7.3V4.2H7V2.8Zm2.5 5-2 3.5h5l-2-3.5V4.2h-1v3.6Z" fill="currentColor"/></svg>',
-  terminal: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4.7 6.2 3.4 3.4L4.7 13l-1-1 2.4-2.4-2.4-2.4 1-1Zm4.4 6.5h6.5v1.5H9.1v-1.5Z" fill="currentColor"/></svg>',
-  copy: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h6A1.5 1.5 0 0 1 16 3.5v8A1.5 1.5 0 0 1 14.5 13h-6A1.5 1.5 0 0 1 7 11.5v-8ZM4 7h1.5v8h7V17h-7A1.5 1.5 0 0 1 4 15.5V7Z" fill="currentColor"/></svg>',
-  server: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3.5h12A1.5 1.5 0 0 1 17.5 5v3A1.5 1.5 0 0 1 16 9.5H4A1.5 1.5 0 0 1 2.5 8V5A1.5 1.5 0 0 1 4 3.5Zm1 2v1.5h1.5V5.5H5Zm-1 5h12a1.5 1.5 0 0 1 1.5 1.5v3A1.5 1.5 0 0 1 16 16.5H4A1.5 1.5 0 0 1 2.5 15v-3A1.5 1.5 0 0 1 4 10.5Zm1 2V14h1.5v-1.5H5Z" fill="currentColor"/></svg>',
+  cursor: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clip-path="url(#cursor)">
+        <path d="M18.1937 4.73376L10.1872 0.111231C9.93007 -0.0372398 9.61283 -0.0372398 9.35573 0.111231L1.34956 4.73376C1.13344 4.85855 1 5.08934 1 5.33929V14.6606C1 14.9106 1.13344 15.1414 1.34956 15.2662L9.3561 19.8887C9.6132 20.0372 9.93044 20.0372 10.1875 19.8887L18.1941 15.2662C18.4102 15.1414 18.5436 14.9106 18.5436 14.6606V5.33929C18.5436 5.08934 18.4102 4.85855 18.1941 4.73376H18.1937ZM17.6908 5.71291L9.96164 19.1001C9.90939 19.1903 9.77145 19.1535 9.77145 19.049V10.2832C9.77145 10.108 9.67785 9.94603 9.526 9.85808L1.9348 5.47536C1.84459 5.42311 1.88143 5.28517 1.98592 5.28517H17.4442C17.6637 5.28517 17.8009 5.5231 17.6912 5.71329H17.6908V5.71291Z" fill="currentColor" />
+      </g>
+      <defs>
+        <clipPath id="cursor">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  `,
+  claude: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clip-path="url(#claude)">
+        <path d="M3.92841 13.2962L7.85957 11.0903L7.92541 10.8981L7.85957 10.7918H7.66732L7.00957 10.7513L4.76324 10.6906L2.81532 10.6097L0.928158 10.5085L0.452574 10.4072L0.00732422 9.82042L0.0528242 9.52692L0.452574 9.25875L1.02424 9.30942L2.28916 9.39542L4.18641 9.52692L5.56257 9.60792L7.60157 9.82042H7.92541L7.97091 9.68883L7.85957 9.60792L7.77357 9.52692L5.81057 8.19633L3.68557 6.78975L2.57257 5.98025L1.97049 5.57042L1.66691 5.18592L1.53541 4.34608L2.08182 3.744L2.81541 3.79458L3.00257 3.84517L3.74632 4.41683L5.33499 5.64633L7.40941 7.17433L7.71299 7.42725L7.83441 7.34125L7.84957 7.28058L7.71291 7.05283L6.58466 5.01392L5.38049 2.9395L4.84424 2.0795L4.70257 1.56333C4.65199 1.35083 4.61657 1.17383 4.61657 0.95625L5.23891 0.11125L5.58282 0L6.41257 0.111333L6.76174 0.414833L7.27774 1.59375L8.11257 3.45058L9.40782 5.97525L9.78724 6.724L9.98966 7.41717L10.0655 7.62967H10.1971V7.50825L10.3033 6.08658L10.5007 4.341L10.6929 2.09458L10.7587 1.46217L11.0723 0.70325L11.6947 0.293417L12.1803 0.526167L12.5801 1.09783L12.5244 1.46725L12.2867 3.01033L11.8212 5.42875L11.5176 7.04783H11.6947L11.8971 6.84542L12.7167 5.75767L14.0928 4.03742L14.7 3.35442L15.4083 2.60058L15.8637 2.24133H16.7237L17.3562 3.18242L17.0729 4.15383L16.1875 5.277L15.4538 6.22817L14.4015 7.64483L13.7437 8.77817L13.8045 8.86925L13.9613 8.854L16.3392 8.34817L17.6243 8.11533L19.1573 7.85225L19.8505 8.17608L19.9263 8.50492L19.6532 9.17783L18.014 9.58258L16.0913 9.96708L13.2277 10.6451L13.1922 10.6704L13.2327 10.721L14.5229 10.8424L15.0744 10.8728H16.4252L18.9398 11.06L19.5975 11.495L19.9922 12.0263L19.9263 12.4311L18.9145 12.9472L17.5484 12.6233L14.3609 11.8644L13.2682 11.5912H13.1163V11.6822L14.0271 12.5728L15.6967 14.0804L17.7862 16.0232L17.8925 16.5039L17.6243 16.8834L17.341 16.8429L15.5044 15.4617L14.7961 14.8393L13.1922 13.4885H13.086V13.6302L13.4553 14.1715L15.4083 17.106L15.5095 18.0066L15.3678 18.3L14.8619 18.4771L14.3053 18.3759L13.1619 16.7721L11.9831 14.9658L11.0319 13.3468L10.9155 13.4127L10.3538 19.4587L10.0908 19.7672L9.48366 20L8.97774 19.6155L8.70957 18.9932L8.97774 17.7638L9.30157 16.1599L9.56466 14.8849L9.80241 13.3012L9.94407 12.7751L9.93399 12.7397L9.81757 12.7548L8.62357 14.3942L6.80724 16.848L5.37032 18.386L5.02632 18.5227L4.42932 18.214L4.48491 17.6625L4.81891 17.1717L6.80724 14.642L8.00632 13.0737L8.78049 12.168L8.77532 12.0364H8.72982L3.44774 15.4668L2.50666 15.5882L2.10191 15.2087L2.15257 14.5864L2.34482 14.384L3.93349 13.2912L3.92841 13.2962Z" fill="currentColor" />
+      </g>
+      <defs>
+        <clipPath id="claude">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  `,
+  windsurf: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clip-path="url(#windsurf)">
+        <path d="M19.625 4.2225C18.6218 4.22084 17.8078 5.03334 17.8078 6.03625V10.0926C17.8078 10.9026 17.1382 11.5588 16.3414 11.5588C15.8681 11.5588 15.3954 11.3204 15.1149 10.9205L10.9722 5.00359C10.6284 4.51225 10.0691 4.21942 9.46358 4.21942C8.51908 4.21942 7.66917 5.02234 7.66917 6.01359V10.0933C7.66917 10.9033 7.00508 11.5595 6.20283 11.5595C5.72783 11.5595 5.25592 11.3212 4.9755 10.9213L0.339667 4.29984C0.235167 4.14984 0 4.224 0 4.40684V7.9445C0 8.12342 0.0546667 8.29684 0.157 8.44367L4.71933 14.9589C4.98883 15.3439 5.3865 15.6299 5.84508 15.7338C6.99267 15.9946 8.04892 15.1113 8.04892 13.9857V9.90817C8.04892 9.09817 8.70517 8.44209 9.51525 8.44209H9.51775C9.75841 8.44214 9.99552 8.50016 10.209 8.61125C10.4225 8.72233 10.6061 8.8832 10.7442 9.08025L14.8878 14.9964C15.2324 15.4885 15.7628 15.7806 16.3956 15.7806C17.3612 15.7806 18.1885 14.9768 18.1885 13.9864V9.90742C18.1885 9.09742 18.8447 8.44125 19.6548 8.44125H19.8165C19.8406 8.4413 19.8645 8.43658 19.8868 8.42738C19.9091 8.41817 19.9293 8.40466 19.9464 8.38762C19.9635 8.37057 19.977 8.35033 19.9862 8.32804C19.9955 8.30576 20.0002 8.28187 20.0002 8.25775V4.40609C20.0002 4.38197 19.9955 4.35808 19.9863 4.33579C19.977 4.31351 19.9635 4.29326 19.9465 4.2762C19.9294 4.25915 19.9092 4.24563 19.8869 4.23641C19.8646 4.2272 19.8407 4.22247 19.8166 4.2225H19.625Z" fill="currentColor" />
+      </g>
+      <defs>
+        <clipPath id="windsurf">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  `,
+  gemini: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clip-path="url(#gemini)">
+        <path d="M20 10.0195C14.6289 10.3477 10.3477 14.6289 10.0195 20H9.98047C9.65234 14.6289 5.37109 10.3477 0 10.0195V9.98047C5.37109 9.65234 9.65234 5.37109 9.98047 0H10.0195C10.3477 5.37109 14.6289 9.65234 20 9.98047V10.0195Z" fill="currentColor" />
+      </g>
+      <defs>
+        <clipPath id="gemini">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  `,
+  codex: `
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g clip-path="url(#codex)">
+        <path d="M18.5681 8.18423C18.7917 7.51079 18.8691 6.79739 18.795 6.09168C18.7209 5.38596 18.497 4.70419 18.1384 4.0919C17.6067 3.16642 16.7948 2.43369 15.8199 1.99936C14.8449 1.56503 13.7572 1.45153 12.7135 1.67523C12.1206 1.0157 11.3646 0.523789 10.5214 0.248906C9.67823 -0.0259764 8.77756 -0.0741542 7.90986 0.109212C7.04216 0.292578 6.23798 0.701031 5.57809 1.29355C4.91821 1.88607 4.42584 2.64179 4.15046 3.48481C3.45518 3.62739 2.79834 3.91672 2.22384 4.33347C1.64933 4.75023 1.1704 5.28481 0.81904 5.90148C0.281569 6.82542 0.0518576 7.89634 0.163116 8.95943C0.274374 10.0225 0.720837 11.0227 1.43796 11.8153C1.21351 12.4884 1.13539 13.2017 1.20883 13.9074C1.28227 14.6132 1.50557 15.2951 1.86379 15.9076C2.39616 16.8334 3.20872 17.5663 4.18438 18.0006C5.16004 18.4349 6.2484 18.5483 7.29262 18.3243C7.76367 18.8548 8.34248 19.2786 8.99038 19.5676C9.63828 19.8566 10.3404 20.004 11.0498 20C12.1195 20.001 13.1618 19.662 14.0263 19.0321C14.8909 18.4021 15.5329 17.5137 15.8596 16.4951C16.5548 16.3523 17.2116 16.0629 17.786 15.6461C18.3605 15.2294 18.8395 14.6949 19.191 14.0784C19.7222 13.1558 19.9479 12.0889 19.836 11.0303C19.7242 9.97163 19.2804 8.9754 18.5681 8.18423ZM11.0498 18.691C10.1737 18.6924 9.32512 18.3853 8.65279 17.8236L8.77104 17.7566L12.753 15.4581C12.8521 15.4 12.9343 15.3171 12.9917 15.2176C13.0491 15.118 13.0796 15.0053 13.0802 14.8904V9.27631L14.7635 10.2501C14.7719 10.2544 14.7791 10.2605 14.7846 10.268C14.7901 10.2755 14.7937 10.2843 14.7952 10.2935V14.9456C14.7931 15.9383 14.3978 16.8898 13.6959 17.5917C12.9939 18.2936 12.0425 18.6889 11.0498 18.691ZM2.99921 15.2531C2.55985 14.4945 2.4021 13.6052 2.55371 12.7417L2.67204 12.8127L6.65787 15.1112C6.7565 15.1691 6.86877 15.1996 6.98312 15.1996C7.09747 15.1996 7.20975 15.1691 7.30837 15.1112L12.1774 12.3041V14.2478C12.1769 14.2579 12.1742 14.2677 12.1694 14.2766C12.1646 14.2855 12.1579 14.2932 12.1497 14.2991L8.11654 16.6251C7.25581 17.121 6.2335 17.255 5.27405 16.9978C4.3146 16.7405 3.49644 16.1131 2.99921 15.2531ZM1.95054 6.57965C2.39294 5.81612 3.09123 5.23375 3.92179 4.93565V9.66665C3.92029 9.78094 3.94949 9.89355 4.00635 9.99271C4.06321 10.0919 4.14564 10.174 4.24504 10.2304L9.09037 13.0256L7.40696 13.9994C7.39785 14.0042 7.38769 14.0068 7.37737 14.0068C7.36706 14.0068 7.3569 14.0042 7.34779 13.9994L3.32254 11.6773C2.46343 11.1793 1.83666 10.3612 1.57951 9.40204C1.32236 8.44291 1.45577 7.42095 1.95054 6.55998V6.57965ZM15.7808 9.79281L10.9197 6.96998L12.5992 5.99998C12.6083 5.99514 12.6185 5.99261 12.6288 5.99261C12.6391 5.99261 12.6493 5.99514 12.6584 5.99998L16.6836 8.32606C17.2991 8.68119 17.8008 9.20407 18.1303 9.83365C18.4597 10.4632 18.6032 11.1735 18.5441 11.8816C18.485 12.5898 18.2257 13.2664 17.7964 13.8327C17.3672 14.3989 16.7857 14.8314 16.1199 15.0796V10.3486C16.1164 10.2345 16.0833 10.1232 16.0238 10.0258C15.9644 9.92833 15.8807 9.8481 15.7808 9.79281ZM17.4564 7.27356L17.338 7.20256L13.3601 4.8844C13.2609 4.82617 13.1479 4.79547 13.0329 4.79547C12.9178 4.79547 12.8049 4.82617 12.7056 4.8844L7.84071 7.6914V5.74781C7.83967 5.73793 7.84132 5.72795 7.84549 5.71893C7.84965 5.70991 7.85618 5.70218 7.86437 5.69656L11.8896 3.3744C12.5065 3.01899 13.2119 2.84659 13.9232 2.87736C14.6345 2.90813 15.3224 3.14079 15.9063 3.54813C16.4903 3.95548 16.9461 4.52066 17.2206 5.17759C17.4952 5.83452 17.577 6.55602 17.4565 7.25773L17.4564 7.27356ZM6.92196 10.7191L5.23862 9.74931C5.2302 9.74424 5.223 9.73738 5.21753 9.72921C5.21205 9.72105 5.20845 9.71178 5.20696 9.70206V5.06181C5.20788 4.34996 5.41144 3.65308 5.79383 3.05265C6.17622 2.45222 6.72164 1.97305 7.36632 1.67118C8.011 1.3693 8.7283 1.2572 9.43434 1.34796C10.1404 1.43873 10.806 1.72861 11.3534 2.18373L11.235 2.25081L7.25321 4.54915C7.1541 4.60727 7.07182 4.69017 7.01445 4.78971C6.95707 4.88925 6.92658 5.00201 6.92596 5.1169L6.92196 10.7191ZM7.83662 8.74798L10.005 7.49815L12.1774 8.74798V11.2475L10.0129 12.4972L7.84062 11.2475L7.83662 8.74798Z" fill="currentColor" />
+      </g>
+      <defs>
+        <clipPath id="codex">
+          <rect width="20" height="20" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
+  `,
 };
-
-function escapeHtml(value: string | undefined): string {
-  return (value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 const styles = String.raw`
   :root {
@@ -39,25 +75,6 @@ const styles = String.raw`
     --brand-neutral-500: #262626;
     --brand-neutral-600: #171717;
     --brand-black: #000000;
-    --bg: var(--brand-black);
-    --surface: var(--brand-neutral-600);
-    --surface-2: #101010;
-    --surface-3: #1d1d1d;
-    --border: var(--brand-neutral-500);
-    --border-strong: var(--brand-neutral-400);
-    --text: var(--brand-white);
-    --muted: var(--brand-neutral-100);
-    --muted-2: var(--brand-neutral-200);
-    --amber: #f4b942;
-    --red: #ff5f57;
-    --cyan: #77d6ff;
-    --violet: #a78bfa;
-    --code: #d7dde8;
-    --code-key: #8fb8ff;
-    --code-string: #8be4b0;
-    --code-number: #f4bf75;
-    --code-literal: #c6a0ff;
-    --code-punctuation: #78818f;
   }
 
   *,
@@ -67,1432 +84,519 @@ const styles = String.raw`
   }
 
   body {
-    display: flex;
-    flex-direction: column;
     margin: 0;
     min-height: 100vh;
-    background: var(--bg);
-    color: var(--text);
+    background: #050505;
+    color: var(--brand-white);
     font-family: "Geist Sans", "Inter", "SF Pro Display", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  button,
-  input,
-  textarea,
-  select {
-    font: inherit;
-  }
-
-  button {
+  a {
     color: inherit;
+    text-decoration: none;
   }
 
-  .layout {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    width: min(1120px, calc(100% - 40px));
+  main {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 0 56px;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding-bottom: 22px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .brand {
-    min-width: 0;
-  }
-
-  .brand-head {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    min-width: 0;
-  }
-
-  .server-icon {
-    display: none;
-    width: 44px;
-    height: 44px;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background: var(--surface);
-    object-fit: cover;
-    flex: 0 0 auto;
-  }
-
-  .server-icon.visible {
-    display: block;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: clamp(1.9rem, 4vw, 3.35rem);
-    line-height: 1;
-    letter-spacing: 0;
-    font-weight: 650;
-  }
-
-  .server-title-row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    min-width: 0;
-    flex-wrap: wrap;
-  }
-
-  .server-version {
-    display: inline-flex;
-    align-items: center;
-    min-height: 22px;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    padding: 0 8px;
-    color: var(--muted);
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.72rem;
-  }
-
-  .description {
-    margin: 12px 0 0;
-    color: var(--muted);
-    font-size: 0.98rem;
-    line-height: 1.6;
-    max-width: 700px;
-  }
-
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 34px;
-    border: 1px solid var(--border-strong);
-    border-radius: 0;
-    background: var(--surface-2);
-    padding: 0 12px;
-    color: var(--text);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-  }
-
-  .button:hover,
-  .button:focus-visible {
-    background: var(--surface-3);
-    border-color: var(--brand-neutral-300);
-    outline: none;
-  }
-
-  .button:active {
-    transform: translateY(1px);
-  }
-
-  .button.primary {
-    border-color: var(--brand-white);
-    background: var(--brand-white);
-    color: var(--brand-black);
-  }
-
-  .button.danger {
-    border-color: rgba(255, 95, 87, 0.55);
-    background: rgba(255, 95, 87, 0.12);
-    color: #ffd7d4;
-  }
-
-  .status-grid {
+    padding: 0 1.5rem;
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin: 22px 0;
-  }
-
-  .stat {
-    min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background: rgba(16, 16, 16, 0.78);
-    padding: 14px;
-  }
-
-  .stat-label {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    color: var(--muted-2);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .stat.copyable {
-    cursor: pointer;
-    text-align: left;
-    color: inherit;
-    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-  }
-
-  .stat.copyable:hover,
-  .stat.copyable:focus-visible {
-    border-color: var(--brand-neutral-300);
-    background: rgba(255, 255, 255, 0.06);
-    outline: none;
-  }
-
-  .stat.copyable:active {
-    transform: translateY(1px);
-  }
-
-  .stat-value {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    min-width: 0;
-    color: var(--text);
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.86rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .stat-value.block {
-    display: block;
-    white-space: normal;
-    overflow: visible;
-    text-overflow: clip;
-  }
-
-  .capability-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 12px;
-  }
-
-  .capability-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 24px;
-    border: 1px dashed var(--brand-neutral-400);
-    border-radius: 0;
-    background: transparent;
-    color: var(--brand-neutral-100);
-    padding: 0 7px;
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.64rem;
-    font-weight: 650;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .capability-chip.active {
-    border-style: solid;
-    border-color: var(--brand-neutral-300);
-    background: var(--brand-neutral-600);
-    color: var(--brand-white);
-  }
-
-  .capability-chip.inactive {
-    opacity: 0.72;
-  }
-
-  .stat-title {
-    display: block;
-    color: var(--text);
-    font-family: "Geist Sans", "Inter", "SF Pro Display", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 0.98rem;
-    font-weight: 650;
-    line-height: 1.25;
-  }
-
-  .stat-description {
-    display: block;
-    margin-top: 6px;
-    color: var(--muted);
-    font-family: "Geist Sans", "Inter", "SF Pro Display", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 0.82rem;
-    line-height: 1.45;
-  }
-
-  .icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    color: currentColor;
-    flex: 0 0 auto;
-  }
-
-  .icon svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-
-  .icon-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background: rgba(255, 255, 255, 0.035);
-    color: var(--muted);
-    flex: 0 0 auto;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
   }
 
   .section {
-    margin-top: 28px;
-  }
-
-  .section-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin: 0 0 12px;
-  }
-
-  .section-title h2 {
-    margin: 0;
-    font-size: 0.78rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .muted {
-    color: var(--muted);
-  }
-
-  .copy {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 26px;
-    border: 1px solid var(--border-strong);
-    border-radius: 0;
-    background: #171717;
-    color: var(--muted);
-    padding: 0 8px;
-    font-size: 0.72rem;
-    cursor: pointer;
-  }
-
-  .copy:hover,
-  .copy:focus-visible {
-    color: var(--text);
-    outline: none;
-  }
-
-  pre {
-    margin: 0;
-    padding: 14px;
-    overflow-x: auto;
-    color: var(--code);
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.8rem;
-    line-height: 1.55;
-  }
-
-  .code-json .json-key {
-    color: var(--code-key);
-  }
-
-  .code-json .json-string {
-    color: var(--code-string);
-  }
-
-  .code-json .json-number {
-    color: var(--code-number);
-  }
-
-  .code-json .json-literal {
-    color: var(--code-literal);
-  }
-
-  .code-json .json-punctuation {
-    color: var(--code-punctuation);
-  }
-
-  code {
-    font-family: inherit;
-  }
-
-  .tabs {
-    display: flex;
-    gap: 0;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    border: 1px solid var(--brand-neutral-400);
-    border-bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-  }
-
-  .terminal-tabs {
-    border-radius: 0;
-    overflow: hidden;
-  }
-
-  .tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    position: relative;
-    border: 0;
-    border-right: 1px solid var(--brand-neutral-500);
-    border-radius: 0;
-    background: transparent;
-    color: var(--brand-neutral-100);
-    padding: 9px 14px;
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.76rem;
-    font-weight: 650;
-    cursor: pointer;
-  }
-
-  .tab:hover,
-  .tab:focus-visible {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--brand-white);
-    outline: none;
-  }
-
-  .tab.active {
-    color: var(--brand-white);
-    background: var(--brand-black);
-  }
-
-  .tab.active::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    background: var(--brand-neutral-200);
-    content: "";
-  }
-
-  .panel {
-    border: 1px solid var(--brand-neutral-400);
-    border-radius: 0;
-    background: rgba(16, 16, 16, 0.78);
-    overflow: hidden;
-  }
-
-  .explorer-header {
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 0;
-  }
-
-  .explorer-header + .panel {
-    border-radius: 0;
-  }
-
-  .config-panel {
-    padding: 16px;
-  }
-
-  .endpoint-row {
+    grid-column: 1 / -1;
+    padding: 2rem 0;
     display: grid;
-    grid-template-columns: auto minmax(112px, 180px) minmax(0, 1fr) minmax(96px, max-content);
-    column-gap: 14px;
-    row-gap: 6px;
-    align-items: center;
-    padding: 13px 14px;
-    border-top: 1px solid var(--border);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
   }
 
-  .endpoint-row:first-child {
-    border-top: 0;
-  }
-
-  .item-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    gap: 14px;
-    align-items: center;
-    padding: 14px;
-    border-top: 1px solid var(--border);
-  }
-
-  .item-row:first-child {
-    border-top: 0;
-  }
-
-  .item-main {
-    min-width: 0;
-  }
-
-  .empty {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .method {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 48px;
-    height: 24px;
-    border-radius: 0;
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .method.get {
-    border: 1px solid var(--brand-neutral-400);
-    background: var(--brand-neutral-600);
-    color: var(--brand-white);
-  }
-
-  .method.post {
-    border: 1px solid var(--brand-neutral-400);
-    background: var(--brand-neutral-600);
-    color: var(--brand-white);
-  }
-
-  .path,
-  .mono {
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-  }
-
-  .path {
-    color: var(--text);
-    font-size: 0.86rem;
-    overflow-wrap: anywhere;
-  }
-
-  .summary {
-    color: var(--muted);
-    font-size: 0.84rem;
-    min-width: 0;
-  }
-
-  .endpoint-meta {
-    justify-self: end;
-    text-align: right;
-    white-space: nowrap;
-  }
-
-  .empty,
-  .error {
-    padding: 18px;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
-
-  .error {
-    color: #ffd0cc;
-    background: rgba(255, 95, 87, 0.08);
-  }
-
-  .tool-detail {
-    display: none;
-    padding: 18px;
-    border-top: 1px solid var(--border);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 120px),
-      rgba(5, 5, 5, 0.42);
-  }
-
-  .tool-detail.open {
-    display: block;
-  }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 14px;
-    align-items: stretch;
-  }
-
-  .schema-box,
-  .result-box {
-    min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background: rgba(10, 10, 10, 0.92);
-    overflow: hidden;
-  }
-
-  .schema-box {
-    border-color: rgba(119, 214, 255, 0.22);
-  }
-
-  .result-box {
-    border-color: var(--brand-neutral-500);
-  }
-
-  .schema-box {
+  .section-content {
+    grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
+    gap: 1.5rem;
   }
 
-  .schema-box pre {
-    flex: 1;
-    min-height: 260px;
-    background:
-      linear-gradient(180deg, rgba(119, 214, 255, 0.035), transparent 150px),
-      #070707;
+  @media (min-width: 1024px) {
+    .section-content {
+      grid-column: 2 / span 9;
+    }
   }
 
-  .result-box {
+  .section-header {
     display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr);
-  }
-
-  .box-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    min-height: 42px;
-    padding: 0 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .schema-box .box-head {
-    border-bottom-color: rgba(119, 214, 255, 0.18);
-  }
-
-  .result-box .box-head {
-    border-bottom-color: var(--brand-neutral-500);
-  }
-
-  .box-title {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  .box-heading {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    min-width: 0;
-  }
-
-  .box-kicker {
-    color: var(--muted-2);
-    font-size: 0.68rem;
-    font-weight: 750;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .box-name {
-    color: var(--text);
-    font-size: 0.82rem;
-    font-weight: 650;
-  }
-
-  .form-fields {
-    display: grid;
-    gap: 12px;
-    padding: 14px;
-  }
-
-  label {
-    display: grid;
-    gap: 6px;
-    color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 650;
-  }
-
-  input,
-  textarea,
-  select {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
     width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 0;
-    background: #050505;
-    color: var(--text);
-    padding: 10px 11px;
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.82rem;
-    outline: none;
-    transition: border-color 0.15s ease, background 0.15s ease;
   }
 
-  input:focus,
-  textarea:focus,
-  select:focus {
-    border-color: var(--brand-neutral-200);
-    background: #080808;
-  }
-
-  input[type="checkbox"] {
-    width: auto;
-    justify-self: start;
-  }
-
-  textarea {
-    min-height: 140px;
-    resize: vertical;
-    line-height: 1.5;
-  }
-
-  .field-help {
-    color: var(--muted-2);
+  .display {
+    grid-column: span 12;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.05em;
     font-weight: 500;
-    line-height: 1.45;
+    margin: 0;
   }
 
-  .warning {
-    display: none;
-    margin: 0 12px 12px;
-    border: 1px solid rgba(244, 185, 66, 0.35);
-    border-radius: 0;
-    background: rgba(244, 185, 66, 0.1);
-    color: #ffe3a3;
-    padding: 10px;
-    font-size: 0.82rem;
-    line-height: 1.5;
+  .heading-2 {
+    grid-column: span 12;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+    margin: 0;
   }
 
-  .warning.visible {
-    display: block;
+  .text-gradient {
+    background: linear-gradient(
+      270deg,
+      rgba(247, 247, 247, 0.8) 0%,
+      #f7f7f7 50%,
+      rgba(247, 247, 247, 0.8) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
-  .submit-row {
+  .lead {
+    grid-column: span 12;
+    font-size: 1.125rem;
+    color: var(--brand-white);
+    max-width: 650px;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .body-text {
+    grid-column: span 12;
+    color: var(--brand-neutral-100);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 650px;
+  }
+
+  .connection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .connection-card {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 0 14px 14px;
+    gap: 1rem;
+    min-height: 60px;
+    border: 1px solid var(--brand-neutral-600);
+    background: rgba(5, 5, 5, 0.85);
+    padding: 1.25rem 1.5rem;
+    border-radius: 2px;
+    color: var(--brand-white);
+    font-size: 1rem;
+    font-weight: 500;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
   }
 
-  .submit-hint {
-    color: var(--muted-2);
-    font-size: 0.76rem;
+  .connection-card:hover,
+  .connection-card:focus-visible {
+    border-color: var(--brand-neutral-400);
+    background: rgba(15, 15, 15, 0.85);
   }
 
-  .result-panel {
-    border-top: 1px solid var(--brand-neutral-500);
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 160px),
-      rgba(5, 5, 5, 0.52);
-    min-height: 0;
+  .connection-card:focus-visible {
+    outline: 2px solid var(--brand-white);
+    outline-offset: 3px;
   }
 
-  .result-panel .box-head {
-    min-height: 38px;
-    border-bottom-color: rgba(38, 38, 38, 0.78);
-  }
-
-  .result-output {
-    min-height: 176px;
-    max-height: 340px;
-    color: var(--code);
-  }
-
-  .result-output.idle {
-    color: var(--muted);
-  }
-
-  .result-output.error-output {
-    color: #ffd0cc;
-  }
-
-  .tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
+  .icon-badge {
+    width: 48px;
+    height: 48px;
     border: 1px dashed var(--brand-neutral-400);
     border-radius: 0;
-    background: transparent;
-    color: var(--brand-neutral-100);
-    padding: 0 7px;
-    font-family: "Geist Mono", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.64rem;
-    font-weight: 650;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .tag.ok {
-    color: var(--brand-white);
-    border-style: solid;
-    border-color: var(--brand-neutral-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--brand-neutral-600);
+    flex-shrink: 0;
   }
 
-  .tag.warn {
-    color: var(--brand-neutral-100);
-    border-style: dashed;
-    border-color: var(--brand-neutral-400);
-    background: transparent;
+  .icon-badge svg {
+    width: 24px;
+    height: 24px;
+    color: var(--brand-white);
+  }
+
+  .background-icon {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    color: var(--brand-neutral-600);
+  }
+
+  .background-icon svg {
+    position: absolute;
+    width: 120px;
+    height: auto;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: currentColor;
+  }
+
+  .card-label {
+    position: relative;
+    z-index: 2;
+    color: var(--brand-white);
+  }
+
+  .code-block {
+    position: relative;
+    width: 100%;
+    margin-top: 1.25rem;
+  }
+
+  .code-block pre {
+    margin: 0;
+    border-radius: 0;
+    border: 1px solid var(--brand-neutral-500);
+    background: rgba(8, 8, 8, 0.9);
+    padding: 1.5rem;
+    overflow-x: auto;
+  }
+
+  .code-block code {
+    font-family: "Geist Mono", "SFMono-Regular", "Consolas", monospace;
+    color: var(--brand-white);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    display: block;
+    white-space: pre;
+  }
+
+  .copy-snippet-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: none;
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--brand-neutral-50);
+    border-radius: 0;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+    z-index: 10;
+  }
+
+  .copy-snippet-btn:hover,
+  .copy-snippet-btn:focus-visible {
+    color: var(--brand-white);
+    background: rgba(0, 0, 0, 0.95);
+    outline: none;
+  }
+
+  .copy-snippet-btn svg {
+    width: 16px;
+    height: 16px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .copy-snippet-btn svg.hidden {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  .copy-snippet-btn svg.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .card-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
   }
 
   .toast {
     position: fixed;
-    right: 22px;
-    bottom: 22px;
-    z-index: 20;
-    max-width: min(420px, calc(100% - 44px));
-    border: 1px solid var(--border-strong);
+    bottom: 24px;
+    right: 24px;
+    background: rgba(8, 8, 8, 0.95);
+    border: 1px solid var(--brand-neutral-500);
     border-radius: 0;
-    background: rgba(16, 16, 16, 0.96);
-    color: var(--text);
-    padding: 10px 12px;
-    font-size: 0.84rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    color: var(--brand-white);
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px) scale(0.98);
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
   }
 
   .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 
-  @media (max-width: 860px) {
-    .topbar {
-      align-items: flex-start;
-      flex-direction: column;
-    }
-
-    .actions {
-      justify-content: flex-start;
-    }
-
-    .status-grid,
-    .detail-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .endpoint-row {
-      grid-template-columns: auto 1fr;
-    }
-
-    .item-row {
-      grid-template-columns: auto 1fr;
-    }
-
-    .tags {
-      justify-content: flex-start;
-    }
-
-    .summary,
-    .endpoint-meta,
-    .endpoint-row .button,
-    .item-row .tags,
-    .item-row .button {
-      grid-column: 2;
-      justify-self: start;
-      text-align: left;
-      white-space: normal;
-    }
-  }
-
-  @media (max-width: 520px) {
-    .layout {
-      width: min(100% - 24px, 1120px);
-      padding-top: 16px;
-    }
-
-    .stat {
-      padding: 12px;
-    }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
   }
 `;
 
-const clientScript = String.raw`
-(() => {
-  const config = window.__XMCP_CONSOLE_CONFIG__;
-  const TOAST_TIMEOUT_MS = ${TOAST_TIMEOUT_MS};
-  const icons = ${JSON.stringify(ICONS)};
-  const capabilityDefinitions = [
-    { key: "tools", label: "Tools", icon: "tool" },
-    { key: "resources", label: "Resources", icon: "resource" },
-    { key: "prompts", label: "Prompts", icon: "prompt" },
-    { key: "completions", label: "Completions", icon: "completion" },
-    { key: "logging", label: "Logging", icon: "logging" },
-    { key: "tasks", label: "Tasks", icon: "task" },
-    { key: "experimental", label: "Experimental", icon: "experimental" },
-  ];
-  const state = {
-    headers: {},
-    tools: [],
-    resources: [],
-    resourceTemplates: [],
-    prompts: [],
-    activeTab: "tools",
-  };
+const createClientScript = (
+  endpoint: string,
+  serverName: string | undefined,
+  serverDescription: string | undefined
+) => `
+  (() => {
+    const templateConfig = ${JSON.stringify({
+      endpoint,
+      serverName: serverName ?? null,
+      serverDescription: serverDescription ?? null,
+    })};
 
-  const els = {
-    capabilities: document.getElementById("capabilities"),
-    mcpUrlCopy: document.getElementById("mcp-url-copy"),
-    serverName: document.getElementById("server-name"),
-    serverDescription: document.getElementById("server-description"),
-    serverIcon: document.getElementById("server-icon"),
-    serverVersion: document.getElementById("server-version"),
-    inventory: document.getElementById("inventory"),
-    tabs: document.querySelectorAll("[data-tab]"),
-    toast: document.getElementById("toast"),
-  };
+    const elements = {
+      name: document.getElementById("server-name"),
+      description: document.getElementById("server-description"),
+      grid: document.getElementById("connection-grid"),
+      remoteSnippet: document.getElementById("remote-snippet"),
+      copyRemoteButton: document.getElementById("copy-remote-snippet"),
+      copyIcon: document.getElementById("copy-icon"),
+      checkIcon: document.getElementById("check-icon"),
+      toast: document.getElementById("toast"),
+    };
 
-  const endpointPath = normalizePath(config.endpoint || "/mcp");
-  const origin = window.location.origin.replace(/\/$/, "");
-  const mcpUrl = origin + endpointPath;
+    const resolvedName =
+      (templateConfig.serverName && templateConfig.serverName.trim()) || "xmcp server";
+    const resolvedDescription =
+      (templateConfig.serverDescription && templateConfig.serverDescription.trim()) ||
+      "${FALLBACK_DESCRIPTION}";
+    const endpointPath =
+      (templateConfig.endpoint && templateConfig.endpoint.trim()) || "/";
+    const normalizedEndpoint = endpointPath.startsWith("/")
+      ? endpointPath
+      : \`/\${endpointPath}\`;
+    const origin = window.location.origin.replace(/\\/$/, "");
+    const serverUrl = origin + normalizedEndpoint;
+    const identifier =
+      resolvedName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") || "xmcp-server";
 
-  els.mcpUrlCopy.setAttribute("data-copy", mcpUrl);
-  bindEvents();
-  loadAll();
+    if (elements.name) {
+      elements.name.textContent = resolvedName;
+    }
 
-  function bindEvents() {
-    els.tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        state.activeTab = tab.dataset.tab;
-        els.tabs.forEach((item) => {
-          const isActive = item === tab;
-          item.classList.toggle("active", isActive);
-          item.setAttribute("aria-selected", String(isActive));
-          item.setAttribute("tabindex", isActive ? "0" : "-1");
-        });
-        renderInventory();
-      });
-    });
-    document.addEventListener("click", (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const copyButton = target.closest("[data-copy]");
-      if (copyButton) {
-        const value = copyButton.getAttribute("data-copy") || "";
-        const message = copyButton.getAttribute("data-copy-message") || "Copied.";
-        copyText(value, message);
-      }
-      const rowButton = target.closest("[data-toggle-tool]");
-      if (rowButton) {
-        const name = rowButton.getAttribute("data-toggle-tool");
-        const detail = Array.from(document.querySelectorAll("[data-tool-detail]")).find(
-          (item) => item.getAttribute("data-tool-detail") === name
-        );
-        if (detail) {
-          const isOpen = detail.classList.toggle("open");
-          rowButton.setAttribute("aria-expanded", String(isOpen));
-        }
-      }
-    });
-    document.addEventListener("submit", (event) => {
-      const form = event.target;
-      if (form instanceof HTMLFormElement && form.id === "headers-form") {
-        event.preventDefault();
-        applyHeaders(form);
-        return;
-      }
-      if (!(form instanceof HTMLFormElement) || !form.dataset.toolName) return;
-      event.preventDefault();
-      callTool(form);
-    });
-  }
+    if (elements.description) {
+      elements.description.textContent = resolvedDescription;
+    }
 
-  async function loadAll() {
-    renderCapabilities({});
-    const init = await rpc("initialize", {
-      protocolVersion: "2025-11-25",
-      capabilities: {},
-      clientInfo: {
-        name: "xmcp-root-console",
-        version: "0.0.0",
+    const icons = ${JSON.stringify(ICONS)};
+
+    const connectionOptions = [
+      {
+        label: "Cursor",
+        type: "copy",
+        snippet: \`{
+    "\${identifier}": {
+      "url": "\${serverUrl}"
+    }
+  }\`,
+        description: "Copy Cursor connection config",
+        icon: "cursor",
       },
-    }).catch((error) => ({ error }));
+      {
+        label: "Claude Code",
+        type: "copy",
+        snippet: \`claude mcp add --transport http "\${identifier}" \\\\\\n    "\${serverUrl}"\`,
+        description: "Copy CLI snippet for Claude Code",
+        icon: "claude",
+      },
+      {
+        label: "Claude Desktop",
+        type: "copy",
+        snippet: \`{
+    "\${identifier}": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "\${serverUrl}"]
+    }
+  }\`,
+        description: "Copy Claude Desktop setup command",
+        icon: "claude",
+      },
+      {
+        label: "Windsurf",
+        type: "copy",
+        snippet: \`"\${identifier}": {
+  "command": "npx",
+  "args": [
+    "mcp-remote",
+    "\${serverUrl}"
+  ]
+}\`,
+        description: "Copy Windsurf attach command",
+        icon: "windsurf",
+      },
+      {
+        label: "Gemini CLI",
+        type: "copy",
+        snippet: \`gemini mcp add --transport http "\${identifier}" "\${serverUrl}"\`,
+        description: "Copy Gemini CLI link command",
+        icon: "gemini",
+      },
+      {
+        label: "Codex",
+        type: "copy",
+        snippet: \`[mcp_servers.\${identifier}]
+command = "npx"
+args = ["-y", "mcp-remote", "\${serverUrl}"]\`,
+        description: "Copy Codex connect command",
+        icon: "codex",
+      },
+    ];
 
-    if (init && init.error) {
-      renderCapabilities({});
-      setText(els.serverName, config.serverName || "xmcp server");
-      setText(els.serverDescription, errorMessage(init.error));
-      setText(els.serverVersion, "Unavailable");
-    } else {
-      renderCapabilities(init.capabilities || {});
-      const serverInfo = init.serverInfo || {};
-      setText(els.serverName, serverInfo.name || config.serverName || "xmcp server");
-      setText(
-        els.serverDescription,
-        serverInfo.description || config.serverDescription || "No description provided"
+    if (elements.remoteSnippet) {
+      const remoteSnippet = JSON.stringify(
+        {
+          command: "npx",
+          args: ["mcp-remote", serverUrl],
+        },
+        null,
+        2
       );
-      setText(els.serverVersion, serverInfo.version ? "v" + serverInfo.version : "vUnknown");
-      setServerIcon(serverInfo.icons || []);
+      elements.remoteSnippet.textContent = remoteSnippet;
     }
 
-    const [tools, resources, resourceTemplates, prompts] = await Promise.all([
-      rpc("tools/list", {}).catch((error) => ({ error })),
-      rpc("resources/list", {}).catch((error) => ({ error })),
-      rpc("resources/templates/list", {}).catch((error) => ({ error })),
-      rpc("prompts/list", {}).catch((error) => ({ error })),
-    ]);
+    if (elements.copyRemoteButton) {
+      elements.copyRemoteButton.addEventListener("click", () => {
+        const snippet = elements.remoteSnippet?.textContent || "";
+        copyText(snippet)
+          .then((success) => {
+            if (success) {
+              // Animate icon change
+              if (elements.copyIcon && elements.checkIcon) {
+                elements.copyIcon.classList.remove("visible");
+                elements.copyIcon.classList.add("hidden");
+                elements.checkIcon.classList.remove("hidden");
+                elements.checkIcon.classList.add("visible");
 
-    state.tools = tools && !tools.error ? tools.tools || [] : [];
-    state.resources = resources && !resources.error ? resources.resources || [] : [];
-    state.resourceTemplates =
-      resourceTemplates && !resourceTemplates.error ? resourceTemplates.resourceTemplates || [] : [];
-    state.prompts = prompts && !prompts.error ? prompts.prompts || [] : [];
-    renderInventory();
-  }
-
-  async function rpc(method, params) {
-    const response = await fetch(endpointPath, {
-      method: "POST",
-      headers: {
-        Accept: "application/json, text/event-stream",
-        "Content-Type": "application/json",
-        ...state.headers,
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: Date.now(),
-        method,
-        params,
-      }),
-    });
-    const payload = await parseRpcResponse(response);
-    if (!response.ok) {
-      throw new Error(payload && payload.error ? payload.error.message : "Request failed with " + response.status);
-    }
-    if (payload.error) {
-      throw payload.error;
-    }
-    return payload.result;
-  }
-
-  async function parseRpcResponse(response) {
-    const text = await response.text();
-    if (!text.trim()) return {};
-    const dataLines = text
-      .split(/\r?\n/)
-      .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trim())
-      .filter(Boolean);
-    if (dataLines.length > 0) {
-      return JSON.parse(dataLines.join("\n"));
-    }
-    return JSON.parse(text);
-  }
-
-  function renderInventory() {
-    if (state.activeTab === "tools") return renderTools();
-    if (state.activeTab === "resources") return renderResources();
-    if (state.activeTab === "templates") return renderResourceTemplates();
-    if (state.activeTab === "config") return renderConfig();
-    renderPrompts();
-  }
-
-  function renderTools() {
-    if (!state.tools.length) {
-      els.inventory.innerHTML = renderEmpty("tool", "No tools were reported by tools/list.");
-      return;
-    }
-    els.inventory.innerHTML = state.tools
-      .map((tool) => {
-        const annotations = tool.annotations || {};
-        const risky = annotations.destructiveHint === true || annotations.readOnlyHint !== true;
-        const tags = renderTags([
-          annotations.readOnlyHint === true ? ["Read only", "ok"] : ["Writable", "warn"],
-          annotations.destructiveHint === true ? ["Destructive", "warn"] : null,
-          annotations.idempotentHint === true ? ["Idempotent", "ok"] : null,
-        ]);
-        return (
-          '<div class="item-row">' +
-          '<span class="icon-badge">' +
-          icon("tool") +
-          "</span>" +
-          '<span class="item-main"><span class="path">' +
-          escapeText(tool.name) +
-          '</span><br><span class="summary">' +
-          escapeText(tool.description || "No description provided") +
-          "</span></span>" +
-          '<span class="tags">' +
-          tags +
-          '</span><button class="button" type="button" aria-expanded="false" data-toggle-tool="' +
-          attr(tool.name) +
-          '">Try it</button></div>' +
-          '<div class="tool-detail" data-tool-detail="' +
-          attr(tool.name) +
-          '">' +
-          renderToolDetail(tool, risky) +
-          "</div>"
-        );
-      })
-      .join("");
-  }
-
-  function renderToolDetail(tool, risky) {
-    const schema = tool.inputSchema || { type: "object", properties: {} };
-    const form = renderToolForm(tool, schema, risky);
-    return (
-      '<div class="detail-grid">' +
-      '<div class="schema-box"><div class="box-head"><span class="box-heading"><span class="icon-badge">' +
-      icon("template") +
-      '</span><span class="box-title"><span class="box-kicker">Schema</span><span class="box-name">Input contract</span></span></span><button class="copy" type="button" data-copy="' +
-      attr(JSON.stringify(schema, null, 2)) +
-      '" data-copy-message="Copied input schema."><span class="icon">' +
-      icon("copy") +
-      '</span>Copy</button></div><pre><code class="code-json">' +
-      formatJsonHtml(schema) +
-      "</code></pre></div>" +
-      '<div class="result-box"><div class="box-head"><span class="box-heading"><span class="icon-badge">' +
-      icon("terminal") +
-      '</span><span class="box-title"><span class="box-kicker">Execution</span><span class="box-name">' +
-      escapeText(tool.name) +
-      "</span></span></span></div>" +
-      form +
-      '<div class="result-panel"><div class="box-head"><span class="box-heading"><span class="icon-badge">' +
-      icon("mcp") +
-      '</span><span class="box-title"><span class="box-kicker">Response</span><span class="box-name">Result payload</span></span></span></div><pre class="result-output idle"><code class="code-json" id="result-' +
-      attr(domId(tool.name)) +
-      '">Run the tool to see the response.</code></pre></div></div></div>'
-    );
-  }
-
-  function renderToolForm(tool, schema, risky) {
-    const properties = schema.properties || {};
-    const required = Array.isArray(schema.required) ? schema.required : [];
-    const fields = Object.keys(properties).length
-      ? Object.entries(properties).map(([name, property]) => renderField(name, property, required.includes(name))).join("")
-      : '<div class="empty">This tool does not define input fields.</div>';
-    return (
-      '<form data-tool-name="' +
-      attr(tool.name) +
-      '" data-risky="' +
-      String(risky) +
-      '"><div class="form-fields">' +
-      fields +
-      '</div><div class="warning ' +
-      (risky ? "visible" : "") +
-      '">This tool is not marked read-only or may be destructive. The first click arms the call; click again to run it.</div><div class="submit-row"><span class="submit-hint">JSON-RPC tools/call</span><button class="button primary" type="submit">' +
-      (risky ? "Review and run" : "Run tool") +
-      "</button></div></form>"
-    );
-  }
-
-  function renderField(name, schema, required) {
-    const type = Array.isArray(schema.type) ? schema.type[0] : schema.type;
-    const help = schema.description ? '<span class="field-help">' + escapeText(schema.description) + "</span>" : "";
-    const label = escapeText(name) + (required ? " *" : "");
-    let control = "";
-    if (Array.isArray(schema.enum)) {
-      control =
-        '<select name="' +
-        attr(name) +
-        '"' +
-        (required ? " required" : "") +
-        ">" +
-        schema.enum.map((item) => '<option value="' + attr(String(item)) + '">' + escapeText(String(item)) + "</option>").join("") +
-        "</select>";
-    } else if (type === "boolean") {
-      control = '<input type="checkbox" name="' + attr(name) + '">';
-    } else if (type === "number" || type === "integer") {
-      control = '<input type="number" name="' + attr(name) + '"' + (required ? " required" : "") + ">";
-    } else if (type === "object" || type === "array") {
-      control =
-        '<textarea name="' +
-        attr(name) +
-        '" data-json="true"' +
-        (required ? " required" : "") +
-        ">" +
-        (type === "array" ? "[]" : "{}") +
-        "</textarea>";
-    } else {
-      control = '<input type="text" name="' + attr(name) + '"' + (required ? " required" : "") + ">";
-    }
-    return "<label><span>" + label + "</span>" + control + help + "</label>";
-  }
-
-  async function callTool(form) {
-    const toolName = form.dataset.toolName;
-    const risky = form.dataset.risky === "true";
-    const button = form.querySelector('button[type="submit"]');
-    if (risky && form.dataset.armed !== "true") {
-      form.dataset.armed = "true";
-      button.textContent = "Confirm run";
-      showToast("Confirm the tool call to continue.");
-      return;
-    }
-    button.disabled = true;
-    button.textContent = "Running";
-    const result = document.getElementById("result-" + domId(toolName));
-    const resultOutput = result ? result.closest(".result-output") : null;
-    if (resultOutput) {
-      resultOutput.classList.remove("idle", "error-output");
-    }
-    try {
-      const args = collectFormArgs(form);
-      const response = await rpc("tools/call", { name: toolName, arguments: args });
-      result.innerHTML = formatJsonHtml(response);
-    } catch (error) {
-      if (resultOutput) resultOutput.classList.add("error-output");
-      result.textContent = errorMessage(error);
-    } finally {
-      button.disabled = false;
-      button.textContent = risky ? "Review and run" : "Run tool";
-      form.dataset.armed = "false";
-    }
-  }
-
-  function collectFormArgs(form) {
-    const args = {};
-    form.querySelectorAll("input, textarea, select").forEach((field) => {
-      if (!field.name) return;
-      if (field instanceof HTMLInputElement && field.type === "checkbox") {
-        args[field.name] = field.checked;
-        return;
-      }
-      if (field instanceof HTMLTextAreaElement && field.dataset.json === "true") {
-        args[field.name] = field.value.trim() ? JSON.parse(field.value) : null;
-        return;
-      }
-      if (field instanceof HTMLInputElement && field.type === "number") {
-        args[field.name] = field.value === "" ? undefined : Number(field.value);
-        return;
-      }
-      args[field.name] = field.value;
-    });
-    Object.keys(args).forEach((key) => args[key] === undefined && delete args[key]);
-    return args;
-  }
-
-  function renderResources() {
-    renderSimpleList(
-      state.resources,
-      "No resources were reported by resources/list.",
-      "resource",
-      (item) => item.uri,
-      (item) => item.description || item.name || "Resource"
-    );
-  }
-
-  function renderResourceTemplates() {
-    renderSimpleList(
-      state.resourceTemplates,
-      "No resource templates were reported by resources/templates/list.",
-      "template",
-      (item) => item.uriTemplate,
-      (item) => item.description || item.name || "Resource template"
-    );
-  }
-
-  function renderPrompts() {
-    renderSimpleList(
-      state.prompts,
-      "No prompts were reported by prompts/list.",
-      "prompt",
-      (item) => item.name,
-      (item) => {
-        const args = Array.isArray(item.arguments) ? " Arguments: " + item.arguments.map((arg) => arg.name).join(", ") : "";
-        return (item.description || "Prompt") + args;
-      }
-    );
-  }
-
-  function renderConfig() {
-    els.inventory.innerHTML =
-      '<form class="config-panel" id="headers-form">' +
-      '<label><span>Request headers for /mcp</span>' +
-      '<textarea name="headers" spellcheck="false" placeholder="{&quot;Authorization&quot;:&quot;Bearer token&quot;}">' +
-      escapeText(JSON.stringify(state.headers, null, 2)) +
-      '</textarea><span class="field-help">Headers stay in memory for this page session only.</span></label>' +
-      '<div class="submit-row"><span></span><button class="button primary" type="submit">Apply headers</button></div>' +
-      "</form>";
-  }
-
-  function renderSimpleList(items, emptyText, iconName, getPath, getSummary) {
-    if (!items.length) {
-      els.inventory.innerHTML = renderEmpty(iconName, emptyText);
-      return;
-    }
-    els.inventory.innerHTML = items
-      .map((item) => {
-        return (
-          '<div class="item-row"><span class="icon-badge">' +
-          icon(iconName) +
-          '</span><span class="item-main"><span class="path">' +
-          escapeText(getPath(item) || "") +
-          '</span><br><span class="summary">' +
-          escapeText(getSummary(item) || "") +
-          '</span></span><span class="tags">' +
-          renderTags([[item.name || item.title || "metadata", ""]]) +
-          "</span></div>"
-        );
-      })
-      .join("");
-  }
-
-  function renderTags(tags) {
-    return tags
-      .filter(Boolean)
-      .map((tag) => '<span class="tag ' + (tag[1] || "") + '">' + escapeText(tag[0]) + "</span>")
-      .join("");
-  }
-
-  function renderCapabilities(capabilities) {
-    const reported = capabilities && typeof capabilities === "object" ? capabilities : {};
-    const knownKeys = capabilityDefinitions.map((capability) => capability.key);
-    const customDefinitions = Object.keys(reported)
-      .filter((key) => !knownKeys.includes(key))
-      .map((key) => ({ key, label: titleCase(key), icon: "capabilities", custom: true }));
-    els.capabilities.innerHTML = capabilityDefinitions.concat(customDefinitions)
-      .map((capability) => {
-        const active = Object.prototype.hasOwnProperty.call(reported, capability.key);
-        return (
-          '<span class="capability-chip ' +
-          (active ? "active" : "inactive") +
-          '" title="' +
-          escapeText(active ? "Active capability" : "Not reported by this server") +
-          '"><span class="icon">' +
-          icon(capability.icon) +
-          "</span><span>" +
-          escapeText(capability.label) +
-          "</span></span>"
-        );
-      })
-      .join("");
-  }
-
-  function renderEmpty(iconName, text) {
-    return '<div class="empty"><span class="icon-badge">' + icon(iconName) + "</span><span>" + escapeText(text) + "</span></div>";
-  }
-
-  function applyHeaders(form) {
-    try {
-      const input = form.elements.headers;
-      const value = input instanceof HTMLTextAreaElement ? input.value : "";
-      const parsed = value.trim() ? JSON.parse(value) : {};
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        throw new Error("Headers must be a JSON object.");
-      }
-      state.headers = {};
-      Object.entries(parsed).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          state.headers[key] = String(value);
-        }
+                // Reset after 2 seconds
+                setTimeout(() => {
+                  elements.copyIcon?.classList.remove("hidden");
+                  elements.copyIcon?.classList.add("visible");
+                  elements.checkIcon?.classList.remove("visible");
+                  elements.checkIcon?.classList.add("hidden");
+                }, 2000);
+              }
+            } else {
+              showToast("Unable to copy. Please copy manually.");
+            }
+          })
+          .catch(() => {
+            showToast("Unable to copy. Please copy manually.");
+          });
       });
-      showToast("Headers applied for this page session.");
-      loadAll();
-    } catch (error) {
-      showToast(errorMessage(error));
     }
-  }
 
-  function setText(el, text) {
-    el.textContent = text;
-  }
-
-  function titleCase(value) {
-    return String(value)
-      .replace(/[-_]+/g, " ")
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
-  }
-
-  function normalizePath(path) {
-    return path.startsWith("/") ? path : "/" + path;
-  }
-
-  function format(value) {
-    return typeof value === "string" ? value : JSON.stringify(value, null, 2);
-  }
-
-  function formatJsonHtml(value) {
-    if (typeof value === "string") {
-      return escapeText(value);
-    }
-    return escapeText(JSON.stringify(value, null, 2)).replace(
-      /(&quot;(?:\\.|[^&])*?&quot;)(\s*:)?|\b(true|false|null)\b|-?\b\d+(?:\.\d+)?\b|[{}[\],:]/g,
-      (match, quoted, colon, literal) => {
-        if (quoted) {
-          return colon
-            ? '<span class="json-key">' + quoted + '</span><span class="json-punctuation">' + colon + '</span>'
-            : '<span class="json-string">' + quoted + '</span>';
+    if (elements.grid) {
+      elements.grid.innerHTML = "";
+      connectionOptions.forEach((option) => {
+        const isCopy = option.type === "copy";
+        const card = document.createElement(isCopy ? "button" : "a");
+        card.className = "connection-card";
+        if (isCopy) {
+          card.type = "button";
+        } else {
+          card.href = option.href;
+          card.target = "_blank";
+          card.rel = "noreferrer";
         }
-        if (literal) return '<span class="json-literal">' + literal + "</span>";
-        if (/^-?\d/.test(match)) return '<span class="json-number">' + match + "</span>";
-        return '<span class="json-punctuation">' + match + "</span>";
-      }
-    );
-  }
 
-  function errorMessage(error) {
-    if (!error) return "Unknown error";
-    if (error.message) return error.message;
-    return format(error);
-  }
+        const inner = document.createElement("span");
+        inner.className = "card-inner";
 
-  function domId(value) {
-    return String(value).replace(/[^a-zA-Z0-9_-]/g, "_");
-  }
+        const iconBadge = document.createElement("span");
+        iconBadge.className = "icon-badge";
+        iconBadge.innerHTML = icons[option.icon] || "";
 
-  function escapeText(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
-  }
+        const label = document.createElement("span");
+        label.className = "card-label";
+        label.textContent = option.label;
 
-  function attr(value) {
-    return escapeText(value);
-  }
+        inner.appendChild(iconBadge);
+        inner.appendChild(label);
+        card.appendChild(inner);
 
-  function icon(name) {
-    return icons[name] || icons.terminal;
-  }
+        const backgroundIcon = document.createElement("span");
+        backgroundIcon.className = "background-icon";
+        backgroundIcon.innerHTML = icons[option.icon] || "";
+        card.appendChild(backgroundIcon);
 
-  function setServerIcon(iconsList) {
-    const selected = selectServerIcon(iconsList);
-    if (!selected || !els.serverIcon) return;
-    els.serverIcon.src = selected.src;
-    els.serverIcon.classList.add("visible");
-  }
+        if (isCopy) {
+          card.addEventListener("click", () => {
+            copyText(option.snippet)
+              .then((success) => {
+                showToast(
+                  success
+                    ? \`\${option.label} connection method copied to clipboard.\`
+                    : "Unable to copy. Please copy manually."
+                );
+              })
+              .catch(() => {
+                showToast("Unable to copy. Please copy manually.");
+              });
+          });
+        }
 
-  function selectServerIcon(iconsList) {
-    if (!Array.isArray(iconsList)) return null;
-    return iconsList.find((item) => {
-      if (!item || typeof item.src !== "string") return false;
-      return /^(https?:\/\/|data:image\/|\/|\.\/|\.\.\/)/.test(item.src);
-    }) || null;
-  }
+        elements.grid?.appendChild(card);
+      });
+    }
 
-  async function copyText(text, message) {
-    try {
+    function showToast(message) {
+      if (!elements.toast) return;
+      elements.toast.textContent = message;
+      elements.toast.classList.add("show");
+      setTimeout(() => {
+        elements.toast && elements.toast.classList.remove("show");
+      }, 2400);
+    }
+
+    async function copyText(text) {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(text);
-      } else {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (error) {
+          return fallbackCopy(text);
+        }
+      }
+      return fallbackCopy(text);
+    }
+
+    function fallbackCopy(text) {
+      try {
         const textarea = document.createElement("textarea");
         textarea.value = text;
         textarea.setAttribute("readonly", "");
@@ -1500,110 +604,143 @@ const clientScript = String.raw`
         textarea.style.left = "-9999px";
         document.body.appendChild(textarea);
         textarea.select();
-        document.execCommand("copy");
+        const successful = document.execCommand("copy");
         document.body.removeChild(textarea);
+        return successful;
+      } catch {
+        return false;
       }
-      showToast(message || "Copied.");
-    } catch {
-      showToast("Unable to copy.");
     }
-  }
-
-  function showToast(message) {
-    els.toast.textContent = message;
-    els.toast.classList.add("show");
-    setTimeout(() => els.toast.classList.remove("show"), TOAST_TIMEOUT_MS);
-  }
-})();
+  })();
 `;
 
 const homeTemplate = (
   endpoint: string,
   serverName: string | undefined,
   serverDescription: string | undefined
-) => {
-  const resolvedName = serverName?.trim() || "xmcp server";
-  const resolvedDescription =
-    serverDescription?.trim() || FALLBACK_DESCRIPTION;
-  const escapedName = escapeHtml(resolvedName);
-  const escapedDescription = escapeHtml(resolvedDescription);
-  const config = JSON.stringify({
-    endpoint,
-    serverName: resolvedName,
-    serverDescription: resolvedDescription,
-  }).replace(/</g, "\\u003c");
-
-  return `<!DOCTYPE html>
+) => `
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escapedName}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;600;650&family=Geist+Mono:wght@400;500;650;800&display=swap" rel="stylesheet" />
-    <style>${styles}</style>
+    <title>${serverName || "xmcp server"}</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Sans:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+${styles}
+    </style>
   </head>
   <body>
-    <main class="layout">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-head">
-            <img class="server-icon" id="server-icon" alt="" />
-            <div>
-              <div class="server-title-row">
-                <h1 id="server-name">${escapedName}</h1>
-                <span class="server-version" id="server-version">vLoading</span>
-              </div>
-            </div>
-          </div>
-          <p class="description" id="server-description">${escapedDescription}</p>
-        </div>
-        <div class="actions">
-          <button class="button primary" type="button" id="mcp-url-copy" data-copy="${escapeHtml(endpoint)}" data-copy-message="Copied MCP URL.">
-            <span class="icon">${ICONS.copy}</span>
-            <span>Get MCP URL</span>
-          </button>
-        </div>
-      </header>
-
-      <section class="status-grid" aria-label="Server status">
-        <div class="stat">
-          <div class="stat-label"><span class="icon">${ICONS.capabilities}</span>Capabilities</div>
-          <div class="capability-list" id="capabilities">
-            <span class="capability-chip inactive"><span class="icon">${ICONS.tool}</span><span>Tools</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.resource}</span><span>Resources</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.prompt}</span><span>Prompts</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.completion}</span><span>Completions</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.logging}</span><span>Logging</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.task}</span><span>Tasks</span></span>
-            <span class="capability-chip inactive"><span class="icon">${ICONS.experimental}</span><span>Experimental</span></span>
+    <main class="template-layout">
+      <section class="section">
+        <div class="section-content">
+          <div class="section-header">
+            <h2 id="server-name" class="display text-gradient">xmcp server</h2>
+            <p id="server-description" class="lead">
+              ${serverDescription || FALLBACK_DESCRIPTION}
+            </p>
           </div>
         </div>
       </section>
 
       <section class="section">
-        <div class="section-title explorer-header">
-          <div class="tabs terminal-tabs" role="tablist" aria-label="MCP inventory">
-            <button class="tab active" type="button" role="tab" aria-selected="true" tabindex="0" data-tab="tools"><span class="icon">${ICONS.tool}</span>Tools</button>
-            <button class="tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="resources"><span class="icon">${ICONS.resource}</span>Resources</button>
-            <button class="tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="templates"><span class="icon">${ICONS.template}</span>Templates</button>
-            <button class="tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="prompts"><span class="icon">${ICONS.prompt}</span>Prompts</button>
-            <button class="tab" type="button" role="tab" aria-selected="false" tabindex="-1" data-tab="config"><span class="icon">${ICONS.server}</span>Config</button>
+        <div class="section-content">
+          <div class="section-header">
+            <h2 class="heading-2 text-gradient">Connect to a client</h2>
+            <p class="body-text">
+              Select your preferred way to connect to your MCP server.
+            </p>
           </div>
-        </div>
-        <div class="panel" id="inventory" role="tabpanel">
-          <div class="empty"><span class="icon-badge">${ICONS.server}</span><span>Loading MCP inventory.</span></div>
+          <div id="connection-grid" class="connection-grid" aria-live="polite"></div>
         </div>
       </section>
 
+      <section class="section">
+        <div class="section-content">
+          <div class="section-header">
+            <h2 class="heading-2 text-gradient">Standard connection</h2>
+            <p class="body-text">
+              For clients not listed above, you can use the following connection method.
+            </p>
+          </div>
+          <div class="code-block">
+            <button
+              type="button"
+              class="copy-snippet-btn"
+              id="copy-remote-snippet"
+              aria-label="Copy standard connection method"
+            >
+              <span class="sr-only">Copy standard connection method</span>
+              <svg
+                id="copy-icon"
+                class="visible"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect
+                  x="5.25"
+                  y="3"
+                  width="7.5"
+                  height="9.5"
+                  rx="1"
+                  stroke="currentColor"
+                  stroke-width="1.25"
+                />
+                <path
+                  d="M3.25 10.75V2.75H9.75"
+                  stroke="currentColor"
+                  stroke-width="1.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <svg
+                id="check-icon"
+                class="hidden"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                style="position: absolute;"
+              >
+                <path
+                  d="M13.5 4L6 11.5L2.5 8"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+        </svg>
+            </button>
+            <pre><code id="remote-snippet"></code></pre>
+          </div>
+    </div>
+      </section>
     </main>
-
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <script>window.__XMCP_CONSOLE_CONFIG__ = ${config};</script>
-    <script>${clientScript}</script>
+    <script>
+${createClientScript(endpoint, serverName, serverDescription)}
+    </script>
   </body>
-</html>`;
-};
+</html>
+`;
 
 export default homeTemplate;
