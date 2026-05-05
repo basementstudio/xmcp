@@ -1,8 +1,15 @@
-import { createServer } from "@/runtime/utils/server";
+import {
+  INJECTED_CONFIG,
+  createServer,
+  loadPrompts,
+  loadResources,
+  loadTools,
+} from "@/runtime/utils/server";
+import { pathToName } from "@/runtime/utils/tools";
 import { WebStatelessHttpTransport } from "@/runtime/transports/http/web-stateless-http";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
-import homeTemplate from "../../templates/home";
+import homeTemplate, { HomeServerMeta } from "../../templates/home";
 
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
 import type { Env, ExecutionContext } from "./types";
@@ -28,6 +35,54 @@ const middleware = INJECTED_MIDDLEWARE as
   | undefined;
 
 let resolvedMiddlewarePromise: Promise<WebMiddleware[]> | null = null;
+let homeMetaPromise: Promise<HomeServerMeta> | null = null;
+
+function getHomeServerMeta(): Promise<HomeServerMeta> {
+  if (!homeMetaPromise) {
+    homeMetaPromise = (async (): Promise<HomeServerMeta> => {
+      const [toolModules, promptModules, resourceModules] = await Promise.all([
+        loadTools(),
+        loadPrompts(),
+        loadResources(),
+      ]);
+
+      return {
+        version: INJECTED_CONFIG.version,
+        icons: INJECTED_CONFIG.icons,
+        instructions: INJECTED_CONFIG.instructions,
+        tools: Array.from(toolModules.entries()).map(([path, mod]) => {
+          const meta = mod.metadata ?? ({} as typeof mod.metadata);
+          return {
+            name: meta.name ?? pathToName(path),
+            description: meta.description,
+            annotations: meta.annotations,
+          };
+        }),
+        prompts: Array.from(promptModules.entries()).map(([path, mod]) => {
+          const meta = mod.metadata ?? ({} as typeof mod.metadata);
+          return {
+            name: meta.name ?? pathToName(path),
+            title: meta.title,
+            description: meta.description,
+          };
+        }),
+        resources: Array.from(resourceModules.entries()).map(([path, mod]) => {
+          const meta = mod.metadata ?? ({} as typeof mod.metadata);
+          return {
+            name: meta.name ?? pathToName(path),
+            title: meta.title,
+            description: meta.description,
+            mimeType: meta.mimeType,
+          };
+        }),
+      };
+    })().catch((error) => {
+      console.error("[Cloudflare-MCP] Failed to load home metadata:", error);
+      return {};
+    });
+  }
+  return homeMetaPromise;
+}
 
 async function resolveWebMiddleware(): Promise<WebMiddleware[]> {
   if (!middleware) {
@@ -220,10 +275,12 @@ export default {
 
     // Home page (no auth required)
     if (pathname === "/" && request.method === "GET") {
+      const serverMeta = await getHomeServerMeta();
       const html = homeTemplate(
         mcpEndpoint,
         templateConfig.name,
-        templateConfig.description
+        templateConfig.description,
+        serverMeta
       );
       const response = new Response(html, {
         status: 200,
