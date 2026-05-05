@@ -84,7 +84,8 @@
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "analyze": "cross-env GENERATE_STATS=true pnpm build && pnpm tsx scripts/analyze-rspack-stats.ts",
-    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts"
+    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts",
+    "test:adapters": "node --import tsx --test src/runtime/adapters/fastify/__tests__/*.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
@@ -114,6 +115,7 @@
     "del": "^7.1.0",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
+    "fastify": "^5.0.0",
     "fs-extra": "^11.3.2",
     "glob": "^11.1.0",
     "is-docker": "^4.0.0",

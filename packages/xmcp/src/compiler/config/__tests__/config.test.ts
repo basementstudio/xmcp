@@ -169,6 +169,27 @@ describe("Config System - Resolution Functions", () => {
 
     assert.equal(resolved.adapter, "express");
   });
+
+  it("should resolve fastify adapter", () => {
+    const config = configSchema.parse({
+      experimental: {
+        adapter: "fastify",
+      },
+    });
+    const resolved = getResolvedExperimentalConfig(config);
+
+    assert.equal(resolved.adapter, "fastify");
+  });
+
+  it("should reject unknown adapter values", () => {
+    assert.throws(() => {
+      configSchema.parse({
+        experimental: {
+          adapter: "unknown-framework",
+        },
+      });
+    });
+  });
 });
 
 describe("Config System - Injection Functions", () => {
