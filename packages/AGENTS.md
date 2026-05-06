@@ -46,7 +46,7 @@ Use this file for `packages/**`.
 
 ## Checks
 
-- Core package: `pnpm --filter xmcp build`.
+- Core package: `cd packages/xmcp && bash build-and-link.sh`.
 - Core config behavior: `cd packages/xmcp && pnpm test:config`.
 - CLI/scaffolders: `pnpm --filter create-xmcp-app build`,
   `pnpm --filter init-xmcp build`, or the touched package equivalent.
