@@ -33,6 +33,9 @@ Apply these before handing work back:
 - Preserve transport semantics. Do not turn stateless HTTP flows into stateful
   session-based flows, or stateful flows into stateless ones, unless the task
   explicitly requires that transport contract change.
+- Stateless HTTP must not depend on server-side memory from previous requests.
+  Any client metadata needed by tools after `initialize` must be repeated in the
+  current request, not recovered from a hidden session/cache.
 - Do not force users to wrap every tool, resource, or prompt for a framework
   feature.
 - Keep config fields optional when values can be inferred safely.

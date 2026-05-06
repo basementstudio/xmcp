@@ -16,6 +16,9 @@ Use this file for `packages/**`.
   stateless HTTP path depend on server-side session state unless the change is
   explicitly about adding stateful transport behavior and includes matching
   docs, examples, and tests.
+- Do not fix `clientInfo`, elicitation, auth, or tool-extra behavior by adding
+  hidden state to stateless HTTP. If a stateless HTTP tool needs client metadata,
+  it must come from the current request, such as repeated headers.
 - Consolidate parallel tool/resource/prompt behavior instead of duplicating
   scattered branches.
 - Preserve public exports, `typesVersions`, package metadata, and runtime

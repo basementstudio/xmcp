@@ -1,3 +1,11 @@
+export const CLIENT_INFO_HEADER_NAMES = [
+  "x-mcp-client-name",
+  "x-mcp-client-version",
+  "x-mcp-client-title",
+  "x-mcp-client-website-url",
+  "x-mcp-client-description",
+] as const;
+
 export interface McpClientInfo {
   /** MCP client implementation name from initialize.params.clientInfo.name */
   name: string;

@@ -69,6 +69,21 @@ Example:
 }
 ```
 
+To make HTTP `extra.clientInfo` available on stateless tool calls, repeat client identity in the current request headers:
+
+```typescript
+{
+  assistant: {
+    url: "https://example.com/mcp",
+    headers: [
+      { name: "x-mcp-client-name", value: "my-client" },
+      { name: "x-mcp-client-version", value: "1.0.0" },
+      { name: "x-mcp-client-title", value: "My Client" },
+    ],
+  },
+}
+```
+
 ## STDIO Clients (local servers)
 
 STDIO clients spawn local processes that communicate via standard input/output.

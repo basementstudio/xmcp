@@ -71,8 +71,43 @@ describe("Config System - Zod Defaults", () => {
       const corsConfig = getResolvedCorsConfig(httpConfig);
       assert.equal(corsConfig.origin, "*");
       assert.deepEqual(corsConfig.methods, ["GET", "POST"]);
+      assert.deepEqual(corsConfig.allowedHeaders, [
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+        "x-mcp-client-name",
+        "x-mcp-client-version",
+        "x-mcp-client-title",
+        "x-mcp-client-website-url",
+        "x-mcp-client-description",
+      ]);
       assert.equal(corsConfig.credentials, false);
       assert.equal(corsConfig.maxAge, 86400);
+    }
+  });
+
+  it("should preserve client info headers when merging CORS allowedHeaders arrays", () => {
+    const httpConfig = getResolvedHttpConfig({
+      cors: {
+        allowedHeaders: ["Content-Type", "Authorization"],
+      },
+    });
+    assert.notEqual(httpConfig, null);
+
+    if (httpConfig) {
+      const corsConfig = getResolvedCorsConfig(httpConfig);
+      assert.deepEqual(corsConfig.allowedHeaders, [
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+        "x-mcp-client-name",
+        "x-mcp-client-version",
+        "x-mcp-client-title",
+        "x-mcp-client-website-url",
+        "x-mcp-client-description",
+      ]);
     }
   });
 });
