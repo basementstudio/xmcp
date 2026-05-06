@@ -67,8 +67,43 @@ describe("Config System - Zod Defaults", () => {
       const corsConfig = getResolvedCorsConfig(httpConfig);
       expect(corsConfig.origin).toBe("*");
       expect(corsConfig.methods).toEqual(["GET", "POST"]);
+      expect(corsConfig.allowedHeaders).toEqual([
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+        "x-mcp-client-name",
+        "x-mcp-client-version",
+        "x-mcp-client-title",
+        "x-mcp-client-website-url",
+        "x-mcp-client-description",
+      ]);
       expect(corsConfig.credentials).toBe(false);
       expect(corsConfig.maxAge).toBe(86400);
+    }
+  });
+
+  it("should preserve client info headers when merging CORS allowedHeaders arrays", () => {
+    const httpConfig = getResolvedHttpConfig({
+      cors: {
+        allowedHeaders: ["Content-Type", "Authorization"],
+      },
+    });
+    expect(httpConfig).not.toBeNull();
+
+    if (httpConfig) {
+      const corsConfig = getResolvedCorsConfig(httpConfig);
+      expect(corsConfig.allowedHeaders).toEqual([
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+        "x-mcp-client-name",
+        "x-mcp-client-version",
+        "x-mcp-client-title",
+        "x-mcp-client-website-url",
+        "x-mcp-client-description",
+      ]);
     }
   });
 });
@@ -163,6 +198,27 @@ describe("Config System - Resolution Functions", () => {
     const resolved = getResolvedExperimentalConfig(config);
 
     expect(resolved.adapter).toBe("express");
+  });
+
+  it("should resolve fastify adapter", () => {
+    const config = configSchema.parse({
+      experimental: {
+        adapter: "fastify",
+      },
+    });
+    const resolved = getResolvedExperimentalConfig(config);
+
+    expect(resolved.adapter).toBe("fastify");
+  });
+
+  it("should reject unknown adapter values", () => {
+    expect(() => {
+      configSchema.parse({
+        experimental: {
+          adapter: "unknown-framework",
+        },
+      });
+    }).toThrow();
   });
 });
 

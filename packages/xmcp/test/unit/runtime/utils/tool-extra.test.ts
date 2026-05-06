@@ -74,7 +74,97 @@ test("transformToolHandler forwards clientInfo through tool extra arguments", as
   });
 });
 
-test("transformToolHandler leaves clientInfo undefined when request has no initialize metadata", async () => {
+test("transformToolHandler prefers initialize clientInfo over request headers", async () => {
+  const transformedHandler = transformToolHandler((_args, extra) => {
+    return {
+      structuredContent: {
+        clientInfoName: extra.clientInfo?.name,
+        clientInfoVersion: extra.clientInfo?.version,
+      },
+    };
+  });
+
+  const result = await new Promise<UserToolResponse>((resolve, reject) => {
+    httpRequestContextProvider(
+      {
+        id: "request-id-headers-precedence",
+        headers: {
+          "x-mcp-client-name": "header-client",
+          "x-mcp-client-version": "9.9.9",
+        },
+        clientInfo: {
+          name: "initialize-client",
+          version: "1.0.0",
+        },
+      },
+      () => {
+        invokeHandler(transformedHandler, "rpc-headers-precedence")
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+  });
+
+  expect(result).toEqual({
+    structuredContent: {
+      clientInfoName: "initialize-client",
+      clientInfoVersion: "1.0.0",
+    },
+    content: [
+      {
+        type: "text",
+        text: '{"clientInfoName":"initialize-client","clientInfoVersion":"1.0.0"}',
+      },
+    ],
+  });
+});
+
+test("transformToolHandler uses request headers as HTTP clientInfo fallback", async () => {
+  const transformedHandler = transformToolHandler((_args, extra) => {
+    return {
+      structuredContent: {
+        clientInfoName: extra.clientInfo?.name,
+        clientInfoVersion: extra.clientInfo?.version,
+        clientInfoTitle: extra.clientInfo?.title,
+      },
+    };
+  });
+
+  const result = await new Promise<UserToolResponse>((resolve, reject) => {
+    httpRequestContextProvider(
+      {
+        id: "request-id-headers",
+        headers: {
+          "X-MCP-Client-Name": "cursor",
+          "X-MCP-Client-Version": "0.50.1",
+          "X-MCP-Client-Title": "Cursor",
+        },
+        clientInfo: undefined,
+      },
+      () => {
+        invokeHandler(transformedHandler, "rpc-headers")
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+  });
+
+  expect(result).toEqual({
+    structuredContent: {
+      clientInfoName: "cursor",
+      clientInfoVersion: "0.50.1",
+      clientInfoTitle: "Cursor",
+    },
+    content: [
+      {
+        type: "text",
+        text: '{"clientInfoName":"cursor","clientInfoVersion":"0.50.1","clientInfoTitle":"Cursor"}',
+      },
+    ],
+  });
+});
+
+test("transformToolHandler leaves clientInfo undefined when request has no client metadata", async () => {
   const transformedHandler = transformToolHandler((_args, extra) => {
     return {
       structuredContent: {

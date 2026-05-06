@@ -6,11 +6,14 @@
 
 Make sure to follow the repository standards.
 
+Keep PRs focused. If you find related cleanup while working, open a follow-up
+unless it is required for the current change.
+
 ## Get Started
 
 ### Repository Setup
 
-We use pnpm and Node version 20.x.
+We use pnpm and Node 20.x.
 
 To get started, run `nvm use 20` and `pnpm install`.
 

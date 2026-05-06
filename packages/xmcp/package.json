@@ -131,6 +131,7 @@
     "eslint": "^9.39.1",
     "eslint-config-custom": "workspace:^",
     "express": "^4.22.1",
+    "fastify": "^5.0.0",
     "fs-extra": "^11.3.2",
     "glob": "^11.1.0",
     "is-docker": "^4.0.0",

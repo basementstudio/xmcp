@@ -1,6 +1,6 @@
 {
   "title": "Adapters",
-  "pages": ["nextjs", "nestjs", "express"],
+  "pages": ["nextjs", "nestjs", "express", "fastify"],
   "defaultOpen": true,
   "root": true
 }

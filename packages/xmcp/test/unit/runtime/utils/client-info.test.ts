@@ -1,5 +1,6 @@
 import { test, expect } from "vitest";
 import {
+  extractClientInfoFromHeaders,
   extractClientInfoFromMessage,
   extractClientInfoFromMessages,
   mapImplementationToClientInfo,
@@ -37,6 +38,50 @@ test("extractClientInfoFromMessage extracts required and optional fields", () =>
     websiteUrl: "https://cursor.com",
     description: "AI code editor",
   });
+});
+
+test("extractClientInfoFromHeaders extracts required and optional fields", () => {
+  expect(
+    extractClientInfoFromHeaders({
+      "x-mcp-client-name": "cursor",
+      "x-mcp-client-version": "0.50.1",
+      "x-mcp-client-title": "Cursor",
+      "x-mcp-client-website-url": "https://cursor.com",
+      "x-mcp-client-description": "AI code editor",
+    })
+  ).toEqual({
+    name: "cursor",
+    version: "0.50.1",
+    title: "Cursor",
+    websiteUrl: "https://cursor.com",
+    description: "AI code editor",
+  });
+});
+
+test("extractClientInfoFromHeaders handles case-insensitive header names", () => {
+  expect(
+    extractClientInfoFromHeaders({
+      "X-MCP-Client-Name": "claude-code",
+      "X-MCP-Client-Version": "2.1.0",
+    })
+  ).toEqual({
+    name: "claude-code",
+    version: "2.1.0",
+  });
+});
+
+test("extractClientInfoFromHeaders returns undefined without name and version", () => {
+  expect(
+    extractClientInfoFromHeaders({
+      "x-mcp-client-name": "cursor",
+    })
+  ).toBeUndefined();
+
+  expect(
+    extractClientInfoFromHeaders({
+      "x-mcp-client-version": "0.50.1",
+    })
+  ).toBeUndefined();
 });
 
 test("extractClientInfoFromMessage returns undefined for invalid clientInfo payload", () => {
