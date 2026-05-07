@@ -331,6 +331,68 @@ const SCENARIOS: LlmScenario[] = [
     },
     verify: verifyServerInfoTemplate,
   },
+  {
+    id: "express-adapter",
+    title: "Express adapter output",
+    docs: [...BASE_DOCS, "apps/website/content/docs/adapters/express.mdx"],
+    prompt: expressAdapterPrompt(),
+    requiredFiles: [...BASE_REQUIRED_FILES, "src/tools/llm_echo.ts"],
+    validate(project) {
+      const config = project.files["xmcp.config.ts"] ?? "";
+      expect(config).toContain("express");
+    },
+    verify: (context) =>
+      verifyAdapterOutput(context, "express", ["xmcpHandler"]),
+  },
+  {
+    id: "nestjs-adapter",
+    title: "NestJS adapter output",
+    docs: [...BASE_DOCS, "apps/website/content/docs/adapters/nestjs.mdx"],
+    prompt: nestjsAdapterPrompt(),
+    requiredFiles: [...BASE_REQUIRED_FILES, "src/tools/llm_echo.ts"],
+    validate(project) {
+      const config = project.files["xmcp.config.ts"] ?? "";
+      expect(config).toContain("nestjs");
+    },
+    verify: (context) =>
+      verifyAdapterOutput(context, "nestjs", ["XmcpService", "XmcpController"]),
+  },
+  {
+    id: "http-cors-config",
+    title: "HTTP CORS configuration reaches preflight responses",
+    docs: [
+      ...BASE_DOCS,
+      "apps/website/content/docs/configuration/transports.mdx",
+    ],
+    prompt: httpCorsPrompt(),
+    requiredFiles: [...BASE_REQUIRED_FILES, "src/tools/llm_echo.ts"],
+    validate(project) {
+      const config = project.files["xmcp.config.ts"] ?? "";
+      expect(config).toContain("https://llm.example");
+      expect(config).toContain("x-llm-test");
+      expect(config).toContain("x-llm-result");
+      expect(config).toContain("123");
+    },
+    verify: verifyHttpCorsConfig,
+  },
+  {
+    id: "stdio-silent-logs",
+    title: "stdio silent mode survives tool console logs",
+    docs: [
+      ...BASE_DOCS,
+      "apps/website/content/docs/configuration/transports.mdx",
+    ],
+    prompt: stdioSilentLogsPrompt(),
+    requiredFiles: [...BASE_REQUIRED_FILES, "src/tools/noisy_echo.ts"],
+    validate(project) {
+      const config = project.files["xmcp.config.ts"] ?? "";
+      const tool = project.files["src/tools/noisy_echo.ts"] ?? "";
+      expect(config).toContain("silent");
+      expect(config).toContain("true");
+      expect(tool).toContain("console.log");
+    },
+    verify: verifyStdioSilentLogs,
+  },
 ];
 
 const ACTIVE_SCENARIOS = SCENARIO_FILTER
@@ -680,9 +742,17 @@ async function verifyHeaderAwareMiddleware(
 }
 
 async function verifyNextjsAdapter(context: ScenarioContext): Promise<void> {
+  await verifyAdapterOutput(context, "nextjs", ["xmcpHandler"]);
+}
+
+async function verifyAdapterOutput(
+  context: ScenarioContext,
+  adapter: "express" | "nestjs" | "nextjs",
+  expectedExports: string[]
+): Promise<void> {
   const { artifactsDir, projectDir, summary } = context;
   const xmcpDir = path.join(projectDir, ".xmcp");
-  const adapterEntry = path.join(xmcpDir, "adapter-nextjs.js");
+  const adapterEntry = path.join(xmcpDir, `adapter-${adapter}.js`);
   const adapterIndexJs = path.join(xmcpDir, "adapter", "index.js");
   const adapterIndexDts = path.join(xmcpDir, "adapter", "index.d.ts");
 
@@ -692,9 +762,11 @@ async function verifyNextjsAdapter(context: ScenarioContext): Promise<void> {
 
   const dts = await fs.readFile(adapterIndexDts, "utf8");
   await writeTextArtifact(artifactsDir, "adapter/index.d.ts", dts);
-  expect(dts).toMatch(/\bxmcpHandler\b/);
-  summary.checks.push("nextjs: adapter files emitted");
-  summary.checks.push("nextjs: xmcpHandler type surface emitted");
+  for (const expectedExport of expectedExports) {
+    expect(dts).toMatch(new RegExp(`\\b${expectedExport}\\b`));
+  }
+  summary.checks.push(`${adapter}: adapter files emitted`);
+  summary.checks.push(`${adapter}: expected type surface emitted`);
 }
 
 async function verifyMalformedDiagnostics(
@@ -797,6 +869,94 @@ async function verifyServerInfoTemplate(
     "Call llm_echo before reporting success"
   );
   summary.checks.push("http: initialize returned serverInfo and instructions");
+}
+
+async function verifyHttpCorsConfig(context: ScenarioContext): Promise<void> {
+  const { artifactsDir, build, safeEnv, summary } = context;
+  const httpServer = await spawnHttpEntry(path.join(build.distDir, "http.js"), {
+    env: safeEnv,
+  });
+  handles.push(httpServer);
+  summary.httpUrl = httpServer.url;
+
+  const preflight = await fetch(httpServer.url, {
+    method: "OPTIONS",
+    headers: {
+      Origin: "https://llm.example",
+      "Access-Control-Request-Method": "POST",
+      "Access-Control-Request-Headers": "x-llm-test",
+    },
+  });
+  const headers = Object.fromEntries(preflight.headers.entries());
+  await writeJsonArtifact(artifactsDir, "http/cors-preflight.json", {
+    status: preflight.status,
+    headers,
+  });
+  expect(preflight.status).toBe(204);
+  expect(preflight.headers.get("access-control-allow-origin")).toBe(
+    "https://llm.example"
+  );
+  expect(preflight.headers.get("access-control-allow-methods")).toContain(
+    "POST"
+  );
+  expect(preflight.headers.get("access-control-allow-headers")).toContain(
+    "x-llm-test"
+  );
+  expect(preflight.headers.get("access-control-expose-headers")).toContain(
+    "x-llm-result"
+  );
+  expect(preflight.headers.get("access-control-allow-credentials")).toBe(
+    "true"
+  );
+  expect(preflight.headers.get("access-control-max-age")).toBe("123");
+  summary.checks.push("http: configured CORS preflight headers returned");
+
+  const target: McpjamTarget = { transport: "http", url: httpServer.url };
+  const call = await mcpjamToolsCall(
+    target,
+    "llm_echo",
+    { phrase: "docs-built" },
+    { env: safeEnv }
+  );
+  await writeJsonArtifact(
+    artifactsDir,
+    "mcpjam/http-cors-tools-call.json",
+    call
+  );
+  expect(call.content[0]?.text).toContain("llm_echo: docs-built");
+  summary.checks.push("http: CORS-configured server handled MCP tool call");
+}
+
+async function verifyStdioSilentLogs(context: ScenarioContext): Promise<void> {
+  const { artifactsDir, build, projectDir, safeEnv, summary } = context;
+  const stdio: McpjamTarget = {
+    transport: "stdio",
+    command: process.execPath,
+    args: [path.join(build.distDir, "stdio.js")],
+    cwd: projectDir,
+  };
+  const doctor = await mcpjamDoctor(stdio, { env: safeEnv });
+  await writeJsonArtifact(
+    artifactsDir,
+    "mcpjam/stdio-silent-doctor.json",
+    doctor
+  );
+  expect(doctor.status).toBe("ready");
+  summary.checks.push("stdio: silent server doctor ready");
+
+  const call = await mcpjamToolsCall(
+    stdio,
+    "noisy_echo",
+    { phrase: "docs-built" },
+    { env: safeEnv }
+  );
+  await writeJsonArtifact(
+    artifactsDir,
+    "mcpjam/stdio-silent-tools-call.json",
+    call
+  );
+  expect(call.content[0]?.text).toContain("noisy_echo: docs-built");
+  summary.checks.push("stdio: noisy tool logs did not corrupt protocol");
 }
 
 async function assertCoreSurfaceTarget(options: {
@@ -1274,6 +1434,93 @@ Required files:
 - tsconfig.json
 - xmcp.config.ts
 - src/tools/llm_echo.ts`;
+}
+
+function expressAdapterPrompt(): string {
+  return `${projectJsonInstructions()}
+
+Create a minimal xmcp project configured for the Express adapter.
+
+Required behavior:
+- In xmcp.config.ts, enable http and set experimental.adapter to "express".
+- In xmcp.config.ts, set paths.tools to "src/tools", paths.prompts to false, and paths.resources to false.
+- Do not create an Express app file and do not add express as a package dependency; this test only verifies xmcp adapter output.
+- Create a tool named "llm_echo" in src/tools/llm_echo.ts.
+- The tool must accept { phrase: string } and return exactly "llm_echo: <phrase>".
+- Include a tsconfig path mapping for "@xmcp/*" to "./.xmcp/*".
+
+Required files:
+- package.json
+- tsconfig.json
+- xmcp.config.ts
+- src/tools/llm_echo.ts`;
+}
+
+function nestjsAdapterPrompt(): string {
+  return `${projectJsonInstructions()}
+
+Create a minimal xmcp project configured for the NestJS adapter.
+
+Required behavior:
+- In xmcp.config.ts, enable http and set experimental.adapter to "nestjs".
+- In xmcp.config.ts, set paths.tools to "src/tools", paths.prompts to false, and paths.resources to false.
+- Do not create a NestJS app file and do not add NestJS packages as package dependencies; this test only verifies xmcp adapter output.
+- Create a tool named "llm_echo" in src/tools/llm_echo.ts.
+- The tool must accept { phrase: string } and return exactly "llm_echo: <phrase>".
+- Include a tsconfig path mapping for "@xmcp/*" to "./.xmcp/*".
+
+Required files:
+- package.json
+- tsconfig.json
+- xmcp.config.ts
+- src/tools/llm_echo.ts`;
+}
+
+function httpCorsPrompt(): string {
+  return `${projectJsonInstructions()}
+
+Create an xmcp HTTP server project that proves you understand CORS transport configuration.
+
+Required behavior:
+- Enable http transport with an object config.
+- Set http.cors.origin to "https://llm.example".
+- Set http.cors.methods to ["POST", "OPTIONS"].
+- Set http.cors.allowedHeaders to include "Content-Type" and "x-llm-test".
+- Set http.cors.exposedHeaders to include "x-llm-result".
+- Set http.cors.credentials to true.
+- Set http.cors.maxAge to 123.
+- In xmcp.config.ts, set paths.tools to "src/tools", paths.prompts to false, and paths.resources to false.
+- Create a tool named "llm_echo" in src/tools/llm_echo.ts.
+- The tool must accept { phrase: string } and return exactly "llm_echo: <phrase>".
+- Do not create resources or prompts.
+
+Required files:
+- package.json
+- tsconfig.json
+- xmcp.config.ts
+- src/tools/llm_echo.ts`;
+}
+
+function stdioSilentLogsPrompt(): string {
+  return `${projectJsonInstructions()}
+
+Create an xmcp stdio server project that proves you understand stdio silent mode.
+
+Required behavior:
+- Enable stdio transport with { silent: true }.
+- HTTP may be disabled.
+- In xmcp.config.ts, set paths.tools to "src/tools", paths.prompts to false, and paths.resources to false.
+- Create a tool named "noisy_echo" in src/tools/noisy_echo.ts.
+- The tool must accept { phrase: string }.
+- Inside the tool handler, call console.log with any debug message before returning.
+- The tool must return exactly "noisy_echo: <phrase>".
+- Do not create resources or prompts.
+
+Required files:
+- package.json
+- tsconfig.json
+- xmcp.config.ts
+- src/tools/noisy_echo.ts`;
 }
 
 function projectJsonInstructions(): string {
