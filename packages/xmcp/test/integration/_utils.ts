@@ -124,6 +124,11 @@ export interface BuildFixtureOptions {
    * `dist` is always cleaned. Use this for adapter outputs like `.vercel`.
    */
   cleanPaths?: string[];
+  /**
+   * Environment for the spawned build process. Defaults to `process.env`.
+   * Tests that build generated/untrusted fixtures can pass a scrubbed env.
+   */
+  env?: NodeJS.ProcessEnv;
 }
 
 export async function buildFixture(
@@ -194,7 +199,7 @@ export async function buildAt(
     [CLI_PATH, "build", ...(options.args ?? [])],
     {
       cwd: fixtureDir,
-      env: { ...process.env, NODE_ENV: "production" },
+      env: { ...(options.env ?? process.env), NODE_ENV: "production" },
       stdio: ["ignore", "pipe", "pipe"],
     }
   );
@@ -258,8 +263,7 @@ export async function spawnHttpEntry(
   const child = spawn(process.execPath, [entryPath], {
     cwd: path.dirname(entryPath),
     env: {
-      ...process.env,
-      ...options.env,
+      ...(options.env ?? process.env),
       PORT: String(startPort),
       HOST: "127.0.0.1",
     },
@@ -295,11 +299,12 @@ async function readBoundPort(child: ChildProcess): Promise<number> {
   }
   const re = /running on http:\/\/[^:]+:(\d+)/;
   let buffer = "";
+  let stderr = "";
   return new Promise<number>((resolve, reject) => {
     const onExit = (code: number | null) => {
       reject(
         new Error(
-          `Server exited with code ${code} before reporting a bound port. Output:\n${buffer}`
+          `Server exited with code ${code} before reporting a bound port.\nstdout:\n${buffer}\nstderr:\n${stderr}`
         )
       );
     };
@@ -312,14 +317,19 @@ async function readBoundPort(child: ChildProcess): Promise<number> {
         resolve(parseInt(m[1]!, 10));
       }
     };
+    const onStderr = (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    };
     child.stdout.on("data", onData);
+    child.stderr?.on("data", onStderr);
     child.once("exit", onExit);
     setTimeout(() => {
       child.stdout?.off("data", onData);
+      child.stderr?.off("data", onStderr);
       child.off("exit", onExit);
       reject(
         new Error(
-          `Server did not report a bound port within ${SERVER_STARTUP_TIMEOUT_MS}ms. Output:\n${buffer}`
+          `Server did not report a bound port within ${SERVER_STARTUP_TIMEOUT_MS}ms.\nstdout:\n${buffer}\nstderr:\n${stderr}`
         )
       );
     }, SERVER_STARTUP_TIMEOUT_MS).unref();
@@ -665,6 +675,11 @@ export type McpjamTarget =
 export interface McpjamRunOptions {
   /** Override the default 30s timeout for slow targets. */
   timeoutMs?: number;
+  /**
+   * Environment for the mcpjam process and any stdio server it spawns.
+   * Defaults to `process.env`.
+   */
+  env?: NodeJS.ProcessEnv;
 }
 
 interface McpjamSpawnOptions extends McpjamRunOptions {
@@ -713,7 +728,7 @@ async function runMcpjam<T = unknown>(options: McpjamSpawnOptions): Promise<T> {
       options.target.transport === "stdio"
         ? (options.target.cwd ?? process.cwd())
         : process.cwd(),
-    env: process.env,
+    env: options.env ?? process.env,
     stdio: ["ignore", "pipe", "pipe"],
   });
 

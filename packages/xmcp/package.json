@@ -94,6 +94,7 @@
     "test:ci": "CI=1 vitest run",
     "e2e:fast": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts -t fast",
     "e2e:full": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts",
+    "e2e:llm": "cross-env LLM_GENERATED_E2E=1 vitest run test/integration/llm-generated-server.test.ts",
     "typecheck": "tsc --noEmit -p .",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"

@@ -1,0 +1,37 @@
+name: LLM generated E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "OpenRouter model id"
+        required: false
+        default: "google/gemini-2.5-flash-lite"
+
+jobs:
+  llm-generated-e2e:
+    name: LLM generates an xmcp server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Run LLM-generated server E2E
+        working-directory: packages/xmcp
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ inputs.model }}
+        run: pnpm e2e:llm

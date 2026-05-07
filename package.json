@@ -47,6 +47,7 @@
     "test:ci": "pnpm --filter=xmcp test:ci",
     "e2e:fast": "pnpm --filter=xmcp e2e:fast",
     "e2e:full": "pnpm --filter=xmcp e2e:full",
+    "e2e:llm": "pnpm --filter=xmcp e2e:llm",
     "typecheck": "turbo run typecheck --filter=xmcp",
     "typecheck:all": "turbo run typecheck",
     "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
