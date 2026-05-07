@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`xmcp CLI argv contract > --help > build --help is unchanged 1`] = `
+"Usage: xmcp build [options]
+
+Build for production
+
+Options:
+  --vercel    Build for Vercel deployment
+  --cf        Build for Cloudflare Workers deployment
+  -h, --help  display help for command"
+`;
+
+exports[`xmcp CLI argv contract > --help > create --help is unchanged 1`] = `
+"Usage: xmcp create [options] <type> <name>
+
+Scaffold a new tool, resource, prompt, or widget
+
+Options:
+  -d, --dir <path>  Custom output directory
+  -h, --help        display help for command"
+`;
+
+exports[`xmcp CLI argv contract > --help > dev --help is unchanged 1`] = `
+"Usage: xmcp dev [options]
+
+Start development mode
+
+Options:
+  --cf        Enable Cloudflare Workers output in development
+  -h, --help  display help for command"
+`;
+
+exports[`xmcp CLI argv contract > --help > root --help is unchanged 1`] = `
+"Usage: xmcp [options] [command]
+
+The MCP framework CLI
+
+Options:
+  -V, --version                   output the version number
+  -h, --help                      display help for command
+
+Commands:
+  dev [options]                   Start development mode
+  build [options]                 Build for production
+  create [options] <type> <name>  Scaffold a new tool, resource, prompt, or
+                                  widget
+  help [command]                  display help for command"
+`;

@@ -1,0 +1,11 @@
+{
+  "name": "@xmcp-fixtures/empty-paths",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "xmcp build"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*"
+  }
+}

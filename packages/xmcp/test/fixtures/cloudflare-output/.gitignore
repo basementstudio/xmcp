@@ -1,0 +1,6 @@
+dist/
+.xmcp/
+node_modules/
+# `xmcp build --cf` writes these to the fixture root.
+worker.js
+wrangler.jsonc

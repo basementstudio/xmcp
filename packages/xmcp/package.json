@@ -84,11 +84,23 @@
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "analyze": "cross-env GENERATE_STATS=true pnpm build && pnpm tsx scripts/analyze-rspack-stats.ts",
-    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts",
-    "test:adapters": "node --import tsx --test src/runtime/adapters/fastify/__tests__/*.test.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:types": "vitest --typecheck.only run",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "CI=1 vitest run",
+    "e2e:fast": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts -t fast",
+    "e2e:full": "cross-env MCPJAM_E2E=1 vitest run test/integration/mcpjam-conformance.test.ts",
+    "e2e:llm": "cross-env LLM_GENERATED_E2E=1 vitest run test/integration/llm-generated-server.test.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@rspack/core": "^1.6.7",
     "jose": "^6.1.3",
     "postcss-loader": "^8.2.0",
@@ -96,6 +108,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@mcpjam/cli": "3.3.3",
     "@nestjs/common": "^11.1.12",
     "@types/async-retry": "^1.4.9",
     "@types/content-type": "^1.1.9",
@@ -105,6 +118,8 @@
     "@types/node": "^22.19.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "^4.1.5",
+    "@vitest/ui": "^4.1.5",
     "async-retry": "^1.3.3",
     "chalk": "^5.6.2",
     "chokidar": "^3.6.0",
@@ -114,6 +129,8 @@
     "cross-env": "^7.0.3",
     "del": "^7.1.0",
     "dotenv": "^16.6.1",
+    "eslint": "^9.39.1",
+    "eslint-config-custom": "workspace:^",
     "express": "^4.22.1",
     "fastify": "^5.0.0",
     "fs-extra": "^11.3.2",
@@ -126,7 +143,8 @@
     "raw-body": "^3.0.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.5"
   },
   "peerDependencies": {
     "react": ">=19.0.0",

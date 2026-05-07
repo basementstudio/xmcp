@@ -37,13 +37,21 @@
     "build:all": "turbo run build",
     "lint": "turbo run lint --filter=xmcp --filter=create-xmcp-app",
     "lint:all": "turbo run lint",
-    "ci": "pnpm run build && pnpm run lint && pnpm run test:ci",
-    "ci:build-only": "pnpm run build && pnpm run lint && pnpm run test:build",
-    "test:ci": "pnpm run test:build && pnpm run test:cli",
-    "test:ci:skip-cli": "pnpm run test:build && pnpm run test:cli --skip",
-    "test:build": "scripts/test-build.sh",
-    "test:cli": "scripts/test-cli.sh",
-    "test:cli:skip": "scripts/test-cli.sh --skip",
+    "test": "turbo run test --filter=xmcp",
+    "test:all": "turbo run test",
+    "test:watch": "pnpm --filter=xmcp test:watch",
+    "test:ui": "pnpm --filter=xmcp test:ui",
+    "test:unit": "pnpm --filter=xmcp test:unit",
+    "test:integration": "pnpm --filter=xmcp test:integration",
+    "test:coverage": "pnpm --filter=xmcp test:coverage",
+    "test:ci": "pnpm --filter=xmcp test:ci",
+    "e2e:fast": "pnpm --filter=xmcp e2e:fast",
+    "e2e:full": "pnpm --filter=xmcp e2e:full",
+    "e2e:llm": "pnpm --filter=xmcp e2e:llm",
+    "typecheck": "turbo run typecheck --filter=xmcp",
+    "typecheck:all": "turbo run typecheck",
+    "prettier:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "ci": "pnpm run typecheck && pnpm run lint && pnpm run test",
     "clean": "turbo run clean && rm -rf node_modules/.cache",
     "reset": "rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
@@ -69,7 +77,7 @@
       "cookie@<1.1.1": "1.1.1",
       "lodash@<4.18.1": "4.18.1",
       "file-type@>=13.0.0 <21.3.2": "21.3.2",
-      "@modelcontextprotocol/sdk@<1.26.0": "1.26.0",
+      "@modelcontextprotocol/sdk@<1.29.0": "1.29.0",
       "flatted@<3.4.2": "3.4.2",
       "undici@>=7.0.0 <7.24.0": "7.24.0",
       "kysely@>=0.26.0 <0.28.14": "0.28.14",
@@ -93,6 +101,6 @@
   },
   "packageManager": "pnpm@10.8.1",
   "engines": {
-    "node": "20.x"
+    "node": ">=20"
   }
 }

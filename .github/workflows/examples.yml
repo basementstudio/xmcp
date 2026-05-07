@@ -1,0 +1,158 @@
+name: Examples & CLI smoke
+
+# Slow CLI/example smoke tests. Off the PR critical path by default — `cli-smoke`
+# runs only on push to main/canary or manual dispatch. `examples-build` also opts
+# in on PRs labeled `full-examples` so contributors touching the compiler/runtime
+# can validate against every example before merge.
+on:
+  push:
+    branches: [main, canary]
+  pull_request:
+    types: [labeled, synchronize]
+  workflow_dispatch:
+
+concurrency:
+  group: examples-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli-smoke:
+    name: CLI smoke
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+
+      - name: xmcp CLI is executable
+        run: |
+          cd packages/xmcp
+          node dist/cli.js --help > /dev/null
+
+      - name: create-xmcp-app scaffolds a project
+        run: |
+          set -e
+          TEST_DIR=$(mktemp -d)
+          pnpm --filter=create-xmcp-app pack
+          PACK_FILE=$(ls packages/create-xmcp-app/create-xmcp-app-*.tgz)
+          npm install -g "$PACK_FILE"
+          cd "$TEST_DIR"
+          create-xmcp-app test-project --yes --use-npm
+          test -d test-project
+
+      - name: init-xmcp adds xmcp to a project
+        run: |
+          set -e
+          TEST_DIR=$(mktemp -d)
+          pnpm --filter=init-xmcp pack
+          PACK_FILE=$(ls packages/init-xmcp/init-xmcp-*.tgz)
+          npm install -g "$PACK_FILE"
+          cd "$TEST_DIR"
+          init-xmcp test-init-project --yes --nextjs
+          test -d test-init-project
+
+  # Per-example build sweep. Each committed examples/* project gets a matrix
+  # cell that builds it against the workspace xmcp and asserts the expected
+  # build artifact exists. We invoke `xmcp build` directly rather than the
+  # example's `pnpm build` script because some scripts (e.g. with-express)
+  # chain a never-exiting dev step. Build-only — no runtime smoke yet.
+  examples-build:
+    name: Build example (${{ matrix.example.name }})
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'full-examples'))
+    strategy:
+      fail-fast: false
+      matrix:
+        example:
+          # core HTTP/stdio
+          - { name: http-transport,         class: http,    artifact: dist/http.js }
+          - { name: stdio-transport,        class: stdio,   artifact: dist/stdio.js }
+          - { name: custom-bundler-config,  class: http,    artifact: dist/http.js }
+          - { name: custom-paths,           class: http,    artifact: dist/http.js }
+          - { name: headers,                class: http,    artifact: dist/http.js }
+          - { name: template-config,        class: http,    artifact: dist/http.js }
+          # framework adapters
+          - { name: with-express,           class: express, artifact: .xmcp/adapter-express.js }
+          - { name: with-nestjs,            class: nestjs,  artifact: dist/main.js }
+          - { name: with-nextjs,            class: nextjs,  artifact: .next }
+          - { name: with-nextjs-ai-sdk,     class: nextjs,  artifact: .next }
+          - { name: cloudflare-workers,     class: cf,      artifact: worker.js }
+          # auth
+          - { name: auth-nextjs,            class: nextjs,  artifact: .next }
+          - { name: auth0-http,             class: http,    artifact: dist/http.js }
+          - { name: better-auth-http,       class: http,    artifact: dist/http.js }
+          - { name: better-auth-nextjs,     class: nextjs,  artifact: .next }
+          - { name: clerk-http,             class: http,    artifact: dist/http.js }
+          - { name: workos-http,            class: http,    artifact: dist/http.js }
+          # middleware
+          - { name: middlewares-api-key,    class: http,    artifact: dist/http.js }
+          - { name: middlewares-array,      class: http,    artifact: dist/http.js }
+          - { name: middlewares-custom,     class: http,    artifact: dist/http.js }
+          - { name: middlewares-jwt,        class: http,    artifact: dist/http.js }
+          # ui / specials
+          - { name: mcp-app-react,          class: http,    artifact: dist/http.js }
+          - { name: mcp-app-react-tailwind, class: http,    artifact: dist/http.js }
+          - { name: mcp-app-css-modules,    class: http,    artifact: dist/http.js }
+          - { name: mcp-ui,                 class: http,    artifact: dist/http.js }
+          - { name: ext-apps,               class: http,    artifact: dist/http.js }
+          - { name: external-clients,      class: http,    artifact: dist/http.js }
+          # 3rd-party / payments
+          - { name: polar-http,             class: http,    artifact: dist/http.js }
+          - { name: x402-http,              class: http,    artifact: dist/http.js }
+          - { name: commet-http,            class: http,    artifact: dist/http.js }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build xmcp (workspace dep)
+        run: pnpm turbo build --filter=xmcp
+
+      - name: Build example (xmcp)
+        working-directory: examples/${{ matrix.example.name }}
+        run: pnpm exec xmcp build ${{ matrix.example.class == 'cf' && '--cf' || '' }}
+
+      - name: Build example (framework adapter)
+        if: matrix.example.class == 'nextjs' || matrix.example.class == 'nestjs'
+        working-directory: examples/${{ matrix.example.name }}
+        run: |
+          if [ "${{ matrix.example.class }}" = "nextjs" ]; then
+            pnpm exec next build
+          else
+            pnpm exec nest build
+          fi
+
+      - name: Assert build artifact exists
+        working-directory: examples/${{ matrix.example.name }}
+        run: |
+          if [ ! -e "${{ matrix.example.artifact }}" ]; then
+            echo "::error::Expected artifact ${{ matrix.example.artifact }} was not produced"
+            ls -la
+            exit 1
+          fi

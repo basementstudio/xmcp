@@ -1,0 +1,12 @@
+{
+  "name": "@xmcp-fixtures/vercel-output",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "xmcp build --vercel"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

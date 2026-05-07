@@ -3,6 +3,7 @@ packages:
   - "packages/plugins/*"
   - "apps/*"
   - "examples/*"
+  - "packages/xmcp/test/fixtures/*"
 
 catalog:
   # Shared dependencies across workspace

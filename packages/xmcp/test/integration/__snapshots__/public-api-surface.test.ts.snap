@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`public API surface > . surface is unchanged 1`] = `
+"# .
+
+value apiKeyAuthMiddleware: { (config: StaticApiKeyConfig): RequestHandler; (config: CustomValidationConfig): RequestHandler; }
+value callSTDIOClientTool: (connection: StdioClientConnection, toolName: string, args: Record<string, unknown>) => Promise<unknown>
+type ClientConnectionEntry: export type ClientConnectionEntry = string | HttpClientConfig | StdioClientConfig | ClientDefinition;
+type ClientConnections: export type ClientConnections = Record<string, ClientConnectionEntry> | ClientConnectionEntry[];
+type ClientDefinition: export type ClientDefinition = HttpClientDefinition | StdioClientDefinition;
+value completable: <T extends AnySchema>(schema: T, complete: CompleteCallback<T>) => CompletableSchema<T>
+value createContext: <T extends Object>({ name, }: CreateContextOptions) => Context<T>
+value createHTTPClient: ({ url, headers, }: HttpClientOptions) => Promise<Client<Request, Notification, Result>>
+value createMcpHostBridge: (options?: CreateMcpHostBridgeOptions) => McpHostBridge
+type CreateMcpHostBridgeOptions: export interface CreateMcpHostBridgeOptions { targetWindow?: WindowLike; requestTimeoutMs?: number; connectionTimeoutMs?: number; }
+value createSTDIOClient: (options: StdioClientOptions) => Promise<StdioClientConnection>
+type CustomHeader: export type CustomHeader = StaticHeader | EnvHeader;
+type CustomHeaders: export type CustomHeaders = CustomHeader[];
+value disconnectSTDIOClient: (connection: StdioClientConnection) => Promise<void>
+type ElicitResult: export type ElicitResult = McpElicitResult;
+type EnvHeader: export interface EnvHeader { name: string; env: string; }
+value extractToolNamesFromRequest: (request: Request) => string[]
+value headersToRecord: (headers: CustomHeaders) => Record<string, string>
+value HOST_CONTEXT_CHANGED_METHOD: "ui/notifications/host-context-changed"
+type HttpClient: export type HttpClient = Awaited<ReturnType<typeof createHTTPClient>>;
+type HttpClientConfig: export type HttpClientConfig = { name?: string; type?: "http"; url: string; headers?: CustomHeaders; };
+type InferSchema: export type InferSchema<T extends Record<string, unknown>> = { [K in keyof T]: T[K] extends z.ZodTypeAny ? z.infer<T[K]> : T[K] extends ZodTypeV4<unknown> ? inferV4<T[K]> : never; };
+value INITIALIZE_METHOD: "ui/initialize"
+value INITIALIZED_METHOD: "ui/notifications/initialized"
+value isEnvHeader: (header: CustomHeader) => header is EnvHeader
+value jwtAuthMiddleware: (config: JWTAuthMiddlewareConfig) => RequestHandler
+value listSTDIOClientTools: (connection: StdioClientConnection) => Promise<string[]>
+value LOG_MESSAGE_METHOD: "notifications/message"
+value MCP_APPS_PROTOCOL_VERSION: "2026-01-26"
+type McpClientInfo: export interface McpClientInfo { name: string; version: string; title?: string; websiteUrl?: string; description?: string; }
+type McpHostBridge: export interface McpHostBridge { callTool: (name: McpHostCallToolParams["name"], args?: McpHostCallToolParams["arguments"]) => Promise<McpHostToolResult>; requestDisplayMode: (mode: McpUiDisplayMode) => Promise<McpHostRequestDisplayModeResult>; openLink: (url: McpHostOpenLinkParams["url"]) => Promise<void>; readResource: (uri: string) => Promise<McpHostReadResourceResult>; sendMessage: (params: McpHostSendMessageParams) => Promise<McpHostMessageResult>; updateModelContext: (params: McpHostUpdateModelContextParams) => Promise<McpHostModelContextResult>; logMessage: (params: McpHostSendMessageParams) => Promise<void>; notifySizeChanged: (params: McpHostContainerDimensions) => Promise<void>; getState: () => McpHostBridgeState; getHostContext: () => McpHostContext | null; getHostCapabilities: () => McpHostCapabilities | null; isConnected: () => boolean; subscribe: (listener: (state: McpHostBridgeState) => void) => () => void; dispose: () => void; }
+type McpHostBridgeState: export interface McpHostBridgeState { isConnected: boolean; hostContext: McpHostContext | null; hostCapabilities: McpHostCapabilities | null; }
+type McpHostCallToolParams: export interface McpHostCallToolParams { name: string; arguments?: Record<string, unknown>; }
+type McpHostCapabilities: export interface McpHostCapabilities { serverTools?: { listChanged?: boolean; call?: boolean; }; serverResources?: { listChanged?: boolean; read?: boolean; }; openLinks?: boolean; updateModelContext?: boolean | string[]; message?: boolean; logging?: boolean; downloadFile?: boolean; sandbox?: Record<string, unknown>; [key: string]: unknown; }
+type McpHostContainerDimensions: export interface McpHostContainerDimensions { width?: number; height?: number; }
+type McpHostContext: export interface McpHostContext { theme?: string; displayMode?: McpUiDisplayMode | string; locale?: string; timeZone?: string; platform?: string; availableDisplayModes?: McpUiDisplayMode[]; containerDimensions?: McpHostContainerDimensions; safeAreaInsets?: { top?: number; right?: number; bottom?: number; left?: number; }; toolInfo?: Record<string, unknown>; deviceCapabilities?: Record<string, unknown>; styles?: McpHostStyleContext; [key: string]: unknown; }
+type McpHostMessageResult: export interface McpHostMessageResult { role?: string; content?: unknown; [key: string]: unknown; }
+type McpHostModelContextResult: export interface McpHostModelContextResult { ok?: boolean; [key: string]: unknown; }
+type McpHostOpenLinkParams: export interface McpHostOpenLinkParams { url: string; }
+type McpHostReadResourceResult: export interface McpHostReadResourceResult { contents?: McpHostResourceContentItem[]; [key: string]: unknown; }
+type McpHostRequestDisplayModeParams: export interface McpHostRequestDisplayModeParams { mode: McpUiDisplayMode; }
+type McpHostRequestDisplayModeResult: export interface McpHostRequestDisplayModeResult { mode: McpUiDisplayMode | string; }
+type McpHostSendMessageParams: export interface McpHostSendMessageParams { role?: string; content: unknown; [key: string]: unknown; }
+type McpHostToolContentItem: export interface McpHostToolContentItem { type: string; text?: string; [key: string]: unknown; }
+type McpHostToolResult: export interface McpHostToolResult { content?: McpHostToolContentItem[]; structuredContent?: unknown; isError?: boolean; [key: string]: unknown; }
+type McpHostUpdateModelContextParams: export interface McpHostUpdateModelContextParams { content?: unknown; role?: string; [key: string]: unknown; }
+type McpUiDisplayMode: export type McpUiDisplayMode = "inline" | "fullscreen" | "pip";
+type Middleware: export type Middleware = RequestHandler | RequestHandlerAndRouter;
+value OPEN_LINK_METHOD: "ui/open-link"
+type PromptMetadata: export type PromptMetadata = { name: string; title: string; description: string; role?: string; };
+value REQUEST_DISPLAY_MODE_METHOD: "ui/request-display-mode"
+type ResourceMetadata: export interface ResourceMetadata { name: string; title?: string; description?: string; mimeType?: string; size?: number; _meta?: { ui?: UIMetadata; [key: string]: unknown; }; [key: string]: any; }
+value RESOURCES_READ_METHOD: "resources/read"
+value SIZE_CHANGED_METHOD: "ui/notifications/size-changed"
+type StaticHeader: export interface StaticHeader { name: string; value: string; }
+type StdioClient: export type StdioClient = StdioClientConnection["client"];
+type StdioClientConfig: export type StdioClientConfig = { name?: string; type?: "stdio"; command?: string; args?: string[]; npm?: string; npmArgs?: string[]; env?: Record<string, string>; cwd?: string; stderr?: StdioIOStrategy; };
+type StdioClientConnection: export interface StdioClientConnection { client: Client<Request, Notification, Result>; transport: StdioClientTransport; }
+type StdioClientOptions: export interface StdioClientOptions extends StdioServerParameters { onStderrData?: (chunk: Buffer) => void; }
+type StdioIOStrategy: export type StdioIOStrategy = "pipe" | "inherit" | "ignore";
+type ToolExtraArguments: export interface ToolExtraArguments { signal: AbortSignal; authInfo?: { token: string; clientId: string; scopes: string[]; expiresAt?: number; resource?: URL; extra?: Record<string, unknown>; }; sessionId?: string; _meta?: { progressToken?: string | number; }; requestId: string | number; requestInfo?: { headers: Record<string, string | string[] | undefined>; }; clientInfo?: McpClientInfo; sendNotification: (notification: any) => Promise<void>; sendRequest: <U extends CompatibleZodType>(request: any, resultSchema: U, options?: ToolRequestOptions) => Promise<InferCompatibleZodType<U>>; elicit: (request: ElicitRequest, options?: ToolRequestOptions) => Promise<ElicitResult>; }
+type ToolMetadata: export interface ToolMetadata { name: string; description: string; annotations?: ToolAnnotations; _meta?: { ui?: UIMetadata; [key: string]: unknown; }; }
+type ToolOutputSchema: export type ToolOutputSchema = Record<string, CompatibleZodType>;
+type ToolSchema: export type ToolSchema = Record<string, CompatibleZodType>;
+value UI_MESSAGE_METHOD: "ui/message"
+type UIMetadata: export interface UIMetadata { resourceUri?: string; visibility?: Array<"model" | "app">; csp?: { connectDomains?: string[]; resourceDomains?: string[]; frameDomains?: string[]; baseUriDomains?: string[]; }; permissions?: { camera?: Record<string, never>; microphone?: Record<string, never>; geolocation?: Record<string, never>; clipboardWrite?: Record<string, never>; }; domain?: string; prefersBorder?: boolean; }
+value UPDATE_MODEL_CONTEXT_METHOD: "ui/update-model-context"
+value UrlElicitationRequiredError: typeof UrlElicitationRequiredError
+type WebMiddleware: export type WebMiddleware = (request: Request, context: WebMiddlewareContext) => Promise<Response | void> | Response | void;
+type WebMiddlewareContext: export type WebMiddlewareContext = { auth?: AuthInfo; setAuth: (auth: AuthInfo) => void; };
+type XmcpConfig: export type XmcpConfigInputSchema = Omit<z.input<typeof configSchema>, "bundler"> & BundlerConfigType;"
+`;
+
+exports[`public API surface > ./cloudflare surface is unchanged 1`] = `
+"# ./cloudflare
+
+value apiKeyAuthMiddleware: { (config: StaticApiKeyConfig): WebMiddleware; (config: CustomValidationConfig): WebMiddleware; }
+value jwtAuthMiddleware: (config: CloudflareJWTAuthMiddlewareConfig) => WebMiddleware
+type JWTAuthMiddlewareConfig: export type CloudflareJWTAuthMiddlewareConfig = { secret: string; algorithms?: string[]; audience?: string | string[]; issuer?: string; subject?: string; clockTolerance?: number | string; maxAge?: string | number; };
+type WebMiddleware: export type WebMiddleware = (request: Request, context: WebMiddlewareContext) => Promise<Response | void> | Response | void;"
+`;
+
+exports[`public API surface > ./headers surface is unchanged 1`] = `
+"# ./headers
+
+value headers: () => HttpHeaders"
+`;
+
+exports[`public API surface > ./host-bridge surface is unchanged 1`] = `
+"# ./host-bridge
+
+value createMcpHostBridge: (options?: CreateMcpHostBridgeOptions) => McpHostBridge
+type CreateMcpHostBridgeOptions: export interface CreateMcpHostBridgeOptions { targetWindow?: WindowLike; requestTimeoutMs?: number; connectionTimeoutMs?: number; }
+value HOST_CONTEXT_CHANGED_METHOD: "ui/notifications/host-context-changed"
+value INITIALIZE_METHOD: "ui/initialize"
+value INITIALIZED_METHOD: "ui/notifications/initialized"
+value LOG_MESSAGE_METHOD: "notifications/message"
+value MCP_APPS_PROTOCOL_VERSION: "2026-01-26"
+type McpHostBridge: export interface McpHostBridge { callTool: (name: McpHostCallToolParams["name"], args?: McpHostCallToolParams["arguments"]) => Promise<McpHostToolResult>; requestDisplayMode: (mode: McpUiDisplayMode) => Promise<McpHostRequestDisplayModeResult>; openLink: (url: McpHostOpenLinkParams["url"]) => Promise<void>; readResource: (uri: string) => Promise<McpHostReadResourceResult>; sendMessage: (params: McpHostSendMessageParams) => Promise<McpHostMessageResult>; updateModelContext: (params: McpHostUpdateModelContextParams) => Promise<McpHostModelContextResult>; logMessage: (params: McpHostSendMessageParams) => Promise<void>; notifySizeChanged: (params: McpHostContainerDimensions) => Promise<void>; getState: () => McpHostBridgeState; getHostContext: () => McpHostContext | null; getHostCapabilities: () => McpHostCapabilities | null; isConnected: () => boolean; subscribe: (listener: (state: McpHostBridgeState) => void) => () => void; dispose: () => void; }
+type McpHostBridgeState: export interface McpHostBridgeState { isConnected: boolean; hostContext: McpHostContext | null; hostCapabilities: McpHostCapabilities | null; }
+type McpHostCallToolParams: export interface McpHostCallToolParams { name: string; arguments?: Record<string, unknown>; }
+type McpHostCapabilities: export interface McpHostCapabilities { serverTools?: { listChanged?: boolean; call?: boolean; }; serverResources?: { listChanged?: boolean; read?: boolean; }; openLinks?: boolean; updateModelContext?: boolean | string[]; message?: boolean; logging?: boolean; downloadFile?: boolean; sandbox?: Record<string, unknown>; [key: string]: unknown; }
+type McpHostContainerDimensions: export interface McpHostContainerDimensions { width?: number; height?: number; }
+type McpHostContext: export interface McpHostContext { theme?: string; displayMode?: McpUiDisplayMode | string; locale?: string; timeZone?: string; platform?: string; availableDisplayModes?: McpUiDisplayMode[]; containerDimensions?: McpHostContainerDimensions; safeAreaInsets?: { top?: number; right?: number; bottom?: number; left?: number; }; toolInfo?: Record<string, unknown>; deviceCapabilities?: Record<string, unknown>; styles?: McpHostStyleContext; [key: string]: unknown; }
+type McpHostMessageResult: export interface McpHostMessageResult { role?: string; content?: unknown; [key: string]: unknown; }
+type McpHostModelContextResult: export interface McpHostModelContextResult { ok?: boolean; [key: string]: unknown; }
+type McpHostOpenLinkParams: export interface McpHostOpenLinkParams { url: string; }
+type McpHostReadResourceResult: export interface McpHostReadResourceResult { contents?: McpHostResourceContentItem[]; [key: string]: unknown; }
+type McpHostRequestDisplayModeParams: export interface McpHostRequestDisplayModeParams { mode: McpUiDisplayMode; }
+type McpHostRequestDisplayModeResult: export interface McpHostRequestDisplayModeResult { mode: McpUiDisplayMode | string; }
+type McpHostSendMessageParams: export interface McpHostSendMessageParams { role?: string; content: unknown; [key: string]: unknown; }
+type McpHostToolContentItem: export interface McpHostToolContentItem { type: string; text?: string; [key: string]: unknown; }
+type McpHostToolResult: export interface McpHostToolResult { content?: McpHostToolContentItem[]; structuredContent?: unknown; isError?: boolean; [key: string]: unknown; }
+type McpHostUpdateModelContextParams: export interface McpHostUpdateModelContextParams { content?: unknown; role?: string; [key: string]: unknown; }
+type McpUiDisplayMode: export type McpUiDisplayMode = "inline" | "fullscreen" | "pip";
+value OPEN_LINK_METHOD: "ui/open-link"
+value REQUEST_DISPLAY_MODE_METHOD: "ui/request-display-mode"
+value RESOURCES_READ_METHOD: "resources/read"
+value SIZE_CHANGED_METHOD: "ui/notifications/size-changed"
+value UI_MESSAGE_METHOD: "ui/message"
+value UPDATE_MODEL_CONTEXT_METHOD: "ui/update-model-context""
+`;

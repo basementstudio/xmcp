@@ -19,7 +19,11 @@ export class WebStatelessHttpTransport implements Transport {
   private debug: boolean;
   private _started: boolean = false;
 
-  // Promise-based response collection (replaces EventEmitter pattern)
+  // Per-request response collection. Safe because callers (cloudflare/worker.ts)
+  // instantiate one transport per incoming Request — these Maps never see
+  // traffic from a different request. The AST contract test in
+  // test/integration/http-stateless.test.ts enforces that invariant.
+  // @stateless: request-scoped
   private _responseResolvers: Map<
     string,
     {
@@ -28,6 +32,7 @@ export class WebStatelessHttpTransport implements Transport {
       resolve: (response: Response) => void;
     }
   > = new Map();
+  // @stateless: request-scoped
   private _requestToCollectorMapping: Map<string | number, string> = new Map();
 
   // MCP SDK transport interface

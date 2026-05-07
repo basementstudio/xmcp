@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ES2020",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "xmcp": ["src/index.ts"],
+      "xmcp/cloudflare": ["src/cloudflare.ts"],
+      "xmcp/host-bridge": ["src/host-bridge.ts"],
+      "xmcp/headers": ["src/runtime/headers.ts"]
+    },
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/types/**/*.test-d.ts"]
+}

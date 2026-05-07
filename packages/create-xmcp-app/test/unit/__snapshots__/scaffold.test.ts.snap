@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`create-xmcp-app — scaffold > emits the expected file tree (snapshot) for the default template 1`] = `
+[
+  ".gitignore",
+  "README.md",
+  "package.json",
+  "src/prompts/review-code.ts",
+  "src/resources/(config)/app.ts",
+  "src/resources/(users)/[userId]/index.ts",
+  "src/tools/greet.ts",
+  "tsconfig.json",
+  "xmcp.config.ts",
+  "xmcp.svg",
+]
+`;

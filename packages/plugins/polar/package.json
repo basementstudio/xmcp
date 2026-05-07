@@ -40,12 +40,16 @@
   ],
   "scripts": {
     "dev": "tsc --watch",
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "CI=1 vitest run"
   },
   "devDependencies": {
     "@types/node": "^22.19.2",
     "express": "^4.22.1",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.5",
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
