@@ -83,14 +83,14 @@ export function TemplateCard({
     >
       <div className="relative border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
         <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
-          <h4 className="text-brand-white font-medium mt-0 text-[1.125rem] capitalize">
+          <h4 className="text-brand-white font-medium mt-0 text-[1.125rem]">
             {displayName}
           </h4>
         </div>
 
         <div className="flex-1 flex flex-col justify-between relative z-10">
           <div className="space-y-3 flex flex-col justify-between h-full px-4">
-            <p className="text-sm text-brand-neutral-100 leading-relaxed capitalize">
+            <p className="text-sm text-brand-neutral-100 leading-relaxed">
               {description}
             </p>
           </div>

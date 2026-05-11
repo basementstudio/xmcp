@@ -108,7 +108,7 @@ export function TemplatesListing({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search templates"
-              className="pl-10"
+              className="h-auto rounded-xs border-brand-neutral-400 bg-brand-black p-2 pl-10 text-sm text-brand-neutral-200 shadow-none placeholder:text-brand-neutral-200 hover:bg-white/10 focus-visible:ring-0"
             />
           </div>
         </div>
