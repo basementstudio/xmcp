@@ -17,7 +17,7 @@ export interface RenderJsonToolConfig {
 
 const renderJsonSchemaDescription = `AppSchema JSON string. For the full reference, read the skill://xmcp-ui/schema-reference resource.
 
-Root shape: { title, mcpServerUrl, root: Component }
+Root shape: { title, mcpServerUrl, root: Component, state?, mcpHeaders?, theme?, themeTokens? }
 Component: { type, props, children?, actions? }
 
 VALID TYPES ONLY: grid, card, tabs, table, stat-card, text, image, link, input, textarea, select, button, badge, separator, checkbox, switch, alert, loader, progress.
@@ -42,7 +42,11 @@ Key props per type:
 - image: src OR srcKey, alt?, width?, height?
 - link: href, label, external?
 
-Actions: { type:"call-tool", tool, args, resultKey } | { type:"set-state", key, value }
+Actions:
+- call-tool: { type:"call-tool", tool, args, resultKey }
+- set-state: { type:"set-state", key, value }
+- set-state-batch: { type:"set-state-batch", entries:[{ key, value }] }
+- open-link: { type:"open-link", url }
 Templates: {{stateKey}} resolves from state, {{event.value}} for onChange.
 
 Important typing rules:
@@ -53,6 +57,7 @@ Important typing rules:
 - Use image sizing as CSS strings, for example "width": "200px", "height": "120px", or "width": "100%".
 - Use table column widths as CSS strings, for example "width": "180px" or "width": "30%".
 - Only use strings for text content, className, URLs, labels, and similar text fields.
+- Do not use javascript: URLs in open-link actions.
 
 Valid example:
 {

@@ -14,7 +14,9 @@ AppSchema is a JSON format for defining interactive UIs that connect to MCP serv
   mcpServerUrl: string       (required) — valid URL of the MCP server
   description?: string       — short description of the app
   state?: Record<string, unknown>  — initial reactive state
+  mcpHeaders?: Array<{ name: string, value: string }>  — optional MCP request headers
   theme?: "dark" | "light"   — color theme
+  themeTokens?: Partial<ThemeTokens>  — optional HSL design tokens
   root: Component            (required) — top-level component tree
 }
 \`\`\`
@@ -81,6 +83,8 @@ Four action types can be attached to component events:
 { "type": "open-link", "url": "https://example.com" }
 \`\`\`
 
+Never use \`javascript:\` URLs in \`open-link\` actions.
+
 ## Template Interpolation
 
 Use \`{{stateKey}}\` in strings to resolve values from state at render time:
@@ -88,6 +92,13 @@ Use \`{{stateKey}}\` in strings to resolve values from state at render time:
 - \`{{user.name}}\` — dot notation accesses nested state
 - \`{{event.value}}\` — in \`onChange\` actions, resolves to the current input value
 - Templates work in action \`args\`, \`value\` fields, and text \`content\` props
+
+## Typing Rules
+
+- Numeric props must be JSON numbers, never strings.
+- Use \`"gap": 16\`, \`"columns": 3\`, \`"padding": 24\`, \`"rows": 4\`, and \`"max": 100\` as numbers.
+- Use CSS strings for image sizes and table column widths, such as \`"200px"\` or \`"30%"\`.
+- Only use strings for text content, className, URLs, labels, and similar text fields.
 
 ## Example 1 — Minimal App
 
