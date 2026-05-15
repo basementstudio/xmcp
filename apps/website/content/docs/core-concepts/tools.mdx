@@ -254,7 +254,15 @@ export default async function calculate({
 
 Tool handlers also receive an `extra` argument. Use `extra.elicit()` when you want the client to collect a small piece of user input before the tool continues.
 
-When the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`). This is available for HTTP transports and stdio (after initialization completes).
+When the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`). In stdio, xmcp keeps that identity after initialization for the lifetime of the connection.
+
+HTTP transports are strictly stateless. Tool calls only receive `extra.clientInfo` when the current request includes client identity. For post-initialize tool calls, repeat the identity with request headers:
+
+```http
+x-mcp-client-name: cursor
+x-mcp-client-version: 0.50.1
+x-mcp-client-title: Cursor
+```
 
 ```typescript title="src/tools/preview-elicitation.ts"
 import { type ToolExtraArguments, type ToolMetadata } from "xmcp";

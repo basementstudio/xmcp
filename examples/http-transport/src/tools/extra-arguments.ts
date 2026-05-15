@@ -3,7 +3,8 @@ import { type ToolMetadata, type ToolExtraArguments } from "xmcp";
 // Define tool metadata
 export const metadata: ToolMetadata = {
   name: "extra-arguments",
-  description: "Access the extra arguments from a tool call",
+  description:
+    "Access extra arguments from a tool call, including repeated HTTP client info headers",
   annotations: {
     title: "Extra arguments",
     readOnlyHint: true,

@@ -32,7 +32,7 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "@clerk/express": "^1.7.60",
+    "@clerk/express": "^1.7.79",
     "express": "^4.22.1"
   },
   "devDependencies": {
