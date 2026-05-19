@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { codeToHtml } from "shiki";
 import { cn } from "../../utils/cn";
+import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 function EditableTerminal({
   code,
@@ -21,7 +22,7 @@ function EditableTerminal({
       try {
         const html = await codeToHtml(code, {
           lang: "typescript",
-          theme: "ayu-dark",
+          theme: xmcpAyuDarkTheme,
           transformers: [
             {
               pre(node) {

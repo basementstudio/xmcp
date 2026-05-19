@@ -2,8 +2,10 @@
   "name": "Next.js with Adapter & AI SDK tool registry injection",
   "description": "Integrate xmcp into a Next.js application using the adapter and inject the tool registry into the AI SDK",
   "keywords": [
+    "adapter",
     "nextjs",
-    "adapter"
+    "ai-sdk",
+    "tool-registry"
   ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",

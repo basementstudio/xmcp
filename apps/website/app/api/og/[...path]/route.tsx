@@ -158,13 +158,13 @@ function resolveOgContent(
       };
     }
 
-    case "examples": {
+    case "templates": {
       return {
         ok: true,
         content: {
-          title: "Examples & templates",
+          title: "Templates",
           description:
-            "Quickstart with xmcp using real-world examples and best practices.",
+            "Quickstart with xmcp using real-world templates and best practices.",
           summary: undefined,
           date: undefined,
         },

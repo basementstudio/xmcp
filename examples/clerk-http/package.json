@@ -2,9 +2,9 @@
   "name": "HTTP with Clerk",
   "description": "HTTP-based xmcp server with Clerk authentication",
   "keywords": [
-    "http",
     "authentication",
-    "clerk"
+    "clerk",
+    "http"
   ],
   "scripts": {
     "build": "xmcp build",
@@ -17,4 +17,3 @@
     "zod": "^4.0.10"
   }
 }
-

@@ -2,8 +2,9 @@
   "name": "Next.js with Better Auth",
   "description": "Next.js app with xmcp and better-auth integration",
   "keywords": [
+    "authentication",
     "nextjs",
-    "authentication"
+    "better-auth"
   ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",

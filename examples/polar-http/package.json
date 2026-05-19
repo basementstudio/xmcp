@@ -14,5 +14,10 @@
     "xmcp": "workspace:*",
     "@xmcp-dev/polar": "workspace:*",
     "zod": "^4.0.10"
-  }
+  },
+  "keywords": [
+    "monetization",
+    "polar",
+    "http"
+  ]
 }
