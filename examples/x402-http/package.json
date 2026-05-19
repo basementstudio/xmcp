@@ -15,5 +15,6 @@
     "@xmcp-dev/x402": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
-  }
+  },
+  "private": true
 }
