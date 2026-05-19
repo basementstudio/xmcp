@@ -176,6 +176,26 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
+  // handle notifications (single-file pattern, like middleware)
+  watcher.watch("./src/notifications.ts", {
+    onAdd: async () => {
+      compilerContext.setContext({
+        hasNotifications: true,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+    onUnlink: async () => {
+      compilerContext.setContext({
+        hasNotifications: false,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+  });
+
   // if adapter is not enabled, handle middleware
   if (!xmcpConfig.experimental?.adapter) {
     // handle middleware
@@ -230,6 +250,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
           reactToolsCount,
           promptsCount: promptPaths.size,
           resourcesCount: resourcePaths.size,
+          hasNotifications: compilerContext.getContext().hasNotifications,
           transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
           adapter: xmcpConfig.experimental?.adapter
             ? (xmcpConfig.experimental.adapter as AdapterType)
