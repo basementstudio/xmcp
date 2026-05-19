@@ -1,14 +1,19 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { toJsonSchemaCompat } from "@modelcontextprotocol/sdk/server/zod-json-schema-compat";
 import { z } from "zod";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
-import { transformToolHandler } from "./transformers/tool";
+import { McpToolHandler, transformToolHandler } from "./transformers/tool";
 import { isReactFile } from "./react";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import {
+  registerSamplingTool,
+  type SamplingToolRegistry,
+} from "./sampling-tool-registry";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -41,7 +46,8 @@ export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annot
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
-  toolModules: Map<string, ToolFile>
+  toolModules: Map<string, ToolFile>,
+  samplingToolRegistry: SamplingToolRegistry
 ): McpServer {
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -139,11 +145,11 @@ export function addToolsToServer(
 
     const flattenedToolMeta = flattenMeta(toolSpecificMeta);
     const meta = uiWidget ? flattenedToolMeta : undefined;
-    let transformedHandler;
+    let transformedHandler: McpToolHandler;
 
     if (isReactFile(path) && uiWidget) {
       transformedHandler = async (args: any, extra: any) => ({
-        content: [{ type: "text", text: "" }],
+        content: [{ type: "text" as const, text: "" }],
         _meta: meta,
         structuredContent: {
           args,
@@ -154,7 +160,8 @@ export function addToolsToServer(
         handler,
         meta,
         toolOutputSchema,
-        toolConfig.name
+        toolConfig.name,
+        samplingToolRegistry
       );
     }
 
@@ -170,6 +177,41 @@ export function addToolsToServer(
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
+
+    registerSamplingTool(toolConfig.name, {
+      definition: {
+        name: toolConfig.name,
+        ...(toolConfigFormatted.title
+          ? { title: toolConfigFormatted.title }
+          : {}),
+        ...(toolConfigFormatted.description
+          ? { description: toolConfigFormatted.description }
+          : {}),
+        inputSchema: toJsonSchemaCompat(toolConfigFormatted.inputSchema, {
+          strictUnions: true,
+          pipeStrategy: "input",
+        }) as any,
+        ...(toolConfigFormatted.outputSchema
+          ? {
+              outputSchema: toJsonSchemaCompat(
+                toolConfigFormatted.outputSchema,
+                {
+                  strictUnions: true,
+                  pipeStrategy: "output",
+                }
+              ) as any,
+            }
+          : {}),
+        ...(toolConfigFormatted.annotations
+          ? { annotations: toolConfigFormatted.annotations }
+          : {}),
+        ...(Object.keys(flattenedToolMeta).length > 0
+          ? { _meta: flattenedToolMeta }
+          : {}),
+      },
+      validateInput: (input) => toolConfigFormatted.inputSchema.parse(input),
+      execute: transformedHandler,
+    }, samplingToolRegistry);
 
     // server as any prevents infinite type recursion
     (server as any).registerTool(

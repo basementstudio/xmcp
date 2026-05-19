@@ -11,6 +11,9 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  SampleMessageInput,
+  SampleRequest,
+  SampleResult,
   InferSchema,
   ElicitResult,
 } from "./types/tool";
@@ -25,6 +28,12 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export { sample } from "./runtime/utils/sampling";
+export {
+  getSampleContext,
+  getSampleContentBlocks,
+  getSampleTextContent,
+} from "./utils/sample-result";
 
 export { completable } from "@modelcontextprotocol/sdk/server/completable";
 export { UrlElicitationRequiredError } from "@modelcontextprotocol/sdk/types";
