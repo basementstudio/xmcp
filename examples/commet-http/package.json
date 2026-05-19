@@ -1,6 +1,7 @@
 {
   "name": "commet-http",
   "version": "0.1.0",
+  "private": true,
   "description": "An xmcp server with feature gating and usage tracking powered by Commet",
   "engines": {
     "node": ">=20.0.0"

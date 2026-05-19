@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { createRequire } from "module";
 import { compile } from "./compiler";
 import { buildVercelOutput } from "./platforms/build-vercel-output";
 import { buildCloudflareOutput } from "./platforms/build-cloudflare-output";
@@ -12,8 +13,13 @@ import {
 import { runCreate, type CreateType } from "./cli/commands/create";
 
 const program = new Command();
+const require = createRequire(import.meta.url);
+const packageJson = require("../package.json");
 
-program.name("xmcp").description("The MCP framework CLI").version("0.0.1");
+program
+  .name("xmcp")
+  .description("The MCP framework CLI")
+  .version(packageJson.version);
 
 program
   .command("dev")

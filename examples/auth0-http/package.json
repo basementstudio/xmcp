@@ -15,5 +15,6 @@
     "@xmcp-dev/auth0": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
-  }
+  },
+  "private": true
 }
