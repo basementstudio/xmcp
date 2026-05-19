@@ -15,6 +15,6 @@
     "@xmcp-dev/clerk": "workspace:*",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
-  }
+  },
+  "private": true
 }
-
