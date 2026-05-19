@@ -8,6 +8,7 @@ import { isZodRawShape, pathToName } from "./tools";
 import { ZodRawShape } from "zod/v3";
 import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
+import { loggerContextProvider } from "./logger";
 import { ResourceMetadata } from "@/types/resource";
 import { flattenMeta } from "./ui/flatten-meta";
 import { generateUIHTML } from "./react/generate-html";
@@ -272,13 +273,19 @@ export function addResourcesToServer(
       resourceSchema
     );
 
+    const wrappedHandler = (uri: URL, extra: any) =>
+      loggerContextProvider(
+        { server, sessionId: extra.sessionId },
+        () => transformedHandler(uri, extra)
+      );
+
     if (resourceInfo.type === "direct") {
       // register as a direct resource (static composed URI)
       server.registerResource(
         resourceConfig.name as string,
         uri,
         resourceConfig,
-        transformedHandler
+        wrappedHandler
       );
     } else {
       // register as a resource template (dynamic URI with parameters)
@@ -310,8 +317,16 @@ export function addResourcesToServer(
           }
         }
 
-        let response = handler(validatedParams, extra);
-        if (response instanceof Promise) response = await response;
+        const runHandler = async () => {
+          let response = handler(validatedParams, extra);
+          if (response instanceof Promise) response = await response;
+          return response;
+        };
+
+        const response = await loggerContextProvider(
+          { server, sessionId: extra.sessionId },
+          runHandler
+        );
 
         return typeof response === "string"
           ? { contents: [{ uri: uri.href, text: response }] }

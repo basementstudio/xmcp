@@ -3,6 +3,7 @@ import { ZodOptional, ZodType, ZodTypeDef, ZodRawShape } from "zod/v3";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
+import { loggerContextProvider } from "./logger";
 
 interface PromptMetadata {
   name: string;
@@ -39,10 +40,16 @@ export function addPromptsToServer(
     }
 
     // Transform the user's handler into an MCP-compatible handler
-    const transformedHandler = transformPromptHandler(
+    const baseHandler = transformPromptHandler(
       handler,
       (promptConfig.role as "user" | "assistant") || "assistant"
     );
+
+    const transformedHandler = (args: any, extra: any) =>
+      loggerContextProvider(
+        { server, sessionId: extra.sessionId },
+        () => baseHandler(args, extra)
+      );
 
     // Validate and ensure schema is properly typed
     if (isZodRawShape(schema)) {

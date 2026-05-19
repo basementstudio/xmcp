@@ -1,0 +1,16 @@
+{
+  "name": "Logging",
+  "description": "Learn how to send structured log messages to clients using the MCP logging capability",
+  "keywords": [
+    "logging"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
