@@ -13,6 +13,10 @@ permissions:
 jobs:
   version:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.14.0]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,10 +28,10 @@ jobs:
         with:
           version: 10.8.1
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 22.14.0
+          node-version: ${{ matrix.node-version }}
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
 
