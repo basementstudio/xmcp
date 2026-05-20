@@ -85,7 +85,7 @@ jobs:
           # Generate canary version with incremental number per stable version
           CANARY_VERSION="${BASE_VERSION}-canary.${CANARY_NUMBER}"
 
-          echo "version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$CANARY_VERSION" >> "$GITHUB_OUTPUT"
           echo "Publishing canary version: $CANARY_VERSION"
 
       - name: Update package versions
@@ -168,7 +168,7 @@ jobs:
 
       - name: Create publish summary
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << EOF
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
           # Canary Release Published
 
           **Canary version \`${{ steps.version.outputs.version }}\`** published:
