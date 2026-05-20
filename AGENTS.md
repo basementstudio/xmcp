@@ -15,8 +15,10 @@ the scoped `AGENTS.md` file for any area you touch:
 - Core package release changes use Changesets. If a PR changes user-facing
   behavior in `xmcp`, `create-xmcp-app`, or `init-xmcp`, add and commit a
   `.changeset/*.md` file with `pnpm changeset`.
+- Pushing to `canary` automatically publishes core package canary releases with
+  the npm `canary` dist-tag and the `nextPatch-canary.N` version format.
 - Changesets runs on `main`: it creates the Version Packages PR, and after that
-  PR is merged it publishes the core packages to npm automatically. Do not
+  PR is merged it publishes stable core packages to npm automatically. Do not
   reintroduce a GitHub Release-based npm publish path.
 - Plugin packages and `@xmcp-dev/cli` are not part of the core Changesets
   rollout; keep their existing manual publish workflows unless explicitly asked

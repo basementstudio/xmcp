@@ -1,7 +1,14 @@
 name: Publish Canary Release to NPM
 
 on:
+  push:
+    branches:
+      - canary
   workflow_dispatch:
+
+concurrency:
+  group: publish-canary
+  cancel-in-progress: false
 
 jobs:
   publish-canary:

@@ -14,7 +14,9 @@ stateful transport.
 
 For user-facing changes to `xmcp`, `create-xmcp-app`, or `init-xmcp`, follow
 the Changesets release instructions in `AGENTS.md` and commit the generated
-`.changeset/*.md` file with the PR.
+`.changeset/*.md` file with the PR. Canary publishes happen automatically from
+`canary`; stable publishes happen automatically after the `main` Version
+Packages PR is merged.
 
 Run `/review-rules` on your diff before handing work back. The local Stop hook
 may also run `.claude/hooks/valerules-check.sh` to catch formatting, excess

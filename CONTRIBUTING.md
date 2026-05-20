@@ -46,9 +46,13 @@ pnpm changeset
 ```
 
 Choose `patch`, `minor`, or `major` based on the user-visible impact. Feature
-PRs still target `canary`. When changes are promoted to `main`, the Changesets
-workflow opens or updates a Version Packages PR. After that PR is merged,
-Changesets publishes the core packages to npm automatically.
+PRs still target `canary`. Every push to `canary` automatically publishes a
+canary release of the core packages with the npm `canary` dist-tag, using the
+existing `nextPatch-canary.N` version format.
+
+When changes are promoted to `main`, the Changesets workflow opens or updates a
+Version Packages PR. After that PR is merged, Changesets publishes the stable
+core packages to npm automatically.
 
 Do not create a separate GitHub Release to publish npm packages. Plugin packages
 and `@xmcp-dev/cli` still use their existing manual publish workflows.
