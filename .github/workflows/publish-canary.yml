@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.14.0]
 
     steps:
       - name: Checkout code
@@ -36,6 +36,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@^11.5.1
 
       - name: Generate canary version
         id: version
@@ -142,6 +145,7 @@ jobs:
       - name: Publish xmcp package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/xmcp
           echo "Publishing xmcp package with canary tag"
@@ -151,6 +155,7 @@ jobs:
       - name: Publish create-xmcp-app package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/create-xmcp-app
           echo "Publishing create-xmcp-app package with canary tag"
@@ -160,6 +165,7 @@ jobs:
       - name: Publish init-xmcp package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/init-xmcp
           echo "Publishing init-xmcp package with canary tag"

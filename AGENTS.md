@@ -18,7 +18,8 @@ the scoped `AGENTS.md` file for any area you touch:
 - Pushing to `canary` automatically publishes core package canary releases with
   the npm `canary` dist-tag and the `nextPatch-canary.N` version format.
 - Changesets runs on `main`: it creates the Version Packages PR, and after that
-  PR is merged it publishes stable core packages to npm automatically. Do not
+  PR is merged it publishes stable core packages to npm automatically through
+  `publish.yml`. Keep npm provenance/trusted publishing enabled. Do not
   reintroduce a GitHub Release-based npm publish path.
 - Plugin packages and `@xmcp-dev/cli` are not part of the core Changesets
   rollout; keep their existing manual publish workflows unless explicitly asked

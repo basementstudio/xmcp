@@ -52,7 +52,8 @@ existing `nextPatch-canary.N` version format.
 
 When changes are promoted to `main`, the Changesets workflow opens or updates a
 Version Packages PR. After that PR is merged, Changesets publishes the stable
-core packages to npm automatically.
+core packages to npm automatically through the `publish.yml` workflow. Stable
+and canary publishes are configured for npm provenance/trusted publishing.
 
 Do not create a separate GitHub Release to publish npm packages. Plugin packages
 and `@xmcp-dev/cli` still use their existing manual publish workflows.
