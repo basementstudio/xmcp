@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run Changesets versioning without publishing"
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -41,7 +48,30 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dry run Changesets version
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ inputs.dry_run }}" != "true" ]; then
+            echo "Manual stable publishing is disabled. Use dry_run=true."
+            exit 1
+          fi
+
+          pnpm version-packages
+
+          {
+            echo "# Changesets Dry Run"
+            echo
+            echo "Ran \`pnpm version-packages\` without publishing."
+            echo
+            echo "## Resulting workspace changes"
+            echo
+            echo '```'
+            git status --short
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create version PR or publish
+        if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
           version: pnpm version-packages
