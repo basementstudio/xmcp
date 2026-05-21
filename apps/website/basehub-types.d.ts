@@ -151,7 +151,7 @@ export interface BlockColor {
     __typename: 'BlockColor'
 }
 
-export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | McpTemplateComponent | Mcps | Showcase | SidebarTree | SidebarTreeComponent | _AgentStart | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockDocument = (ArticleComponent | Articles | Assets | Collection | Documentation | McpTemplateComponent | Mcps | Showcase | SidebarTree | SidebarTreeComponent | Testimonials | TestimonialsItem | _AgentStart | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList | testimonialsItem_AsList) & { __isUnion?: true }
 
 export interface BlockDocumentSys {
     apiNamePath: Scalars['String']
@@ -210,7 +210,7 @@ export interface BlockImage {
     __typename: 'BlockImage'
 }
 
-export type BlockList = (Articles | Collection | Mcps | SidebarTree | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList) & { __isUnion?: true }
+export type BlockList = (Articles | Collection | Mcps | SidebarTree | Testimonials | articleComponent_AsList | mcpTemplateComponent_AsList | sidebarTreeComponent_AsList | testimonialsItem_AsList) & { __isUnion?: true }
 
 export interface BlockOgImage {
     height: Scalars['Int']
@@ -391,6 +391,7 @@ export interface Query {
     assets: Assets
     documentation: Documentation
     showcase: Showcase
+    testimonials: Testimonials
     __typename: 'Query'
 }
 
@@ -475,6 +476,45 @@ export interface Submissions {
     schema: Scalars['BSHBEventSchema']
     __typename: 'Submissions'
 }
+
+export interface Testimonials {
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _meta: ListMeta
+    /** The key used to search from the frontend. */
+    _searchKey: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
+    item: (TestimonialsItem | null)
+    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
+    items: TestimonialsItem[]
+    __typename: 'Testimonials'
+}
+
+export interface TestimonialsItem {
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight: (SearchHighlight[] | null)
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    handle: (Scalars['String'] | null)
+    logo: (BlockImage | null)
+    position: (Scalars['String'] | null)
+    tagline: (Scalars['String'] | null)
+    __typename: 'TestimonialsItem'
+}
+
+export type TestimonialsItemOrderByEnum = '_sys_createdAt__ASC' | '_sys_createdAt__DESC' | '_sys_hash__ASC' | '_sys_hash__DESC' | '_sys_id__ASC' | '_sys_id__DESC' | '_sys_lastModifiedAt__ASC' | '_sys_lastModifiedAt__DESC' | '_sys_slug__ASC' | '_sys_slug__DESC' | '_sys_title__ASC' | '_sys_title__DESC' | 'handle__ASC' | 'handle__DESC' | 'logo__ASC' | 'logo__DESC' | 'position__ASC' | 'position__DESC' | 'tagline__ASC' | 'tagline__DESC' | 'untitled__ASC' | 'untitled__DESC'
 
 export interface TransactionStatus {
     /** Duration in milliseconds. */
@@ -601,6 +641,7 @@ export interface _components {
     article: articleComponent_AsList
     mcpTemplate: mcpTemplateComponent_AsList
     sidebarTree: sidebarTreeComponent_AsList
+    testimonialsItem: testimonialsItem_AsList
     __typename: '_components'
 }
 
@@ -659,6 +700,25 @@ export interface sidebarTreeComponent_AsList {
     /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
     items: SidebarTreeComponent[]
     __typename: 'sidebarTreeComponent_AsList'
+}
+
+export interface testimonialsItem_AsList {
+    _analyticsKey: Scalars['String']
+    _dashboardUrl: Scalars['String']
+    _id: Scalars['String']
+    _idPath: Scalars['String']
+    _meta: ListMeta
+    /** The key used to search from the frontend. */
+    _searchKey: Scalars['String']
+    _slug: Scalars['String']
+    _slugPath: Scalars['String']
+    _sys: BlockDocumentSys
+    _title: Scalars['String']
+    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
+    item: (TestimonialsItem | null)
+    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
+    items: TestimonialsItem[]
+    __typename: 'testimonialsItem_AsList'
 }
 
 export interface ArticleComponentGenqlSelection{
@@ -806,10 +866,13 @@ export interface BlockDocumentGenqlSelection{
     on_Showcase?: ShowcaseGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
     on_SidebarTreeComponent?: SidebarTreeComponentGenqlSelection
+    on_Testimonials?: TestimonialsGenqlSelection
+    on_TestimonialsItem?: TestimonialsItemGenqlSelection
     on__AgentStart?: _AgentStartGenqlSelection
     on_articleComponent_AsList?: articleComponent_AsListGenqlSelection
     on_mcpTemplateComponent_AsList?: mcpTemplateComponent_AsListGenqlSelection
     on_sidebarTreeComponent_AsList?: sidebarTreeComponent_AsListGenqlSelection
+    on_testimonialsItem_AsList?: testimonialsItem_AsListGenqlSelection
     __typename?: boolean | number
     __fragmentOn?: "BlockDocument"
 }
@@ -896,9 +959,11 @@ export interface BlockListGenqlSelection{
     on_Collection?: CollectionGenqlSelection
     on_Mcps?: McpsGenqlSelection
     on_SidebarTree?: SidebarTreeGenqlSelection
+    on_Testimonials?: TestimonialsGenqlSelection
     on_articleComponent_AsList?: articleComponent_AsListGenqlSelection
     on_mcpTemplateComponent_AsList?: mcpTemplateComponent_AsListGenqlSelection
     on_sidebarTreeComponent_AsList?: sidebarTreeComponent_AsListGenqlSelection
+    on_testimonialsItem_AsList?: testimonialsItem_AsListGenqlSelection
     __typename?: boolean | number
     __fragmentOn?: "BlockList"
 }
@@ -1230,6 +1295,17 @@ export interface QueryGenqlSelection{
     assets?: AssetsGenqlSelection
     documentation?: DocumentationGenqlSelection
     showcase?: ShowcaseGenqlSelection
+    testimonials?: (TestimonialsGenqlSelection & { __args?: {
+    /** Filter by a field. */
+    filter?: (TestimonialsItemFilterInput | null), 
+    /** Limit the number of items returned. Defaults to 500. */
+    first?: (Scalars['Int'] | null), 
+    /** Order by a field. */
+    orderBy?: (TestimonialsItemOrderByEnum | null), 
+    /** Search configuration */
+    search?: (TestimonialsItemSearchInput | null), 
+    /** Skip the first n items. */
+    skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
     __fragmentOn?: "Query"
 }
@@ -1382,6 +1458,65 @@ export interface SubmissionsGenqlSelection{
 }
 
 export interface TargetBlock {focus?: (Scalars['Boolean'] | null),id: Scalars['String'],label: Scalars['String']}
+
+export interface TestimonialsGenqlSelection{
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _meta?: ListMetaGenqlSelection
+    /** The key used to search from the frontend. */
+    _searchKey?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
+    item?: TestimonialsItemGenqlSelection
+    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
+    items?: TestimonialsItemGenqlSelection
+    __typename?: boolean | number
+    __fragmentOn?: "Testimonials"
+}
+
+export interface TestimonialsItemGenqlSelection{
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    /** Array of search highlight information with field names and HTML markup */
+    _highlight?: SearchHighlightGenqlSelection
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    handle?: boolean | number
+    logo?: BlockImageGenqlSelection
+    position?: boolean | number
+    tagline?: boolean | number
+    __typename?: boolean | number
+    __fragmentOn?: "TestimonialsItem"
+}
+
+export interface TestimonialsItemFilterInput {AND?: (TestimonialsItemFilterInput | null),OR?: (TestimonialsItemFilterInput | null),_id?: (StringFilter | null),_slug?: (StringFilter | null),_sys_apiNamePath?: (StringFilter | null),_sys_createdAt?: (DateFilter | null),_sys_hash?: (StringFilter | null),_sys_id?: (StringFilter | null),_sys_idPath?: (StringFilter | null),_sys_lastModifiedAt?: (DateFilter | null),_sys_slug?: (StringFilter | null),_sys_slugPath?: (StringFilter | null),_sys_title?: (StringFilter | null),_title?: (StringFilter | null),handle?: (StringFilter | null),position?: (StringFilter | null),tagline?: (StringFilter | null)}
+
+export interface TestimonialsItemSearchInput {
+/** Searchable fields for query */
+by?: (Scalars['String'][] | null),
+/** Search query */
+q?: (Scalars['String'] | null)}
 
 export interface TransactionStatusGenqlSelection{
     /** Duration in milliseconds. */
@@ -1547,6 +1682,17 @@ export interface _componentsGenqlSelection{
     search?: (SidebarTreeComponentSearchInput | null), 
     /** Skip the first n items. */
     skip?: (Scalars['Int'] | null)} })
+    testimonialsItem?: (testimonialsItem_AsListGenqlSelection & { __args?: {
+    /** Filter by a field. */
+    filter?: (TestimonialsItemFilterInput | null), 
+    /** Limit the number of items returned. Defaults to 500. */
+    first?: (Scalars['Int'] | null), 
+    /** Order by a field. */
+    orderBy?: (TestimonialsItemOrderByEnum | null), 
+    /** Search configuration */
+    search?: (TestimonialsItemSearchInput | null), 
+    /** Skip the first n items. */
+    skip?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
     __fragmentOn?: "_components"
 }
@@ -1627,6 +1773,32 @@ export interface sidebarTreeComponent_AsListGenqlSelection{
     items?: SidebarTreeComponentGenqlSelection
     __typename?: boolean | number
     __fragmentOn?: "sidebarTreeComponent_AsList"
+}
+
+export interface testimonialsItem_AsListGenqlSelection{
+    _analyticsKey?: { __args: {
+    /**
+     * The scope of the analytics key. Use `send` for just ingesting data. Use `query` if you need to show an analytics data in your website.
+     * 
+     * Have in mind, if you expose your `query` analytics key in the frontend, you'll be exposing all of this block's analytics data to the public. This is generally safe, but it might not be in your case.
+     */
+    scope?: (AnalyticsKeyScope | null)} } | boolean | number
+    _dashboardUrl?: boolean | number
+    _id?: boolean | number
+    _idPath?: boolean | number
+    _meta?: ListMetaGenqlSelection
+    /** The key used to search from the frontend. */
+    _searchKey?: boolean | number
+    _slug?: boolean | number
+    _slugPath?: boolean | number
+    _sys?: BlockDocumentSysGenqlSelection
+    _title?: boolean | number
+    /** Returns the first item in the list, or null if the list is empty. Useful when you expect only one result. */
+    item?: TestimonialsItemGenqlSelection
+    /** Returns the list of items after filtering and paginating according to the arguments sent by the client. */
+    items?: TestimonialsItemGenqlSelection
+    __typename?: boolean | number
+    __fragmentOn?: "testimonialsItem_AsList"
 }
 
 export interface FragmentsMap {
@@ -1762,6 +1934,14 @@ export interface FragmentsMap {
     root: Submissions,
     selection: SubmissionsGenqlSelection,
 }
+  Testimonials: {
+    root: Testimonials,
+    selection: TestimonialsGenqlSelection,
+}
+  TestimonialsItem: {
+    root: TestimonialsItem,
+    selection: TestimonialsItemGenqlSelection,
+}
   TransactionStatus: {
     root: TransactionStatus,
     selection: TransactionStatusGenqlSelection,
@@ -1813,5 +1993,9 @@ export interface FragmentsMap {
   sidebarTreeComponent_AsList: {
     root: sidebarTreeComponent_AsList,
     selection: sidebarTreeComponent_AsListGenqlSelection,
+}
+  testimonialsItem_AsList: {
+    root: testimonialsItem_AsList,
+    selection: testimonialsItem_AsListGenqlSelection,
 }
 }

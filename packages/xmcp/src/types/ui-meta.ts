@@ -6,11 +6,28 @@ export interface UIMetadata {
   resourceUri?: string;
 
   /**
+   * Visibility hint for how prominently hosts should surface the widget entry point.
+   */
+  visibility?: Array<"model" | "app">;
+
+  /**
    * Content Security Policy configuration for widget resources.
    */
   csp?: {
     connectDomains?: string[];
     resourceDomains?: string[];
+    frameDomains?: string[];
+    baseUriDomains?: string[];
+  };
+
+  /**
+   * Browser permission hints requested by the widget iframe.
+   */
+  permissions?: {
+    camera?: Record<string, never>;
+    microphone?: Record<string, never>;
+    geolocation?: Record<string, never>;
+    clipboardWrite?: Record<string, never>;
   };
 
   /**
@@ -23,4 +40,3 @@ export interface UIMetadata {
    */
   prefersBorder?: boolean;
 }
-

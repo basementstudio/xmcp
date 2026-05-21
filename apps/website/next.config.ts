@@ -43,6 +43,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      { source: "/docs/:slug*.md", destination: "/llms.mdx/:slug*" },
+      { source: "/docs/:slug*.mdx", destination: "/llms.mdx/:slug*" },
+      { source: "/docs.md", destination: "/llms.txt" },
+      { source: "/docs.mdx", destination: "/llms.txt" },
+    ];
+  },
 };
 
 export default withMDX(nextConfig);

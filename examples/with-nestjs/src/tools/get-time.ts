@@ -32,12 +32,5 @@ export default async function getTime({
     timeString = now.toLocaleString();
   }
 
-  return {
-    content: [
-      {
-        type: "text",
-        text: `Current time${timezone ? ` in ${timezone}` : ""}: ${timeString}`,
-      },
-    ],
-  };
+  return `Current time${timezone ? ` in ${timezone}` : ""}: ${timeString}`;
 }

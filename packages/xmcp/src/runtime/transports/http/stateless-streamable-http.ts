@@ -30,6 +30,7 @@ import {
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 // Global type declarations for tool name context
 declare global {
@@ -187,7 +188,7 @@ export class StatelessStreamableHTTPTransport {
       res.status(200).json({
         status: "ok",
         transport: "streamable-http",
-        mode: "session",
+        mode: "stateless",
       });
     });
 
@@ -282,6 +283,9 @@ export class StatelessStreamableHTTPTransport {
     res: Response
   ): Promise<void> {
     try {
+      const requestClientInfo = extractClientInfoFromMessages(req.body);
+      setHttpRequestContext({ clientInfo: requestClientInfo });
+
       const sessionId = this.getSessionId(req);
       let lifecycle = sessionId ? this.sessions.get(sessionId) : undefined;
       let ephemeralLifecycle = false;

@@ -80,6 +80,22 @@ describe("splitUIMetaNested", () => {
         );
       }
     });
+
+    it("should split visibility to toolMeta", () => {
+      const meta = {
+        ui: {
+          visibility: ["model", "app"],
+        },
+      };
+      const result = splitUIMetaNested(meta);
+
+      assert.deepStrictEqual(result.toolMeta, {
+        ui: {
+          visibility: ["model", "app"],
+        },
+      });
+      assert.deepStrictEqual(result.resourceMeta, {});
+    });
   });
 
   describe("Resource Metadata Keys (CSP and Display)", () => {
@@ -121,6 +137,8 @@ describe("splitUIMetaNested", () => {
           csp: {
             connectDomains: ["https://api.weather.com"],
             resourceDomains: ["https://cdn.jsdelivr.net"],
+            frameDomains: ["https://widgets.example.com"],
+            baseUriDomains: ["https://assets.example.com"],
           },
         },
       };
@@ -132,6 +150,30 @@ describe("splitUIMetaNested", () => {
           csp: {
             connectDomains: ["https://api.weather.com"],
             resourceDomains: ["https://cdn.jsdelivr.net"],
+            frameDomains: ["https://widgets.example.com"],
+            baseUriDomains: ["https://assets.example.com"],
+          },
+        },
+      });
+    });
+
+    it("should split permissions to resourceMeta", () => {
+      const meta = {
+        ui: {
+          permissions: {
+            camera: {},
+            microphone: {},
+          },
+        },
+      };
+      const result = splitUIMetaNested(meta);
+
+      assert.deepStrictEqual(result.toolMeta, {});
+      assert.deepStrictEqual(result.resourceMeta, {
+        ui: {
+          permissions: {
+            camera: {},
+            microphone: {},
           },
         },
       });

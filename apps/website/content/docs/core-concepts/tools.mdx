@@ -37,11 +37,7 @@ export const metadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  const result = `Hello, ${name}!`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}!`;
 }
 ```
 
@@ -258,6 +254,16 @@ export default async function calculate({
 
 Tool handlers also receive an `extra` argument. Use `extra.elicit()` when you want the client to collect a small piece of user input before the tool continues.
 
+When the client sends an MCP `initialize` request, `extra.clientInfo` is available with protocol-level client identity (`name`, `version`, and optional fields like `title`). In stdio, xmcp keeps that identity after initialization for the lifetime of the connection.
+
+HTTP transports are strictly stateless. Tool calls only receive `extra.clientInfo` when the current request includes client identity. For post-initialize tool calls, repeat the identity with request headers:
+
+```http
+x-mcp-client-name: cursor
+x-mcp-client-version: 0.50.1
+x-mcp-client-title: Cursor
+```
+
 ```typescript title="src/tools/preview-elicitation.ts"
 import { type ToolExtraArguments, type ToolMetadata } from "xmcp";
 
@@ -293,9 +299,7 @@ export default async function previewElicitation(
     },
   });
 
-  return {
-    content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-  };
+  return JSON.stringify(result, null, 2);
 }
 ```
 
@@ -539,3 +543,41 @@ If the file exists but does not export a default handler, startup will log:
   exports. Invalid implementations and real import/syntax errors still surface
   as normal runtime errors.
 </Callout>
+
+## CLI Scaffolding
+
+You can use the CLI to scaffold tools, resources, and prompts.
+
+### Create a tool
+
+```bash
+xmcp create tool my-tool
+```
+
+### Create a resource
+
+```bash
+xmcp create resource my-resource
+```
+
+### Create a prompt
+
+```bash
+xmcp create prompt my-prompt
+```
+
+### Output
+
+Each command creates a starter file in the default directory for that primitive:
+
+- `xmcp create tool my-tool` → `src/tools/my-tool.ts`
+- `xmcp create resource my-resource` → `src/resources/my-resource.ts`
+- `xmcp create prompt my-prompt` → `src/prompts/my-prompt.ts`
+
+The generated file already includes the basic exports you need to continue:
+
+- tools: `schema`, `metadata`, and a default function
+- resources: `metadata` and a default function
+- prompts: `schema`, `metadata`, and a default function
+
+So instead of starting from an empty file, you get a ready-to-edit template with placeholder descriptions and example return values.

@@ -23,9 +23,5 @@ export const metadata: ToolMetadata = {
 export default async function greet({ name }: InferSchema<typeof schema>) {
   const session = await getBetterAuthSession();
 
-  const result = `Hello, ${name}! Your user id is ${session.userId}`;
-
-  return {
-    content: [{ type: "text", text: result }],
-  };
+  return `Hello, ${name}! Your user id is ${session.userId}`;
 }

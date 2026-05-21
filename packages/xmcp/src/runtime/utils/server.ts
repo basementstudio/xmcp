@@ -52,7 +52,7 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
-export const INJECTED_CONFIG = SERVER_INFO as Implementation;
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -93,7 +93,8 @@ export async function loadResources() {
 }
 
 export async function createServer() {
-  const server = new McpServer(INJECTED_CONFIG);
+  const { instructions, ...serverInfo } = INJECTED_CONFIG;
+  const server = new McpServer(serverInfo, { instructions });
   const toolModulesPromise = loadTools();
   const promptModulesPromise = loadPrompts();
   const resourceModulesPromise = loadResources();

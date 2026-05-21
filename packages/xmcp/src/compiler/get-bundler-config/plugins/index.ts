@@ -6,6 +6,7 @@ import { XmcpConfigOutputSchema } from "@/compiler/config";
 import { getXmcpConfig } from "@/compiler/compiler-context";
 import {
   expressTypeDefinition,
+  fastifyTypeDefinition,
   nestJsTypeDefinition,
   nextJsTypeDefinition,
 } from "./types";
@@ -71,6 +72,8 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-nextjs.js");
     } else if (xmcpConfig.experimental?.adapter === "nestjs") {
       neededFiles.push("adapter-nestjs.js");
+    } else if (xmcpConfig.experimental?.adapter === "fastify") {
+      neededFiles.push("adapter-fastify.js");
     } else {
       neededFiles.push("http.js");
     }
@@ -118,12 +121,14 @@ export class CreateTypeDefinitionPlugin {
         // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
         if (xmcpConfig.experimental?.adapter) {
           let typeDefinitionContent = "";
-          if (xmcpConfig.experimental?.adapter == "nextjs") {
+          if (xmcpConfig.experimental?.adapter === "nextjs") {
             typeDefinitionContent = nextJsTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter == "express") {
+          } else if (xmcpConfig.experimental?.adapter === "express") {
             typeDefinitionContent = expressTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter == "nestjs") {
+          } else if (xmcpConfig.experimental?.adapter === "nestjs") {
             typeDefinitionContent = nestJsTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "fastify") {
+            typeDefinitionContent = fastifyTypeDefinition;
           }
           fs.writeFileSync(
             path.join(adapterOutputPath, "index.d.ts"),

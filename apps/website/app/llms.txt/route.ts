@@ -4,7 +4,13 @@ export const revalidate = false;
 
 export async function GET() {
   const scanned: string[] = [];
-  scanned.push("# Docs");
+  scanned.push("# xmcp");
+  scanned.push(
+    "> xmcp is a framework for building and shipping MCP servers with TypeScript. " +
+      "Designed with DX in mind, it simplifies setup and removes friction in just one command — " +
+      "making it easy to build & deploy AI tools on top of the Model Context Protocol ecosystem."
+  );
+  scanned.push("## Docs");
   const map = new Map<string, string[]>();
 
   for (const page of source.getPages()) {

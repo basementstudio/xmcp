@@ -30,6 +30,19 @@ const templateConfigBaseSchema = z.object({
     )
     .optional(),
   /**
+   * Instructions describing how to use the server and its features.
+   *
+   * This is sent in the MCP `initialize` response and can be used by clients
+   * to improve the LLM's understanding of available tools, resources, etc.
+   *
+   * Instructions should focus on cross-tool relationships, workflow patterns,
+   * and constraints, but should not duplicate information already in tool descriptions.
+   *
+   * @example
+   * instructions: "Use tool-a before tool-b. Always check resources first."
+   */
+  instructions: z.string().optional(),
+  /**
    * Custom home page content for the `/` endpoint.
    *
    * Can be either:

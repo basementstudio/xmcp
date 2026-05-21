@@ -32,7 +32,5 @@ export default async function previewElicitation(
     },
   });
 
-  return {
-    content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-  };
+  return JSON.stringify(result, null, 2);
 }

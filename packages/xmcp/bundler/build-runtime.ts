@@ -19,7 +19,7 @@ interface RuntimeRoot {
   path: string;
 }
 
-// Node.js runtime roots (express, nextjs adapters + transports)
+// Node.js runtime roots (adapters + transports)
 const runtimeRoots: RuntimeRoot[] = [
   { name: "auth", path: "auth" },
   { name: "headers", path: "headers" },
@@ -28,6 +28,7 @@ const runtimeRoots: RuntimeRoot[] = [
   { name: "adapter-express", path: "adapters/express" },
   { name: "adapter-nextjs", path: "adapters/nextjs" },
   { name: "adapter-nestjs", path: "adapters/nestjs" },
+  { name: "adapter-fastify", path: "adapters/fastify" },
 ];
 
 const entry: EntryObject = {};
@@ -35,7 +36,7 @@ for (const root of runtimeRoots) {
   entry[root.name] = path.join(srcPath, "runtime", root.path);
 }
 
-// Node.js config (express, nextjs, http, stdio)
+// Node.js runtime bundle config
 const config: RspackOptions = {
   name: "runtime-node",
   entry,
@@ -46,6 +47,7 @@ const config: RspackOptions = {
   externals: {
     "@rspack/core": "@rspack/core",
     "@nestjs/common": "@nestjs/common",
+    fastify: "fastify",
   },
   output: {
     filename: "[name].js",

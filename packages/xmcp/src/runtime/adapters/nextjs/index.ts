@@ -10,7 +10,12 @@ import {
 } from "./handler/server-lifecycle";
 import { createIncomingMessage } from "./handler/request-converter";
 import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import {
+  httpRequestContextProvider,
+  setHttpRequestContext,
+} from "@/runtime/contexts/http-request-context";
+import { randomUUID } from "node:crypto";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 const BODY_SIZE_LIMIT = "10mb";
 
@@ -24,13 +29,15 @@ export async function xmcpHandler(request: Request): Promise<Response> {
     return createMethodNotAllowedResponse();
   }
 
+  const id = randomUUID();
   const requestHeaders = Object.fromEntries(request.headers.entries());
 
   return httpRequestContextProvider(
     {
-      id: crypto.randomUUID(),
+      id,
       headers: requestHeaders,
       auth: request.auth,
+      clientInfo: undefined,
     },
     () =>
       nodeToWebAdapter(request.signal, async (res: ServerResponse) => {
@@ -43,6 +50,8 @@ export async function xmcpHandler(request: Request): Promise<Response> {
 
           // Parse request body
           const bodyContent = await request.json();
+          const clientInfo = extractClientInfoFromMessages(bodyContent);
+          setHttpRequestContext({ clientInfo });
 
           // Convert Web Request to Node.js IncomingMessage
           const incomingRequest = createIncomingMessage({

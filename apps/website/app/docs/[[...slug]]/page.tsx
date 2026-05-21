@@ -26,11 +26,16 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   return (
     <DocsPage
       toc={page.data.toc}
-      pageActions={<PageActions markdownUrl={`${page.url}.mdx`} />}
+      pageActions={<PageActions markdownUrl={`${page.url}.md`} />}
     >
       <DocsTitle>{displayTitle}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody className="border-t border-white/20 pt-4">
+        <blockquote className="sr-only">
+          For the complete documentation index, see{" "}
+          <a href="/llms.txt">llms.txt</a>. Markdown variants of every page are
+          available by appending <code>.md</code> to the URL.
+        </blockquote>
         <MDX
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths

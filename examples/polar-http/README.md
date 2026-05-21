@@ -44,9 +44,7 @@ export const metadata = {
 
 // Tool implementation
 export default async function add({ a, b }: InferSchema<typeof schema>) {
-  return {
-    content: [{ type: "text", text: String(a + b) }],
-  };
+  return String(a + b);
 }
 ```
 
