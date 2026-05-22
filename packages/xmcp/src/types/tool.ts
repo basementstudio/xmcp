@@ -25,6 +25,11 @@ export interface ToolMetadata {
   description: string;
   /** Optional hints about tool behavior */
   annotations?: ToolAnnotations;
+  /**
+   * Freshness hint: how long, in milliseconds, a client may treat this tool's listing as fresh before re-discovering it.
+   */
+  ttlMs?: number;
+  cacheScope?: string;
   /** Metadata for the tool. */
   _meta?: {
     ui?: UIMetadata;
@@ -43,6 +48,16 @@ type InferCompatibleZodType<T extends CompatibleZodType> =
 export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
 export type ElicitResult = McpElicitResult;
+
+/**
+ * W3C trace-context headers carried on the current
+ * request, when present, so tools can read and forward them to downstream calls.
+ */
+export interface TraceContext {
+  traceparent?: string;
+  tracestate?: string;
+  baggage?: string;
+}
 
 export interface ToolRequestOptions {
   /** Progress notification callback */
@@ -165,6 +180,18 @@ export interface ToolExtraArguments {
 
   /** MCP client metadata from initialize.params.clientInfo, when available */
   clientInfo?: McpClientInfo;
+
+  /** W3C trace-context headers from the current request, when present */
+  traceContext?: TraceContext;
+
+  /** MCP-Protocol-Version header value from the current request, when sent */
+  protocolVersion?: string;
+
+  /** Mcp-Method header value from the current request */
+  mcpMethod?: string;
+
+  /** Mcp-Name header value from the current request */
+  mcpName?: string;
 
   /** Sends a notification that relates to the current request being handled */
   sendNotification: (notification: any) => Promise<void>;

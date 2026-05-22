@@ -1,6 +1,14 @@
 import { z } from "zod/v3";
 import { CLIENT_INFO_HEADER_NAMES } from "@/types/client-info";
 
+// W3C trace-context headers (2026-07-28 spec telemetry). Allowed so browser
+// clients can propagate distributed traces into tool calls.
+const TRACE_CONTEXT_HEADER_NAMES = [
+  "traceparent",
+  "tracestate",
+  "baggage",
+] as const;
+
 // ------------------------------------------------------------
 // Cors config schema
 // ------------------------------------------------------------
@@ -15,7 +23,10 @@ const corsConfigBaseSchema = z.object({
       "Authorization",
       "mcp-session-id",
       "mcp-protocol-version",
+      "mcp-method",
+      "mcp-name",
       ...CLIENT_INFO_HEADER_NAMES,
+      ...TRACE_CONTEXT_HEADER_NAMES,
     ]),
   exposedHeaders: z
     .union([z.string(), z.array(z.string())])
@@ -42,8 +53,13 @@ export const corsConfigSchema = corsConfigBaseSchema
       const headers = new Set(result.allowedHeaders);
       headers.add("mcp-session-id");
       headers.add("mcp-protocol-version");
+      headers.add("mcp-method");
+      headers.add("mcp-name");
       for (const clientInfoHeaderName of CLIENT_INFO_HEADER_NAMES) {
         headers.add(clientInfoHeaderName);
+      }
+      for (const traceHeaderName of TRACE_CONTEXT_HEADER_NAMES) {
+        headers.add(traceHeaderName);
       }
       result.allowedHeaders = Array.from(headers);
     }

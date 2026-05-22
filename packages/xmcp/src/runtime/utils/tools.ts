@@ -31,7 +31,9 @@ export function pathToName(path: string): string {
 }
 
 /** Ensures toolConfig has its own annotations object with a title */
-export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annotations">): void {
+export function ensureAnnotations(
+  toolConfig: Pick<ToolMetadata, "name" | "annotations">
+): void {
   toolConfig.annotations = { ...(toolConfig.annotations ?? {}) };
   if (toolConfig.annotations.title === undefined) {
     toolConfig.annotations.title = toolConfig.name;
@@ -93,6 +95,13 @@ export function addToolsToServer(
       toolConfig._meta = {};
     }
 
+    if (toolConfig.ttlMs !== undefined) {
+      toolConfig._meta.ttlMs = toolConfig.ttlMs;
+    }
+    if (toolConfig.cacheScope !== undefined) {
+      toolConfig._meta.cacheScope = toolConfig.cacheScope;
+    }
+
     const isReact = isReactFile(path);
 
     const uiWidget = hasUIMeta(toolConfig._meta) || isReact;
@@ -120,9 +129,7 @@ export function addToolsToServer(
         resourceSpecificMeta.ui.csp.resourceDomains || [];
 
       if (
-        !resourceSpecificMeta.ui.csp.resourceDomains.includes(
-          "https://esm.sh"
-        )
+        !resourceSpecificMeta.ui.csp.resourceDomains.includes("https://esm.sh")
       ) {
         resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
       }

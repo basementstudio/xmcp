@@ -85,7 +85,8 @@
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "analyze": "cross-env GENERATE_STATS=true pnpm build && pnpm tsx scripts/analyze-rspack-stats.ts",
     "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts",
-    "test:adapters": "node --import tsx --test src/runtime/adapters/fastify/__tests__/*.test.ts"
+    "test:adapters": "node --import tsx --test src/runtime/adapters/fastify/__tests__/*.test.ts",
+    "test:runtime": "node --import tsx --test src/runtime/utils/__tests__/*.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

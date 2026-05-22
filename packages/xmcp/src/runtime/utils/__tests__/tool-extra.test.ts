@@ -200,6 +200,91 @@ test("transformToolHandler leaves clientInfo undefined when request has no clien
   });
 });
 
+test("transformToolHandler forwards trace context and MCP routing headers", async () => {
+  const transformedHandler = transformToolHandler((_args, extra) => {
+    return {
+      structuredContent: {
+        traceparent: extra.traceContext?.traceparent,
+        baggage: extra.traceContext?.baggage,
+        protocolVersion: extra.protocolVersion,
+        mcpMethod: extra.mcpMethod,
+        mcpName: extra.mcpName,
+      },
+    };
+  });
+
+  const result = await new Promise<UserToolResponse>((resolve, reject) => {
+    httpRequestContextProvider(
+      {
+        id: "request-id-trace",
+        headers: {
+          traceparent:
+            "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+          baggage: "userId=42",
+          "mcp-protocol-version": "2026-07-28",
+          "mcp-method": "tools/call",
+          "mcp-name": "search",
+        },
+        clientInfo: undefined,
+      },
+      () => {
+        invokeHandler(transformedHandler, "rpc-trace").then(resolve).catch(reject);
+      }
+    );
+  });
+
+  assert.deepStrictEqual(result, {
+    structuredContent: {
+      traceparent: "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+      baggage: "userId=42",
+      protocolVersion: "2026-07-28",
+      mcpMethod: "tools/call",
+      mcpName: "search",
+    },
+    content: [
+      {
+        type: "text",
+        text: '{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01","baggage":"userId=42","protocolVersion":"2026-07-28","mcpMethod":"tools/call","mcpName":"search"}',
+      },
+    ],
+  });
+});
+
+test("transformToolHandler leaves trace context and routing undefined when absent", async () => {
+  const transformedHandler = transformToolHandler((_args, extra) => {
+    return {
+      structuredContent: {
+        hasTraceContext: extra.traceContext !== undefined,
+        hasMcpName: extra.mcpName !== undefined,
+      },
+    };
+  });
+
+  const result = await new Promise<UserToolResponse>((resolve, reject) => {
+    httpRequestContextProvider(
+      { id: "request-id-no-trace", headers: {}, clientInfo: undefined },
+      () => {
+        invokeHandler(transformedHandler, "rpc-no-trace")
+          .then(resolve)
+          .catch(reject);
+      }
+    );
+  });
+
+  assert.deepStrictEqual(result, {
+    structuredContent: {
+      hasTraceContext: false,
+      hasMcpName: false,
+    },
+    content: [
+      {
+        type: "text",
+        text: '{"hasTraceContext":false,"hasMcpName":false}',
+      },
+    ],
+  });
+});
+
 test("transformToolHandler uses stdio clientInfo context as fallback", async () => {
   const transformedHandler = transformToolHandler((_args, extra) => {
     return {

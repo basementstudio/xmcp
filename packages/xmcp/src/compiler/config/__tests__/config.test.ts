@@ -76,11 +76,16 @@ describe("Config System - Zod Defaults", () => {
         "Authorization",
         "mcp-session-id",
         "mcp-protocol-version",
+        "mcp-method",
+        "mcp-name",
         "x-mcp-client-name",
         "x-mcp-client-version",
         "x-mcp-client-title",
         "x-mcp-client-website-url",
         "x-mcp-client-description",
+        "traceparent",
+        "tracestate",
+        "baggage",
       ]);
       assert.equal(corsConfig.credentials, false);
       assert.equal(corsConfig.maxAge, 86400);
@@ -102,11 +107,16 @@ describe("Config System - Zod Defaults", () => {
         "Authorization",
         "mcp-session-id",
         "mcp-protocol-version",
+        "mcp-method",
+        "mcp-name",
         "x-mcp-client-name",
         "x-mcp-client-version",
         "x-mcp-client-title",
         "x-mcp-client-website-url",
         "x-mcp-client-description",
+        "traceparent",
+        "tracestate",
+        "baggage",
       ]);
     }
   });

@@ -9,6 +9,9 @@ import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
 import { extractClientInfoFromHeaders } from "@/runtime/utils/client-info";
+import { extractTraceContextFromHeaders } from "@/runtime/utils/trace-context";
+import { readMcpRoutingHeaders } from "@/runtime/utils/mcp-protocol";
+import type { TraceContext } from "@/types/tool";
 import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
@@ -77,12 +80,16 @@ function createToolExtraArguments(
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ): ToolExtraArguments {
   let clientInfo = undefined;
+  let traceContext: TraceContext | undefined = undefined;
+  let routing: ReturnType<typeof readMcpRoutingHeaders> = {};
 
   try {
     const httpRequestContext = getHttpRequestContext();
     clientInfo =
       httpRequestContext.clientInfo ??
       extractClientInfoFromHeaders(httpRequestContext.headers);
+    traceContext = extractTraceContextFromHeaders(httpRequestContext.headers);
+    routing = readMcpRoutingHeaders(httpRequestContext.headers);
   } catch {
     // no HTTP request context available (for example, stdio transport)
   }
@@ -98,6 +105,10 @@ function createToolExtraArguments(
   return {
     ...(extra as ToolExtraArguments),
     clientInfo,
+    traceContext,
+    protocolVersion: routing.protocolVersion,
+    mcpMethod: routing.mcpMethod,
+    mcpName: routing.mcpName,
     elicit: (request, options) =>
       elicitFromTool(extra as ToolExtraArguments, request, options),
   };

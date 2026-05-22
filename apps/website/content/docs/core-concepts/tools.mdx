@@ -173,6 +173,27 @@ annotations: {
   about when and how to call your tools, but they don't enforce any behavior.
 </Callout>
 
+### Caching hints
+
+Tools can advertise how fresh their listing is so clients know how long they may
+cache it before re-discovering. Both fields are optional:
+
+```typescript
+export const metadata: ToolMetadata = {
+  name: "search",
+  description: "Search the knowledge base",
+  // How long, in milliseconds, a client may treat this listing as fresh
+  ttlMs: 60_000,
+  // The scope under which the cached entry is valid
+  cacheScope: "global",
+};
+```
+
+<Callout variant="info">
+  `ttlMs` and `cacheScope` are surfaced through the tool's `_meta` so clients can
+  read them.
+</Callout>
+
 ### MCP Apps metadata
 
 <Callout variant="info">
@@ -262,6 +283,17 @@ HTTP transports are strictly stateless. Tool calls only receive `extra.clientInf
 x-mcp-client-name: cursor
 x-mcp-client-version: 0.50.1
 x-mcp-client-title: Cursor
+```
+
+When the request carries W3C trace-context headers (`traceparent`, `tracestate`,
+`baggage`), they are surfaced on `extra.traceContext` so tools can read and
+forward them to downstream calls for distributed tracing:
+
+```typescript
+export default async function search(_: any, extra: ToolExtraArguments) {
+  const traceparent = extra.traceContext?.traceparent;
+  // forward `traceparent` on outbound fetch/db calls to keep the trace linked
+}
 ```
 
 ```typescript title="src/tools/preview-elicitation.ts"

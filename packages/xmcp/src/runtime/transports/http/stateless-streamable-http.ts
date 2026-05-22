@@ -28,6 +28,10 @@ import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
+import {
+  readMcpRoutingHeaders,
+  findMcpNameRoutingError,
+} from "@/runtime/utils/mcp-protocol";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
@@ -226,16 +230,26 @@ export class StatelessStreamableHTTPTransport {
     this.app.use(this.endpoint, async (req: Request, res: Response) => {
       this.log(`${req.method} ${req.path}`);
 
-      this.extractAndStoreToolName(req);
+      const toolNames = extractToolNamesFromRequest(req);
+      this.storeToolName(req, toolNames);
+
+      const { mcpName } = readMcpRoutingHeaders(req.headers);
+      const routingError = findMcpNameRoutingError(mcpName, toolNames);
+      if (routingError) {
+        res.status(400).json({
+          jsonrpc: "2.0",
+          error: { code: -32602, message: routingError },
+          id: null,
+        });
+        return;
+      }
 
       await this.handleStatelessRequest(req, res);
     });
   }
 
-  private extractAndStoreToolName(req: Request): void {
+  private storeToolName(req: Request, toolNames: string[]): void {
     try {
-      const toolNames = extractToolNamesFromRequest(req);
-
       if (toolNames.length > 0) {
         storeToolNamesOnRequestHeaders(req, toolNames);
         global.__XMCP_CURRENT_TOOL_NAME = toolNames[0];
