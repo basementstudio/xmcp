@@ -1,0 +1,224 @@
+---
+title: "Scalekit"
+metadataTitle: "Usage with Scalekit | xmcp Documentation"
+publishedAt: "2026-06-28"
+summary: "Add secure authentication to your MCP server using Scalekit"
+description: "The Scalekit plugin provides OAuth 2.1 authentication for your MCP server using Scalekit as the authorization server."
+---
+
+## Installation
+
+Install the Scalekit plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/scalekit",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/scalekit",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/scalekit",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/scalekit",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Scalekit Setup
+
+Before getting started, configure your Scalekit environment:
+
+1. Go to your [Scalekit Dashboard](https://app.scalekit.com).
+2. Navigate to **MCP Auth** and register a new MCP server resource.
+3. Save your **Environment URL**, **Client ID**, and **Client Secret** from the dashboard.
+
+Scalekit automatically enables **Dynamic Client Registration (DCR)** and **Client ID Metadata Documents (CIMD)** for MCP clients — no extra configuration needed.
+
+### Environment Variables
+
+Create a `.env` file in the root of your project and configure the following environment variables:
+
+```bash
+SCALEKIT_ENVIRONMENT_URL=https://your-env.scalekit.com
+SCALEKIT_CLIENT_ID=skc_...
+SCALEKIT_CLIENT_SECRET=skcs_...
+
+BASE_URL=http://127.0.0.1:3001
+```
+
+<Callout variant="info">
+  For production, replace `BASE_URL` with your deployed server URL.
+</Callout>
+
+## Set up the Provider
+
+Create a `middleware.ts` and import the provider from the package:
+
+```typescript title="src/middleware.ts"
+import { scalekitProvider } from "@xmcp-dev/scalekit";
+
+export default scalekitProvider({
+  environmentUrl: process.env.SCALEKIT_ENVIRONMENT_URL!,
+  clientId: process.env.SCALEKIT_CLIENT_ID!,
+  clientSecret: process.env.SCALEKIT_CLIENT_SECRET!,
+  baseURL: process.env.BASE_URL!,
+});
+```
+
+### Configuration Options
+
+- **`environmentUrl`**: Your Scalekit environment URL from the dashboard.
+- **`clientId`**: Scalekit client ID for OAuth.
+- **`clientSecret`**: Scalekit client secret for SDK access.
+- **`baseURL`**: Base URL of your MCP server.
+- **`resourceId`**: (Optional) Scalekit resource ID for resource-specific OAuth metadata.
+- **`scopes`**: (Optional) Array of scopes to advertise in resource metadata.
+- **`docsURL`**: (Optional) URL for your MCP server documentation.
+
+## Get a user session
+
+Access the authenticated user in your xmcp tools using `getSession`.
+
+### Example: Greet the user with their Scalekit identity
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/scalekit";
+
+export const schema = {
+  name: z.string().optional().describe("The name of the user to greet"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet the user with their Scalekit identity",
+};
+
+export default function greet({ name }: InferSchema<typeof schema>): string {
+  const session = getSession();
+  const displayName = name ?? session.userId;
+  return `Hello, ${displayName}! Your user ID is ${session.userId}`;
+}
+```
+
+## Get user info
+
+Access the full session including organization context.
+
+### Example: Return session details
+
+```typescript title="src/tools/whoami.ts"
+import type { ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/scalekit";
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Returns the authenticated user's session information",
+};
+
+export default function whoami(): string {
+  const session = getSession();
+  return JSON.stringify(
+    {
+      userId: session.userId,
+      organizationId: session.organizationId,
+      scopes: session.scopes,
+      expiresAt: session.expiresAt.toISOString(),
+    },
+    null,
+    2
+  );
+}
+```
+
+The `session` object contains token data and user claims:
+
+- `session.userId`: User ID (subject claim).
+- `session.scopes`: Array of granted scopes.
+- `session.organizationId`: Organization ID, if present.
+- `session.expiresAt`: Token expiration as a `Date`.
+- `session.issuedAt`: Token issue time as a `Date`.
+- `session.claims`: Raw JWT claims for advanced use cases.
+
+## Access the client
+
+The `getClient()` function gives you access to the full [Scalekit Node SDK](https://github.com/scalekit-inc/scalekit-sdk-node), allowing you to leverage all Scalekit features in your MCP tools.
+
+### Example: List organization connections
+
+```typescript title="src/tools/list-connections.ts"
+import { type ToolMetadata } from "xmcp";
+import { getSession, getClient } from "@xmcp-dev/scalekit";
+
+export const metadata: ToolMetadata = {
+  name: "list-connections",
+  description: "List SSO connections for the user's organization",
+};
+
+export default async function listConnections(): Promise<string> {
+  const session = getSession();
+  const client = getClient();
+
+  if (!session.organizationId) {
+    return "No organization associated with this session.";
+  }
+
+  const connections = await client.connection.listConnections(
+    session.organizationId
+  );
+
+  if (connections.connections.length === 0) {
+    return "No SSO connections configured.";
+  }
+
+  return JSON.stringify(connections.connections, null, 2);
+}
+```
+
+## Troubleshooting
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens.
+- If errors persist, the client may have a bug or the refresh token expired.
+- Users can disconnect and reconnect to get fresh tokens.
+
+### Session Not Initialized
+
+If you see `Session not initialized` errors:
+
+- Ensure `getSession` is called within a tool or handler that runs through the middleware pipeline.
+- Verify the `scalekitProvider` middleware is properly configured in your `middleware.ts`.
+- Make sure the route is under the `/mcp` path.
+- Check that the request includes a valid bearer token.
+
+### JWKS Resolution Failures
+
+If token verification fails with network errors:
+
+- Verify `SCALEKIT_ENVIRONMENT_URL` is correct and reachable.
+- The plugin auto-discovers JWKS keys from the OIDC configuration endpoint.
+- Check that your server can reach `{environmentUrl}/.well-known/openid-configuration`.
+
+### Invalid Token Errors
+
+If tokens are consistently invalid:
+
+- Verify `SCALEKIT_ENVIRONMENT_URL` matches your Scalekit environment.
+- Check that the MCP server URL in your Scalekit dashboard matches `BASE_URL`.
+- Ensure the token was issued for the correct resource.
