@@ -15,8 +15,8 @@ pnpm add @xmcp-dev/scalekit
 Before using this plugin, configure your Scalekit environment:
 
 1. Go to your [Scalekit Dashboard](https://app.scalekit.com).
-2. Navigate to **MCP Auth** and register a new MCP server resource.
-3. Save your **Environment URL**, **Client ID**, and **Client Secret**.
+2. Navigate to **Auth for SaaS** → **MCP Auth** and [register a new MCP server resource](https://docs.scalekit.com/authenticate/mcp/quickstart/).
+3. Go to **Settings** → **API Credentials** and save your **Environment URL**, **Client ID**, and **Client Secret**.
 
 Scalekit automatically enables **Dynamic Client Registration (DCR)** and **Client ID Metadata Documents (CIMD)** for MCP clients.
 

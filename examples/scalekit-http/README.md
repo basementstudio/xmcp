@@ -7,9 +7,8 @@ This example demonstrates how to create an authenticated MCP server using Scalek
 ### 1. Scalekit Dashboard Setup
 
 1. Go to your [Scalekit Dashboard](https://app.scalekit.com).
-2. Navigate to **MCP Auth** and register a new MCP server resource.
-3. Save your environment URL, client ID, and client secret.
-4. Scalekit automatically enables Dynamic Client Registration (DCR) and Client ID Metadata Documents (CIMD) for MCP clients.
+2. Navigate to **Auth for SaaS** → **MCP Auth** and [register a new MCP server resource](https://docs.scalekit.com/authenticate/mcp/quickstart/).
+3. Go to **Settings** → **API Credentials** and save your environment URL, client ID, and client secret.
 
 ### 2. Environment Variables
 
