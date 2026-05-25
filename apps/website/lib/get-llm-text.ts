@@ -5,6 +5,7 @@ const OAUTH_PLUGINS_MD = [
   "- [Auth0](/docs/integrations/auth0)",
   "- [Better Auth](/docs/integrations/better-auth)",
   "- [Clerk](/docs/integrations/clerk)",
+  "- [Scalekit](/docs/integrations/scalekit)",
   "- [WorkOS](/docs/integrations/workos)",
 ].join("\n");
 
