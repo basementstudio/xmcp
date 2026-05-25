@@ -5,7 +5,7 @@ import {
   NextFunction,
   type RequestHandler,
 } from "express";
-import { Middleware } from "xmcp";
+import type { Middleware } from "xmcp";
 import { contextProviderSession, contextProviderClient } from "./context.js";
 import type {
   Config,
