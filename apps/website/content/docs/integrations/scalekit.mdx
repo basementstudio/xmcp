@@ -157,18 +157,18 @@ The `session` object contains token data and user claims:
 
 The `getClient()` function gives you access to the full [Scalekit Node SDK](https://github.com/scalekit-inc/scalekit-sdk-node), allowing you to leverage all Scalekit features in your MCP tools.
 
-### Example: List organization connections
+### Example: Get organization details
 
-```typescript title="src/tools/list-connections.ts"
+```typescript title="src/tools/get-org.ts"
 import { type ToolMetadata } from "xmcp";
 import { getSession, getClient } from "@xmcp-dev/scalekit";
 
 export const metadata: ToolMetadata = {
-  name: "list-connections",
-  description: "List SSO connections for the user's organization",
+  name: "get-org",
+  description: "Get the user's organization details",
 };
 
-export default async function listConnections(): Promise<string> {
+export default async function getOrg(): Promise<string> {
   const session = getSession();
   const client = getClient();
 
@@ -176,15 +176,11 @@ export default async function listConnections(): Promise<string> {
     return "No organization associated with this session.";
   }
 
-  const connections = await client.connection.listConnections(
+  const { organization } = await client.organization.getOrganization(
     session.organizationId
   );
 
-  if (connections.connections.length === 0) {
-    return "No SSO connections configured.";
-  }
-
-  return JSON.stringify(connections.connections, null, 2);
+  return JSON.stringify(organization, null, 2);
 }
 ```
 

@@ -101,7 +101,7 @@ Returns the initialized [Scalekit Node SDK](https://github.com/scalekit-inc/scal
 
 The `getClient()` function gives you access to the full Scalekit Node SDK, allowing you to leverage all Scalekit features in your MCP tools.
 
-### SSO Connections
+### Organization Details
 
 ```typescript
 import { getSession, getClient } from "@xmcp-dev/scalekit";
@@ -114,12 +114,12 @@ export default async function myTool() {
     return "No organization associated with this session.";
   }
 
-  // List SSO connections for the organization
-  const connections = await client.connection.listConnections(
+  // Get organization details
+  const { organization } = await client.organization.getOrganization(
     session.organizationId
   );
 
-  return JSON.stringify(connections.connections, null, 2);
+  return JSON.stringify(organization, null, 2);
 }
 ```
 
