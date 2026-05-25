@@ -129,6 +129,10 @@ export default async function myTool() {
 - MCP clients automatically refresh tokens using refresh tokens
 - If you see "token_expired" errors, the client should handle refresh automatically
 
+## Example
+
+See [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) for a complete working project.
+
 ## Documentation
 
 Full documentation: [xmcp.dev/docs/integrations/scalekit](https://xmcp.dev/docs/integrations/scalekit)
