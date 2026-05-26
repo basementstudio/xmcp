@@ -39,16 +39,20 @@
     "lint:all": "turbo run lint",
     "ci": "pnpm run build && pnpm run lint && pnpm run test:ci",
     "ci:build-only": "pnpm run build && pnpm run lint && pnpm run test:build",
+    "changeset": "changeset",
     "test:ci": "pnpm run test:build && pnpm run test:cli",
     "test:ci:skip-cli": "pnpm run test:build && pnpm run test:cli --skip",
     "test:build": "scripts/test-build.sh",
     "test:cli": "scripts/test-cli.sh",
     "test:cli:skip": "scripts/test-cli.sh --skip",
+    "version-packages": "changeset version",
+    "publish-packages": "changeset publish",
     "clean": "turbo run clean && rm -rf node_modules/.cache",
     "reset": "rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "eslint-config-custom": "workspace:^",
     "prettier": "^3.7.4",
     "turbo": "^2.9.14"

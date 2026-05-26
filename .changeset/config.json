@@ -1,0 +1,29 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "changelog": [
+    "@changesets/cli/changelog",
+    {
+      "repo": "basementstudio/xmcp"
+    }
+  ],
+  "commit": false,
+  "fixed": [["xmcp", "create-xmcp-app", "init-xmcp"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@xmcp-dev/auth0",
+    "@xmcp-dev/better-auth",
+    "@xmcp-dev/clerk",
+    "@xmcp-dev/cli",
+    "@xmcp-dev/commet",
+    "@xmcp-dev/polar",
+    "@xmcp-dev/workos",
+    "@xmcp-dev/x402"
+  ],
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  }
+}

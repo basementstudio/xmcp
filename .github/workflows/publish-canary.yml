@@ -1,7 +1,20 @@
 name: Publish Canary Release to NPM
 
 on:
+  push:
+    branches:
+      - canary
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run canary publish flow with npm publish --dry-run"
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: publish-canary
+  cancel-in-progress: false
 
 jobs:
   publish-canary:
@@ -29,6 +42,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@^11.5.1
 
       - name: Generate canary version
         id: version
@@ -78,7 +94,7 @@ jobs:
           # Generate canary version with incremental number per stable version
           CANARY_VERSION="${BASE_VERSION}-canary.${CANARY_NUMBER}"
 
-          echo "version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$CANARY_VERSION" >> "$GITHUB_OUTPUT"
           echo "Publishing canary version: $CANARY_VERSION"
 
       - name: Update package versions
@@ -135,33 +151,63 @@ jobs:
       - name: Publish xmcp package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/xmcp
-          echo "Publishing xmcp package with canary tag"
-          npm publish --access public --tag canary
-          echo "✅ Successfully published xmcp@${{ steps.version.outputs.version }} with tag canary"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.dry_run }}" != "true" ]; then
+              echo "Manual canary publishing is disabled. Use dry_run=true."
+              exit 1
+            fi
+            echo "Dry-run publishing xmcp package with canary tag"
+            npm publish --access public --tag canary --dry-run
+          else
+            echo "Publishing xmcp package with canary tag"
+            npm publish --access public --tag canary
+            echo "✅ Successfully published xmcp@${{ steps.version.outputs.version }} with tag canary"
+          fi
 
       - name: Publish create-xmcp-app package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/create-xmcp-app
-          echo "Publishing create-xmcp-app package with canary tag"
-          npm publish --access public --tag canary
-          echo "✅ Successfully published create-xmcp-app@${{ steps.version.outputs.version }} with tag canary"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.dry_run }}" != "true" ]; then
+              echo "Manual canary publishing is disabled. Use dry_run=true."
+              exit 1
+            fi
+            echo "Dry-run publishing create-xmcp-app package with canary tag"
+            npm publish --access public --tag canary --dry-run
+          else
+            echo "Publishing create-xmcp-app package with canary tag"
+            npm publish --access public --tag canary
+            echo "✅ Successfully published create-xmcp-app@${{ steps.version.outputs.version }} with tag canary"
+          fi
 
       - name: Publish init-xmcp package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
         run: |
           cd packages/init-xmcp
-          echo "Publishing init-xmcp package with canary tag"
-          npm publish --access public --tag canary
-          echo "✅ Successfully published init-xmcp@${{ steps.version.outputs.version }} with tag canary"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.dry_run }}" != "true" ]; then
+              echo "Manual canary publishing is disabled. Use dry_run=true."
+              exit 1
+            fi
+            echo "Dry-run publishing init-xmcp package with canary tag"
+            npm publish --access public --tag canary --dry-run
+          else
+            echo "Publishing init-xmcp package with canary tag"
+            npm publish --access public --tag canary
+            echo "✅ Successfully published init-xmcp@${{ steps.version.outputs.version }} with tag canary"
+          fi
 
       - name: Create publish summary
         run: |
-          cat >> $GITHUB_STEP_SUMMARY << EOF
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
           # Canary Release Published
 
           **Canary version \`${{ steps.version.outputs.version }}\`** published:
