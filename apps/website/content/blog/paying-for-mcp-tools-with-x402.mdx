@@ -1,0 +1,63 @@
+---
+title: "When your agent has to pay"
+description: "Charging for a tool is the easy half. The real shift is software that pays for tools on its own."
+summary: "Charging for a tool is the easy half. The real shift is software that pays for tools on its own."
+category: "engineering"
+date: "2026-05-27"
+featured: false
+previewImage: "/textures/text2.png"
+authors:
+  - 0xkoller
+---
+
+Most of the x402 conversation is about getting paid. Wrap a tool, set a price, collect USDC per call. We [wrote about that side](/blog/x402-integration), and it's genuinely easy to do.
+
+But a payment has two ends. For every tool that charges, something has to pay and *that* end is where the interesting shift is happening. Charging is a server setting. Paying, with no human in the loop, is a different kind of software than we've been building.
+
+## Your server is already a buyer
+
+If you've used xmcp to [connect to external MCPs](/blog/cli-typed-clients), you've already shipped a consumer. A `clients.ts` entry turns a remote server's tools into typed functions your own tools can call:
+
+```typescript title="src/clients.ts"
+import { ClientConnections } from "xmcp";
+
+export const clients: ClientConnections = {
+  context: {
+    url: "https://mcp.context7.com/mcp",
+    headers: [{ name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" }],
+  },
+};
+```
+
+Today those external tools are free, or they're gated behind an API key you went and provisioned by hand. That works because *you* were there to sign up. The moment the thing doing the calling is an agent — discovering tools at runtime, with no operator standing by — the hand-provisioned key stops being an option.
+
+## Why paying is the hard half
+
+Charging is config. Paying autonomously asks the buyer to do four things a credit card flow never had to:
+
+- **Learn the price at call time.** The buyer didn't know the cost in advance. The `402` response hands it back, machine-readable.
+- **Decide if it's worth it.** Against a budget, not a saved card. Some calls are worth a cent; some aren't.
+- **Produce payment in milliseconds.** A signed stablecoin authorization, not a checkout page.
+- **Do it without anyone clicking "approve."** No human in the loop, by design.
+
+Cards, invoices, and seat licenses can't do any of that. They assume an account that exists before the transaction and a person who set it up. x402 inverts it: the price arrives *with* the request, and the buyer answers with a signature on the spot. That's the part that makes "agentic payment" more than a slogan — it's the buyer behaving like a buyer, autonomously.
+
+## What it unlocks: composition with a price tag
+
+Once paying is cheap and automatic, tool use stops being a closed set you wired up ahead of time. An agent hits a capability it doesn't have, finds a tool that does, checks the price, pays, and keeps going. The unit of trust becomes a budget instead of a pile of credentials. One agent can pay another for a single call and never establish a relationship beyond that.
+
+This isn't far-off. A payment standard for agents is consolidating in the open — the x402 Foundation launched in early 2026 with Google, Microsoft, AWS, Visa, Mastercard, Stripe, Coinbase, and Circle behind it, and the protocol is being folded into Google's AP2 effort. The rails for the buyer side are being poured now.
+
+## Both halves, one loop
+
+<Callout variant="info">
+  Seller side — charging for your tools with the `paid()` wrapper — lives in
+  [Pay-per-use MCP tools with x402](/blog/x402-integration). This post is the buyer side.
+  Together they're the full loop.
+</Callout>
+
+The way to think about an xmcp server is that it sits on both ends. Its own tools can charge via `paid()`. Its `clients.ts` connections consume other servers' tools — and when those start costing money, x402 is how it settles, per call, without a human or an API key in sight.
+
+That's the loop that makes a machine economy actually run: servers that can charge, and buyers that can pay, talking the same protocol. The seller side is shipped. The buyer side is where agentic payment lives.
+
+If you're building agents that need to pay for what they use, come tell us what you're working on in [Discord](https://discord.gg/d9a7JBBxV9).
