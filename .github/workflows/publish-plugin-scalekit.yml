@@ -1,0 +1,38 @@
+name: Publish @xmcp-dev/scalekit
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --filter @xmcp-dev/scalekit --frozen-lockfile
+
+      - name: Build @xmcp-dev/scalekit
+        run: pnpm --filter @xmcp-dev/scalekit build
+
+      - name: Publish @xmcp-dev/scalekit
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/plugins/scalekit
+          pnpm publish --access public --no-git-checks
