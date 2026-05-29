@@ -2,8 +2,9 @@ import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
 import fs from "fs-extra";
 import path from "path";
 import { Compiler } from "@rspack/core";
+import type { StatsModule } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/compiler/config";
-import { getXmcpConfig } from "@/compiler/compiler-context";
+import { compilerContext, getXmcpConfig } from "@/compiler/compiler-context";
 import {
   expressTypeDefinition,
   fastifyTypeDefinition,
@@ -103,6 +104,58 @@ export class InjectRuntimePlugin {
         }
       }
     );
+  }
+}
+
+function collectModules(modules: StatsModule[]): StatsModule[] {
+  const result: StatsModule[] = [];
+  for (const mod of modules) {
+    result.push(mod);
+    if (mod.modules) result.push(...collectModules(mod.modules));
+  }
+  return result;
+}
+
+export class CheckDefaultExportsPlugin {
+  apply(compiler: Compiler) {
+    compiler.hooks.done.tap("CheckDefaultExportsPlugin", (stats) => {
+      if (compiler.options.mode !== "production") return;
+
+      const { toolPaths, promptPaths, resourcePaths } =
+        compilerContext.getContext();
+      const cwd = process.cwd();
+
+      const statsJson = stats.toJson({
+        all: false,
+        modules: true,
+        providedExports: true,
+      });
+
+      const moduleExports = new Map<string, string[] | null>();
+      for (const mod of collectModules(statsJson.modules ?? [])) {
+        if (mod.nameForCondition) {
+          moduleExports.set(mod.nameForCondition, mod.providedExports ?? null);
+        }
+      }
+
+      const checks: [string, Set<string>][] = [
+        ["tool", toolPaths],
+        ["prompt", promptPaths],
+        ["resource", resourcePaths],
+      ];
+
+      for (const [label, paths] of checks) {
+        for (const filePath of paths) {
+          const absPath = path.resolve(cwd, filePath);
+          const provided = moduleExports.get(absPath);
+          if (Array.isArray(provided) && !provided.includes("default")) {
+            console.warn(
+              `[xmcp] Failed to load ${label} file: ${filePath}\n   -> File does not export a default ${label} handler.`
+            );
+          }
+        }
+      }
+    });
   }
 }
 
