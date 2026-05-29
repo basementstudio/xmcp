@@ -100,7 +100,7 @@ The `paths` reflect the components you selected during init (`false` for the one
 
 ## Register the Module
 
-This is the one integration step init can't do for you — it prints these exact instructions when it finishes. Import `XmcpModule` into your application module:
+This is the one integration step init leaves to you — it prints these exact instructions when it finishes. This is deliberate: init won't edit your `app.module.ts` to auto-register `XmcpModule`, because mounting the service into your application graph without your say-so could introduce a breaking change to a project that's already running. You decide when the MCP endpoint goes live. Import `XmcpModule` into your application module:
 
 ```typescript title="src/app.module.ts"
 import { Module } from "@nestjs/common";
