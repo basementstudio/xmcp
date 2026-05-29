@@ -18,7 +18,7 @@ export const Header = () => {
           <div className="hidden md:flex gap-4">
             <AnimatedLink href="/">Home</AnimatedLink>
             <AnimatedLink href="/docs">Docs</AnimatedLink>
-            <AnimatedLink href="/examples">Examples</AnimatedLink>
+            <AnimatedLink href="/templates">Templates</AnimatedLink>
             <AnimatedLink href="/blog">Blog</AnimatedLink>
             <AnimatedLink href="/showcase">Showcase</AnimatedLink>
           </div>

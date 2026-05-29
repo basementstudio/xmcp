@@ -2,7 +2,9 @@
   "name": "Middleware Array",
   "description": "Chain multiple middlewares together in xmcp servers",
   "keywords": [
-    "middleware"
+    "middleware",
+    "composition",
+    "array"
   ],
   "scripts": {
     "build": "xmcp build",
