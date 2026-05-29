@@ -1,0 +1,49 @@
+{
+  "name": "@xmcp-dev/scalekit",
+  "description": "Scalekit OAuth 2.1 integration for xmcp — purpose-built MCP server authentication",
+  "version": "0.0.1",
+  "author": {
+    "name": "xmcp",
+    "email": "support@xmcp.dev",
+    "url": "https://xmcp.dev"
+  },
+  "license": "MIT",
+  "keywords": [
+    "xmcp",
+    "scalekit",
+    "authentication",
+    "mcp",
+    "oauth",
+    "oauth2.1"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/scalekit"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "rm -rf dist && tsc"
+  },
+  "dependencies": {
+    "@scalekit-sdk/node": "^2.6.2",
+    "jose": "^5.2.0",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.25",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "xmcp": "^0.6.10"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.6.10"
+  }
+}
