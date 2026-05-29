@@ -40,7 +40,7 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "@commet/node": "^1.9.0",
+    "@commet/node": "^5.0.0",
     "express": "^4.22.1"
   },
   "devDependencies": {

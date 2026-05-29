@@ -17,17 +17,16 @@ export default async function aiGenerate({
   const client = getClient();
   const customerId = getCustomerId();
 
-  const { data } = await client.customer(customerId).features.check("ai_generate");
+  const { data } = await client.features.canUse({
+    customerId,
+    code: "ai_generate",
+  });
 
   if (!data?.allowed) {
     return "Your plan does not include this feature.";
   }
 
-  await client.usage.track({
-    feature: "ai_generate",
-    customerId,
-    value: 1,
-  });
+  await client.usage.track({ feature: "ai_generate", customerId, value: 1 });
 
   return `Generated content for: "${prompt}"`;
 }

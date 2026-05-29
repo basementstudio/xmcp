@@ -1199,8 +1199,8 @@ importers:
   packages/plugins/commet:
     dependencies:
       '@commet/node':
-        specifier: ^1.9.0
-        version: 1.9.0(typescript@5.9.3)
+        specifier: ^5.0.0
+        version: 5.0.0(typescript@5.9.3)
       express:
         specifier: ^4.22.1
         version: 4.22.1
@@ -1778,8 +1778,8 @@ packages:
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
     engines: {node: '>=0.1.90'}
 
-  '@commet/node@1.9.0':
-    resolution: {integrity: sha512-GhbPPCDDliu1ZrIz3YKt1VowKnpMFU8Okta0t+zDARkSIb7xVwOQpuOK22Qh82PMVoJf3ca6iuYPk8YHu1Bjfw==}
+  '@commet/node@5.0.0':
+    resolution: {integrity: sha512-yzeH7y68rGiq/l2T/ntLL4NxesKcwbmSNnDGhamfLclbB728fhHm+1vSIySuTyu6+IhzIWaKlGHKUEeLlZkZSw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: '>=5.0.0'
@@ -9663,7 +9663,7 @@ snapshots:
   '@colors/colors@1.5.0':
     optional: true
 
-  '@commet/node@1.9.0(typescript@5.9.3)':
+  '@commet/node@5.0.0(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
@@ -11732,7 +11732,7 @@ snapshots:
       '@connectrpc/connect-node': 2.1.1(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.12.0))
       axios: 1.16.1
       jose: 5.6.3
-      qs: 6.14.2
+      qs: 6.15.2
     transitivePeerDependencies:
       - debug
       - supports-color
