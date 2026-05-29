@@ -10,9 +10,9 @@ authors:
   - 0xkoller
 ---
 
-Most of the x402 conversation is about getting paid. Wrap a tool, set a price, collect USDC per call. We [wrote about that side](/blog/x402-integration), and it's genuinely easy to do.
+Almost everything written about x402 covers the seller side: wrap a tool, set a price, collect USDC per call. We [covered that](/blog/x402-integration), and it comes down to a few lines of config.
 
-But a payment has two ends. For every tool that charges, something has to pay and *that* end is where the interesting shift is happening. Charging is a server setting. Paying, with no human in the loop, is a different kind of software than we've been building.
+But a payment has two ends. For every tool that charges, something has to pay and the paying end is where the real shift is. Charging is a server setting. Paying, with no human in the loop, is a different kind of software than we've been building.
 
 ## Your server is already a buyer
 
@@ -40,7 +40,7 @@ Charging is config. Paying autonomously asks the buyer to do four things a credi
 - **Produce payment in milliseconds.** A signed stablecoin authorization, not a checkout page.
 - **Do it without anyone clicking "approve."** No human in the loop, by design.
 
-Cards, invoices, and seat licenses can't do any of that. They assume an account that exists before the transaction and a person who set it up. x402 inverts it: the price arrives *with* the request, and the buyer answers with a signature on the spot. That's the part that makes "agentic payment" more than a slogan — it's the buyer behaving like a buyer, autonomously.
+Cards, invoices, and seat licenses can't do any of that. They assume an account that exists before the transaction and a person who set it up. x402 inverts it: the price arrives *with* the request, and the buyer answers with a signature on the spot. That's what makes agentic payment real: the buyer behaving like a buyer, autonomously.
 
 ## What it unlocks: composition with a price tag
 
@@ -58,6 +58,6 @@ This isn't far-off. A payment standard for agents is consolidating in the open �
 
 The way to think about an xmcp server is that it sits on both ends. Its own tools can charge via `paid()`. Its `clients.ts` connections consume other servers' tools — and when those start costing money, x402 is how it settles, per call, without a human or an API key in sight.
 
-That's the loop that makes a machine economy actually run: servers that can charge, and buyers that can pay, talking the same protocol. The seller side is shipped. The buyer side is where agentic payment lives.
+That's the loop a machine economy runs on: servers that can charge, and buyers that can pay, talking the same protocol. The seller side is shipped. The buyer side is where agentic payment lives.
 
 If you're building agents that need to pay for what they use, come tell us what you're working on in [Discord](https://discord.gg/d9a7JBBxV9).
