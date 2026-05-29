@@ -17,7 +17,7 @@ export { type Middleware } from "@/types/middleware";
 import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";
-import { greenCheck } from "@/utils/cli-icons";
+import { greenCheck, warningSign } from "@/utils/cli-icons";
 import {
   telemetry,
   TelemetryEventName,
@@ -32,6 +32,7 @@ import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "./config/utils";
 import { pathToToolName } from "./utils/path-utils";
+import { findMissingDefaultExports } from "./utils/check-default-exports";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import {
@@ -445,7 +446,21 @@ async function generateCode({
 }: {
   rebuildClientBundles?: boolean;
 } = {}) {
-  const { clientBundles: currentClientBundles } = compilerContext.getContext();
+  const { toolPaths, promptPaths, resourcePaths, clientBundles: currentClientBundles } =
+    compilerContext.getContext();
+
+  const cwd = process.cwd();
+  for (const [label, paths] of [
+    ["tool", toolPaths],
+    ["resource", resourcePaths],
+    ["prompt", promptPaths],
+  ] as const) {
+    for (const filePath of findMissingDefaultExports(paths, cwd)) {
+      console.warn(
+        `${warningSign} ${filePath} is missing export default — ${label} handler required`
+      );
+    }
+  }
   const clientBundles =
     rebuildClientBundles || currentClientBundles === undefined
       ? await buildClientBundles()
