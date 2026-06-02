@@ -11732,7 +11732,7 @@ snapshots:
       '@connectrpc/connect-node': 2.1.1(@bufbuild/protobuf@2.12.0)(@connectrpc/connect@2.1.1(@bufbuild/protobuf@2.12.0))
       axios: 1.16.1
       jose: 5.6.3
-      qs: 6.14.2
+      qs: 6.15.2
     transitivePeerDependencies:
       - debug
       - supports-color
