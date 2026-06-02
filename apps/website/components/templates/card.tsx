@@ -20,6 +20,8 @@ function getFallbackImageClass(src: string) {
       return "bottom-4 left-[59%] -translate-x-1/2 w-[86%]";
     case "/templates/express.svg":
       return "bottom-4 left-[54%] -translate-x-1/2 w-[84%]";
+    case "/templates/fastify.svg":
+      return "bottom-12 left-[55%] -translate-x-1/2 w-[92%]";
     case "/templates/betterauth.svg":
       return "bottom-4 left-[55%] -translate-x-1/2 w-[76%]";
     case "/templates/polar.svg":

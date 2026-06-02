@@ -13,6 +13,7 @@ const PROVIDER_FALLBACKS: Record<string, string> = {
   clerk: "/templates/clerk.svg",
   cloudflare: "/templates/cloudflare.svg",
   express: "/templates/express.svg",
+  fastify: "/templates/fastify.svg",
   nestjs: "/templates/nestjs.svg",
   nextjs: NEXTJS_FALLBACK_SRC,
   polar: "/templates/polar.svg",
