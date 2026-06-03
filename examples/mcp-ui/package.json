@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Learn how to set up an xmcp server that serves UI resources with MCP-UI",
   "keywords": [
-    "mcp-ui"
+    "ui",
+    "mcp-ui",
+    "tools"
   ],
   "engines": {
     "node": ">=20.0.0"

@@ -2,7 +2,9 @@
   "name": "Custom Middleware",
   "description": "Create custom middleware functions for xmcp servers",
   "keywords": [
-    "middleware"
+    "middleware",
+    "customization",
+    "pipeline"
   ],
   "scripts": {
     "build": "xmcp build",

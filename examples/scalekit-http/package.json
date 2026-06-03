@@ -1,0 +1,19 @@
+{
+  "name": "scalekit-http-example",
+  "description": "HTTP-based xmcp server with Scalekit authentication",
+  "keywords": [
+    "http",
+    "authentication",
+    "scalekit"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/scalekit": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

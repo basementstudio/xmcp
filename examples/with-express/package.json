@@ -20,7 +20,9 @@
     "xmcp": "workspace:*"
   },
   "keywords": [
-    "adapter"
+    "adapter",
+    "express",
+    "http"
   ],
   "author": "",
   "license": "MIT"

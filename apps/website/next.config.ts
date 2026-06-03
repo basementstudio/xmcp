@@ -32,6 +32,12 @@ const nextConfig: NextConfig = {
       {
         hostname: "assets.basehub.com",
       },
+      {
+        hostname: "raw.githubusercontent.com",
+      },
+      {
+        hostname: "avatars.githubusercontent.com",
+      },
     ],
   },
   async redirects() {
@@ -39,6 +45,16 @@ const nextConfig: NextConfig = {
       {
         source: "/docs/configuration/webpack",
         destination: "/docs/configuration/bundler",
+        permanent: true,
+      },
+      {
+        source: "/examples",
+        destination: "/templates",
+        permanent: true,
+      },
+      {
+        source: "/examples/:slug",
+        destination: "/templates/:slug",
         permanent: true,
       },
     ];

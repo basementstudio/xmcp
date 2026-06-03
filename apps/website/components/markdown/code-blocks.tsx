@@ -10,7 +10,6 @@ import bash from "@shikijs/langs/bash";
 import json from "@shikijs/langs/json";
 import tsx from "@shikijs/langs/tsx";
 import sql from "@shikijs/langs/sql";
-import ayuDark from "@shikijs/themes/ayu-dark";
 import { CopyButton } from "../ui/copy-button";
 import {
   ComponentProps,
@@ -21,10 +20,11 @@ import {
   useState,
 } from "react";
 import { cn } from "../../utils/cn";
+import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [js, ts, bash, json, tsx, sql],
-  themes: [ayuDark],
+  themes: [xmcpAyuDarkTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -52,8 +52,7 @@ export function Code({
   let theme = "none";
 
   if (lang && lang !== "bash") {
-    //theme = "github-dark-high-contrast";
-    theme = "ayu-dark";
+    theme = XMCP_SHIKI_THEME_NAME;
   }
 
   const codeHTML = highlighter.codeToHtml(children, {

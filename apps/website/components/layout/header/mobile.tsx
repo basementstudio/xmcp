@@ -74,11 +74,11 @@ export const MobileMenu = () => {
                 style={{ animationDelay: "0.2s" }}
               >
                 <AnimatedLink
-                  href="/examples"
+                  href="/templates"
                   className="text-white text-lg"
                   onClick={handleLinkClick}
                 >
-                  Examples
+                  Templates
                 </AnimatedLink>
               </div>
               <div
