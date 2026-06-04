@@ -1,0 +1,36 @@
+{
+  "name": "@xmcp-dev/descope",
+  "version": "0.1.0",
+  "description": "Descope authentication provider for xmcp",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@descope/node-sdk": "^2.6.0"
+  },
+  "peerDependencies": {
+    "xmcp": "^0.5.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.0.0",
+    "express": "^5.2.1",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0",
+    "xmcp": "^0.5.7"
+  }
+}
