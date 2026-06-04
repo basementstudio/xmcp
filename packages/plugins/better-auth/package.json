@@ -48,7 +48,7 @@
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
   "dependencies": {
-    "better-auth": "1.6.2",
+    "better-auth": "1.6.11",
     "express": "^4.22.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
