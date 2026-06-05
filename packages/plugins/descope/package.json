@@ -16,8 +16,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "test": "vitest run"
+    "dev": "tsc --watch"
   },
   "dependencies": {
     "@descope/node-sdk": "^2.6.0"
@@ -26,11 +25,8 @@
     "xmcp": "^0.5.7"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
-    "express": "^5.2.1",
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0",
     "xmcp": "^0.5.7"
   }
 }
