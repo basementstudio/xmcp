@@ -38,28 +38,28 @@ Install the Descope plugin:
 
 ## Descope Setup
 
-MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xmcp server can participate in the agentic OAuth flow.
+MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xMCP server can participate in the agentic OAuth flow.
 
 ### 1. Create a Project
 
-If you don't already have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from the project settings — it follows the format `Pxxxxxxxxxxxxxxxxxxxxxxxxx`.
+If you don't already have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from your project settings. It will be formatted like `Pxxxxxxxxxxxxxxxxxxxxxxxxx`.
 
 ### 2. Create an Agentic MCP Server
 
 1. Go to **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
-2. Click **Create MCP Server**
+2. Click **+ MCP Server**
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
 4. Copy the **MCP Server ID**
 
-The MCP Server ID wires your xmcp server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
+The MCP Server ID wires your xMCP server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
 
 ### 3. Create a Management Key (optional)
 
 A management key is required to call `getUser()` or `getManagementClient()`. If you only need session data from the token, you can skip this step.
 
 1. Go to **Descope Console** → **Company** → **Management Keys**
-2. Click **Generate Key**
-3. Copy and save the key — it is only shown once
+2. Click **+ Management Key**
+3. Copy and save the key since it is only shown once
 
 ## Environment Variables
 
@@ -67,7 +67,7 @@ Configure the following environment variables in your `.env` file:
 
 ```bash
 # Descope credentials
-DESCOPE_PROJECT_ID=Pxxxxxxxxxxxxxxxxxxxxxxxxx
+DESCOPE_PROJECT_ID=your-project-id
 DESCOPE_MCP_SERVER_ID=your-mcp-server-id
 
 # Required only when using getUser() or getManagementClient()
@@ -83,7 +83,7 @@ BASE_URL=http://127.0.0.1:3001
 
 ## Set up the Provider
 
-Create a `middleware.ts` file in your xmcp app's `src` directory:
+Create a `middleware.ts` file in your xMCP app's `src` directory:
 
 ```typescript title="src/middleware.ts"
 import { descopeProvider } from "@xmcp-dev/descope";
@@ -245,7 +245,7 @@ If `getSession()` throws `"getSession() called outside of Descope middleware"`:
 
 - Ensure `descopeProvider` is exported as default from `middleware.ts`
 - Ensure the tool is called on a route under `/mcp/*`
-- Do not call `getSession()` at module load time — only inside tool handlers
+- Do not call `getSession()` at module load time, only inside tool handlers
 
 ### Management Key Errors
 
