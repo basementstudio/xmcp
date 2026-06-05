@@ -90,8 +90,7 @@ function descopeMiddleware(
       providerSessionContext({ session }, () => {
         next();
       });
-    }).catch((err) => {
-      console.error("[Descope] Authentication error:", err);
+    }).catch(() => {
       res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
       res.status(401).json({ error: "server_error", error_description: "Authentication processing failed" });
     });
