@@ -1,0 +1,270 @@
+---
+title: "Descope"
+metadataTitle: "Usage with Descope | xmcp Documentation"
+publishedAt: "2026-06-05"
+summary: "Add secure authentication to your MCP server using Descope"
+description: "The Descope plugin provides authentication for your MCP server using Descope's OAuth 2.1 agentic identity system with Dynamic Client Registration."
+---
+
+## Installation
+
+Install the Descope plugin:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/descope",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/descope",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/descope",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/descope",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Descope Setup
+
+MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xmcp server can participate in the agentic OAuth flow.
+
+### 1. Create a Project
+
+If you don't already have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from the project settings — it follows the format `Pxxxxxxxxxxxxxxxxxxxxxxxxx`.
+
+### 2. Create an Agentic MCP Server
+
+1. Go to **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
+2. Click **Create MCP Server**
+3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
+4. Copy the **MCP Server ID**
+
+The MCP Server ID wires your xmcp server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
+
+### 3. Create a Management Key (optional)
+
+A management key is required to call `getUser()` or `getManagementClient()`. If you only need session data from the token, you can skip this step.
+
+1. Go to **Descope Console** → **Company** → **Management Keys**
+2. Click **Generate Key**
+3. Copy and save the key — it is only shown once
+
+## Environment Variables
+
+Configure the following environment variables in your `.env` file:
+
+```bash
+# Descope credentials
+DESCOPE_PROJECT_ID=Pxxxxxxxxxxxxxxxxxxxxxxxxx
+DESCOPE_MCP_SERVER_ID=your-mcp-server-id
+
+# Required only when using getUser() or getManagementClient()
+DESCOPE_MANAGEMENT_KEY=your-management-key
+
+# App configuration
+BASE_URL=http://127.0.0.1:3001
+```
+
+<Callout variant="info">
+  For production, set `BASE_URL` to your deployed server URL and update the base URL on your MCP Server record in the Descope Console to match.
+</Callout>
+
+## Set up the Provider
+
+Create a `middleware.ts` file in your xmcp app's `src` directory:
+
+```typescript title="src/middleware.ts"
+import { descopeProvider } from "@xmcp-dev/descope";
+
+export default descopeProvider({
+  projectId: process.env.DESCOPE_PROJECT_ID!,
+  mcpServerId: process.env.DESCOPE_MCP_SERVER_ID!,
+  baseURL: process.env.BASE_URL!,
+});
+```
+
+To enable user profile lookups, add the management key:
+
+```typescript title="src/middleware.ts"
+import { descopeProvider } from "@xmcp-dev/descope";
+
+export default descopeProvider({
+  projectId: process.env.DESCOPE_PROJECT_ID!,
+  mcpServerId: process.env.DESCOPE_MCP_SERVER_ID!,
+  baseURL: process.env.BASE_URL!,
+  managementKey: process.env.DESCOPE_MANAGEMENT_KEY,
+});
+```
+
+### Configuration Options
+
+- **`projectId`**: Your Descope project ID (required).
+- **`mcpServerId`**: The MCP Server ID from the Descope Console (required).
+- **`baseURL`**: Base URL of your MCP server (required). Must match the URL configured on the MCP Server record in Descope.
+- **`managementKey`**: (Optional) Descope management key. Required to use `getUser()` or `getManagementClient()`.
+- **`scopesSupported`**: (Optional) Array of OAuth scopes advertised in the resource metadata. Defaults to `["openid", "profile", "email"]`.
+
+## Get a user session
+
+Access the authenticated user's session in your tools using `getSession()`.
+
+### Example: Return the current user's identity
+
+```typescript title="src/tools/whoami.ts"
+import type { ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/descope";
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Returns the authenticated Descope session information",
+};
+
+export default function whoami(): string {
+  const session = getSession();
+
+  return JSON.stringify(
+    {
+      userId: session.userId,
+      loginIds: session.loginIds,
+      permissions: session.permissions,
+      roles: session.roles,
+      tenants: session.tenants,
+      expiresAt: session.expiresAt.toISOString(),
+    },
+    null,
+    2,
+  );
+}
+```
+
+The `session` object contains the following fields:
+
+- `session.userId`: The Descope user ID.
+- `session.token`: The raw bearer token from the request.
+- `session.loginIds`: Login identifiers associated with the user (email, phone, etc.).
+- `session.permissions`: Array of permissions granted to this session.
+- `session.roles`: Roles assigned to the user.
+- `session.tenants`: Tenant memberships, each with per-tenant `permissions` and `roles`.
+- `session.expiresAt`: Token expiry as a `Date`.
+- `session.issuedAt`: Token issue time as a `Date`.
+- `session.claims`: Raw JWT claims object.
+
+<Callout variant="warning">
+  Do not call `getSession()` at module load time. Only call it inside tool handler functions where the middleware context is active.
+</Callout>
+
+## Get user profile
+
+Use `getUser()` to fetch full user details from the Descope Management API. This requires `managementKey` to be set in your provider configuration.
+
+### Example: Return full user profile
+
+```typescript title="src/tools/user-profile.ts"
+import type { ToolMetadata } from "xmcp";
+import { getUser } from "@xmcp-dev/descope";
+
+export const metadata: ToolMetadata = {
+  name: "user-profile",
+  description: "Returns the full Descope user profile for the authenticated user",
+};
+
+export default async function userProfile(): Promise<string> {
+  const user = await getUser();
+  return JSON.stringify(user, null, 2);
+}
+```
+
+<Callout variant="warning">
+  `getUser()` requires `managementKey` to be configured in `descopeProvider`. If the key is not set, the function throws an error.
+</Callout>
+
+## Access the SDK clients
+
+### `getClient()`
+
+Returns the full Descope Node SDK client, giving you access to all Descope features from within your tool handlers.
+
+```typescript title="src/tools/advanced.ts"
+import { getClient, getSession } from "@xmcp-dev/descope";
+
+export default async function advanced(): Promise<string> {
+  const client = getClient();
+  const session = getSession();
+
+  // Use any Descope SDK method
+  const resp = await client.management.user.loadByUserId(session.userId);
+  return JSON.stringify(resp.data, null, 2);
+}
+```
+
+### `getManagementClient()`
+
+Returns the `management` namespace of the Descope SDK. Requires `managementKey` to be configured.
+
+```typescript title="src/tools/list-roles.ts"
+import { getManagementClient } from "@xmcp-dev/descope";
+
+export default async function listRoles(): Promise<string> {
+  const mgmt = getManagementClient();
+  const resp = await mgmt.role.loadAll();
+  return JSON.stringify(resp.data, null, 2);
+}
+```
+
+## Troubleshooting
+
+These are the most common errors you may encounter when using the Descope plugin:
+
+- `unauthorized`: The request is missing the `Authorization` header. The MCP client must complete the OAuth flow before accessing protected routes.
+- `token_expired`: The access token has expired. MCP clients should automatically refresh tokens; users can disconnect and reconnect to get fresh tokens.
+- `invalid_token`: Token verification failed. Check that `DESCOPE_PROJECT_ID` matches the project that issued the token.
+
+### OAuth Init Failed
+
+If an MCP client fails to initialize the OAuth flow:
+
+- Verify your MCP Server record exists in **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
+- Confirm `DESCOPE_MCP_SERVER_ID` matches the ID shown in the console
+- Ensure `BASE_URL` matches the base URL configured on your MCP Server record
+
+### Session Not Initialized
+
+If `getSession()` throws `"getSession() called outside of Descope middleware"`:
+
+- Ensure `descopeProvider` is exported as default from `middleware.ts`
+- Ensure the tool is called on a route under `/mcp/*`
+- Do not call `getSession()` at module load time — only inside tool handlers
+
+### Management Key Errors
+
+If `getUser()` or `getManagementClient()` throws an error about the management key:
+
+- Set `DESCOPE_MANAGEMENT_KEY` in your environment
+- Pass `managementKey: process.env.DESCOPE_MANAGEMENT_KEY` in your `descopeProvider` config
+- Verify the key is valid in **Descope Console** → **Company** → **Management Keys**
+
+### Token Expired Errors
+
+Access tokens are short-lived. If you see `token_expired` errors:
+
+- MCP clients should automatically refresh tokens using the refresh token flow
+- Users can disconnect and reconnect to get fresh tokens
+
+### Invalid Token Errors
+
+If token verification consistently fails:
+
+- Verify `DESCOPE_PROJECT_ID` is set to the correct project ID
+- Ensure the MCP client is sending tokens issued by the correct Descope project
