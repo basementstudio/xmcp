@@ -1,6 +1,7 @@
 import Descope from "@descope/node-sdk";
 import type { RequestHandler, Router as ExpressRouter } from "express";
 import { Router } from "express";
+import type { Middleware } from "xmcp";
 import { providerClientContext, providerSessionContext } from "./context.js";
 import { extractBearerToken, validateToken } from "./jwt.js";
 import type { DescopeConfig, OAuthAuthorizationServerMetadata, OAuthProtectedResourceMetadata } from "./types.js";
@@ -25,29 +26,26 @@ function descopeRouter(config: DescopeConfig): ExpressRouter {
     res.json(body);
   });
 
-  let cachedDiscovery: OAuthAuthorizationServerMetadata | null = null;
-
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
-    if (!cachedDiscovery) {
-      try {
-        const resp = await fetch(
-          `https://api.descope.com/${projectId}/.well-known/openid-configuration`,
-        );
-        if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
-        cachedDiscovery = (await resp.json()) as OAuthAuthorizationServerMetadata;
-      } catch {
-        cachedDiscovery = {
-          issuer: `https://api.descope.com/${projectId}`,
-          authorization_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/authorize`,
-          token_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/token`,
-          jwks_uri: `https://api.descope.com/${projectId}/.well-known/jwks.json`,
-          response_types_supported: ["code"],
-          grant_types_supported: ["authorization_code", "refresh_token"],
-          code_challenge_methods_supported: ["S256"],
-        };
-      }
+    try {
+      const resp = await fetch(
+        `https://api.descope.com/${projectId}/.well-known/openid-configuration`,
+      );
+      if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
+      const discovery = (await resp.json()) as OAuthAuthorizationServerMetadata;
+      res.json(discovery);
+    } catch {
+      const fallback: OAuthAuthorizationServerMetadata = {
+        issuer: `https://api.descope.com/${projectId}`,
+        authorization_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/authorize`,
+        token_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/token`,
+        jwks_uri: `https://api.descope.com/${projectId}/.well-known/jwks.json`,
+        response_types_supported: ["code"],
+        grant_types_supported: ["authorization_code", "refresh_token"],
+        code_challenge_methods_supported: ["S256"],
+      };
+      res.json(fallback);
     }
-    res.json(cachedDiscovery);
   });
 
   return router;
@@ -92,14 +90,15 @@ function descopeMiddleware(
       providerSessionContext({ session }, () => {
         next();
       });
+    }).catch((err) => {
+      console.error("[Descope] Authentication error:", err);
+      res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
+      res.status(401).json({ error: "server_error", error_description: "Authentication processing failed" });
     });
   };
 }
 
-export function descopeProvider(config: DescopeConfig): {
-  middleware: RequestHandler;
-  router: ExpressRouter;
-} {
+export function descopeProvider(config: DescopeConfig): Middleware {
   if (!config.projectId) throw new Error("DescopeConfig.projectId is required");
   if (!config.mcpServerId) throw new Error("DescopeConfig.mcpServerId is required");
   if (!config.baseURL) throw new Error("DescopeConfig.baseURL is required");

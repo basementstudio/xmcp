@@ -4,14 +4,16 @@ import type nodeSdk from "@descope/node-sdk";
 
 type DescopeClient = ReturnType<typeof nodeSdk>;
 
-export const contextSession = createContext<{ session: DescopeSession | null }>({
+const contextSession = createContext<{ session: DescopeSession | null }>({
   name: "descope-context-session",
 });
-export const { getContext: getSessionContext, provider: providerSessionContext } = contextSession;
+export const getSessionContext = contextSession.getContext;
+export const providerSessionContext = contextSession.provider;
 
-export const contextClient = createContext<{ client: DescopeClient; managementKey?: string }>({
+const contextClient = createContext<{ client: DescopeClient; managementKey?: string }>({
   name: "descope-context-client",
 });
-export const { getContext: getClientContext, provider: providerClientContext } = contextClient;
+export const getClientContext = contextClient.getContext;
+export const providerClientContext = contextClient.provider;
 
 export type { DescopeClient };
