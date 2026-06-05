@@ -13,7 +13,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "better-auth": "^1.6.2",
+    "better-auth": "^1.6.14",
     "next": "16.2.6",
     "pg": "^8.16.3",
     "react": "^19.2.3",
