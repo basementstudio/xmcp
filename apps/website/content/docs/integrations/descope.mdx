@@ -38,7 +38,7 @@ Install the Descope plugin:
 
 ## Descope Setup
 
-MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xMCP server can participate in the agentic OAuth flow.
+MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xmcp server can participate in the agentic OAuth flow.
 
 ### 1. Create a Project
 
@@ -51,7 +51,7 @@ If you don't already have one, create a project at [app.descope.com](https://app
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
 4. Copy the **MCP Server ID**
 
-The MCP Server ID wires your xMCP server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
+The MCP Server ID wires your xmcp server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
 
 ### 3. Create a Management Key (optional)
 
@@ -83,7 +83,7 @@ BASE_URL=http://127.0.0.1:3001
 
 ## Set up the Provider
 
-Create a `middleware.ts` file in your xMCP app's `src` directory:
+Create a `middleware.ts` file in your xmcp app's `src` directory:
 
 ```typescript title="src/middleware.ts"
 import { descopeProvider } from "@xmcp-dev/descope";
