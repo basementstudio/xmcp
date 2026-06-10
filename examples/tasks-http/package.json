@@ -10,10 +10,17 @@
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",
-    "start": "node dist/http.js"
+    "worker": "tsx watch src/worker.ts",
+    "start": "node dist/http.js",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.26",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

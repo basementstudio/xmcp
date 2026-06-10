@@ -4,7 +4,7 @@ import {
   type ToolExtraArguments,
   type ToolMetadata,
 } from "xmcp";
-import { store } from "../task-store";
+import { enqueue } from "../queue";
 
 export const schema = {
   label: z.string().describe("A label for the job"),
@@ -37,28 +37,17 @@ export default async function longJob(
 ) {
   const taskId = extra.task?.taskId;
 
-  // Kick off the work out-of-band and return nothing, leaving the task in the
-  // "working" state. In a serverless deployment you would enqueue this onto a
-  // queue/worker (so it survives the function returning); on a long-lived Node
-  // server we simply detach a promise. Either way, the result is written back
-  // through the task store, which is what later tasks/get and tasks/result read.
+  // The tool does NOT run the job. It only hands the work off to the queue and
+  // returns nothing, leaving the task in the "working" state. A separate
+  // process (src/worker.ts) picks the job up, runs it, and writes the result
+  // back through the shared task store — which is what later tasks/get and
+  // tasks/result read. This is the serverless model: enqueue here, execute
+  // elsewhere.
   if (taskId) {
-    void runJob(taskId, label, seconds);
+    await enqueue({ taskId, label, seconds });
     return;
   }
 
   // Fallback for a non-task invocation (only reachable if taskSupport changes).
   return `Job "${label}" ran inline.`;
-}
-
-async function runJob(taskId: string, label: string, seconds: number) {
-  // The delay simulates real work; its duration comes from the caller.
-  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
-  // Store a plain string: xmcp coerces it into a CallToolResult when the client
-  // reads it back, just like returning a string from a normal tool.
-  await store.storeTaskResult(
-    taskId,
-    "completed",
-    `Job "${label}" finished after ${seconds}s.`
-  );
 }

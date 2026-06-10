@@ -2,3 +2,4 @@
 .xmcp
 xmcp-env.d.ts
 .tasks
+.queue
