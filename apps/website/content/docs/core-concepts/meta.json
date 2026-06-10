@@ -4,6 +4,7 @@
     "tools",
     "prompts",
     "resources",
+    "tasks",
     "middlewares",
     "css",
     "external-clients"
