@@ -243,6 +243,10 @@ export function getRspackConfig(
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "middleware",
     ],
+    INJECTED_TASK_STORE: [
+      path.resolve(processFolder, ".xmcp/import-map.js"),
+      "taskStore",
+    ],
   };
 
   // add entry points based on config

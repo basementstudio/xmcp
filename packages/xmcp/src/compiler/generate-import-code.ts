@@ -14,6 +14,7 @@ export function generateImportCode(): string {
     promptPaths,
     resourcePaths,
     hasMiddleware,
+    hasTaskStore,
     clientBundles,
     platforms,
   } = compilerContext.getContext();
@@ -28,6 +29,7 @@ export function generateImportCode(): string {
       promptPaths,
       resourcePaths,
       hasMiddleware,
+      hasTaskStore,
       clientBundles
     );
   }
@@ -37,6 +39,7 @@ export function generateImportCode(): string {
     promptPaths,
     resourcePaths,
     hasMiddleware,
+    hasTaskStore,
     clientBundles
   );
 }
@@ -50,6 +53,7 @@ function generateStaticImportCode(
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
   hasMiddleware: boolean,
+  hasTaskStore: boolean,
   clientBundles?: Map<string, string>
 ): string {
   // Generate static import statements at the top
@@ -88,6 +92,12 @@ function generateStaticImportCode(
     middlewareCode = `export const middleware = () => Promise.resolve(_middleware);`;
   }
 
+  let taskStoreCode = "";
+  if (hasTaskStore) {
+    staticImports.push(`import * as _taskStore from "../src/task-store.ts";`);
+    taskStoreCode = `export const taskStore = () => Promise.resolve(_taskStore);`;
+  }
+
   // Generate client bundles mapping (empty object if none)
   const clientBundlesEntries =
     clientBundles && clientBundles.size > 0
@@ -115,6 +125,8 @@ ${clientBundlesEntries}
 };
 
 ${middlewareCode}
+
+${taskStoreCode}
 `;
 }
 
@@ -127,6 +139,7 @@ function generateDynamicImportCode(
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
   hasMiddleware: boolean,
+  hasTaskStore: boolean,
   clientBundles?: Map<string, string>
 ): string {
   const importToolsCode = Array.from(toolPaths)
@@ -157,6 +170,10 @@ function generateDynamicImportCode(
     ? `export const middleware = () => import("../src/middleware.ts");`
     : "";
 
+  const importTaskStoreCode = hasTaskStore
+    ? `export const taskStore = () => import("../src/task-store.ts");`
+    : "";
+
   // Generate client bundles mapping (empty object if none)
   const clientBundlesEntries =
     clientBundles && clientBundles.size > 0
@@ -183,5 +200,7 @@ ${clientBundlesEntries}
 };
 
 ${importMiddlewareCode}
+
+${importTaskStoreCode}
 `;
 }

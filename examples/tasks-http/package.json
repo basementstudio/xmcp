@@ -1,0 +1,19 @@
+{
+  "name": "Tasks HTTP",
+  "description": "Run long-running tools as MCP tasks over stateless HTTP with an external task store",
+  "keywords": [
+    "tasks",
+    "long-running",
+    "http",
+    "stateless"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}

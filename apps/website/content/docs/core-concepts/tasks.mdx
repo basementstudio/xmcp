@@ -1,0 +1,171 @@
+---
+title: "Tasks"
+metadataTitle: "Tasks | xmcp Documentation"
+publishedAt: "2026-06-10"
+summary: "Learn how to run tools as long-running, pollable tasks in your xmcp application."
+description: "Tasks let a tool call run as a durable, pollable operation. The call returns immediately with a task id, and clients poll for status and fetch the result later. xmcp keeps this fully stateless by storing task state in an external store you provide."
+---
+
+`xmcp` enables tasks when you add a `src/task-store.ts` file. A task lets a tool call run as a long-running, pollable operation — the [MCP tasks utility](https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/tasks). Instead of blocking until the tool finishes, the server returns a task immediately; clients poll `tasks/get` for status and call `tasks/result` for the output once the task reaches a terminal state.
+
+Tasks are **stateless**: the HTTP transport builds a fresh server per request and never holds task state in memory. All state lives in a **task store** you back with external storage (Redis, a database, a KV service, …), which makes tasks a good fit for serverless.
+
+<Callout variant="info">
+  Tasks are experimental in the MCP specification and may evolve in future
+  protocol versions.
+</Callout>
+
+## The task store
+
+The task store is the single source of truth. Default-export one from `src/task-store.ts`; its presence enables tasks and advertises the `tasks` capability during initialization.
+
+You rarely write a store by hand. `createTaskStore` builds a complete store from four small persistence methods — it handles id generation, timestamps, the status lifecycle, TTL expiry, and pagination for you:
+
+```ts title="src/task-store.ts"
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { createTaskStore, type TaskRecord } from "xmcp";
+
+const dir = path.resolve(process.cwd(), ".tasks");
+const file = (taskId: string) => path.join(dir, `${taskId}.json`);
+
+export const store = createTaskStore({
+  async get(taskId) {
+    try {
+      return JSON.parse(await fs.readFile(file(taskId), "utf-8")) as TaskRecord;
+    } catch {
+      return null;
+    }
+  },
+  async set(taskId, record) {
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(file(taskId), JSON.stringify(record));
+  },
+  async delete(taskId) {
+    await fs.rm(file(taskId), { force: true });
+  },
+  async list() {
+    const names = (await fs.readdir(dir)).filter((n) => n.endsWith(".json"));
+    return Promise.all(
+      names.map((n) =>
+        fs.readFile(path.join(dir, n), "utf-8").then((r) => JSON.parse(r))
+      )
+    );
+  },
+});
+
+export default store;
+```
+
+The adapter only stores and loads a `TaskRecord` (a JSON object) by id. `createTaskStore` accepts optional tuning as a second argument:
+
+- **`defaultTtlMs`**: lifetime in ms when the requestor doesn't ask for one. Defaults to `null` (unlimited).
+- **`pollIntervalMs`**: suggested client poll interval, surfaced in task responses. Defaults to `1000`.
+- **`pageSize`**: page size for `tasks/list`. Defaults to `50`.
+
+## Marking a tool as a task
+
+A tool opts in with `taskSupport` in its `metadata`:
+
+```ts title="src/tools/long-job.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolExtraArguments, type ToolMetadata } from "xmcp";
+import { store } from "../task-store";
+
+export const schema = {
+  label: z.string(),
+};
+
+export const metadata: ToolMetadata = {
+  name: "long_job",
+  description: "Runs a long job as a task.",
+  taskSupport: "required",
+};
+
+export default async function longJob(
+  { label }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const taskId = extra.task?.taskId;
+
+  // Kick off the work out-of-band and return nothing: the task stays "working"
+  // until your worker writes the result back through the store.
+  void enqueue({ taskId, label });
+}
+```
+
+`taskSupport` accepts:
+
+- **`"forbidden"`** (default): the tool is never task-augmented.
+- **`"optional"`**: clients may call it as a task or as a normal call.
+- **`"required"`**: clients must call it as a task.
+
+When a tool runs as a task, `extra.task.taskId` is available. Use it to key the work you enqueue and to write the result back to your store.
+
+## Execution is yours
+
+xmcp creates the task and serves status and result reads — it does **not** run the background work. You decide how the tool executes:
+
+- **Return a result synchronously.** If your handler returns a `CallToolResult` (or a string/number), xmcp stores it as the terminal result immediately. Good for quick work or long-lived Node servers.
+- **Complete it out-of-band.** Return nothing to leave the task `working`, enqueue the work (queue, cron, worker), and have that worker write the result back through the store. This is the right model for serverless, where the function may freeze after returning.
+
+<Callout variant="info">
+  If a tool is `"optional"` and a client calls it **without** a task, it is
+  expected to return a normal result synchronously. Use `"required"` for work
+  that only ever completes out-of-band.
+</Callout>
+
+### Returning a string from a worker
+
+An out-of-band worker can store a plain `string` (or `number`) — xmcp coerces it into a `CallToolResult` when the client reads it back, exactly like returning a string from a normal tool:
+
+```ts title="src/jobs/worker.ts"
+await store.storeTaskResult(taskId, "completed", `Job "${label}" finished.`);
+// the client receives: { content: [{ type: "text", text: "Job \"...\" finished." }] }
+```
+
+If you store an object instead, it must already be a valid `CallToolResult` (e.g. `{ content: [{ type: "text", text: "..." }] }` or `{ structuredContent: {...} }`) — objects are returned to the client unchanged.
+
+## Plug in any store
+
+The adapter is just `get` / `set` / `delete` / `list` over a JSON record, so any KV or database drops straight in — point the four methods at it:
+
+```ts title="src/task-store.ts"
+import { createTaskStore } from "xmcp";
+import { redis } from "./redis";
+
+export const store = createTaskStore({
+  get: (taskId) => redis.get(`task:${taskId}`),
+  set: (taskId, record) => redis.set(`task:${taskId}`, record),
+  delete: (taskId) => redis.del(`task:${taskId}`),
+  list: () => redis.mget(`task:*`),
+});
+
+export default store;
+```
+
+<Callout variant="info">
+  `list()` only powers `tasks/list`. `createTaskStore` paginates its result in
+  memory, which is fine for moderate volumes — for very large datasets,
+  [implement the store yourself](#implementing-the-store-yourself) and paginate
+  in the query. You can also let your store's native TTL (e.g. Redis `EXPIRE`)
+  expire records; `createTaskStore` already evicts expired tasks on read.
+</Callout>
+
+### Implementing the store yourself
+
+`createTaskStore` is a convenience. For full control — query-level pagination, custom expiry, multi-tenant keys — implement the `TaskStore` interface directly and default-export it from `src/task-store.ts`. It exposes `createTask`, `getTask`, `storeTaskResult`, `getTaskResult`, `updateTaskStatus`, and `listTasks`. Generate ids with `generateTaskId` (Web Crypto, cryptographically secure), keep a terminal task (`completed` / `failed` / `cancelled`) terminal, and use ISO 8601 strings for `createdAt` / `lastUpdatedAt`.
+
+## Lifecycle
+
+1. The client calls the tool with a `task` field. xmcp creates a task (`status: "working"`) in your store and returns immediately.
+2. The client polls `tasks/get` until the task reaches a terminal status (`completed`, `failed`, or `cancelled`), respecting the `pollInterval`.
+3. The client calls `tasks/result` for the underlying tool result. A result with `isError: true` maps to `failed`.
+4. `tasks/cancel` moves a non-terminal task to `cancelled`; cancelling a terminal task returns a `-32602` error.
+5. After the `ttl` elapses, the store may delete the task.
+
+## Security
+
+Stateless HTTP has no requestor identity, so the task id is the only access control. xmcp generates cryptographically secure ids, and you should prefer short TTLs. If you need stronger isolation between callers, add [authentication](/docs/authentication/jwt).
+
+See the [`tasks-http` example](https://github.com/basementstudio/xmcp/tree/main/examples/tasks-http) for a complete, runnable server.
