@@ -26,7 +26,7 @@ MCP server (the tool)            worker (separate process)
    (`src/tools/long-job.ts`). When a client calls it with a `task` field, xmcp
    creates a task in the store and returns immediately. **The tool only drops a
    job on the queue — it does not run the work.**
-2. The worker (`src/worker.ts`) is a standalone process. It watches the queue,
+2. The worker (`src/worker.ts`) is a standalone process. It polls the queue,
    runs the job, and writes the result back through the **same** task store.
 3. Clients poll `tasks/get` for status and call `tasks/result` for the output.
    They read from the store the worker wrote to — the server that created the
@@ -45,21 +45,29 @@ store with Redis, a database, or a KV service.
 
 ## Run it
 
-You need **two terminals** — the separation is the lesson.
-
-Terminal 1 — the MCP server (enqueues jobs):
-
 ```bash
-pnpm dev      # or: pnpm build && pnpm start
+pnpm dev
 ```
 
-Terminal 2 — the worker (executes jobs elsewhere):
-
-```bash
-pnpm worker
-```
+`dev` starts **both** processes — the MCP server and the worker — so tasks
+complete out of the box. The worker is still a separate process (`tsx watch
+src/worker.ts &`); it just shares the terminal.
 
 The server listens on `http://127.0.0.1:3001/mcp`.
+
+> **A task stuck on `working` means the worker isn't running.** The tool only
+> enqueues; if nothing drains the queue, the task never completes. `pnpm dev`
+> runs the worker for you — or run it yourself with `pnpm worker`.
+
+To see the two processes truly side by side, run them in separate terminals:
+
+```bash
+# terminal 1 — server only
+pnpm build && pnpm start
+
+# terminal 2 — worker only
+pnpm worker
+```
 
 ## Try the flow
 

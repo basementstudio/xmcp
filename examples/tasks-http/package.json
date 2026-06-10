@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "xmcp build",
-    "dev": "xmcp dev",
+    "dev": "tsx watch src/worker.ts & xmcp dev",
     "worker": "tsx watch src/worker.ts",
     "start": "node dist/http.js",
     "type-check": "tsc --noEmit"

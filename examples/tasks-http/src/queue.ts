@@ -1,5 +1,4 @@
 import { promises as fs } from "node:fs";
-import { watch } from "node:fs";
 import path from "node:path";
 
 /**
@@ -17,6 +16,15 @@ export interface Job {
 
 const dir = path.resolve(process.cwd(), ".queue");
 const file = (taskId: string) => path.join(dir, `${taskId}.json`);
+
+/**
+ * How often the worker checks the queue. A production worker would receive
+ * jobs through its queue's native delivery (SQS long-poll, Redis `BLPOP`, a
+ * webhook); this dependency-free example polls the directory instead.
+ */
+const POLL_INTERVAL_MS = 500;
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Drop a job on the queue. Called by the tool; returns immediately. */
 export async function enqueue(job: Job): Promise<void> {
@@ -46,27 +54,28 @@ async function pendingTaskIds(): Promise<string[]> {
 }
 
 /**
- * Watch the queue and run `onJob` for each job exactly once. Signal-based: it
- * drains anything already queued on startup, then reacts to `fs.watch` events
- * for new jobs — no polling timer.
+ * Poll the queue forever, running `onJob` for each job exactly once. Jobs run
+ * concurrently, so a long one never blocks the rest of the queue.
  */
-export async function watchQueue(
+export async function processQueue(
   onJob: (job: Job) => Promise<void>
 ): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
+  const running = new Set<string>();
 
-  const run = async (taskId: string) => {
-    const job = await claimJob(taskId);
-    if (job) await onJob(job);
-  };
-
-  for (const taskId of await pendingTaskIds()) {
-    await run(taskId);
-  }
-
-  watch(dir, (_event, filename) => {
-    if (filename && filename.endsWith(".json")) {
-      void run(filename.slice(0, -".json".length));
+  for (;;) {
+    for (const taskId of await pendingTaskIds()) {
+      if (running.has(taskId)) continue;
+      running.add(taskId);
+      void (async () => {
+        try {
+          const job = await claimJob(taskId);
+          if (job) await onJob(job);
+        } finally {
+          running.delete(taskId);
+        }
+      })();
     }
-  });
+    await delay(POLL_INTERVAL_MS);
+  }
 }
