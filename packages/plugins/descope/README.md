@@ -92,6 +92,7 @@ import { getSession } from "@xmcp-dev/descope";
 
 const session = getSession();
 session.userId       // Descope user ID
+session.email        // Email address from JWT claims
 session.loginIds     // Login identifiers (email, phone, etc.)
 session.permissions  // Permissions granted to this session
 session.roles        // Roles assigned to the user

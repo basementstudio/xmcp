@@ -152,6 +152,7 @@ export default function whoami(): string {
 The `session` object contains the following fields:
 
 - `session.userId`: The Descope user ID.
+- `session.email`: Email address from the JWT claims.
 - `session.token`: The raw bearer token from the request.
 - `session.loginIds`: Login identifiers associated with the user (email, phone, etc.).
 - `session.permissions`: Array of permissions granted to this session.

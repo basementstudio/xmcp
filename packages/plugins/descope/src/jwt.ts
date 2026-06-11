@@ -24,6 +24,7 @@ export function claimsToSession(token: string, authInfo: AuthenticationInfo): De
   }
   return {
     userId: claims.sub ?? "",
+    email: typeof claims.email === "string" ? claims.email : "",
     token,
     loginIds,
     tenants,

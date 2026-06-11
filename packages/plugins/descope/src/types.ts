@@ -13,6 +13,7 @@ export interface DescopeTenant {
 
 export interface DescopeSession {
   userId: string;
+  email: string;
   token: string;
   loginIds: string[];
   tenants: Record<string, DescopeTenant>;
