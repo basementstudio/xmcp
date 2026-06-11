@@ -166,6 +166,31 @@ The `session` object contains the following fields:
   Do not call `getSession()` at module load time. Only call it inside tool handler functions where the middleware context is active.
 </Callout>
 
+### Example: Read custom JWT claims
+
+Any claims added to Descope JWTs via [JWT templates](https://docs.descope.com/management/token/jwt-templates#custom-claims) are available on `session.claims`:
+
+```typescript title="src/tools/custom-claims.ts"
+import type { ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/descope";
+
+export const metadata: ToolMetadata = {
+  name: "custom-claims",
+  description: "Returns custom claims from the authenticated user's JWT",
+};
+
+export default function customClaims(): string {
+  const { claims } = getSession();
+
+  const plan = claims["plan"] as string | undefined;
+  const orgId = claims["org_id"] as string | undefined;
+
+  return JSON.stringify({ plan, orgId }, null, 2);
+}
+```
+
+`session.claims` is typed as `Record<string, unknown>`, so cast each value to the type you expect after reading it.
+
 ## Get user profile
 
 Use `getUser()` to fetch full user details from the Descope Management API. This requires `managementKey` to be set in your provider configuration.
