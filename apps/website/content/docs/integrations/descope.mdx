@@ -249,6 +249,70 @@ export default async function listRoles(): Promise<string> {
 }
 ```
 
+## Fetch a provider token
+
+Use `getManagementClient()` to retrieve a stored OAuth access token from Descope's [connection vault](https://docs.descope.com/management/token/jwt-templates#custom-claims). This is useful when a tool needs to call a third-party API on behalf of the authenticated user.
+
+```typescript title="src/tools/github-repos.ts"
+import type { ToolMetadata } from "xmcp";
+import { getManagementClient, getSession } from "@xmcp-dev/descope";
+
+export const metadata: ToolMetadata = {
+  name: "github-repos",
+  description: "Lists the authenticated user's GitHub repositories using their stored GitHub token",
+};
+
+export default async function githubRepos(): Promise<string> {
+  const { loginIds } = getSession();
+  const mgmt = getManagementClient();
+
+  const resp = await mgmt.user.getProviderToken(loginIds[0], "github");
+  const { accessToken } = resp.data!;
+
+  const response = await fetch("https://api.github.com/user/repos", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const repos = await response.json();
+  return JSON.stringify(repos, null, 2);
+}
+```
+
+<Callout variant="warning">
+  `getManagementClient()` requires `managementKey` to be configured in `descopeProvider`. The provider token is only available if the user authenticated via that OAuth connection.
+</Callout>
+
+## Fetch an outbound app token
+
+Use `getManagementClient()` to fetch a token for a [Descope outbound app](https://docs.descope.com/manage/outboundapps). Outbound apps are OAuth connections configured in Descope where Descope manages the client credentials and token lifecycle on your behalf.
+
+```typescript title="src/tools/github-repos.ts"
+import type { ToolMetadata } from "xmcp";
+import { getManagementClient, getSession } from "@xmcp-dev/descope";
+
+export const metadata: ToolMetadata = {
+  name: "github-repos",
+  description: "Lists the authenticated user's GitHub repositories using a Descope outbound app token",
+};
+
+export default async function githubRepos(): Promise<string> {
+  const { userId } = getSession();
+  const mgmt = getManagementClient();
+
+  const resp = await mgmt.outboundApplication.fetchToken("github", userId);
+  const { accessToken } = resp.data!.token;
+
+  const response = await fetch("https://api.github.com/user/repos", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const repos = await response.json();
+  return JSON.stringify(repos, null, 2);
+}
+```
+
+<Callout variant="warning">
+  `getManagementClient()` requires `managementKey` to be configured in `descopeProvider`. The outbound app must be configured in the Descope Console and the user must have granted access to it.
+</Callout>
+
 ## Troubleshooting
 
 These are the most common errors you may encounter when using the Descope plugin:
