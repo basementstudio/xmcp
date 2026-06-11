@@ -1,0 +1,342 @@
+---
+title: "Roll out to a team"
+displayTitle: "Roll out to a team"
+metadataTitle: "Roll Out to a Team | xmcp Documentation"
+publishedAt: "2026-06-11"
+summary: "Roll out secure team access to your xmcp server so each person signs in individually, without sharing API keys in MCP client config."
+description: "Secure team access to your xmcp server using Scalekit. Set up OAuth 2.1, configure sign-in, and let team members connect from MCP clients."
+---
+
+You built an MCP server with xmcp. Your team needs the same tools, but each person must sign in with their own identity instead of inheriting API keys from a shared MCP client config. Secure the server with [Scalekit](https://scalekit.com), register it for OAuth 2.1, and share one URL so team members connect from their own MCP clients.
+
+**The outcome:** each team member adds one URL to their MCP client. On first connect, Scalekit handles sign-in. Your tools receive a per-user session you can scope to that person's data.
+
+| Shared across the team | Per team member |
+| --- | --- |
+| MCP server URL (for example `http://localhost:3001/mcp`) | Sign-in identity from Scalekit |
+| Scalekit credentials in your server `.env` | Tool data scoped to their user ID |
+
+For plugin API details and troubleshooting, see the [Scalekit integration](/docs/integrations/scalekit). For how MCP OAuth works under the hood, see the [authentication guide](/docs/guides/authentication).
+
+## Prerequisites
+
+You need an xmcp project with HTTP transport enabled, Node 20, and a Scalekit account. If you have not scaffolded a server yet, follow [installation](/docs/getting-started/installation) and select the HTTP transport.
+
+## Create a Scalekit account and get API credentials
+
+1. Sign up at the [Scalekit Dashboard](https://app.scalekit.com).
+2. Open **Settings** → **API Credentials**.
+3. Copy these three values. Add them to your server environment, not to team member MCP client configs:
+
+| Credential | Example prefix | Where it lives |
+| --- | --- | --- |
+| Environment URL | `https://your-env.scalekit.com` | Server `.env` only |
+| Client ID | `skc_...` | Server `.env` only |
+| Client Secret | `skcs_...` | Server `.env` only |
+
+<Callout variant="warning" title="Keep secrets on the server">
+  Never put `SCALEKIT_CLIENT_SECRET` or other service credentials in Cursor, Claude, or any MCP client config. Team members connect with the server URL only. Your server validates tokens Scalekit issues after each person signs in.
+</Callout>
+
+## Register your MCP server in Scalekit
+
+Register the server URL your team will connect to. Scalekit uses this registration to issue tokens and expose OAuth discovery endpoints that MCP clients rely on.
+
+Follow the [Scalekit MCP Auth quickstart](https://docs.scalekit.com/authenticate/mcp/quickstart/) for the full dashboard walkthrough. The steps that matter most for xmcp:
+
+1. In the Scalekit dashboard, go to **Auth for SaaS** → **MCP Auth** and add a new MCP server.
+2. Set **Server URL** to your xmcp server base URL. For local development, use `http://localhost:3001`. For production, use your deployed URL.
+3. Confirm **Allow dynamic client registration** is enabled. Cursor, Claude Code, and most MCP clients register themselves automatically on first connect.
+4. Copy the **Resource ID** (`res_...`) shown for the server. You need this so clients can discover the registration endpoint.
+
+<Callout variant="info" title="Match your BASE_URL">
+  The URL you register in Scalekit must match the `BASE_URL` environment variable in your xmcp project. A mismatch causes token validation failures and broken OAuth discovery.
+</Callout>
+
+Scalekit also publishes an [xmcp-specific quickstart](https://docs.scalekit.com/authenticate/mcp/xmcp-quickstart) if you want a parallel walkthrough focused on xmcp projects.
+
+## Add Scalekit auth to your xmcp server
+
+Install the Scalekit plugin and wire it as middleware. The plugin handles OAuth discovery routes, token validation, and session context for your tools.
+
+### Install the plugin
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm add @xmcp-dev/scalekit",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/scalekit",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/scalekit",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/scalekit",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+### Configure environment variables
+
+Create a `.env` file in your project root:
+
+```bash
+SCALEKIT_ENVIRONMENT_URL=https://your-env.scalekit.com
+SCALEKIT_CLIENT_ID=skc_...
+SCALEKIT_CLIENT_SECRET=skcs_...
+SCALEKIT_RESOURCE_ID=res_...
+
+BASE_URL=http://localhost:3001
+```
+
+Replace the placeholder values with the credentials from your Scalekit dashboard. Set `BASE_URL` to the same URL you registered as the MCP server.
+
+### Add middleware
+
+Create `src/middleware.ts` and export the Scalekit provider:
+
+```typescript title="src/middleware.ts"
+import { scalekitProvider } from "@xmcp-dev/scalekit";
+
+export default scalekitProvider({
+  environmentUrl: process.env.SCALEKIT_ENVIRONMENT_URL!,
+  clientId: process.env.SCALEKIT_CLIENT_ID!,
+  clientSecret: process.env.SCALEKIT_CLIENT_SECRET!,
+  baseURL: process.env.BASE_URL!,
+  resourceId: process.env.SCALEKIT_RESOURCE_ID,
+  scopes: ["openid", "profile", "email"],
+});
+```
+
+### Scope data to the signed-in user
+
+Use `getSession()` inside tools to read the authenticated user's ID and scope data to that person:
+
+```typescript title="src/tools/whoami.ts"
+import type { ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/scalekit";
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Returns the authenticated user's session information",
+};
+
+export default function whoami(): string {
+  const session = getSession();
+  return JSON.stringify(
+    {
+      userId: session.userId,
+      organizationId: session.organizationId,
+      scopes: session.scopes,
+    },
+    null,
+    2,
+  );
+}
+```
+
+Run the server:
+
+```bash
+pnpm dev
+```
+
+The MCP endpoint is available at `http://localhost:3001/mcp` by default. See the [`scalekit-http` example](https://github.com/basementstudio/xmcp/tree/canary/examples/scalekit-http) for a complete working project.
+
+## Configure sign-in options in Scalekit
+
+The sign-in screen your team sees is controlled in the Scalekit dashboard. Enable the methods you want before sharing the MCP server URL.
+
+| Method | Default | Configure in Scalekit |
+| --- | --- | --- |
+| Google OAuth | On | [Social logins](https://docs.scalekit.com/mcp/auth-methods/social/) |
+| Microsoft OAuth | On | [Social logins](https://docs.scalekit.com/mcp/auth-methods/social/) |
+| Passwordless (magic link) | On | [Passwordless auth](https://docs.scalekit.com/authenticate/auth-methods/passwordless/) |
+| Enterprise single sign-on (SSO) | Off | [Enterprise SSO](https://docs.scalekit.com/mcp/auth-methods/enterprise/) |
+
+Toggle each method on or off in the dashboard. For SAML or OIDC connections to your company's identity provider, enable enterprise SSO and follow the [enterprise auth guide](https://docs.scalekit.com/mcp/auth-methods/enterprise/).
+
+<Callout variant="info" title="Enable at least one method">
+  Team members cannot sign in until you enable at least one auth method in the Scalekit dashboard. Do this before sharing the MCP server URL.
+</Callout>
+
+Anyone with the MCP server URL can create an account on first connect. Share the URL when you are ready for new users to sign up.
+
+### Rename Organization to Team
+
+Scalekit labels the shared workspace "Organization" by default. For a team rollout, rename it so the sign-in UI matches how your group thinks about access.
+
+1. Go to **Auth for SaaS** → **Settings** → **Application Details**.
+2. Change the **Organization** meta name to **Team**.
+
+The updated label appears in Scalekit sign-in and account flows your team sees on first connect.
+
+## Let team members connect from their MCP client
+
+Share the MCP server URL with your team. Each team member adds only that URL to their own MCP client, such as Cursor or Claude Desktop. Scalekit credentials stay in your server `.env`. On first use, the client starts OAuth automatically and Scalekit handles sign-in.
+
+Any MCP client that supports Streamable HTTP and OAuth 2.1 can connect to your server. For [Cursor](/docs/getting-started/connecting#cursor), [Claude Desktop](/docs/getting-started/connecting#claude-desktop), and other config-file clients, follow [connecting to your server](/docs/getting-started/connecting). For HTTP transport details, see [transports](/docs/configuration/transports).
+
+### What happens on first connect
+
+1. The MCP client sends a request to `/mcp` and receives a `401` with a `WWW-Authenticate` header.
+2. The client fetches `/.well-known/oauth-protected-resource` to find the authorization server.
+3. The client registers itself through dynamic client registration and starts the authorization code flow with PKCE. See the [authentication guide](/docs/guides/authentication) for how PKCE protects the flow.
+4. Scalekit shows the sign-in screen. The team member completes sign-in or sign-up.
+5. The client sends authenticated requests to `/mcp`. Your tools receive that user's session.
+
+### CLI clients
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "Claude Code",
+      value: "claude-code",
+      content: "claude mcp add --transport http my-team-server http://localhost:3001/mcp",
+    },
+    {
+      label: "Gemini CLI",
+      value: "gemini-cli",
+      content: "gemini mcp add --transport http my-team-server http://localhost:3001/mcp",
+    },
+    {
+      label: "Codex",
+      value: "codex",
+      content: "# ~/.codex/config.toml\n[mcp_servers.my-team-server]\ncommand = \"npx\"\nargs = [\"-y\", \"mcp-remote\", \"http://localhost:3001/mcp\"]",
+    },
+  ]}
+  defaultTab="claude-code"
+/>
+
+For production, replace `http://localhost:3001/mcp` with your deployed server address.
+
+After a team member adds the server, they open their client and trigger a tool call. The OAuth browser flow starts on the first authenticated request.
+
+## Restrict tool access with roles and permissions
+
+Authentication tells you who connected. Authorization tells you what they are allowed to do. After team members sign in, Scalekit can include **roles** and **permissions** in the access token your MCP server already validates on each request.
+
+When you configure role-based access control (RBAC) in Scalekit, the token can carry values like:
+
+```json
+{
+  "sub": "usr_...",
+  "org_id": "org_...",
+  "roles": ["member", "project_manager"],
+  "permissions": ["notes:read", "notes:write", "admin:settings"]
+}
+```
+
+Permissions use a `resource:action` pattern (for example `notes:write`). Your xmcp tools read these claims from `getSession()` and allow or deny access before running tool logic. No extra Scalekit API call is required for this check.
+
+Set up roles and permissions in the Scalekit dashboard first:
+
+1. Read the [authorization overview](https://docs.scalekit.com/authenticate/authz/overview/) to understand how RBAC fits into your rollout.
+2. Follow [create roles and permissions](https://docs.scalekit.com/authenticate/authz/create-roles-permissions/) to define what each role can do.
+3. Assign roles to team members in your organization.
+
+### Check permissions inside a tool
+
+Read permissions from the JWT claims Scalekit issued at sign-in:
+
+```typescript title="src/lib/permissions.ts"
+import type { Session } from "@xmcp-dev/scalekit";
+
+export function getTokenPermissions(session: Session): string[] {
+  const claims = session.claims as Record<string, unknown>;
+
+  if (Array.isArray(claims.permissions)) {
+    return claims.permissions as string[];
+  }
+
+  if (Array.isArray(claims["https://scalekit.com/permissions"])) {
+    return claims["https://scalekit.com/permissions"] as string[];
+  }
+
+  if (Array.isArray(claims["scalekit:permissions"])) {
+    return claims["scalekit:permissions"] as string[];
+  }
+
+  return [];
+}
+
+export function hasPermission(session: Session, permission: string): boolean {
+  return getTokenPermissions(session).includes(permission);
+}
+```
+
+### Gate a tool behind `notes:write`
+
+```typescript title="src/tools/save-note.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+import { getSession } from "@xmcp-dev/scalekit";
+import { hasPermission } from "../lib/permissions";
+
+export const schema = {
+  content: z.string().describe("Note content to save"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "save_note",
+  description: "Save a note for the signed-in user",
+};
+
+export default function saveNote({ content }: InferSchema<typeof schema>): string {
+  const session = getSession();
+
+  if (!hasPermission(session, "notes:write")) {
+    return "You do not have permission to save notes. Ask an admin to grant the notes:write permission.";
+  }
+
+  // Save note scoped to session.userId
+  return "Note saved.";
+}
+```
+
+Use the same pattern to gate admin-only tools, read-only team members, or feature flags per role. Call `whoami` during testing to inspect `session.claims.roles` and `session.claims.permissions` for a signed-in user.
+
+<Callout variant="info" title="OAuth scopes vs RBAC permissions">
+  `session.scopes` comes from the OAuth `scope` claim (for example `openid`, `profile`, `email`). RBAC `permissions` are separate strings defined in Scalekit. Use `permissions` for tool-level allow and deny rules inside your MCP server.
+</Callout>
+
+## Verify per-user access
+
+Confirm that two team members see different data when they use the same server URL:
+
+1. **Alice** connects her MCP client to the server URL and completes sign-in.
+2. Alice calls a tool that writes data scoped to her user ID.
+3. Alice reads that data back. She sees her own result.
+4. **Bob** connects the same URL with a different Scalekit account.
+5. Bob reads the same data. He does not see Alice's result.
+
+If both users see the same private data, check that your tools call `getSession()` and scope queries by `session.userId` rather than using shared credentials.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `401` on every tool call | OAuth not completed | Reconnect the MCP client and finish the browser sign-in flow |
+| `Session not initialized` in a tool | Tool runs outside the auth middleware | Confirm `src/middleware.ts` exports `scalekitProvider` and the route is under `/mcp` |
+| Client cannot register (DCR error) | Missing resource ID or DCR disabled | Set `SCALEKIT_RESOURCE_ID` and enable dynamic client registration in Scalekit |
+| Token validation fails | URL mismatch | Make `BASE_URL`, the registered server URL, and the URL in the MCP client config identical |
+| Empty sign-in screen | No auth methods enabled | Enable at least one method in the Scalekit dashboard |
+
+For additional plugin-level errors, see [troubleshooting in the Scalekit integration](/docs/integrations/scalekit#troubleshooting).
+
+## Next steps
+
+- Read the [Scalekit integration](/docs/integrations/scalekit) for `getClient()`, optional scopes, and production configuration.
+- Review the [authentication guide](/docs/guides/authentication) for OAuth discovery, PKCE, and token lifecycle details.
+- Deploy your server so your team can connect remotely. See [deployment](/docs/deployment/vercel).
