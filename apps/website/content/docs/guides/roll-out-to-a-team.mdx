@@ -16,11 +16,11 @@ You built an MCP server with xmcp. Your team needs the same tools, but each pers
 | MCP server URL (for example `http://localhost:3001/mcp`) | Sign-in identity from Scalekit |
 | Scalekit credentials in your server `.env` | Tool data scoped to their user ID |
 
-For plugin API details and troubleshooting, see the [Scalekit integration](/docs/integrations/scalekit). For how MCP OAuth works under the hood, see the [authentication guide](/docs/guides/authentication).
+For plugin API details and troubleshooting, see the [Scalekit integration](/docs/integrations/scalekit). For how MCP OAuth works under the hood, see the [authentication guide](/docs/guides/authentication). To follow along with working code, clone the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) repository.
 
 ## Prerequisites
 
-You need an xmcp project with HTTP transport enabled, Node 20, and a Scalekit account. If you have not scaffolded a server yet, follow [installation](/docs/getting-started/installation) and select the HTTP transport.
+You need an xmcp project with HTTP transport enabled, Node 20, and a Scalekit account. If you have not scaffolded a server yet, follow [installation](/docs/getting-started/installation) and select the HTTP transport, or start from the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) repo and check out the code there.
 
 ## Create a Scalekit account and get API credentials
 
@@ -57,7 +57,7 @@ Scalekit also publishes an [xmcp-specific quickstart](https://docs.scalekit.com/
 
 ## Add Scalekit auth to your xmcp server
 
-Install the Scalekit plugin and wire it as middleware. The plugin handles OAuth discovery routes, token validation, and session context for your tools.
+Install the Scalekit plugin and wire it as middleware. The plugin handles OAuth discovery routes, token validation, and session context for your tools. The snippets below match the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) project — check out that repo for the full middleware, `whoami`, and `greet` tool implementations.
 
 ### Install the plugin
 
@@ -152,7 +152,7 @@ Run the server:
 pnpm dev
 ```
 
-The MCP endpoint is available at `http://localhost:3001/mcp` by default. See the [`scalekit-http` example](https://github.com/basementstudio/xmcp/tree/canary/examples/scalekit-http) for a complete working project.
+The MCP endpoint is available at `http://localhost:3001/mcp` by default. Run the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) project locally to test the full OAuth flow before sharing the URL with your team.
 
 ## Configure sign-in options in Scalekit
 
@@ -337,6 +337,7 @@ For additional plugin-level errors, see [troubleshooting in the Scalekit integra
 
 ## Next steps
 
+- Check out the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) repository for a runnable project with Scalekit middleware and per-user session tools.
 - Read the [Scalekit integration](/docs/integrations/scalekit) for `getClient()`, optional scopes, and production configuration.
 - Review the [authentication guide](/docs/guides/authentication) for OAuth discovery, PKCE, and token lifecycle details.
 - Deploy your server so your team can connect remotely. See [deployment](/docs/deployment/vercel).
