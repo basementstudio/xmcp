@@ -120,17 +120,21 @@ Define roles in Scalekit ([create roles and permissions](https://docs.scalekit.c
 
 ## Try it out
 
-Prove the pattern on the team-notes demo, or run the same checks on your own server after you deploy.
+Prove the pattern with the Scalekit template, or run the same checks on your own server after you deploy.
 
-### Start from an in-repo example
+### Start from the Scalekit template
 
-A minimal authenticated server using the Scalekit plugin is at `examples/scalekit-http`. It includes the middleware wiring and a `whoami` tool so you can observe per-request identity right away.
+Bootstrap an authenticated MCP server in one command:
 
-The `save_note` / `list_my_notes` pattern from the snippets in this guide can be added on top of that example (or any xmcp server) by scoping storage to `getSession().userId`. The verification steps below work for either the included example or your own implementation.
+```bash
+npx create-xmcp-app --example scalekit
+```
+
+The [Scalekit Authentication template](/templates/scalekit) includes the middleware wiring, a `whoami` tool to observe per-request identity, and `save_note` / `list_my_notes` tools that demonstrate per-user data isolation. Run the verification steps below against it or your own implementation.
 
 ### Verify per-user isolation
 
-Run these checks against the demo or your deployment:
+Run these checks against the template or your deployment:
 
 1. Alice signs in, saves a note, lists notes, and sees only hers.
 2. Bob uses the same URL with a different account and does not see Alice's note.
