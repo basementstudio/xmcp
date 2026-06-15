@@ -7,9 +7,9 @@ summary: "Your MCP config has API keys in it. Share one server URL so each user 
 description: "Roll out secure team access to your xmcp server using Scalekit OAuth 2.1. Understand the team-notes pattern, wire it into your project, and verify per-user isolation."
 ---
 
-You built an MCP server your team wants in Cursor or Claude Code. The fastest way to share it is also the riskiest: drop `API_KEY`, database URLs, and service tokens into a shared `mcp.json`, commit it, and paste the same block into every laptop.
+You built an MCP server your team wants in their own MCP client, like Cursor, Claude Code, or others. The fastest way to share it is also the riskiest: drop `API_KEY`, database URLs, and service tokens into a shared `mcp.json`, commit it, and paste the same block into every laptop.
 
-That works until someone rotates a key, a new hire needs a 30-minute setup call, or you realize every tool call runs as the same service account. Audit logs cannot tell Alice from Bob. One leaked config exposes credentials for the whole team.
+It only takes one person rotating a key, one onboarding call, or the realization that every tool runs as a shared service account before problems surface. Audit logs mix up who did what, and a single leaked config can expose credentials.
 
 Per-user OAuth on the server fixes this. xmcp runs auth in middleware before tools execute; the Scalekit plugin handles sign-in, token validation, and session identity. You share one MCP URL. Each user signs in individually. Secrets stay in server `.env`, not in client config.
 
@@ -17,7 +17,7 @@ Per-user OAuth on the server fixes this. xmcp runs auth in middleware before too
 
 ## How team access works on one URL
 
-The pattern below uses a small **team notes** server as the example. You deploy it once and share a single HTTP endpoint (for example `https://notes.internal.example/mcp`).
+The pattern below uses a small **team notes** MCP server as the example. You deploy it once and share a single HTTP endpoint (for example `https://notes.internal.example/mcp`).
 
 Each user adds **only that URL** to Cursor, Claude Code, or another MCP client. On the first tool call, the client opens browser sign-in. No API keys or service tokens go into client config.
 
@@ -36,9 +36,7 @@ A multi-user rollout succeeds when all of this is true:
 3. Each calls `save_note` and `list_my_notes`.
 4. Each person sees **only their notes**.
 
-That is the whole win. The sections below explain why it works and how to wire the same shape into your xmcp server.
-
-## Per-user OAuth moves the trust boundary to your server
+## Per-user OAuth moves the trust boundary to your xmcp server
 
 Shared credentials put the trust boundary in the MCP client. Per-user OAuth moves it to the server.
 
@@ -46,7 +44,7 @@ Shared credentials put the trust boundary in the MCP client. Per-user OAuth move
 | --- | --- |
 | MCP server URL you share | Sign-in through Scalekit |
 | `SCALEKIT_CLIENT_SECRET` and service credentials in `.env` | Bearer token on each request |
-| Your tool logic and data rules | Identity (`userId`) and optional permissions in the token |
+| Your tool logic and data rules | Identity (`userId`) and optional authorization (`permissions`) in the token |
 
 xmcp exposes middleware so auth runs before tools execute. The `@xmcp-dev/scalekit` plugin handles OAuth discovery, token validation, and `getSession()` inside tools. Users add one URL; the server decides who they are.
 
@@ -79,14 +77,7 @@ BASE_URL=http://localhost:3001
 
 ### Configure sign-in for users
 
-Enable auth methods in the Scalekit dashboard before sharing the URL:
-
-| Method | Default | Configure in Scalekit |
-| --- | --- | --- |
-| Google OAuth | On | [Social logins](https://docs.scalekit.com/mcp/auth-methods/social/) |
-| Microsoft OAuth | On | [Social logins](https://docs.scalekit.com/mcp/auth-methods/social/) |
-| Passwordless (magic link) | On | [Passwordless auth](https://docs.scalekit.com/authenticate/auth-methods/passwordless/) |
-| Enterprise SSO | Off | [Enterprise SSO](https://docs.scalekit.com/mcp/auth-methods/enterprise/) |
+Enable the authentication methods your team will use in the Scalekit dashboard. Scalekit supports social logins, passwordless (OTP and magic links), Enterprise SSO, and [bring your own auth](https://docs.scalekit.com/mcp/auth-methods/custom-auth/).
 
 ### Share the URL
 
@@ -94,7 +85,7 @@ Each user adds only the MCP server URL to their client. For [Cursor](/docs/getti
 
 ## When identity is not enough: RBAC
 
-`userId` scoping answers **whose data is this?** It does not answer **should this person use this tool?**
+`userId` scoping answers **whose data is this?** It does not answer **should this person use this tool?** That second question is authorization.
 
 A viewer might list their own notes but must not call `save_note`. Scalekit can put `roles` and `permissions` in the access token your middleware already validates:
 
@@ -121,21 +112,31 @@ await saveNote(session.userId, content);
 | `hasPermission(session, "notes:write")` | Carol saving when she is read-only |
 | `hasPermission(session, "notes:read")` | Dave using note tools at all |
 
-Define roles in Scalekit ([create roles and permissions](https://docs.scalekit.com/authenticate/authz/create-roles-permissions/)), assign them to members, enforce in tools. No extra API call per request.
+Define roles in Scalekit ([create roles and permissions](https://docs.scalekit.com/authenticate/authz/create-roles-permissions/)), assign them to members, and enforce authorization in tools. No extra API call per request.
 
 <Callout variant="info" title="OAuth scopes vs RBAC permissions">
   `session.scopes` (`openid`, `profile`, `email`) identify the user. RBAC `permissions` (`notes:write`) control what tools they may run. Use both layers when you need isolation and policy.
 </Callout>
 
-## Verify the rollout
+## Try it out
 
-Run this checklist after you deploy your server:
+Prove the pattern on the team-notes demo, or run the same checks on your own server after you deploy.
+
+### Start from an in-repo example
+
+A minimal authenticated server using the Scalekit plugin is at `examples/scalekit-http`. It includes the middleware wiring and a `whoami` tool so you can observe per-request identity right away.
+
+The `save_note` / `list_my_notes` pattern from the snippets in this guide can be added on top of that example (or any xmcp server) by scoping storage to `getSession().userId`. The verification steps below work for either the included example or your own implementation.
+
+### Verify per-user isolation
+
+Run these checks against the demo or your deployment:
 
 1. Alice signs in, saves a note, lists notes, and sees only hers.
 2. Bob uses the same URL with a different account and does not see Alice's note.
 3. (Optional) A read-only role can list but cannot save.
 
-Success means per-user identity works on one shared URL. Permission errors on step 3 mean RBAC is doing its job.
+Success means per-user identity works on one shared URL. A permission error on step 3 means authorization is doing its job.
 
 ## Troubleshooting
 
@@ -149,10 +150,6 @@ Success means per-user identity works on one shared URL. Permission errors on st
 | Both users see the same data | Scope storage with `getSession().userId`, not shared client env vars |
 
 More plugin errors: [Scalekit integration troubleshooting](/docs/integrations/scalekit#troubleshooting).
-
-## Try it yourself (optional)
-
-Want to run the team-notes demo locally before you adapt the pattern? The [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) repo includes `save_note`, `list_my_notes`, and Streamable HTTP at `/mcp`. Clone it and follow the README for configure, run, and client connection steps.
 
 ## What to do next
 
