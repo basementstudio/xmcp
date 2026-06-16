@@ -1,0 +1,407 @@
+---
+title: "Build and deploy an authenticated xmcp server from scratch"
+description: "Go from MCP fundamentals to a deployed, production-ready xmcp server on Vercel, with tools, transport choices, and OAuth-ready authentication."
+summary: "A practical 0-to-1 guide to understanding MCP, creating your first xmcp server, adding a typed tool, deploying to Vercel, and preparing authentication for AI clients like ChatGPT and Claude."
+category: "guides"
+date: "2026-06-16"
+order: 10
+authors:
+  - 0xkoller
+---
+
+MCP servers are becoming the integration layer between AI clients and real systems. They let ChatGPT, Claude, Cursor, and other clients discover tools, call them with typed arguments, and receive structured results.
+
+In this guide, we'll build one from zero: a typed xmcp server, a real weather tool, local testing, Vercel deployment, and the authentication path you should use before exposing private data or write actions to the internet.
+
+## What you'll build
+
+By the end, you'll have:
+
+- An xmcp server using the HTTP transport
+- A typed `get-weather` tool backed by a public weather API
+- A local `/mcp` endpoint for development
+- A deployed Vercel URL at `https://your-project.vercel.app/mcp`
+- A clear path to add OAuth with providers like Auth0, Clerk, Better Auth, WorkOS, or Scalekit
+
+The weather tool is intentionally simple and read-only. That lets us focus on the mechanics first, then add the production concerns that matter once the server is reachable by remote clients.
+
+## MCP in plain English
+
+The Model Context Protocol is a standard way for AI clients to connect to external capabilities.
+
+An MCP server can expose three main things:
+
+- **Tools**: Functions the model can call, like `get-weather`, `create-ticket`, or `query-crm`.
+- **Resources**: Data the client can read, like a document, profile, config file, or database record.
+- **Prompts**: Reusable workflows or instructions that clients can surface as commands.
+
+The important part is that the model does not call arbitrary code. It sees tool names, descriptions, schemas, and annotations. Then it decides when a tool is relevant and sends a structured call to your server.
+
+That means your tool metadata is part of the product. A vague tool description leads to vague behavior. A clear schema with useful `.describe()` text gives the model enough context to call the tool correctly.
+
+## Why xmcp
+
+xmcp is a TypeScript-first framework for building MCP-compatible backends. It gives you a project structure and removes the repetitive protocol wiring.
+
+The main features we'll use are:
+
+- File-system based discovery for tools, prompts, and resources
+- Zod schemas with TypeScript inference through `InferSchema`
+- HTTP and STDIO transports
+- Middleware for auth and request processing
+- OAuth provider plugins for production authentication
+- Zero-configuration deployment on Vercel
+
+For this guide, HTTP is the right transport because we want a remote server. STDIO is useful when a server runs locally on a user's machine. A deployed Vercel server needs an HTTPS endpoint that remote clients can reach.
+
+## Create the project
+
+Start with the xmcp scaffolder:
+
+```bash
+npx create-xmcp-app@latest my-weather-mcp --yes --use-pnpm --http
+cd my-weather-mcp
+pnpm dev
+```
+
+This creates an HTTP-based xmcp project and starts the local server. By default, the HTTP endpoint is:
+
+```txt
+http://localhost:3001/mcp
+```
+
+The generated project will look roughly like this:
+
+```txt
+my-weather-mcp/
+├── src/
+│   ├── tools/
+│   │   └── greet.ts
+│   ├── prompts/
+│   └── resources/
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts
+```
+
+The `xmcp.config.ts` file is where the transport and content paths are configured:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+  paths: {
+    tools: "./src/tools",
+    prompts: "./src/prompts",
+    resources: "./src/resources",
+  },
+  template: {
+    icons: [{ src: "./xmcp.svg" }],
+  },
+};
+
+export default config;
+```
+
+When xmcp starts, it discovers files in `src/tools`, `src/prompts`, and `src/resources` and registers them with the server.
+
+## Create your first real tool
+
+Replace the starter `greet` example with a tool that calls the [Open-Meteo](https://open-meteo.com/) API. It does not require an API key, so it is useful for learning and demos.
+
+Create `src/tools/get-weather.ts`:
+
+```typescript title="src/tools/get-weather.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  latitude: z.number().describe("Latitude of the location"),
+  longitude: z.number().describe("Longitude of the location"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-weather",
+  description: "Get the current temperature for a latitude and longitude",
+  annotations: {
+    title: "Get weather",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+};
+
+export default async function getWeather({
+  latitude,
+  longitude,
+}: InferSchema<typeof schema>) {
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.searchParams.set("latitude", String(latitude));
+  url.searchParams.set("longitude", String(longitude));
+  url.searchParams.set("current", "temperature_2m,wind_speed_10m");
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    return `Weather lookup failed with status ${response.status}`;
+  }
+
+  const data = await response.json();
+
+  return JSON.stringify(data.current, null, 2);
+}
+```
+
+There are three important exports here:
+
+- `schema` tells clients and models which arguments the tool accepts.
+- `metadata` explains what the tool does and how risky it is.
+- The default export is the handler that runs when the tool is called.
+
+The annotations matter. This tool only reads public weather data, so `readOnlyHint` is `true` and `destructiveHint` is `false`. If you later create tools that send emails, update records, charge money, or delete data, those annotations should change.
+
+## Test locally
+
+Start the server:
+
+```bash
+pnpm dev
+```
+
+Your local endpoint is:
+
+```txt
+http://localhost:3001/mcp
+```
+
+For Cursor, add an MCP server config like this:
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
+For Claude Desktop, use `mcp-remote`:
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
+
+You can also inspect the server with MCPJam:
+
+```bash
+npx @mcpjam/inspector@latest
+```
+
+Connect it to `http://localhost:3001/mcp`, list the tools, and call `get-weather` with coordinates like:
+
+```json
+{
+  "latitude": 40.7128,
+  "longitude": -74.006
+}
+```
+
+## Deploy to Vercel
+
+Vercel supports xmcp as a zero-configuration backend framework. You do not need to add a custom adapter or route handler for the basic xmcp project.
+
+You can deploy from the Vercel dashboard by pushing the project to GitHub and importing it at [vercel.com/new](https://vercel.com/new).
+
+Or deploy with the Vercel CLI:
+
+```bash
+vc deploy
+```
+
+After deployment, your MCP endpoint is:
+
+```txt
+https://your-project.vercel.app/mcp
+```
+
+You can use the same endpoint in remote clients. For Cursor:
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "url": "https://your-project.vercel.app/mcp"
+    }
+  }
+}
+```
+
+For Claude Code:
+
+```bash
+claude mcp add --transport http weather https://your-project.vercel.app/mcp
+```
+
+For ChatGPT Apps or connectors, enable developer mode, create a connector, and use the deployed `/mcp` URL.
+
+## Authentication is not optional for real data
+
+The weather example can be public because it reads public data and does not mutate anything. Most production MCP servers are different.
+
+If your server can read private data, query a CRM, send emails, update tickets, create purchases, or access customer records, protect it before sharing the URL. A remote HTTP MCP server is on the internet. Without authentication, anyone who can reach the endpoint can attempt to call the tools it exposes.
+
+MCP authentication is based on OAuth 2.1 concepts. A protected MCP server acts as a resource server, the AI client acts as an OAuth client, and your identity provider handles login, consent, tokens, scopes, and discovery metadata.
+
+This matters because remote AI clients increasingly expect standards-based authentication for protected MCP servers. ChatGPT documents OAuth 2.1-compatible flows for authenticated MCP servers. Claude remote connectors support OAuth and browser-based login for remote HTTP servers. Other clients vary, but OAuth is the interoperable path when you need per-user identity and consent.
+
+Do not confuse this with provider API keys. An API key for an LLM provider authenticates your app to that provider. It does not identify the end user who is calling your MCP tool. If your tool needs to know which user is asking, or what that user can access, use OAuth through an identity provider.
+
+## Use a provider, not hand-rolled OAuth
+
+xmcp's experimental built-in OAuth configuration has been replaced by provider plugins. Use one of the official integrations instead of building OAuth yourself.
+
+Good defaults:
+
+| Provider | Good fit |
+| --- | --- |
+| Auth0 | RBAC, enterprise auth, permissions like `tool:update-deal` |
+| Clerk | Fast user/session setup and user details inside tools |
+| Better Auth | Owning the auth stack with PostgreSQL |
+| WorkOS | B2B auth, organizations, SSO |
+| Scalekit | Enterprise OAuth and SaaS auth flows |
+
+Auth0 is a good choice when you need roles and permissions. Install the plugin:
+
+```bash
+pnpm i @xmcp-dev/auth0
+```
+
+Then add `src/middleware.ts`:
+
+```typescript title="src/middleware.ts"
+import { auth0Provider } from "@xmcp-dev/auth0";
+
+export default auth0Provider({
+  domain: process.env.DOMAIN!,
+  audience: process.env.AUDIENCE!,
+  baseURL: process.env.BASE_URL!,
+  clientId: process.env.CLIENT_ID!,
+  clientSecret: process.env.CLIENT_SECRET!,
+});
+```
+
+Clerk is a good choice when you want a fast application auth setup with user/session access inside tools:
+
+```bash
+pnpm i @xmcp-dev/clerk
+```
+
+```typescript title="src/middleware.ts"
+import { clerkProvider } from "@xmcp-dev/clerk";
+
+export default clerkProvider({
+  secretKey: process.env.CLERK_SECRET_KEY!,
+  clerkDomain: process.env.CLERK_DOMAIN!,
+  baseURL: process.env.BASE_URL!,
+});
+```
+
+In local development, `BASE_URL` should match your server:
+
+```bash
+BASE_URL=http://127.0.0.1:3001
+```
+
+In Vercel, set it to your production deployment:
+
+```bash
+BASE_URL=https://your-project.vercel.app
+```
+
+Each provider has additional dashboard setup. Auth0 requires Dynamic Client Registration and resource parameter support for MCP clients. Clerk requires Dynamic Client Registration in OAuth Applications. Follow the provider integration docs before publishing the server.
+
+Once auth is enabled, tools can read the authenticated user from the provider plugin. For Auth0:
+
+```typescript title="src/tools/whoami.ts"
+import type { ToolMetadata } from "xmcp";
+import { getAuthInfo } from "@xmcp-dev/auth0";
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Return the authenticated user's Auth0 identity",
+  annotations: {
+    title: "Who am I",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default function whoami() {
+  const authInfo = getAuthInfo();
+  return `Authenticated as ${authInfo.user.sub}`;
+}
+```
+
+With Auth0 permissions, you can protect specific tools by creating permissions named after the tool, such as `tool:update-deal`. If the permission exists, only users with that permission can call the tool. If it does not exist, the tool is public to authenticated users.
+
+## Connecting authenticated clients
+
+For unauthenticated demos, a client only needs the `/mcp` URL. For authenticated production servers, the client needs to complete the OAuth flow.
+
+Claude Code can add the HTTP server:
+
+```bash
+claude mcp add --transport http weather https://your-project.vercel.app/mcp
+```
+
+Then authenticate from inside Claude Code:
+
+```txt
+/mcp
+```
+
+ChatGPT connectors use the deployed HTTPS `/mcp` endpoint. When the server advertises OAuth metadata and returns the right authentication challenge, ChatGPT can guide the user through account linking.
+
+Cursor and other clients can connect to HTTP MCP endpoints, but authentication behavior depends on the client. If a client does not support the OAuth flow you need, use it only for local testing or choose an auth method the client supports.
+
+## Production checklist
+
+Before you share a deployed MCP server, check the basics:
+
+- Use HTTPS for remote clients.
+- Add OAuth before exposing private data or write actions.
+- Keep `BASE_URL` correct in every environment.
+- Use provider plugins like Auth0, Clerk, Better Auth, WorkOS, or Scalekit instead of hand-rolled OAuth.
+- Give every tool a clear name, description, schema, and annotations.
+- Mark read-only tools with `readOnlyHint: true`.
+- Mark destructive or write tools accurately.
+- Do not log access tokens, authorization headers, or user secrets.
+- Test locally with MCPJam or your target client.
+- Test production with the exact deployed `/mcp` URL.
+
+## Where to go next
+
+The server you built is intentionally small, but the shape is production-ready: typed tools, HTTP transport, a Vercel deployment path, and a real authentication plan.
+
+From here, you can add more tools, expose resources, create prompts, or build MCP Apps with interactive React widgets. If the server touches user data or performs actions on behalf of a user, add OAuth before you ship it.
+
+Useful docs:
+
+- [Installation](/docs/getting-started/installation)
+- [Tools](/docs/core-concepts/tools)
+- [Transports](/docs/configuration/transports)
+- [Vercel deployment](/docs/deployment/vercel)
+- [Authentication guide](/docs/guides/authentication)
+- [Auth0 integration](/docs/integrations/auth0)
+- [Clerk integration](/docs/integrations/clerk)
