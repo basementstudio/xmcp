@@ -28,6 +28,8 @@ function getFallbackImageClass(src: string) {
       return "bottom-2 left-[55%] -translate-x-1/2 w-[88%]";
     case "/templates/react.svg":
       return "bottom-0 left-[56%] -translate-x-1/2 w-[96%]";
+    case "/templates/scalekit.svg":
+      return "bottom-10 left-[54%] -translate-x-1/2 w-[92%]";
     case "/templates/tailwind.svg":
       return "bottom-0 left-[54%] -translate-x-1/2 w-full";
     default:
