@@ -18,7 +18,6 @@ const PROVIDER_FALLBACKS: Record<string, string> = {
   nextjs: NEXTJS_FALLBACK_SRC,
   polar: "/templates/polar.svg",
   react: "/templates/react.svg",
-  scalekit: "/templates/scalekit.svg",
   tailwind: "/templates/tailwind.svg",
   workos: "/templates/workos.svg",
 };
