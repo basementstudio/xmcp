@@ -6,6 +6,7 @@ import path from "path";
 export default defineConfig({
   plugins: [react()],
   build: {
+    target: "es2022",
     outDir: "../dist/auth-ui",
     emptyOutDir: true,
     rollupOptions: {
