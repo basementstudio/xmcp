@@ -120,19 +120,19 @@ Define roles in Scalekit ([create roles and permissions](https://docs.scalekit.c
 
 ## Try it out
 
-Verify per-user isolation end-to-end using the Scalekit template, or run the same checks against your own deployment.
+Verify per-user isolation end-to-end using the [xmcp-scalekit-example](https://github.com/scalekit-developers/xmcp-scalekit-example) — a working reference with middleware wiring, a `whoami` tool to observe per-request identity, and `save_note` / `list_my_notes` tools that demonstrate per-user data isolation. When the wizard prompts you to choose a transport, select **http**.
 
 ### Start from the Scalekit template
 
-Bootstrap an authenticated MCP server in one command:
+To scaffold your own project, bootstrap from the [Scalekit Authentication template](/templates/scalekit) in one command:
 
 ```bash
-npx create-xmcp-app --example scalekit
+npx create-xmcp-app@latest my-scalekit-app --example scalekit
 ```
 
-The [Scalekit Authentication template](/templates/scalekit) includes the middleware wiring, a `whoami` tool to observe per-request identity, and `save_note` / `list_my_notes` tools that demonstrate per-user data isolation. Run the verification steps below against it or your own implementation.
+Run the verification steps below against either.
 
-### Verify per-user isolation
+### Try per-user isolation
 
 Run these checks against the template or your deployment:
 
