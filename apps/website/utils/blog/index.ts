@@ -1,5 +1,5 @@
 import fs from "fs";
-import matter from "gray-matter";
+import { parseFrontmatter } from "@/utils/frontmatter";
 
 export type BlogCategory = "changelog" | "guides" | "engineering";
 
@@ -124,7 +124,7 @@ export function getAllBlogPosts(): BlogPost[] {
 
     if (stat.isFile() && item.endsWith(".mdx")) {
       const fileContent = fs.readFileSync(itemPath, "utf8");
-      const { data, content } = matter(fileContent);
+      const { data, content } = parseFrontmatter(fileContent);
 
       const { order } = extractOrderFromFilename(item);
       const slug = generateSlugFromPath("", item);

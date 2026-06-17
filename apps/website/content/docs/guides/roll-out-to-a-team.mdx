@@ -1,0 +1,156 @@
+---
+title: "Roll out to a team"
+displayTitle: "Roll out to a team"
+metadataTitle: "Roll Out to a Team | xmcp Documentation"
+publishedAt: "2026-06-11"
+summary: "Your MCP config has API keys in it. Share one server URL so each user signs in individually, with per-user isolation you can verify before you roll out."
+description: "Roll out secure team access to your xmcp server using Scalekit OAuth 2.1. Understand the team-notes pattern, wire it into your project, and verify per-user isolation."
+---
+
+You built an MCP server your team wants in their own MCP client, like Cursor, Claude Code, or others. The fastest way to share it is also the riskiest: drop `API_KEY`, database URLs, and service tokens into a shared `mcp.json`, commit it, and paste the same block into every laptop.
+
+It only takes one person rotating a key, one onboarding call, or the realization that every tool runs as a shared service account before problems surface. Audit logs mix up who did what, and a single leaked config can expose credentials.
+
+Per-user OAuth on the server fixes this. xmcp runs auth in middleware before tools execute; the Scalekit plugin handles sign-in, token validation, and session identity. You share one MCP URL. Each user signs in individually. Secrets stay in server `.env`, not in client config.
+
+**By the end of this guide,** you will know how two people connect to the same MCP server URL, sign in individually, and each see only their own notes.
+
+## How team access works on one URL
+
+The pattern below uses a small **team notes** MCP server as the example. You deploy it once and share a single HTTP endpoint (for example `https://notes.internal.example/mcp`).
+
+Each user adds **only that URL** to Cursor, Claude Code, or another MCP client. On the first tool call, the client opens browser sign-in. No API keys or service tokens go into client config.
+
+After sign-in, the server knows who is calling. Tools such as `save_note` and `list_my_notes` read identity from the session and scope data to that person. Alice and Bob use the same URL, but each works in a private notes space. Call `whoami` when you need to inspect `userId` (JWT `sub`) during rollout.
+
+<Callout variant="info" title="Not limited to one internal team">
+  The same pattern works when you publish one MCP server URL broadly. Different B2B customers can each connect their own teams through Scalekit sign-in, with identity and data scoped per user (and per organization when you need it).
+</Callout>
+
+## Four checks before you share the URL
+
+A multi-user rollout succeeds when all of this is true:
+
+1. Two different people add the **same** MCP server URL to their clients.
+2. Each completes sign-in on first connect (no secrets in client config).
+3. Each calls `save_note` and `list_my_notes`.
+4. Each person sees **only their notes**.
+
+## Per-user OAuth moves the trust boundary to your xmcp server
+
+Shared credentials put the trust boundary in the MCP client. Per-user OAuth moves it to the server.
+
+| Stays on the server | Stays with each person |
+| --- | --- |
+| MCP server URL you share | Sign-in through Scalekit |
+| `SCALEKIT_CLIENT_SECRET` and service credentials in `.env` | Bearer token on each request |
+| Your tool logic and data rules | Identity (`userId`) and optional authorization (`permissions`) in the token |
+
+xmcp exposes middleware so auth runs before tools execute. The `@xmcp-dev/scalekit` plugin handles OAuth discovery, token validation, and `getSession()` inside tools. Users add one URL; the server decides who they are.
+
+If you would rather wire OAuth yourself, you can, but you still need discovery endpoints, dynamic client registration, PKCE, and JWT validation on every `/mcp` request. The [authentication guide](/docs/guides/authentication) shows what MCP clients expect.
+
+## Wire per-user auth into your xmcp server
+
+Bring the team-notes shape into your project.
+
+### Wire Scalekit middleware
+
+1. **HTTP transport:** Shared MCP servers use Streamable HTTP, not stdio. See [installation](/docs/getting-started/installation).
+2. **Install the plugin:** `pnpm add @xmcp-dev/scalekit` (or npm/yarn/bun). Full API: [Scalekit integration](/docs/integrations/scalekit).
+3. **Environment variables:** Server `.env` only:
+
+```bash
+SCALEKIT_ENVIRONMENT_URL=https://your-env.scalekit.com
+SCALEKIT_CLIENT_ID=skc_...
+SCALEKIT_CLIENT_SECRET=skcs_...
+SCALEKIT_RESOURCE_ID=res_...
+BASE_URL=http://localhost:3001
+```
+
+4. **Middleware:** Export `scalekitProvider` from `src/middleware.ts`. Match `BASE_URL` to the URL you registered in Scalekit.
+5. **Scope by `userId`:** Key reads and writes on `getSession().userId`, not shared env credentials in the client.
+
+<Callout variant="warning" title="Keep secrets on the server">
+  Never put `SCALEKIT_CLIENT_SECRET` or other service credentials in Cursor, Claude, or any MCP client config. Users connect with the server URL only.
+</Callout>
+
+### Configure sign-in for users
+
+Enable the authentication methods your team will use in the Scalekit dashboard. Scalekit supports social logins, passwordless (OTP and magic links), Enterprise SSO, and [bring your own auth](https://docs.scalekit.com/mcp/auth-methods/custom-auth/).
+
+### Share the URL
+
+Each user adds only the MCP server URL to their client. For [Cursor](/docs/getting-started/connecting#cursor), [Claude Desktop](/docs/getting-started/connecting#claude-desktop), and other clients, see [connecting to your server](/docs/getting-started/connecting). For production, replace `localhost` with your deployed address.
+
+## When identity is not enough: RBAC
+
+`userId` scoping answers **whose data is this?** It does not answer **should this person use this tool?** That second question is authorization.
+
+A viewer might list their own notes but must not call `save_note`. Scalekit can put `roles` and `permissions` in the access token your middleware already validates:
+
+```json
+{
+  "sub": "usr_...",
+  "permissions": ["notes:read", "notes:write"]
+}
+```
+
+In tool code, check permissions before mutating state:
+
+```typescript title="Gate before write"
+const session = getSession();
+if (!hasPermission(session, "notes:write")) {
+  return "Missing notes:write permission.";
+}
+await saveNote(session.userId, content);
+```
+
+| Check | Stops |
+| --- | --- |
+| `listNotes(session.userId)` | Bob reading Alice's rows |
+| `hasPermission(session, "notes:write")` | Carol saving when she is read-only |
+| `hasPermission(session, "notes:read")` | Dave using note tools at all |
+
+Define roles in Scalekit ([create roles and permissions](https://docs.scalekit.com/authenticate/authz/create-roles-permissions/)), assign them to members, and enforce authorization in tools. No extra API call per request.
+
+<Callout variant="info" title="OAuth scopes vs RBAC permissions">
+  `session.scopes` (`openid`, `profile`, `email`) identify the user. RBAC `permissions` (`notes:write`) control what tools they may run. Use both layers when you need isolation and policy.
+</Callout>
+
+## Try it out
+
+Bootstrap the [Scalekit Authentication template](/templates/scalekit) and run the checks below to verify per-user isolation end-to-end. When the wizard prompts you to choose a transport, select **http**.
+
+```bash
+npx create-xmcp-app@latest my-scalekit-app --example scalekit
+```
+
+### Try per-user isolation
+
+Run these checks against the template or your deployment:
+
+1. Alice signs in, saves a note, lists notes, and sees only hers.
+2. Bob uses the same URL with a different account and does not see Alice's note.
+3. (Optional) A read-only role can list but cannot save.
+
+Success means per-user identity works on one shared URL. A permission error on step 3 means authorization is doing its job.
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `401` on every tool call | Finish the browser OAuth flow; reconnect the client |
+| `Session not initialized` | Confirm `src/middleware.ts` exports `scalekitProvider` |
+| DCR / client registration error | Set `SCALEKIT_RESOURCE_ID`; enable dynamic client registration |
+| Token validation fails | Align `BASE_URL`, Scalekit server URL, and client URL |
+| Empty sign-in screen | Enable at least one auth method in the Scalekit dashboard |
+| Both users see the same data | Scope storage with `getSession().userId`, not shared client env vars |
+
+More plugin errors: [Scalekit integration troubleshooting](/docs/integrations/scalekit#troubleshooting).
+
+## What to do next
+
+- **Production:** Deploy the server and swap `localhost` for your public URL. See [deployment](/docs/deployment/vercel).
+- **OAuth internals:** [Authentication guide](/docs/guides/authentication) for discovery, PKCE, and token lifecycle.
+- **Plugin reference:** [Scalekit integration](/docs/integrations/scalekit) for `getClient()`, scopes, and advanced configuration.

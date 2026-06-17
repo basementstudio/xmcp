@@ -14,9 +14,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.80",
-    "@ai-sdk/react": "^2.0.109",
-    "ai": "^5.0.108",
+    "@ai-sdk/openai": "^3.0.68",
+    "@ai-sdk/react": "^3.0.199",
+    "ai": "^6.0.197",
     "next": "^16.2.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

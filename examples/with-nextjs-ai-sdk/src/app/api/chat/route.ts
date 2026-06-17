@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     model: openai("gpt-4.1"),
     tools,
     system: "You are a helpful assistant.",
-    messages: convertToModelMessages(messages),
+    messages: await convertToModelMessages(messages),
   });
 
   return result.toUIMessageStreamResponse();
