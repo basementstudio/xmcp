@@ -1,6 +1,5 @@
 export interface DescopeConfig {
-  projectId: string;
-  audience: string;
+  issuerURL: string;
   baseURL: string;
   managementKey?: string;
   scopesSupported?: string[];

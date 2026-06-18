@@ -10,7 +10,7 @@ const contextSession = createContext<{ session: DescopeSession | null }>({
 export const getSessionContext = contextSession.getContext;
 export const providerSessionContext = contextSession.provider;
 
-const contextClient = createContext<{ client: DescopeClient; managementKey?: string }>({
+const contextClient = createContext<{ client: DescopeClient; projectId: string; managementKey?: string }>({
   name: "descope-context-client",
 });
 export const getClientContext = contextClient.getContext;

@@ -22,8 +22,7 @@ Create a `src/middleware.ts` file:
 import { descopeProvider } from "@xmcp-dev/descope";
 
 export default descopeProvider({
-  projectId: process.env.DESCOPE_PROJECT_ID!,
-  audience: process.env.DESCOPE_AUDIENCE!,
+  issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
 });
 ```
@@ -49,25 +48,20 @@ export default function whoami() {
 ### 3. Environment Variables
 
 ```bash
-DESCOPE_PROJECT_ID=your-descope-project-id
-DESCOPE_AUDIENCE=your-resource-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
 BASE_URL=http://127.0.0.1:3001
 ```
 
 ## Descope Setup
 
-### 1. Create a Project
-
-If you don't have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from the project settings.
-
-### 2. Create an MCP Server Resource
+### 1. Create an MCP Server Resource
 
 1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
 2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL
-4. Copy the **Audience**
+4. Copy the **Issuer URL**
 
-The audience identifies your resource to Descope's agentic OAuth endpoints, which MCP clients use for Dynamic Client Registration and token exchange.
+The issuer URL identifies your resource and contains your project ID. The plugin parses both from it automatically, so you only need the one value.
 
 ## API Reference
 
@@ -77,8 +71,7 @@ Creates the Descope authentication provider for xmcp. Returns `{ middleware, rou
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `projectId` | `string` | Yes | Your Descope project ID |
-| `audience` | `string` | Yes | The audience from your MCP Server resource in the Descope console |
+| `issuerURL` | `string` | Yes | Issuer URL from your MCP Server resource in the Descope Console |
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
 | `managementKey` | `string` | No | Descope management key — required to use `getUser()` or `getManagementClient()` |
 | `scopesSupported` | `string[]` | No | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
@@ -134,6 +127,16 @@ import { getManagementClient } from "@xmcp-dev/descope";
 
 const mgmt = getManagementClient();
 await mgmt.user.loadByUserId(userId);
+```
+
+### `fetchConnectionToken(appId)`
+
+Fetches a connection token for the authenticated user using their own bearer token — no management key required. The user's access token must include the `outbound.token.fetch` scope.
+
+```typescript
+import { fetchConnectionToken } from "@xmcp-dev/descope";
+
+const accessToken = await fetchConnectionToken("github");
 ```
 
 ## OAuth Endpoints

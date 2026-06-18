@@ -6,16 +6,12 @@ This example demonstrates how to create an authenticated MCP server using Descop
 
 ### 1. Descope Setup
 
-#### Step 1: Create a Project
-
-Create a project at [app.descope.com](https://app.descope.com) and copy the **Project ID** from project settings.
-
-#### Step 2: Create an MCP Server Resource
+#### Step 1: Create an MCP Server Resource
 
 1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
 2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL (e.g., `http://localhost:3001`)
-4. Copy the **Audience**
+4. Copy the **Issuer URL**
 
 ### 2. Environment Variables
 
@@ -26,15 +22,8 @@ cp .env.example .env
 Fill in `.env`:
 
 ```bash
-DESCOPE_PROJECT_ID=your-descope-project-id
-DESCOPE_AUDIENCE=your-resource-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
 BASE_URL=http://127.0.0.1:3001
-```
-
-To use `getUser()`, also add:
-
-```bash
-DESCOPE_MANAGEMENT_KEY=your-management-key
 ```
 
 ### 3. Run

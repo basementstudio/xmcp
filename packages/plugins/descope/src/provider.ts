@@ -10,15 +10,20 @@ const DEFAULT_SCOPES = ["openid", "profile", "email"];
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
-function descopeRouter(config: DescopeConfig): ExpressRouter {
-  const { projectId, audience, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
-  const issuer = `https://api.descope.com/${projectId}/${audience}`;
+function parseProjectId(issuerURL: string): string {
+  const segments = new URL(issuerURL).pathname.replace(/^\//, "").split("/").filter(Boolean);
+  if (!segments[0]) throw new Error(`DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`);
+  return segments[0];
+}
+
+function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter {
+  const { issuerURL, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
   const router = Router();
 
   router.get(RESOURCE_METADATA_PATH, (_req, res) => {
     const body: OAuthProtectedResourceMetadata = {
       resource: baseURL,
-      authorization_servers: [issuer],
+      authorization_servers: [issuerURL],
       scopes_supported: scopesSupported,
       bearer_methods_supported: ["header"],
     };
@@ -27,15 +32,15 @@ function descopeRouter(config: DescopeConfig): ExpressRouter {
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
-      const resp = await fetch(`${issuer}/.well-known/openid-configuration`);
+      const resp = await fetch(`${issuerURL}/.well-known/openid-configuration`);
       if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
       const discovery = (await resp.json()) as OAuthAuthorizationServerMetadata;
       res.json(discovery);
     } catch {
       const fallback: OAuthAuthorizationServerMetadata = {
-        issuer,
-        authorization_endpoint: `${issuer}/oauth2/v1/authorize`,
-        token_endpoint: `${issuer}/oauth2/v1/token`,
+        issuer: issuerURL,
+        authorization_endpoint: `${issuerURL}/oauth2/v1/authorize`,
+        token_endpoint: `${issuerURL}/oauth2/v1/token`,
         jwks_uri: `https://api.descope.com/${projectId}/.well-known/jwks.json`,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
@@ -95,20 +100,21 @@ function descopeMiddleware(
 }
 
 export function descopeProvider(config: DescopeConfig): Middleware {
-  if (!config.projectId) throw new Error("DescopeConfig.projectId is required");
-  if (!config.audience) throw new Error("DescopeConfig.audience is required");
+  if (!config.issuerURL) throw new Error("DescopeConfig.issuerURL is required");
   if (!config.baseURL) throw new Error("DescopeConfig.baseURL is required");
 
+  const projectId = parseProjectId(config.issuerURL);
+
   const sdk = Descope({
-    projectId: config.projectId,
+    projectId,
     managementKey: config.managementKey,
   });
 
-  const router = descopeRouter(config);
+  const router = descopeRouter(config, projectId);
   const rawMiddleware = descopeMiddleware(config, sdk);
 
   const middleware: RequestHandler = (req, res, next) => {
-    providerClientContext({ client: sdk, managementKey: config.managementKey }, () => {
+    providerClientContext({ client: sdk, projectId, managementKey: config.managementKey }, () => {
       rawMiddleware(req, res, next);
     });
   };
