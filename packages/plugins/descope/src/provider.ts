@@ -54,7 +54,6 @@ function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter 
 }
 
 function descopeMiddleware(
-  config: DescopeConfig,
   sdk: ReturnType<typeof Descope>,
 ): RequestHandler {
   return (req, res, next) => {
