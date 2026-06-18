@@ -1,6 +1,6 @@
 export interface DescopeConfig {
   projectId: string;
-  mcpServerId: string;
+  audience: string;
   baseURL: string;
   managementKey?: string;
   scopesSupported?: string[];

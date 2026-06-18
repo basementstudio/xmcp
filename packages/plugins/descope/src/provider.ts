@@ -11,15 +11,14 @@ const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
 function descopeRouter(config: DescopeConfig): ExpressRouter {
-  const { projectId, mcpServerId, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
+  const { projectId, audience, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
+  const issuer = `https://api.descope.com/${projectId}/${audience}`;
   const router = Router();
 
   router.get(RESOURCE_METADATA_PATH, (_req, res) => {
     const body: OAuthProtectedResourceMetadata = {
       resource: baseURL,
-      authorization_servers: [
-        `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}`,
-      ],
+      authorization_servers: [issuer],
       scopes_supported: scopesSupported,
       bearer_methods_supported: ["header"],
     };
@@ -28,17 +27,15 @@ function descopeRouter(config: DescopeConfig): ExpressRouter {
 
   router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
     try {
-      const resp = await fetch(
-        `https://api.descope.com/${projectId}/.well-known/openid-configuration`,
-      );
+      const resp = await fetch(`${issuer}/.well-known/openid-configuration`);
       if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
       const discovery = (await resp.json()) as OAuthAuthorizationServerMetadata;
       res.json(discovery);
     } catch {
       const fallback: OAuthAuthorizationServerMetadata = {
-        issuer: `https://api.descope.com/${projectId}`,
-        authorization_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/authorize`,
-        token_endpoint: `https://api.descope.com/oauth2/v1/apps/agentic/${projectId}/${mcpServerId}/token`,
+        issuer,
+        authorization_endpoint: `${issuer}/oauth2/v1/authorize`,
+        token_endpoint: `${issuer}/oauth2/v1/token`,
         jwks_uri: `https://api.descope.com/${projectId}/.well-known/jwks.json`,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
@@ -99,7 +96,7 @@ function descopeMiddleware(
 
 export function descopeProvider(config: DescopeConfig): Middleware {
   if (!config.projectId) throw new Error("DescopeConfig.projectId is required");
-  if (!config.mcpServerId) throw new Error("DescopeConfig.mcpServerId is required");
+  if (!config.audience) throw new Error("DescopeConfig.audience is required");
   if (!config.baseURL) throw new Error("DescopeConfig.baseURL is required");
 
   const sdk = Descope({

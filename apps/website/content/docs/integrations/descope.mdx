@@ -44,14 +44,14 @@ MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate.
 
 If you don't already have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from your project settings. It will be formatted like `Pxxxxxxxxxxxxxxxxxxxxxxxxx`.
 
-### 2. Create an Agentic MCP Server
+### 2. Create an MCP Server Resource
 
-1. Go to **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
-2. Click **+ MCP Server**
+1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
+2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
-4. Copy the **MCP Server ID**
+4. Copy the **Audience**
 
-The MCP Server ID wires your xmcp server to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
+The audience identifies your resource to Descope's agentic OAuth endpoints. MCP clients use these endpoints for Dynamic Client Registration and token exchange.
 
 ### 3. Create a Management Key (optional)
 
@@ -68,7 +68,7 @@ Configure the following environment variables in your `.env` file:
 ```bash
 # Descope credentials
 DESCOPE_PROJECT_ID=your-project-id
-DESCOPE_MCP_SERVER_ID=your-mcp-server-id
+DESCOPE_AUDIENCE=your-resource-audience
 
 # Required only when using getUser() or getManagementClient()
 DESCOPE_MANAGEMENT_KEY=your-management-key
@@ -90,7 +90,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 
 export default descopeProvider({
   projectId: process.env.DESCOPE_PROJECT_ID!,
-  mcpServerId: process.env.DESCOPE_MCP_SERVER_ID!,
+  audience: process.env.DESCOPE_AUDIENCE!,
   baseURL: process.env.BASE_URL!,
 });
 ```
@@ -102,7 +102,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 
 export default descopeProvider({
   projectId: process.env.DESCOPE_PROJECT_ID!,
-  mcpServerId: process.env.DESCOPE_MCP_SERVER_ID!,
+  audience: process.env.DESCOPE_AUDIENCE!,
   baseURL: process.env.BASE_URL!,
   managementKey: process.env.DESCOPE_MANAGEMENT_KEY,
 });
@@ -111,7 +111,7 @@ export default descopeProvider({
 ### Configuration Options
 
 - **`projectId`**: Your Descope project ID (required).
-- **`mcpServerId`**: The MCP Server ID from the Descope Console (required).
+- **`audience`**: The audience from your MCP Server resource in the Descope Console (required).
 - **`baseURL`**: Base URL of your MCP server (required). Must match the URL configured on the MCP Server record in Descope.
 - **`managementKey`**: (Optional) Descope management key. Required to use `getUser()` or `getManagementClient()`.
 - **`scopesSupported`**: (Optional) Array of OAuth scopes advertised in the resource metadata. Defaults to `["openid", "profile", "email"]`.
@@ -249,41 +249,9 @@ export default async function listRoles(): Promise<string> {
 }
 ```
 
-## Fetch a provider token
+## Fetch a connection token
 
-Use `getManagementClient()` to retrieve a stored OAuth access token from Descope's [connection vault](https://docs.descope.com/management/token/jwt-templates#custom-claims). This is useful when a tool needs to call a third-party API on behalf of the authenticated user.
-
-```typescript title="src/tools/github-repos.ts"
-import type { ToolMetadata } from "xmcp";
-import { getManagementClient, getSession } from "@xmcp-dev/descope";
-
-export const metadata: ToolMetadata = {
-  name: "github-repos",
-  description: "Lists the authenticated user's GitHub repositories using their stored GitHub token",
-};
-
-export default async function githubRepos(): Promise<string> {
-  const { loginIds } = getSession();
-  const mgmt = getManagementClient();
-
-  const resp = await mgmt.user.getProviderToken(loginIds[0], "github");
-  const { accessToken } = resp.data!;
-
-  const response = await fetch("https://api.github.com/user/repos", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const repos = await response.json();
-  return JSON.stringify(repos, null, 2);
-}
-```
-
-<Callout variant="warning">
-  `getManagementClient()` requires `managementKey` to be configured in `descopeProvider`. The provider token is only available if the user authenticated via that OAuth connection.
-</Callout>
-
-## Fetch an outbound app token
-
-Use `getManagementClient()` to fetch a token for a [Descope outbound app](https://docs.descope.com/manage/outboundapps). Outbound apps are OAuth connections configured in Descope where Descope manages the client credentials and token lifecycle on your behalf.
+Use `getManagementClient()` to fetch a token for a [Descope connection](https://docs.descope.com/agentic-identity-hub/core-components/connections). Connections are OAuth connections configured in Descope where Descope manages the client credentials and token lifecycle on your behalf.
 
 ```typescript title="src/tools/github-repos.ts"
 import type { ToolMetadata } from "xmcp";
@@ -291,7 +259,7 @@ import { getManagementClient, getSession } from "@xmcp-dev/descope";
 
 export const metadata: ToolMetadata = {
   name: "github-repos",
-  description: "Lists the authenticated user's GitHub repositories using a Descope outbound app token",
+  description: "Lists the authenticated user's GitHub repositories using a Descope connection token",
 };
 
 export default async function githubRepos(): Promise<string> {
@@ -325,9 +293,9 @@ These are the most common errors you may encounter when using the Descope plugin
 
 If an MCP client fails to initialize the OAuth flow:
 
-- Verify your MCP Server record exists in **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
-- Confirm `DESCOPE_MCP_SERVER_ID` matches the ID shown in the console
-- Ensure `BASE_URL` matches the base URL configured on your MCP Server record
+- Verify your resource exists in **Descope Console** → **Agentic Identity Hub** → **Resources**
+- Confirm `DESCOPE_AUDIENCE` matches the audience shown in the console
+- Ensure `BASE_URL` matches the base URL configured on your resource
 
 ### Session Not Initialized
 

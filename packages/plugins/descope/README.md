@@ -23,7 +23,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 
 export default descopeProvider({
   projectId: process.env.DESCOPE_PROJECT_ID!,
-  mcpServerId: process.env.DESCOPE_MCP_SERVER_ID!,
+  audience: process.env.DESCOPE_AUDIENCE!,
   baseURL: process.env.BASE_URL!,
 });
 ```
@@ -50,7 +50,7 @@ export default function whoami() {
 
 ```bash
 DESCOPE_PROJECT_ID=your-descope-project-id
-DESCOPE_MCP_SERVER_ID=your-mcp-server-id
+DESCOPE_AUDIENCE=your-resource-audience
 BASE_URL=http://127.0.0.1:3001
 ```
 
@@ -60,14 +60,14 @@ BASE_URL=http://127.0.0.1:3001
 
 If you don't have one, create a project at [app.descope.com](https://app.descope.com). Copy the **Project ID** from the project settings.
 
-### 2. Create an Agentic MCP Server
+### 2. Create an MCP Server Resource
 
-1. Go to **Descope Console** → **Agentic Identity Hub** → **MCP Servers**
-2. Click **Create MCP Server**
+1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
+2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL
-4. Copy the **MCP Server ID**
+4. Copy the **Audience**
 
-The MCP Server ID wires your xmcp server to Descope's agentic OAuth endpoints, which MCP clients use for Dynamic Client Registration and token exchange.
+The audience identifies your resource to Descope's agentic OAuth endpoints, which MCP clients use for Dynamic Client Registration and token exchange.
 
 ## API Reference
 
@@ -78,7 +78,7 @@ Creates the Descope authentication provider for xmcp. Returns `{ middleware, rou
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
 | `projectId` | `string` | Yes | Your Descope project ID |
-| `mcpServerId` | `string` | Yes | The MCP server ID from the Descope console |
+| `audience` | `string` | Yes | The audience from your MCP Server resource in the Descope console |
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
 | `managementKey` | `string` | No | Descope management key — required to use `getUser()` or `getManagementClient()` |
 | `scopesSupported` | `string[]` | No | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
