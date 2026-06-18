@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -35,8 +35,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const displayTitle =
     (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
 
-  const baseUrl = getBaseUrl();
-  const meta = getDocsMetadata(params.slug, baseUrl);
+  const meta = getDocsMetadata(params.slug, SITE_URL);
   const slugSegments = params.slug ?? [];
   const crumbs: BreadcrumbItem[] = [
     { name: "Home", url: "/" },
@@ -50,8 +49,8 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     })),
   ];
   const structuredData = [
-    ...(meta ? [getTechArticleSchema(meta, params.slug, baseUrl)] : []),
-    getBreadcrumbSchema(crumbs, baseUrl),
+    ...(meta ? [getTechArticleSchema(meta, params.slug, SITE_URL)] : []),
+    getBreadcrumbSchema(crumbs, SITE_URL),
   ];
 
   return (
@@ -98,10 +97,16 @@ export async function generateMetadata(
 
   const title = meta.title + " | xmcp Documentation";
   const description = meta.summary ?? meta.description;
+  const slugPath = params.slug?.join("/") ?? "";
+  const canonical = slugPath ? `${SITE_URL}/docs/${slugPath}` : `${SITE_URL}/docs`;
 
   return {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
+    alternates: {
+      canonical,
+    },
     openGraph: {
       title,
       description,

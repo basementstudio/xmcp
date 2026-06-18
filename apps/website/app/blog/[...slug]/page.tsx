@@ -12,7 +12,7 @@ import {
   resolveAuthors,
 } from "@/utils/blog";
 import { PostAuthors } from "@/components/blog/post-authors";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBlogPostingSchema,
@@ -28,18 +28,17 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const MDX = page.data.body;
   const authors = resolveAuthors(page.data.authors);
 
-  const baseUrl = getBaseUrl();
   const post = getBlogPostBySlug(slug);
   const structuredData = post
     ? [
-        getBlogPostingSchema(post, baseUrl),
+        getBlogPostingSchema(post, SITE_URL),
         getBreadcrumbSchema(
           [
             { name: "Home", url: "/" },
             { name: "Blog", url: "/blog" },
             { name: post.title, url: `/blog/${post.slug}` },
           ],
-          baseUrl
+          SITE_URL
         ),
       ]
     : null;
@@ -101,9 +100,12 @@ export async function generateMetadata(
   const { title, description, ogImageUrl } = meta;
 
   return {
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL(SITE_URL),
     title,
     description,
+    alternates: {
+      canonical: `${SITE_URL}/blog/${slug}`,
+    },
     openGraph: {
       title,
       description,

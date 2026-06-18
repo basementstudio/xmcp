@@ -11,7 +11,7 @@ import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/seo/json-ld";
-import { getBaseUrl } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 import {
   getOrganizationSchema,
   getWebSiteSchema,
@@ -28,8 +28,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "xmcp — The TypeScript MCP framework",
   description: "The framework for building & shipping MCP applications.",
+  keywords: [
+    "xmcp",
+    "MCP",
+    "Model Context Protocol",
+    "TypeScript",
+    "MCP framework",
+    "MCP server",
+    "AI tools",
+    "LLM tools",
+  ],
   robots: {
     index: true,
     follow: true,
@@ -82,8 +93,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const baseUrl = getBaseUrl();
-
   return (
     <html lang="en">
       <head>
@@ -93,7 +102,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <JsonLd
-          data={[getOrganizationSchema(baseUrl), getWebSiteSchema(baseUrl)]}
+          data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />
         <RootProvider
           search={{
