@@ -10,6 +10,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getBaseUrl } from "@/lib/base-url";
+import {
+  getOrganizationSchema,
+  getWebSiteSchema,
+} from "@/lib/structured-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -76,6 +82,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const baseUrl = getBaseUrl();
+
   return (
     <html lang="en">
       <head>
@@ -84,6 +92,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
+        <JsonLd
+          data={[getOrganizationSchema(baseUrl), getWebSiteSchema(baseUrl)]}
+        />
         <RootProvider
           search={{
             SearchDialog: DefaultSearchDialog,

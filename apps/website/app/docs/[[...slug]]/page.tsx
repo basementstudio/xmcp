@@ -13,6 +13,18 @@ import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
 import { getBaseUrl } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
+import { JsonLd } from "@/components/seo/json-ld";
+import {
+  getBreadcrumbSchema,
+  getTechArticleSchema,
+  type BreadcrumbItem,
+} from "@/lib/structured-data";
+
+const titleize = (segment: string): string =>
+  segment
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -23,11 +35,31 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const displayTitle =
     (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
 
+  const baseUrl = getBaseUrl();
+  const meta = getDocsMetadata(params.slug, baseUrl);
+  const slugSegments = params.slug ?? [];
+  const crumbs: BreadcrumbItem[] = [
+    { name: "Home", url: "/" },
+    { name: "Docs", url: "/docs" },
+    ...slugSegments.map((_, index) => ({
+      name:
+        index === slugSegments.length - 1
+          ? displayTitle
+          : titleize(slugSegments[index]),
+      url: `/docs/${slugSegments.slice(0, index + 1).join("/")}`,
+    })),
+  ];
+  const structuredData = [
+    ...(meta ? [getTechArticleSchema(meta, params.slug, baseUrl)] : []),
+    getBreadcrumbSchema(crumbs, baseUrl),
+  ];
+
   return (
     <DocsPage
       toc={page.data.toc}
       pageActions={<PageActions markdownUrl={`${page.url}.md`} />}
     >
+      <JsonLd data={structuredData} />
       <DocsTitle>{displayTitle}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody className="border-t border-white/20 pt-4">
