@@ -27,7 +27,7 @@ overrides:
   file-type@>=13.0.0 <21.3.2: 21.3.2
   '@modelcontextprotocol/sdk@<1.26.0': 1.26.0
   flatted@<3.4.2: 3.4.2
-  undici@>=7.0.0 <7.24.0: 7.24.0
+  undici@>=7.0.0 <7.28.0: 7.28.0
   kysely@>=0.26.0 <0.30.0: 0.28.17
   esbuild@>=0.17.0 <0.28.1: 0.28.1
   path-to-regexp@>=8.0.0 <8.4.0: 8.4.0
@@ -8517,8 +8517,8 @@ packages:
   undici-types@6.26.0:
     resolution: {integrity: sha512-anbjel3h0aEs7QuwKb3qbvApZmBE4lD0xonwP/6fOHvOj/1D3wmBWula2MOjOV2RRPOLnE9istBSlA+mqVhzMA==}
 
-  undici@7.24.0:
-    resolution: {integrity: sha512-jxytwMHhsbdpBXxLAcuu0fzlQeXCNnWdDyRHpvWsUl8vd98UwYdl9YTyn8/HcpcJPC3pwUveefsa3zTxyD/ERg==}
+  undici@7.28.0:
+    resolution: {integrity: sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA==}
     engines: {node: '>=20.18.1'}
 
   unenv@2.0.0-rc.24:
@@ -15235,7 +15235,7 @@ snapshots:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.34.5
-      undici: 7.24.0
+      undici: 7.28.0
       workerd: 1.20260131.0
       ws: 8.21.0
       youch: 4.1.0-beta.10
@@ -17102,7 +17102,7 @@ snapshots:
 
   undici-types@6.26.0: {}
 
-  undici@7.24.0: {}
+  undici@7.28.0: {}
 
   unenv@2.0.0-rc.24:
     dependencies:
