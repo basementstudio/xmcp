@@ -1,0 +1,128 @@
+---
+title: "MCP Transports Explained: STDIO vs SSE vs Streamable HTTP"
+description: "A clear breakdown of MCP server transports — STDIO, the legacy HTTP+SSE transport, and Streamable HTTP — when to use each, and how xmcp configures them with a single line."
+summary: "A clear breakdown of MCP server transports — STDIO, the legacy HTTP+SSE transport, and Streamable HTTP — when to use each, and how xmcp configures them with a single line."
+category: "guides"
+date: "2026-06-19"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Every MCP server talks to its client over a **transport** — the channel that carries JSON-RPC messages back and forth. Pick the wrong one and your server either won't connect, won't scale, or won't deploy to serverless. This guide explains the three transports you'll encounter and how to choose.
+
+## The short answer
+
+| Transport | Where it runs | Use it for |
+| --- | --- | --- |
+| **STDIO** | Locally, as a child process of the client | Local tools, desktop integrations, single-user servers |
+| **HTTP + SSE** (legacy) | Remote server | Older remote servers; being phased out |
+| **Streamable HTTP** | Remote server | Modern remote servers, serverless, multi-user |
+
+If you're building a remote server today, use **Streamable HTTP**. If you're building a local tool that runs on the user's own machine, use **STDIO**.
+
+## STDIO: the local transport
+
+With STDIO, the client launches your server as a subprocess and talks to it over standard input/output. There's no network, no port, no URL — the client owns the process lifecycle.
+
+STDIO is the right choice when the client and server live on the same machine and serve a single user: a CLI wrapper, a filesystem tool, a local database helper. It's simple and has no transport-layer auth because it doesn't need any — it inherits the trust of the local user.
+
+In xmcp, you enable it in `xmcp.config.ts`:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  stdio: true,
+};
+
+export default config;
+```
+
+You build it and the client runs the compiled output directly:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/my-project/dist/stdio.js"]
+    }
+  }
+}
+```
+
+One STDIO gotcha worth knowing: anything your tools write to `stdout` (a stray `console.log`) corrupts the JSON-RPC stream and breaks clients like Claude Desktop with a parse error. xmcp has a `silent` option that redirects all console output to `stderr` so it can't interfere:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  stdio: {
+    silent: true,
+  },
+};
+```
+
+The tradeoff with STDIO is scale. It's a process-per-user model — every client spawns its own copy. That's fine on a laptop, but it doesn't work for a hosted service that many people connect to. For that, you need HTTP.
+
+## HTTP + SSE: the legacy remote transport
+
+The first remote transport in the MCP spec paired a plain HTTP endpoint for requests with a long-lived **Server-Sent Events (SSE)** connection for streaming responses back. It works, but it has a structural cost: the SSE connection stays open between client and server even while idle, holding a persistent connection per client.
+
+That persistent-connection model is awkward for modern serverless platforms, which prefer short-lived, stateless function invocations. The MCP spec has since moved on, and HTTP+SSE is now considered the legacy path. You'll still see it in older servers and clients, but you shouldn't build new servers around it.
+
+## Streamable HTTP: the modern remote transport
+
+**Streamable HTTP** replaces HTTP+SSE. It uses regular HTTP and supports both stateless and stateful server models, so a single server process can serve many clients concurrently without holding a connection open per client. That makes it the natural fit for serverless and multi-user deployments.
+
+This is what xmcp's HTTP transport uses. You enable it the same simple way:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+By default the server runs on port `3001` at the `/mcp` endpoint. Pass an object instead of `true` to customize the port, endpoint, body size limit, or CORS:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: {
+    port: 3001,
+    host: "127.0.0.1",
+    endpoint: "/mcp",
+  },
+};
+
+export default config;
+```
+
+### Why "stateless" matters
+
+xmcp's HTTP transport is **strictly stateless**: it does not stash per-client data on the server between requests. Each request carries everything the server needs. This is exactly what lets an xmcp server run on serverless platforms where any request can hit a fresh instance — there's no in-memory session to lose.
+
+A practical consequence: if a tool needs client identity (the client's name and version) after the initial handshake, that identity must be repeated on each request via headers rather than recovered from server memory:
+
+```http
+x-mcp-client-name: cursor
+x-mcp-client-version: 0.50.1
+```
+
+This statelessness is also why xmcp servers don't suffer the ["Session not found" 404 that breaks stateful HTTP servers on restart](/blog/mcp-session-not-found-error) — there's no session ID to go stale.
+
+## Choosing a transport
+
+- **Building a local/desktop tool for one user?** → STDIO.
+- **Building a remote server, especially on serverless?** → Streamable HTTP (`http: true`).
+- **Maintaining an old server on HTTP+SSE?** → plan a migration to Streamable HTTP.
+
+You can even configure both STDIO and HTTP in the same xmcp project and start the one you need — just point each start script at the matching `dist/stdio.js` or `dist/http.js` output.
+
+## Next steps
+
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — the full from-scratch walkthrough.
+- **[Transports configuration docs](/docs/configuration/transports)** — every option, including CORS and silent mode.
+- **[Deploy to Vercel](/docs/deployment/vercel)** — Streamable HTTP, zero config.
