@@ -14,6 +14,8 @@ import {
   rankRelatedItems,
   stripLeadingHeading,
 } from "@/app/templates/utils/detail";
+import { collectUniqueCategories } from "@/app/templates/utils/categories";
+import { slugifyCategory } from "@/app/templates/utils/slug";
 import { buildDeployOptions } from "@/app/templates/utils/deploy";
 import { TemplateBreadcrumb } from "@/components/templates/detail/breadcrumb";
 import { TemplateDetailHeader } from "@/components/templates/detail/header";
@@ -123,6 +125,11 @@ export default async function TemplateDetailPage(
       ...(template.tags ?? []).filter((tag) => !isTypeLabel(tag)),
     ])
   );
+  const validCategorySlugs = new Set(
+    collectUniqueCategories(items).map((category) =>
+      slugifyCategory(category)
+    )
+  );
   const previewImage = resolveTemplatePreviewImage(template);
   const displayName = normalizeDisplayLabel(template.name);
   const repositoryLabel = formatRepositoryLabel(template.repositoryUrl);
@@ -190,6 +197,7 @@ Add a README.md to this template to show content here.`;
           template={template}
           repositoryLabel={repositoryLabel}
           categoryItems={categoryItems}
+          validCategorySlugs={validCategorySlugs}
           pageUrl={pageUrl}
           xShareUrl={xShareUrl}
         />

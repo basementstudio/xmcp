@@ -9,12 +9,14 @@ export function TemplateDetailSidebar({
   template,
   repositoryLabel,
   categoryItems,
+  validCategorySlugs,
   pageUrl,
   xShareUrl,
 }: {
   template: TemplateItem;
   repositoryLabel: string;
   categoryItems: string[];
+  validCategorySlugs: Set<string>;
   pageUrl: string;
   xShareUrl: string;
 }) {
@@ -60,15 +62,23 @@ export function TemplateDetailSidebar({
       {categoryItems.length > 0 && (
         <InfoCard label="Categories">
           <div className="flex flex-wrap gap-2">
-            {categoryItems.map((tag) => (
-              <Tag
-                key={tag}
-                text={tag}
-                href={`/templates/category/${slugifyCategory(tag)}`}
-                interactive
-                className="bg-brand-neutral-600"
-              />
-            ))}
+            {categoryItems.map((tag) => {
+              const slug = slugifyCategory(tag);
+              const isValid = validCategorySlugs.has(slug);
+              return (
+                <Tag
+                  key={tag}
+                  text={tag}
+                  href={
+                    isValid
+                      ? `/templates/category/${slug}`
+                      : undefined
+                  }
+                  interactive={isValid}
+                  className="bg-brand-neutral-600"
+                />
+              );
+            })}
           </div>
         </InfoCard>
       )}
