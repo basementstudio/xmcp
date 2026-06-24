@@ -134,7 +134,7 @@ async function handleMcpRequest(
     });
 
     httpRequestContextProvider(
-      { id: requestId, headers, clientInfo },
+      { id: requestId, headers, auth: authInfo, clientInfo },
       async () => {
         let server: Awaited<ReturnType<typeof createServer>> | null = null;
         let transport: WebStatelessHttpTransport | null = null;

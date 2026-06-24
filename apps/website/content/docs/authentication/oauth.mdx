@@ -3,18 +3,43 @@ title: "OAuth"
 metadataTitle: "OAuth Authentication | xmcp Documentation"
 publishedAt: "2025-01-16"
 summary: "OAuth authentication plugins for xmcp servers."
-description: "Production-ready OAuth implementations with authentication plugins."
+description: "Native OAuth support for custom OAuth/resource-server setups in xmcp."
 ---
 
-<Callout variant="warning">
-  The experimental `oauth` configuration has been deprecated in favor of
-  production-ready plugin implementations.
-</Callout>
+`xmcp` supports native OAuth configuration for custom OAuth/resource-server setups through `src/middleware.ts`.
 
-The built-in OAuth system has been replaced with dedicated authentication plugins that provide better DX, improved security, and more features out of the box.
+Use this when you need to advertise OAuth metadata from your MCP server while proxying authorization and token flows to your own authorization server, or when you want to combine xmcp's OAuth routes with custom verification middleware.
 
-Use one of the official plugins below that handle OAuth flows, token management, and session handling for you:
+```typescript title="src/middleware.ts"
+import { nativeOAuthMiddleware } from "xmcp";
+
+export default nativeOAuthMiddleware({
+  issuerUrl: "https://auth.example.com",
+  baseUrl: "https://mcp.example.com",
+});
+```
+
+By default xmcp performs issuer discovery against `/.well-known/oauth-authorization-server` and falls back to `/.well-known/openid-configuration`. Use `nativeOAuthMiddleware({ endpoints: ... })` only when you need to override missing or non-standard provider metadata.
+
+The protected resource identity defaults to the configured MCP endpoint URL, not just the server origin. For the default HTTP transport that means the OAuth `resource` is `http://host:port/mcp`, and xmcp also serves endpoint-scoped resource metadata at `/.well-known/oauth-protected-resource/mcp`.
+
+When the built-in middleware validates a token, your tools can read the normalized auth context through `xmcp/auth`.
+
+Native OAuth verification is stateless. xmcp does not persist exchanged access tokens or maintain an in-process token cache, so token validity always comes from JWKS verification or introspection on each request.
+
+If you want to keep the OAuth metadata/routes but use your own request verification, set `middleware: false` in `nativeOAuthMiddleware(...)` and provide custom validation in `src/middleware.ts`.
+
+During clean client bootstrap, MCP clients may probe the MCP endpoint directly before initialization. xmcp answers unauthenticated requests with a bearer challenge that links back to the endpoint-scoped protected-resource metadata.
+
+Native OAuth is no longer configured in `xmcp.config.ts`. If you previously used `oauth` or `experimental.oauth`, move that configuration into `nativeOAuthMiddleware(...)`.
+
+When both JWKS and introspection are configured, xmcp prefers local JWKS validation first. That keeps request handling fast, but it also means revoked JWTs remain valid until expiry unless you rely on introspection or custom middleware.
+
+## Runnable examples
+
+- Built-in native OAuth middleware: run `pnpm --dir examples/auth-native-oauth dev`
+- Custom middleware with native OAuth routes: run `pnpm --dir examples/auth-native-oauth-custom-middleware dev`
+
+If you are integrating directly with a hosted provider such as Auth0, WorkOS, or Clerk, the official plugins are still the better fit:
 
 <OAuthPlugins />
-
-Each plugin integrates directly with its respective auth provider and requires minimal configuration. Choose the one that matches your existing infrastructure or start fresh with any of them.

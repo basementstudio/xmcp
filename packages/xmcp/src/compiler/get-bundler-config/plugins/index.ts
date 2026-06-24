@@ -57,6 +57,7 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
 
   // headers included if http is configured
   if (xmcpConfig.http) {
+    neededFiles.push("auth.js");
     neededFiles.push("headers.js");
   }
 

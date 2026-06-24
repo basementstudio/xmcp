@@ -25,6 +25,7 @@
     "src/cloudflare.ts",
     "src/host-bridge.ts",
     "src/index.ts",
+    "src/runtime/auth.ts",
     "src/runtime/headers.ts",
   ],
 }

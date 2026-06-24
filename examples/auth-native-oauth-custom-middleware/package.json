@@ -1,0 +1,28 @@
+{
+  "name": "Native OAuth Custom Middleware HTTP",
+  "description": "Demonstrates xmcp native OAuth routes with stateless custom JWT verification on the HTTP transport",
+  "keywords": [
+    "oauth",
+    "http",
+    "authentication",
+    "middleware"
+  ],
+  "scripts": {
+    "build": "xmcp build && ../../node_modules/.pnpm/node_modules/.bin/tsc -p provider/tsconfig.json",
+    "dev": "../../node_modules/.pnpm/node_modules/.bin/concurrently \"../../node_modules/.pnpm/node_modules/.bin/tsx provider/server.ts\" \"xmcp dev\"",
+    "start": "../../node_modules/.pnpm/node_modules/.bin/concurrently \"node provider/dist/server.js\" \"node dist/http.js\""
+  },
+  "dependencies": {
+    "express": "^4.22.1",
+    "jose": "^6.1.3",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.2",
+    "concurrently": "^9.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

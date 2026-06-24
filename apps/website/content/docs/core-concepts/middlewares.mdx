@@ -70,3 +70,31 @@ export default async function search({ query }: InferSchema<typeof schema>) {
   return JSON.stringify(data);
 }
 ```
+
+## Accessing auth context
+
+Use the `xmcp/auth` module to read auth information that has been attached to the current request context. This is useful when your adapter or custom middleware validates auth and stores it on the request.
+
+```typescript title="src/tools/whoami.ts"
+import { auth } from "xmcp/auth";
+
+export default async function whoami() {
+  const authInfo = auth();
+
+  if (!authInfo) {
+    return "Anonymous request";
+  }
+
+  return JSON.stringify({
+    clientId: authInfo.clientId,
+    scopes: authInfo.scopes,
+    expiresAt: authInfo.expiresAt ?? null,
+  });
+}
+```
+
+If you're writing custom Express middleware, attach validated auth to `req.auth` before calling `next()`. xmcp will expose that value through `xmcp/auth`.
+
+This is also the supported bridge when you configure native OAuth with `nativeOAuthMiddleware({ ..., middleware: false })`.
+
+For a runnable end-to-end example, start `pnpm --dir examples/auth-native-oauth-custom-middleware dev`.
