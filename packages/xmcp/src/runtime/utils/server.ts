@@ -9,6 +9,7 @@ import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
+import { addNotificationsToServer } from "./notifications";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
@@ -17,6 +18,7 @@ import {
   reportResourceLoadIssues,
 } from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import type { NotificationsConfig } from "@/types/notification";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -52,7 +54,13 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
-export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
+const injectedNotifications = INJECTED_NOTIFICATIONS as
+  | (() => Promise<{ default?: NotificationsConfig }>)
+  | undefined;
+
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & {
+  instructions?: string;
+};
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -60,13 +68,15 @@ export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
-  resourceModules: Map<string, ResourceFile>
+  resourceModules: Map<string, ResourceFile>,
+  notificationsConfig: NotificationsConfig | undefined
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
 
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
+  addNotificationsToServer(server, notificationsConfig);
   return server;
 }
 
@@ -92,16 +102,33 @@ export async function loadResources() {
   return resourceModules;
 }
 
+export async function loadNotificationsConfig(): Promise<
+  NotificationsConfig | undefined
+> {
+  if (!injectedNotifications) return undefined;
+  const mod = await injectedNotifications();
+  return mod?.default;
+}
+
 export async function createServer() {
   const { instructions, ...serverInfo } = INJECTED_CONFIG;
   const server = new McpServer(serverInfo, { instructions });
   const toolModulesPromise = loadTools();
   const promptModulesPromise = loadPrompts();
   const resourceModulesPromise = loadResources();
-  const [toolModules, promptModules, resourceModules] = await Promise.all([
-    toolModulesPromise,
-    promptModulesPromise,
-    resourceModulesPromise,
-  ]);
-  return configureServer(server, toolModules, promptModules, resourceModules);
+  const notificationsConfigPromise = loadNotificationsConfig();
+  const [toolModules, promptModules, resourceModules, notificationsConfig] =
+    await Promise.all([
+      toolModulesPromise,
+      promptModulesPromise,
+      resourceModulesPromise,
+      notificationsConfigPromise,
+    ]);
+  return configureServer(
+    server,
+    toolModules,
+    promptModules,
+    resourceModules,
+    notificationsConfig
+  );
 }

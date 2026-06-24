@@ -15,6 +15,12 @@ declare const INJECTED_RESOURCES: Record<
   () => Promise<import("../runtime/utils/server").ResourceFile>
 >;
 
+declare const INJECTED_NOTIFICATIONS:
+  | (() => Promise<{
+      default?: import("./notification").NotificationsConfig;
+    }>)
+  | undefined;
+
 declare const INJECTED_MIDDLEWARE:
   | (() => Promise<{
       default?:

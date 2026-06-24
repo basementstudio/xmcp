@@ -1,0 +1,19 @@
+{
+  "name": "notifications",
+  "description": "Learn how to subscribe to MCP client notifications using xmcp",
+  "keywords": [
+    "notifications",
+    "subscribe",
+    "events"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js",
+    "test:notifications": "node --experimental-strip-types test-notifications.ts"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
