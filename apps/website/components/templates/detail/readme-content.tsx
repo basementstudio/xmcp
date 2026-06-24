@@ -6,6 +6,24 @@ import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
 import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
+const BROKEN_INTERNAL_LINK_RE = /\/docs\/integrations\/chatgpt\b/;
+
+function stripBrokenInternalLinks(source: string): string {
+  // Replace markdown links pointing at the removed /docs/integrations/chatgpt
+  // route with their link text so they stop generating 404 hits. Matches both
+  // inline links [text](url) and reference-style [text]: url.
+  const inlineReplaced = source.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (match, text: string, url: string) =>
+      BROKEN_INTERNAL_LINK_RE.test(url) ? text : match
+  );
+  return inlineReplaced.replace(
+    /^\s{0,3}\[([^\]]+)\]:\s+(.+)$/gm,
+    (match, _, url: string) =>
+      BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match
+  );
+}
+
 async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
@@ -62,13 +80,30 @@ async function ReadmePre(props: ComponentProps<"pre">) {
   return renderHighlightedCodeBlock(content.trimEnd(), lang);
 }
 
+function ReadmeImg(props: ComponentProps<"img">) {
+  const { src } = props;
+  if (!src || typeof src !== "string") return null;
+  const isRemote = /^https?:\/\//i.test(src);
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      {...props}
+      src={src}
+      loading="lazy"
+      referrerPolicy={isRemote ? "no-referrer" : undefined}
+      className="inline-block max-w-full h-auto rounded-xs"
+    />
+  );
+}
+
 export function TemplateReadmeContent({ source }: { source: string }) {
   return (
     <div className="prose prose-invert max-w-none">
       <MDXRemote
-        source={source}
+        source={stripBrokenInternalLinks(source)}
         components={getMDXComponents({
           pre: ReadmePre,
+          img: ReadmeImg as never,
         })}
       />
     </div>

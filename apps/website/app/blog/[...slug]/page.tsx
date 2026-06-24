@@ -98,17 +98,19 @@ export async function generateMetadata(
   if (!meta) notFound();
 
   const { title, description, ogImageUrl } = meta;
+  const canonical = `${SITE_URL}/blog/${slug}`;
 
   return {
     metadataBase: new URL(SITE_URL),
     title,
     description,
     alternates: {
-      canonical: `${SITE_URL}/blog/${slug}`,
+      canonical,
     },
     openGraph: {
       title,
       description,
+      url: canonical,
       siteName: "xmcp",
       type: "article",
       locale: "en_US",

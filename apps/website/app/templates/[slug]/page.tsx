@@ -14,6 +14,8 @@ import {
   rankRelatedItems,
   stripLeadingHeading,
 } from "@/app/templates/utils/detail";
+import { collectUniqueCategories } from "@/app/templates/utils/categories";
+import { slugifyCategory } from "@/app/templates/utils/slug";
 import { buildDeployOptions } from "@/app/templates/utils/deploy";
 import { TemplateBreadcrumb } from "@/components/templates/detail/breadcrumb";
 import { TemplateDetailHeader } from "@/components/templates/detail/header";
@@ -54,6 +56,10 @@ export async function generateMetadata(
   const canonical = `${baseUrl}/templates/${template.slug}`;
   const metadataName = humanizeMetadataName(template.name);
   const metadataTitle = `${metadataName} | xmcp Templates`;
+  const previewImage = resolveTemplatePreviewImage(template);
+  const previewImageUrl = previewImage.src.startsWith("/")
+    ? `${baseUrl}${previewImage.src}`
+    : previewImage.src;
   const metadataKeywords = Array.from(
     new Set(
       [
@@ -75,21 +81,19 @@ export async function generateMetadata(
       url: canonical,
       siteName: "xmcp",
       type: "website",
-      images: template.previewUrl
-        ? [
-            {
-              url: template.previewUrl,
-              width: 1200,
-              height: 630,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: previewImageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: metadataTitle,
       description: template.description,
-      images: template.previewUrl ? [template.previewUrl] : undefined,
+      images: [previewImageUrl],
     },
   };
 }
@@ -120,6 +124,11 @@ export default async function TemplateDetailPage(
         : []),
       ...(template.tags ?? []).filter((tag) => !isTypeLabel(tag)),
     ])
+  );
+  const validCategorySlugs = new Set(
+    collectUniqueCategories(items).map((category) =>
+      slugifyCategory(category)
+    )
   );
   const previewImage = resolveTemplatePreviewImage(template);
   const displayName = normalizeDisplayLabel(template.name);
@@ -188,6 +197,7 @@ Add a README.md to this template to show content here.`;
           template={template}
           repositoryLabel={repositoryLabel}
           categoryItems={categoryItems}
+          validCategorySlugs={validCategorySlugs}
           pageUrl={pageUrl}
           xShareUrl={xShareUrl}
         />
