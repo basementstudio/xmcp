@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://xmcp.dev/showcase",
   },
+  openGraph: {
+    title: "Showcase - xmcp",
+    description:
+      "Join the xmcp showcase program and share your MCP servers with the community.",
+    url: "https://xmcp.dev/showcase",
+    siteName: "xmcp",
+    type: "website",
+    locale: "en_US",
+    images: {
+      url: "/xmcp-og.png",
+      width: 1200,
+      height: 630,
+    },
+  },
 };
 
 export default function ShowcasePage() {

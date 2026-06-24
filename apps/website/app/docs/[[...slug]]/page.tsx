@@ -110,6 +110,7 @@ export async function generateMetadata(
     openGraph: {
       title,
       description,
+      url: canonical,
       siteName: "xmcp",
       type: "article",
       locale: "en_US",
