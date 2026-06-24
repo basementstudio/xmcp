@@ -54,6 +54,10 @@ export async function generateMetadata(
   const canonical = `${baseUrl}/templates/${template.slug}`;
   const metadataName = humanizeMetadataName(template.name);
   const metadataTitle = `${metadataName} | xmcp Templates`;
+  const previewImage = resolveTemplatePreviewImage(template);
+  const previewImageUrl = previewImage.src.startsWith("/")
+    ? `${baseUrl}${previewImage.src}`
+    : previewImage.src;
   const metadataKeywords = Array.from(
     new Set(
       [
@@ -75,21 +79,19 @@ export async function generateMetadata(
       url: canonical,
       siteName: "xmcp",
       type: "website",
-      images: template.previewUrl
-        ? [
-            {
-              url: template.previewUrl,
-              width: 1200,
-              height: 630,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: previewImageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: metadataTitle,
       description: template.description,
-      images: template.previewUrl ? [template.previewUrl] : undefined,
+      images: [previewImageUrl],
     },
   };
 }

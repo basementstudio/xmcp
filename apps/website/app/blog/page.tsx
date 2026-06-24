@@ -9,10 +9,25 @@ import { BlogCard } from "@/components/home/blog";
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "Blog - xmcp",
-  description: "Latest updates, guides, and insights about xmcp",
+  title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
+  description:
+    "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
   alternates: {
     canonical: "https://xmcp.dev/blog",
+  },
+  openGraph: {
+    title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
+    description:
+      "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
+    url: "https://xmcp.dev/blog",
+    siteName: "xmcp",
+    type: "website",
+    locale: "en_US",
+    images: {
+      url: "/xmcp-og.png",
+      width: 1200,
+      height: 630,
+    },
   },
 };
 
