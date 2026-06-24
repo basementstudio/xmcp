@@ -2,10 +2,13 @@ import { getAllBlogPosts } from "../utils/blog";
 import type { MetadataRoute } from "next";
 import { source } from "@/lib/source";
 import { SITE_URL } from "@/lib/base-url";
+import { fetchTemplates } from "@/app/templates/utils/github";
+import { collectUniqueCategories } from "@/app/templates/utils/categories";
+import { slugifyCategory } from "@/app/templates/utils/slug";
 
 export const baseUrl = SITE_URL;
 
-export const revalidate = false;
+export const revalidate = 1800;
 
 const toDay = (date: Date): string => date.toISOString().split("T")[0];
 
@@ -39,7 +42,7 @@ export default async function sitemap() {
     return toDay(new Date());
   };
 
-  const routes = ["", "/docs", "/blog", "/templates", "/x", "/showcase"].map(
+  const routes = ["", "/docs", "/blog", "/templates", "/showcase", "/telemetry"].map(
     (route) => ({
       url: url(route),
       lastModified: lastModifiedFor(route),
@@ -67,5 +70,30 @@ export default async function sitemap() {
     } as MetadataRoute.Sitemap[number];
   });
 
-  return [...routes, ...blogRoutes, ...docRoutes];
+  const templates = await fetchTemplates();
+
+  const templateRoutes: MetadataRoute.Sitemap[number][] = templates.map(
+    (template) => ({
+      url: url(`/templates/${template.slug}`),
+      lastModified: lastModifiedFor(`/templates/${template.slug}`),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    })
+  );
+
+  const templateCategoryRoutes: MetadataRoute.Sitemap[number][] =
+    collectUniqueCategories(templates).map((category) => ({
+      url: url(`/templates/category/${slugifyCategory(category)}`),
+      lastModified: lastModifiedFor("/templates"),
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }));
+
+  return [
+    ...routes,
+    ...blogRoutes,
+    ...docRoutes,
+    ...templateRoutes,
+    ...templateCategoryRoutes,
+  ];
 }
