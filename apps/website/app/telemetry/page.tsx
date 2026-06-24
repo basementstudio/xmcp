@@ -6,14 +6,14 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Telemetry - xmcp",
   description:
-    "Learn what xmcp collects, why the data matters, and how to disable telemetry at any time.",
+    "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
   alternates: {
     canonical: "https://xmcp.dev/telemetry",
   },
   openGraph: {
     title: "Telemetry - xmcp",
     description:
-      "Learn what xmcp collects, why the data matters, and how to disable telemetry at any time.",
+      "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
     url: "https://xmcp.dev/telemetry",
     siteName: "xmcp",
     type: "website",

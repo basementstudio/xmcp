@@ -6,14 +6,14 @@ import { Tag } from "@/components/ui/tag";
 export const metadata: Metadata = {
   title: "Showcase - xmcp",
   description:
-    "Join the xmcp showcase program and share your MCP servers with the community.",
+    "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
   alternates: {
     canonical: "https://xmcp.dev/showcase",
   },
   openGraph: {
     title: "Showcase - xmcp",
     description:
-      "Join the xmcp showcase program and share your MCP servers with the community.",
+      "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
     url: "https://xmcp.dev/showcase",
     siteName: "xmcp",
     type: "website",
