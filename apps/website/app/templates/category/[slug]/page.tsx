@@ -46,7 +46,7 @@ export async function generateMetadata(
 
   const label = humanizeMetadataName(match);
   const title = `${label} templates - xmcp`;
-  const description = `xmcp templates in the ${label} category — real-world implementations and best practices.`;
+  const description = `Browse ${label} templates built with xmcp — production-ready MCP servers showcasing authentication, transports, monetization, and integrations you can fork and deploy.`;
   const canonical = `${baseUrl}/templates/category/${params.slug}`;
 
   return {

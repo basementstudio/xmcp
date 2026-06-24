@@ -30,7 +30,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "xmcp — The TypeScript MCP framework",
-  description: "The framework for building & shipping MCP applications.",
+  description:
+    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
   keywords: [
     "xmcp",
     "MCP",
@@ -67,12 +68,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     title: "xmcp — The TypeScript MCP framework",
-    description: "The framework for building & shipping MCP applications.",
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
   },
   twitter: {
     card: "summary_large_image",
     title: "xmcp — The TypeScript MCP framework",
-    description: "The framework for building & shipping MCP applications.",
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
     images: {
       url: "/xmcp-og.png",
       width: 1200,
