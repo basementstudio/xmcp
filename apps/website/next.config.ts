@@ -67,6 +67,26 @@ const nextConfig: NextConfig = {
       { source: "/docs.mdx", destination: "/llms.txt" },
     ];
   },
+  async headers() {
+    // RFC 8288 Link headers point agents at discoverable resources from the
+    // homepage. Single comma-separated value because Next overrides duplicate
+    // header keys (last wins).
+    return [
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Link",
+            value: [
+              '</docs>; rel="service-doc"; type="text/html"',
+              '</llms.txt>; rel="service-desc"; type="text/plain"',
+              '</llms-full.txt>; rel="describedby"; type="text/plain"',
+            ].join(", "),
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withMDX(nextConfig);
