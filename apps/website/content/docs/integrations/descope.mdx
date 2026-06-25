@@ -253,7 +253,7 @@ export default async function listRoles(): Promise<string> {
   Map your MCP server scopes to any corresponding connection scopes that are necessary to fetch from the Descope Connections Vault.
 </Callout>
 
-Use `fetchConnectionToken()` to retrieve a stored OAuth access token from a [Descope connection](https://docs.descope.com/agentic-identity-hub/core-components/connections). This uses the user's own bearer token — no management key required.
+Use `fetchConnectionToken()` to retrieve a stored OAuth access token from a [Descope connection](https://docs.descope.com/agentic-identity-hub/core-components/connections). This uses the MCP Server's access token (no Management Key required).
 
 ```typescript title="src/tools/github-repos.ts"
 import type { ToolMetadata } from "xmcp";
