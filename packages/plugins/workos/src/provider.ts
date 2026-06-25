@@ -66,34 +66,45 @@ function workosRouter(config: config): Router {
   router.get(
     "/.well-known/oauth-authorization-server",
     async (_req: Request, res: Response) => {
+      const authkitUrl = getAuthKitBaseUrl(config.authkitDomain);
+
       try {
-        const authkitMetadataUrl = `${getAuthKitBaseUrl(config.authkitDomain)}/.well-known/openid-configuration`;
-        const response = await fetch(authkitMetadataUrl);
+        // RFC 8414 OAuth Authorization Server Metadata. AuthKit advertises the
+        // MCP-relevant fields ONLY here, not in the OIDC discovery document
+        // (/.well-known/openid-configuration): client_id_metadata_document_supported
+        // (CIMD), registration_endpoint (DCR) and code_challenge_methods_supported
+        // (PKCE). Mirroring the OIDC doc drops them, so clients (e.g. ChatGPT)
+        // report CIMD/DCR as unsupported even when enabled in the dashboard.
+        // The 5s timeout keeps a slow/stalled AuthKit from hanging the request.
+        const response = await fetch(
+          `${authkitUrl}/.well-known/oauth-authorization-server`,
+          { signal: AbortSignal.timeout(5000) }
+        );
 
         if (response.ok) {
-          const data = await response.json();
-          res.json(data);
+          res.json(await response.json());
           return;
         }
-
-        // Fallback
-        const authkitUrl = getAuthKitBaseUrl(config.authkitDomain);
-        const metadata: OAuthAuthorizationServerMetadata = {
-          issuer: authkitUrl,
-          authorization_endpoint: `${authkitUrl}/oauth2/authorize`,
-          token_endpoint: `${authkitUrl}/oauth2/token`,
-          jwks_uri: `${authkitUrl}/oauth2/jwks`,
-          response_types_supported: ["code"],
-          grant_types_supported: ["authorization_code", "refresh_token"],
-          code_challenge_methods_supported: ["S256"],
-          token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
-          scopes_supported: ["openid", "profile", "email", "offline_access"],
-        };
-        res.json(metadata);
       } catch (error) {
         console.error("[WorkOS] Failed to fetch OAuth metadata:", error);
-        res.status(500).json({ error: "Failed to get OAuth configuration" });
       }
+
+      // Static fallback, served when AuthKit's metadata endpoint is unreachable
+      // or errors. It intentionally omits CIMD/DCR: those depend on dashboard
+      // configuration the plugin cannot infer offline. Returning usable metadata
+      // is better than a 500, which would break discovery on a transient blip.
+      const metadata: OAuthAuthorizationServerMetadata = {
+        issuer: authkitUrl,
+        authorization_endpoint: `${authkitUrl}/oauth2/authorize`,
+        token_endpoint: `${authkitUrl}/oauth2/token`,
+        jwks_uri: `${authkitUrl}/oauth2/jwks`,
+        response_types_supported: ["code"],
+        grant_types_supported: ["authorization_code", "refresh_token"],
+        code_challenge_methods_supported: ["S256"],
+        token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
+        scopes_supported: ["openid", "profile", "email", "offline_access"],
+      };
+      res.json(metadata);
     }
   );
 
