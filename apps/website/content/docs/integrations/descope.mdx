@@ -40,22 +40,15 @@ Install the Descope plugin:
 
 MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate. Configure your Descope project so your xmcp server can participate in the agentic OAuth flow.
 
-### 1. Create an MCP Server Resource
+### Create an MCP Server Resource
 
 1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
 2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
-4. Copy the **Issuer URL**
+4. Optional: Map your MCP server scopes to any corresponding connection scopes that are necessary to fetch from the Descope Connections Vault
+5. Copy the **Issuer URL**
 
 The issuer URL identifies your resource and contains your project ID. The plugin parses both from it, so you only need this one value.
-
-### 2. Create a Management Key (optional)
-
-A management key is required to call `getUser()` or `getManagementClient()`. If you only need session data from the token, you can skip this step.
-
-1. Go to **Descope Console** → **Company** → **Management Keys**
-2. Click **+ Management Key**
-3. Copy and save the key since it is only shown once
 
 ## Environment Variables
 
@@ -65,16 +58,33 @@ Configure the following environment variables in your `.env` file:
 # Descope credentials
 DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
 
-# Required only when using getUser() or getManagementClient()
-DESCOPE_MANAGEMENT_KEY=your-management-key
-
 # App configuration
 BASE_URL=http://127.0.0.1:3001
+
+# Scopes that are supported
+SCOPES_SUPPORTED="openid,profile,email"
 ```
 
 <Callout variant="info">
   For production, set `BASE_URL` to your deployed server URL and update the base URL on your MCP Server record in the Descope Console to match.
 </Callout>
+
+### Create a Management Key (optional)
+
+<Callout variant="info">
+  Required only when using getUser() or getManagementClient()
+</Callout>
+
+A management key is required to call `getUser()` or `getManagementClient()`. If you only need session data from the token, you can skip this step.
+
+1. Go to **Descope Console** → **Company** → **Management Keys**
+2. Click **+ Management Key**
+3. Copy and save the key to your `.env` file since it is only shown once
+
+```bash
+# Descope Project Management Key
+DESCOPE_MANAGEMENT_KEY=your-management-key
+```
 
 ## Set up the Provider
 
@@ -98,6 +108,7 @@ export default descopeProvider({
   issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
   managementKey: process.env.DESCOPE_MANAGEMENT_KEY,
+  scopesSupported: process.env.SCOPES_SUPPORTED,
 });
 ```
 
@@ -204,10 +215,6 @@ export default async function userProfile(): Promise<string> {
 }
 ```
 
-<Callout variant="warning">
-  `getUser()` requires `managementKey` to be configured in `descopeProvider`. If the key is not set, the function throws an error.
-</Callout>
-
 ## Access the SDK clients
 
 ### `getClient()`
@@ -264,10 +271,6 @@ export default async function githubRepos(): Promise<string> {
   return JSON.stringify(repos, null, 2);
 }
 ```
-
-<Callout variant="info">
-  The connection must be configured in the Descope Console and the user must have granted access to it. The user's access token must include the `outbound.token.fetch` scope — add it to `scopesSupported` in your provider config so MCP clients can request it.
-</Callout>
 
 ## Troubleshooting
 
