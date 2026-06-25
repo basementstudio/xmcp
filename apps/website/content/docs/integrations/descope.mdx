@@ -45,8 +45,7 @@ MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate.
 1. Go to **Descope Console** → **Agentic Identity Hub** → **Resources**
 2. Click **Create Resource** → **MCP Server**
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
-4. Optional: Map your MCP server scopes to any corresponding connection scopes that are necessary to fetch from the Descope Connections Vault
-5. Copy the **Issuer URL**
+4. Copy the **Issuer URL**
 
 The issuer URL identifies your resource and contains your project ID. The plugin parses both from it, so you only need this one value.
 
@@ -249,6 +248,10 @@ export default async function listRoles(): Promise<string> {
 ```
 
 ## Fetch a connection token
+
+<Callout variant="info">
+  Map your MCP server scopes to any corresponding connection scopes that are necessary to fetch from the Descope Connections Vault.
+</Callout>
 
 Use `fetchConnectionToken()` to retrieve a stored OAuth access token from a [Descope connection](https://docs.descope.com/agentic-identity-hub/core-components/connections). This uses the user's own bearer token — no management key required.
 
