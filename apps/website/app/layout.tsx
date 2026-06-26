@@ -11,6 +11,7 @@ import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/seo/json-ld";
+import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
 import {
   getOrganizationSchema,
@@ -129,6 +130,7 @@ export default function RootLayout({
           <Toaster />
         </RootProvider>
         <Toolbar />
+        <WebMCPProvider />
         <Analytics />
         <SpeedInsights />
       </body>
