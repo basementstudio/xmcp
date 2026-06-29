@@ -187,6 +187,7 @@ export class StatelessStreamableHTTPTransport {
       );
     });
 
+    this.setupMcpServerCardRoute();
     this.setupOpenAIAppsChallengeRoute();
 
     // isolate requests context
@@ -196,6 +197,47 @@ export class StatelessStreamableHTTPTransport {
         next();
       });
     });
+  }
+
+  /**
+   * Serves an MCP Server Card at /.well-known/mcp/server-card.json.
+   * Enables agent discovery clients to auto-configure connections to this server.
+   */
+  private setupMcpServerCardRoute(): void {
+    this.app.get(
+      "/.well-known/mcp/server-card.json",
+      (req: Request, res: Response) => {
+        const host = req.get("host") ?? "localhost";
+        const hostname = host.replace(/:\d+$/, "");
+        const reversedName = hostname.split(".").reverse().join(".");
+        const proto =
+          (req.headers["x-forwarded-proto"] as string | undefined)
+            ?.split(",")[0]
+            ?.trim() ?? req.protocol;
+        const card: Record<string, unknown> = {
+          $schema:
+            "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+          name: `${reversedName}/mcp`,
+          version: SERVER_INFO.version,
+          description: this.options.template?.description,
+          title: this.options.template?.name,
+          remotes: [
+            {
+              type: "streamable-http",
+              url: `${proto}://${host}${this.endpoint}`,
+            },
+          ],
+        };
+        if (this.options.template?.icons?.length) {
+          card.icons = this.options.template.icons;
+        }
+        res
+          .setHeader("Content-Type", "application/mcp-server-card+json")
+          .setHeader("Cache-Control", "public, max-age=3600, must-revalidate")
+          .setHeader("Access-Control-Allow-Origin", "*")
+          .json(card);
+      }
+    );
   }
 
   /**
