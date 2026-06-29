@@ -81,6 +81,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.199
         version: 3.0.199(react@19.2.4)(zod@4.1.13)
+      '@mcp-b/global':
+        specifier: ^3.0.0
+        version: 3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@4.1.13)
       '@mdx-js/loader':
         specifier: ^3.1.1
         version: 3.1.1(webpack@5.104.1)
@@ -254,7 +257,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-        version: 0.6.9(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13)
+        version: 0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -507,6 +510,18 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  examples/descope-http:
+    dependencies:
+      '@xmcp-dev/descope':
+        specifier: workspace:*
+        version: link:../../packages/plugins/descope
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.4.3
+
   examples/ext-apps:
     dependencies:
       react:
@@ -641,7 +656,7 @@ importers:
     dependencies:
       '@mcp-ui/server':
         specifier: ^5.16.2
-        version: 5.16.2(zod@4.1.13)
+        version: 5.16.2(@cfworker/json-schema@4.1.1)(zod@4.1.13)
       xmcp:
         specifier: workspace:*
         version: link:../../packages/xmcp
@@ -968,7 +983,7 @@ importers:
         version: 5.1.0(esbuild@0.28.1)
       xmcp:
         specifier: latest
-        version: 0.6.9(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.28.1))(zod@4.1.13)
+        version: 0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.28.1))(zod@4.1.13)
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -1104,7 +1119,7 @@ importers:
         version: 5.9.3
       xmcp:
         specifier: ^0.6.2
-        version: 0.6.2(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        version: 0.6.2(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
 
   packages/plugins/better-auth:
     dependencies:
@@ -1203,7 +1218,7 @@ importers:
         version: 5.9.3
       xmcp:
         specifier: ^0.5.7
-        version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        version: 0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
 
   packages/plugins/commet:
     dependencies:
@@ -1226,6 +1241,28 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../../xmcp
+
+  packages/plugins/descope:
+    dependencies:
+      '@descope/node-sdk':
+        specifier: ^2.6.0
+        version: 2.9.0
+      express:
+        specifier: ^4.22.1
+        version: 4.22.1
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.25
+        version: 4.17.25
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.2
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      xmcp:
+        specifier: ^0.6.2
+        version: 0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
 
   packages/plugins/polar:
     devDependencies:
@@ -1265,7 +1302,7 @@ importers:
         version: 5.9.3
       xmcp:
         specifier: ^0.6.10
-        version: 0.6.10(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        version: 0.6.10(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
 
   packages/plugins/workos:
     dependencies:
@@ -1290,7 +1327,7 @@ importers:
         version: 5.9.3
       xmcp:
         specifier: ^0.5.7
-        version: 0.5.7(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        version: 0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
 
   packages/plugins/x402:
     dependencies:
@@ -1312,13 +1349,13 @@ importers:
         version: 5.9.3
       xmcp:
         specifier: ^0.5.8
-        version: 0.5.8(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76)
+        version: 0.5.8(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76)
 
   packages/xmcp:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.26.0
-        version: 1.26.0(zod@4.4.3)
+        version: 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       '@rspack/core':
         specifier: ^1.6.7
         version: 1.6.7(@swc/helpers@0.5.15)
@@ -1722,6 +1759,9 @@ packages:
   '@bufbuild/protobuf@2.12.0':
     resolution: {integrity: sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA==}
 
+  '@cfworker/json-schema@4.1.1':
+    resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
+
   '@choojs/findup@0.2.1':
     resolution: {integrity: sha512-YstAqNb0MCN8PjdLCDfRsBcGVRN41f3vgLvaI0IrIcBp4AqILRSS0DeWNGkicC+f/zRIPJLc+9RURVSepwvfBw==}
     hasBin: true
@@ -1823,6 +1863,13 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@descope/core-js-sdk@2.65.0':
+    resolution: {integrity: sha512-iClOeEsTbmlAkEpuJEWWTGREHHjLP+s6m37LtUq0tkMSL9b3Afe72xGW1PEpT6ROordlPK7E7F17QcneMQkeQQ==}
+
+  '@descope/node-sdk@2.9.0':
+    resolution: {integrity: sha512-nKV/wEiJ2nbmTPMazYCA5I12NLtz3HpAr1yk1jUAhOn7GEc7KDkuuwv+VM0HJTl9aNXxnHRCKXxeVOut5uQagw==}
+    engines: {node: '>= 16.0.0'}
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
@@ -2437,6 +2484,32 @@ packages:
   '@lukeed/csprng@1.1.0':
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
     engines: {node: '>=8'}
+
+  '@mcp-b/global@3.0.0':
+    resolution: {integrity: sha512-HZWlR2Gb5v/ROtg0noiiHfrnHVPYxxhOPPaeYlXvCd6UB/u82Q3lwtCdWQLw66N25Zp9VSMGRR1Eq72yDFqcNQ==}
+    engines: {node: '>=18'}
+
+  '@mcp-b/transports@3.0.0':
+    resolution: {integrity: sha512-WMgeb0P9Bhu+0mN07qkvCo+W9Fucdk9+iyp7wPZYAtQ4ZTcbNuu8Zl1qdNM8oWxXgMbA749w4nUcPsbPaMvSvA==}
+
+  '@mcp-b/webmcp-polyfill@3.0.0':
+    resolution: {integrity: sha512-TCrCOZCTfRWrTp8MpWU8EO4U7r7IvDDaIYW9Ej0aBD2KVR2hvwr4t3T7kPkSYssGhpIZJrq19owSzN1vZabW+A==}
+    engines: {node: '>=18'}
+
+  '@mcp-b/webmcp-ts-sdk@3.0.0':
+    resolution: {integrity: sha512-Lbn7ODKWMYd6xqpcl+OmXseKbjwB+Q3F9CUm9vDFpZgviWc3/5CuG3IDylHg/toVMeZz6v5+E8AmBnv8zj5G5w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25 || ^4.0
+      zod-to-json-schema: ^3.25.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+      zod-to-json-schema:
+        optional: true
+
+  '@mcp-b/webmcp-types@3.0.0':
+    resolution: {integrity: sha512-MmKHNAtlyZoK5khz5GnmgEj/ehk5esoUbgOaFndrlZvpjq3ppmIY3BDrwCv6xaihuuIMOoLLDlf0E65wUd4q7A==}
 
   '@mcp-ui/server@5.16.2':
     resolution: {integrity: sha512-KgdEI5IdM5wrWi658y8ZBw+QWM+3XwTtezWpMKR56LIZOCJjRMhBPWWWAF0mlg/r5ngzrXklvXCQbx79PqFAwQ==}
@@ -5058,6 +5131,9 @@ packages:
     engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
     hasBin: true
 
+  cross-fetch@4.1.0:
+    resolution: {integrity: sha512-uKm5PU+MHTootlWEY+mZ4vvXoCn4fLQxT9dSc1sXVMSFkINTJVN8cAQROpwcKm8bJ/c7rgZVIBWzH5T78sNZZw==}
+
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
@@ -6453,6 +6529,9 @@ packages:
   jose@4.15.9:
     resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
+  jose@5.2.2:
+    resolution: {integrity: sha512-/WByRr4jDcsKlvMd1dRJnPfS1GVO3WuKyaurJ/vvXcOaUQO8rnNObCQMlv/5uCceVQIq5Q4WLF44ohsdiTohdg==}
+
   jose@5.6.3:
     resolution: {integrity: sha512-1Jh//hEEwMhNYPDDLwXHa2ePWgWiFNNUadVmguAAw2IJ6sj9mNxV5tGXJNqlMkJAybF6Lgw1mISDxTePP/187g==}
 
@@ -6530,6 +6609,10 @@ packages:
 
   jws@4.0.1:
     resolution: {integrity: sha512-EKI/M/yqPncGUUh44xz0PxSidXFr/+r0pA70+gIYhjv+et7yxM+s29Y+VGDkovRofQem0fs7Uvf4+YmAdyRduA==}
+
+  jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
+    engines: {node: '>=18'}
 
   katex@0.16.27:
     resolution: {integrity: sha512-aeQoDkuRWSqQN6nSvVCEFvfXdqo1OQiCmmW1kc9xSdjutPv7BGO7pqY9sQRJpMOGrEdfDgF2TfRXe5eUAD2Waw==}
@@ -7152,6 +7235,15 @@ packages:
 
   node-emoji@1.11.0:
     resolution: {integrity: sha512-wo2DpQkQp7Sjm2A0cq+sN7EHKO6Sl0ctXeBdFZrL9T9+UywORbufTcTZxom8YqpLQt/FqNMUkOpkZrJVYSKD3A==}
+
+  node-fetch@2.7.0:
+    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
 
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
@@ -8363,6 +8455,9 @@ packages:
     resolution: {integrity: sha512-dRXchy+C0IgK8WPC6xvCHFRIWYUbqqdEIKPaKo/AcTUNzwLTK6AH7RjdLWsEZcAN/TBdtfUw3PYEgPr5VPr6ww==}
     engines: {node: '>=14.16'}
 
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   tree-dump@1.1.0:
     resolution: {integrity: sha512-rMuvhU4MCDbcbnleZTFezWsaZXRFemSqAM+7jPnzUl1fo9w3YEKOxAeui0fz3OI4EU4hf23iyA7uQRVko+UaBA==}
     engines: {node: '>=10.0'}
@@ -8702,6 +8797,9 @@ packages:
   webgl-sdf-generator@1.1.1:
     resolution: {integrity: sha512-9Z0JcMTFxeE+b2x1LJTdnaT8rT8aEp7MVxkNwoycNmJWwPdzoXzMh0BjJSh/AEFP+KPYZUli814h8bJZFIZ2jA==}
 
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
   webpack-node-externals@3.0.0:
     resolution: {integrity: sha512-LnL6Z3GGDPht/AigwRh2dvL9PQPFQ8skEpVrWZXLWBYmqcaojHNN0onvHzie6rq7EWKrrBfPYqNEzTJgiwEQDQ==}
     engines: {node: '>=6'}
@@ -8719,6 +8817,9 @@ packages:
     peerDependenciesMeta:
       webpack-cli:
         optional: true
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
@@ -8830,8 +8931,8 @@ packages:
       react-dom:
         optional: true
 
-  xmcp@0.6.2:
-    resolution: {integrity: sha512-xY88YcyD/CJab4PAK7b2CCPCian+DQv63wyVv40snVmgD3AFNWp8uZ1d41UqsJl4xN7gyc/XqV/GvhrgBoMbVg==}
+  xmcp@0.6.13:
+    resolution: {integrity: sha512-RGjaBr05bSaG/NF0OUHIUfX4fhZf4oKLF3PtN3fgHZAzpmVYUMyunPPLB+sE15p3fVG8q77nJCLmVyt+6XicbQ==}
     hasBin: true
     peerDependencies:
       react: '>=19.0.0'
@@ -8843,8 +8944,8 @@ packages:
       react-dom:
         optional: true
 
-  xmcp@0.6.9:
-    resolution: {integrity: sha512-aM8QTdeC8vnG90IPdumkv904qv75Jm1FKj4Lt0mMdQ+YqV9Yzm3CBlL8/9Pvm0teM/jjxpvA/0f6JT8yxDNdHA==}
+  xmcp@0.6.2:
+    resolution: {integrity: sha512-xY88YcyD/CJab4PAK7b2CCPCian+DQv63wyVv40snVmgD3AFNWp8uZ1d41UqsJl4xN7gyc/XqV/GvhrgBoMbVg==}
     hasBin: true
     peerDependencies:
       react: '>=19.0.0'
@@ -9083,7 +9184,7 @@ snapshots:
 
   '@auth0/auth0-auth-js@1.3.0':
     dependencies:
-      jose: 6.1.3
+      jose: 6.2.3
       openid-client: 6.8.1
 
   '@babel/code-frame@7.27.1':
@@ -9290,6 +9391,8 @@ snapshots:
 
   '@bufbuild/protobuf@2.12.0': {}
 
+  '@cfworker/json-schema@4.1.1': {}
+
   '@choojs/findup@0.2.1':
     dependencies:
       commander: 2.20.3
@@ -9378,6 +9481,20 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@descope/core-js-sdk@2.65.0':
+    dependencies:
+      jwt-decode: 4.0.0
+      tslib: 2.8.1
+
+  '@descope/node-sdk@2.9.0':
+    dependencies:
+      '@descope/core-js-sdk': 2.65.0
+      cross-fetch: 4.1.0
+      jose: 5.2.2
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - encoding
 
   '@dimforge/rapier3d-compat@0.12.0': {}
 
@@ -9903,9 +10020,50 @@ snapshots:
 
   '@lukeed/csprng@1.1.0': {}
 
-  '@mcp-ui/server@5.16.2(zod@4.1.13)':
+  '@mcp-b/global@3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@4.1.13)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.1.13)
+      '@mcp-b/transports': 3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))
+      '@mcp-b/webmcp-polyfill': 3.0.0
+      '@mcp-b/webmcp-ts-sdk': 3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@4.1.13)
+      '@mcp-b/webmcp-types': 3.0.0
+    transitivePeerDependencies:
+      - zod
+      - zod-to-json-schema
+
+  '@mcp-b/transports@3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))':
+    dependencies:
+      '@mcp-b/webmcp-ts-sdk': 3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - zod-to-json-schema
+
+  '@mcp-b/webmcp-polyfill@3.0.0':
+    dependencies:
+      '@cfworker/json-schema': 4.1.1
+      '@mcp-b/webmcp-types': 3.0.0
+      '@standard-schema/spec': 1.1.0
+
+  '@mcp-b/webmcp-ts-sdk@3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@3.25.76)':
+    dependencies:
+      '@mcp-b/webmcp-polyfill': 3.0.0
+      '@mcp-b/webmcp-types': 3.0.0
+    optionalDependencies:
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.1(zod@4.1.13)
+
+  '@mcp-b/webmcp-ts-sdk@3.0.0(zod-to-json-schema@3.25.1(zod@4.1.13))(zod@4.1.13)':
+    dependencies:
+      '@mcp-b/webmcp-polyfill': 3.0.0
+      '@mcp-b/webmcp-types': 3.0.0
+    optionalDependencies:
+      zod: 4.1.13
+      zod-to-json-schema: 3.25.1(zod@4.1.13)
+
+  '@mcp-b/webmcp-types@3.0.0': {}
+
+  '@mcp-ui/server@5.16.2(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -9958,7 +10116,7 @@ snapshots:
 
   '@mediapipe/tasks-vision@0.10.17': {}
 
-  '@modelcontextprotocol/sdk@1.26.0(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.25)
       ajv: 8.18.0
@@ -9977,10 +10135,12 @@ snapshots:
       raw-body: 3.0.2
       zod: 3.25.76
       zod-to-json-schema: 3.25.1(zod@3.25.76)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.26.0(zod@4.1.13)':
+  '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.25)
       ajv: 8.18.0
@@ -9999,10 +10159,12 @@ snapshots:
       raw-body: 3.0.2
       zod: 4.1.13
       zod-to-json-schema: 3.25.1(zod@4.1.13)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/sdk@1.26.0(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.25)
       ajv: 8.18.0
@@ -10021,6 +10183,8 @@ snapshots:
       raw-body: 3.0.2
       zod: 4.4.3
       zod-to-json-schema: 3.25.1(zod@4.4.3)
+    optionalDependencies:
+      '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
       - supports-color
 
@@ -12709,6 +12873,12 @@ snapshots:
     dependencies:
       cross-spawn: 7.0.6
 
+  cross-fetch@4.1.0:
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
   cross-spawn@7.0.6:
     dependencies:
       path-key: 3.1.1
@@ -13181,8 +13351,8 @@ snapshots:
       '@babel/parser': 7.29.2
       eslint: 9.39.1(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.1.13
-      zod-validation-error: 4.0.2(zod@4.1.13)
+      zod: 4.4.3
+      zod-validation-error: 4.0.2(zod@4.4.3)
     transitivePeerDependencies:
       - supports-color
 
@@ -14435,6 +14605,8 @@ snapshots:
 
   jose@4.15.9: {}
 
+  jose@5.2.2: {}
+
   jose@5.6.3: {}
 
   jose@6.1.3: {}
@@ -14513,6 +14685,8 @@ snapshots:
     dependencies:
       jwa: 2.0.1
       safe-buffer: 5.2.1
+
+  jwt-decode@4.0.0: {}
 
   katex@0.16.27:
     dependencies:
@@ -15415,6 +15589,10 @@ snapshots:
   node-emoji@1.11.0:
     dependencies:
       lodash: 4.18.1
+
+  node-fetch@2.7.0:
+    dependencies:
+      whatwg-url: 5.0.0
 
   node-releases@2.0.27: {}
 
@@ -16916,6 +17094,8 @@ snapshots:
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
 
+  tr46@0.0.3: {}
+
   tree-dump@1.1.0(tslib@2.8.1):
     dependencies:
       tslib: 2.8.1
@@ -17324,6 +17504,8 @@ snapshots:
 
   webgl-sdf-generator@1.1.1: {}
 
+  webidl-conversions@3.0.1: {}
+
   webpack-node-externals@3.0.0: {}
 
   webpack-sources@3.3.3: {}
@@ -17392,6 +17574,11 @@ snapshots:
       - esbuild
       - uglify-js
     optional: true
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   which-boxed-primitive@1.1.1:
     dependencies:
@@ -17493,9 +17680,9 @@ snapshots:
 
   ws@8.21.0: {}
 
-  xmcp@0.5.7(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
+  xmcp@0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
       ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
@@ -17511,9 +17698,9 @@ snapshots:
       - supports-color
       - webpack
 
-  xmcp@0.5.8(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76):
+  xmcp@0.5.8(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@3.25.76)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
       ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
@@ -17529,9 +17716,9 @@ snapshots:
       - supports-color
       - webpack
 
-  xmcp@0.6.10(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
+  xmcp@0.6.10(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
       jose: 6.1.3
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
@@ -17548,29 +17735,11 @@ snapshots:
       - supports-color
       - webpack
 
-  xmcp@0.6.2(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
+  xmcp@0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.28.1))(zod@4.1.13):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
-      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
-      typescript: 5.9.3
-      zod: 4.4.3
-    optionalDependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@swc/helpers'
-      - postcss
-      - supports-color
-      - webpack
-
-  xmcp@0.6.9(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.28.1))(zod@4.1.13):
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.1.13)
-      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      jose: 6.1.3
+      jose: 6.2.3
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1(esbuild@0.28.1))
       ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
       typescript: 5.9.3
@@ -17585,15 +17754,52 @@ snapshots:
       - supports-color
       - webpack
 
-  xmcp@0.6.9(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13):
+  xmcp@0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.1.13):
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(zod@4.1.13)
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
       '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      jose: 6.1.3
+      jose: 6.2.3
       postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
       ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
       typescript: 5.9.3
       zod: 4.1.13
+    optionalDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@swc/helpers'
+      - postcss
+      - supports-color
+      - webpack
+
+  xmcp@0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
+      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
+      jose: 6.2.3
+      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
+      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
+      typescript: 5.9.3
+      zod: 4.4.3
+    optionalDependencies:
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - '@swc/helpers'
+      - postcss
+      - supports-color
+      - webpack
+
+  xmcp@0.6.2(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
+    dependencies:
+      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
+      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
+      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.14)(typescript@5.9.3)(webpack@5.104.1)
+      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
+      typescript: 5.9.3
+      zod: 4.4.3
     optionalDependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -17657,9 +17863,9 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod-validation-error@4.0.2(zod@4.1.13):
+  zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:
-      zod: 4.1.13
+      zod: 4.4.3
 
   zod@3.25.76: {}
 

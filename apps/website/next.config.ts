@@ -60,11 +60,48 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
+    // Content negotiation: agents sending `Accept: text/markdown` get the
+    // markdown route; browsers (which never list text/markdown) fall through to
+    // HTML. These must run in `beforeFiles` so `/` is intercepted before the
+    // homepage page route resolves (`afterFiles` runs after page matching).
+    const acceptsMarkdown = [
+      { type: "header" as const, key: "accept", value: ".*text/markdown.*" },
+    ];
+    return {
+      beforeFiles: [
+        { source: "/", has: acceptsMarkdown, destination: "/llms.mdx" },
+        {
+          source: "/docs/:slug*",
+          has: acceptsMarkdown,
+          destination: "/llms.mdx/:slug*",
+        },
+      ],
+      afterFiles: [
+        { source: "/docs/:slug*.md", destination: "/llms.mdx/:slug*" },
+        { source: "/docs/:slug*.mdx", destination: "/llms.mdx/:slug*" },
+        { source: "/docs.md", destination: "/llms.txt" },
+        { source: "/docs.mdx", destination: "/llms.txt" },
+      ],
+    };
+  },
+  async headers() {
+    // RFC 8288 Link headers point agents at discoverable resources from the
+    // homepage. Single comma-separated value because Next overrides duplicate
+    // header keys (last wins).
     return [
-      { source: "/docs/:slug*.md", destination: "/llms.mdx/:slug*" },
-      { source: "/docs/:slug*.mdx", destination: "/llms.mdx/:slug*" },
-      { source: "/docs.md", destination: "/llms.txt" },
-      { source: "/docs.mdx", destination: "/llms.txt" },
+      {
+        source: "/",
+        headers: [
+          {
+            key: "Link",
+            value: [
+              '</docs>; rel="service-doc"; type="text/html"',
+              '</llms.txt>; rel="service-desc"; type="text/plain"',
+              '</llms-full.txt>; rel="describedby"; type="text/plain"',
+            ].join(", "),
+          },
+        ],
+      },
     ];
   },
 };
