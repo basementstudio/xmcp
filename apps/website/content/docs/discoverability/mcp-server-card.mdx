@@ -51,7 +51,9 @@ curl https://your-server.example.com/.well-known/mcp/server-card.json
 
 ## Next.js adapter
 
-When using the Next.js adapter, add a single route file to expose the card:
+The route is not scaffolded automatically because not every project needs it. Add it manually when you want discovery:
+
+
 
 ```typescript title="app/.well-known/mcp/server-card.json/route.ts"
 import { serverCardHandler } from "@xmcp/adapter";
