@@ -1,0 +1,19 @@
+{
+  "name": "descope-http-example",
+  "description": "HTTP-based xmcp server with Descope authentication",
+  "keywords": [
+    "authentication",
+    "descope",
+    "http"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/descope": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
