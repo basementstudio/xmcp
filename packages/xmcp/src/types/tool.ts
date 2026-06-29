@@ -4,6 +4,7 @@ import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/sdk/
 import { UIMetadata } from "./ui-meta";
 import type { McpClientInfo } from "./client-info";
 
+
 export interface ToolAnnotations {
   /** Human-readable title for the tool */
   title?: string;
