@@ -3,7 +3,11 @@ import { z } from "zod";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
 import { ToolMetadata } from "@/types/tool";
-import { transformToolHandler } from "./transformers/tool";
+import {
+  transformToolHandler,
+  createToolExtraArguments,
+  coerceToolResponse,
+} from "./transformers/tool";
 import { isReactFile } from "./react";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
@@ -41,7 +45,8 @@ export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annot
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
-  toolModules: Map<string, ToolFile>
+  toolModules: Map<string, ToolFile>,
+  hasTaskStore = false
 ): McpServer {
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -171,12 +176,72 @@ export function addToolsToServer(
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
-    // server as any prevents infinite type recursion
-    (server as any).registerTool(
-      toolConfig.name,
-      toolConfigFormatted,
-      transformedHandler
-    );
+    const taskSupport = toolConfig.taskSupport;
+    const isTaskTool = taskSupport === "optional" || taskSupport === "required";
+
+    if (isTaskTool) {
+      if (!hasTaskStore) {
+        throw new Error(
+          `Tool "${toolConfig.name}" declares taskSupport "${taskSupport}" but no task store was found. ` +
+            `Add a src/task-store.ts that exports a TaskStore implementation.`
+        );
+      }
+
+      // Register as a task-augmented tool. The SDK exposes tasks/get,
+      // tasks/result, tasks/list and tasks/cancel and routes task-augmented
+      // tools/call requests to this handler triple.
+      (server as any).experimental.tasks.registerToolTask(
+        toolConfig.name,
+        { ...toolConfigFormatted, execution: { taskSupport } },
+        {
+          // Create the task record, let the tool kick off (or run) the work,
+          // and return immediately. The tool either returns a result
+          // synchronously (stored as the terminal result) or returns nothing
+          // and completes the task later via the store from its own worker.
+          createTask: async (args: any, extra: any) => {
+            const task = await extra.taskStore.createTask({
+              ttl: extra.taskRequestedTtl ?? undefined,
+            });
+
+            const toolExtra = createToolExtraArguments(extra);
+            toolExtra.task = { taskId: task.taskId };
+
+            let response: any = handler(args, toolExtra);
+            if (response instanceof Promise) {
+              response = await response;
+            }
+
+            if (response !== undefined && response !== null) {
+              const result = coerceToolResponse(
+                response,
+                args,
+                meta,
+                toolOutputSchema,
+                toolConfig.name
+              );
+              await extra.taskStore.storeTaskResult(
+                task.taskId,
+                result.isError ? "failed" : "completed",
+                result
+              );
+            }
+
+            return { task };
+          },
+          getTask: (_args: any, extra: any) =>
+            extra.taskStore.getTask(extra.taskId),
+          getTaskResult: (_args: any, extra: any) =>
+            extra.taskStore.getTaskResult(extra.taskId),
+        }
+      );
+    } else {
+      // server as any prevents infinite type recursion
+      (server as any).registerTool(
+        toolConfig.name,
+        toolConfigFormatted,
+        transformedHandler
+      );
+    }
   });
 
   return server;

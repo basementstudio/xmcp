@@ -740,6 +740,25 @@ importers:
         specifier: ^4.0.10
         version: 4.1.13
 
+  examples/tasks-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.26
+        version: 20.19.26
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   examples/template-config:
     dependencies:
       xmcp:

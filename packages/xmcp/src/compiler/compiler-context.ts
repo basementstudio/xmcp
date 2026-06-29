@@ -22,6 +22,8 @@ interface CompilerContext {
   resourcePaths: Set<string>;
   /** Whether the middleware is enabled. */
   hasMiddleware: boolean;
+  /** Whether a task store (src/task-store.ts) is present. */
+  hasTaskStore: boolean;
   /** The parsed config. */
   xmcpConfig?: XmcpConfigOutputSchema;
   /** Client bundles mapping for React (toolName -> bundlePath). */
@@ -36,7 +38,11 @@ export const compilerContext = createContext<CompilerContext>({
 export const compilerContextProvider = async (
   initialValue: Omit<
     CompilerContext,
-    "toolPaths" | "promptPaths" | "resourcePaths" | "hasMiddleware"
+    | "toolPaths"
+    | "promptPaths"
+    | "resourcePaths"
+    | "hasMiddleware"
+    | "hasTaskStore"
   >,
   callback: () => void
 ) => {
@@ -47,6 +53,7 @@ export const compilerContextProvider = async (
       promptPaths: new Set(),
       resourcePaths: new Set(),
       hasMiddleware: false,
+      hasTaskStore: false,
     },
     () => Promise.resolve(callback())
   );

@@ -25,6 +25,13 @@ declare const INJECTED_MIDDLEWARE:
     }>)
   | undefined;
 
+declare const INJECTED_TASK_STORE:
+  | (() => Promise<{
+      default?: import("./task").TaskStore;
+      taskStore?: import("./task").TaskStore;
+    }>)
+  | undefined;
+
 // ─── DefinePlugin — config objects ────────────────────────────────────────────
 
 declare const HTTP_CONFIG: Omit<

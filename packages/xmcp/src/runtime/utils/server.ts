@@ -17,6 +17,9 @@ import {
   reportResourceLoadIssues,
 } from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import type { TaskStore } from "@/types/task";
+import type { TaskStore as SdkTaskStore } from "@modelcontextprotocol/sdk/experimental/tasks/interfaces";
+import { coerceToolResponse } from "./transformers/tool";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -54,17 +57,64 @@ export const injectedResources = INJECTED_RESOURCES as Record<
 
 export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
 
+const injectedTaskStore = INJECTED_TASK_STORE;
+
+/** Loads the user-provided task store (src/task-store.ts), if present. */
+export async function loadTaskStore(): Promise<TaskStore | undefined> {
+  if (!injectedTaskStore) return undefined;
+  const module = await injectedTaskStore();
+  return module?.default ?? module?.taskStore;
+}
+
+/**
+ * Wraps a task store so `getTaskResult` applies the same string/number → result
+ * coercion xmcp does on a synchronous tool return. An out-of-band worker can
+ * store a plain string and the client still receives a valid CallToolResult.
+ * Only primitives are coerced; objects/arrays (already-valid results, failed
+ * envelopes, etc.) pass through unchanged.
+ */
+export function wrapTaskStore(store: TaskStore): SdkTaskStore {
+  return {
+    createTask: (...args) => store.createTask(...args),
+    getTask: (...args) => store.getTask(...args),
+    storeTaskResult: (...args) => store.storeTaskResult(...args),
+    updateTaskStatus: (...args) => store.updateTaskStatus(...args),
+    listTasks: (...args) => store.listTasks(...args),
+    getTaskResult: async (taskId, sessionId) => {
+      const result = await store.getTaskResult(taskId, sessionId);
+      if (typeof result === "string" || typeof result === "number") {
+        return coerceToolResponse(result, {}, undefined, undefined, "task");
+      }
+      return result;
+    },
+  };
+}
+
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
 export async function configureServer(
   server: McpServer,
   toolModules: Map<string, ToolFile>,
   promptModules: Map<string, PromptFile>,
-  resourceModules: Map<string, ResourceFile>
+  resourceModules: Map<string, ResourceFile>,
+  hasTaskStore = false
 ): Promise<McpServer> {
   uIResourceRegistry.clear();
 
-  addToolsToServer(server, toolModules);
+  if (hasTaskStore) {
+    // Advertise task support so clients may augment tools/call with a task.
+    // Security note: stateless HTTP has no requestor identity, so task IDs are
+    // the only access control. Use cryptographically secure IDs in the store.
+    server.server.registerCapabilities({
+      tasks: {
+        list: {},
+        cancel: {},
+        requests: { tools: { call: {} } },
+      },
+    });
+  }
+
+  addToolsToServer(server, toolModules, hasTaskStore);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
   return server;
@@ -94,14 +144,27 @@ export async function loadResources() {
 
 export async function createServer() {
   const { instructions, ...serverInfo } = INJECTED_CONFIG;
-  const server = new McpServer(serverInfo, { instructions });
   const toolModulesPromise = loadTools();
   const promptModulesPromise = loadPrompts();
   const resourceModulesPromise = loadResources();
-  const [toolModules, promptModules, resourceModules] = await Promise.all([
-    toolModulesPromise,
-    promptModulesPromise,
-    resourceModulesPromise,
-  ]);
-  return configureServer(server, toolModules, promptModules, resourceModules);
+  const taskStorePromise = loadTaskStore();
+  const [toolModules, promptModules, resourceModules, taskStore] =
+    await Promise.all([
+      toolModulesPromise,
+      promptModulesPromise,
+      resourceModulesPromise,
+      taskStorePromise,
+    ]);
+  // Passing a task store enables the SDK's tasks/* request handlers.
+  const server = new McpServer(serverInfo, {
+    instructions,
+    taskStore: taskStore ? wrapTaskStore(taskStore) : undefined,
+  });
+  return configureServer(
+    server,
+    toolModules,
+    promptModules,
+    resourceModules,
+    Boolean(taskStore)
+  );
 }
