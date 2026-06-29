@@ -20,6 +20,7 @@ import { getEntries } from "./get-entries";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
+  CheckDefaultExportsPlugin,
   CreateTypeDefinitionPlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
@@ -180,6 +181,7 @@ export function getRspackConfig(
         : null,
       new InjectRuntimePlugin(),
       new CreateTypeDefinitionPlugin(),
+      new CheckDefaultExportsPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
     module: {

@@ -446,6 +446,7 @@ async function generateCode({
   rebuildClientBundles?: boolean;
 } = {}) {
   const { clientBundles: currentClientBundles } = compilerContext.getContext();
+
   const clientBundles =
     rebuildClientBundles || currentClientBundles === undefined
       ? await buildClientBundles()
