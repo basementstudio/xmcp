@@ -1,0 +1,86 @@
+---
+title: "How to Deploy an MCP Server to Production (Vercel, Lambda, Railway)"
+description: "A practical comparison of the main MCP server deployment targets — Vercel, AWS Lambda, Railway, and ECS — with the tradeoffs for each and how xmcp simplifies the Vercel path."
+summary: "A practical comparison of the main MCP server deployment targets — Vercel, AWS Lambda, Railway, and ECS — with the tradeoffs for each and how xmcp simplifies the Vercel path."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Getting an MCP server to production requires a different mental model than deploying a REST API. MCP connections can be long-lived, cold starts affect perceived latency, and the Streamable HTTP transport has specific requirements for serverless environments.
+
+Here's a practical comparison of the main options.
+
+## Deployment options at a glance
+
+| | Vercel (Fluid) | AWS Lambda | Railway | AWS ECS |
+| --- | --- | --- | --- | --- |
+| Cold starts | Yes (2–3s p95 for first request) | Yes (similar) | No (always-on) | No (always-on) |
+| Max request duration | Configurable (Fluid compute) | 15 min | No limit | No limit |
+| Scaling | Automatic | Automatic | Manual / autoscale | Manual / autoscale |
+| MCP transport | Streamable HTTP | Streamable HTTP | STDIO or Streamable HTTP | STDIO or Streamable HTTP |
+| xmcp zero-config | Yes | No | No | No |
+| Infrastructure to manage | None | API Gateway + Lambda | Minimal | VPC, ECS cluster, task defs |
+| Best for | Serverless, JS/TS teams, fast shipping | Existing AWS infrastructure | Persistent connections, low traffic | Full control, complex workloads |
+
+## Vercel — the zero-config path
+
+Vercel with Fluid compute is the simplest deployment for TypeScript MCP servers. Fluid compute handles the connection lifecycle and concurrency that regular serverless functions struggle with (standard Vercel functions have a 10-second timeout that breaks long MCP sessions).
+
+If you're using xmcp, deployment is a single command:
+
+```bash
+vercel deploy
+```
+
+xmcp generates the correct route structure and configures Streamable HTTP automatically. There's no `vercel.json` to write, no function configuration to set. [See the zero-config Vercel guide](/blog/vercel-zero-config) for the full walkthrough.
+
+**Choose Vercel when:** you want to ship fast, you're on TypeScript, and zero infrastructure management is a priority.
+
+## AWS Lambda — serverless with more control
+
+Lambda works well for MCP servers when you're already in AWS and want to keep everything in the same account and VPC. AWS Labs maintains a library that wraps stdio-based MCP servers in Lambda functions, and Streamable HTTP works natively over API Gateway.
+
+The tradeoff is setup time: you need to configure API Gateway, set appropriate timeouts (default 29s is too short for complex tool calls — set 300s minimum), and manage IAM roles. AWS ECS via Bedrock AgentCore Gateway is also a path for teams that need MCP servers discoverable within the AWS AI ecosystem.
+
+**Choose Lambda when:** you're already on AWS, you need VPC integration for private resources, or you're connecting to Bedrock-based AI workloads.
+
+## Railway — always-on containers
+
+Railway runs persistent containers with no timeout ceiling. This makes it a good fit for STDIO-based MCP servers (which run as persistent processes) and for MCP servers that maintain in-process state between tool calls.
+
+Railway's cost model is always-on — you pay for compute whether or not there's traffic. For a low-traffic internal tool, this is often cheaper than per-invocation Lambda pricing. For a high-traffic public server, Vercel's serverless model usually wins.
+
+**Choose Railway when:** you need persistent connections, you're running a STDIO server, or you have in-process state that can't survive cold starts.
+
+## AWS ECS — full control
+
+ECS on Fargate gives you long-lived containers with warm caches, persistent streaming connections, and the ability to run any language and runtime. It's the right choice when you need sidecars, custom networking, or workloads that the other options can't support.
+
+The cost is significant infrastructure overhead — VPCs, task definitions, load balancers, service discovery. Only worth it if you have AWS infrastructure expertise on the team and a workload that genuinely requires it.
+
+**Choose ECS when:** you have complex networking requirements, existing ECS infrastructure, or workloads that need more than the other options support.
+
+## The transport question
+
+HTTP-based deployments (Vercel, Lambda) require **Streamable HTTP** transport. STDIO transport, where the client spawns the server as a child process, only works for local deployments (Claude Desktop, Cursor on your machine) and persistent server environments like Railway or ECS.
+
+If you're building a server for remote AI clients (not local Claude Desktop), you need Streamable HTTP. xmcp enables it with a single config line:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+## Next steps
+
+- **[Vercel Zero-Config Deployment](/blog/vercel-zero-config)** — the full xmcp + Vercel walkthrough.
+- **[MCP Server Transports Explained](/blog/mcp-server-transports-explained)** — STDIO vs Streamable HTTP in depth.
+- **[MCP Server Authentication](/blog/mcp-server-authentication)** — secure your deployed server with OAuth.

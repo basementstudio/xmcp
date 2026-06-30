@@ -1,0 +1,87 @@
+---
+title: "MCP Server vs REST API: When to Use Each"
+description: "MCP servers and REST APIs both expose functionality over a network — but they're designed for different clients. Here's when to build each one, and when you need both."
+summary: "MCP servers and REST APIs both expose functionality over a network — but they're designed for different clients. Here's when to build each one, and when you need both."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+MCP servers and REST APIs look similar on the surface — both expose functionality over a network, both can read data and trigger actions. The difference is who the client is.
+
+## The short answer
+
+| | REST API | MCP Server |
+| --- | --- | --- |
+| Designed for | Human developers, browser clients, mobile apps | AI agents, LLM clients (Claude, Cursor, Copilot) |
+| Discovery | OpenAPI spec, docs, human reads it | Automatic — client calls `tools/list` at connect time |
+| Statefulness | Stateless by default | Session-aware (context persists across calls) |
+| Interface | HTTP verbs + JSON | MCP protocol (tools, resources, prompts) |
+| Auth model | API keys, JWTs, OAuth | OAuth 2.1, same tokens your REST API uses |
+| When to build | Your users are developers or apps | Your tools should be callable by AI clients |
+
+## What a REST API is for
+
+A REST API is the right interface when the client is a human-written program: a frontend app, a mobile client, another backend service, or a developer integrating your product. You design endpoints around your data model, return structured JSON, and the calling code knows exactly what to request and how to parse the response.
+
+REST is also well-understood infrastructure — every language has HTTP clients, every team knows how to build and consume them.
+
+## What an MCP server is for
+
+An [MCP server](/blog/what-is-an-mcp-server) is the right interface when the client is an AI agent. Instead of the AI guessing how to call your API (hallucinating endpoints, misreading docs), you expose a server that advertises its capabilities directly. The AI connects, discovers what tools exist, and calls them — no custom glue code, no prompt-engineering around API docs.
+
+The critical difference is **discovery**. With a REST API, a developer reads your OpenAPI spec and writes integration code. With an MCP server, the AI client asks the server what it can do and figures out the rest automatically.
+
+## They're not alternatives — they're layers
+
+Most production systems need both. Your REST API serves your web app, your mobile clients, and third-party developers. Your MCP server wraps the same business logic and makes it accessible to AI agents.
+
+A common pattern:
+
+```
+Mobile app → REST API → Database
+AI agent   → MCP Server → (same REST API or same database)
+```
+
+The MCP server doesn't replace your API. It's an AI-native interface to the same underlying system.
+
+## When you only need one
+
+**Build just a REST API** when your users are developers or end-users in a traditional app. No AI client needs to connect.
+
+**Build just an MCP server** when you're shipping a tool specifically for AI agents — something that has no traditional app interface.
+
+**Build both** when you have an existing product that you want to make accessible to AI clients like Claude, Cursor, or Copilot.
+
+## Building the MCP side with xmcp
+
+[xmcp](/docs) handles the MCP layer in TypeScript. You drop tool files in `src/tools/` and they're exposed over MCP automatically — no manual registration, no transport wiring:
+
+```typescript title="src/tools/get-order.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  orderId: z.string().describe("The order ID to look up"),
+};
+
+export const metadata = {
+  name: "get_order",
+  description: "Look up an order by ID",
+};
+
+export default async function getOrder({ orderId }: InferSchema<typeof schema>) {
+  // call your existing REST API or database here
+  return { id: orderId, status: "shipped" };
+}
+```
+
+Your REST API keeps serving your existing clients. The MCP server makes the same data available to AI clients.
+
+## Next steps
+
+- **[What Is an MCP Server?](/blog/what-is-an-mcp-server)** — the foundational explainer.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — scaffold and ship in minutes.
+- **[MCP Server Authentication](/blog/mcp-server-authentication)** — secure your tools with OAuth 2.1.

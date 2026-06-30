@@ -1,0 +1,80 @@
+---
+title: "MCP vs OpenAI Function Calling: Key Differences Explained"
+description: "OpenAI function calling and MCP both let AI models invoke external code — but they solve different problems. Here's how they compare and when to use each."
+summary: "OpenAI function calling and MCP both let AI models invoke external code — but they solve different problems. Here's how they compare and when to use each."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Both OpenAI function calling and the Model Context Protocol (MCP) let an AI model invoke external code. On the surface they look similar. The difference is what they're designed for — and that difference matters when you're deciding how to build.
+
+## The short answer
+
+| | OpenAI function calling | MCP |
+| --- | --- | --- |
+| Scope | OpenAI models only | Any MCP-compatible client |
+| Where tools are defined | In the API call payload | In a separate MCP server |
+| Transport | Through the OpenAI API | STDIO or HTTP |
+| Clients | ChatGPT, OpenAI API | Claude, Cursor, Copilot, and more |
+| Tool reuse across clients | No | Yes |
+| Standard | OpenAI-specific | Open, multi-vendor |
+
+## What OpenAI function calling is
+
+Function calling is a feature of the OpenAI chat completions API. When you make an API call, you include a `tools` array that describes the functions the model can invoke. The model returns a `tool_calls` response, you execute the function on your side, and you send the result back as a new message.
+
+The entire flow is coupled to a single provider. Your tools are defined inside the API request — they exist only for that conversation, they only work with OpenAI models, and the client application is responsible for running them.
+
+This is the right approach when you're building **a product on top of the OpenAI API directly** — a chatbot, an assistant, a pipeline where you own the full stack and OpenAI is your chosen model provider.
+
+## What MCP is
+
+The [Model Context Protocol (MCP)](/blog/what-is-an-mcp-server) takes a different approach. Instead of embedding tool definitions inside API calls, you build a **separate server** that exposes tools (and resources and prompts) over a standardized protocol. Any MCP-compatible client can connect to that server and use those tools.
+
+The tools live outside any particular model or API. Claude, Cursor, GitHub Copilot, and a growing list of clients all speak MCP. You build your server once and every compliant client can use it — no per-client integration code.
+
+## The key architectural difference
+
+With function calling, the **client application** owns the tools. The model asks to call a function; the client runs it.
+
+With MCP, the **MCP server** owns the tools. The AI client (Claude, Cursor, etc.) connects to your server and discovers what it can do. The server runs independently.
+
+This separation is what makes MCP tools reusable across clients. If you want your tools to be available in Claude Desktop, Cursor, and whatever AI client your users prefer next year, MCP is the right abstraction. If you're building a tightly coupled product around the OpenAI API, function calling may be simpler.
+
+## Can you use both?
+
+Yes. Some MCP clients (like Claude Desktop) use MCP for tool connectivity. Some agent frameworks let you mix OpenAI function calling with MCP servers as tool sources. They're not mutually exclusive — they operate at different layers.
+
+## Building MCP servers with xmcp
+
+If you're building an MCP server in TypeScript, [xmcp](/docs) handles the protocol, transport, and tool discovery for you. You write a file per tool, and xmcp exposes it over MCP:
+
+```typescript title="src/tools/search.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  query: z.string().describe("The search query"),
+};
+
+export const metadata = {
+  name: "search",
+  description: "Search for information",
+};
+
+export default async function search({ query }: InferSchema<typeof schema>) {
+  // your implementation
+  return `Results for: ${query}`;
+}
+```
+
+Any MCP client — not just one provider — can then use this tool.
+
+## Next steps
+
+- **[What Is an MCP Server?](/blog/what-is-an-mcp-server)** — the foundational explainer.
+- **[MCP Clients Explained](/blog/what-are-mcp-clients)** — which clients support MCP today.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — get a working server running in minutes.

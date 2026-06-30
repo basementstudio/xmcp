@@ -17,6 +17,17 @@ Use this file for `apps/website/**`.
 - Avoid adding client-side interactivity or new dependencies unless the page
   needs it.
 
+## Blog
+
+- Each `.mdx` in `content/blog/` becomes a post at `/blog/<filename>`. Frontmatter
+  fields are defined in `source.config.ts` (the `blog` schema) and read by
+  `utils/blog/index.ts`.
+- Set `unlisted: true` in a post's frontmatter to publish a **ghost article**: it is
+  fully rendered and kept in `sitemap.xml` (so search engines index it) but hidden
+  from every on-site listing — the `/blog` index, the home page strip, and the
+  featured slot. Use it for SEO landing pages that should be discoverable via search
+  but not linked from site navigation. See `content/blog/what-is-an-mcp-server.mdx`.
+
 ## Checks
 
 - Run `pnpm --filter website lint` for site code changes.

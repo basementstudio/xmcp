@@ -1,5 +1,5 @@
 import { Tag } from "@/components/ui/tag";
-import { BlogPost, getAllBlogPosts } from "@/utils/blog";
+import { BlogPost, getListedBlogPosts } from "@/utils/blog";
 import Link from "fumadocs-core/link";
 import Image from "next/image";
 
@@ -11,7 +11,7 @@ const TEXTURE_IMAGES = [
 ];
 
 export const HomeBlog = () => {
-  const posts = getAllBlogPosts().slice(0, 3);
+  const posts = getListedBlogPosts().slice(0, 3);
 
   return (
     <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">

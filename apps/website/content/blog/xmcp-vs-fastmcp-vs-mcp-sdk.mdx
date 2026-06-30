@@ -1,0 +1,98 @@
+---
+title: "xmcp vs FastMCP vs the Official MCP SDK: Which TypeScript Framework?"
+description: "An honest comparison of the main ways to build an MCP server in TypeScript — the official MCP SDK, FastMCP, Vercel's mcp-handler, and xmcp — covering developer experience, transports, auth, and deployment."
+summary: "An honest comparison of the main ways to build an MCP server in TypeScript — the official MCP SDK, FastMCP, Vercel's mcp-handler, and xmcp — covering developer experience, transports, auth, and deployment."
+category: "guides"
+date: "2026-06-19"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+If you're building an MCP server in TypeScript, you have a few realistic options. They're not all solving the same problem, so the right choice depends on how much you want to own versus how much you want handled for you. Here's a straight comparison.
+
+We'll look at four:
+
+- **The official MCP TypeScript SDK** (`@modelcontextprotocol/sdk`)
+- **FastMCP** (the TypeScript framework)
+- **Vercel's `mcp-handler`** (a Next.js / Nuxt adapter)
+- **xmcp** (the framework this blog belongs to)
+
+## The official MCP TypeScript SDK
+
+The official SDK is the reference implementation maintained alongside the protocol itself. Everything else in this list is built on top of it.
+
+It's intentionally **low-level**. You create a server instance, register tools imperatively, and wire up a transport yourself. That control is the point — if you need to do something unusual, nothing is hidden from you.
+
+The tradeoff is boilerplate. You manage tool registration, transport setup, and the surrounding server lifecycle by hand. For a quick tool or a production service where you'd rather not maintain that plumbing, it's more work than most people want.
+
+**Choose the SDK when:** you're building tooling on top of MCP itself, you need maximum control, or you're learning how the protocol works under the hood.
+
+## FastMCP
+
+FastMCP is a TypeScript framework built on top of the official SDK. Its pitch is the same one a lot of frameworks make: it provides an opinionated layer that handles the boilerplate automatically so you can focus on your tools rather than the protocol.
+
+You register tools imperatively through the framework's API, and it handles client sessions and multiple transports for you — including STDIO, HTTP streaming with SSE compatibility, and a stateless mode for serverless deployments. It's a capable, well-scoped DX layer over the SDK.
+
+**Choose FastMCP when:** you want less boilerplate than the raw SDK and you're comfortable registering tools imperatively in code.
+
+## Vercel's mcp-handler
+
+`mcp-handler` is Vercel's official adapter for MCP. It's a different shape from the others: rather than a standalone framework, it's designed to add an MCP endpoint to an **existing Next.js (13+) or Nuxt (3+) app**. You define tools with Zod schemas and expose them through a handler in an API route.
+
+It supports Streamable HTTP and SSE, with SSE resumability requiring an optional Redis integration. If your MCP server is really a feature of a larger Next.js application, adapting that app in place is convenient.
+
+**Choose mcp-handler when:** you already have a Next.js or Nuxt app and want to bolt an MCP endpoint onto it without standing up a separate service.
+
+## xmcp
+
+xmcp is a standalone framework whose defining choice is **file-based discovery**. You don't register tools imperatively — you drop a file in `src/tools/` and it becomes a tool:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+};
+
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+There's no central registry to keep in sync — the file *is* the registration. That convention extends to resources and prompts, and xmcp leans into a batteries-included setup:
+
+- **One-command scaffold** with `create-xmcp-app`, plus `xmcp create tool` for new primitives.
+- **STDIO and Streamable HTTP** transports configured with a single line in `xmcp.config.ts`; the HTTP transport is strictly stateless, so it fits serverless cleanly.
+- **Zero-config deploy to Vercel** — `vc deploy` works out of the box.
+- **Auth plugins** for Better Auth, Clerk, Auth0, WorkOS, and Scalekit, so OAuth-protecting your tools doesn't mean hand-rolling a resource server.
+- **Monetization** via x402 and Polar integrations for paid tools.
+
+**Choose xmcp when:** you want a file-based DX, a standalone server (not tied to an existing meta-framework), and built-in answers for transports, auth, deployment, and monetization.
+
+## Side by side
+
+| | Official SDK | FastMCP | mcp-handler | xmcp |
+| --- | --- | --- | --- | --- |
+| Shape | Low-level SDK | Framework over SDK | Next.js/Nuxt adapter | Standalone framework |
+| Tool definition | Imperative | Imperative | Imperative (in a route) | File-based discovery |
+| Scaffolding CLI | — | — | — | `create-xmcp-app` |
+| Transports | You wire it | STDIO + HTTP streaming | Streamable HTTP + SSE | STDIO + Streamable HTTP |
+| Built-in auth plugins | — | — | — | Better Auth, Clerk, Auth0, WorkOS, Scalekit |
+| Monetization | — | — | — | x402, Polar |
+| Best fit | Max control | Less boilerplate, imperative | Add MCP to an existing app | Batteries-included standalone server |
+
+## How to decide
+
+- Want **total control** or building protocol-level tooling? Use the **official SDK**.
+- Want a **lighter imperative framework**? **FastMCP** is a solid choice.
+- Already have a **Next.js or Nuxt app**? **mcp-handler** fits in place.
+- Want **file-based DX with auth, deploy, and monetization handled**? Try **xmcp**.
+
+There's no single winner — these are different tradeoffs between control and convenience. If the file-based approach appeals to you, the [build-from-scratch guide](/blog/build-mcp-server-typescript) gets you to a working xmcp server in a few minutes, and the [docs](/docs) cover the rest.

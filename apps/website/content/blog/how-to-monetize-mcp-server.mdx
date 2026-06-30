@@ -1,0 +1,114 @@
+---
+title: "How to Monetize Your MCP Server (x402 and Polar)"
+description: "Two practical approaches to charging for MCP tool usage: x402 for per-call micropayments and Polar for subscription-based access — both built into xmcp."
+summary: "Two practical approaches to charging for MCP tool usage: x402 for per-call micropayments and Polar for subscription-based access — both built into xmcp."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+If your MCP server wraps a paid API, costs compute per call, or provides specialized capability, you probably want to charge for it. xmcp ships two monetization integrations: **x402** for per-call micropayments and **Polar** for subscription-based access with license keys.
+
+## Two monetization models
+
+| | x402 | Polar |
+| --- | --- | --- |
+| Billing model | Per tool call (micropayments) | Subscription or one-time purchase |
+| Payment method | Crypto (via Coinbase x402) | Card, Stripe |
+| User accounts required | No | Yes (Polar account) |
+| Best for | Pay-as-you-go usage, agents | SaaS-style access, recurring revenue |
+| Integration | `@xmcp-dev/x402` plugin | `@xmcp-dev/polar` plugin |
+
+## x402: per-call micropayments
+
+x402 is a protocol built by Coinbase on the long-reserved HTTP 402 status code. A client sends a signed crypto payment with each request; the server verifies it before executing the tool. No accounts, no subscriptions — just pay and use.
+
+This model fits tools with unbounded usage patterns: an agent that calls a search tool hundreds of times in a session, a data enrichment tool where usage varies wildly per user, or any capability where a flat monthly fee doesn't match consumption.
+
+Install the plugin:
+
+```bash
+npm install @xmcp-dev/x402
+```
+
+Add it to your config:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+import { x402Plugin } from "@xmcp-dev/x402";
+
+const config: XmcpConfig = {
+  http: true,
+  plugins: [
+    x402Plugin({
+      facilitatorUrl: "https://x402.org/facilitator",
+      payTo: process.env.WALLET_ADDRESS!,
+      amount: 0.001, // USD per call
+      asset: "USDC",
+    }),
+  ],
+};
+
+export default config;
+```
+
+From that point, every tool call requires a valid x402 payment header. Clients that support x402 (including AI agents built with compatible SDKs) handle the payment flow automatically.
+
+See the [full x402 integration guide](/blog/x402-integration) for payment header details and testing.
+
+## Polar: subscription access
+
+Polar is a developer-first monetization platform that handles subscriptions and license keys. The xmcp plugin validates Polar license keys on each request, so only paying subscribers can call your tools.
+
+This model fits when you want predictable revenue — a monthly plan for teams, a one-time purchase for individuals, or tiered access based on subscription level.
+
+Install the plugin:
+
+```bash
+npm install @xmcp-dev/polar
+```
+
+Add it to your config:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+import { polarPlugin } from "@xmcp-dev/polar";
+
+const config: XmcpConfig = {
+  http: true,
+  plugins: [
+    polarPlugin({
+      accessToken: process.env.POLAR_ACCESS_TOKEN!,
+      organizationId: process.env.POLAR_ORGANIZATION_ID!,
+    }),
+  ],
+};
+
+export default config;
+```
+
+Users include their license key with requests. The plugin validates it against Polar and rejects calls from expired or invalid keys.
+
+See the [full Polar integration guide](/blog/polar-integration) for product setup, license key handling, and usage tracking.
+
+## Which model to choose
+
+Use **x402** when:
+- Usage varies heavily per user or per session
+- You want zero-friction access (no accounts, no sign-up)
+- Your target users are autonomous agents that can handle crypto payments
+
+Use **Polar** when:
+- You want predictable, subscription-based revenue
+- Your users are developers or teams buying access for a period
+- You want usage analytics and customer management in a dashboard
+
+You can also run both plugins simultaneously and route different tool groups to different payment models — though for most servers, one model is the right fit.
+
+## Next steps
+
+- **[Pay-per-use MCP tools with x402](/blog/x402-integration)** — detailed x402 setup and client-side payment flow.
+- **[Integrating Polar with xmcp](/blog/polar-integration)** — Polar product setup, license keys, and usage tracking.
+- **[Deployment docs](/docs/deployment/vercel)** — ship your monetized server to Vercel with zero config.

@@ -1,0 +1,222 @@
+---
+title: "How to Build an MCP Server in TypeScript (2026 Guide)"
+description: "A step-by-step guide to building a Model Context Protocol (MCP) server in TypeScript with xmcp: scaffold a project, write your first tool, run it locally, and connect it to Claude or Cursor."
+summary: "A step-by-step guide to building a Model Context Protocol (MCP) server in TypeScript with xmcp: scaffold a project, write your first tool, run it locally, and connect it to Claude or Cursor."
+category: "guides"
+date: "2026-06-19"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+If you want an AI assistant like Claude or Cursor to call your own functions, read your own data, or hit your own APIs, you need an **MCP server**. This guide walks through building one in TypeScript from an empty terminal to a working server connected to a real client, using [xmcp](/docs).
+
+By the end you'll have a server with a working tool, running locally, that Claude Desktop or Cursor can call.
+
+## What you're building
+
+The [Model Context Protocol (MCP)](/blog/what-is-an-mcp-server) is a standard way to expose **tools** (functions the model can call), **resources** (data it can read), and **prompts** (reusable instructions) to any MCP-compatible client. An MCP server is the program that hosts those capabilities.
+
+We'll build a tiny server with one tool, then point Claude at it.
+
+## Prerequisites
+
+- Node.js 20 or later
+- An MCP client to test against (Claude Desktop or Cursor)
+
+## Step 1: Scaffold the project
+
+The fastest path is the `create-xmcp-app` CLI, which generates a project with everything wired up:
+
+```bash
+npx create-xmcp-app@latest
+```
+
+You'll be prompted for a project name, a template, a package manager, a transport, and which primitives to include:
+
+```bash
+? What is your project named? my-xmcp-app
+? Select a template: Default (Standard MCP server)
+? Select a package manager: npm
+? Select the transport you want to use: HTTP (runs on a server)
+? Select components to initialize: Tools, Prompts, Resources
+```
+
+Pick **HTTP** as the transport for this guide — it's what you'll deploy remotely, and it's the easiest to test in a browser. (We'll cover the difference between HTTP and STDIO in [MCP Transports Explained](/blog/mcp-server-transports-explained).)
+
+The CLI creates a folder, installs dependencies, and gives you a [file-based project structure](/docs/getting-started/project-structure):
+
+```
+my-xmcp-app/
+├── src/
+│   └── tools/          # Tool files are auto-discovered here
+│       └── greet.ts
+├── package.json
+├── tsconfig.json
+└── xmcp.config.ts      # xmcp configuration
+```
+
+The key idea: **you don't register tools manually**. Drop a file in `src/tools/` and xmcp discovers it.
+
+## Step 2: Understand a tool file
+
+Open `src/tools/greet.ts`. A tool is just a file with up to three exports:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+// 1. The input parameters, described with Zod
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+// 2. The tool's identity and behavior hints
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+  annotations: {
+    title: "Greet the user",
+    readOnlyHint: true,
+  },
+};
+
+// 3. The handler — args are fully typed from your schema
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+Three things worth calling out:
+
+- **`schema`** uses [Zod](https://zod.dev) and `.describe()` so the model understands each parameter. Clear descriptions are what make tools discoverable.
+- **`InferSchema`** turns your Zod schema into a TypeScript type automatically — no duplicate type definitions, full autocomplete inside the handler.
+- The **default export** is the handler. Returning a plain string or number is enough; xmcp wraps it in the proper MCP response shape for you.
+
+## Step 3: Write your own tool
+
+Let's add a tool that does something slightly more real — fetch the current time for a timezone. Create `src/tools/current-time.ts`:
+
+```typescript title="src/tools/current-time.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  timeZone: z
+    .string()
+    .describe("An IANA timezone, e.g. 'America/New_York' or 'Europe/Madrid'"),
+};
+
+export const metadata = {
+  name: "current-time",
+  description: "Get the current time in a given timezone",
+  annotations: {
+    title: "Current time",
+    readOnlyHint: true,
+  },
+};
+
+export default async function currentTime({
+  timeZone,
+}: InferSchema<typeof schema>) {
+  const now = new Date().toLocaleString("en-US", { timeZone });
+  return `The current time in ${timeZone} is ${now}.`;
+}
+```
+
+That's the whole loop: a new file, a schema, a handler. xmcp picks it up automatically — no registry to edit.
+
+> Prefer scaffolding? `xmcp create tool current-time` generates a starter file with the exports already in place.
+
+## Step 4: Run the dev server
+
+Start xmcp in development mode:
+
+```bash
+npm run dev
+```
+
+This runs `xmcp dev`, which watches your files and reloads on change. By default the HTTP transport serves on port `3001` at the `/mcp` endpoint, so your server is now live at:
+
+```
+http://localhost:3001/mcp
+```
+
+Your `xmcp.config.ts` controls the transport. For HTTP it looks like this:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+`http: true` uses sensible defaults; pass an object to override the port, endpoint, or [CORS settings](/docs/configuration/transports).
+
+## Step 5: Connect a client
+
+Now point an MCP client at your server.
+
+**Cursor** speaks HTTP directly:
+
+```json
+{
+  "mcpServers": {
+    "my-xmcp-app": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
+**Claude Desktop** doesn't connect to HTTP servers natively yet, so you bridge it with the `mcp-remote` adapter:
+
+```json
+{
+  "mcpServers": {
+    "my-xmcp-app": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
+
+Restart the client, and your `greet` and `current-time` tools show up. Ask Claude "what time is it in Tokyo?" and it will call your tool.
+
+If the server doesn't appear, see [Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection) — connection issues almost always come down to transport, the `mcp-remote` bridge, or CORS.
+
+## Step 6: Build for production
+
+When you're ready to ship:
+
+```bash
+npm run build
+```
+
+`xmcp build` compiles to a `dist/` directory. You start the production server with the script matching your transport:
+
+```json title="package.json"
+{
+  "scripts": {
+    "dev": "xmcp dev",
+    "build": "xmcp build",
+    "start": "node dist/http.js"
+  }
+}
+```
+
+From here you can deploy to Vercel with zero config — `vc deploy` is all it takes. See the [Vercel deployment docs](/docs/deployment/vercel) for the full flow.
+
+## Where to go next
+
+You now have a working TypeScript MCP server. To take it further:
+
+- **[MCP Transports Explained](/blog/mcp-server-transports-explained)** — when to use STDIO vs HTTP, and why it matters for serverless.
+- **[Authentication docs](/docs/guides/authentication)** — lock down your tools with OAuth via Better Auth, Clerk, or Auth0.
+- **[Core concepts](/docs/core-concepts/tools)** — resources, prompts, middleware, and structured outputs.
+
+The whole point of xmcp is that adding capability stays this simple: write a file, and it's a tool.

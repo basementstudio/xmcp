@@ -77,6 +77,7 @@ export interface BlogFrontmatter {
   readonly category?: BlogCategory;
   readonly order?: number;
   readonly featured?: boolean;
+  readonly unlisted?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
   readonly authors?: string[];
@@ -95,6 +96,7 @@ export interface BlogPost {
   readonly description?: string;
   readonly summary?: string;
   readonly featured?: boolean;
+  readonly unlisted?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
   readonly authors: BlogAuthor[];
@@ -150,6 +152,7 @@ export function getAllBlogPosts(): BlogPost[] {
         description: data.description,
         summary: data.summary,
         featured: data.featured || false,
+        unlisted: data.unlisted || false,
         previewImage: data.previewImage,
         textureImage: data.textureImage,
         authors: resolveAuthors(data.authors),
@@ -167,6 +170,14 @@ export function getAllBlogPosts(): BlogPost[] {
   });
 
   return posts;
+}
+
+/**
+ * Listed posts only — excludes "ghost" articles (`unlisted: true`), which still
+ * render and stay in the sitemap but must not surface in any on-site listing.
+ */
+export function getListedBlogPosts(): BlogPost[] {
+  return getAllBlogPosts().filter((post) => !post.unlisted);
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | null {
@@ -210,12 +221,12 @@ export function getBlogMetadata(
 }
 
 export function getBlogPostsByCategory(category: BlogCategory): BlogPost[] {
-  const posts = getAllBlogPosts();
+  const posts = getListedBlogPosts();
   return posts.filter((post) => post.category === category);
 }
 
 export function getFeaturedBlogPost(): BlogPost | null {
-  const posts = getAllBlogPosts();
+  const posts = getListedBlogPosts();
   const featuredPost = posts.find((post) => post.featured);
 
   return featuredPost || posts[0] || null;

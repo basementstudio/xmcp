@@ -1,0 +1,89 @@
+---
+title: "Best FastMCP Alternatives for TypeScript MCP Servers (2026)"
+description: "Looking for alternatives to FastMCP? Here's how the main TypeScript MCP frameworks compare — and when xmcp, the official SDK, or Vercel's mcp-handler might be a better fit."
+summary: "Looking for alternatives to FastMCP? Here's how the main TypeScript MCP frameworks compare — and when xmcp, the official SDK, or Vercel's mcp-handler might be a better fit."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+FastMCP is a reasonable first step beyond the raw MCP SDK — it cuts boilerplate while keeping an imperative tool registration style. But if you've hit its limits (no auth integration, no monetization, no file-based DX, nothing for deployment), here are the realistic alternatives.
+
+## The alternatives at a glance
+
+| | FastMCP | Official SDK | mcp-handler | xmcp |
+| --- | --- | --- | --- | --- |
+| Tool definition | Imperative | Imperative | Imperative (in a route) | File-based discovery |
+| Auth plugins | — | — | — | Better Auth, Clerk, Auth0, WorkOS, Scalekit |
+| Monetization | — | — | — | x402, Polar |
+| Scaffolding CLI | — | — | — | `create-xmcp-app` |
+| Transports | STDIO + HTTP streaming | You wire it | Streamable HTTP + SSE | STDIO + Streamable HTTP |
+| Best for | Less boilerplate, stay imperative | Max protocol control | Add MCP to an existing Next.js/Nuxt app | Standalone server with batteries included |
+
+## The official MCP TypeScript SDK
+
+The SDK is what FastMCP is built on. If the reason you're looking at alternatives is that FastMCP adds conventions you don't want, going back to the SDK gives you complete control — no imposed patterns, just the raw protocol.
+
+The cost is that every server concern (transport wiring, tool registration, lifecycle management) is yours to handle. It's the right choice for tooling that operates at the protocol level.
+
+**Switch to the SDK when:** you want maximum control and are comfortable owning the plumbing yourself.
+
+## Vercel's mcp-handler
+
+`mcp-handler` is not a general-purpose framework — it's an adapter that adds MCP to an **existing Next.js or Nuxt app**. If your MCP tools naturally live inside an existing application (shared auth, shared database, same deploy), it's the cleanest path: add a route, drop in your tools, done.
+
+It has no STDIO support and no standalone server mode, so it doesn't replace FastMCP for projects that don't already have a Next.js app.
+
+**Switch to mcp-handler when:** your tools belong inside a Next.js or Nuxt application you're already running.
+
+## xmcp
+
+xmcp is a standalone MCP framework whose core difference from FastMCP is **file-based discovery**: instead of calling `server.addTool()`, you drop a file in `src/tools/` and it's registered automatically.
+
+```typescript title="src/tools/weather.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  city: z.string().describe("The city to get weather for"),
+};
+
+export const metadata = {
+  name: "weather",
+  description: "Get current weather for a city",
+};
+
+export default async function weather({ city }: InferSchema<typeof schema>) {
+  // your implementation
+  return `Weather in ${city}: sunny, 22°C`;
+}
+```
+
+Beyond the DX, xmcp brings things FastMCP doesn't have:
+
+- **Auth plugins** for Better Auth, Clerk, Auth0, WorkOS, and Scalekit — OAuth-protecting your tools without hand-rolling a resource server.
+- **Monetization** via x402 (per-call micropayments) and Polar (subscriptions with license keys).
+- **Zero-config deploy** to Vercel — `vc deploy` just works.
+- **`create-xmcp-app`** scaffolds a full project in one command.
+
+The tradeoff: if you have an existing codebase that registers tools imperatively and you want to keep that pattern, xmcp's file-based convention requires a different mental model.
+
+**Switch to xmcp when:** you want a standalone server with file-based DX, built-in auth, monetization, and a straightforward path to production.
+
+## How to migrate from FastMCP
+
+The core change is moving from `server.addTool()` calls to individual tool files. Each tool becomes a file in `src/tools/` that exports a `schema`, `metadata`, and a default handler. The `create-xmcp-app` CLI scaffolds the project structure:
+
+```bash
+npx create-xmcp-app@latest
+```
+
+From there, move your tool logic into individual files — the [full build guide](/blog/build-mcp-server-typescript) walks through the complete workflow.
+
+## Next steps
+
+- **[xmcp vs FastMCP vs the Official MCP SDK](/blog/xmcp-vs-fastmcp-vs-mcp-sdk)** — a longer side-by-side comparison including code examples.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — start fresh with xmcp in one command.
+- **[Authentication docs](/docs/guides/authentication)** — the auth plugins in detail.
