@@ -1,0 +1,131 @@
+---
+title: "MCP Tools vs Resources vs Prompts: When to Use Each"
+description: "MCP servers can expose three types of capabilities: tools, resources, and prompts. They're not interchangeable — each one is controlled by a different actor and used for a different purpose."
+summary: "MCP servers can expose three types of capabilities: tools, resources, and prompts. They're not interchangeable — each one is controlled by a different actor and used for a different purpose."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+MCP servers expose three types of capabilities: **tools**, **resources**, and **prompts**. Developers often use "tool" to mean any of them — but they behave differently because they're controlled by different actors. Getting this right affects how your server integrates with AI clients.
+
+## The short answer
+
+| | Tools | Resources | Prompts |
+| --- | --- | --- | --- |
+| Controlled by | The AI model | The host application | The user |
+| Side effects | Yes — intended to act | No — read-only | No — just text |
+| Invoked | Automatically by the LLM | Loaded by the client app | Explicitly by the user |
+| Examples | Send email, run query, call API | File contents, database record, docs | `/summarize`, `/review-pr`, slash commands |
+| xmcp directory | `src/tools/` | `src/resources/` | `src/prompts/` |
+
+The key question for any capability: **who should decide when this is used?**
+
+## Tools — the AI decides
+
+Tools are functions the AI model can call autonomously based on the conversation. When a user says "check the weather in Tokyo," the model decides to call your `get_weather` tool — the user never explicitly invokes it.
+
+Use a tool when:
+- The capability performs an action or has side effects (writing data, calling an API, sending a message)
+- The model should be able to discover and use it automatically based on context
+- The output feeds back into the conversation
+
+```typescript title="src/tools/send-email.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  to: z.string().email(),
+  subject: z.string(),
+  body: z.string(),
+};
+
+export const metadata = {
+  name: "send_email",
+  description: "Send an email to an address",
+};
+
+export default async function sendEmail({ to, subject, body }: InferSchema<typeof schema>) {
+  // send the email
+  return { sent: true };
+}
+```
+
+## Resources — the application decides
+
+Resources are read-only data sources that a client application loads into context. The AI model doesn't invoke resources directly — the host app (Claude Desktop, Cursor, etc.) fetches them and makes their content available.
+
+Think of resources as the "what the AI can read" layer, not the "what the AI can do" layer. They have stable URIs and are fetched by address.
+
+Use a resource when:
+- You're exposing static or semi-static data (a file, a config, a knowledge base entry)
+- The content should be readable but not modified
+- The client application — not the model — decides when to load it
+
+```typescript title="src/resources/company-docs.ts"
+export const metadata = {
+  uri: "docs://company/handbook",
+  name: "Company Handbook",
+  description: "The employee handbook",
+  mimeType: "text/markdown",
+};
+
+export default async function companyDocs() {
+  return "# Company Handbook\n\n...";
+}
+```
+
+## Prompts — the user decides
+
+Prompts are reusable, parameterized instruction templates that users invoke explicitly — like slash commands in Slack or Claude's `/` menu. The model doesn't call prompts autonomously; the user picks one and fills in any parameters.
+
+Use a prompt when:
+- You want to give users a structured, repeatable way to kick off a task
+- The interaction is user-initiated, not model-initiated
+- You're standardizing how a common task is described to the model
+
+```typescript title="src/prompts/review-code.ts"
+export const metadata = {
+  name: "review_code",
+  description: "Review a code snippet for issues",
+  arguments: [
+    { name: "language", description: "Programming language", required: true },
+    { name: "code", description: "The code to review", required: true },
+  ],
+};
+
+export default function reviewCode({ language, code }: { language: string; code: string }) {
+  return `Review this ${language} code for bugs, security issues, and style problems:\n\n\`\`\`${language}\n${code}\n\`\`\``;
+}
+```
+
+## The mental model
+
+If you're unsure which primitive to use, ask:
+
+1. **Should the AI decide when to use this?** → Tool
+2. **Is this data the app should pre-load for context?** → Resource
+3. **Should the user explicitly choose this interaction?** → Prompt
+
+Most MCP servers only need tools. Resources and prompts are powerful but narrower — use them when you have a clear use case for the non-model-controlled interaction.
+
+## How xmcp maps to this
+
+xmcp follows the file-based convention: each capability lives in its own directory and file. Drop a file, get a registered capability:
+
+```
+src/
+  tools/       → tools the AI calls
+  resources/   → data the app loads
+  prompts/     → templates the user picks
+```
+
+No manual registration. xmcp discovers and registers everything at build time.
+
+## Next steps
+
+- **[What Is an MCP Server?](/blog/what-is-an-mcp-server)** — the full primer on MCP.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — scaffold a project with tools, resources, and prompts.
+- **[Core concepts](/docs/core-concepts)** — the xmcp docs for each primitive.
