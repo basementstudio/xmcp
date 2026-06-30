@@ -1,0 +1,105 @@
+---
+title: "MCP Clients Explained: Claude, Cursor, and the Growing Ecosystem"
+description: "An MCP server is only half the picture — here's a guide to the clients (Claude Desktop, Cursor, GitHub Copilot, and others) that connect to MCP servers, and how each one works."
+summary: "An MCP server is only half the picture — here's a guide to the clients (Claude Desktop, Cursor, GitHub Copilot, and others) that connect to MCP servers, and how each one works."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+An [MCP server](/blog/what-is-an-mcp-server) exposes tools, resources, and prompts. An **MCP client** is the AI application that connects to it, discovers what's available, and lets the model call those tools. The two sides are defined by the same protocol, which means a server built once works with any compliant client.
+
+Here's what the client ecosystem looks like in 2026.
+
+## How clients connect
+
+MCP clients connect to servers over one of two [transports](/blog/mcp-server-transports-explained):
+
+- **STDIO** — the client launches the server as a child process and communicates over stdin/stdout. Used for local tools on the same machine.
+- **Streamable HTTP** — the client connects to a URL over HTTP. Used for remote servers and multi-user deployments.
+
+Each client has its own configuration format for adding MCP servers, but the connection model is the same.
+
+## Claude Desktop
+
+**Transport support:** STDIO and HTTP (via `mcp-remote` bridge)
+
+Claude Desktop is Anthropic's native desktop client and has one of the earliest MCP integrations. You configure servers in its `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "node",
+      "args": ["/path/to/dist/stdio.js"]
+    }
+  }
+}
+```
+
+For HTTP servers, Claude Desktop doesn't connect natively yet — you bridge it with the `mcp-remote` adapter:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://your-server.vercel.app/mcp"]
+    }
+  }
+}
+```
+
+Claude in the web and Claude.ai are separate from Claude Desktop and have their own integration surface (currently limited to Anthropic-verified integrations).
+
+## Cursor
+
+**Transport support:** Streamable HTTP and STDIO
+
+Cursor added MCP support in 2025 and treats it as a first-class feature. HTTP servers connect directly — no bridge needed:
+
+```json
+{
+  "mcpServers": {
+    "my-server": {
+      "url": "https://your-server.vercel.app/mcp"
+    }
+  }
+}
+```
+
+STDIO servers use the same `command` / `args` pattern as Claude Desktop. Cursor exposes connected tools inside the Composer and Chat interfaces, and the model can call them during normal coding sessions.
+
+## GitHub Copilot
+
+**Transport support:** Streamable HTTP (via Extensions)
+
+GitHub Copilot supports MCP through its Extensions platform. Tools connected via MCP appear in Copilot Chat in VS Code, Visual Studio, and GitHub.com. The integration is configured at the extension level rather than in a local config file.
+
+## Windsurf
+
+**Transport support:** STDIO and HTTP
+
+Windsurf (by Codeium) is an AI-first IDE that supports MCP server connections through its cascade feature. Configuration is similar to Cursor — servers are declared in a settings file and become available during AI-assisted coding sessions.
+
+## Other clients
+
+The MCP ecosystem is growing quickly. Other clients with MCP support include:
+
+- **Zed** — the collaborative code editor has MCP integration in its assistant.
+- **Continue.dev** — the open-source AI coding assistant supports MCP for tool extension.
+- **Custom agents** — any application built with the MCP TypeScript or Python SDK can act as a client.
+
+## What this means for your server
+
+Because all of these clients speak the same protocol, an xmcp server deployed to Vercel works with all of them. You configure the connection once per client (URL or command), and the client handles the rest — tool discovery, schema rendering, and calling your handlers.
+
+The only thing that varies is transport: HTTP for remote servers (Claude via bridge, Cursor natively, Copilot via Extensions) and STDIO for local servers running on the user's machine.
+
+## Next steps
+
+- **[MCP Transports Explained](/blog/mcp-server-transports-explained)** — STDIO vs Streamable HTTP in detail.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — connect to Claude or Cursor in minutes.
+- **[Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection)** — common connection issues and how to resolve them.
