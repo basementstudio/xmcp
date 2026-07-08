@@ -24,6 +24,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 export default descopeProvider({
   issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
+  projectId: process.env.DESCOPE_PROJECT_ID,
 });
 ```
 
@@ -48,7 +49,8 @@ export default function whoami() {
 ### 3. Environment Variables
 
 ```bash
-DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/v1/apps/agentic/your-project-id/your-mcp-server-id
+DESCOPE_PROJECT_ID=your-project-id
 BASE_URL=http://127.0.0.1:3001
 ```
 
@@ -61,7 +63,7 @@ BASE_URL=http://127.0.0.1:3001
 3. Set a name and your server's base URL
 4. Copy the **Issuer URL**
 
-The issuer URL identifies your resource and contains your project ID. The plugin parses both from it automatically, so you only need the one value.
+The issuer URL identifies your resource and contains your project ID, which the plugin parses out automatically. If you'd rather not rely on parsing, pass `projectId` explicitly (also visible in **Descope Console** → **Project Settings**).
 
 ## API Reference
 
@@ -73,6 +75,7 @@ Creates the Descope authentication provider for xmcp. Returns `{ middleware, rou
 |--------|------|----------|-------------|
 | `issuerURL` | `string` | Yes | Issuer URL from your MCP Server resource in the Descope Console |
 | `baseURL` | `string` | Yes | The base URL of your MCP server |
+| `projectId` | `string` | No | Descope project ID — pass this to skip parsing it out of `issuerURL` |
 | `managementKey` | `string` | No | Descope management key — required to use `getUser()` or `getManagementClient()` |
 | `scopesSupported` | `string[]` | No | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
 

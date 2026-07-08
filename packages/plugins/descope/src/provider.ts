@@ -12,8 +12,10 @@ const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
 function parseProjectId(issuerURL: string): string {
   const segments = new URL(issuerURL).pathname.replace(/^\//, "").split("/").filter(Boolean);
-  if (!segments[0]) throw new Error(`DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`);
-  return segments[0];
+  const agenticIdx = segments.indexOf("agentic");
+  const projectId = agenticIdx !== -1 ? segments[agenticIdx + 1] : segments[0];
+  if (!projectId) throw new Error(`DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`);
+  return projectId;
 }
 
 function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter {
@@ -102,7 +104,7 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   if (!config.issuerURL) throw new Error("DescopeConfig.issuerURL is required");
   if (!config.baseURL) throw new Error("DescopeConfig.baseURL is required");
 
-  const projectId = parseProjectId(config.issuerURL);
+  const projectId = config.projectId ?? parseProjectId(config.issuerURL);
 
   const sdk = Descope({
     projectId,
@@ -110,7 +112,7 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   });
 
   const router = descopeRouter(config, projectId);
-  const rawMiddleware = descopeMiddleware(config, sdk);
+  const rawMiddleware = descopeMiddleware(sdk);
 
   const middleware: RequestHandler = (req, res, next) => {
     providerClientContext({ client: sdk, projectId, managementKey: config.managementKey }, () => {

@@ -47,7 +47,7 @@ MCP clients use Dynamic Client Registration (DCR) and OAuth 2.1 to authenticate.
 3. Set a name and your server's base URL (e.g., `http://127.0.0.1:3001` for local development)
 4. Copy the **Issuer URL**
 
-The issuer URL identifies your resource and contains your project ID. The plugin parses both from it, so you only need this one value.
+The issuer URL identifies your resource and contains your project ID, which the plugin parses out automatically. If you'd rather not rely on parsing, pass `projectId` explicitly (also visible in **Descope Console** → **Project Settings**).
 
 ## Environment Variables
 
@@ -55,7 +55,8 @@ Configure the following environment variables in your `.env` file:
 
 ```bash
 # Descope credentials
-DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/v1/apps/agentic/your-project-id/your-mcp-server-id
+DESCOPE_PROJECT_ID=your-project-id
 
 # App configuration
 BASE_URL=http://127.0.0.1:3001
@@ -95,6 +96,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 export default descopeProvider({
   issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
+  projectId: process.env.DESCOPE_PROJECT_ID,
 });
 ```
 
@@ -106,15 +108,17 @@ import { descopeProvider } from "@xmcp-dev/descope";
 export default descopeProvider({
   issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
+  projectId: process.env.DESCOPE_PROJECT_ID,
   managementKey: process.env.DESCOPE_MANAGEMENT_KEY,
-  scopesSupported: process.env.SCOPES_SUPPORTED,
+  scopesSupported: process.env.SCOPES_SUPPORTED?.split(","),
 });
 ```
 
 ### Configuration Options
 
-- **`issuerURL`**: Issuer URL from your MCP Server resource in the Descope Console (required). Contains your project ID — no separate project ID field needed.
+- **`issuerURL`**: Issuer URL from your MCP Server resource in the Descope Console (required). Contains your project ID, which is parsed out automatically.
 - **`baseURL`**: Base URL of your MCP server (required). Must match the URL configured on the resource in Descope.
+- **`projectId`**: (Optional) Descope project ID. Pass this to skip parsing it out of `issuerURL`.
 - **`managementKey`**: (Optional) Descope management key. Required to use `getUser()` or `getManagementClient()`.
 - **`scopesSupported`**: (Optional) Array of OAuth scopes advertised in the resource metadata. Defaults to `["openid", "profile", "email"]`.
 
