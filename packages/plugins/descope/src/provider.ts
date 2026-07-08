@@ -15,6 +15,9 @@ const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
 function parseProjectId(issuerURL: string): string {
+  // Agentic Identity Hub issuer URLs are shaped
+  // /v1/apps/agentic/<projectId>/<mcpServerId>; legacy issuer URLs are just
+  // /<projectId>, so fall back to the first segment when "agentic" is absent.
   const segments = new URL(issuerURL).pathname
     .replace(/^\//, "")
     .split("/")
