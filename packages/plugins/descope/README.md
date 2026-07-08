@@ -71,13 +71,13 @@ The issuer URL identifies your resource and contains your project ID, which the 
 
 Creates the Descope authentication provider for xmcp. Returns `{ middleware, router }`.
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `issuerURL` | `string` | Yes | Issuer URL from your MCP Server resource in the Descope Console |
-| `baseURL` | `string` | Yes | The base URL of your MCP server |
-| `projectId` | `string` | No | Descope project ID — pass this to skip parsing it out of `issuerURL` |
-| `managementKey` | `string` | No | Descope management key — required to use `getUser()` or `getManagementClient()` |
-| `scopesSupported` | `string[]` | No | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
+| Option            | Type       | Required | Description                                                                     |
+| ----------------- | ---------- | -------- | ------------------------------------------------------------------------------- |
+| `issuerURL`       | `string`   | Yes      | Issuer URL from your MCP Server resource in the Descope Console                 |
+| `baseURL`         | `string`   | Yes      | The base URL of your MCP server                                                 |
+| `projectId`       | `string`   | No       | Descope project ID — pass this to skip parsing it out of `issuerURL`            |
+| `managementKey`   | `string`   | No       | Descope management key — required to use `getUser()` or `getManagementClient()` |
+| `scopesSupported` | `string[]` | No       | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
 
 ### `getSession()`
 
@@ -87,15 +87,15 @@ Returns the authenticated user's session for the current request. Throws if call
 import { getSession } from "@xmcp-dev/descope";
 
 const session = getSession();
-session.userId       // Descope user ID
-session.email        // Email address from JWT claims
-session.loginIds     // Login identifiers (email, phone, etc.)
-session.permissions  // Permissions granted to this session
-session.roles        // Roles assigned to the user
-session.tenants      // Tenant memberships with per-tenant permissions and roles
-session.expiresAt    // Token expiry as a Date
-session.issuedAt     // Token issue time as a Date
-session.claims       // Raw JWT claims
+session.userId; // Descope user ID
+session.email; // Email address from JWT claims
+session.loginIds; // Login identifiers (email, phone, etc.)
+session.permissions; // Permissions granted to this session
+session.roles; // Roles assigned to the user
+session.tenants; // Tenant memberships with per-tenant permissions and roles
+session.expiresAt; // Token expiry as a Date
+session.issuedAt; // Token issue time as a Date
+session.claims; // Raw JWT claims
 ```
 
 ### `getUser()`

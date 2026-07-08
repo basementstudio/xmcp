@@ -4,21 +4,34 @@ import { Router } from "express";
 import type { Middleware } from "xmcp";
 import { providerClientContext, providerSessionContext } from "./context.js";
 import { extractBearerToken, validateToken } from "./jwt.js";
-import type { DescopeConfig, OAuthAuthorizationServerMetadata, OAuthProtectedResourceMetadata } from "./types.js";
+import type {
+  DescopeConfig,
+  OAuthAuthorizationServerMetadata,
+  OAuthProtectedResourceMetadata,
+} from "./types.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"];
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
 function parseProjectId(issuerURL: string): string {
-  const segments = new URL(issuerURL).pathname.replace(/^\//, "").split("/").filter(Boolean);
+  const segments = new URL(issuerURL).pathname
+    .replace(/^\//, "")
+    .split("/")
+    .filter(Boolean);
   const agenticIdx = segments.indexOf("agentic");
   const projectId = agenticIdx !== -1 ? segments[agenticIdx + 1] : segments[0];
-  if (!projectId) throw new Error(`DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`);
+  if (!projectId)
+    throw new Error(
+      `DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`
+    );
   return projectId;
 }
 
-function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter {
+function descopeRouter(
+  config: DescopeConfig,
+  projectId: string
+): ExpressRouter {
   const { issuerURL, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
   const router = Router();
 
@@ -55,9 +68,7 @@ function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter 
   return router;
 }
 
-function descopeMiddleware(
-  sdk: ReturnType<typeof Descope>,
-): RequestHandler {
+function descopeMiddleware(sdk: ReturnType<typeof Descope>): RequestHandler {
   return (req, res, next) => {
     if (!req.path.startsWith("/mcp")) {
       next();
@@ -74,29 +85,42 @@ function descopeMiddleware(
       return;
     }
 
-    validateToken(sdk, token).then((result) => {
-      if (!result.ok) {
-        if (result.error === "expired") {
-          res.setHeader(
-            "WWW-Authenticate",
-            `${WWW_AUTH_BASE}, error="invalid_token", error_description="Token has expired"`,
-          );
-          res.status(401).json({ error: "token_expired" });
-        } else {
-          res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
-          res.status(401).json({ error: "invalid_token" });
+    validateToken(sdk, token)
+      .then((result) => {
+        if (!result.ok) {
+          if (result.error === "expired") {
+            res.setHeader(
+              "WWW-Authenticate",
+              `${WWW_AUTH_BASE}, error="invalid_token", error_description="Token has expired"`
+            );
+            res.status(401).json({ error: "token_expired" });
+          } else {
+            res.setHeader(
+              "WWW-Authenticate",
+              `${WWW_AUTH_BASE}, error="invalid_token"`
+            );
+            res.status(401).json({ error: "invalid_token" });
+          }
+          return;
         }
-        return;
-      }
 
-      const { session } = result;
-      providerSessionContext({ session }, () => {
-        next();
+        const { session } = result;
+        providerSessionContext({ session }, () => {
+          next();
+        });
+      })
+      .catch(() => {
+        res.setHeader(
+          "WWW-Authenticate",
+          `${WWW_AUTH_BASE}, error="invalid_token"`
+        );
+        res
+          .status(401)
+          .json({
+            error: "server_error",
+            error_description: "Authentication processing failed",
+          });
       });
-    }).catch(() => {
-      res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
-      res.status(401).json({ error: "server_error", error_description: "Authentication processing failed" });
-    });
   };
 }
 
@@ -115,9 +139,12 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   const rawMiddleware = descopeMiddleware(sdk);
 
   const middleware: RequestHandler = (req, res, next) => {
-    providerClientContext({ client: sdk, projectId, managementKey: config.managementKey }, () => {
-      rawMiddleware(req, res, next);
-    });
+    providerClientContext(
+      { client: sdk, projectId, managementKey: config.managementKey },
+      () => {
+        rawMiddleware(req, res, next);
+      }
+    );
   };
 
   return { middleware, router };
