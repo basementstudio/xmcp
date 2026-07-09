@@ -71,13 +71,13 @@ The issuer URL identifies your resource and contains your project ID, which the 
 
 Creates the Descope authentication provider for xmcp. Returns `{ middleware, router }`.
 
-| Option            | Type       | Required | Description                                                                     |
-| ----------------- | ---------- | -------- | ------------------------------------------------------------------------------- |
-| `issuerURL`       | `string`   | Yes      | Issuer URL from your MCP Server resource in the Descope Console                 |
-| `baseURL`         | `string`   | Yes      | The base URL of your MCP server                                                 |
-| `projectId`       | `string`   | No       | Descope project ID — pass this to skip parsing it out of `issuerURL`            |
-| `managementKey`   | `string`   | No       | Descope management key — required to use `getUser()` or `getManagementClient()` |
-| `scopesSupported` | `string[]` | No       | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
+| Option            | Type       | Required | Description                                                                                                                                                                                                                                                                           |
+| ----------------- | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `issuerURL`       | `string`   | Yes      | Issuer URL from your MCP Server resource in the Descope Console                                                                                                                                                                                                                       |
+| `baseURL`         | `string`   | Yes      | The base URL of your MCP server                                                                                                                                                                                                                                                       |
+| `projectId`       | `string`   | No       | Descope project ID — pass this to skip parsing it out of `issuerURL`                                                                                                                                                                                                                  |
+| `managementKey`   | `string`   | No       | Descope management key — required to use `getUser()` or `getManagementClient()`                                                                                                                                                                                                       |
+| `scopesSupported` | `string[]` | No       | Scopes advertised in OAuth metadata. If omitted, the plugin fetches `scopes_supported` from Descope's OIDC discovery document at `{issuerURL}/.well-known/openid-configuration`, falling back to `["openid", "profile", "email"]` if that document is unreachable or omits the field. |
 
 ### `getSession()`
 
@@ -90,7 +90,7 @@ const session = getSession();
 session.userId; // Descope user ID
 session.email; // Email address from JWT claims
 session.loginIds; // Login identifiers (email, phone, etc.)
-session.permissions; // Permissions granted to this session
+session.permissions; // Permissions granted to this session (RBAC `permissions` claim merged with OAuth `scope` grants, e.g. from an Agentic Identity Hub policy)
 session.roles; // Roles assigned to the user
 session.tenants; // Tenant memberships with per-tenant permissions and roles
 session.expiresAt; // Token expiry as a Date
@@ -146,5 +146,5 @@ const accessToken = await fetchConnectionToken("github");
 
 The plugin serves two OAuth metadata endpoints used by MCP clients during the authorization flow:
 
-- `GET /.well-known/oauth-protected-resource` — Resource server metadata
+- `GET /.well-known/oauth-protected-resource` — Resource server metadata. `scopes_supported` is synced from Descope's discovery document unless `scopesSupported` is set explicitly.
 - `GET /.well-known/oauth-authorization-server` — Proxies Descope's OIDC discovery document

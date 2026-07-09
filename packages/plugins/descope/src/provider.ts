@@ -35,14 +35,32 @@ function descopeRouter(
   config: DescopeConfig,
   projectId: string
 ): ExpressRouter {
-  const { issuerURL, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
+  const { issuerURL, baseURL, scopesSupported } = config;
   const router = Router();
 
-  router.get(RESOURCE_METADATA_PATH, (_req, res) => {
+  router.get(RESOURCE_METADATA_PATH, async (_req, res) => {
+    let scopes = scopesSupported ?? DEFAULT_SCOPES;
+    if (!scopesSupported) {
+      try {
+        const resp = await fetch(
+          `${issuerURL}/.well-known/openid-configuration`
+        );
+        if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
+        const discovery = (await resp.json()) as {
+          scopes_supported?: string[];
+        };
+        if (discovery.scopes_supported?.length) {
+          scopes = discovery.scopes_supported;
+        }
+      } catch {
+        // Descope's discovery document is unreachable; keep the default scopes.
+      }
+    }
+
     const body: OAuthProtectedResourceMetadata = {
       resource: baseURL,
       authorization_servers: [issuerURL],
-      scopes_supported: scopesSupported,
+      scopes_supported: scopes,
       bearer_methods_supported: ["header"],
     };
     res.json(body);
