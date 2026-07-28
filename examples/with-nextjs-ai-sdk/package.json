@@ -17,7 +17,7 @@
     "@ai-sdk/openai": "^3.0.68",
     "@ai-sdk/react": "^3.0.199",
     "ai": "^6.0.197",
-    "next": "^16.2.6",
+    "next": "^16.2.11",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "xmcp": "workspace:*",
