@@ -1,4 +1,4 @@
-import { createRemoteJWKSet, jwtVerify, errors } from "jose";
+import { jwtVerify, errors, type JWTVerifyGetKey } from "jose";
 import type { JWTClaims, Session } from "./types.js";
 
 export type TokenVerifyResult =
@@ -7,13 +7,11 @@ export type TokenVerifyResult =
 
 export async function verifyScalekitToken(
   token: string,
-  jwksUrl: URL,
+  keySet: JWTVerifyGetKey,
   issuer: string | readonly string[],
   audience?: string
 ): Promise<TokenVerifyResult> {
   try {
-    const JWKS = createRemoteJWKSet(jwksUrl);
-
     const verifyOptions: Record<string, unknown> = {
       issuer: typeof issuer === "string" ? issuer : [...issuer],
       clockTolerance: 30,
@@ -22,7 +20,7 @@ export async function verifyScalekitToken(
       verifyOptions.audience = audience;
     }
 
-    const { payload } = await jwtVerify(token, JWKS, verifyOptions);
+    const { payload } = await jwtVerify(token, keySet, verifyOptions);
 
     if (!payload.sub) {
       console.error("[Scalekit] Missing required JWT claim: sub");

@@ -18,6 +18,7 @@ import {
   extractBearerToken,
 } from "./jwt.js";
 import { Scalekit } from "@scalekit-sdk/node";
+import { createRemoteJWKSet, type JWTVerifyGetKey } from "jose";
 
 export function scalekitProvider(config: Config): Middleware {
   if (!config.environmentUrl) {
@@ -139,22 +140,36 @@ function scalekitMiddleware(config: Config): RequestHandler {
   const authServerBase = getAuthServerBase(config);
   const expectedIssuers = getExpectedIssuers(config);
 
-  // Pre-fetch JWKS URI from OIDC discovery
-  let resolvedJwksUri: URL | null = null;
-  (async () => {
-    try {
-      const oidcUrl = `${authServerBase}/.well-known/openid-configuration`;
-      const response = await fetch(oidcUrl);
-      if (response.ok) {
-        const oidcConfig = (await response.json()) as { jwks_uri?: string };
-        if (oidcConfig.jwks_uri) {
-          resolvedJwksUri = new URL(oidcConfig.jwks_uri);
+  // Resolve the JWKS once and cache the remote key set for the lifetime of the
+  // middleware. createRemoteJWKSet maintains its own key cache, so building it
+  // per request would defeat that and refetch the JWKS on every verification.
+  let jwks: Promise<JWTVerifyGetKey> | null = null;
+  const getJwks = (): Promise<JWTVerifyGetKey> => {
+    if (!jwks) {
+      jwks = (async () => {
+        let jwksUri = new URL(`${authServerBase}/keys`);
+        try {
+          const oidcUrl = `${authServerBase}/.well-known/openid-configuration`;
+          const response = await fetch(oidcUrl);
+          if (response.ok) {
+            const oidcConfig = (await response.json()) as { jwks_uri?: string };
+            if (oidcConfig.jwks_uri) {
+              jwksUri = new URL(oidcConfig.jwks_uri);
+            }
+          }
+        } catch {
+          // Fall back to the constructed key set URL
         }
-      }
-    } catch {
-      // Will fall back to constructed URL at request time
+        return createRemoteJWKSet(jwksUri);
+      })().catch((error) => {
+        // Don't cache a rejected promise, otherwise a transient discovery
+        // error would wedge the middleware for its whole lifetime.
+        jwks = null;
+        throw error;
+      });
     }
-  })();
+    return jwks;
+  };
 
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith("/mcp")) {
@@ -177,14 +192,13 @@ function scalekitMiddleware(config: Config): RequestHandler {
         return;
       }
 
-      const jwksUrl =
-        resolvedJwksUri || new URL(`${authServerBase}/keys`);
+      const keySet = await getJwks();
       const audience =
         config.resourceId || config.baseURL.replace(/\/$/, "");
 
       const result = await verifyScalekitToken(
         token,
-        jwksUrl,
+        keySet,
         expectedIssuers,
         audience
       );
