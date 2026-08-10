@@ -137,8 +137,15 @@ function scalekitRouter(config: Config): Router {
 }
 
 function scalekitMiddleware(config: Config): RequestHandler {
-  const authServerBase = getAuthServerBase(config);
   const expectedIssuers = getExpectedIssuers(config);
+
+  // JWKS and OIDC discovery live at the environment root, NOT under the
+  // resource-scoped issuer that getAuthServerBase() returns. Scalekit serves the
+  // key set at `${env}/keys` (and discovery at `${env}/.well-known/...`) for
+  // every resource; resource-scoped access tokens are signed with those same
+  // environment keys. Deriving the JWKS base from a resource-scoped issuer
+  // (`${env}/resources/<id>`) would hit a 404 and fail verification.
+  const jwksBase = config.environmentUrl.replace(/\/$/, "");
 
   // Resolve the JWKS once and cache the remote key set for the lifetime of the
   // middleware. createRemoteJWKSet maintains its own key cache, so building it
@@ -147,9 +154,9 @@ function scalekitMiddleware(config: Config): RequestHandler {
   const getJwks = (): Promise<JWTVerifyGetKey> => {
     if (!jwks) {
       jwks = (async () => {
-        let jwksUri = new URL(`${authServerBase}/keys`);
+        let jwksUri = new URL(`${jwksBase}/keys`);
         try {
-          const oidcUrl = `${authServerBase}/.well-known/openid-configuration`;
+          const oidcUrl = `${jwksBase}/.well-known/openid-configuration`;
           const response = await fetch(oidcUrl);
           if (response.ok) {
             const oidcConfig = (await response.json()) as { jwks_uri?: string };
