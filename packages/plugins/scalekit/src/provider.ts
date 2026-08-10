@@ -10,7 +10,6 @@ import { contextProviderSession, contextProviderClient } from "./context.js";
 import type {
   Config,
   OAuthProtectedResourceMetadata,
-  OAuthAuthorizationServerMetadata,
 } from "./types.js";
 import {
   verifyScalekitToken,
@@ -97,41 +96,9 @@ function scalekitRouter(config: Config): Router {
     }
   );
 
-  router.get(
-    "/.well-known/oauth-authorization-server",
-    async (_req: Request, res: Response) => {
-      try {
-        const oidcUrl = `${authServerBase}/.well-known/openid-configuration`;
-        const response = await fetch(oidcUrl);
-
-        if (response.ok) {
-          const data = await response.json();
-          res.json(data);
-          return;
-        }
-
-        // Fallback
-        const metadata: OAuthAuthorizationServerMetadata = {
-          issuer: authServerBase,
-          authorization_endpoint: `${authServerBase}/oauth/authorize`,
-          token_endpoint: `${authServerBase}/oauth/token`,
-          jwks_uri: `${authServerBase}/keys`,
-          response_types_supported: ["code"],
-          grant_types_supported: ["authorization_code", "refresh_token"],
-          code_challenge_methods_supported: ["S256"],
-          token_endpoint_auth_methods_supported: [
-            "none",
-            "client_secret_post",
-          ],
-          scopes_supported: ["openid", "profile", "email", "offline_access"],
-        };
-        res.json(metadata);
-      } catch (error) {
-        console.error("[Scalekit] Failed to fetch OAuth metadata:", error);
-        res.status(500).json({ error: "Failed to get OAuth configuration" });
-      }
-    }
-  );
+  // Note: the authorization server metadata (RFC 8414) is served by Scalekit,
+  // not proxied here. Clients follow `authorization_servers` from the protected
+  // resource metadata above to Scalekit's own /.well-known endpoint.
 
   return router;
 }
@@ -139,13 +106,18 @@ function scalekitRouter(config: Config): Router {
 function scalekitMiddleware(config: Config): RequestHandler {
   const expectedIssuers = getExpectedIssuers(config);
 
-  // JWKS and OIDC discovery live at the environment root, NOT under the
-  // resource-scoped issuer that getAuthServerBase() returns. Scalekit serves the
-  // key set at `${env}/keys` (and discovery at `${env}/.well-known/...`) for
-  // every resource; resource-scoped access tokens are signed with those same
-  // environment keys. Deriving the JWKS base from a resource-scoped issuer
-  // (`${env}/resources/<id>`) would hit a 404 and fail verification.
+  // Discover the JWKS via the authorization server metadata (RFC 8414). For a
+  // resource-scoped issuer (`${env}/resources/<id>`) the metadata lives at
+  // `${env}/.well-known/oauth-authorization-server/resources/<id>` — the
+  // well-known segment is inserted after the origin, per RFC 8414 — and its
+  // `jwks_uri` points at the environment key set (`${env}/keys`). Resource-scoped
+  // access tokens are signed with those same environment keys. Fall back to
+  // `${env}/keys` if the metadata is unavailable.
   const jwksBase = config.environmentUrl.replace(/\/$/, "");
+  const resourcePath = config.resourceId
+    ? `/resources/${config.resourceId}`
+    : "";
+  const asMetadataUrl = `${jwksBase}/.well-known/oauth-authorization-server${resourcePath}`;
 
   // Resolve the JWKS once and cache the remote key set for the lifetime of the
   // middleware. createRemoteJWKSet maintains its own key cache, so building it
@@ -156,12 +128,11 @@ function scalekitMiddleware(config: Config): RequestHandler {
       jwks = (async () => {
         let jwksUri = new URL(`${jwksBase}/keys`);
         try {
-          const oidcUrl = `${jwksBase}/.well-known/openid-configuration`;
-          const response = await fetch(oidcUrl);
+          const response = await fetch(asMetadataUrl);
           if (response.ok) {
-            const oidcConfig = (await response.json()) as { jwks_uri?: string };
-            if (oidcConfig.jwks_uri) {
-              jwksUri = new URL(oidcConfig.jwks_uri);
+            const metadata = (await response.json()) as { jwks_uri?: string };
+            if (metadata.jwks_uri) {
+              jwksUri = new URL(metadata.jwks_uri);
             }
           }
         } catch {
