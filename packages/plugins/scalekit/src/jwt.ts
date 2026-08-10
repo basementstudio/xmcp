@@ -8,14 +8,14 @@ export type TokenVerifyResult =
 export async function verifyScalekitToken(
   token: string,
   jwksUrl: URL,
-  issuer: string,
+  issuer: string | readonly string[],
   audience?: string
 ): Promise<TokenVerifyResult> {
   try {
     const JWKS = createRemoteJWKSet(jwksUrl);
 
     const verifyOptions: Record<string, unknown> = {
-      issuer,
+      issuer: typeof issuer === "string" ? issuer : [...issuer],
       clockTolerance: 30,
     };
     if (audience) {

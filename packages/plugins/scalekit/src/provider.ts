@@ -57,6 +57,24 @@ function getAuthServerBase(config: Config): string {
   return config.resourceId ? `${envUrl}/resources/${config.resourceId}` : envUrl;
 }
 
+// The set of `iss` values a valid access token may carry. Scalekit is migrating
+// this claim from the bare environment URL to a resource-scoped issuer, and both
+// forms are valid during the rollout — so we accept the bare URL plus, when a
+// resource is configured, its resource-scoped form. Derived entirely from the
+// existing config; nothing extra to configure. Intentionally broader than
+// getAuthServerBase, which must stay a single value for the OAuth AS metadata
+// (RFC 9728 / RFC 8414).
+function getExpectedIssuers(config: Config): readonly string[] {
+  const envUrl = config.environmentUrl.replace(/\/$/, "");
+  const issuers = new Set<string>([envUrl]);
+
+  if (config.resourceId) {
+    issuers.add(`${envUrl}/resources/${config.resourceId}`);
+  }
+
+  return [...issuers];
+}
+
 function scalekitRouter(config: Config): Router {
   const router = Router();
   const baseUrl = config.baseURL.replace(/\/$/, "");
@@ -119,6 +137,7 @@ function scalekitRouter(config: Config): Router {
 
 function scalekitMiddleware(config: Config): RequestHandler {
   const authServerBase = getAuthServerBase(config);
+  const expectedIssuers = getExpectedIssuers(config);
 
   // Pre-fetch JWKS URI from OIDC discovery
   let resolvedJwksUri: URL | null = null;
@@ -166,7 +185,7 @@ function scalekitMiddleware(config: Config): RequestHandler {
       const result = await verifyScalekitToken(
         token,
         jwksUrl,
-        authServerBase,
+        expectedIssuers,
         audience
       );
 
