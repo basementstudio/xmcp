@@ -22,9 +22,12 @@ cp .env.example .env
 Fill in `.env`:
 
 ```bash
-DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/v1/apps/agentic/your-project-id/your-mcp-server-id
+DESCOPE_PROJECT_ID=your-project-id
 BASE_URL=http://127.0.0.1:3001
 ```
+
+`DESCOPE_PROJECT_ID` is optional — if omitted, the plugin parses the project ID out of `DESCOPE_ISSUER_URL` instead. Your project ID is also visible in **Descope Console** → **Project Settings**.
 
 ### 3. Run
 

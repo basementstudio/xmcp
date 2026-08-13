@@ -22,13 +22,25 @@ export function claimsToSession(token: string, authInfo: AuthenticationInfo): De
       };
     }
   }
+  // Descope's RBAC "permissions" claim (roles/tenant grants) and the standard
+  // OAuth "scope" claim (Agentic Identity Hub policy grants) both represent
+  // permissions granted to this session, so merge them into one list.
+  const rbacPermissions = Array.isArray(claims["permissions"])
+    ? (claims["permissions"] as string[])
+    : [];
+  const scopeClaim = claims["scope"];
+  const grantedScopes =
+    typeof scopeClaim === "string"
+      ? scopeClaim.split(" ").filter(Boolean)
+      : [];
+
   return {
     userId: claims.sub ?? "",
     email: typeof claims.email === "string" ? claims.email : "",
     token,
     loginIds,
     tenants,
-    permissions: Array.isArray(claims["permissions"]) ? (claims["permissions"] as string[]) : [],
+    permissions: Array.from(new Set([...rbacPermissions, ...grantedScopes])),
     roles: Array.isArray(claims["roles"]) ? (claims["roles"] as string[]) : [],
     expiresAt: new Date((claims.exp as number) * 1000),
     issuedAt: new Date((claims.iat as number) * 1000),

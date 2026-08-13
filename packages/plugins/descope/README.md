@@ -24,6 +24,7 @@ import { descopeProvider } from "@xmcp-dev/descope";
 export default descopeProvider({
   issuerURL: process.env.DESCOPE_ISSUER_URL!,
   baseURL: process.env.BASE_URL!,
+  projectId: process.env.DESCOPE_PROJECT_ID,
 });
 ```
 
@@ -48,7 +49,8 @@ export default function whoami() {
 ### 3. Environment Variables
 
 ```bash
-DESCOPE_ISSUER_URL=https://api.descope.com/your-project-id/your-audience
+DESCOPE_ISSUER_URL=https://api.descope.com/v1/apps/agentic/your-project-id/your-mcp-server-id
+DESCOPE_PROJECT_ID=your-project-id
 BASE_URL=http://127.0.0.1:3001
 ```
 
@@ -61,7 +63,7 @@ BASE_URL=http://127.0.0.1:3001
 3. Set a name and your server's base URL
 4. Copy the **Issuer URL**
 
-The issuer URL identifies your resource and contains your project ID. The plugin parses both from it automatically, so you only need the one value.
+The issuer URL identifies your resource and contains your project ID, which the plugin parses out automatically. If you'd rather not rely on parsing, pass `projectId` explicitly (also visible in **Descope Console** → **Project Settings**).
 
 ## API Reference
 
@@ -69,12 +71,13 @@ The issuer URL identifies your resource and contains your project ID. The plugin
 
 Creates the Descope authentication provider for xmcp. Returns `{ middleware, router }`.
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `issuerURL` | `string` | Yes | Issuer URL from your MCP Server resource in the Descope Console |
-| `baseURL` | `string` | Yes | The base URL of your MCP server |
-| `managementKey` | `string` | No | Descope management key — required to use `getUser()` or `getManagementClient()` |
-| `scopesSupported` | `string[]` | No | Scopes advertised in OAuth metadata (default: `["openid", "profile", "email"]`) |
+| Option            | Type       | Required | Description                                                                                                                                                                                                                                                                           |
+| ----------------- | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `issuerURL`       | `string`   | Yes      | Issuer URL from your MCP Server resource in the Descope Console                                                                                                                                                                                                                       |
+| `baseURL`         | `string`   | Yes      | The base URL of your MCP server                                                                                                                                                                                                                                                       |
+| `projectId`       | `string`   | No       | Descope project ID — pass this to skip parsing it out of `issuerURL`                                                                                                                                                                                                                  |
+| `managementKey`   | `string`   | No       | Descope management key — required to use `getUser()` or `getManagementClient()`                                                                                                                                                                                                       |
+| `scopesSupported` | `string[]` | No       | Scopes advertised in OAuth metadata. If omitted, the plugin fetches `scopes_supported` from Descope's OIDC discovery document at `{issuerURL}/.well-known/openid-configuration`, falling back to `["openid", "profile", "email"]` if that document is unreachable or omits the field. |
 
 ### `getSession()`
 
@@ -84,15 +87,15 @@ Returns the authenticated user's session for the current request. Throws if call
 import { getSession } from "@xmcp-dev/descope";
 
 const session = getSession();
-session.userId       // Descope user ID
-session.email        // Email address from JWT claims
-session.loginIds     // Login identifiers (email, phone, etc.)
-session.permissions  // Permissions granted to this session
-session.roles        // Roles assigned to the user
-session.tenants      // Tenant memberships with per-tenant permissions and roles
-session.expiresAt    // Token expiry as a Date
-session.issuedAt     // Token issue time as a Date
-session.claims       // Raw JWT claims
+session.userId; // Descope user ID
+session.email; // Email address from JWT claims
+session.loginIds; // Login identifiers (email, phone, etc.)
+session.permissions; // Permissions granted to this session (RBAC `permissions` claim merged with OAuth `scope` grants, e.g. from an Agentic Identity Hub policy)
+session.roles; // Roles assigned to the user
+session.tenants; // Tenant memberships with per-tenant permissions and roles
+session.expiresAt; // Token expiry as a Date
+session.issuedAt; // Token issue time as a Date
+session.claims; // Raw JWT claims
 ```
 
 ### `getUser()`
@@ -143,5 +146,5 @@ const accessToken = await fetchConnectionToken("github");
 
 The plugin serves two OAuth metadata endpoints used by MCP clients during the authorization flow:
 
-- `GET /.well-known/oauth-protected-resource` — Resource server metadata
+- `GET /.well-known/oauth-protected-resource` — Resource server metadata. `scopes_supported` is synced from Descope's discovery document unless `scopesSupported` is set explicitly.
 - `GET /.well-known/oauth-authorization-server` — Proxies Descope's OIDC discovery document
