@@ -14,6 +14,8 @@ export type {
   InferSchema,
   ElicitResult,
 } from "./types/tool";
+export type { Logger } from "./runtime/utils/logger";
+export { logger } from "./runtime/utils/logger";
 export type { McpClientInfo } from "./types/client-info";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";

@@ -30,6 +30,7 @@ import {
 } from "@/runtime/utils/request-tool-names";
 import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import { isLogLevel, setLogLevel } from "@/runtime/utils/logger";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 // Global type declarations for tool name context
@@ -81,12 +82,41 @@ export class StatelessHttpServerTransport extends BaseHttpServerTransport {
     await this.transport.send(message as any, options);
   }
 
+  private captureLogLevelFromPayload(
+    req: IncomingMessage,
+    parsedBody?: unknown
+  ): void {
+    const sessionId = this.getSessionIdFromRequest(req);
+    const messages = Array.isArray(parsedBody)
+      ? (parsedBody as JsonRpcMessage[])
+      : parsedBody !== undefined
+        ? ([parsedBody] as JsonRpcMessage[])
+        : [];
+
+    for (const message of messages) {
+      if (message.method === "logging/setLevel" && isLogLevel(message.params?.level)) {
+        setLogLevel(message.params.level, sessionId);
+      }
+    }
+  }
+
+  private getSessionIdFromRequest(req: IncomingMessage): string | undefined {
+    const rawValue = req.headers["mcp-session-id"];
+
+    if (Array.isArray(rawValue)) {
+      return rawValue[0];
+    }
+
+    return rawValue;
+  }
+
   async handleRequest(
     req: IncomingMessage & { auth?: AuthInfo },
     res: ServerResponse,
     parsedBody?: unknown
   ): Promise<void> {
     this.log(`${req.method} ${req.url ?? req.headers.host ?? "/mcp"}`);
+    this.captureLogLevelFromPayload(req, parsedBody);
     await this.transport.handleRequest(req, res, parsedBody);
   }
 }

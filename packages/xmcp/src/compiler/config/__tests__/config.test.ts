@@ -341,9 +341,16 @@ describe("Config System - Injection Functions", () => {
     const variables = injectServerInfoVariables(config);
 
     assert.notEqual(variables.SERVER_INFO, undefined);
+    assert.notEqual(variables.SERVER_OPTIONS, undefined);
     const serverInfo = JSON.parse(variables.SERVER_INFO);
+    const serverOptions = JSON.parse(variables.SERVER_OPTIONS);
     assert.equal(serverInfo.name, "xmcp server");
     assert.deepEqual(serverInfo.icons, []);
+    assert.deepEqual(serverOptions, {
+      capabilities: {
+        logging: {},
+      },
+    });
   });
 
   it("should inject server info with user-supplied icons", () => {

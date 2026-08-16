@@ -39,6 +39,7 @@ declare const TEMPLATE_CONFIG: import("../compiler/config").TemplateConfig;
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
 declare const SERVER_INFO: import("@modelcontextprotocol/sdk/types").Implementation;
+declare const SERVER_OPTIONS: import("@modelcontextprotocol/sdk/server/index").ServerOptions;
 
 // ─── DefinePlugin — individual CORS vars (legacy Express adapter) ──────────────
 

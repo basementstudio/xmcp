@@ -5,7 +5,7 @@ import {
 } from "@modelcontextprotocol/sdk/types";
 import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
 import { PromptArgsRawShape } from "../prompts";
-import { contentValidators, validateContent } from "../validators";
+import { validateContent } from "../validators";
 
 /**
  * Type for content that users can return from prompt handlers
@@ -53,12 +53,15 @@ export function transformPromptHandler(
     args: PromptArgsRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<GetPromptResult> => {
-    let response = handler(args, extra);
+    const runHandler = async () => {
+      let response = handler(args, extra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response = await runHandler();
 
     let content: GetPromptResult["messages"][number]["content"];
 

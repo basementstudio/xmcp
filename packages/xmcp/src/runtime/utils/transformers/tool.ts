@@ -129,13 +129,16 @@ export function transformToolHandler(
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
-    const toolExtra = createToolExtraArguments(extra);
-    let response: any = handler(args, toolExtra);
+    const runHandler = async () => {
+      const toolExtra = createToolExtraArguments(extra);
+      let response: any = handler(args, toolExtra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response: any = await runHandler();
 
     if (typeof response === "string" || typeof response === "number") {
       if (outputSchema) {

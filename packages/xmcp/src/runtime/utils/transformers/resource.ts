@@ -60,12 +60,15 @@ export function transformResourceHandler(
     // extract and validate parameters from the actual URI using the template and schema
     const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);
 
-    let response = handler(parameters, extra);
+    const runHandler = async () => {
+      let response = handler(parameters, extra);
+      if (response instanceof Promise) {
+        response = await response;
+      }
+      return response;
+    };
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
-    }
+    let response = await runHandler();
 
     // transform string response to ReadResourceResult
     if (typeof response === "string") {

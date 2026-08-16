@@ -10,6 +10,7 @@ import {
 } from "./utils";
 import type { ResolvedHttpConfig, XmcpConfigOutputSchema } from "./index";
 import type { HttpTransportConfig } from "./schemas/transport/http";
+import type { ServerOptions } from "@modelcontextprotocol/sdk/server/index";
 
 export function injectHttpVariables(
   httpConfig: HttpTransportConfig | boolean | undefined,
@@ -169,6 +170,11 @@ export function injectServerInfoVariables(userConfig: XmcpConfigOutputSchema) {
 
   return {
     SERVER_INFO: JSON.stringify(serverInfo),
+    SERVER_OPTIONS: JSON.stringify({
+      capabilities: {
+        logging: {},
+      },
+    } satisfies ServerOptions),
   };
 }
 
