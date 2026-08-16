@@ -37,12 +37,12 @@
     "express": "^4.22.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.25",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "^0.6.2"
+    "xmcp": "workspace:^"
   }
 }

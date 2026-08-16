@@ -1120,8 +1120,8 @@ importers:
         version: 4.22.1
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -1219,8 +1219,8 @@ importers:
         version: 4.22.1
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -1228,8 +1228,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       xmcp:
-        specifier: ^0.5.7
-        version: 0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        specifier: workspace:*
+        version: link:../../xmcp
 
   packages/plugins/commet:
     dependencies:
@@ -1263,8 +1263,8 @@ importers:
         version: 4.22.1
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.2
@@ -1303,8 +1303,8 @@ importers:
         version: 5.6.3
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -1328,8 +1328,8 @@ importers:
         version: 5.6.3
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -1337,8 +1337,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       xmcp:
-        specifier: ^0.5.7
-        version: 0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3)
+        specifier: workspace:*
+        version: link:../../xmcp
 
   packages/plugins/x402:
     dependencies:
@@ -1350,8 +1350,8 @@ importers:
         version: 3.25.76
     devDependencies:
       '@types/express':
-        specifier: ^4.17.25
-        version: 4.17.25
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
@@ -1359,8 +1359,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       xmcp:
-        specifier: ^0.5.8
-        version: 0.5.8(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76)
+        specifier: workspace:*
+        version: link:../../xmcp
 
   packages/xmcp:
     dependencies:
@@ -9128,32 +9128,6 @@ packages:
       utf-8-validate:
         optional: true
 
-  xmcp@0.5.7:
-    resolution: {integrity: sha512-NnBx+1P7v6Apah5lgtxZxojhp/lP1qLjTTS/0AVear60akULVYL5f54n9w7XjHvxm59JqNBppOVYdm8zemehYw==}
-    hasBin: true
-    peerDependencies:
-      react: '>=19.0.0'
-      react-dom: '>=19.0.0'
-      zod: ^3.25.76 || ^4.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
-
-  xmcp@0.5.8:
-    resolution: {integrity: sha512-MI1OrdBE4EHsf5NDlN7UCSSL4T4KgwTrchCWJvAZi7MCCvvLeFV2Gosl3YM9aYynz/T2QVnv26ymyP25a6maCQ==}
-    hasBin: true
-    peerDependencies:
-      react: '>=19.0.0'
-      react-dom: '>=19.0.0'
-      zod: ^3.25.76 || ^4.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-dom:
-        optional: true
-
   xmcp@0.6.13:
     resolution: {integrity: sha512-RGjaBr05bSaG/NF0OUHIUfX4fhZf4oKLF3PtN3fgHZAzpmVYUMyunPPLB+sE15p3fVG8q77nJCLmVyt+6XicbQ==}
     hasBin: true
@@ -10499,30 +10473,6 @@ snapshots:
       react: 19.2.4
 
   '@mediapipe/tasks-vision@0.10.17': {}
-
-  '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)':
-    dependencies:
-      '@hono/node-server': 1.19.15(hono@4.12.34)
-      ajv: 8.18.0
-      ajv-formats: 3.0.1(ajv@8.18.0)
-      content-type: 1.0.5
-      cors: 2.8.6
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.0.6
-      express: 5.2.1
-      express-rate-limit: 8.2.2(express@5.2.1)
-      hono: 4.12.34
-      jose: 6.1.3
-      json-schema-typed: 8.0.2
-      pkce-challenge: 5.0.1
-      raw-body: 3.0.2
-      zod: 3.25.76
-      zod-to-json-schema: 3.25.1(zod@3.25.76)
-    optionalDependencies:
-      '@cfworker/json-schema': 4.1.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
     dependencies:
@@ -18201,42 +18151,6 @@ snapshots:
 
   ws@8.21.0: {}
 
-  xmcp@0.5.7(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@4.4.3):
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.23)(typescript@5.9.3)(webpack@5.104.1)
-      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
-      typescript: 5.9.3
-      zod: 4.4.3
-    optionalDependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@swc/helpers'
-      - postcss
-      - supports-color
-      - webpack
-
-  xmcp@0.5.8(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1)(zod@3.25.76):
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@3.25.76)
-      '@rspack/core': 1.6.7(@swc/helpers@0.5.15)
-      postcss-loader: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.23)(typescript@5.9.3)(webpack@5.104.1)
-      ts-checker-rspack-plugin: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
-      typescript: 5.9.3
-      zod: 3.25.76
-    optionalDependencies:
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - '@swc/helpers'
-      - postcss
-      - supports-color
-      - webpack
-
   xmcp@0.6.13(@cfworker/json-schema@4.1.1)(@swc/helpers@0.5.15)(postcss@8.5.23)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(webpack@5.104.1(esbuild@0.28.1))(zod@4.1.13):
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
@@ -18315,10 +18229,6 @@ snapshots:
       '@speed-highlight/core': 1.2.14
       cookie: 1.1.1
       youch-core: 0.3.3
-
-  zod-to-json-schema@3.25.1(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
 
   zod-to-json-schema@3.25.1(zod@4.1.13):
     dependencies:

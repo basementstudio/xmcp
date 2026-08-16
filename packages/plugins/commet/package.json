@@ -50,6 +50,6 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "workspace:*"
+    "xmcp": "workspace:^"
   }
 }

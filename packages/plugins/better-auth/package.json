@@ -75,7 +75,7 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "^0.1.9-canary.1"
+    "xmcp": "workspace:^"
   },
   "optionalDependencies": {
     "pg": "^8.16.3"
