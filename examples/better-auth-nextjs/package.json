@@ -1,5 +1,6 @@
 {
   "name": "Next.js with Better Auth",
+  "private": true,
   "description": "Next.js app with xmcp and better-auth integration",
   "keywords": [
     "authentication",

@@ -1,5 +1,6 @@
 {
   "name": "with-fastify",
+  "private": true,
   "description": "Build a Fastify server with xmcp's adapter",
   "scripts": {
     "dev": "xmcp dev & tsx watch src/index.ts",

@@ -1,5 +1,6 @@
 {
   "name": "HTTP with Clerk",
+  "private": true,
   "description": "HTTP-based xmcp server with Clerk authentication",
   "keywords": [
     "authentication",

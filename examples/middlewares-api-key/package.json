@@ -1,5 +1,6 @@
 {
   "name": "API Key Middleware",
+  "private": true,
   "description": "Secure your xmcp server with API key authentication middleware",
   "keywords": [
     "authentication",

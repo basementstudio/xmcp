@@ -46,7 +46,7 @@
     "test:cli": "scripts/test-cli.sh",
     "test:cli:skip": "scripts/test-cli.sh --skip",
     "version-packages": "changeset version && pnpm install --lockfile-only",
-    "publish-packages": "pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp && changeset publish",
+    "publish-packages": "pnpm turbo build --filter=\"./packages/**\" && changeset publish",
     "version-canary": "changeset version --snapshot canary",
     "publish-canary": "changeset publish --tag canary --no-git-tag",
     "clean": "turbo run clean && rm -rf node_modules/.cache",

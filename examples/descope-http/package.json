@@ -1,5 +1,6 @@
 {
   "name": "descope-http-example",
+  "private": true,
   "description": "HTTP-based xmcp server with Descope authentication",
   "keywords": [
     "authentication",

@@ -1,5 +1,6 @@
 {
   "name": "paid-http-transport",
+  "private": true,
   "description": "Example of x402 paid tools with xmcp HTTP transport",
   "keywords": [
     "monetization",

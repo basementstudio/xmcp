@@ -65,7 +65,10 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build packages
-        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+        # Everything publishable, not just the core three: `changeset publish`
+        # ships any non-private package whose version is not yet on npm, and an
+        # unbuilt package would go out with no dist.
+        run: pnpm turbo build --filter="./packages/**"
 
       - name: Publish
         if: ${{ !inputs.dry_run }}

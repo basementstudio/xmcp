@@ -1,5 +1,6 @@
 {
   "name": "Template Config",
+  "private": true,
   "description": "Modify the template config in the xmcp.config.ts file.",
   "keywords": [
     "configuration",

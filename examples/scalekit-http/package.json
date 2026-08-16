@@ -1,5 +1,6 @@
 {
   "name": "scalekit-http-example",
+  "private": true,
   "description": "HTTP-based xmcp server with Scalekit authentication",
   "keywords": [
     "http",

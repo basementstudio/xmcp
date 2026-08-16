@@ -1,5 +1,6 @@
 {
   "name": "External Clients",
+  "private": true,
   "description": "Learn how to use external clients in xmcp",
   "keywords": [
     "clients",

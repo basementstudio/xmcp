@@ -1,5 +1,6 @@
 {
   "name": "Custom Middleware",
+  "private": true,
   "description": "Create custom middleware functions for xmcp servers",
   "keywords": [
     "middleware",

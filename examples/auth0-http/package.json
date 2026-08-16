@@ -1,5 +1,6 @@
 {
   "name": "auth0-http-example",
+  "private": true,
   "description": "HTTP-based xmcp server with Auth0 authentication",
   "keywords": [
     "authentication",

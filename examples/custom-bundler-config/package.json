@@ -1,5 +1,6 @@
 {
   "name": "Custom Webpack Config",
+  "private": true,
   "description": "Customize webpack configuration for xmcp builds",
   "keywords": [
     "configuration",

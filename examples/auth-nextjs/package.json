@@ -1,5 +1,6 @@
 {
   "name": "Next.js with Auth",
+  "private": true,
   "description": "A Next.js application with xmcp and authentication handler",
   "keywords": [
     "authentication",
