@@ -59,25 +59,41 @@ jobs:
         run: |
           VERSION=$(node -p "require('./packages/xmcp/package.json').version")
           if [ "${VERSION#*-canary}" = "$VERSION" ]; then
+            # Nothing unreleased to cut from. That is a normal state, not a
+            # failure — skip the rest and leave the run green.
             echo "No pending changesets — nothing to release as a canary."
-            exit 1
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build packages
         # Everything publishable, not just the core three: `changeset publish`
         # ships any non-private package whose version is not yet on npm, and an
         # unbuilt package would go out with no dist.
+        if: steps.version.outputs.release == 'true'
         run: pnpm turbo build --filter="./packages/**"
 
       - name: Publish
-        if: ${{ !inputs.dry_run }}
+        if: steps.version.outputs.release == 'true' && !inputs.dry_run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
         run: pnpm publish-canary
 
+      - name: Report nothing to release
+        if: steps.version.outputs.release != 'true'
+        run: |
+          {
+            echo "# No Canary Release"
+            echo
+            echo "No pending changesets, so there is nothing unreleased to cut a"
+            echo "canary from. Add a changeset and run this again."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Create publish summary
+        if: steps.version.outputs.release == 'true'
         run: |
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             HEADING="# Canary Release (dry run)"

@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/workos --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/workos... --frozen-lockfile
 
       - name: Build @xmcp-dev/workos
-        run: pnpm --filter @xmcp-dev/workos build
+        run: pnpm turbo build --filter=@xmcp-dev/workos
 
       - name: Test @xmcp-dev/workos
         run: pnpm --filter @xmcp-dev/workos test

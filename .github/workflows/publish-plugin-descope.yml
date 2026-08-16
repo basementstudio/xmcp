@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/descope --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/descope... --frozen-lockfile
 
       - name: Build @xmcp-dev/descope
-        run: pnpm --filter @xmcp-dev/descope build
+        run: pnpm turbo build --filter=@xmcp-dev/descope
 
       - name: Publish @xmcp-dev/descope
         env:

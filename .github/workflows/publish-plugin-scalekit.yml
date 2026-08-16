@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/scalekit --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/scalekit... --frozen-lockfile
 
       - name: Build @xmcp-dev/scalekit
-        run: pnpm --filter @xmcp-dev/scalekit build
+        run: pnpm turbo build --filter=@xmcp-dev/scalekit
 
       - name: Publish @xmcp-dev/scalekit
         env:
