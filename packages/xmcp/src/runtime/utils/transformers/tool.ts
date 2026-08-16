@@ -10,7 +10,9 @@ import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
 import { extractClientInfoFromHeaders } from "@/runtime/utils/client-info";
 import { elicitFromTool } from "../elicitation";
+import { bindSamplingContext, clearSamplingContext } from "../sampling";
 import { validateContent } from "../validators";
+import type { SamplingToolRegistry } from "../sampling-tool-registry";
 
 function validateAgainstOutputSchema(
   data: Record<string, unknown>,
@@ -123,18 +125,30 @@ export function transformToolHandler(
   handler: UserToolHandler,
   meta?: Record<string, any>,
   outputSchema?: ZodRawShape,
-  toolName = "unknown-tool"
+  toolName = "unknown-tool",
+  samplingToolRegistry?: SamplingToolRegistry
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
     extra: RequestHandlerExtra<ServerRequest, ServerNotification>
   ): Promise<CallToolResult> => {
     const toolExtra = createToolExtraArguments(extra);
-    let response: any = handler(args, toolExtra);
+    bindSamplingContext(toolExtra as any, {
+      currentToolName: toolName,
+      samplingToolRegistry,
+    });
 
-    // only await if it's actually a promise
-    if (response instanceof Promise) {
-      response = await response;
+    let response: any;
+
+    try {
+      response = handler(args, toolExtra);
+
+      // only await if it's actually a promise
+      if (response instanceof Promise) {
+        response = await response;
+      }
+    } finally {
+      clearSamplingContext(toolExtra as any);
     }
 
     if (typeof response === "string" || typeof response === "number") {

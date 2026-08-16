@@ -1,6 +1,15 @@
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
-import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/sdk/types";
+import type {
+  CreateMessageRequestParams,
+  CreateMessageResult,
+  CreateMessageResultWithTools,
+  ElicitResult as McpElicitResult,
+  ModelPreferences,
+  SamplingMessage,
+  SamplingMessageContentBlock,
+  ToolChoice,
+} from "@modelcontextprotocol/sdk/types";
 import { UIMetadata } from "./ui-meta";
 import type { McpClientInfo } from "./client-info";
 
@@ -43,6 +52,45 @@ type InferCompatibleZodType<T extends CompatibleZodType> =
 export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
 export type ElicitResult = McpElicitResult;
+export type SampleMessage = SamplingMessage;
+export type SampleContent = SamplingMessageContentBlock;
+export type SampleMessageContentInput =
+  | SampleContent
+  | readonly SampleContent[]
+  | string;
+export type SampleMessageInput = Omit<SampleMessage, "content"> & {
+  content: SampleMessageContentInput;
+};
+export type SampleModelPreferences = ModelPreferences;
+export type SampleToolChoice = ToolChoice;
+export type SampleToolSelection = "all" | readonly string[];
+export type SampleResult = CreateMessageResult | CreateMessageResultWithTools;
+
+type SampleRequestBase = Omit<
+  CreateMessageRequestParams,
+  "messages" | "tools" | "toolChoice"
+> & {
+  messages: readonly SampleMessageInput[];
+  /**
+   * Maximum number of tool-execution rounds to run before aborting.
+   * Only applies when `tools` are enabled.
+   */
+  maxSteps?: number;
+};
+
+export type SampleRequest =
+  | (SampleRequestBase & {
+      tools?: never;
+      toolChoice?: never;
+    })
+  | (SampleRequestBase & {
+      /**
+       * Local xmcp tool names to expose to the model, or `"all"` to expose
+       * every registered tool in the current server.
+       */
+      tools: SampleToolSelection;
+      toolChoice?: ToolChoice;
+    });
 
 export interface ToolRequestOptions {
   /** Progress notification callback */
