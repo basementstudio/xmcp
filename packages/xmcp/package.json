@@ -77,8 +77,7 @@
     }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
