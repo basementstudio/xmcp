@@ -2,6 +2,7 @@
   "name": "with-nestjs",
   "description": "Basic NestJS server with xmcp's adapter - No authentication",
   "version": "1.0.0",
+  "private": true,
   "main": "dist/main.js",
   "scripts": {
     "dev": "xmcp dev & nest start --watch",
