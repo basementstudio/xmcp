@@ -73,7 +73,7 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
   );
 }
 
-function createToolExtraArguments(
+export function createToolExtraArguments(
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>
 ): ToolExtraArguments {
   let clientInfo = undefined;
@@ -137,6 +137,28 @@ export function transformToolHandler(
       response = await response;
     }
 
+    return coerceToolResponse(response, args, meta, outputSchema, toolName);
+  };
+}
+
+/**
+ * Normalizes a user tool handler's return value into a valid `CallToolResult`.
+ *
+ * Shared by {@link transformToolHandler} and the task-tool wrapper so that
+ * string/number coercion, structured-content handling, widget metadata, and
+ * outputSchema validation behave identically whether a tool runs synchronously
+ * or as a task.
+ *
+ * @throws Error if the value cannot be turned into a valid CallToolResult.
+ */
+export function coerceToolResponse(
+  response: any,
+  args: ZodRawShape,
+  meta?: Record<string, any>,
+  outputSchema?: ZodRawShape,
+  toolName = "unknown-tool"
+): CallToolResult {
+  {
     if (typeof response === "string" || typeof response === "number") {
       if (outputSchema) {
         const outputSchemaEntries = Object.entries(outputSchema);

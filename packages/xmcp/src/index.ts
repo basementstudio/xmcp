@@ -11,9 +11,21 @@ export type {
   ToolSchema,
   ToolOutputSchema,
   ToolExtraArguments,
+  TaskSupport,
   InferSchema,
   ElicitResult,
 } from "./types/tool";
+export type {
+  Task,
+  TaskStore,
+  TaskResult,
+  TaskRecord,
+  TaskStoreAdapter,
+  CreateTaskStoreOptions,
+  CreateTaskOptions,
+} from "./types/task";
+export { generateTaskId } from "./types/task";
+export { createTaskStore } from "./utils/create-task-store";
 export type { McpClientInfo } from "./types/client-info";
 export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";

@@ -18,6 +18,16 @@ export interface ToolAnnotations {
   [key: string]: any;
 }
 
+/**
+ * Whether a tool can be invoked as an MCP task (long-running, pollable).
+ * - "forbidden" (default): the tool is never task-augmented.
+ * - "optional": clients may invoke it as a task or as a normal call.
+ * - "required": clients must invoke it as a task.
+ *
+ * Requires a `src/task-store.ts` task store implementation to be present.
+ */
+export type TaskSupport = "required" | "optional" | "forbidden";
+
 export interface ToolMetadata {
   /** Unique identifier for the tool */
   name: string;
@@ -25,6 +35,12 @@ export interface ToolMetadata {
   description: string;
   /** Optional hints about tool behavior */
   annotations?: ToolAnnotations;
+  /**
+   * Opt the tool into MCP task execution. When set to "optional" or
+   * "required", xmcp registers the tool as a task-augmented tool. Requires a
+   * `src/task-store.ts` task store implementation.
+   */
+  taskSupport?: TaskSupport;
   /** Metadata for the tool. */
   _meta?: {
     ui?: UIMetadata;
@@ -156,6 +172,16 @@ export interface ToolExtraArguments {
 
   /** The JSON-RPC ID of the request being handled */
   requestId: string | number;
+
+  /**
+   * Present only when the tool is being executed as an MCP task. Use
+   * `task.taskId` to key external work (e.g. enqueue a job) and to write the
+   * result back to your task store from a worker.
+   */
+  task?: {
+    /** The receiver-generated unique identifier for this task */
+    taskId: string;
+  };
 
   /** The original HTTP request information */
   requestInfo?: {

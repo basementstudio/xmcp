@@ -199,6 +199,26 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
+  // handle task store (src/task-store.ts)
+  watcher.watch("./src/task-store.ts", {
+    onAdd: async () => {
+      compilerContext.setContext({
+        hasTaskStore: true,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+    onUnlink: async () => {
+      compilerContext.setContext({
+        hasTaskStore: false,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+  });
+
   // start compiler
   watcher.onReady(async () => {
     let firstBuild = true;
