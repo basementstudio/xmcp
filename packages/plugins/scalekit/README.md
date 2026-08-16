@@ -129,6 +129,12 @@ export default async function myTool() {
 - MCP clients automatically refresh tokens using refresh tokens
 - If you see "token_expired" errors, the client should handle refresh automatically
 
+## OAuth metadata
+
+The plugin serves protected resource metadata at `GET /.well-known/oauth-protected-resource`. Clients follow `authorization_servers` to Scalekit for RFC 8414 authorization server metadata. The MCP server does not host `/.well-known/oauth-authorization-server`.
+
+During Scalekit's issuer migration, token verification accepts both the environment URL and, when `resourceId` is set, `https://<env>/resources/<resourceId>`.
+
 ## Example
 
 See the [`scalekit-http` example](https://github.com/basementstudio/xmcp/tree/canary/examples/scalekit-http) for a complete working project.

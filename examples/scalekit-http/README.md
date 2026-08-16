@@ -38,5 +38,6 @@ pnpm dev
 
 The server exposes:
 
-- `GET /.well-known/oauth-protected-resource` — Resource metadata for MCP clients
-- `GET /.well-known/oauth-authorization-server` — Proxied authorization server metadata from Scalekit
+- `GET /.well-known/oauth-protected-resource` — Resource metadata for MCP clients (`authorization_servers` points at Scalekit)
+
+Authorization server metadata (RFC 8414) is served by Scalekit, not this server. Clients follow `authorization_servers` from the protected resource metadata.
