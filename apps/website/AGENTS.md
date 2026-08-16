@@ -4,8 +4,7 @@ Use this file for `apps/website/**`.
 
 ## Standards
 
-- Docs/site-only PRs target `main`; code/package/example changes target
-  `canary`.
+- All PRs target `main`.
 - Docs must match the current code and package APIs. Check source before
   documenting behavior.
 - User-facing feature changes in packages, examples, templates, transports, or

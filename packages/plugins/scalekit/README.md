@@ -131,7 +131,7 @@ export default async function myTool() {
 
 ## Example
 
-See the [`scalekit-http` example](https://github.com/basementstudio/xmcp/tree/canary/examples/scalekit-http) for a complete working project.
+See the [`scalekit-http` example](https://github.com/basementstudio/xmcp/tree/main/examples/scalekit-http) for a complete working project.
 
 ## Documentation
 

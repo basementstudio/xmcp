@@ -27,5 +27,9 @@
   "privatePackages": {
     "version": false,
     "tag": false
+  },
+  "snapshot": {
+    "useCalculatedVersion": true,
+    "prereleaseTemplate": "{tag}-{datetime}"
   }
 }

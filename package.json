@@ -47,6 +47,8 @@
     "test:cli:skip": "scripts/test-cli.sh --skip",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "publish-packages": "pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp && changeset publish",
+    "version-canary": "changeset version --snapshot canary",
+    "publish-canary": "changeset publish --tag canary --no-git-tag",
     "clean": "turbo run clean && rm -rf node_modules/.cache",
     "reset": "rm -rf node_modules packages/*/node_modules packages/*/dist && pnpm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\""

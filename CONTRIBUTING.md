@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-**Important: Always branch from `canary` and target `canary` in your PR.**
+**Important: Always branch from `main` and target `main` in your PR.**
 
 Make sure to follow the repository standards.
 
@@ -46,13 +46,19 @@ changeset and commit the generated file with your PR:
 pnpm changeset
 ```
 
-Choose `patch`, `minor`, or `major` based on the user-visible impact. Feature
-PRs still target `canary`.
+Choose `patch`, `minor`, or `major` based on the user-visible impact.
 
-When changes are promoted to `main`, the Changesets workflow opens or updates a
-Version Packages PR. That PR applies the pending changesets to the package
-versions and changelogs. After it is merged, `publish.yml` builds the core
-packages and publishes them to npm with provenance.
+Once your PR lands on `main`, the Changesets workflow opens or updates a Version
+Packages PR. That PR applies the pending changesets to the package versions and
+changelogs. After it is merged, `publish.yml` builds the core packages and
+publishes them to npm with provenance.
+
+To cut a canary in the meantime, run the **Publish Canary Release to NPM**
+workflow. It is a Changesets snapshot release: the version is derived from the
+pending changesets plus a timestamp — `0.7.0-canary-20260816222921` — and goes
+out under the `canary` dist-tag. Nothing is committed back, so canaries never
+touch the version history. It needs at least one pending changeset to have
+something to release.
 
 Because Changesets versions from the committed `package.json` values, those
 versions are the source of truth and must not be edited by hand.

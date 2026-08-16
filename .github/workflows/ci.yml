@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, canary]
+    branches: [main]
 
 env:
   # Set this to 'true' to skip CLI tests in CI
