@@ -1,0 +1,79 @@
+---
+title: "MCP Server: Python vs TypeScript (Which Should You Use?)"
+description: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and why TypeScript is the stronger default for most teams."
+summary: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and why TypeScript is the stronger default for most teams."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Both Python and TypeScript have first-party MCP SDKs maintained by Anthropic. Either can build a working MCP server. The choice comes down to your team's existing skills, your integration targets, and how much infrastructure you want to manage.
+
+## At a glance
+
+| | Python | TypeScript |
+| --- | --- | --- |
+| Official SDK | `mcp` (PyPI) | `@modelcontextprotocol/sdk` (npm) |
+| Type safety | Optional (mypy, pyright) | Built-in |
+| Data science libraries | Native (pandas, numpy, scikit-learn) | Via bindings or API calls |
+| Server frameworks | FastAPI, Flask, FastMCP-python | xmcp, mcp-handler, FastMCP |
+| Auth plugin ecosystem | Manual | Better Auth, Clerk, Auth0, WorkOS, Scalekit (via xmcp) |
+| Vercel zero-config deploy | No | Yes (via xmcp) |
+| Best for | Data pipelines, ML integration, rapid prototyping | Production servers, type-safe tooling, JS/TS teams |
+
+## When Python makes sense
+
+Python is the right choice when your tools are deeply integrated with the data science ecosystem — calling numpy, running a scikit-learn model, querying a pandas DataFrame. Wrapping that in TypeScript would mean either spawning a Python subprocess or rewriting the logic, neither of which is a good tradeoff.
+
+Python also wins for rapid prototyping when you don't need the type guarantees. The `mcp` SDK is mature, FastMCP has a Python variant, and the iteration loop is fast.
+
+**Use Python when:** your tools are data science code, your team is primarily Python, or you're building a quick internal tool with no auth or deployment requirements.
+
+## When TypeScript makes sense
+
+TypeScript is the default for most production MCP servers. A few reasons:
+
+**The ecosystem is ahead.** Tools like xmcp, mcp-handler, and the Stainless MCP generator are TypeScript-first. The auth plugin ecosystem (Better Auth, Clerk, Auth0, WorkOS, Scalekit) exists only on the TypeScript side. Vercel's zero-config MCP deployment is TypeScript-native.
+
+**Type safety matters for tool schemas.** MCP tool inputs are validated against JSON Schema at runtime. TypeScript lets you define those schemas with Zod and get compile-time type checking on your handler — Python's equivalent requires more manual effort to keep types and schemas in sync.
+
+**Deployment is simpler.** A TypeScript MCP server built with xmcp deploys to Vercel with no configuration. Python servers typically need a container, a runtime like Railway or ECS, or manual serverless wrapping.
+
+**Use TypeScript when:** you're building a standalone production server, you need auth or monetization, or your team already works in JavaScript/TypeScript.
+
+## Performance doesn't matter here
+
+A common concern is startup time — Python is slower to start than Node.js, and Go is faster than both. For MCP servers, this is mostly irrelevant. MCP clients launch servers on demand and keep them running; the marginal startup difference (50–300ms) is imperceptible in an interactive AI workflow. Don't pick a language for MCP server performance.
+
+## The xmcp shortcut
+
+If you're on TypeScript, [xmcp](/docs) eliminates most of the boilerplate advantage Python has for speed of iteration. You drop a file in `src/tools/` and it's registered automatically:
+
+```typescript title="src/tools/analyze.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  data: z.string().describe("JSON data to analyze"),
+};
+
+export const metadata = {
+  name: "analyze",
+  description: "Analyze a dataset",
+};
+
+export default async function analyze({ data }: InferSchema<typeof schema>) {
+  const parsed = JSON.parse(data);
+  return { rows: parsed.length };
+}
+```
+
+No `server.addTool()` call. No transport wiring. Just the handler and the schema.
+
+## Next steps
+
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — get a TypeScript server running in minutes with xmcp.
+- **[Best MCP Server Frameworks in 2026](/blog/best-mcp-server-frameworks)** — full comparison of xmcp, FastMCP, the official SDK, and mcp-handler.
+- **[MCP Server Authentication](/blog/mcp-server-authentication)** — add OAuth to your server with a single plugin.

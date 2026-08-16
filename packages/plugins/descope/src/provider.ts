@@ -4,27 +4,63 @@ import { Router } from "express";
 import type { Middleware } from "xmcp";
 import { providerClientContext, providerSessionContext } from "./context.js";
 import { extractBearerToken, validateToken } from "./jwt.js";
-import type { DescopeConfig, OAuthAuthorizationServerMetadata, OAuthProtectedResourceMetadata } from "./types.js";
+import type {
+  DescopeConfig,
+  OAuthAuthorizationServerMetadata,
+  OAuthProtectedResourceMetadata,
+} from "./types.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"];
 const RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource";
 const WWW_AUTH_BASE = `Bearer resource_metadata="${RESOURCE_METADATA_PATH}"`;
 
 function parseProjectId(issuerURL: string): string {
-  const segments = new URL(issuerURL).pathname.replace(/^\//, "").split("/").filter(Boolean);
-  if (!segments[0]) throw new Error(`DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`);
-  return segments[0];
+  // Agentic Identity Hub issuer URLs are shaped
+  // /v1/apps/agentic/<projectId>/<mcpServerId>; legacy issuer URLs are just
+  // /<projectId>, so fall back to the first segment when "agentic" is absent.
+  const segments = new URL(issuerURL).pathname
+    .replace(/^\//, "")
+    .split("/")
+    .filter(Boolean);
+  const agenticIdx = segments.indexOf("agentic");
+  const projectId = agenticIdx !== -1 ? segments[agenticIdx + 1] : segments[0];
+  if (!projectId)
+    throw new Error(
+      `DescopeConfig.issuerURL is invalid: cannot parse project ID from "${issuerURL}"`
+    );
+  return projectId;
 }
 
-function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter {
-  const { issuerURL, baseURL, scopesSupported = DEFAULT_SCOPES } = config;
+function descopeRouter(
+  config: DescopeConfig,
+  projectId: string
+): ExpressRouter {
+  const { issuerURL, baseURL, scopesSupported } = config;
   const router = Router();
 
-  router.get(RESOURCE_METADATA_PATH, (_req, res) => {
+  router.get(RESOURCE_METADATA_PATH, async (_req, res) => {
+    let scopes = scopesSupported ?? DEFAULT_SCOPES;
+    if (!scopesSupported) {
+      try {
+        const resp = await fetch(
+          `${issuerURL}/.well-known/openid-configuration`
+        );
+        if (!resp.ok) throw new Error(`Upstream ${resp.status}`);
+        const discovery = (await resp.json()) as {
+          scopes_supported?: string[];
+        };
+        if (discovery.scopes_supported?.length) {
+          scopes = discovery.scopes_supported;
+        }
+      } catch {
+        // Descope's discovery document is unreachable; keep the default scopes.
+      }
+    }
+
     const body: OAuthProtectedResourceMetadata = {
       resource: baseURL,
       authorization_servers: [issuerURL],
-      scopes_supported: scopesSupported,
+      scopes_supported: scopes,
       bearer_methods_supported: ["header"],
     };
     res.json(body);
@@ -53,9 +89,7 @@ function descopeRouter(config: DescopeConfig, projectId: string): ExpressRouter 
   return router;
 }
 
-function descopeMiddleware(
-  sdk: ReturnType<typeof Descope>,
-): RequestHandler {
+function descopeMiddleware(sdk: ReturnType<typeof Descope>): RequestHandler {
   return (req, res, next) => {
     if (!req.path.startsWith("/mcp")) {
       next();
@@ -72,29 +106,42 @@ function descopeMiddleware(
       return;
     }
 
-    validateToken(sdk, token).then((result) => {
-      if (!result.ok) {
-        if (result.error === "expired") {
-          res.setHeader(
-            "WWW-Authenticate",
-            `${WWW_AUTH_BASE}, error="invalid_token", error_description="Token has expired"`,
-          );
-          res.status(401).json({ error: "token_expired" });
-        } else {
-          res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
-          res.status(401).json({ error: "invalid_token" });
+    validateToken(sdk, token)
+      .then((result) => {
+        if (!result.ok) {
+          if (result.error === "expired") {
+            res.setHeader(
+              "WWW-Authenticate",
+              `${WWW_AUTH_BASE}, error="invalid_token", error_description="Token has expired"`
+            );
+            res.status(401).json({ error: "token_expired" });
+          } else {
+            res.setHeader(
+              "WWW-Authenticate",
+              `${WWW_AUTH_BASE}, error="invalid_token"`
+            );
+            res.status(401).json({ error: "invalid_token" });
+          }
+          return;
         }
-        return;
-      }
 
-      const { session } = result;
-      providerSessionContext({ session }, () => {
-        next();
+        const { session } = result;
+        providerSessionContext({ session }, () => {
+          next();
+        });
+      })
+      .catch(() => {
+        res.setHeader(
+          "WWW-Authenticate",
+          `${WWW_AUTH_BASE}, error="invalid_token"`
+        );
+        res
+          .status(401)
+          .json({
+            error: "server_error",
+            error_description: "Authentication processing failed",
+          });
       });
-    }).catch(() => {
-      res.setHeader("WWW-Authenticate", `${WWW_AUTH_BASE}, error="invalid_token"`);
-      res.status(401).json({ error: "server_error", error_description: "Authentication processing failed" });
-    });
   };
 }
 
@@ -102,7 +149,7 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   if (!config.issuerURL) throw new Error("DescopeConfig.issuerURL is required");
   if (!config.baseURL) throw new Error("DescopeConfig.baseURL is required");
 
-  const projectId = parseProjectId(config.issuerURL);
+  const projectId = config.projectId ?? parseProjectId(config.issuerURL);
 
   const sdk = Descope({
     projectId,
@@ -110,12 +157,15 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   });
 
   const router = descopeRouter(config, projectId);
-  const rawMiddleware = descopeMiddleware(config, sdk);
+  const rawMiddleware = descopeMiddleware(sdk);
 
   const middleware: RequestHandler = (req, res, next) => {
-    providerClientContext({ client: sdk, projectId, managementKey: config.managementKey }, () => {
-      rawMiddleware(req, res, next);
-    });
+    providerClientContext(
+      { client: sdk, projectId, managementKey: config.managementKey },
+      () => {
+        rawMiddleware(req, res, next);
+      }
+    );
   };
 
   return { middleware, router };

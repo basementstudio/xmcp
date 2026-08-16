@@ -1,0 +1,143 @@
+---
+title: "Fix: MCP Server Won't Connect in Claude Desktop"
+description: "A troubleshooting checklist for when your MCP server won't connect in Claude Desktop — transport mismatches, the mcp-remote bridge, STDIO logging, CORS, and config file mistakes."
+summary: "A troubleshooting checklist for when your MCP server won't connect in Claude Desktop — transport mismatches, the mcp-remote bridge, STDIO logging, CORS, and config file mistakes."
+category: "guides"
+date: "2026-06-19"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Your MCP server runs fine, but Claude Desktop shows it as failed, disconnected, or simply missing. This is one of the most common MCP problems, and it almost always comes down to a handful of causes. Here's a checklist to work through, fastest fixes first.
+
+## 0. Is the server actually running?
+
+Claude can only connect to a server that's up. If you're developing locally, your server isn't available unless the dev server is running or you've built and started it:
+
+```bash
+npm run dev
+```
+
+For an HTTP server, confirm it responds at its endpoint (default `http://localhost:3001/mcp`). If that URL isn't live, nothing downstream will connect.
+
+## 1. Use the `mcp-remote` bridge for HTTP servers
+
+This is the single most common cause. **Claude Desktop does not connect to HTTP MCP servers directly.** If you give it a plain `url`, it won't work.
+
+For an HTTP (Streamable HTTP) server, you bridge it with the `mcp-remote` adapter, which translates Claude's local STDIO expectation into an HTTP connection:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://localhost:3001/mcp"]
+    }
+  }
+}
+```
+
+Note this is different from Cursor, which *does* take a `url` directly:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "url": "http://localhost:3001/mcp"
+    }
+  }
+}
+```
+
+If you copied a Cursor config into Claude Desktop, this mismatch is your problem.
+
+## 2. STDIO server logging to stdout
+
+If you're running a **STDIO** server, the connection breaks the moment your code writes to `stdout`. Claude Desktop reads the MCP protocol off stdout, so a stray `console.log` in a tool or a dependency injects noise into the JSON-RPC stream and causes a JSON parse error.
+
+The fix in xmcp is the `silent` option, which redirects all console output to `stderr` where it's safe:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  stdio: {
+    silent: true,
+  },
+};
+
+export default config;
+```
+
+Your logs aren't lost — they still show up in stderr — they just stop corrupting the protocol.
+
+## 3. Transport mismatch between config and build
+
+If you build for one transport and try to connect with the other, it fails. A STDIO client config points at the built STDIO output:
+
+```json
+{
+  "mcpServers": {
+    "my-project": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/my-project/dist/stdio.js"]
+    }
+  }
+}
+```
+
+Make sure:
+
+- Your `xmcp.config.ts` enables the transport you're actually using (`stdio: true` or `http: true`).
+- The path points at the matching build output (`dist/stdio.js` for STDIO).
+- You've run `npm run build` so that `dist/` actually exists.
+
+A common slip is referencing `dist/stdio.js` while only the HTTP transport is configured — so the file was never produced.
+
+## 4. Use an absolute path for STDIO
+
+Claude Desktop doesn't resolve relative paths the way your shell does. A STDIO `args` path must be **absolute**:
+
+```json
+"args": ["/Users/you/projects/my-project/dist/stdio.js"]
+```
+
+A relative path like `./dist/stdio.js` will silently fail to launch.
+
+## 5. CORS for HTTP servers
+
+If your HTTP server is reachable but rejects the connection, CORS may be blocking the request. xmcp lets you configure CORS on the HTTP transport, including the MCP-specific headers clients send:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "mcp-session-id",
+        "mcp-protocol-version",
+      ],
+    },
+  },
+};
+```
+
+For local development against `localhost`, CORS is usually not the issue — but it's worth checking once you move to a deployed URL.
+
+## 6. Restart the client after editing config
+
+Claude Desktop reads its config at startup. After any change to `claude_desktop_config.json`, **fully quit and reopen** the app — not just close the window. Until you do, you're testing the old config.
+
+## 7. Validate the JSON
+
+A trailing comma or missing brace in `claude_desktop_config.json` makes the whole file invalid, and every server silently disappears. Paste it into a JSON validator if servers vanished after an edit.
+
+## Still stuck?
+
+Work down the list in order — most failures are #1 (missing `mcp-remote` bridge) or #2 (STDIO logging). If your HTTP server connects but drops with a "Session not found" error after a redeploy, that's a different, transport-level issue covered in [MCP "Session not found" (HTTP 404): Causes & Fixes](/blog/mcp-session-not-found-error).
+
+For the full connection reference, see the [connecting docs](/docs/getting-started/connecting). If you're just getting started, the [build guide](/blog/build-mcp-server-typescript) walks through a working setup end to end.

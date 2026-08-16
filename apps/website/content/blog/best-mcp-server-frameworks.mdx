@@ -1,0 +1,99 @@
+---
+title: "Best MCP Server Frameworks in 2026: TypeScript Edition"
+description: "A practical guide to the main TypeScript frameworks for building MCP servers — the official SDK, FastMCP, Vercel's mcp-handler, and xmcp — with a clear recommendation for each use case."
+summary: "A practical guide to the main TypeScript frameworks for building MCP servers — the official SDK, FastMCP, Vercel's mcp-handler, and xmcp — with a clear recommendation for each use case."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+If you're building an [MCP server](/blog/what-is-an-mcp-server) in TypeScript, you have four realistic options in 2026. They're not interchangeable — each one targets a different situation. Here's a clear breakdown of all four.
+
+## Quick comparison
+
+| | Official SDK | FastMCP | mcp-handler | xmcp |
+| --- | --- | --- | --- | --- |
+| Shape | Low-level SDK | Framework over SDK | Next.js/Nuxt adapter | Standalone framework |
+| Tool definition | Imperative | Imperative | Imperative (in a route) | File-based (`src/tools/`) |
+| Scaffolding CLI | — | — | — | `create-xmcp-app` |
+| Auth plugins | — | — | — | Better Auth, Clerk, Auth0, WorkOS, Scalekit |
+| Monetization | — | — | — | x402, Polar |
+| Transports | You wire it | STDIO + HTTP streaming | Streamable HTTP + SSE | STDIO + Streamable HTTP |
+| Best fit | Protocol-level control | Less boilerplate, imperative style | Add MCP to an existing app | Batteries-included standalone server |
+
+## 1. The official MCP TypeScript SDK
+
+**Package:** `@modelcontextprotocol/sdk`
+
+The SDK is the reference implementation. Everything else in this list is built on top of it. You get a server instance, register tools imperatively, and handle your own transport wiring.
+
+This is the lowest-level option by design. You're closest to the protocol, nothing is abstracted away, and anything unusual in the spec is accessible. The cost is that you own all the setup — sessions, lifecycle, transport configuration.
+
+**Choose it when:** you're building tooling that operates at the protocol level, contributing to the MCP ecosystem, or need capabilities not yet surfaced by higher-level frameworks.
+
+## 2. FastMCP
+
+FastMCP sits just above the SDK. You register tools through a more ergonomic API, and it handles sessions and transports automatically — including STDIO, HTTP streaming, and a stateless serverless mode.
+
+If your complaint about the raw SDK is boilerplate and you want to keep an imperative style (`server.addTool(...)`), FastMCP is the right move. It's well-scoped, doesn't impose strong conventions, and gets out of your way.
+
+**Choose it when:** you want less boilerplate than the SDK and prefer to register tools programmatically rather than via file conventions.
+
+## 3. Vercel's mcp-handler
+
+**Package:** `@vercel/mcp-adapter`
+
+`mcp-handler` is not a general-purpose framework. It's an adapter that adds an MCP endpoint to an **existing Next.js 13+ or Nuxt 3+ application**. You define tools inside an API route handler. Transports are Streamable HTTP and SSE; SSE resumability requires an optional Redis integration.
+
+The framing matters: if your MCP tools are a feature of a larger application (shared database, shared auth session, already deploying to Vercel), bolting on an MCP route is the simplest approach. If you're standing up a new, dedicated MCP server, this is the wrong tool.
+
+**Choose it when:** you already have a Next.js or Nuxt app and want to expose MCP tools from within it.
+
+## 4. xmcp
+
+xmcp is a standalone MCP framework built around **file-based discovery**. You don't call `server.addTool()` — you drop a file in `src/tools/` and it's registered. Same for resources (`src/resources/`) and prompts (`src/prompts/`).
+
+```typescript title="src/tools/summarize.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  text: z.string().describe("The text to summarize"),
+};
+
+export const metadata = {
+  name: "summarize",
+  description: "Summarize a block of text",
+};
+
+export default async function summarize({ text }: InferSchema<typeof schema>) {
+  // your implementation
+  return `Summary: ${text.slice(0, 100)}...`;
+}
+```
+
+Beyond the DX, xmcp is the only framework in this list with built-in answers for production concerns:
+
+- **Auth:** plugins for Better Auth, Clerk, Auth0, WorkOS, and Scalekit
+- **Monetization:** x402 for per-call micropayments, Polar for subscriptions
+- **Deploy:** `vc deploy` to Vercel with zero configuration
+- **Scaffold:** `npx create-xmcp-app@latest` generates a complete project
+
+The HTTP transport is strictly stateless, which means serverless deployments work cleanly without session management overhead.
+
+**Choose it when:** you're building a standalone MCP server from scratch and want file-based DX, built-in auth, and a clear path to deployment.
+
+## How to decide
+
+- Need **total protocol control** or building on top of MCP? → **Official SDK**
+- Want **less boilerplate but stay imperative**? → **FastMCP**
+- Already have a **Next.js or Nuxt app**? → **mcp-handler**
+- Building a **standalone server from scratch** and want auth, deploy, and DX handled? → **xmcp**
+
+## Next steps
+
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — get a working xmcp server running in minutes.
+- **[xmcp vs FastMCP vs the Official MCP SDK](/blog/xmcp-vs-fastmcp-vs-mcp-sdk)** — deeper side-by-side with code examples for each.
+- **[xmcp vs mcp-handler](/blog/xmcp-vs-mcp-handler)** — focused comparison of the two Vercel-adjacent options.

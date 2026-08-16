@@ -1,0 +1,99 @@
+---
+title: "How to Debug Your MCP Server (MCP Inspector Guide)"
+description: "MCP servers fail silently in ways that REST APIs don't. Here's how to use the MCP Inspector to test tools, catch protocol errors, and diagnose the most common issues."
+summary: "MCP servers fail silently in ways that REST APIs don't. Here's how to use the MCP Inspector to test tools, catch protocol errors, and diagnose the most common issues."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+Debugging an MCP server is different from debugging a REST API. There's no browser tab to open, no curl command that directly tests a tool call. The primary tool is the **MCP Inspector** — a browser-based debugger maintained by Anthropic that gives you a live view of everything your server is doing.
+
+## Start with MCP Inspector
+
+The Inspector connects to your server, runs the MCP handshake, and gives you a UI to call tools manually, inspect protocol messages, and see exactly what your server returns.
+
+```bash
+npx @modelcontextprotocol/inspector node build/index.js
+```
+
+Replace `node build/index.js` with however you start your server. The Inspector opens at `http://localhost:6274`. From there you can:
+
+- See the full `tools/list` response — every tool your server advertises
+- Call any tool with custom inputs and see the raw response
+- Inspect the JSON-RPC traffic between client and server
+- Watch `notifications/message` log entries in real time
+
+For HTTP servers, pass the URL instead:
+
+```bash
+npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+```
+
+## The most common silent failure: writing to stdout
+
+If you have any `console.log()` calls in your MCP server, remove them.
+
+MCP's stdio transport uses **stdout exclusively for JSON-RPC messages**. Any other output — debug logs, startup messages, anything — corrupts the protocol stream. The AI client receives garbled JSON and the tool call fails with a parse error, often silently.
+
+The fix:
+
+```typescript
+// Wrong — corrupts the MCP stream on stdio
+console.log("Tool called:", name);
+
+// Correct — stderr is safe for diagnostic output
+console.error("Tool called:", name);
+process.stderr.write(`Tool called: ${name}\n`);
+```
+
+This is the #1 cause of "my MCP server works in isolation but fails in Claude Desktop."
+
+## Common errors and what they mean
+
+**`MCP error -32700: Parse error`**
+Your server sent something to stdout that isn't valid JSON-RPC. Check for `console.log` calls, startup banners, or any library that writes to stdout.
+
+**`MCP error -32601: Method not found`**
+The client is calling a method your server doesn't implement. Usually happens when the client tries a transport feature (like `resources/list`) that your server doesn't expose.
+
+**Tool call returns `undefined`**
+Your tool handler returned `undefined` instead of a string or object. MCP tool results must be non-null — return an empty string or `{ success: true }` instead.
+
+**Connection closes immediately**
+Your server process is crashing on startup. Run it directly (`node build/index.js`) and check stderr for the actual error before wrapping it in Inspector.
+
+## Debugging xmcp servers
+
+If you're using xmcp, run the dev server for a live-reloading development environment:
+
+```bash
+pnpm dev
+```
+
+xmcp routes all internal logs to stderr by default, so the stdio stream is clean. Use the Inspector against the HTTP transport during development:
+
+```bash
+npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+```
+
+For tool-level issues, add temporary `console.error()` calls in your tool handler — they'll show up in Inspector's notifications pane without touching the protocol stream.
+
+## Testing tool inputs systematically
+
+The Inspector lets you call tools with arbitrary inputs — use this to verify your Zod schemas are working correctly before connecting a real AI client:
+
+1. Open the **Tools** tab in Inspector
+2. Select the tool you want to test
+3. Fill in the input form (Inspector generates it from your schema)
+4. Hit **Call Tool** and inspect the response
+
+Test edge cases: empty strings, missing optional fields, out-of-range numbers. Your schema validation errors should return clean MCP error responses, not crashes.
+
+## Next steps
+
+- **[Fix MCP Server Connection Issues in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection)** — if the Inspector works but Claude Desktop doesn't.
+- **[MCP Session Not Found Error](/blog/mcp-session-not-found-error)** — the most common HTTP transport error.
+- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — start fresh with a clean project.

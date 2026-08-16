@@ -1,5 +1,5 @@
 import {
-  getAllBlogPosts,
+  getListedBlogPosts,
   getFeaturedBlogPost,
   type BlogPost,
 } from "../../utils/blog";
@@ -32,7 +32,7 @@ export const metadata = {
 };
 
 export default function BlogPage() {
-  const posts = getAllBlogPosts();
+  const posts = getListedBlogPosts();
   const featuredPost = getFeaturedBlogPost();
 
   const regularPosts = featuredPost
