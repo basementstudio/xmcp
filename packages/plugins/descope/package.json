@@ -42,7 +42,7 @@
     "express": "^4.22.1"
   },
   "peerDependencies": {
-    "xmcp": "workspace:^"
+    "xmcp": ">=0.7.0 <1.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

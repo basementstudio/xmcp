@@ -75,7 +75,7 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "workspace:^"
+    "xmcp": ">=0.7.0 <1.0.0"
   },
   "optionalDependencies": {
     "pg": "^8.16.3"

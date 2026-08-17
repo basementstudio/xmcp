@@ -10,6 +10,60 @@ env:
   SKIP_CLI_TESTS: true
 
 jobs:
+  changeset-check:
+    # Flags a PR that edits a releasable package without adding a changeset.
+    # Only packages/** counts — the website and examples are private, so
+    # Changesets does not consider them releasable and they never trip this.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Check for a changeset
+        run: |
+          if pnpm changeset status --since=origin/${{ github.base_ref }}; then
+            exit 0
+          fi
+
+          {
+            echo "## Missing changeset"
+            echo
+            echo "This PR changes a releasable package under \`packages/\` but adds no changeset,"
+            echo "so the change would never be published."
+            echo
+            echo "Add one, picking only the packages you actually want to release:"
+            echo
+            echo '```bash'
+            echo "pnpm changeset"
+            echo '```'
+            echo
+            echo "Plugins version independently — releasing a plugin does not move xmcp,"
+            echo "and vice versa. If this change needs no release (tests, comments, internal"
+            echo "refactors), record that explicitly instead:"
+            echo
+            echo '```bash'
+            echo "pnpm changeset add --empty"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
   build-and-test:
     runs-on: ubuntu-latest
 

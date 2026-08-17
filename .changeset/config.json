@@ -12,18 +12,10 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@xmcp-dev/auth0",
-    "@xmcp-dev/better-auth",
-    "@xmcp-dev/clerk",
-    "@xmcp-dev/cli",
-    "@xmcp-dev/commet",
-    "@xmcp-dev/descope",
-    "@xmcp-dev/polar",
-    "@xmcp-dev/scalekit",
-    "@xmcp-dev/workos",
-    "@xmcp-dev/x402"
-  ],
+  "ignore": ["@xmcp-dev/cli"],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  },
   "privatePackages": {
     "version": false,
     "tag": false
