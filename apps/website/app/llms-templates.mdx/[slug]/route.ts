@@ -11,9 +11,9 @@ import {
 import { estimateTokens } from "@/lib/estimate-tokens";
 import { SITE_URL } from "@/lib/base-url";
 
-// Matches the /templates pages and sitemap, which use the same GitHub-backed
-// fetch with this revalidation window.
-export const revalidate = 1800;
+// Cached forever like the docs and blog twins; the underlying GitHub fetches
+// still revalidate on their own window, and new templates appear on redeploy.
+export const revalidate = false;
 
 export async function GET(
   _req: Request,
