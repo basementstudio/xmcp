@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { FAQ_ITEMS } from "@/content/faq";
 import { JsonLd } from "@/components/seo/json-ld";
+import { Icons } from "@/components/icons";
 import { getBreadcrumbSchema, getFaqSchema } from "@/lib/structured-data";
 import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 
@@ -81,22 +82,32 @@ export default function FaqPage() {
           </p>
         </div>
 
-        {/* Plain, always-expanded markup: every answer is in the initial HTML,
-            so crawlers and answer engines read it without running JS. */}
-        <dl className="col-span-12 lg:col-span-10 lg:col-start-2 flex flex-col gap-[20px]">
-          {FAQ_ITEMS.map((faq) => (
-            <div
+        {/* Native <details> rather than a JS accordion: the answers stay in the
+            initial HTML for crawlers and answer engines, and the page needs no
+            client bundle. The browser owns the open/close state. */}
+        <div className="col-span-12 lg:col-span-10 lg:col-start-2 flex flex-col gap-[20px]">
+          {FAQ_ITEMS.map((faq, index) => (
+            <details
               key={faq.slug}
               id={faq.slug}
-              className="flex flex-col gap-2 p-4 rounded-xs border border-brand-neutral-500 scroll-mt-24"
+              // First entry starts open so the page reads as answers rather
+              // than a stack of closed labels.
+              open={index === 0}
+              className="group p-4 rounded-xs border border-brand-neutral-500 scroll-mt-24"
             >
-              <dt className="text-brand-white text-lg text-balance">
-                {faq.question}
-              </dt>
-              <dd className="text-brand-neutral-100 body-l">{faq.answer}</dd>
-            </div>
+              <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <h2 className="text-brand-white text-lg text-balance">
+                  {faq.question}
+                </h2>
+                <Icons.arrowDown
+                  aria-hidden="true"
+                  className="size-5 shrink-0 text-brand-neutral-100 transition-transform duration-200 group-open:rotate-180"
+                />
+              </summary>
+              <p className="text-brand-neutral-100 body-l pt-2">{faq.answer}</p>
+            </details>
           ))}
-        </dl>
+        </div>
       </div>
     </main>
   );
