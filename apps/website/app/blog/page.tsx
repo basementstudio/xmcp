@@ -14,6 +14,9 @@ export const metadata = {
     "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
   alternates: {
     canonical: "https://xmcp.dev/blog",
+    types: {
+      "text/markdown": "https://xmcp.dev/blog.md",
+    },
   },
   openGraph: {
     title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",

@@ -1,6 +1,10 @@
 import { source } from "../../lib/source";
+import { getAllBlogPosts } from "../../utils/blog";
+import { fetchTemplates } from "../templates/utils/github";
 
-export const revalidate = false;
+// Templates come from the GitHub API, so this file revalidates on the same
+// window as the /templates pages instead of being fully static.
+export const revalidate = 1800;
 
 export async function GET() {
   const scanned: string[] = [];
@@ -27,5 +31,46 @@ export async function GET() {
     scanned.push(value.join("\n"));
   }
 
-  return new Response(scanned.join("\n\n"));
+  // Deliberately includes unlisted "ghost" posts: they are hidden from
+  // on-site listings but published for search and answer engines, and this
+  // index is their machine-facing discovery channel.
+  scanned.push("## Blog");
+  scanned.push(
+    getAllBlogPosts()
+      .map((post) => {
+        const description = post.description ?? post.summary;
+        const link = `- [${post.title}](/blog/${post.slug})`;
+        return description ? `${link}: ${description}` : link;
+      })
+      .join("\n")
+  );
+
+  // fetchTemplates returns [] when the GitHub API is unavailable; the docs
+  // and blog sections above never depend on that fetch.
+  const templates = await fetchTemplates();
+  if (templates.length > 0) {
+    scanned.push("## Templates");
+    scanned.push(
+      templates
+        .map(
+          (template) =>
+            `- [${template.name}](/templates/${template.slug}): ${template.description}`
+        )
+        .join("\n")
+    );
+  }
+
+  scanned.push("## Optional");
+  scanned.push(
+    [
+      "- [llms-full.txt](/llms-full.txt): complete documentation content in one file",
+      "- [index.md](/index.md): site overview in markdown",
+    ].join("\n")
+  );
+
+  return new Response(scanned.join("\n\n"), {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+    },
+  });
 }

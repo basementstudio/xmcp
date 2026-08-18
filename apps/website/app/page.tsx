@@ -15,6 +15,9 @@ export const metadata: Metadata = {
     "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
   alternates: {
     canonical: "https://xmcp.dev",
+    types: {
+      "text/markdown": "https://xmcp.dev/index.md",
+    },
   },
 };
 
