@@ -5,7 +5,7 @@ import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
-import type { CorsConfig } from "@/compiler/config";
+import type { CorsConfig } from "@/config";
 
 const httpConfig = HTTP_CONFIG as {
   port: number;

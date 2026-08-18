@@ -50,26 +50,31 @@ To manually create an xmcp project, install the required dependencies:
     {
       label: "pnpm",
       value: "pnpm",
-      content: "pnpm i xmcp zod@^3.25.76",
+      content: "pnpm add xmcp zod@^3.25.76 && pnpm add -D @xmcp-dev/compiler",
     },
     {
       label: "npm",
       value: "npm",
-      content: "npm i xmcp zod@^3.25.76",
+      content: "npm i xmcp zod@^3.25.76 && npm i -D @xmcp-dev/compiler",
     },
     {
       label: "yarn",
       value: "yarn",
-      content: "yarn add xmcp zod@^3.25.76",
+      content: "yarn add xmcp zod@^3.25.76 && yarn add -D @xmcp-dev/compiler",
     },
     {
       label: "bun",
       value: "bun",
-      content: "bun add xmcp zod@^3.25.76",
+      content: "bun add xmcp zod@^3.25.76 && bun add -D @xmcp-dev/compiler",
     },
   ]}
   defaultTab="pnpm"
 />
+
+`xmcp` contains the runtime used by your built server. The development-only
+`@xmcp-dev/compiler` package provides the `dev`, `build`, and `create` commands;
+keep both packages on matching versions. Production installs can omit development
+dependencies because xmcp build output is self-contained.
 
 Then add the following scripts to your package.json:
 
@@ -97,6 +102,10 @@ This is correlated with the `xmcp.config.ts` configuration.
 ## Troubleshooting
 
 If you encounter issues when running the built server, make sure the transport is matching the configured one in `xmcp.config.ts`.
+
+If `xmcp dev` or `xmcp build` reports that the compiler is missing, install the
+matching compiler version with `npm i -D @xmcp-dev/compiler` (or the equivalent
+command for your package manager).
 
 If you're working with HTTP, your configuration should look like this:
 

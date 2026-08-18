@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "latest"
   }
 }

@@ -1,11 +1,7 @@
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
 import { Middleware } from "@/types/middleware";
-import {
-  CorsConfig,
-  ResolvedHttpConfig,
-  TemplateConfig,
-} from "@/compiler/config";
+import type { CorsConfig, ResolvedHttpConfig, TemplateConfig } from "@/config";
 import { Provider, processProviders } from "@/runtime/middlewares/utils";
 import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
 import dotenv from "dotenv";

@@ -20,5 +20,8 @@
     "@mcp-ui/server": "^5.16.2",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
   }
 }

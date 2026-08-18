@@ -16,8 +16,8 @@ import {
   HttpTransportOptions,
 } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
-import { greenCheck } from "../../../utils/cli-icons";
-import { findAvailablePort } from "../../../utils/port-utils";
+import { greenCheck } from "@/runtime/utils/terminal";
+import { findAvailablePort } from "@/runtime/utils/port-utils";
 import { cors } from "./cors";
 import { Provider } from "@/runtime/middlewares/utils";
 import {
@@ -28,7 +28,8 @@ import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
-import { CorsConfig, corsConfigSchema } from "@/compiler/config/schemas";
+import type { CorsConfig } from "@/config/schemas";
+import { DEFAULT_CORS_CONFIG } from "./cors/defaults";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
@@ -106,7 +107,7 @@ export class StatelessStreamableHTTPTransport {
   constructor(
     createServerFn: () => Promise<McpServer>,
     options: HttpTransportOptions = {},
-    corsConfig: CorsConfig = corsConfigSchema.parse({}),
+    corsConfig: CorsConfig = DEFAULT_CORS_CONFIG,
     providers?: Provider[]
   ) {
     this.options = {

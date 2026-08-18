@@ -8,6 +8,10 @@ description: "Vercel supports xmcp with zero-configuration."
 
 First, bootstrap a new project with `npx create-xmcp-app@latest`.
 
+The build step requires the `@xmcp-dev/compiler` development dependency. Keep
+Vercel's default behavior of installing development dependencies during the
+build; the generated `dist` server is self-contained at runtime.
+
 Then, [connect your Git repository](https://vercel.com/new) or [use Vercel CLI](https://vercel.com/docs/cli):
 
 ```bash

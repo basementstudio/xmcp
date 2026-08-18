@@ -20,5 +20,8 @@
     "monetization",
     "polar",
     "http"
-  ]
+  ],
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
 }

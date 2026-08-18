@@ -19,7 +19,7 @@ export type { PromptMetadata } from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 
-export type { XmcpConfigInputSchema as XmcpConfig } from "./compiler/config";
+export type { XmcpConfigInputSchema as XmcpConfig } from "./config";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";

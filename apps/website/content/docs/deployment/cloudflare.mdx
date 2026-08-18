@@ -8,6 +8,10 @@ description: "Cloudflare Workers support in xmcp uses a Cloudflare-native bundle
 
 Cloudflare Workers support is built into xmcp with the `--cf` flag. The easiest path is to bootstrap a project that includes Wrangler and the Cloudflare build pipeline.
 
+Keep `@xmcp-dev/compiler` installed as a development dependency in the build
+environment. It is only needed to produce the Worker bundle and is not part of
+the deployed runtime.
+
 ## Create a new project
 
 Start with `create-xmcp-app` and the Cloudflare flag (you can also pass `--cloudflare` when cloning an example with `--example`):

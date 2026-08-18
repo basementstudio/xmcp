@@ -12,6 +12,7 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
     "@types/node": "^22.19.2",
     "tsx": "^4.19.4",
     "typescript": "^5.9.3",

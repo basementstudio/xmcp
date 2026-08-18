@@ -42,12 +42,13 @@ export async function install(
   version: string
 ) {
   const dependencies = [`xmcp@${version}`, "zod"];
+  const compiler = `@xmcp-dev/compiler@${version}`;
 
   const commands = {
-    npm: `npm install ${dependencies.join(" ")}`,
-    pnpm: `pnpm add ${dependencies.join(" ")}`,
-    yarn: `yarn add ${dependencies.join(" ")}`,
-    bun: `bun add ${dependencies.join(" ")}`,
+    npm: `npm install ${dependencies.join(" ")} && npm install --save-dev ${compiler}`,
+    pnpm: `pnpm add ${dependencies.join(" ")} && pnpm add --save-dev ${compiler}`,
+    yarn: `yarn add ${dependencies.join(" ")} && yarn add --dev ${compiler}`,
+    bun: `bun add ${dependencies.join(" ")} && bun add --dev ${compiler}`,
   };
 
   try {

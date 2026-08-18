@@ -1,4 +1,4 @@
-import { ResolvedHttpConfig } from "@/compiler/config";
+import type { ResolvedHttpConfig } from "@/config";
 import { createContext } from "../../utils/context";
 
 export interface HttpTransportContext {

@@ -2,7 +2,7 @@
  * CORS handling for Cloudflare Workers adapter.
  */
 
-import type { CorsConfig } from "@/compiler/config";
+import type { CorsConfig } from "@/config";
 import { buildCorsHeaders } from "@/runtime/transports/http/cors/headers";
 
 // CORS config - injected by compiler as combined object

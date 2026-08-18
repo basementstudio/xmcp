@@ -10,7 +10,7 @@ import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateles
 import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
-import type { CorsConfig } from "@/compiler/config";
+import type { CorsConfig } from "@/config";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;

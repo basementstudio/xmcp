@@ -18,5 +18,8 @@
     "xmcp": "workspace:*",
     "zod": "^4.0.10",
     "@playwright/mcp": "^0.0.49"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
   }
 }

@@ -19,6 +19,7 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3"
   }

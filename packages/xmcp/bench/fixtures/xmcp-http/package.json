@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build"
+  },
+  "dependencies": {
+    "xmcp": "0.7.1",
+    "zod": "4.1.13"
+  }
+}
