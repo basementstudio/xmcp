@@ -77,7 +77,12 @@ export async function generateMetadata(
     title: metadataTitle,
     description: template.description,
     keywords: metadataKeywords,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
+    },
     openGraph: {
       title: metadataTitle,
       description: template.description,

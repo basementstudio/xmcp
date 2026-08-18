@@ -1,5 +1,6 @@
 import { estimateTokens } from "../../lib/estimate-tokens";
 import { SITE_URL } from "../../lib/base-url";
+import { FAQ_ITEMS } from "../../content/faq";
 
 export const revalidate = false;
 
@@ -27,10 +28,14 @@ npx create-xmcp-app@latest
 
 ## Markdown mirrors
 
-Append \`.md\` to any docs or blog URL for a markdown version of that page, or send \`Accept: text/markdown\` to the HTML URL.
+Append \`.md\` to any docs, blog, or template detail URL for a markdown version of that page, or send \`Accept: text/markdown\` to the HTML URL.
 
 - [llms.txt](${SITE_URL}/llms.txt): index of all docs, blog posts, and templates
-- [llms-full.txt](${SITE_URL}/llms-full.txt): complete documentation content in one file
+- [llms-full.txt](${SITE_URL}/llms-full.txt): complete documentation and blog content in one file
+
+## FAQ
+
+${FAQ_ITEMS.map((faq) => `### ${faq.question}\n\n${faq.answer}`).join("\n\n")}
 
 ## Source
 

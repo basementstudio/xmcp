@@ -1,0 +1,6 @@
+{
+  "title": "Authentication",
+  "pages": ["api-key", "jwt", "oauth"],
+  "defaultOpen": true,
+  "root": true
+}

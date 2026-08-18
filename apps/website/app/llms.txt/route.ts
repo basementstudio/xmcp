@@ -6,6 +6,48 @@ import { fetchTemplates } from "../templates/utils/github";
 // window as the /templates pages instead of being fully static.
 export const revalidate = 1800;
 
+type TreeNode = {
+  type?: string;
+  name?: unknown;
+  url?: string;
+  index?: TreeNode;
+  children?: TreeNode[];
+};
+
+type DocSection = { title?: string; entries: string[] };
+
+// Group docs links under the curated section titles and order from the
+// meta.json files (via the page tree) instead of raw directory slugs.
+function collectDocSections(): DocSection[] {
+  const pagesByUrl = new Map(source.getPages().map((page) => [page.url, page]));
+  const sections: DocSection[] = [{ entries: [] }];
+
+  const entryFor = (url: string | undefined): string | null => {
+    const page = url ? pagesByUrl.get(url) : undefined;
+    if (!page) return null;
+    const link = `- [${page.data.title}](${page.url})`;
+    return page.data.description ? `${link}: ${page.data.description}` : link;
+  };
+
+  const visit = (node: TreeNode) => {
+    if (node.type === "separator" || node.type === "folder") {
+      sections.push({
+        title: typeof node.name === "string" ? node.name : undefined,
+        entries: [],
+      });
+      const indexEntry = entryFor(node.index?.url);
+      if (indexEntry) sections[sections.length - 1].entries.push(indexEntry);
+      node.children?.forEach(visit);
+      return;
+    }
+    const entry = entryFor(node.url);
+    if (entry) sections[sections.length - 1].entries.push(entry);
+  };
+
+  (source.pageTree.children as TreeNode[]).forEach(visit);
+  return sections.filter((section) => section.entries.length > 0);
+}
+
 export async function GET() {
   const scanned: string[] = [];
   scanned.push("# xmcp");
@@ -15,20 +57,12 @@ export async function GET() {
       "making it easy to build & deploy AI tools on top of the Model Context Protocol ecosystem."
   );
   scanned.push("## Docs");
-  const map = new Map<string, string[]>();
 
-  for (const page of source.getPages()) {
-    const dir = page.slugs[0];
-    const list = map.get(dir) ?? [];
-    list.push(`- [${page.data.title}](${page.url}): ${page.data.description}`);
-    map.set(dir, list);
-  }
-
-  for (const [key, value] of map) {
-    if (key) {
-      scanned.push(`## ${key}`);
+  for (const section of collectDocSections()) {
+    if (section.title) {
+      scanned.push(`### ${section.title}`);
     }
-    scanned.push(value.join("\n"));
+    scanned.push(section.entries.join("\n"));
   }
 
   // Deliberately includes unlisted "ghost" posts: they are hidden from
@@ -60,11 +94,21 @@ export async function GET() {
     );
   }
 
+  scanned.push("## Pages");
+  scanned.push(
+    [
+      "- [Showcase](/showcase): community MCP servers built with xmcp",
+      "- [Telemetry](/telemetry): what anonymous telemetry xmcp collects and how to opt out",
+    ].join("\n")
+  );
+
   scanned.push("## Optional");
   scanned.push(
     [
-      "- [llms-full.txt](/llms-full.txt): complete documentation content in one file",
+      "- [llms-full.txt](/llms-full.txt): complete documentation and blog content in one file",
       "- [index.md](/index.md): site overview in markdown",
+      "- [blog.md](/blog.md): blog index in markdown",
+      "- [templates.md](/templates.md): templates index in markdown",
     ].join("\n")
   );
 

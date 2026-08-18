@@ -16,9 +16,11 @@ export async function GET() {
   // header so the route degrades instead of failing.
   const templates = await fetchTemplates();
   if (templates.length > 0) {
+    // Like /blog.md, entries link to the .md twins; /llms.txt keeps linking
+    // the canonical HTML URLs.
     const entries = templates.map((template) => {
       const parts = [
-        `- [${template.name}](${SITE_URL}/templates/${template.slug})`,
+        `- [${template.name}](${SITE_URL}/templates/${template.slug}.md)`,
       ];
       if (template.category) parts.push(`(${template.category})`);
       if (template.description) parts.push(`— ${template.description}`);
