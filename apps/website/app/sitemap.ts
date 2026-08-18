@@ -42,12 +42,18 @@ export default async function sitemap() {
     return toDay(new Date());
   };
 
-  const routes = ["", "/docs", "/blog", "/templates", "/showcase", "/telemetry"].map(
-    (route) => ({
-      url: url(route),
-      lastModified: lastModifiedFor(route),
-    })
-  );
+  const routes = [
+    "",
+    "/docs",
+    "/blog",
+    "/templates",
+    "/showcase",
+    "/faq",
+    "/telemetry",
+  ].map((route) => ({
+    url: url(route),
+    lastModified: lastModifiedFor(route),
+  }));
 
   // Add blog posts to sitemap
   const blogRoutes = blogPosts.map((post) => ({
