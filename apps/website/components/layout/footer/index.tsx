@@ -11,16 +11,14 @@ export const Footer = () => {
           © xmcp {year} All rights reserved.
         </span>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-end gap-1 z-100 text-brand-neutral-200">
+      <div className="flex-1 flex items-center justify-center z-100 text-brand-neutral-200">
         <AnimatedLink
           href="https://vercel.com/oss"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-center gap-1 text-brand-neutral-200 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-brand-neutral-200 hover:text-white transition-colors"
         >
-          <span className="text-xs uppercase tracking-wider">
-            Open Source Program
-          </span>
+          <span>Open Source Program</span>
           <Icons.vercelGeist aria-hidden="true" className="h-3.5 w-auto" />
         </AnimatedLink>
       </div>
