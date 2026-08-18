@@ -15,6 +15,9 @@ export const metadata: Metadata = {
     "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
   alternates: {
     canonical: `${SITE_URL}/templates`,
+    types: {
+      "text/markdown": `${SITE_URL}/templates.md`,
+    },
   },
   openGraph: {
     title: "Templates - xmcp",

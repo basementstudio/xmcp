@@ -69,7 +69,13 @@ const nextConfig: NextConfig = {
     ];
     return {
       beforeFiles: [
-        { source: "/", has: acceptsMarkdown, destination: "/llms.mdx" },
+        { source: "/", has: acceptsMarkdown, destination: "/index.md" },
+        { source: "/blog", has: acceptsMarkdown, destination: "/blog.md" },
+        {
+          source: "/templates",
+          has: acceptsMarkdown,
+          destination: "/templates.md",
+        },
         {
           source: "/docs/:slug*",
           has: acceptsMarkdown,
@@ -106,6 +112,7 @@ const nextConfig: NextConfig = {
               '</docs>; rel="service-doc"; type="text/html"',
               '</llms.txt>; rel="service-desc"; type="text/plain"',
               '</llms-full.txt>; rel="describedby"; type="text/plain"',
+              '</index.md>; rel="alternate"; type="text/markdown"',
             ].join(", "),
           },
         ],
