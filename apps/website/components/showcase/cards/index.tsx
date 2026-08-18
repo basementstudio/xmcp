@@ -2,7 +2,6 @@ import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import Image from "next/image";
 import { CopyButton } from "../../ui/copy-button";
-import { fetchMCPs } from "@/basehub/";
 import { Tag } from "@/components/ui/tag";
 
 export type ShowcaseItem = {
@@ -16,13 +15,11 @@ export type ShowcaseItem = {
   tag?: string;
 };
 
-export async function ShowcaseCards() {
-  const mcps = await fetchMCPs();
-
+export function ShowcaseCards({ mcps }: { mcps: readonly ShowcaseItem[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
       {mcps.map((mcp, index) => (
-        <ShowcaseCard key={index} {...(mcp as ShowcaseItem)} />
+        <ShowcaseCard key={index} {...mcp} />
       ))}
     </div>
   );

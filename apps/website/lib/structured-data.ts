@@ -107,6 +107,54 @@ export function getTemplatesItemListSchema(
   };
 }
 
+export interface TemplateSourceCode {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+  readonly repositoryUrl: string;
+}
+
+export function getSoftwareSourceCodeSchema(
+  template: TemplateSourceCode,
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name: template.name,
+    description: template.description,
+    url: absolute(baseUrl, `/templates/${template.slug}`),
+    codeRepository: template.repositoryUrl,
+    programmingLanguage: "TypeScript",
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export interface ShowcaseListItem {
+  readonly name: string;
+  readonly tagline: string;
+  readonly repositoryUrl?: string | null;
+}
+
+export function getShowcaseItemListSchema(
+  items: readonly ShowcaseListItem[],
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Community MCP servers",
+    url: absolute(baseUrl, "/showcase"),
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      description: item.tagline,
+      ...(item.repositoryUrl ? { url: item.repositoryUrl } : {}),
+    })),
+  };
+}
+
 export function getWebSiteSchema(baseUrl: string) {
   // The site search is a client-side dialog with no URL query endpoint, so we
   // intentionally omit a SearchAction (a sitelinks searchbox needs a crawlable

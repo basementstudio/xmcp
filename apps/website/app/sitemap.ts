@@ -42,12 +42,28 @@ export default async function sitemap() {
     return toDay(new Date());
   };
 
-  const routes = ["", "/docs", "/blog", "/templates", "/showcase", "/telemetry"].map(
-    (route) => ({
-      url: url(route),
-      lastModified: lastModifiedFor(route),
-    })
-  );
+  const topLevelPriority: Record<string, number> = {
+    "": 1,
+    "/docs": 0.9,
+    "/blog": 0.9,
+    "/templates": 0.8,
+    "/showcase": 0.7,
+    "/telemetry": 0.5,
+  };
+
+  const routes: MetadataRoute.Sitemap[number][] = [
+    "",
+    "/docs",
+    "/blog",
+    "/templates",
+    "/showcase",
+    "/telemetry",
+  ].map((route) => ({
+    url: url(route),
+    lastModified: lastModifiedFor(route),
+    changeFrequency: "weekly",
+    priority: topLevelPriority[route],
+  }));
 
   // Add blog posts to sitemap
   const blogRoutes = blogPosts.map((post) => ({
@@ -72,10 +88,11 @@ export default async function sitemap() {
 
   const templates = await fetchTemplates();
 
+  // No lastModified for templates and categories: the GitHub API gives us no
+  // content dates, and stamping "today" on every revalidation churns the value.
   const templateRoutes: MetadataRoute.Sitemap[number][] = templates.map(
     (template) => ({
       url: url(`/templates/${template.slug}`),
-      lastModified: lastModifiedFor(`/templates/${template.slug}`),
       changeFrequency: "weekly",
       priority: 0.7,
     })
@@ -84,7 +101,6 @@ export default async function sitemap() {
   const templateCategoryRoutes: MetadataRoute.Sitemap[number][] =
     collectUniqueCategories(templates).map((category) => ({
       url: url(`/templates/category/${slugifyCategory(category)}`),
-      lastModified: lastModifiedFor("/templates"),
       changeFrequency: "weekly",
       priority: 0.6,
     }));

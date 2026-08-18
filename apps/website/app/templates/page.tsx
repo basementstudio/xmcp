@@ -1,15 +1,16 @@
 import { Metadata } from "next";
-import { getBaseUrl, SITE_URL } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 import { fetchTemplates } from "@/app/templates/utils/github";
 import { TemplatesListing } from "@/components/templates/listing";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { JsonLd } from "@/components/seo/json-ld";
-import { getTemplatesItemListSchema } from "@/lib/structured-data";
+import {
+  getBreadcrumbSchema,
+  getTemplatesItemListSchema,
+} from "@/lib/structured-data";
 
 export const dynamic = "force-static";
 export const revalidate = 1800; // 30 minutes
-
-const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: "Templates - xmcp",
@@ -30,7 +31,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: `${SITE_URL}/templates`,
     images: {
-      url: `${baseUrl}/api/og/templates`,
+      url: `${SITE_URL}/api/og/templates`,
       width: 1200,
       height: 630,
     },
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     description:
       "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
     images: {
-      url: `${baseUrl}/api/og/templates`,
+      url: `${SITE_URL}/api/og/templates`,
       width: 1200,
       height: 630,
     },
@@ -57,6 +58,15 @@ export default async function TemplatesPage() {
       {templates.length > 0 && (
         <JsonLd data={getTemplatesItemListSchema(templates, SITE_URL)} />
       )}
+      <JsonLd
+        data={getBreadcrumbSchema(
+          [
+            { name: "Home", url: "/" },
+            { name: "Templates", url: "/templates" },
+          ],
+          SITE_URL
+        )}
+      />
       <TemplatesListing
         templates={templates}
         categories={categories}
