@@ -288,7 +288,10 @@ export function ShowcaseForm() {
           </div>
 
           <div className="space-y-2 min-h-[102px] flex flex-col">
-            <label className="block text-xs font-medium uppercase text-[#DBDBDB]">
+            <label
+              htmlFor="logo"
+              className="block text-xs font-medium uppercase text-[#DBDBDB]"
+            >
               Logo *
             </label>
             <div className="flex items-center gap-3">

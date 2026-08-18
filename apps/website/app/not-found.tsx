@@ -5,7 +5,10 @@ export const dynamic = "force-static";
 
 export default async function Page() {
   return (
-    <div className="min-h-[calc(100vh-12rem)] flex flex-col items-center justify-center gap-4">
+    <main
+      id="main-content"
+      className="min-h-[calc(100vh-12rem)] flex flex-col items-center justify-center gap-4"
+    >
       <h1 className="display text-center text-balance z-10 text-gradient">
         404 - Page Not Found
       </h1>
@@ -20,6 +23,6 @@ export default async function Page() {
           <Link href="/docs">Read the docs</Link>
         </Button>
       </div>
-    </div>
+    </main>
   );
 }

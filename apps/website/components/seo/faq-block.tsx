@@ -18,7 +18,7 @@ export function FaqBlock({
   return (
     <>
       <JsonLd data={getFaqSchema(items)} />
-      <section className="sr-only" aria-hidden="true">
+      <section className="sr-only">
         <h2>Frequently asked questions</h2>
         <dl>
           {items.map((faq) => (

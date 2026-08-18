@@ -110,6 +110,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-brand-black focus:text-brand-white focus:px-3 focus:py-2"
+        >
+          Skip to content
+        </a>
         <JsonLd
           data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />

@@ -53,7 +53,7 @@ export async function ShowcaseCard({
           </div>
           <div className="flex-1">
             <div className="flex items-start justify-between">
-              <h4 className="text-white font-medium uppercase">{name}</h4>
+              <h2 className="text-white font-medium uppercase">{name}</h2>
             </div>
           </div>
         </div>

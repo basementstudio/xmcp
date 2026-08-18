@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function TelemetryPage() {
   return (
-    <main className="flex w-full justify-center px-4 lg:px-8">
+    <main id="main-content" className="flex w-full justify-center px-4 lg:px-8">
       <JsonLd
         data={getBreadcrumbSchema(
           [

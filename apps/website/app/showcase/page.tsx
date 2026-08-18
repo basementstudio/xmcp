@@ -47,7 +47,7 @@ export default async function ShowcasePage() {
   const mcps = (await fetchMCPs()) as ShowcaseItem[];
 
   return (
-    <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main id="main-content" className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
       <JsonLd
         data={[
           getShowcaseItemListSchema(mcps, SITE_URL),
