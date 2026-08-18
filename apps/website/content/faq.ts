@@ -2,68 +2,95 @@ import type { FaqItem } from "@/lib/structured-data";
 
 /**
  * High-intent FAQ entries about xmcp, grounded in the documentation under
- * `content/docs`. Surfaced as FAQPage structured data and as visually-hidden
- * (but DOM-present, crawlable) content. Keep answers accurate to current docs.
+ * `content/docs`. This is the single source for the /faq page, its markdown
+ * twin at /faq.md, and the FAQPage structured data. Keep answers accurate to
+ * current docs. `slug` is the stable anchor id — change the question wording
+ * freely, but keep the slug so existing deep links and citations survive.
  */
 export const FAQ_ITEMS: readonly FaqItem[] = [
   {
+    slug: "what-is-xmcp",
     question: "What is xmcp?",
     answer:
-      "xmcp is a TypeScript framework for building and shipping MCP (Model Context Protocol) applications. It handles the boilerplate of defining tools, resources, and prompts — auto-discovering them from your project — so you can focus on functionality and ship AI tools on top of the MCP ecosystem.",
+      "xmcp is an open-source TypeScript framework for building and deploying MCP (Model Context Protocol) servers. It simplifies MCP development by automatically discovering tools, resources, and prompts from your project's file system, reducing boilerplate and manual configuration.",
   },
   {
+    slug: "create-a-project",
     question: "How do I create a new xmcp project?",
     answer:
-      "The quickest way is `npx create-xmcp-app@latest`, which scaffolds a project and lets you pick a package manager, transport (HTTP or STDIO), and which components (tools, prompts, resources) to include. To add xmcp to an existing app you can run `npx init-xmcp@latest`, or install manually with `npm i xmcp zod@^3.25.76`. xmcp requires Node.js 20 or later.",
+      "Create a new xmcp project by running npx create-xmcp-app@latest. The CLI scaffolds a ready-to-use MCP server and lets you choose your package manager, transport (HTTP or STDIO), and project components. To add xmcp to an existing application — Next.js, Express, Fastify, or NestJS — run npx init-xmcp@latest.",
   },
   {
+    slug: "tools-resources-and-prompts",
     question: "What are tools, resources, and prompts in xmcp?",
     answer:
-      "Tools are functions the LLM can call to perform actions (auto-discovered from `src/tools`). Resources are read-only data sources that provide context (auto-discovered from `src/resources`). Prompts are user-controlled, parameterized instruction templates (auto-discovered from `src/prompts`). You don't register them manually — xmcp discovers them from the file system.",
+      "In xmcp, tools are functions that an LLM or AI agent can call to perform actions. Resources are read-only data sources that provide context to the model. Prompts are reusable, parameterized instruction templates. xmcp automatically discovers tools, resources, and prompts from your project's file system, so they do not need to be registered manually.",
   },
   {
+    slug: "define-a-tool",
     question: "How do I define a tool in xmcp?",
     answer:
-      "Add a file to `src/tools` that exports an optional `schema` (Zod) describing inputs, an optional `metadata` object (name, description, annotations), and a default async function that handles the call. The clear description is what helps the LLM decide when to use the tool. You can scaffold one with `xmcp create tool my-tool`.",
+      "To create an MCP tool with xmcp, add a file inside src/tools. A tool can export a Zod schema for input validation, metadata such as its name and description, and a default async function that executes the tool. Clear, descriptive metadata helps LLMs understand when and how to use the tool.",
   },
   {
-    question: "What transports does xmcp support?",
+    slug: "transports",
+    question: "What transport options does xmcp support?",
     answer:
-      "xmcp supports HTTP and STDIO transports. HTTP is stateless and suited to remote/serverless deployments — it defaults to port 3001 and the `/mcp` endpoint, and each request must carry its own context. STDIO runs on the user's machine and is typical for local clients like Claude Desktop or Cursor.",
+      "xmcp supports both HTTP and STDIO transports for MCP servers. HTTP is stateless and designed for remote, cloud, and serverless deployments. STDIO runs locally on the user's machine and is commonly used by MCP clients such as Claude Desktop and Cursor.",
   },
   {
+    slug: "stateless-http",
     question: "Is xmcp's HTTP transport stateful or stateless?",
     answer:
-      "HTTP is stateless: the server does not retain per-client session memory between requests. Any client metadata a tool needs after initialization must be repeated on the current request, for example via headers such as `x-mcp-client-name` and `x-mcp-client-version`.",
+      "HTTP is stateless: the server does not retain per-client session memory between requests. Any client metadata a tool needs after initialization must be repeated on the current request, for example via headers such as x-mcp-client-name and x-mcp-client-version.",
   },
   {
-    question: "How do I add authentication to my MCP server?",
-    answer:
-      "xmcp ships middleware for API key and JWT authentication, and the Next.js adapter supports OAuth via `withAuth`. You can also integrate dedicated providers including Auth0, Better Auth, Clerk, Scalekit, and WorkOS.",
-  },
-  {
+    slug: "framework-integrations",
     question: "Which frameworks can I integrate xmcp with?",
     answer:
-      "xmcp provides adapters for Next.js, Express, Fastify, and NestJS, so you can add an MCP server to an existing application or run it standalone.",
+      "xmcp provides adapters for Next.js, Express, Fastify, and NestJS. These adapters let developers add an MCP server to an existing TypeScript application instead of creating and maintaining a separate service.",
   },
   {
-    question: "Where can I deploy an xmcp application?",
+    slug: "authentication",
+    question: "How do I add authentication to an xmcp server?",
     answer:
-      "xmcp deploys to Vercel with zero configuration, and also supports Cloudflare, Replit, and ALPIC. Because it builds to a standard Node.js server, the HTTP transport runs on any Node-compatible host.",
+      "xmcp supports authentication through middleware for API keys and JWTs. The Next.js adapter also supports OAuth through withAuth. xmcp includes integrations with authentication providers such as Auth0, Better Auth, Clerk, Scalekit, and WorkOS.",
   },
   {
-    question: "Can I charge for my MCP tools?",
+    slug: "deployment",
+    question: "Where can I deploy an xmcp server?",
     answer:
-      "Yes. xmcp integrates with Polar for license-key based monetization and with x402 for pay-per-call payments in USDC on Base, so agents can pay for tool usage programmatically.",
+      "xmcp can be deployed to Vercel with zero configuration and also supports platforms including Cloudflare, Replit, and ALPIC. Because xmcp can build to a standard Node.js server, MCP servers using the HTTP transport can also run on other Node.js-compatible hosting providers.",
   },
   {
-    question: "How do I make my xmcp server discoverable to LLMs and registries?",
+    slug: "monetization",
+    question: "Can I charge for MCP tools built with xmcp?",
     answer:
-      "The docs site exposes `/llms.txt` (a markdown index) and `/llms-full.txt` (full documentation) for LLM consumption, and xmcp servers can be published to the Smithery registry for distribution.",
+      "Yes. xmcp supports monetization for MCP tools through Polar and x402. Polar enables license-key-based access, while x402 enables pay-per-call payments using USDC on Base, allowing AI agents to programmatically pay for access to MCP tools.",
   },
   {
+    slug: "discoverability",
+    question:
+      "How do I make my xmcp server discoverable to LLMs and registries?",
+    answer:
+      "The xmcp docs site exposes /llms.txt (a markdown index) and /llms-full.txt (full documentation) for LLM consumption, and xmcp servers can be published to the Smithery registry for distribution.",
+  },
+  {
+    slug: "open-source",
     question: "Is xmcp open source?",
     answer:
-      "Yes. xmcp is open source and developed in the open at github.com/basementstudio/xmcp, where you can read the docs, browse examples, and contribute.",
+      "Yes. xmcp is an open-source TypeScript framework. Its source code, documentation, examples, issues, and contribution guidelines are available in the xmcp GitHub repository at github.com/basementstudio/xmcp.",
+  },
+  {
+    slug: "what-is-mcp",
+    question: "What is the Model Context Protocol (MCP)?",
+    answer:
+      "The Model Context Protocol (MCP) is an open protocol for connecting AI applications and agents to external tools, data sources, and services. xmcp provides a TypeScript framework for implementing MCP servers without manually handling much of the underlying server infrastructure.",
+  },
+  {
+    slug: "why-xmcp",
+    question: "Why use xmcp instead of building an MCP server from scratch?",
+    answer:
+      "xmcp reduces the boilerplate required to build a TypeScript MCP server. It provides file-system routing, automatic discovery of tools, resources, and prompts, framework adapters, authentication, middleware, deployment support, and monetization integrations in a single framework.",
   },
 ];

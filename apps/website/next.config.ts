@@ -76,6 +76,7 @@ const nextConfig: NextConfig = {
           has: acceptsMarkdown,
           destination: "/templates.md",
         },
+        { source: "/faq", has: acceptsMarkdown, destination: "/faq.md" },
         {
           source: "/docs/:slug*",
           has: acceptsMarkdown,

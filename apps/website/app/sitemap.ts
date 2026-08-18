@@ -48,6 +48,7 @@ export default async function sitemap() {
     "/blog": 0.9,
     "/templates": 0.8,
     "/showcase": 0.7,
+    "/faq": 0.7,
     "/telemetry": 0.5,
   };
 
@@ -57,6 +58,7 @@ export default async function sitemap() {
     "/blog",
     "/templates",
     "/showcase",
+    "/faq",
     "/telemetry",
   ].map((route) => ({
     url: url(route),

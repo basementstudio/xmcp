@@ -27,6 +27,8 @@ export interface BreadcrumbItem {
 }
 
 export interface FaqItem {
+  /** Stable anchor id on /faq, also used as the Question `@id` fragment. */
+  readonly slug: string;
   readonly question: string;
   readonly answer: string;
 }
@@ -231,12 +233,21 @@ export function getBreadcrumbSchema(items: BreadcrumbItem[], baseUrl: string) {
   };
 }
 
-export function getFaqSchema(faqs: readonly FaqItem[]) {
+/**
+ * `pageUrl` is the absolute URL of the page that renders these questions as
+ * visible content. When passed, each Question gets its own anchor URL so answer
+ * engines can cite a single entry instead of the whole page.
+ */
+export function getFaqSchema(faqs: readonly FaqItem[], pageUrl?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    ...(pageUrl ? { url: pageUrl, mainEntityOfPage: pageUrl } : {}),
     mainEntity: faqs.map((faq) => ({
       "@type": "Question",
+      ...(pageUrl
+        ? { "@id": `${pageUrl}#${faq.slug}`, url: `${pageUrl}#${faq.slug}` }
+        : {}),
       name: faq.question,
       acceptedAnswer: {
         "@type": "Answer",

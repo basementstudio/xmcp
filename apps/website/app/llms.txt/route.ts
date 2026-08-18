@@ -1,10 +1,9 @@
 import { source } from "../../lib/source";
 import { getAllBlogPosts } from "../../utils/blog";
 import { fetchTemplates } from "../templates/utils/github";
+import { FAQ_ITEMS } from "../../content/faq";
 
-// Templates come from the GitHub API, so this file revalidates on the same
-// window as the /templates pages instead of being fully static.
-export const revalidate = 1800;
+export const revalidate = false;
 
 type TreeNode = {
   type?: string;
@@ -94,6 +93,13 @@ export async function GET() {
     );
   }
 
+  // Questions are the phrasing agents actually match on, so each one is listed
+  // with its anchor instead of a single link to the page.
+  scanned.push("## FAQ");
+  scanned.push(
+    FAQ_ITEMS.map((faq) => `- [${faq.question}](/faq#${faq.slug})`).join("\n")
+  );
+
   scanned.push("## Pages");
   scanned.push(
     [
@@ -109,6 +115,7 @@ export async function GET() {
       "- [index.md](/index.md): site overview in markdown",
       "- [blog.md](/blog.md): blog index in markdown",
       "- [templates.md](/templates.md): templates index in markdown",
+      "- [faq.md](/faq.md): frequently asked questions with full answers in markdown",
     ].join("\n")
   );
 

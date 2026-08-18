@@ -1,6 +1,5 @@
 import { estimateTokens } from "../../lib/estimate-tokens";
 import { SITE_URL } from "../../lib/base-url";
-import { FAQ_ITEMS } from "../../content/faq";
 
 export const revalidate = false;
 
@@ -25,6 +24,7 @@ npx create-xmcp-app@latest
 - [Blog](${SITE_URL}/blog): guides, release notes, and engineering articles
 - [Templates](${SITE_URL}/templates): production-ready MCP server templates to fork and deploy
 - [Showcase](${SITE_URL}/showcase): MCP servers built with xmcp
+- [FAQ](${SITE_URL}/faq): common questions about xmcp, MCP, transports, auth, deployment, and monetization
 
 ## Markdown mirrors
 
@@ -32,10 +32,7 @@ Append \`.md\` to any docs, blog, or template detail URL for a markdown version 
 
 - [llms.txt](${SITE_URL}/llms.txt): index of all docs, blog posts, and templates
 - [llms-full.txt](${SITE_URL}/llms-full.txt): complete documentation and blog content in one file
-
-## FAQ
-
-${FAQ_ITEMS.map((faq) => `### ${faq.question}\n\n${faq.answer}`).join("\n\n")}
+- [faq.md](${SITE_URL}/faq.md): frequently asked questions in markdown
 
 ## Source
 
