@@ -56,7 +56,10 @@ export default function BlogPage() {
     : posts;
 
   return (
-    <main id="main-content" className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main
+      id="main-content"
+      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
+    >
       <JsonLd
         data={[
           getBlogCollectionSchema(posts, SITE_URL),

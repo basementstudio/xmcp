@@ -145,7 +145,10 @@ Add a README.md to this template to show content here.`;
   const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
 
   return (
-    <main id="main-content" className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
+    <main
+      id="main-content"
+      className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10"
+    >
       <JsonLd
         data={[
           getBreadcrumbSchema(

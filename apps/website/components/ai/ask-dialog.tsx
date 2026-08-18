@@ -173,7 +173,12 @@ function AskAIInput({
         }}
       />
       {isLoading ? (
-        <button key="bn" type="button" aria-label="Generating response" disabled>
+        <button
+          key="bn"
+          type="button"
+          aria-label="Generating response"
+          disabled
+        >
           <Loader2 className="size-4 animate-spin text-brand-neutral-100" />
         </button>
       ) : (
