@@ -1,6 +1,7 @@
 import { source } from "../../lib/source";
 import { getAllBlogPosts } from "../../utils/blog";
 import { fetchTemplates } from "../templates/utils/github";
+import { FAQ_ITEMS } from "../../content/faq";
 
 export const revalidate = false;
 
@@ -58,11 +59,19 @@ export async function GET() {
     );
   }
 
+  // Questions are the phrasing agents actually match on, so each one is listed
+  // with its anchor instead of a single link to the page.
+  scanned.push("## FAQ");
+  scanned.push(
+    FAQ_ITEMS.map((faq) => `- [${faq.question}](/faq#${faq.slug})`).join("\n")
+  );
+
   scanned.push("## Optional");
   scanned.push(
     [
       "- [llms-full.txt](/llms-full.txt): complete documentation content in one file",
       "- [index.md](/index.md): site overview in markdown",
+      "- [faq.md](/faq.md): frequently asked questions with full answers in markdown",
     ].join("\n")
   );
 
