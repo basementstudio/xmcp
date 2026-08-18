@@ -1,6 +1,6 @@
-import { getLLMText } from "../../../lib/get-llm-text";
+import { getBlogLLMText } from "../../../lib/get-llm-text";
 import { estimateTokens } from "../../../lib/estimate-tokens";
-import { source } from "../../../lib/source";
+import { blogSource } from "../../../lib/source";
 import { SITE_URL } from "../../../lib/base-url";
 import { notFound } from "next/navigation";
 
@@ -8,13 +8,13 @@ export const revalidate = false;
 
 export async function GET(
   _req: Request,
-  { params }: RouteContext<"/llms.mdx/[[...slug]]">
+  { params }: RouteContext<"/llms-blog.mdx/[...slug]">
 ) {
   const { slug } = await params;
-  const page = source.getPage(slug);
+  const page = blogSource.getPage(slug);
   if (!page) notFound();
 
-  const text = await getLLMText(page);
+  const text = await getBlogLLMText(page);
 
   return new Response(text, {
     headers: {
@@ -31,5 +31,5 @@ export async function GET(
 }
 
 export function generateStaticParams() {
-  return source.generateParams();
+  return blogSource.generateParams();
 }

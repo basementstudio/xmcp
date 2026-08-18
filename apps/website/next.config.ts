@@ -75,12 +75,20 @@ const nextConfig: NextConfig = {
           has: acceptsMarkdown,
           destination: "/llms.mdx/:slug*",
         },
+        // `:slug+` (one or more segments) so the /blog index keeps its HTML.
+        {
+          source: "/blog/:slug+",
+          has: acceptsMarkdown,
+          destination: "/llms-blog.mdx/:slug+",
+        },
       ],
       afterFiles: [
         { source: "/docs/:slug*.md", destination: "/llms.mdx/:slug*" },
         { source: "/docs/:slug*.mdx", destination: "/llms.mdx/:slug*" },
         { source: "/docs.md", destination: "/llms.txt" },
         { source: "/docs.mdx", destination: "/llms.txt" },
+        { source: "/blog/:slug*.md", destination: "/llms-blog.mdx/:slug*" },
+        { source: "/blog/:slug*.mdx", destination: "/llms-blog.mdx/:slug*" },
       ],
     };
   },

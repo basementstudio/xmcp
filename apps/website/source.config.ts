@@ -25,6 +25,9 @@ export const docs = defineDocs({
 export const blog = defineDocs({
   dir: "content/blog",
   docs: {
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
     schema: frontmatterSchema.extend({
       category: z.string().optional(),
       order: z.number().optional(),

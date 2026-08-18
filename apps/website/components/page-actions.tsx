@@ -8,13 +8,19 @@ import { track } from "@vercel/analytics";
 
 const cache = new Map<string, string>();
 
-export function PageActions({ markdownUrl }: { markdownUrl: string }) {
+export function PageActions({
+  markdownUrl,
+  trackLocation = "docs_page_actions",
+}: {
+  markdownUrl: string;
+  trackLocation?: string;
+}) {
   const [isLoading, setLoading] = useState(false);
   const [checked, onClick] = useCopyButton(async () => {
     track("docs action clicked", {
       action: "copy_markdown",
       markdownUrl: markdownUrl,
-      location: "docs_page_actions",
+      location: trackLocation,
     });
 
     const cached = cache.get(markdownUrl);
@@ -122,7 +128,7 @@ export function PageActions({ markdownUrl }: { markdownUrl: string }) {
             track("docs action clicked", {
               action: item.title.toLowerCase().replace(/\s+/g, "_"),
               markdownUrl: markdownUrl,
-              location: "docs_page_actions",
+              location: trackLocation,
               destination: item.href.toString(),
             });
           }}
@@ -140,7 +146,7 @@ export function PageActions({ markdownUrl }: { markdownUrl: string }) {
           track("docs action clicked", {
             action: "connect_mcp",
             markdownUrl: markdownUrl,
-            location: "docs_page_actions",
+            location: trackLocation,
           });
         }}
       >
