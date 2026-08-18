@@ -3,6 +3,8 @@ import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { fetchTemplates } from "@/app/templates/utils/github";
 import { TemplatesListing } from "@/components/templates/listing";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getTemplatesItemListSchema } from "@/lib/structured-data";
 
 export const dynamic = "force-static";
 export const revalidate = 1800; // 30 minutes
@@ -52,6 +54,9 @@ export default async function TemplatesPage() {
 
   return (
     <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+      {templates.length > 0 && (
+        <JsonLd data={getTemplatesItemListSchema(templates, SITE_URL)} />
+      )}
       <TemplatesListing
         templates={templates}
         categories={categories}

@@ -24,6 +24,8 @@ import { TemplateReadmeContent } from "@/components/templates/detail/readme-cont
 import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
 import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getBreadcrumbSchema } from "@/lib/structured-data";
 
 export const revalidate = 1800; // 30 minutes
 
@@ -126,9 +128,7 @@ export default async function TemplateDetailPage(
     ])
   );
   const validCategorySlugs = new Set(
-    collectUniqueCategories(items).map((category) =>
-      slugifyCategory(category)
-    )
+    collectUniqueCategories(items).map((category) => slugifyCategory(category))
   );
   const previewImage = resolveTemplatePreviewImage(template);
   const displayName = normalizeDisplayLabel(template.name);
@@ -140,6 +140,16 @@ Add a README.md to this template to show content here.`;
 
   return (
     <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
+      <JsonLd
+        data={getBreadcrumbSchema(
+          [
+            { name: "Home", url: "/" },
+            { name: "Templates", url: "/templates" },
+            { name: displayName, url: `/templates/${template.slug}` },
+          ],
+          SITE_URL
+        )}
+      />
       <TemplateBreadcrumb name={displayName} />
 
       <div className="space-y-4 md:space-y-6">
