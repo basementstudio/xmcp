@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { fetchTemplates } from "@/app/templates/utils/github";
 import { TemplatesListing } from "@/components/templates/listing";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
   alternates: {
-    canonical: `${baseUrl}/templates`,
+    canonical: `${SITE_URL}/templates`,
   },
   openGraph: {
     title: "Templates - xmcp",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    url: `${baseUrl}/templates`,
+    url: `${SITE_URL}/templates`,
     images: {
       url: `${baseUrl}/api/og/templates`,
       width: 1200,
