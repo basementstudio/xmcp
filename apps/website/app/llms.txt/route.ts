@@ -2,9 +2,7 @@ import { source } from "../../lib/source";
 import { getAllBlogPosts } from "../../utils/blog";
 import { fetchTemplates } from "../templates/utils/github";
 
-// Templates come from the GitHub API, so this file revalidates on the same
-// window as the /templates pages instead of being fully static.
-export const revalidate = 1800;
+export const revalidate = false;
 
 export async function GET() {
   const scanned: string[] = [];
