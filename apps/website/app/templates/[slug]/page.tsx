@@ -22,7 +22,7 @@ import { TemplateDetailHeader } from "@/components/templates/detail/header";
 import { RelatedTemplates } from "@/components/templates/detail/related-items";
 import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
 import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
 
 export const revalidate = 1800; // 30 minutes
@@ -53,7 +53,7 @@ export async function generateMetadata(
     };
   }
 
-  const canonical = `${baseUrl}/templates/${template.slug}`;
+  const canonical = `${SITE_URL}/templates/${template.slug}`;
   const metadataName = humanizeMetadataName(template.name);
   const metadataTitle = `${metadataName} | xmcp Templates`;
   const previewImage = resolveTemplatePreviewImage(template);

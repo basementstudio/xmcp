@@ -3,7 +3,7 @@ import { SITE_URL } from "@/lib/base-url";
 export function GET() {
   return new Response(
     `User-Agent: *
-Content-Signal: ai-train=no, search=yes, ai-input=no
+Content-Signal: ai-train=no, search=yes, ai-input=yes
 Allow: /
 
 Sitemap: ${SITE_URL}/sitemap.xml

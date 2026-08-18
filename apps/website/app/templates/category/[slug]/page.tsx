@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getBaseUrl } from "@/lib/base-url";
+import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { fetchTemplates } from "@/app/templates/utils/github";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
@@ -47,7 +47,7 @@ export async function generateMetadata(
   const label = humanizeMetadataName(match);
   const title = `${label} templates - xmcp`;
   const description = `Browse ${label} templates built with xmcp — production-ready MCP servers showcasing authentication, transports, monetization, and integrations you can fork and deploy.`;
-  const canonical = `${baseUrl}/templates/category/${params.slug}`;
+  const canonical = `${SITE_URL}/templates/category/${params.slug}`;
 
   return {
     title,
