@@ -6,6 +6,9 @@ import { HomeBlog } from "@/components/home/blog";
 import { HomeTestimonials } from "@/components/home/testimonials";
 import { getLatestVersion } from "@/lib/get-version";
 import { FaqBlock } from "@/components/seo/faq-block";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getSoftwareApplicationSchema } from "@/lib/structured-data";
+import { SITE_URL } from "@/lib/base-url";
 
 export const dynamic = "force-static";
 
@@ -26,6 +29,7 @@ export default async function Home() {
 
   return (
     <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+      <JsonLd data={getSoftwareApplicationSchema(SITE_URL)} />
       <HomeHero version={version} />
       <HomeFeatures />
       <HomeSteps />

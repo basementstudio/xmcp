@@ -10,8 +10,13 @@ const ORG_SAME_AS = [
 const absolute = (baseUrl: string, path: string): string =>
   new URL(path, baseUrl).toString();
 
+// Stable @id so every publisher/creator reference across the page's scripts
+// merges into the one Organization node instead of creating blank-node copies.
+const orgId = (baseUrl: string) => `${baseUrl}/#organization`;
+
 const orgRef = (baseUrl: string) => ({
   "@type": "Organization",
+  "@id": orgId(baseUrl),
   name: ORG_NAME,
   url: baseUrl,
 });
@@ -30,10 +35,75 @@ export function getOrganizationSchema(baseUrl: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": orgId(baseUrl),
     name: ORG_NAME,
     url: baseUrl,
     logo: absolute(baseUrl, "/favicon.svg"),
     sameAs: ORG_SAME_AS,
+  };
+}
+
+export function getSoftwareApplicationSchema(baseUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: ORG_NAME,
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    url: baseUrl,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Node.js",
+    offers: {
+      "@type": "Offer",
+      price: 0,
+      priceCurrency: "USD",
+    },
+    sameAs: [...ORG_SAME_AS, "https://www.npmjs.com/package/xmcp"],
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export function getBlogCollectionSchema(
+  posts: readonly BlogPost[],
+  baseUrl: string
+) {
+  const url = absolute(baseUrl, "/blog");
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "xmcp Blog",
+    url,
+    mainEntityOfPage: url,
+    publisher: orgRef(baseUrl),
+    hasPart: posts.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      url: absolute(baseUrl, `/blog/${post.slug}`),
+    })),
+  };
+}
+
+export interface TemplateListItem {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+}
+
+export function getTemplatesItemListSchema(
+  templates: readonly TemplateListItem[],
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: templates.map((template, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: template.name,
+      description: template.description,
+      url: absolute(baseUrl, `/templates/${template.slug}`),
+    })),
   };
 }
 
@@ -100,10 +170,7 @@ export function getTechArticleSchema(
   };
 }
 
-export function getBreadcrumbSchema(
-  items: BreadcrumbItem[],
-  baseUrl: string
-) {
+export function getBreadcrumbSchema(items: BreadcrumbItem[], baseUrl: string) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
