@@ -388,6 +388,38 @@ input[type="email"] {
   }
 }
 
+/* FAQ dropdowns. Animating a <details> needs ::details-content plus
+   interpolate-size, because the closed height is a keyword, not a length.
+   Browsers without those features toggle instantly, which is why the effect
+   lives here instead of in JS — the answers stay in the initial HTML either
+   way. Exclusivity (opening one closes the rest) comes from the shared
+   `name` attribute on the elements themselves. */
+.faq-item {
+  interpolate-size: allow-keywords;
+
+  &::details-content {
+    block-size: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      block-size 250ms ease,
+      opacity 200ms ease,
+      content-visibility 250ms;
+    transition-behavior: allow-discrete;
+  }
+
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-item::details-content {
+    transition-duration: 0s;
+  }
+}
+
 @property --fade-left {
   syntax: "<length>";
   inherits: false;
