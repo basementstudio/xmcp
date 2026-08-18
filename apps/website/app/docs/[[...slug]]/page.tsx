@@ -98,7 +98,9 @@ export async function generateMetadata(
   const title = meta.title + " | xmcp Documentation";
   const description = meta.summary ?? meta.description;
   const slugPath = params.slug?.join("/") ?? "";
-  const canonical = slugPath ? `${SITE_URL}/docs/${slugPath}` : `${SITE_URL}/docs`;
+  const canonical = slugPath
+    ? `${SITE_URL}/docs/${slugPath}`
+    : `${SITE_URL}/docs`;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -106,6 +108,9 @@ export async function generateMetadata(
     description,
     alternates: {
       canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
     },
     openGraph: {
       title,

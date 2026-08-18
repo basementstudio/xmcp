@@ -12,6 +12,7 @@ import {
   resolveAuthors,
 } from "@/utils/blog";
 import { PostAuthors } from "@/components/blog/post-authors";
+import { PageActions } from "@/components/page-actions";
 import { getBaseUrl, SITE_URL } from "@/lib/base-url";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -44,7 +45,16 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
     : null;
 
   return (
-    <BlogPage toc={page.data.toc} slug={slug}>
+    <BlogPage
+      toc={page.data.toc}
+      slug={slug}
+      pageActions={
+        <PageActions
+          markdownUrl={`/blog/${slug}.md`}
+          trackLocation="blog_page_actions"
+        />
+      }
+    >
       {structuredData && <JsonLd data={structuredData} />}
       <div className="flex flex-col gap-4">
         {page.data.date && (
@@ -106,6 +116,9 @@ export async function generateMetadata(
     description,
     alternates: {
       canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
     },
     openGraph: {
       title,

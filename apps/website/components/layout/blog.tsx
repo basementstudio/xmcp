@@ -32,6 +32,7 @@ export interface BlogPageProps {
   toc?: TOCItemType[];
   children: ReactNode;
   slug?: string | string[];
+  pageActions?: ReactNode;
 }
 
 function TocItem({
@@ -59,7 +60,12 @@ function TocItem({
   );
 }
 
-export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
+export function BlogPage({
+  toc = [],
+  slug,
+  pageActions,
+  ...props
+}: BlogPageProps) {
   const activeAnchors = useImprovedActiveAnchors(toc);
 
   return (
@@ -82,20 +88,24 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
           </article>
         </div>
 
-        {toc.length > 0 && (
+        {(toc.length > 0 || pageActions) && (
           <aside className="hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-[104px] h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
-            <p className="text-sm text-brand-white font-medium">
-              Table of contents
-            </p>
-            <nav className="flex flex-col pb-4 border-b border-white/20">
-              {toc.map((item) => (
-                <TocItem
-                  key={item.url}
-                  item={item}
-                  activeAnchors={activeAnchors}
-                />
-              ))}
-            </nav>
+            {toc.length > 0 && (
+              <>
+                <p className="text-sm text-brand-white font-medium">
+                  Table of contents
+                </p>
+                <nav className="flex flex-col pb-4 border-b border-white/20">
+                  {toc.map((item) => (
+                    <TocItem
+                      key={item.url}
+                      item={item}
+                      activeAnchors={activeAnchors}
+                    />
+                  ))}
+                </nav>
+              </>
+            )}
             {slug && (
               <div className="flex flex-wrap items-center gap-3 text-sm text-brand-neutral-50 w-full group hover:text-brand-white transition-colors">
                 <span className="inline-flex items-center gap-2 group-hover:text-brand-white transition-colors">
@@ -107,6 +117,7 @@ export function BlogPage({ toc = [], slug, ...props }: BlogPageProps) {
                 </span>
               </div>
             )}
+            {pageActions && <div className="mt-2">{pageActions}</div>}
           </aside>
         )}
       </div>
