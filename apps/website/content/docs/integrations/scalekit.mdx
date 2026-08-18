@@ -210,8 +210,8 @@ If you see `Session not initialized` errors:
 If token verification fails with network errors:
 
 - Verify `SCALEKIT_ENVIRONMENT_URL` is correct and reachable.
-- The plugin auto-discovers JWKS keys from the OIDC configuration endpoint.
-- Check that your server can reach `{environmentUrl}/.well-known/openid-configuration`.
+- The plugin discovers `jwks_uri` from Scalekit's RFC 8414 metadata at `{environmentUrl}/.well-known/oauth-authorization-server` (or `{environmentUrl}/.well-known/oauth-authorization-server/resources/{resourceId}` when `resourceId` is set), then falls back to `{environmentUrl}/keys`.
+- Check that your server can reach that metadata URL and `{environmentUrl}/keys`.
 
 ### Invalid Token Errors
 
