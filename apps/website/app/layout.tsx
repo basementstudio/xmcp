@@ -148,6 +148,11 @@ export default function RootLayout({
             gtag('config', 'G-1H605RJV2K');
           `}
         </Script>
+        <Script
+          async
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="3RwN0TIK29DoT05/h0pY1g"
+        />
       </body>
     </html>
   );
