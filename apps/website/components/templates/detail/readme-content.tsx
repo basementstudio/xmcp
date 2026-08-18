@@ -89,6 +89,7 @@ function ReadmeImg(props: ComponentProps<"img">) {
     <img
       {...props}
       src={src}
+      alt={props.alt ?? ""}
       loading="lazy"
       referrerPolicy={isRemote ? "no-referrer" : undefined}
       className="inline-block max-w-full h-auto rounded-xs"

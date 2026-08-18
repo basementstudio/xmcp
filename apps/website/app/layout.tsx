@@ -65,6 +65,7 @@ export const metadata: Metadata = {
       url: "/xmcp-og.png",
       width: 1200,
       height: 630,
+      alt: "xmcp — The TypeScript MCP framework",
     },
     url: "https://xmcp.dev",
     type: "website",
@@ -75,6 +76,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@xmcp_dev",
+    creator: "@xmcp_dev",
     title: "xmcp — The TypeScript MCP framework",
     description:
       "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
@@ -82,15 +85,16 @@ export const metadata: Metadata = {
       url: "/xmcp-og.png",
       width: 1200,
       height: 630,
+      alt: "xmcp — The TypeScript MCP framework",
     },
   },
   manifest: "/site.webmanifest",
   appleWebApp: {
     title: "xmcp",
   },
-  alternates: {
-    canonical: "https://xmcp.dev",
-  },
+  // No root-level alternates.canonical: it would be inherited verbatim by any
+  // route that doesn't set its own (404, /terminal), claiming they are the
+  // homepage. Every indexable page sets its own canonical.
 };
 
 export default function RootLayout({
@@ -106,6 +110,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-brand-black focus:text-brand-white focus:px-3 focus:py-2"
+        >
+          Skip to content
+        </a>
         <JsonLd
           data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />

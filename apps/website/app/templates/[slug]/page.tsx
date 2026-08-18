@@ -22,14 +22,15 @@ import { TemplateDetailHeader } from "@/components/templates/detail/header";
 import { RelatedTemplates } from "@/components/templates/detail/related-items";
 import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
 import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
-import { getBaseUrl, SITE_URL } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
 import { JsonLd } from "@/components/seo/json-ld";
-import { getBreadcrumbSchema } from "@/lib/structured-data";
+import {
+  getBreadcrumbSchema,
+  getSoftwareSourceCodeSchema,
+} from "@/lib/structured-data";
 
 export const revalidate = 1800; // 30 minutes
-
-const baseUrl = getBaseUrl();
 
 type TemplateDetailPageProps = {
   params: Promise<{
@@ -60,7 +61,7 @@ export async function generateMetadata(
   const metadataTitle = `${metadataName} | xmcp Templates`;
   const previewImage = resolveTemplatePreviewImage(template);
   const previewImageUrl = previewImage.src.startsWith("/")
-    ? `${baseUrl}${previewImage.src}`
+    ? `${SITE_URL}${previewImage.src}`
     : previewImage.src;
   const metadataKeywords = Array.from(
     new Set(
@@ -76,7 +77,12 @@ export async function generateMetadata(
     title: metadataTitle,
     description: template.description,
     keywords: metadataKeywords,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
+    },
     openGraph: {
       title: metadataTitle,
       description: template.description,
@@ -114,7 +120,7 @@ export default async function TemplateDetailPage(
   const readmeContent = await fetchTemplateReadme(template);
   const moreTemplates = rankRelatedItems(template, items);
   const deployOptions = buildDeployOptions(template);
-  const pageUrl = `${baseUrl}/templates/${template.slug}`;
+  const pageUrl = `${SITE_URL}/templates/${template.slug}`;
   const shareMessage = `Check out ${template.name} on xmcp`;
   const xShareUrl = `https://www.x.com/intent/post?text=${encodeURIComponent(
     shareMessage
@@ -139,16 +145,30 @@ Add a README.md to this template to show content here.`;
   const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
 
   return (
-    <main className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10">
+    <main
+      id="main-content"
+      className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10"
+    >
       <JsonLd
-        data={getBreadcrumbSchema(
-          [
-            { name: "Home", url: "/" },
-            { name: "Templates", url: "/templates" },
-            { name: displayName, url: `/templates/${template.slug}` },
-          ],
-          SITE_URL
-        )}
+        data={[
+          getBreadcrumbSchema(
+            [
+              { name: "Home", url: "/" },
+              { name: "Templates", url: "/templates" },
+              { name: displayName, url: `/templates/${template.slug}` },
+            ],
+            SITE_URL
+          ),
+          getSoftwareSourceCodeSchema(
+            {
+              slug: template.slug,
+              name: displayName,
+              description: template.description,
+              repositoryUrl: template.repositoryUrl,
+            },
+            SITE_URL
+          ),
+        ]}
       />
       <TemplateBreadcrumb name={displayName} />
 

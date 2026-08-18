@@ -117,9 +117,9 @@ export function TemplatesListing({
       <div className="col-span-12 flex flex-col gap-8">
         <div className="flex flex-col gap-4 max-w-[920px] w-full mx-auto">
           <div className="flex flex-col items-center gap-2 min-w-0 md:flex-row md:justify-center md:gap-4">
-            <h3 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
+            <h2 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
               Filter by category
-            </h3>
+            </h2>
 
             <div className="relative min-w-0 max-w-full">
               <div className="edge-fade-x flex gap-2 scroll-smooth py-0.5">

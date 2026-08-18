@@ -6,6 +6,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -21,6 +22,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -36,6 +38,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -51,6 +54,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -66,6 +70,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -81,6 +86,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -96,6 +102,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -111,6 +118,7 @@ export const Icons = {
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -128,6 +136,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -143,6 +152,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -161,6 +171,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -176,6 +187,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -194,6 +206,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -209,6 +222,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path d="M4 5H5V6H4V5ZM6 5H7V6H6V5ZM8 5H9V6H8V5Z" fill="currentColor" />
@@ -227,6 +241,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -244,6 +259,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -264,6 +280,7 @@ export const Icons = {
       viewBox="0 0 16 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -280,6 +297,7 @@ export const Icons = {
       height="52"
       width="261"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <g>
@@ -297,6 +315,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -312,6 +331,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -327,6 +347,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -342,6 +363,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -357,6 +379,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -372,6 +395,7 @@ export const Icons = {
       viewBox="0 0 21 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -387,6 +411,7 @@ export const Icons = {
       viewBox="1.5 1 13 13.5"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -410,6 +435,7 @@ export const Icons = {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -425,6 +451,7 @@ export const Icons = {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -440,6 +467,7 @@ export const Icons = {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -455,6 +483,7 @@ export const Icons = {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -470,6 +499,7 @@ export const Icons = {
       viewBox="0 0 20 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -485,6 +515,7 @@ export const Icons = {
       height="1227"
       viewBox="0 0 1200 1227"
       fill="none"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -500,6 +531,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -518,6 +550,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -543,6 +576,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -558,6 +592,7 @@ export const Icons = {
       viewBox="0 0 128 128"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <circle cx="64" cy="64" r="20" fill="currentColor" />
@@ -579,6 +614,7 @@ export const Icons = {
       viewBox="0 0 24 21"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <g clip-path="url(#clip0_6482_601)">
@@ -601,6 +637,7 @@ export const Icons = {
       viewBox="0 0 512 512"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -616,6 +653,7 @@ export const Icons = {
       viewBox="0 0 300 300"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -633,6 +671,7 @@ export const Icons = {
       viewBox="4 2 24 28"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -648,6 +687,7 @@ export const Icons = {
       viewBox="0 0 300 332"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -675,6 +715,7 @@ export const Icons = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path

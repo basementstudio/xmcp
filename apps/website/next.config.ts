@@ -88,14 +88,31 @@ const nextConfig: NextConfig = {
           has: acceptsMarkdown,
           destination: "/llms-blog.mdx/:slug+",
         },
+        // Single-segment `:slug` so the /templates index (handled above) and
+        // /templates/category/* keep their own behavior.
+        {
+          source: "/templates/:slug",
+          has: acceptsMarkdown,
+          destination: "/llms-templates.mdx/:slug",
+        },
       ],
       afterFiles: [
         { source: "/docs/:slug*.md", destination: "/llms.mdx/:slug*" },
         { source: "/docs/:slug*.mdx", destination: "/llms.mdx/:slug*" },
-        { source: "/docs.md", destination: "/llms.txt" },
-        { source: "/docs.mdx", destination: "/llms.txt" },
+        // The docs index page's own markdown — the site-wide index lives at
+        // /llms.txt, and Accept-negotiation on /docs resolves here too.
+        { source: "/docs.md", destination: "/llms.mdx" },
+        { source: "/docs.mdx", destination: "/llms.mdx" },
         { source: "/blog/:slug*.md", destination: "/llms-blog.mdx/:slug*" },
         { source: "/blog/:slug*.mdx", destination: "/llms-blog.mdx/:slug*" },
+        {
+          source: "/templates/:slug.md",
+          destination: "/llms-templates.mdx/:slug",
+        },
+        {
+          source: "/templates/:slug.mdx",
+          destination: "/llms-templates.mdx/:slug",
+        },
       ],
     };
   },

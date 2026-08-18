@@ -149,7 +149,8 @@ server.listen(3000, () => {
   };
 
   return (
-    <div className="min-h-screen bg-transparent py-12">
+    <main id="main-content" className="min-h-screen bg-transparent py-12">
+      <h1 className="sr-only">Terminal playground</h1>
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col gap-8 max-w-none">
           <div className="flex justify-center">
@@ -164,6 +165,6 @@ server.listen(3000, () => {
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

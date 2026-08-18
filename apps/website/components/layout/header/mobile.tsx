@@ -56,7 +56,7 @@ export const MobileMenu = () => {
           className="w-full bg-black/95 border-white/10 data-[state=closed]:duration-500 z-50 top-12"
         >
           <div className="flex flex-col items-center justify-center gap-8 mt-8 min-h-[60vh]">
-            <nav className="flex flex-col items-center gap-6">
+            <nav aria-label="Main" className="flex flex-col items-center gap-6">
               <div
                 className="animate-fade-in-up"
                 style={{ animationDelay: "0.1s" }}

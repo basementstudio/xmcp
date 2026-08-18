@@ -22,7 +22,10 @@ export const Footer = () => {
           <Icons.vercelGeist aria-hidden="true" className="h-3.5 w-auto" />
         </AnimatedLink>
       </div>
-      <div className="flex-1 flex gap-4 justify-center sm:justify-end">
+      <nav
+        aria-label="Footer"
+        className="flex-1 flex gap-4 justify-center sm:justify-end"
+      >
         <AnimatedLink
           href="https://npmjs.com/package/xmcp"
           target="_blank"
@@ -51,7 +54,7 @@ export const Footer = () => {
         >
           Discord
         </AnimatedLink>
-      </div>
+      </nav>
     </footer>
   );
 };

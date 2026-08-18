@@ -67,6 +67,7 @@ function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
       <button
         type="button"
         onClick={handleCopy}
+        aria-label="Copy conversation"
         className="cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
         disabled={!hasMessages}
       >
@@ -88,6 +89,7 @@ function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
       <button
         type="button"
         onClick={() => regenerate()}
+        aria-label="Regenerate response"
         className="cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
         disabled={
           !hasMessages ||
@@ -99,6 +101,7 @@ function AskAIActions({ alwaysShow = false }: { alwaysShow?: boolean }) {
       </button>
       <button
         type="button"
+        aria-label="Clear conversation"
         className="cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
         onClick={() => setMessages([])}
         disabled={!hasMessages}
@@ -149,6 +152,7 @@ function AskAIInput({
         id="ask-ai-input"
         type="text"
         value={input}
+        aria-label="Ask AI anything"
         placeholder="Ask AI anything..."
         className="w-0 flex-1 text-lg placeholder:text-brand-neutral-200 focus-visible:!outline-none focus:outline-none leading-none"
         onChange={(e) => {
@@ -169,7 +173,12 @@ function AskAIInput({
         }}
       />
       {isLoading ? (
-        <button key="bn" type="button">
+        <button
+          key="bn"
+          type="button"
+          aria-label="Generating response"
+          disabled
+        >
           <Loader2 className="size-4 animate-spin text-brand-neutral-100" />
         </button>
       ) : (
@@ -177,6 +186,7 @@ function AskAIInput({
           <button
             key="bn"
             type="button"
+            aria-label="Send message"
             className="transition-opacity duration-200 shrink-0 disabled:text-brand-neutral-400 disabled:cursor-not-allowed text-brand-white focus-visible:outline"
             disabled={input.length === 0}
             onClick={onStart}
@@ -412,6 +422,7 @@ function MobilePanel({
           <button
             type="button"
             onClick={() => onOpenChange(false)}
+            aria-label="Close dialog"
             className="cursor-pointer text-brand-white hover:text-brand-neutral-50 transition-colors"
           >
             <X className="size-5" />

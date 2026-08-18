@@ -28,10 +28,10 @@ npx create-xmcp-app@latest
 
 ## Markdown mirrors
 
-Append \`.md\` to any docs or blog URL for a markdown version of that page, or send \`Accept: text/markdown\` to the HTML URL.
+Append \`.md\` to any docs, blog, or template detail URL for a markdown version of that page, or send \`Accept: text/markdown\` to the HTML URL.
 
 - [llms.txt](${SITE_URL}/llms.txt): index of all docs, blog posts, and templates
-- [llms-full.txt](${SITE_URL}/llms-full.txt): complete documentation content in one file
+- [llms-full.txt](${SITE_URL}/llms-full.txt): complete documentation and blog content in one file
 - [faq.md](${SITE_URL}/faq.md): frequently asked questions in markdown
 
 ## Source

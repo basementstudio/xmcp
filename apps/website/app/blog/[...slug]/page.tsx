@@ -13,7 +13,7 @@ import {
 } from "@/utils/blog";
 import { PostAuthors } from "@/components/blog/post-authors";
 import { PageActions } from "@/components/page-actions";
-import { getBaseUrl, SITE_URL } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBlogPostingSchema,
@@ -103,8 +103,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
-  const baseUrl = getBaseUrl();
-  const meta = getBlogMetadata(slug, baseUrl);
+  const meta = getBlogMetadata(slug, SITE_URL);
   if (!meta) notFound();
 
   const { title, description, ogImageUrl } = meta;
@@ -127,6 +126,8 @@ export async function generateMetadata(
       siteName: "xmcp",
       type: "article",
       locale: "en_US",
+      ...(meta.date ? { publishedTime: meta.date } : {}),
+      authors: meta.authors.map((author) => author.xUrl),
       images: {
         url: ogImageUrl,
         width: 1200,

@@ -50,9 +50,9 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
               )}
             </div>
 
-            <h1 className="text-base md:text-2xl text-brand-white font-medium mb-3 md:mb-4 leading-tight">
+            <h2 className="text-base md:text-2xl text-brand-white font-medium mb-3 md:mb-4 leading-tight">
               {featuredPost.title}
-            </h1>
+            </h2>
 
             {featuredPost.description && (
               <p className="text-sm md:text-base text-brand-neutral-200 leading-relaxed">

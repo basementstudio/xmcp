@@ -126,7 +126,9 @@ function Sidebar() {
         !open && "max-md:invisible"
       )}
     >
-      {children}
+      <nav aria-label="Docs" className="contents">
+        {children}
+      </nav>
     </aside>
   );
 }

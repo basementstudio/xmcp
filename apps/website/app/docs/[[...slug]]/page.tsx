@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
 import { CodeBlock } from "@/components/codeblock";
-import { getBaseUrl, SITE_URL } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -91,8 +91,7 @@ export async function generateMetadata(
   props: PageProps<"/docs/[[...slug]]">
 ): Promise<Metadata> {
   const params = await props.params;
-  const baseUrl = getBaseUrl();
-  const meta = getDocsMetadata(params.slug, baseUrl);
+  const meta = getDocsMetadata(params.slug, SITE_URL);
   if (!meta) notFound();
 
   const title = meta.title + " | xmcp Documentation";
