@@ -65,7 +65,11 @@ prepare_consumer "xmcp-http" "$HTTP_APP"
 (cd "$HTTP_APP" && npx xmcp build >build.log 2>&1) \
   || { cat "$HTTP_APP/build.log" >&2; fail "xmcp build through the shim (HTTP consumer)"; }
 [ -f "$HTTP_APP/dist/http.js" ] || fail "shim build produced no dist/http.js"
-pass "shim resolves project-installed @xmcp-dev/compiler and builds"
+# The fixture declares "type": "module", so the build must emit ESM output
+# with the dist/package.json marker that keeps the artifact self-contained.
+grep -q '"type":"module"' "$HTTP_APP/dist/package.json" 2>/dev/null \
+  || fail "ESM build did not emit the dist/package.json module marker"
+pass "shim resolves project-installed @xmcp-dev/compiler and builds (ESM)"
 
 # --- Stage 3: HTTP artifact runs without node_modules ------------------------
 HTTP_DEPLOY="$WORK_DIR/deploy-http"
@@ -148,5 +152,35 @@ pass "missing @xmcp-dev/compiler exits non-zero with the install hint"
 (cd "$HTTP_APP" && node --input-type=module -e 'await import("xmcp/config")') \
   || fail "import(\"xmcp/config\")"
 pass "xmcp/config resolves via require and import"
+
+# --- Stage 7: CommonJS projects still get CommonJS output --------------------
+# Strip "type": "module" from the HTTP consumer and rebuild.
+node -e '
+const fs = require("fs");
+const pkgPath = process.argv[1];
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+delete pkg.type;
+fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+' "$HTTP_APP/package.json"
+(cd "$HTTP_APP" && rm -rf dist .xmcp && npx xmcp build >build-cjs.log 2>&1) \
+  || { cat "$HTTP_APP/build-cjs.log" >&2; fail "xmcp build in CommonJS mode"; }
+[ ! -f "$HTTP_APP/dist/package.json" ] \
+  || fail "CommonJS build unexpectedly emitted a dist/package.json marker"
+
+CJS_DEPLOY="$WORK_DIR/deploy-http-cjs"
+mkdir -p "$CJS_DEPLOY"
+cp -R "$HTTP_APP/dist" "$CJS_DEPLOY/dist"
+(cd "$CJS_DEPLOY" && node dist/http.js >server.log 2>&1) &
+SERVER_PID=$!
+for _ in $(seq "$READY_ATTEMPTS"); do
+  if curl -s -o /dev/null --max-time "$REQUEST_TIMEOUT_S" "http://127.0.0.1:$HTTP_PORT/mcp"; then break; fi
+  kill -0 "$SERVER_PID" 2>/dev/null || { cat "$CJS_DEPLOY/server.log" >&2; fail "CommonJS HTTP server exited early"; }
+  sleep "$READY_INTERVAL_S"
+done
+CJS_RES="$(mcp_post '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"add","arguments":{"a":2,"b":3}}}')"
+echo "$CJS_RES" | grep -q '"5"' || { echo "$CJS_RES" >&2; fail "CommonJS HTTP tools/call add(2,3)"; }
+{ kill "$SERVER_PID" && wait "$SERVER_PID"; } 2>/dev/null || true
+SERVER_PID=""
+pass "CommonJS project still builds and serves CommonJS output"
 
 echo "All split E2E checks passed."

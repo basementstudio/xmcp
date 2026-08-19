@@ -13,6 +13,7 @@ import {
   adapterOutputPath,
   cloudflareOutputPath,
   resolveXmcpSrcPath,
+  runtimeFolderPath,
 } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
@@ -21,12 +22,25 @@ import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
+  EmitModulePackageJsonPlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
 import { getExternals } from "./get-externals";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 import fs from "fs";
+
+/** Reads the project's package.json "type" field to infer the output format */
+function projectPrefersEsm(projectFolder: string): boolean {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(projectFolder, "package.json"), "utf-8")
+    ) as { type?: string };
+    return packageJson.type === "module";
+  } catch {
+    return false;
+  }
+}
 
 /** Creates the bundler configuration that xmcp will use to bundle the user's code */
 export function getRspackConfig(
@@ -36,6 +50,13 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
+  // ESM output only applies to the plain node server builds: Cloudflare is
+  // already ESM, and adapter output is consumed by the host framework's
+  // own module pipeline.
+  const isEsmOutput =
+    !isCloudflare &&
+    !xmcpConfig.experimental?.adapter &&
+    projectPrefersEsm(processFolder);
   const projectZodPath = path.join(processFolder, "node_modules", "zod");
   const zodAliases: ResolveAlias = fs.existsSync(projectZodPath)
     ? {
@@ -122,7 +143,7 @@ export function getRspackConfig(
       filename: outputFilename,
       path: outputPath,
       globalObject: "globalThis",
-      ...(isCloudflare
+      ...(isCloudflare || isEsmOutput
         ? {
             library: { type: "module" },
             chunkFormat: "module",
@@ -139,8 +160,19 @@ export function getRspackConfig(
       },
     },
     target: isCloudflare ? "webworker" : "node",
-    externals: isCloudflare ? { async_hooks: "async_hooks" } : getExternals(),
-    experiments: isCloudflare ? { outputModule: true } : undefined,
+    externals: isCloudflare
+      ? { async_hooks: "async_hooks" }
+      : getExternals(isEsmOutput),
+    // The node externals preset emits require() for builtins even in module
+    // output; disable it for ESM so getExternals handles builtins through
+    // externalsType node-commonjs (createRequire) instead.
+    ...(isEsmOutput
+      ? {
+          externalsType: "node-commonjs" as const,
+          externalsPresets: { node: false },
+        }
+      : {}),
+    experiments: isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
     resolve: {
       fallback: {
         process: false,
@@ -181,11 +213,25 @@ export function getRspackConfig(
           })
         : null,
       new InjectRuntimePlugin(),
+      isEsmOutput ? new EmitModulePackageJsonPlugin() : null,
       new CreateTypeDefinitionPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
     module: {
       rules: [
+        // The prebuilt runtime files copied into .xmcp are CommonJS; when the
+        // application package.json declares "type": "module" they would be
+        // parsed as strict ESM and their require() calls left unresolved.
+        ...(isEsmOutput
+          ? [
+              {
+                test: /\.js$/,
+                include: runtimeFolderPath,
+                exclude: /import-map\.js$/,
+                type: "javascript/dynamic" as const,
+              },
+            ]
+          : []),
         {
           test: /\.(ts|tsx)$/,
           use: {
