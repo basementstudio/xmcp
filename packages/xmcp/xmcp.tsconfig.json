@@ -14,10 +14,10 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["src/*"]
     },
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src/types/adapter.d.ts",
@@ -25,6 +25,7 @@
     "src/cloudflare.ts",
     "src/host-bridge.ts",
     "src/index.ts",
-    "src/runtime/headers.ts",
-  ],
+    "src/config/**/*.ts",
+    "src/runtime/headers.ts"
+  ]
 }

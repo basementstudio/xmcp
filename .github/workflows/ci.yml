@@ -64,6 +64,33 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           exit 1
 
+  e2e-split:
+    # End-to-end checks for the runtime/compiler split: the packed tarballs,
+    # the CLI shim, the missing-compiler error path, and built HTTP/stdio
+    # servers running from dist/ without node_modules.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run split E2E checks
+        run: bash scripts/test-split-e2e.sh
+
   build-and-test:
     runs-on: ubuntu-latest
 

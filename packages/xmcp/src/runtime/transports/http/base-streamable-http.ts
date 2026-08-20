@@ -1,4 +1,4 @@
-import { TemplateConfig } from "@/compiler/config/schemas";
+import type { TemplateConfig } from "@/config/schemas";
 import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport";
 import { MessageExtraInfo } from "@modelcontextprotocol/sdk/types";

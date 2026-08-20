@@ -300,6 +300,9 @@ importers:
       '@types/react-dom':
         specifier: 19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
@@ -361,6 +364,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
@@ -385,6 +391,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/better-auth-http:
     dependencies:
@@ -404,6 +414,9 @@ importers:
       '@types/pg':
         specifier: ^8.15.6
         version: 8.15.6
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/better-auth-nextjs:
     dependencies:
@@ -447,6 +460,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
@@ -471,6 +487,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/cloudflare-workers:
     dependencies:
@@ -484,6 +504,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241112.0
         version: 4.20260127.0
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       concurrently:
         specifier: ^9.2.0
         version: 9.2.1
@@ -505,6 +528,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/custom-bundler-config:
     dependencies:
@@ -514,6 +541,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/custom-paths:
     dependencies:
@@ -523,6 +554,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/descope-http:
     dependencies:
@@ -535,6 +570,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.4.3
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/ext-apps:
     dependencies:
@@ -557,6 +596,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.2
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/external-clients:
     dependencies:
@@ -572,6 +614,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/headers:
     dependencies:
@@ -581,6 +627,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/http-transport:
     dependencies:
@@ -590,6 +640,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/mcp-app-css-modules:
     dependencies:
@@ -612,6 +666,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/mcp-app-react:
     dependencies:
@@ -634,6 +691,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/mcp-app-react-tailwind:
     dependencies:
@@ -659,6 +719,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       postcss:
         specifier: ^8.5.23
         version: 8.5.23
@@ -677,6 +740,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/middlewares-api-key:
     dependencies:
@@ -686,6 +753,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/middlewares-array:
     dependencies:
@@ -695,6 +766,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/middlewares-custom:
     dependencies:
@@ -711,6 +786,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/middlewares-jwt:
     dependencies:
@@ -720,6 +798,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/polar-http:
     dependencies:
@@ -732,6 +814,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/scalekit-http:
     dependencies:
@@ -744,6 +830,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/stdio-transport:
     dependencies:
@@ -753,6 +843,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/template-config:
     dependencies:
@@ -762,6 +856,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/with-express:
     dependencies:
@@ -778,6 +876,9 @@ importers:
       '@types/node':
         specifier: ^20.19.26
         version: 20.19.26
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -800,6 +901,9 @@ importers:
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       tsx:
         specifier: ^4.19.4
         version: 4.21.0
@@ -849,6 +953,9 @@ importers:
       '@types/node':
         specifier: ^20.19.26
         version: 20.19.26
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -898,6 +1005,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
@@ -953,6 +1063,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
       eslint:
         specifier: ^9.39.1
         version: 9.39.1(jiti@2.6.1)
@@ -977,6 +1090,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/x402-http:
     dependencies:
@@ -989,6 +1106,10 @@ importers:
       zod:
         specifier: ^4.0.10
         version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   packages/cli:
     dependencies:
@@ -1011,6 +1132,82 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  packages/compiler:
+    dependencies:
+      '@rspack/core':
+        specifier: ^1.6.7
+        version: 1.6.7(@swc/helpers@0.5.15)
+      postcss-loader:
+        specifier: ^8.2.0
+        version: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.23)(typescript@5.9.3)(webpack@5.104.1)
+      ts-checker-rspack-plugin:
+        specifier: ^1.2.1
+        version: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      xmcp:
+        specifier: workspace:>=0.7.0 <0.9.0
+        version: link:../xmcp
+      zod:
+        specifier: ^3.25.76 || ^4.0.0
+        version: 4.4.3
+    devDependencies:
+      '@types/async-retry':
+        specifier: ^1.4.9
+        version: 1.4.9
+      '@types/fs-extra':
+        specifier: ^11.0.4
+        version: 11.0.4
+      '@types/node':
+        specifier: ^22.19.2
+        version: 22.19.2
+      async-retry:
+        specifier: ^1.3.3
+        version: 1.3.3
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
+      chokidar:
+        specifier: ^3.6.0
+        version: 3.6.0
+      ci-info:
+        specifier: ^4.3.1
+        version: 4.3.1
+      commander:
+        specifier: ^11.1.0
+        version: 11.1.0
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      del:
+        specifier: ^7.1.0
+        version: 7.1.0
+      dotenv:
+        specifier: ^16.6.1
+        version: 16.6.1
+      fs-extra:
+        specifier: ^11.3.2
+        version: 11.3.2
+      glob:
+        specifier: ^11.1.0
+        version: 11.1.0
+      is-docker:
+        specifier: ^4.0.0
+        version: 4.0.0
+      is-wsl:
+        specifier: ^3.1.0
+        version: 3.1.0
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
+      memfs:
+        specifier: ^4.51.1
+        version: 4.51.1
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
 
   packages/create-xmcp-app:
     dependencies:
@@ -1367,37 +1564,25 @@ importers:
 
   packages/xmcp:
     dependencies:
-      '@modelcontextprotocol/sdk':
-        specifier: ^1.26.0
-        version: 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
-      '@rspack/core':
-        specifier: ^1.6.7
-        version: 1.6.7(@swc/helpers@0.5.15)
-      jose:
-        specifier: ^6.1.3
-        version: 6.1.3
-      postcss-loader:
-        specifier: ^8.2.0
-        version: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.23)(typescript@5.9.3)(webpack@5.104.1)
       react:
         specifier: '>=19.0.0'
         version: 19.2.1
       react-dom:
         specifier: '>=19.0.0'
         version: 19.2.1(react@19.2.1)
-      ts-checker-rspack-plugin:
-        specifier: ^1.2.1
-        version: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
       zod:
         specifier: ^3.25.76 || ^4.0.0
         version: 4.4.3
     devDependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.26.0
+        version: 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.4.3)
       '@nestjs/common':
         specifier: ^11.1.12
         version: 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@rspack/core':
+        specifier: ^1.6.7
+        version: 1.6.7(@swc/helpers@0.5.15)
       '@types/async-retry':
         specifier: ^1.4.9
         version: 1.4.9
@@ -1467,6 +1652,9 @@ importers:
       is-wsl:
         specifier: ^3.1.0
         version: 3.1.0
+      jose:
+        specifier: ^6.1.3
+        version: 6.1.3
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -1476,6 +1664,9 @@ importers:
       memfs:
         specifier: ^4.51.1
         version: 4.51.1
+      postcss-loader:
+        specifier: ^8.2.0
+        version: 8.2.0(@rspack/core@1.6.7(@swc/helpers@0.5.15))(postcss@8.5.23)(typescript@5.9.3)(webpack@5.104.1)
       raw-body:
         specifier: ^3.0.2
         version: 3.0.2
@@ -1485,9 +1676,15 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      ts-checker-rspack-plugin:
+        specifier: ^1.2.1
+        version: 1.2.1(@rspack/core@1.6.7(@swc/helpers@0.5.15))(typescript@5.9.3)
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
 packages:
 

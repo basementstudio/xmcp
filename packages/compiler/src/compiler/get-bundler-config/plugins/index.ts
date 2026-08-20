@@ -1,0 +1,159 @@
+import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
+import fs from "fs-extra";
+import path from "path";
+import { Compiler } from "@rspack/core";
+import { XmcpConfigOutputSchema } from "@/runtime-config";
+import { getRuntimeDirectoryPath } from "@/runtime-config";
+import { getXmcpConfig } from "@/compiler/compiler-context";
+import {
+  expressTypeDefinition,
+  fastifyTypeDefinition,
+  nestJsTypeDefinition,
+  nextJsTypeDefinition,
+} from "./types";
+
+/**
+ * Read all client bundles from disk for Cloudflare injection.
+ * Returns a record mapping bundle names to their JS and CSS contents.
+ */
+export function readClientBundlesFromDisk(): Record<
+  string,
+  { js: string; css?: string }
+> {
+  const bundles: Record<string, { js: string; css?: string }> = {};
+  const clientDir = path.join(process.cwd(), "dist", "client");
+
+  if (!fs.existsSync(clientDir)) {
+    return bundles;
+  }
+
+  const files = fs.readdirSync(clientDir);
+  const jsFiles = files.filter((f) => f.endsWith(".bundle.js"));
+
+  for (const jsFile of jsFiles) {
+    const bundleName = jsFile.replace(".bundle.js", "");
+    const jsPath = path.join(clientDir, jsFile);
+    const cssPath = path.join(clientDir, `${bundleName}.bundle.css`);
+
+    const js = fs.readFileSync(jsPath, "utf-8");
+    let css: string | undefined;
+
+    if (fs.existsSync(cssPath)) {
+      css = fs.readFileSync(cssPath, "utf-8");
+    }
+
+    bundles[bundleName] = { js, css };
+  }
+
+  return bundles;
+}
+
+function assertRuntimeDirectory(runtimeDirectoryPath: string): void {
+  if (!fs.existsSync(runtimeDirectoryPath)) {
+    throw new Error(
+      "xmcp installation is corrupted — dist/runtime not found. Reinstall xmcp and try again."
+    );
+  }
+}
+
+export function getRuntimeFileNames(): string[] {
+  const runtimeDirectoryPath = getRuntimeDirectoryPath();
+  assertRuntimeDirectory(runtimeDirectoryPath);
+  return fs
+    .readdirSync(runtimeDirectoryPath)
+    .filter((fileName) => fileName.endsWith(".js"));
+}
+
+export function readRuntimeFile(fileName: string): string {
+  const runtimeDirectoryPath = getRuntimeDirectoryPath();
+  assertRuntimeDirectory(runtimeDirectoryPath);
+  return fs.readFileSync(path.join(runtimeDirectoryPath, fileName), "utf-8");
+}
+
+/**
+ * Determines which runtime files are needed based on user configuration.
+ */
+function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
+  const neededFiles: string[] = [];
+
+  // headers included if http is configured
+  if (xmcpConfig.http) {
+    neededFiles.push("headers.js");
+  }
+
+  if (xmcpConfig.stdio) {
+    neededFiles.push("stdio.js");
+  }
+
+  if (xmcpConfig.http) {
+    if (xmcpConfig.experimental?.adapter === "express") {
+      neededFiles.push("adapter-express.js");
+    } else if (xmcpConfig.experimental?.adapter === "nextjs") {
+      neededFiles.push("adapter-nextjs.js");
+    } else if (xmcpConfig.experimental?.adapter === "nestjs") {
+      neededFiles.push("adapter-nestjs.js");
+    } else if (xmcpConfig.experimental?.adapter === "fastify") {
+      neededFiles.push("adapter-fastify.js");
+    } else {
+      neededFiles.push("http.js");
+    }
+  }
+
+  return neededFiles;
+}
+
+export class InjectRuntimePlugin {
+  apply(compiler: Compiler) {
+    let hasRun = false;
+    compiler.hooks.beforeCompile.tap(
+      "InjectRuntimePlugin",
+      (_compilationParams) => {
+        if (hasRun) return;
+        hasRun = true;
+
+        const xmcpConfig = getXmcpConfig();
+        const neededFiles = getNeededRuntimeFiles(xmcpConfig);
+
+        for (const fileName of neededFiles) {
+          fs.writeFileSync(
+            path.join(runtimeFolderPath, fileName),
+            readRuntimeFile(fileName)
+          );
+        }
+      }
+    );
+  }
+}
+
+export class CreateTypeDefinitionPlugin {
+  apply(compiler: Compiler) {
+    let hasRun = false;
+    compiler.hooks.afterEmit.tap(
+      "CreateTypeDefinitionPlugin",
+      (_compilationParams) => {
+        if (hasRun) return;
+        hasRun = true;
+
+        const xmcpConfig = getXmcpConfig();
+
+        // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
+        if (xmcpConfig.experimental?.adapter) {
+          let typeDefinitionContent = "";
+          if (xmcpConfig.experimental?.adapter === "nextjs") {
+            typeDefinitionContent = nextJsTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "express") {
+            typeDefinitionContent = expressTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "nestjs") {
+            typeDefinitionContent = nestJsTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "fastify") {
+            typeDefinitionContent = fastifyTypeDefinition;
+          }
+          fs.writeFileSync(
+            path.join(adapterOutputPath, "index.d.ts"),
+            typeDefinitionContent
+          );
+        }
+      }
+    );
+  }
+}

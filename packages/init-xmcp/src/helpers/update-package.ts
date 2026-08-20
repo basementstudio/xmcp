@@ -14,6 +14,9 @@ export function updatePackageJson(projectPath: string): void {
     packageJson.scripts = {};
   }
 
+  packageJson.devDependencies = packageJson.devDependencies ?? {};
+  packageJson.devDependencies["@xmcp-dev/compiler"] ??= "latest";
+
   // prepend commands to existing scripts - prevent overwriting
   if (packageJson.scripts.build) {
     packageJson.scripts.build = `xmcp build && ${packageJson.scripts.build}`;

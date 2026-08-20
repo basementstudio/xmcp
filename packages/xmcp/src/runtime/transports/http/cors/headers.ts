@@ -1,4 +1,4 @@
-import type { CorsConfig } from "@/compiler/config";
+import type { CorsConfig } from "@/config";
 
 export function buildCorsHeaders(
   config: CorsConfig,

@@ -31,8 +31,8 @@ interface PackageFootprint {
 }
 
 const STAT_FILES = [
-  { label: "Main Compiler", file: "stats-main.json" },
-  { label: "Runtime Compiler", file: "stats-runtime.json" },
+  { label: "Runtime Package", file: "stats-main.json" },
+  { label: "Prebuilt Runtime", file: "stats-runtime.json" },
 ];
 
 function ensureStatsFiles(): void {

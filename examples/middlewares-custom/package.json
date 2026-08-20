@@ -18,6 +18,7 @@
     "zod": "^4.0.10"
   },
   "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
     "@types/jsonwebtoken": "^9.0.10"
   }
 }

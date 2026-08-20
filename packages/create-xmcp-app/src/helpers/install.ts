@@ -12,15 +12,15 @@ function getInstallCommand(
   switch (packageManager) {
     case "yarn":
       // Add --check-engines flag to enforce Node version requirement
-      return `yarn install --check-engines xmcp@${packageVersion}`;
+      return `yarn install --check-engines xmcp@${packageVersion} && yarn add --dev @xmcp-dev/compiler@${packageVersion}`;
     case "pnpm":
-      return `pnpm install xmcp@${packageVersion}`;
+      return `pnpm install xmcp@${packageVersion} && pnpm add --save-dev @xmcp-dev/compiler@${packageVersion}`;
     case "bun":
-      return `bun install xmcp@${packageVersion}`;
+      return `bun install xmcp@${packageVersion} && bun add --dev @xmcp-dev/compiler@${packageVersion}`;
     case "npm":
     default:
       // npm automatically checks engines by default
-      return `npm install xmcp@${packageVersion}`;
+      return `npm install xmcp@${packageVersion} && npm install --save-dev @xmcp-dev/compiler@${packageVersion}`;
   }
 }
 

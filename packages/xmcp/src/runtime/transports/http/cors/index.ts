@@ -1,4 +1,4 @@
-import { CorsConfig } from "@/compiler/config";
+import type { CorsConfig } from "@/config";
 import { ServerResponse } from "http";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { buildCorsHeaders } from "./headers";

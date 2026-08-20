@@ -7,7 +7,7 @@
     }
   ],
   "commit": false,
-  "fixed": [["xmcp", "create-xmcp-app", "init-xmcp"]],
+  "fixed": [["xmcp", "@xmcp-dev/compiler", "create-xmcp-app", "init-xmcp"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

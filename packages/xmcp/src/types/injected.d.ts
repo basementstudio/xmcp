@@ -28,13 +28,13 @@ declare const INJECTED_MIDDLEWARE:
 // ─── DefinePlugin — config objects ────────────────────────────────────────────
 
 declare const HTTP_CONFIG: Omit<
-  NonNullable<import("../compiler/config").ResolvedHttpConfig>,
+  NonNullable<import("../config").ResolvedHttpConfig>,
   "cors"
 >;
 
-declare const HTTP_CORS_CONFIG: import("../compiler/config").CorsConfig;
+declare const HTTP_CORS_CONFIG: import("../config").CorsConfig;
 
-declare const TEMPLATE_CONFIG: import("../compiler/config").TemplateConfig;
+declare const TEMPLATE_CONFIG: import("../config").TemplateConfig;
 
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
@@ -58,5 +58,3 @@ declare const IS_CLOUDFLARE: boolean;
 declare const INJECTED_CLIENT_BUNDLES:
   | Record<string, { js: string; css?: string }>
   | undefined;
-
-declare const RUNTIME_FILES: Record<string, string>;
