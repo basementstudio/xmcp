@@ -1,6 +1,12 @@
 "use client";
 import type * as PageTree from "fumadocs-core/page-tree";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  type ComponentType,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { cn } from "../../lib/cn";
 import { TreeContextProvider, useTreeContext } from "fumadocs-ui/contexts/tree";
 import Link from "fumadocs-core/link";
@@ -12,6 +18,32 @@ import {
   useSidebarOpenState,
 } from "@/hooks/use-sidebar-open-state";
 import { Icons } from "../icons";
+import {
+  ArchiveIcon,
+  AvatarIcon,
+  BarChartIcon,
+  CardStackPlusIcon,
+  ChatBubbleIcon,
+  ColorWheelIcon,
+  CubeIcon,
+  DownloadIcon,
+  FileTextIcon,
+  GlobeIcon,
+  GroupIcon,
+  HomeIcon,
+  IdCardIcon,
+  InfoCircledIcon,
+  LayersIcon,
+  LightningBoltIcon,
+  Link2Icon,
+  ListBulletIcon,
+  LockClosedIcon,
+  MagicWandIcon,
+  MagnifyingGlassIcon,
+  PaperPlaneIcon,
+  PersonIcon,
+  TokensIcon,
+} from "@radix-ui/react-icons";
 
 type SeparatorNode = Extract<PageTree.Node, { type: "separator" }>;
 type GroupedItem =
@@ -145,24 +177,50 @@ const linkVariants = cva(
   }
 );
 
-const sidebarIcons: Partial<Record<string, keyof typeof Icons>> = {
-  "/docs/adapters/nextjs": "nextjs",
-  "/docs/adapters/nestjs": "nestjs",
-  "/docs/adapters/express": "express",
-  "/docs/adapters/fastify": "fastify",
-  "/docs/deployment/vercel": "vercel",
-  "/docs/deployment/cloudflare": "cloudflare",
-  "/docs/deployment/alpic": "alpic",
-  "/docs/deployment/replit": "replit",
-  "/docs/integrations/auth0": "auth0",
-  "/docs/integrations/better-auth": "betterAuth",
-  "/docs/integrations/clerk": "clerk",
-  "/docs/integrations/commet": "commet",
-  "/docs/integrations/descope": "descope",
-  "/docs/integrations/polar": "polar",
-  "/docs/integrations/scalekit": "scalekit",
-  "/docs/integrations/workos": "workos",
-  "/docs/integrations/x402": "x402",
+const sidebarIcons: Partial<
+  Record<string, ComponentType<{ className?: string }>>
+> = {
+  "/docs": HomeIcon,
+  "/docs/getting-started/installation": DownloadIcon,
+  "/docs/getting-started/project-structure": ListBulletIcon,
+  "/docs/getting-started/connecting": Link2Icon,
+  "/docs/configuration/transports": PaperPlaneIcon,
+  "/docs/configuration/server-info": InfoCircledIcon,
+  "/docs/configuration/custom-directories": ArchiveIcon,
+  "/docs/configuration/bundler": CubeIcon,
+  "/docs/configuration/telemetry": BarChartIcon,
+  "/docs/core-concepts/tools": LightningBoltIcon,
+  "/docs/core-concepts/prompts": ChatBubbleIcon,
+  "/docs/core-concepts/resources": FileTextIcon,
+  "/docs/core-concepts/middlewares": LayersIcon,
+  "/docs/core-concepts/css": ColorWheelIcon,
+  "/docs/core-concepts/external-clients": GlobeIcon,
+  "/docs/authentication/api-key": LockClosedIcon,
+  "/docs/authentication/jwt": TokensIcon,
+  "/docs/authentication/oauth": PersonIcon,
+  "/docs/adapters/nextjs": Icons.nextjs,
+  "/docs/adapters/nestjs": Icons.nestjs,
+  "/docs/adapters/express": Icons.express,
+  "/docs/adapters/fastify": Icons.fastify,
+  "/docs/deployment/vercel": Icons.vercel,
+  "/docs/deployment/cloudflare": Icons.cloudflare,
+  "/docs/deployment/alpic": Icons.alpic,
+  "/docs/deployment/replit": Icons.replit,
+  "/docs/integrations/auth0": Icons.auth0,
+  "/docs/integrations/better-auth": Icons.betterAuth,
+  "/docs/integrations/clerk": Icons.clerk,
+  "/docs/integrations/commet": Icons.commet,
+  "/docs/integrations/descope": Icons.descope,
+  "/docs/integrations/polar": Icons.polar,
+  "/docs/integrations/scalekit": Icons.scalekit,
+  "/docs/integrations/workos": Icons.workos,
+  "/docs/integrations/x402": Icons.x402,
+  "/docs/discoverability/smithery": MagnifyingGlassIcon,
+  "/docs/discoverability/mcp-server-card": IdCardIcon,
+  "/docs/guides/xmcp-mcp-server": MagicWandIcon,
+  "/docs/guides/authentication": AvatarIcon,
+  "/docs/guides/roll-out-to-a-team": GroupIcon,
+  "/docs/guides/monetization": CardStackPlusIcon,
 };
 
 function SidebarItem({
@@ -181,8 +239,7 @@ function SidebarItem({
   const pathname = usePathname();
 
   if (item.type === "page") {
-    const iconKey = sidebarIcons[item.url];
-    const PageIcon = iconKey ? Icons[iconKey] : undefined;
+    const PageIcon = sidebarIcons[item.url];
     return (
       <Link
         href={item.url}
@@ -279,7 +336,7 @@ function SidebarSeparator({
         isOpen={isOpen}
         disableInitialAnimation={disableInitialAnimation}
       >
-        <div className="mt-1 pl-8 flex flex-col gap-1">{children}</div>
+        <div className="mt-1 pl-4 flex flex-col gap-1">{children}</div>
       </AnimatedGroup>
     </div>
   );
