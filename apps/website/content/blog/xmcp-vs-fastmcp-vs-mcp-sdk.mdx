@@ -80,6 +80,21 @@ xmcp 0.8 split the product into two packages:
 
 Applications install the compiler as a development dependency. Production `xmcp` installs therefore no longer pull Rspack or TypeScript into the runtime tree. The generated server remains self-contained: removing `node_modules` after the build does not break HTTP, STDIO, CommonJS, ESM, or MCP App artifacts.
 
+To measure that architectural change separately from the SDK v2 migration, we ran the same minimal HTTP fixture on Node 20 against the final 0.7 release (`xmcp@0.7.1`) and the first split release (`xmcp@0.8.0`). The production-install rows use the published packages with development dependencies omitted. The 0.7 build uses its embedded compiler; the 0.8 build uses `@xmcp-dev/compiler` packed from the matching 0.8.0 source tag.
+
+| Measure                        |   xmcp 0.7.1 |  xmcp 0.8.0 | Reduction |
+| ------------------------------ | -----------: | ----------: | --------: |
+| Runtime tarball                |  4,126,552 B | 2,018,611 B |    51.08% |
+| Unpacked runtime package       | 12,398,118 B | 6,054,013 B |    51.17% |
+| Fresh production install       |   101.12 MiB |   10.12 MiB |    89.99% |
+| Production dependency entries  |          169 |           2 |    98.82% |
+| Full development install       |   101.12 MiB |   85.14 MiB |    15.81% |
+| Development dependency entries |          169 |          77 |    54.44% |
+| Generated `dist/` directory    |  1,178,195 B | 1,166,645 B |     0.98% |
+| Generated HTTP artifact        |  1,074,696 B | 1,063,146 B |     1.07% |
+
+This is why the 0.8 split should be described as an install and packaging improvement, not as a dramatic reduction in the generated server itself. The production tree is about 90% smaller because build tools moved out of the runtime package; the self-contained HTTP artifact is roughly unchanged.
+
 The SDK v2 migration also reduced duplicated runtime code. Against an untouched packed xmcp 0.8.0 baseline:
 
 | Measure                          | 0.8.0 baseline | 0.8.1 candidate | Reduction |
