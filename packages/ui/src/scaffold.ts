@@ -163,6 +163,14 @@ export default function UiKitDemo() {
 }
 `,
   },
+  {
+    path: "src/resources/(skill)/xmcp-ui/schema-reference.ts",
+    content: `export {
+  schemaReferenceResourceHandler as default,
+  schemaReferenceResourceMetadata as metadata,
+} from "@xmcp-dev/ui";
+`,
+  },
 ];
 
 function mergeMissing(

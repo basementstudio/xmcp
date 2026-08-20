@@ -166,7 +166,7 @@ const program = new Command()
       template = "mcp-apps";
       templateChoice = "mcp-app";
       transports = ["http"];
-      selectedPaths = ["tools"];
+      selectedPaths = ["tools", "resources"];
       tailwind = true;
     } else if (options.ui) {
       template = "mcp-apps";

@@ -35,6 +35,9 @@ describe("initUi", () => {
     expect(changed).toContain("src/globals.css");
     expect(changed).toContain("src/tools/render-json.tsx");
     expect(changed).toContain("src/tools/ui-kit-demo.tsx");
+    expect(changed).toContain(
+      "src/resources/(skill)/xmcp-ui/schema-reference.ts"
+    );
 
     const packageJson = JSON.parse(
       readFileSync(path.join(cwd, "package.json"), "utf8")

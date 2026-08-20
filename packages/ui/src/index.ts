@@ -14,6 +14,12 @@ export { ui } from "./dsl/index.js";
 // Validation helpers
 export { validateSchema } from "./schema/validate.js";
 export {
+  SCHEMA_REFERENCE,
+  SCHEMA_REFERENCE_URI,
+  schemaReferenceResourceHandler,
+  schemaReferenceResourceMetadata,
+} from "./schema/reference.js";
+export {
   ThemeProvider,
   useTheme,
   createTheme,

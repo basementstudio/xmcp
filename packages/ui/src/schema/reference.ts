@@ -1,6 +1,8 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import type { ResourceMetadata } from "xmcp";
 
-const SCHEMA_REFERENCE = `# xmcp UI — AppSchema Reference
+export const SCHEMA_REFERENCE_URI = "skill://xmcp-ui/schema-reference";
+
+export const SCHEMA_REFERENCE = `# xmcp UI — AppSchema Reference
 
 ## Overview
 
@@ -159,27 +161,21 @@ A search form that calls an MCP tool and displays results in a table:
 \`\`\`
 `;
 
-export function registerUISkillResource(
-  server: McpServer
-): void {
-  server.registerResource(
-    "xmcp-ui-schema-reference",
-    "skill://xmcp-ui/schema-reference",
-    {
-      description:
-        "Component catalog and schema format for generating valid xmcp UI JSON",
-      mimeType: "text/markdown",
-    },
-    async (uri: URL) => ({
-      contents: [
-        {
-          text: SCHEMA_REFERENCE,
-          uri: uri.href,
-          mimeType: "text/markdown",
-        },
-      ],
-    })
-  );
-}
+export const schemaReferenceResourceMetadata: ResourceMetadata = {
+  name: "xmcp-ui-schema-reference",
+  description:
+    "Component catalog and schema format for generating valid xmcp UI JSON",
+  mimeType: "text/markdown",
+};
 
-export { SCHEMA_REFERENCE };
+export function schemaReferenceResourceHandler() {
+  return {
+    contents: [
+      {
+        text: SCHEMA_REFERENCE,
+        uri: SCHEMA_REFERENCE_URI,
+        mimeType: "text/markdown",
+      },
+    ],
+  };
+}
