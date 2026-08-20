@@ -117,10 +117,16 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build main packages only
-        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui
 
       - name: Lint packages (if available)
-        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp || echo "No lint script available, skipping..."
+        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui || echo "No lint script available, skipping..."
+
+      - name: Test UI package
+        run: pnpm --filter @xmcp-dev/ui test
+
+      - name: Build UI showcase example
+        run: pnpm --filter ui-showcase build
 
       - name: Verify xmcp package build
         run: |
