@@ -15,7 +15,7 @@
     "dev": "xmcp dev"
   },
   "dependencies": {
-    "@xmcp-dev/ui": "latest",
+    "@xmcp-dev/ui": "^0.1.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "zod": "^4.0.0"
