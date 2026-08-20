@@ -1,14 +1,18 @@
 import {
   CallToolResult,
-  ServerRequest,
-  ServerNotification,
-} from "@modelcontextprotocol/sdk/types";
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+  InputRequiredResult,
+  ServerContext,
+  isInputRequiredResult,
+  CLIENT_INFO_META_KEY,
+} from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
-import { extractClientInfoFromHeaders } from "@/runtime/utils/client-info";
+import {
+  extractClientInfoFromHeaders,
+  mapImplementationToClientInfo,
+} from "@/runtime/utils/client-info";
 import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
@@ -48,6 +52,7 @@ function validateAgainstOutputSchema(
  */
 export type UserToolResponse =
   | CallToolResult
+  | InputRequiredResult
   | string
   | number
   | Record<string, unknown>;
@@ -62,8 +67,11 @@ export type UserToolHandler = (
  */
 export type McpToolHandler = (
   args: ZodRawShape,
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
-) => CallToolResult | Promise<CallToolResult>;
+  ctx: ServerContext
+) =>
+  | CallToolResult
+  | InputRequiredResult
+  | Promise<CallToolResult | InputRequiredResult>;
 
 function hasUIMeta(meta?: Record<string, any>): boolean {
   return !!(
@@ -73,18 +81,35 @@ function hasUIMeta(meta?: Record<string, any>): boolean {
   );
 }
 
-function createToolExtraArguments(
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
-): ToolExtraArguments {
-  let clientInfo = undefined;
+function headersFromWebRequest(
+  request: Request | undefined
+): Record<string, string> | undefined {
+  if (!request) return undefined;
+  const headers: Record<string, string> = {};
+  request.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  return headers;
+}
 
-  try {
-    const httpRequestContext = getHttpRequestContext();
-    clientInfo =
-      httpRequestContext.clientInfo ??
-      extractClientInfoFromHeaders(httpRequestContext.headers);
-  } catch {
-    // no HTTP request context available (for example, stdio transport)
+function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
+  // 2026-07-28 requests carry client identity in the per-request _meta
+  // envelope; earlier eras fall back to the x-mcp-client-* headers or the
+  // initialize handshake capture.
+  const envelope = ctx.mcpReq.envelope as Record<string, unknown> | undefined;
+  let clientInfo = mapImplementationToClientInfo(
+    envelope?.[CLIENT_INFO_META_KEY] as never
+  );
+
+  if (!clientInfo) {
+    try {
+      const httpRequestContext = getHttpRequestContext();
+      clientInfo =
+        httpRequestContext.clientInfo ??
+        extractClientInfoFromHeaders(httpRequestContext.headers);
+    } catch {
+      // no HTTP request context available (for example, stdio transport)
+    }
   }
 
   if (!clientInfo) {
@@ -95,11 +120,22 @@ function createToolExtraArguments(
     }
   }
 
+  const requestHeaders = headersFromWebRequest(ctx.http?.req);
+
   return {
-    ...(extra as ToolExtraArguments),
+    signal: ctx.mcpReq.signal,
+    authInfo: ctx.http?.authInfo,
+    sessionId: ctx.sessionId,
+    _meta: ctx.mcpReq._meta,
+    requestId: ctx.mcpReq.id,
+    requestInfo: requestHeaders ? { headers: requestHeaders } : undefined,
     clientInfo,
-    elicit: (request, options) =>
-      elicitFromTool(extra as ToolExtraArguments, request, options),
+    sendNotification: (notification) => ctx.mcpReq.notify(notification),
+    sendRequest: (request, resultSchema, options) =>
+      ctx.mcpReq.send(request, resultSchema as never, options),
+    elicit: (request, options) => elicitFromTool(ctx, request, options),
+    inputResponses: ctx.mcpReq.inputResponses,
+    requestState: ctx.mcpReq.requestState,
   };
 }
 
@@ -127,14 +163,20 @@ export function transformToolHandler(
 ): McpToolHandler {
   return async (
     args: ZodRawShape,
-    extra: RequestHandlerExtra<ServerRequest, ServerNotification>
-  ): Promise<CallToolResult> => {
-    const toolExtra = createToolExtraArguments(extra);
+    ctx: ServerContext
+  ): Promise<CallToolResult | InputRequiredResult> => {
+    const toolExtra = createToolExtraArguments(ctx);
     let response: any = handler(args, toolExtra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {
       response = await response;
+    }
+
+    // Multi round-trip interim results (2026-07-28) pass through untouched:
+    // the SDK completes them, the client retries the original request.
+    if (isInputRequiredResult(response)) {
+      return response;
     }
 
     if (typeof response === "string" || typeof response === "number") {

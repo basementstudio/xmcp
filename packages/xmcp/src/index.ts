@@ -26,8 +26,21 @@ export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
 
-export { completable } from "@modelcontextprotocol/sdk/server/completable";
-export { UrlElicitationRequiredError } from "@modelcontextprotocol/sdk/types";
+export {
+  completable,
+  UrlElicitationRequiredError,
+  inputRequired,
+  inputResponse,
+  acceptedContent,
+  isInputRequiredResult,
+  createRequestStateCodec,
+} from "@modelcontextprotocol/server";
+export type {
+  InputRequiredResult,
+  InputRequests,
+  InputResponses,
+  RequestStateCodec,
+} from "@modelcontextprotocol/server";
 
 export {
   createHTTPClient,

@@ -119,6 +119,13 @@ jobs:
       - name: Build main packages only
         run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
 
+      - name: Test xmcp runtime and compiler behavior
+        run: |
+          pnpm --filter xmcp test:config
+          pnpm --filter xmcp test:adapters
+          pnpm --filter xmcp test:runtime
+          pnpm --filter @xmcp-dev/compiler typecheck
+
       - name: Lint packages (if available)
         run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp || echo "No lint script available, skipping..."
 

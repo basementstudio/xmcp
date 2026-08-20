@@ -1,8 +1,9 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/server";
 import { ZodOptional, ZodType, ZodTypeDef, ZodRawShape } from "zod/v3";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
+import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
 
 interface PromptMetadata {
   name: string;
@@ -53,15 +54,16 @@ export function addPromptsToServer(
       );
     }
 
-    // server as any prevents infinite type recursion
-    (server as any).registerPrompt(
+    server.registerPrompt(
       promptConfig.name,
       {
         title: promptConfig.title,
         description: promptConfig.description,
-        argsSchema: schema,
+        argsSchema: rawShapeToStandardSchema(
+          promptSchema as unknown as RawShape
+        ),
       },
-      transformedHandler
+      transformedHandler as never
     );
   });
 

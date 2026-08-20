@@ -311,6 +311,80 @@ export default async function previewElicitation(
 4. Call `preview-elicitation`.
 5. MCPJam opens a small form with an environment select. Accepting returns `action: "accept"` plus `content.environment`. Cancel or decline returns the matching `action`.
 
+<Callout type="info">
+  `extra.elicit()` uses server-initiated requests, which exist on 2025-era MCP
+  connections only. On protocol revision `2026-07-28` it throws with a message
+  pointing at `inputRequired()` below — the multi round-trip replacement that
+  works on both eras.
+</Callout>
+
+### Multi round-trip input (`inputRequired`)
+
+Protocol revision `2026-07-28` replaces server-initiated requests with
+[multi round-trip requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr):
+the tool returns an `input_required` result describing what it needs, the
+client collects it, and retries the same tool call with `inputResponses`
+attached. xmcp re-exports the SDK helpers, so a tool that needs user input
+before continuing looks like this:
+
+```typescript title="src/tools/preview-input-required.ts"
+import { z } from "zod";
+import {
+  acceptedContent,
+  inputRequired,
+  type InferSchema,
+  type ToolExtraArguments,
+} from "xmcp";
+
+export const schema = {
+  theme: z.string().describe("The theme to apply"),
+};
+
+export const metadata = {
+  name: "preview-input-required",
+  description: "Ask the user to confirm before applying a theme",
+};
+
+export default async function previewInputRequired(
+  { theme }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const answer = acceptedContent<{ confirmed: boolean }>(
+    extra.inputResponses,
+    "confirmation"
+  );
+
+  if (!answer) {
+    return inputRequired({
+      inputRequests: {
+        confirmation: inputRequired.elicit({
+          message: `Apply the "${theme}" theme?`,
+          requestedSchema: {
+            type: "object",
+            properties: {
+              confirmed: { type: "boolean", title: "Confirm" },
+            },
+            required: ["confirmed"],
+          },
+        }),
+      },
+    });
+  }
+
+  return answer.confirmed
+    ? `Theme "${theme}" applied.`
+    : `Theme change cancelled.`;
+}
+```
+
+The handler runs once per round: the first call returns the embedded
+elicitation, the retry finds the answer in `extra.inputResponses` and
+completes. On 2025-era connections the SDK's legacy shim converts the
+`inputRequired` return into a real elicitation request automatically, so the
+same tool serves both client generations. To carry server state across rounds
+(remember: it round-trips through the client), mint and verify it with
+`createRequestStateCodec`, also re-exported from `xmcp`.
+
 ### 2. Template Literal Handlers
 
 Return HTML directly to create interactive widgets. xmcp automatically generates

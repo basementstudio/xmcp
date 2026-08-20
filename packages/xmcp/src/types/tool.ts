@@ -1,6 +1,6 @@
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
-import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/sdk/types";
+import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/server";
 import { UIMetadata } from "./ui-meta";
 import type { McpClientInfo } from "./client-info";
 
@@ -120,8 +120,8 @@ export interface ElicitUrlRequest {
 
 export type ElicitRequest = ElicitFormRequest | ElicitUrlRequest;
 
-// The ToolExtraArguments type is based on Parameters<ToolCallback<undefined>>[0]
-// from @modelcontextprotocol/sdk, with xmcp-specific extensions.
+// The ToolExtraArguments type mirrors the request information the MCP SDK
+// exposes to tool handlers (ServerContext), with xmcp-specific extensions.
 /**
  * Extra arguments passed to MCP tool functions.
  */
@@ -181,6 +181,21 @@ export interface ToolExtraArguments {
     request: ElicitRequest,
     options?: ToolRequestOptions
   ) => Promise<ElicitResult>;
+
+  /**
+   * Multi round-trip input responses carried by a retried request
+   * (protocol 2026-07-28). Read with `acceptedContent()` / `inputResponse()`
+   * after returning `inputRequired(...)` from a previous round. Values come
+   * from the client and are not validated — treat them as untrusted input.
+   */
+  inputResponses?: Record<string, unknown>;
+
+  /**
+   * Reads the multi round-trip request state minted by a previous round
+   * (protocol 2026-07-28). Round-trips through the client — verify it with
+   * `createRequestStateCodec` when it influences authorization or logic.
+   */
+  requestState: <T = unknown>() => T | undefined;
 }
 
 export type InferSchema<T extends Record<string, unknown>> = {
