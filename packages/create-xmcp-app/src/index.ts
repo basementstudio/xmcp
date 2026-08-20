@@ -45,6 +45,7 @@ const program = new Command()
   .option("--stdio", "Enable STDIO transport", false)
   .option("--cloudflare, --cf", "Initialize for Cloudflare Workers", false)
   .option("--ui", "Initialize with MCP App template (non-tailwind)", false)
+  .option("--ui-kit", "Initialize with @xmcp-dev/ui starter files", false)
   .option("--tailwind, --tw", "Use Tailwind CSS (only with MCP App)", false)
   .action(async (projectDir, options) => {
     const cloudflareFlag =
@@ -161,7 +162,13 @@ const program = new Command()
       if (options.stdio) transports.push("stdio");
     }
 
-    if (options.ui) {
+    if (options.uiKit) {
+      template = "mcp-apps";
+      templateChoice = "mcp-app";
+      transports = ["http"];
+      selectedPaths = ["tools"];
+      tailwind = true;
+    } else if (options.ui) {
       template = "mcp-apps";
       templateChoice = "mcp-app";
       transports = ["http"];
@@ -170,7 +177,7 @@ const program = new Command()
     }
 
     if (!options.yes) {
-      if (!options.ui) {
+      if (!options.ui && !options.uiKit) {
         const templateAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -198,7 +205,12 @@ const program = new Command()
         }
       }
 
-      if (templateChoice === "mcp-app" && !options.tailwind && !options.ui) {
+      if (
+        templateChoice === "mcp-app" &&
+        !options.tailwind &&
+        !options.ui &&
+        !options.uiKit
+      ) {
         const tailwindAnswers = await inquirer.prompt([
           {
             type: "confirm",
@@ -318,12 +330,18 @@ const program = new Command()
       }
 
       // Default to Tailwind for MCP app template in non-interactive mode
-      if (templateChoice === "mcp-app" && !options.ui) {
+      if (templateChoice === "mcp-app" && !options.ui && !options.uiKit) {
         tailwind = true;
       }
     }
 
-    if (options.ui && options.tailwind) {
+    if (options.uiKit && options.ui) {
+      console.log(
+        chalk.yellow(
+          "Using --ui-kit starter and ignoring --ui because --ui-kit already scaffolds an MCP App."
+        )
+      );
+    } else if (options.ui && options.tailwind) {
       console.log(
         chalk.yellow(
           "Ignoring --tailwind because --ui scaffolds the non-tailwind MCP App template."
@@ -339,18 +357,19 @@ const program = new Command()
 
     const spinner = ora("Creating your xmcp app...").start();
     try {
-        createProject({
-          projectPath: resolvedProjectPath,
-          projectName,
-          packageManager,
-          transports: transports,
-          packageVersion: packageJson.version,
-          skipInstall,
-          paths: selectedPaths,
-          template,
-          tailwind,
-          cloudflare: cloudflareFlag,
-        });
+      createProject({
+        projectPath: resolvedProjectPath,
+        projectName,
+        packageManager,
+        transports: transports,
+        packageVersion: packageJson.version,
+        skipInstall,
+        paths: selectedPaths,
+        template,
+        tailwind,
+        uiKit: Boolean(options.uiKit),
+        cloudflare: cloudflareFlag,
+      });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
 

@@ -1,0 +1,11 @@
+@import "tailwindcss";
+@import "@xmcp-dev/ui/styles.css";
+
+@theme {
+  --font-mono:
+    "SFMono-Regular", "SF Mono", "IBM Plex Mono", "JetBrains Mono", "Fira Code",
+    ui-monospace, monospace;
+  --font-sans:
+    "Geist", "Avenir Next", "Segoe UI", "Helvetica Neue", Arial,
+    ui-sans-serif, sans-serif;
+}

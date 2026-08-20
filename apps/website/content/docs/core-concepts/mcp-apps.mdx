@@ -1,0 +1,237 @@
+---
+title: "MCP Apps"
+metadataTitle: "MCP Apps | xmcp Documentation"
+publishedAt: "2026-04-09"
+summary: "Build MCP Apps that communicate with the host through tool calls, resource reads, display modes, and messaging."
+description: "Reference for MCP App capabilities: callTool, openLink, requestDisplayMode, readResource, sendMessage, updateModelContext, host context, and host capabilities."
+---
+
+## What is an MCP App?
+
+An MCP App is an iframe-based UI that communicates with its host through
+PostMessage and JSON-RPC. The host provides capabilities like tool calling,
+resource reads, display-mode switching, and conversation messaging. Your app
+discovers what the host supports at connection time and can adapt accordingly.
+
+The MCP App runtime is exported from the main `xmcp` package at
+`xmcp/host-bridge`. The `@xmcp-dev/ui` package re-exports a React hook
+(`useMcpApp()`) that wraps the bridge for convenience.
+
+## `useMcpApp()` hook
+
+The recommended way to use MCP App capabilities in React:
+
+```tsx title="src/tools/my-app.tsx"
+import { useMcpApp } from "@xmcp-dev/ui";
+
+export default function MyApp() {
+  const {
+    callTool,
+    openLink,
+    requestDisplayMode,
+    readResource,
+    sendMessage,
+    updateModelContext,
+    logMessage,
+    notifySizeChanged,
+    isConnected,
+    hostContext,
+    hostCapabilities,
+  } = useMcpApp();
+
+  // ...
+}
+```
+
+## Capabilities
+
+### `callTool(name, args?)`
+
+Invoke an MCP tool through the host. The host routes the call to the connected
+MCP server and returns the result.
+
+```tsx
+const result = await callTool("getWeather", { city: "Buenos Aires" });
+// result.content: array of content items (text, images, etc.)
+// result.isError: true if the tool returned an error
+```
+
+### `openLink(url)`
+
+Open a URL in the host's browser. Falls back to `window.open` when no host is
+connected.
+
+```tsx
+await openLink("https://docs.example.com/api");
+```
+
+### `requestDisplayMode(mode)`
+
+Ask the host to switch the app's display mode. Supported modes:
+
+- `"inline"`: embedded in the conversation flow (default)
+- `"fullscreen"`: takes over the full viewport
+- `"pip"`: picture-in-picture floating window
+
+The host may not grant the requested mode. The returned object tells you which
+mode was actually applied.
+
+```tsx
+const { mode } = await requestDisplayMode("fullscreen");
+// mode: the mode the host actually set
+```
+
+### `readResource(uri)`
+
+Read an MCP resource from the server through the host.
+
+```tsx
+const result = await readResource("docs://api-reference");
+// result.contents: array of { uri, mimeType, text, blob }
+```
+
+### `sendMessage(params)`
+
+Send a message to the host conversation. This lets the app communicate back to
+the user or model through the host's chat interface.
+
+```tsx
+const reply = await sendMessage({
+  role: "user",
+  content: "Task completed successfully",
+});
+```
+
+### `updateModelContext(params)`
+
+Inject context into the model's next turn. Use this to provide the model with
+information it should consider in its response.
+
+```tsx
+await updateModelContext({
+  role: "system",
+  content: "The user just approved the deployment",
+});
+```
+
+### `logMessage(params)`
+
+Emit a log notification to the host. This is fire-and-forget and does not wait
+for a response.
+
+```tsx
+logMessage({ content: "Processing started" });
+```
+
+### `notifySizeChanged(dimensions)`
+
+Tell the host that the app's rendered size has changed. The host can use this to
+resize the iframe container.
+
+```tsx
+notifySizeChanged({ width: 600, height: 400 });
+```
+
+For automatic size reporting, use `useAutoMcpAppSize()` instead of calling this
+manually.
+
+## Reactive state
+
+### `isConnected`
+
+Boolean indicating whether the bridge has an active connection to the host. The
+bridge starts connected if it detects a parent window, then marks disconnected
+if no host traffic arrives within the connection timeout (2 seconds by default).
+
+### `hostContext`
+
+The host environment context, updated reactively when the host sends
+`ui/notifications/host-context-changed`. Contains:
+
+| Field                  | Type                          | Description                                         |
+| ---------------------- | ----------------------------- | --------------------------------------------------- |
+| `theme`                | `string`                      | Host color theme (`"light"`, `"dark"`, etc.)        |
+| `displayMode`          | `string`                      | Current display mode                                |
+| `locale`               | `string`                      | Host locale (e.g. `"en-US"`)                        |
+| `timeZone`             | `string`                      | Host timezone                                       |
+| `platform`             | `string`                      | Host platform identifier                            |
+| `availableDisplayModes`| `McpUiDisplayMode[]`          | Which display modes the host supports               |
+| `containerDimensions`  | `{ width, height }`           | Current container size in pixels                    |
+| `safeAreaInsets`        | `{ top, right, bottom, left }`| Safe area insets for the app viewport               |
+| `toolInfo`             | `Record<string, unknown>`     | Metadata about the tool that launched this app      |
+| `deviceCapabilities`   | `Record<string, unknown>`     | Device-level capabilities                           |
+| `styles`               | `McpHostStyleContext`         | Theme variables and CSS provided by the host        |
+
+### `hostCapabilities`
+
+What the host advertises it supports. Use this to conditionally enable features:
+
+| Field               | Type                 | Description                                       |
+| -------------------- | -------------------- | ------------------------------------------------- |
+| `serverTools`        | `{ call, listChanged }` | Whether the host can call tools and track changes |
+| `serverResources`    | `{ read, listChanged }` | Whether the host can read resources               |
+| `openLinks`          | `boolean`            | Whether `openLink` is supported                   |
+| `updateModelContext` | `boolean \| string[]`| Whether model context updates are supported       |
+| `message`            | `boolean`            | Whether `sendMessage` is supported                |
+| `logging`            | `boolean`            | Whether `logMessage` is supported                 |
+| `downloadFile`       | `boolean`            | Whether file downloads are supported              |
+| `sandbox`            | `Record`             | Sandbox restrictions                              |
+
+```tsx
+const { hostCapabilities, openLink } = useMcpApp();
+
+// Only show the link button if the host supports it
+if (hostCapabilities?.openLinks) {
+  await openLink("https://example.com");
+}
+```
+
+## Auto size reporting
+
+`useAutoMcpAppSize()` uses `ResizeObserver` to automatically report size changes
+to the host:
+
+```tsx title="src/tools/my-app.tsx"
+import { useRef } from "react";
+import { AppShell, useAutoMcpAppSize } from "@xmcp-dev/ui";
+
+export default function MyApp() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useAutoMcpAppSize(rootRef);
+
+  return <AppShell ref={rootRef}>...</AppShell>;
+}
+```
+
+## Framework-agnostic usage
+
+If you are not using React or `@xmcp-dev/ui`, the host bridge is available
+directly from the main `xmcp` package:
+
+```ts
+import { createMcpHostBridge } from "xmcp/host-bridge";
+
+const bridge = createMcpHostBridge();
+
+bridge.subscribe((state) => {
+  console.log("Connected:", state.isConnected);
+  console.log("Host context:", state.hostContext);
+});
+
+const result = await bridge.callTool("myTool", { key: "value" });
+```
+
+The bridge exposes the same methods as `useMcpApp()` plus lifecycle controls:
+
+- `getState()`: current bridge state
+- `getHostContext()`: current host context
+- `getHostCapabilities()`: current host capabilities
+- `isConnected()`: connection status
+- `subscribe(listener)`: listen for state changes (returns unsubscribe fn)
+- `dispose()`: clean up listeners and reject pending requests
+
+## References
+
+- [UI Rendering](/docs/guides/ui-rendering)
+- [Tools](/docs/core-concepts/tools)
+- [CSS](/docs/core-concepts/css)

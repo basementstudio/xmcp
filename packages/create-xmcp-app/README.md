@@ -42,7 +42,12 @@ npx create-xmcp-app@latest my-app --skip-install
 - `--http`: Enable HTTP transport
 - `--stdio`: Enable STDIO transport
 - `--ui`: Initialize with MCP App template (non-tailwind)
+- `--ui-kit`: Initialize with MCP App template and @xmcp-dev/ui starter files
 - `--tailwind, --tw`: Use Tailwind CSS (only with MCP App template)
+
+Use `--ui-kit` when you want the MCP App template to start with
+`@xmcp-dev/ui`, Tailwind, a schema-driven `renderJson` tool, and a small
+handwritten React MCP App.
 
 ## Getting Started
 

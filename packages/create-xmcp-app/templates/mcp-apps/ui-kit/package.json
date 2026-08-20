@@ -1,0 +1,30 @@
+{
+  "name": "create-xmcp-app",
+  "version": "0.1.0",
+  "description": "An xmcp MCP App with @xmcp-dev/ui starter files",
+  "keywords": [
+    "mcp",
+    "tailwind",
+    "ui"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev"
+  },
+  "dependencies": {
+    "@xmcp-dev/ui": "latest",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  }
+}

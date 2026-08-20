@@ -11,6 +11,7 @@ import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
 import { ResourceMetadata } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { registerUISkillResource } from "./ui-skill-resource";
 import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
 import {
   loadResourceModules,
@@ -67,6 +68,7 @@ export async function configureServer(
   addToolsToServer(server, toolModules);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
+  registerUISkillResource(server);
   return server;
 }
 
