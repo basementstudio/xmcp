@@ -99,6 +99,11 @@ You can then run the scripts based on the package manager you've set up.
 Based on the transport you've chosen when bootstrapping your project, the [transport] placeholder will be replaced with the appropriate one.
 This is correlated with the `xmcp.config.ts` configuration.
 
+The output format follows your project's `package.json`: with `"type": "module"`
+the build emits ES modules (and writes a `dist/package.json` marker so the
+self-contained `dist` directory keeps running when deployed on its own);
+otherwise it emits CommonJS. No configuration is needed either way.
+
 ## Troubleshooting
 
 If you encounter issues when running the built server, make sure the transport is matching the configured one in `xmcp.config.ts`.

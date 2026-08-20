@@ -1,7 +1,7 @@
 import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
 import fs from "fs-extra";
 import path from "path";
-import { Compiler } from "@rspack/core";
+import { Compiler, Compilation, sources } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getRuntimeDirectoryPath } from "@/runtime-config";
 import { getXmcpConfig } from "@/compiler/compiler-context";
@@ -62,6 +62,32 @@ export function getRuntimeFileNames(): string[] {
   return fs
     .readdirSync(runtimeDirectoryPath)
     .filter((fileName) => fileName.endsWith(".js"));
+}
+
+/**
+ * Marks the output directory as ESM so the self-contained dist keeps running
+ * when deployed away from the project's package.json.
+ */
+export class EmitModulePackageJsonPlugin {
+  apply(compiler: Compiler) {
+    compiler.hooks.thisCompilation.tap(
+      "EmitModulePackageJsonPlugin",
+      (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: "EmitModulePackageJsonPlugin",
+            stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+          },
+          () => {
+            compilation.emitAsset(
+              "package.json",
+              new sources.RawSource(`{"type":"module"}\n`)
+            );
+          }
+        );
+      }
+    );
+  }
 }
 
 export function readRuntimeFile(fileName: string): string {

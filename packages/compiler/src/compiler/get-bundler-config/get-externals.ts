@@ -8,7 +8,9 @@ import { RspackOptions } from "@rspack/core";
  * We want to avoid building node modules.
  * When using Next.js, we want to avoid building tools/*, since the nextjs compiler will handle that code.
  */
-export function getExternals(): RspackOptions["externals"] {
+export function getExternals(
+  esmOutput = false
+): RspackOptions["externals"] {
   const xmcpConfig = getXmcpConfig();
 
   const replacedImports = new Set<string>();
@@ -28,6 +30,12 @@ export function getExternals(): RspackOptions["externals"] {
         builtinModules.includes(request) ||
         builtinModules.includes(request.replace(/^node:/, ""));
       if (isBuiltinModule) {
+        // In ESM output the unprefixed request falls back to the config's
+        // externalsType ("node-commonjs"), which resolves builtins through
+        // createRequire so both import and require usages keep working.
+        if (esmOutput) {
+          return callback(undefined, request);
+        }
         return callback(undefined, `commonjs ${request}`);
       }
 
