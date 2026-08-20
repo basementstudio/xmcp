@@ -1,0 +1,243 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import {
+  fetchTemplateBySlug,
+  fetchTemplateReadme,
+  fetchTemplates,
+} from "@/app/templates/utils/github";
+import {
+  formatRepositoryLabel,
+  humanizeMetadataName,
+  isTypeLabel,
+  normalizeDisplayLabel,
+  rankRelatedItems,
+  stripLeadingHeading,
+} from "@/app/templates/utils/detail";
+import { collectUniqueCategories } from "@/app/templates/utils/categories";
+import { slugifyCategory } from "@/app/templates/utils/slug";
+import { buildDeployOptions } from "@/app/templates/utils/deploy";
+import { TemplateBreadcrumb } from "@/components/templates/detail/breadcrumb";
+import { TemplateDetailHeader } from "@/components/templates/detail/header";
+import { RelatedTemplates } from "@/components/templates/detail/related-items";
+import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
+import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
+import { SITE_URL } from "@/lib/base-url";
+import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
+import { JsonLd } from "@/components/seo/json-ld";
+import {
+  getBreadcrumbSchema,
+  getSoftwareSourceCodeSchema,
+} from "@/lib/structured-data";
+
+export const revalidate = 1800; // 30 minutes
+
+type TemplateDetailPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
+export async function generateStaticParams() {
+  const items = await fetchTemplates();
+  return items.map((item) => ({ slug: item.slug }));
+}
+
+export async function generateMetadata(
+  props: TemplateDetailPageProps
+): Promise<Metadata> {
+  const params = await props.params;
+  const template = await fetchTemplateBySlug(params.slug);
+
+  if (!template) {
+    return {
+      title: "Template not found - xmcp",
+      description: "The requested template could not be found.",
+    };
+  }
+
+  const canonical = `${SITE_URL}/templates/${template.slug}`;
+  const metadataName = humanizeMetadataName(template.name);
+  const metadataTitle = `${metadataName} | xmcp Templates`;
+  const previewImage = resolveTemplatePreviewImage(template);
+  const previewImageUrl = previewImage.src.startsWith("/")
+    ? `${SITE_URL}${previewImage.src}`
+    : previewImage.src;
+  const metadataKeywords = Array.from(
+    new Set(
+      [
+        ...(template.metadataKeywords ?? []),
+        ...(template.tags ?? []),
+        template.category,
+      ].filter(Boolean)
+    )
+  ) as string[];
+
+  return {
+    title: metadataTitle,
+    description: template.description,
+    keywords: metadataKeywords,
+    alternates: {
+      canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
+    },
+    openGraph: {
+      title: metadataTitle,
+      description: template.description,
+      url: canonical,
+      siteName: "xmcp",
+      type: "website",
+      images: [
+        {
+          url: previewImageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: metadataTitle,
+      description: template.description,
+      images: [previewImageUrl],
+    },
+  };
+}
+
+export default async function TemplateDetailPage(
+  props: TemplateDetailPageProps
+) {
+  const params = await props.params;
+  const items = await fetchTemplates();
+  const template = items.find((item) => item.slug === params.slug) ?? null;
+
+  if (!template) {
+    notFound();
+  }
+
+  const readmeContent = await fetchTemplateReadme(template);
+  const moreTemplates = rankRelatedItems(template, items);
+  const deployOptions = buildDeployOptions(template);
+  const pageUrl = `${SITE_URL}/templates/${template.slug}`;
+  const shareMessage = `Check out ${template.name} on xmcp`;
+  const xShareUrl = `https://www.x.com/intent/post?text=${encodeURIComponent(
+    shareMessage
+  )}&url=${encodeURIComponent(pageUrl)}`;
+  const categoryItems = Array.from(
+    new Set([
+      ...(template.category && !isTypeLabel(template.category)
+        ? [template.category]
+        : []),
+      ...(template.tags ?? []).filter((tag) => !isTypeLabel(tag)),
+    ])
+  );
+  const validCategorySlugs = new Set(
+    collectUniqueCategories(items).map((category) => slugifyCategory(category))
+  );
+  const previewImage = resolveTemplatePreviewImage(template);
+  const displayName = normalizeDisplayLabel(template.name);
+  const repositoryLabel = formatRepositoryLabel(template.repositoryUrl);
+  const fallbackReadme = `# README not found
+
+Add a README.md to this template to show content here.`;
+  const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
+
+  return (
+    <main
+      id="main-content"
+      className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10"
+    >
+      <JsonLd
+        data={[
+          getBreadcrumbSchema(
+            [
+              { name: "Home", url: "/" },
+              { name: "Templates", url: "/templates" },
+              { name: displayName, url: `/templates/${template.slug}` },
+            ],
+            SITE_URL
+          ),
+          getSoftwareSourceCodeSchema(
+            {
+              slug: template.slug,
+              name: displayName,
+              description: template.description,
+              repositoryUrl: template.repositoryUrl,
+            },
+            SITE_URL
+          ),
+        ]}
+      />
+      <TemplateBreadcrumb name={displayName} />
+
+      <div className="space-y-4 md:space-y-6">
+        <TemplateDetailHeader
+          name={displayName}
+          description={template.description}
+          demoUrl={template.demoUrl}
+          replitUrl={template.replitUrl}
+          deployOptions={deployOptions}
+        />
+
+        <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500">
+          <div className="aspect-[16/8] relative">
+            {!previewImage.isFallback ? (
+              <Image
+                src={previewImage.src}
+                alt={`${template.name} preview`}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <Image
+                src={previewImage.src}
+                alt={`${template.name} preview`}
+                fill
+                sizes="100vw"
+                unoptimized
+                className={
+                  previewImage.isNextJsFallback
+                    ? "object-contain [object-position:center_70%] scale-90"
+                    : "object-contain [object-position:center_70%]"
+                }
+                priority
+              />
+            )}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
+              <Image
+                src="/textures/text5.png"
+                alt=""
+                aria-hidden
+                fill
+                sizes="100vw"
+                className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
+                priority={false}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <TemplateDetailSidebar
+          template={template}
+          repositoryLabel={repositoryLabel}
+          categoryItems={categoryItems}
+          validCategorySlugs={validCategorySlugs}
+          pageUrl={pageUrl}
+          xShareUrl={xShareUrl}
+        />
+
+        <section className="lg:col-span-9 space-y-6 pl-8 border-l border-brand-neutral-500">
+          <TemplateReadmeContent source={bodyContent} />
+        </section>
+      </div>
+
+      <RelatedTemplates items={moreTemplates} />
+    </main>
+  );
+}

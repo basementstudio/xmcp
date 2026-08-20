@@ -102,7 +102,10 @@ export function SidebarClient({ sidebar }: { sidebar: SidebarItem[] }) {
 
   return (
     <div className="absolute left-0 top-0 hidden h-full min-[1200px]:block w-[340px] z-60">
-      <nav className="sticky left-8 top-30 z-10 flex h-auto min-h-[600px] flex-col px-8 pl-4 lg:h-[calc(100dvh-64px)]">
+      <nav
+        aria-label="Sections"
+        className="sticky left-8 top-30 z-10 flex h-auto min-h-[600px] flex-col px-8 pl-4 lg:h-[calc(100dvh-64px)]"
+      >
         <div className="relative pb-10 pt-10 flex flex-col gap-2.5 overflow-y-auto">
           <div className="flex flex-col gap-4">
             {sidebar.map((item) => {

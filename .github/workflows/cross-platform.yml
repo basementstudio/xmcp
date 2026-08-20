@@ -2,7 +2,7 @@ name: Cross-Platform Tests
 
 on:
   pull_request:
-    branches: [main, canary]
+    branches: [main]
 
 jobs:
   cross-platform-test:

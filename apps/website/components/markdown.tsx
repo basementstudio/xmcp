@@ -1,3 +1,5 @@
+"use client";
+
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
@@ -17,6 +19,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { visit } from "unist-util-visit";
 import type { ElementContent, Root, RootContent } from "hast";
 import { CodeBlock } from "./codeblock";
+import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 export interface Processor {
   process: (content: string) => Promise<ReactNode>;
@@ -100,7 +103,7 @@ function Pre(props: ComponentProps<"pre">) {
       lang={lang}
       code={content.trimEnd()}
       options={{
-        theme: "ayu-dark",
+        theme: xmcpAyuDarkTheme,
         components: {
           pre: ({ ref, ...props }) => (
             <CodeBlock ref={ref} {...props}>

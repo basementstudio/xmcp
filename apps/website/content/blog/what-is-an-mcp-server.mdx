@@ -1,0 +1,60 @@
+---
+title: "What Is an MCP Server? A Plain-English Guide"
+description: "An MCP server exposes tools, resources, and prompts to AI clients over the Model Context Protocol. Here's what that means, why it matters, and how to build one with xmcp."
+summary: "An MCP server exposes tools, resources, and prompts to AI clients over the Model Context Protocol. Here's what that means, why it matters, and how to build one with xmcp."
+category: "guides"
+date: "2026-06-18"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+If you've started building with AI assistants like Claude, you've probably run into the term "MCP server" and wondered what it actually is. This guide explains it in plain English and shows where xmcp fits in.
+
+## The short version
+
+An **MCP server** is a small program that exposes capabilities to an AI client over the **Model Context Protocol (MCP)**. Instead of an AI model guessing or hallucinating, it can call real functions, read real data, and reuse predefined prompts that you control.
+
+MCP standardizes three kinds of capabilities:
+
+- **Tools** — functions the AI can call to take action or fetch live data (query a database, send an email, hit an API).
+- **Resources** — read-only data the AI can load into context (files, records, documentation).
+- **Prompts** — reusable, parameterized instructions the AI can invoke on demand.
+
+Because the protocol is standardized, any MCP-compatible client (Claude, IDEs, and a growing ecosystem of agents) can connect to any MCP server without custom glue code.
+
+## Why MCP servers matter
+
+Before MCP, every integration between an AI app and an external system was bespoke. MCP turns that into a common interface: build your server once, and any compliant client can use it. That means less integration code, predictable behavior, and a clear security boundary — you decide exactly which tools exist and what they're allowed to do.
+
+## Building one with xmcp
+
+[xmcp](/docs) is a TypeScript framework for building and shipping MCP servers with minimal setup. You define a tool as a file, and the framework handles discovery, validation, and transport:
+
+```typescript title="tools/greet.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  name: z.string().describe("The name to greet"),
+};
+
+export const metadata = {
+  name: "greet",
+  description: "Greet a user by name",
+};
+
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+Drop that file in your project, run the dev server, and the tool is automatically exposed over MCP — no manual registration required.
+
+## Where to go next
+
+- **[Installation](/docs/getting-started/installation)** — scaffold a new server in one command.
+- **[Core concepts](/docs)** — tools, resources, prompts, and transports.
+- **[Deployment](/docs)** — ship your server to Vercel with zero config.
+
+MCP servers are the bridge between AI models and the real systems they need to be useful. With xmcp, building that bridge takes minutes instead of days.

@@ -1,6 +1,6 @@
 {
   "title": "Discoverability",
-  "pages": ["smithery"],
+  "pages": ["smithery", "mcp-server-card"],
   "defaultOpen": true,
   "root": true
 }

@@ -36,6 +36,9 @@ export function getEntries(
     if (xmcpConfig.experimental?.adapter === "nestjs") {
       entries["adapter"] = path.join(runtimeFolderPath, "adapter-nestjs.js");
     }
+    if (xmcpConfig.experimental?.adapter === "fastify") {
+      entries["adapter"] = path.join(runtimeFolderPath, "adapter-fastify.js");
+    }
   }
   return entries;
 }

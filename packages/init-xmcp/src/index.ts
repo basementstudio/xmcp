@@ -365,7 +365,7 @@ const program = new Command()
       console.log(chalk.blue("\nNext steps:"));
 
       // code integration for express projects
-      if (detectedFramework !== "nextjs" && detectedFramework !== "nestjs") {
+      if (detectedFramework === "express") {
         const integrationCode = `import { xmcpHandler } from '@xmcp/adapter';
 
 myApp.post("/mcp", xmcpHandler);
@@ -383,6 +383,32 @@ myApp.get("/mcp", xmcpHandler);`;
           console.log(chalk.green(chalk.bgBlack(`  ${line}${padding}`)));
         });
         console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
+      }
+
+      // code integration for Fastify projects
+      if (detectedFramework === "fastify") {
+        const integrationCode = `import { xmcpHandler } from '@xmcp/adapter';
+
+app.post("/mcp", xmcpHandler);
+app.get("/mcp", xmcpHandler);`;
+
+        const lines = integrationCode.split("\n");
+        const maxLength = Math.max(...lines.map((line) => line.length)) + 2;
+
+        console.log(
+          "\nTo get started with the xmcpHandler in your Fastify application, add this code to your server:\n"
+        );
+        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
+        lines.forEach((line) => {
+          const padding = " ".repeat(maxLength - line.length);
+          console.log(chalk.green(chalk.bgBlack(`  ${line}${padding}`)));
+        });
+        console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
+        console.log(
+          chalk.yellow(
+            "\nNote: for browser clients, add CORS and OPTIONS handling at the app level (e.g. @fastify/cors).\n"
+          )
+        );
       }
 
       // code integration for NestJS projects

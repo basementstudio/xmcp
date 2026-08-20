@@ -6,9 +6,19 @@ import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
-import { getBlogMetadata, resolveAuthors } from "@/utils/blog";
+import {
+  getBlogMetadata,
+  getBlogPostBySlug,
+  resolveAuthors,
+} from "@/utils/blog";
 import { PostAuthors } from "@/components/blog/post-authors";
-import { getBaseUrl } from "@/lib/base-url";
+import { PageActions } from "@/components/page-actions";
+import { SITE_URL } from "@/lib/base-url";
+import { JsonLd } from "@/components/seo/json-ld";
+import {
+  getBlogPostingSchema,
+  getBreadcrumbSchema,
+} from "@/lib/structured-data";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -19,8 +29,33 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const MDX = page.data.body;
   const authors = resolveAuthors(page.data.authors);
 
+  const post = getBlogPostBySlug(slug);
+  const structuredData = post
+    ? [
+        getBlogPostingSchema(post, SITE_URL),
+        getBreadcrumbSchema(
+          [
+            { name: "Home", url: "/" },
+            { name: "Blog", url: "/blog" },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ],
+          SITE_URL
+        ),
+      ]
+    : null;
+
   return (
-    <BlogPage toc={page.data.toc} slug={slug}>
+    <BlogPage
+      toc={page.data.toc}
+      slug={slug}
+      pageActions={
+        <PageActions
+          markdownUrl={`/blog/${slug}.md`}
+          trackLocation="blog_page_actions"
+        />
+      }
+    >
+      {structuredData && <JsonLd data={structuredData} />}
       <div className="flex flex-col gap-4">
         {page.data.date && (
           <time
@@ -68,22 +103,31 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const params = await props.params;
   const slug = Array.isArray(params.slug) ? params.slug.join("/") : params.slug;
-  const baseUrl = getBaseUrl();
-  const meta = getBlogMetadata(slug, baseUrl);
+  const meta = getBlogMetadata(slug, SITE_URL);
   if (!meta) notFound();
 
   const { title, description, ogImageUrl } = meta;
+  const canonical = `${SITE_URL}/blog/${slug}`;
 
   return {
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL(SITE_URL),
     title,
     description,
+    alternates: {
+      canonical,
+      types: {
+        "text/markdown": `${canonical}.md`,
+      },
+    },
     openGraph: {
       title,
       description,
+      url: canonical,
       siteName: "xmcp",
       type: "article",
       locale: "en_US",
+      ...(meta.date ? { publishedTime: meta.date } : {}),
+      authors: meta.authors.map((author) => author.xUrl),
       images: {
         url: ogImageUrl,
         width: 1200,

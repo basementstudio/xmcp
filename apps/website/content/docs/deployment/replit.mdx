@@ -2,8 +2,38 @@
 title: "Replit"
 metadataTitle: "Replit Deployment | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Learn how to deploy your xmcp application to Replit."
+summary: "Deploy your xmcp MCP server to Replit with one-click setup, live editing, and managed hosting from your browser in minutes."
 description: "Deploy your xmcp application to Replit with a single click."
 ---
 
 Get started by remixing the [xmcp Replit template](https://replit.com/@matt/MCP-on-Replit-TS#README.md).
+
+Remixing creates your own copy of the template in a Replit workspace. Run it to get a development endpoint in the Preview pane, then select **Publish** to deploy it to a production URL. Your server will be available at `https://<your-app>.replit.app/mcp`, ready to connect from any MCP client.
+
+## Deploy an existing project
+
+You can deploy your xmcp server to Replit in three steps:
+
+1. Import your repository at [replit.com/import](https://replit.com/import). For public repositories, you can also open `https://replit.com/github.com/<owner>/<repo>` directly.
+2. Configure the HTTP server to listen on `0.0.0.0`. Published Replit apps are not reachable when the server binds to xmcp's default host, `127.0.0.1`. Leave the port unset: Replit maps the first port your server opens to the public URL.
+3. Select **Publish** in the workspace and choose a deployment type. Autoscale is a good fit for stateless HTTP MCP servers.
+
+Your configuration should look like this:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: {
+    host: "0.0.0.0",
+  },
+};
+
+export default config;
+```
+
+The run command should build the project and start the HTTP server:
+
+```bash
+npm run build && node dist/http.js
+```
+
+Learn more about deploying xmcp to Replit in the [Replit documentation](https://docs.replit.com/features/publishing/deployment-types).

@@ -3,7 +3,7 @@ import fs from "fs-extra";
 import path from "path";
 import { readTsConfigFile } from "../utils/read-config-file.js";
 
-export type Framework = "nextjs" | "nestjs" | "express";
+export type Framework = "nextjs" | "nestjs" | "express" | "fastify";
 
 export function detectFramework(projectRoot: string): Framework {
   const packageJson = JSON.parse(
@@ -11,13 +11,24 @@ export function detectFramework(projectRoot: string): Framework {
   );
 
   // Check for NestJS
-  if (packageJson.dependencies?.["@nestjs/core"] || packageJson.devDependencies?.["@nestjs/core"]) {
+  if (
+    packageJson.dependencies?.["@nestjs/core"] ||
+    packageJson.devDependencies?.["@nestjs/core"]
+  ) {
     return "nestjs";
   }
 
   // Check for Next.js
   if (packageJson.dependencies?.next || packageJson.devDependencies?.next) {
     return "nextjs";
+  }
+
+  // Check for Fastify
+  if (
+    packageJson.dependencies?.fastify ||
+    packageJson.devDependencies?.fastify
+  ) {
+    return "fastify";
   }
 
   // Default to express

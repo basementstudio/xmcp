@@ -1,12 +1,14 @@
 import { CorsConfig } from "@/compiler/config";
+import { ServerResponse } from "http";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { buildCorsHeaders } from "./headers";
 
 /**
- * Sets CORS headers on the response based on the provided configuration
+ * Sets CORS headers on the response based on the provided configuration.
+ * Accepts any Node ServerResponse (or Express Response, which extends it).
  */
 export function setHeaders(
-  res: Response,
+  res: ServerResponse,
   config: CorsConfig,
   origin?: string
 ): void {

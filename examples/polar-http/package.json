@@ -1,6 +1,7 @@
 {
   "name": "polar-http",
   "version": "0.1.0",
+  "private": true,
   "description": "An xmcp server with tool paywalled by Polar",
   "engines": {
     "node": ">=20.0.0"
@@ -14,5 +15,10 @@
     "xmcp": "workspace:*",
     "@xmcp-dev/polar": "workspace:*",
     "zod": "^4.0.10"
-  }
+  },
+  "keywords": [
+    "monetization",
+    "polar",
+    "http"
+  ]
 }

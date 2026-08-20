@@ -4,35 +4,61 @@ import { cn } from "../../utils/cn";
 import { Icons } from "./icons";
 
 const calloutVariants = cva(
-  "relative rounded-xs border border-brand-neutral-400 p-4 py-3 flex items-start gap-3 my-4",
+  "relative flex flex-col gap-4 my-4 border-l pl-4",
   {
     variants: {
       variant: {
-        default: "bg-background text-foreground",
-        destructive: "text-destructive dark:border-destructive",
-        warning: "text-yellow-700 dark:text-yellow-400",
-        info: "text-blue-700 dark:text-blue-400",
-        success: "text-green-700 dark:text-green-400",
+        default: "border-[#D4943D]",
+        destructive: "border-[#E8737A]",
+        warning: "border-[#E8737A]",
+        info: "border-[#5BB8B0]",
+        success: "border-green-400",
       },
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const titleColorMap: Record<string, string> = {
+  default: "text-[#D4943D]",
+  destructive: "text-[#E8737A]",
+  warning: "text-[#E8737A]",
+  info: "text-[#5BB8B0]",
+  success: "text-green-400",
+};
+
+const defaultTitleMap: Record<string, string> = {
+  default: "Callout",
+  destructive: "Warning",
+  warning: "Warning",
+  info: "Info",
+  success: "Success",
+};
 
 export interface CalloutProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof calloutVariants> {}
+    VariantProps<typeof calloutVariants> {
+  title?: string;
+  icon?: string;
+}
 
 const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
-  ({ className, variant, children, ...props }, ref) => {
+  ({ className, variant, title, children, ...props }, ref) => {
+    const resolvedVariant = variant ?? "default";
+
     let IconComponent: React.FC<React.SVGProps<SVGSVGElement>> | null = null;
-    if (variant === "warning") {
+    if (resolvedVariant === "warning" || resolvedVariant === "destructive") {
       IconComponent = Icons.warning;
-    } else if (variant === "info") {
+    } else if (resolvedVariant === "info") {
       IconComponent = Icons.info;
+    } else if (resolvedVariant === "default") {
+      IconComponent = Icons.callout;
     }
+
+    const displayTitle =
+      title ?? defaultTitleMap[resolvedVariant] ?? "Callout";
+    const titleColor = titleColorMap[resolvedVariant] ?? "";
 
     return (
       <div
@@ -40,12 +66,17 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
         className={cn(calloutVariants({ variant }), className)}
         {...props}
       >
-        {IconComponent && (
-          <span className="mt-1.5 flex-shrink-0">
-            <IconComponent className="size-4" />
+        <div className="flex items-center gap-2">
+          {IconComponent && (
+            <span className="flex-shrink-0">
+              <IconComponent className="size-5" />
+            </span>
+          )}
+          <span className={cn("text-sm font-medium", titleColor)}>
+            {displayTitle}
           </span>
-        )}
-        <div className="[&_p]:leading-relaxed [&_p]:!m-0 [&_p]:text-sm">
+        </div>
+        <div className="[&_p]:leading-relaxed [&_p]:!m-0 [&_p]:text-sm text-foreground">
           {children}
         </div>
       </div>

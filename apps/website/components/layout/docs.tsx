@@ -126,7 +126,9 @@ function Sidebar() {
         !open && "max-md:invisible"
       )}
     >
-      {children}
+      <nav aria-label="Docs" className="contents">
+        {children}
+      </nav>
     </aside>
   );
 }
@@ -142,6 +144,26 @@ const linkVariants = cva(
     },
   }
 );
+
+const sidebarIcons: Partial<Record<string, keyof typeof Icons>> = {
+  "/docs/adapters/nextjs": "nextjs",
+  "/docs/adapters/nestjs": "nestjs",
+  "/docs/adapters/express": "express",
+  "/docs/adapters/fastify": "fastify",
+  "/docs/deployment/vercel": "vercel",
+  "/docs/deployment/cloudflare": "cloudflare",
+  "/docs/deployment/alpic": "alpic",
+  "/docs/deployment/replit": "replit",
+  "/docs/integrations/auth0": "auth0",
+  "/docs/integrations/better-auth": "betterAuth",
+  "/docs/integrations/clerk": "clerk",
+  "/docs/integrations/commet": "commet",
+  "/docs/integrations/descope": "descope",
+  "/docs/integrations/polar": "polar",
+  "/docs/integrations/scalekit": "scalekit",
+  "/docs/integrations/workos": "workos",
+  "/docs/integrations/x402": "x402",
+};
 
 function SidebarItem({
   item,
@@ -159,6 +181,8 @@ function SidebarItem({
   const pathname = usePathname();
 
   if (item.type === "page") {
+    const iconKey = sidebarIcons[item.url];
+    const PageIcon = iconKey ? Icons[iconKey] : undefined;
     return (
       <Link
         href={item.url}
@@ -166,6 +190,7 @@ function SidebarItem({
           active: pathname === item.url,
         })}
       >
+        {PageIcon && <PageIcon className="shrink-0 text-brand-neutral-100" />}
         {item.name}
       </Link>
     );

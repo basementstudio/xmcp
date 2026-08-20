@@ -1,0 +1,98 @@
+---
+title: "How to Add Authentication to Your MCP Server"
+description: "A practical guide to securing MCP server tools with OAuth 2.0 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
+summary: "A practical guide to securing MCP server tools with OAuth 2.0 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
+category: "guides"
+date: "2026-06-30"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+An MCP server without authentication is an open door. Any client that knows your endpoint URL can call your tools, read your resources, and consume your compute. For production MCP servers — especially ones with access to real data or paid APIs — auth is not optional.
+
+This guide explains how MCP authentication works and how xmcp handles it.
+
+## How MCP authentication works
+
+The MCP spec delegates authentication to the **transport layer**. For HTTP transports (which is what most remote MCP servers use), that means OAuth 2.0. The flow looks like this:
+
+1. The MCP client (Claude, Cursor, etc.) tries to connect to your server.
+2. Your server responds with a `401 Unauthorized` and a `WWW-Authenticate` header pointing to your authorization server.
+3. The client initiates an OAuth flow — the user authenticates and grants access.
+4. The client sends subsequent requests with a Bearer token in the `Authorization` header.
+5. Your server validates the token on each request before executing any tool.
+
+The critical part is step 5: your server has to validate every incoming token. That requires an authorization server — something that issues and verifies tokens. Rolling this yourself is non-trivial.
+
+## The problem with DIY auth
+
+Building an OAuth authorization server from scratch means handling token issuance, refresh, revocation, PKCE flows, and client registration. For a side project or internal tool, that's often more work than the MCP server itself.
+
+This is the gap xmcp's auth plugins fill.
+
+## Auth plugins in xmcp
+
+xmcp ships plugins for five auth providers. Each one wires up the OAuth flow — discovery metadata, token validation, redirect handling — without requiring you to build or manage an authorization server.
+
+The available plugins are:
+
+| Plugin | Provider |
+| --- | --- |
+| `@xmcp-dev/better-auth` | Better Auth (self-hosted, PostgreSQL) |
+| `@xmcp-dev/clerk` | Clerk |
+| `@xmcp-dev/auth0` | Auth0 |
+| `@xmcp-dev/workos` | WorkOS |
+| `@xmcp-dev/scalekit` | Scalekit |
+
+You pick the one that matches your auth infrastructure. If you don't have existing auth infrastructure and want full control, Better Auth is the self-hosted option. If you want managed auth, Clerk, Auth0, WorkOS, and Scalekit are all supported.
+
+## A quick example with Better Auth
+
+Install the plugin and your chosen database adapter:
+
+```bash
+npm install @xmcp-dev/better-auth better-auth @auth/pg-adapter pg
+```
+
+Add it to your `xmcp.config.ts`:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+import { betterAuthPlugin } from "@xmcp-dev/better-auth";
+
+const config: XmcpConfig = {
+  http: true,
+  plugins: [
+    betterAuthPlugin({
+      database: {
+        connectionString: process.env.DATABASE_URL!,
+      },
+    }),
+  ],
+};
+
+export default config;
+```
+
+That's the server side. The plugin handles the OAuth metadata endpoint, token validation, and auth error responses. Your tools receive a validated identity on every call without any additional plumbing.
+
+See the [Better Auth integration guide](/blog/better-auth-integration) for the full setup, including database schema and client-side configuration.
+
+## What authenticated tools look like
+
+Once auth is configured, your tool handlers can access the authenticated user's identity from the request context. Tools that don't need the identity don't change at all — auth is enforced at the transport layer, not inside every handler.
+
+## Choosing an auth provider
+
+- **No existing auth, want self-hosted control?** → Better Auth with PostgreSQL.
+- **Want managed auth, fast setup?** → Clerk or Auth0.
+- **Enterprise SSO / B2B?** → WorkOS or Scalekit.
+
+All five work with the same plugin pattern in `xmcp.config.ts`. You can swap providers by swapping the plugin import.
+
+## Next steps
+
+- **[Better Auth integration guide](/blog/better-auth-integration)** — complete setup with database and client configuration.
+- **[Securing Your MCP Server](/blog/securing-your-mcp-server)** — broader security considerations beyond auth.
+- **[Authentication docs](/docs/guides/authentication)** — full reference for all five auth plugins.

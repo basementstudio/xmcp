@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import {
+  extractClientInfoFromHeaders,
   extractClientInfoFromMessage,
   extractClientInfoFromMessages,
   mapImplementationToClientInfo,
@@ -96,4 +97,50 @@ test("mapImplementationToClientInfo maps SDK implementation shape", () => {
     websiteUrl: "https://claude.ai",
     description: "CLI coding agent",
   });
+});
+
+test("extractClientInfoFromHeaders extracts required and optional fields", () => {
+  const result = extractClientInfoFromHeaders({
+    "x-mcp-client-name": "cursor",
+    "x-mcp-client-version": "0.50.1",
+    "x-mcp-client-title": "Cursor",
+    "x-mcp-client-website-url": "https://cursor.com",
+    "x-mcp-client-description": "AI code editor",
+  });
+
+  assert.deepStrictEqual(result, {
+    name: "cursor",
+    version: "0.50.1",
+    title: "Cursor",
+    websiteUrl: "https://cursor.com",
+    description: "AI code editor",
+  });
+});
+
+test("extractClientInfoFromHeaders handles case-insensitive header names", () => {
+  const result = extractClientInfoFromHeaders({
+    "X-MCP-Client-Name": "claude-code",
+    "X-MCP-Client-Version": "2.1.0",
+  });
+
+  assert.deepStrictEqual(result, {
+    name: "claude-code",
+    version: "2.1.0",
+  });
+});
+
+test("extractClientInfoFromHeaders returns undefined without name and version", () => {
+  assert.strictEqual(
+    extractClientInfoFromHeaders({
+      "x-mcp-client-name": "cursor",
+    }),
+    undefined
+  );
+
+  assert.strictEqual(
+    extractClientInfoFromHeaders({
+      "x-mcp-client-version": "0.50.1",
+    }),
+    undefined
+  );
 });

@@ -35,23 +35,19 @@
   }
 
   [data-line-numbers] .twoslash-meta-line& {
-    padding-left: calc(var(--padding-left) + 7 * var(--spacing));
+    padding-left: calc(var(--padding-left) + 6 * var(--spacing));
   }
 
   [data-line-numbers] .line& {
     counter-increment: line;
-    padding-left: calc(var(--padding-left) + 7 * var(--spacing));
+    padding-left: calc(var(--padding-left) + 6 * var(--spacing));
   }
 
   [data-line-numbers] .line&::after {
     position: absolute;
     content: counter(line);
-    color: color-mix(
-      in oklab,
-      var(--fd-counter-color, var(--color-fd-muted-foreground)) 60%,
-      transparent
-    );
-    @apply top-0 left-4;
+    color: var(--color-brand-neutral-300);
+    @apply top-0 left-3;
   }
 
   .diff&::before {

@@ -1,20 +1,53 @@
 import type { Metadata } from "next";
 import { DocsBody } from "@/components/layout/page";
+import { JsonLd } from "@/components/seo/json-ld";
+import { getBreadcrumbSchema } from "@/lib/structured-data";
+import { SITE_URL } from "@/lib/base-url";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Telemetry - xmcp",
   description:
-    "Learn what xmcp collects, why the data matters, and how to disable telemetry at any time.",
+    "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
   alternates: {
     canonical: "https://xmcp.dev/telemetry",
+  },
+  openGraph: {
+    title: "Telemetry - xmcp",
+    description:
+      "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
+    url: "https://xmcp.dev/telemetry",
+    siteName: "xmcp",
+    type: "website",
+    locale: "en_US",
+    images: {
+      url: "/xmcp-og.png",
+      width: 1200,
+      height: 630,
+    },
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Telemetry - xmcp",
+    description:
+      "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
+    images: "/xmcp-og.png",
   },
 };
 
 export default function TelemetryPage() {
   return (
-    <main className="flex w-full justify-center px-4 lg:px-8">
+    <main id="main-content" className="flex w-full justify-center px-4 lg:px-8">
+      <JsonLd
+        data={getBreadcrumbSchema(
+          [
+            { name: "Home", url: "/" },
+            { name: "Telemetry", url: "/telemetry" },
+          ],
+          SITE_URL
+        )}
+      />
       <article className="flex w-full max-w-[860px] flex-col gap-6 py-16">
         <header className="flex flex-col gap-4">
           <h1 className="display font-medium text-white">Telemetry</h1>

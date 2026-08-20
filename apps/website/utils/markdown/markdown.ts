@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import matter from "gray-matter";
+import { parseFrontmatter } from "@/utils/frontmatter";
 import { slugify } from "../../components/markdown/renderer";
 import {
   DOCS_DIRECTORY,
@@ -48,7 +48,7 @@ export function getAllMarkdownFiles(): MarkdownFile[] {
         readDirectory(itemPath, path.join(basePath, cleanDirName));
       } else if (item.endsWith(".mdx")) {
         const fileContent = fs.readFileSync(itemPath, "utf8");
-        const { data, content } = matter(fileContent);
+        const { data, content } = parseFrontmatter(fileContent);
 
         const { order } = extractOrderFromFilename(item);
         const slug = generateSlugFromPath(basePath, item);
@@ -207,7 +207,7 @@ export function getSidebarTreeFromIndex(): SidebarItem[] {
   }
 
   const fileContent = fs.readFileSync(indexFile, "utf8");
-  const { content } = matter(fileContent);
+  const { content } = parseFrontmatter(fileContent);
 
   const lines = content.split("\n");
   const tree: SidebarItem[] = [];

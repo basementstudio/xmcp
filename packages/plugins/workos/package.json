@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/workos",
   "description": "WorkOS AuthKit integration for xmcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -38,12 +38,12 @@
     "express": "^4.22.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.25",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
-    "xmcp": "^0.5.7"
+    "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "^0.5.7"
+    "xmcp": ">=0.7.0 <1.0.0"
   }
 }

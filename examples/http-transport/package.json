@@ -1,7 +1,10 @@
 {
   "name": "HTTP Transport",
+  "private": true,
   "description": "Learn how to set up an xmcp server using HTTP transport",
   "keywords": [
+    "transport",
+    "server",
     "http"
   ],
   "scripts": {

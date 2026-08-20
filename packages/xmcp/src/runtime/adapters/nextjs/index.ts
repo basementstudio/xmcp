@@ -80,3 +80,42 @@ export {
   type AuthConfig,
   type OAuthProtectedResourceMetadata,
 } from "./auth";
+
+/**
+ * MCP Server Card handler for Next.js route files (SEP-1649).
+ * Serves server identity and transport metadata at `/.well-known/mcp/server-card.json`,
+ * enabling agent discovery clients to auto-configure connections.
+ *
+ * @example
+ * // app/.well-known/mcp/server-card.json/route.ts
+ * import { serverCardHandler } from "@xmcp/adapter";
+ * export { serverCardHandler as GET };
+ */
+export function serverCardHandler(request: Request): Response {
+  const url = new URL(request.url);
+  const reversedName = url.hostname.split(".").reverse().join(".");
+  const card: Record<string, unknown> = {
+    $schema:
+      "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+    name: `${reversedName}/mcp`,
+    version: SERVER_INFO.version,
+    description: TEMPLATE_CONFIG.description,
+    title: TEMPLATE_CONFIG.name,
+    remotes: [
+      {
+        type: "streamable-http",
+        url: `${url.origin}${HTTP_CONFIG.endpoint}`,
+      },
+    ],
+  };
+  if (TEMPLATE_CONFIG.icons?.length) {
+    card.icons = TEMPLATE_CONFIG.icons;
+  }
+  return Response.json(card, {
+    headers: {
+      "Content-Type": "application/mcp-server-card+json",
+      "Cache-Control": "public, max-age=3600, must-revalidate",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}

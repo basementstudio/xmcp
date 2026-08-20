@@ -8,6 +8,7 @@ export const Icons = {
       viewBox="0 0 15 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -25,6 +26,7 @@ export const Icons = {
       viewBox="0 0 15 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -42,11 +44,28 @@ export const Icons = {
       viewBox="0 0 22 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
         d="M16.5 0.820068L22 10.3201L16.5 19.8201H5.5L0 10.3201L5.5 0.820068H16.5ZM10 13.3201V15.3201H12V13.3201H10ZM10 5.32007V11.3201H12V5.32007H10Z"
-        fill="#BF6464"
+        fill="#E8737A"
+      />
+    </svg>
+  ),
+  callout: (props: SVGProps<SVGSVGElement>) => (
+    <svg
+      width="20"
+      height="21"
+      viewBox="0 0 20 21"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M10 20.6807C4.47715 20.6807 0 16.2035 0 10.6807C0 5.15781 4.47715 0.680664 10 0.680664C15.5228 0.680664 20 5.15781 20 10.6807C20 16.2035 15.5228 20.6807 10 20.6807ZM9 13.6807V15.6807H11V13.6807H9ZM9 5.68066V11.6807H11V5.68066H9Z"
+        fill="#D4943D"
       />
     </svg>
   ),
@@ -57,11 +76,12 @@ export const Icons = {
       viewBox="0 0 20 21"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
         d="M10 20.6807C4.47715 20.6807 0 16.2035 0 10.6807C0 5.15781 4.47715 0.680664 10 0.680664C15.5228 0.680664 20 5.15781 20 10.6807C20 16.2035 15.5228 20.6807 10 20.6807ZM9 13.6807V15.6807H11V13.6807H9ZM9 5.68066V11.6807H11V5.68066H9Z"
-        fill="#F7F7F7"
+        fill="#5BB8B0"
       />
     </svg>
   ),
@@ -72,6 +92,7 @@ export const Icons = {
       viewBox="0 0 15 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -89,6 +110,7 @@ export const Icons = {
       viewBox="0 0 15 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path
@@ -106,6 +128,7 @@ export const Icons = {
       viewBox="0 0 15 15"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
       {...props}
     >
       <path

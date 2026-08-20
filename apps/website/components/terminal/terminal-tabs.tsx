@@ -6,11 +6,11 @@ import { useState, useMemo } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import bash from "@shikijs/langs/bash";
-import ayuDark from "@shikijs/themes/ayu-dark";
+import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [bash],
-  themes: [ayuDark],
+  themes: [xmcpAyuDarkTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -37,7 +37,7 @@ export function TerminalTabs({
 
   const highlightedContent = useMemo(() => {
     return highlighter.codeToHtml(activeContent, {
-      theme: "ayu-dark",
+      theme: XMCP_SHIKI_THEME_NAME,
       lang: "bash",
     });
   }, [activeContent]);

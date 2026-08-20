@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/x402 --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/x402... --frozen-lockfile
 
       - name: Build @xmcp-dev/x402
-        run: pnpm --filter @xmcp-dev/x402 build
+        run: pnpm turbo build --filter=@xmcp-dev/x402
 
       - name: Publish @xmcp-dev/x402
         env:

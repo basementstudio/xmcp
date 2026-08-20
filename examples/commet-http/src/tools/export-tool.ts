@@ -16,7 +16,7 @@ export default async function exportData({
 }: InferSchema<typeof schema>) {
   const client = getClient();
   const customerId = getCustomerId();
-  const { data } = await client.customer(customerId).features.check("export");
+  const { data } = await client.features.get({ customerId, code: "export" });
 
   if (!data?.allowed) {
     return "Your plan does not include this feature.";

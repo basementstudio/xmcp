@@ -7,9 +7,17 @@ import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { JsonLd } from "@/components/seo/json-ld";
+import { WebMCPProvider } from "@/components/ai/webmcp-provider";
+import { SITE_URL } from "@/lib/base-url";
+import {
+  getOrganizationSchema,
+  getWebSiteSchema,
+} from "@/lib/structured-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +30,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "xmcp — The TypeScript MCP framework",
-  description: "The framework for building & shipping MCP applications.",
+  description:
+    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+  keywords: [
+    "xmcp",
+    "MCP",
+    "Model Context Protocol",
+    "TypeScript",
+    "MCP framework",
+    "MCP server",
+    "AI tools",
+    "LLM tools",
+  ],
   robots: {
     index: true,
     follow: true,
@@ -45,30 +65,36 @@ export const metadata: Metadata = {
       url: "/xmcp-og.png",
       width: 1200,
       height: 630,
+      alt: "xmcp — The TypeScript MCP framework",
     },
     url: "https://xmcp.dev",
     type: "website",
     locale: "en_US",
     title: "xmcp — The TypeScript MCP framework",
-    description: "The framework for building & shipping MCP applications.",
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
   },
   twitter: {
     card: "summary_large_image",
+    site: "@xmcp_dev",
+    creator: "@xmcp_dev",
     title: "xmcp — The TypeScript MCP framework",
-    description: "The framework for building & shipping MCP applications.",
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
     images: {
       url: "/xmcp-og.png",
       width: 1200,
       height: 630,
+      alt: "xmcp — The TypeScript MCP framework",
     },
   },
   manifest: "/site.webmanifest",
   appleWebApp: {
     title: "xmcp",
   },
-  alternates: {
-    canonical: "https://xmcp.dev",
-  },
+  // No root-level alternates.canonical: it would be inherited verbatim by any
+  // route that doesn't set its own (404, /terminal), claiming they are the
+  // homepage. Every indexable page sets its own canonical.
 };
 
 export default function RootLayout({
@@ -84,6 +110,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[200] focus:bg-brand-black focus:text-brand-white focus:px-3 focus:py-2"
+        >
+          Skip to content
+        </a>
+        <JsonLd
+          data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
+        />
         <RootProvider
           search={{
             SearchDialog: DefaultSearchDialog,
@@ -106,8 +141,28 @@ export default function RootLayout({
           <Toaster />
         </RootProvider>
         <Toolbar />
+        <WebMCPProvider />
         <Analytics />
         <SpeedInsights />
+        {/* Google tag (gtag.js) */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-1H605RJV2K"
+        />
+        <Script id="gtag-init">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-1H605RJV2K');
+          `}
+        </Script>
+        <Script
+          async
+          src="https://analytics.ahrefs.com/analytics.js"
+          data-key="3RwN0TIK29DoT05/h0pY1g"
+        />
       </body>
     </html>
   );

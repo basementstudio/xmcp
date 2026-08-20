@@ -11,13 +11,14 @@ export const metadata: ToolMetadata = {
   description: "Chat with AI, tracks token consumption per model",
 };
 
-export default async function aiChat({
-  prompt,
-}: InferSchema<typeof schema>) {
+export default async function aiChat({ prompt }: InferSchema<typeof schema>) {
   const client = getClient();
   const customerId = getCustomerId();
 
-  const { data } = await client.customer(customerId).features.check("ai_chat");
+  const { data } = await client.features.canUse({
+    customerId,
+    code: "ai_chat",
+  });
 
   if (!data?.allowed) {
     return "Your plan does not include this feature.";

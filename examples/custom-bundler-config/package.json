@@ -1,8 +1,11 @@
 {
   "name": "Custom Webpack Config",
+  "private": true,
   "description": "Customize webpack configuration for xmcp builds",
   "keywords": [
-    "config"
+    "configuration",
+    "bundler",
+    "webpack"
   ],
   "scripts": {
     "build": "xmcp build",

@@ -15,7 +15,7 @@ const components: MDXComponents = {
   h4: ({ children }) => <h4 className="text-xl font-bold">{children}</h4>,
   h5: ({ children }) => <h5 className="text-lg font-bold">{children}</h5>,
   h6: ({ children }) => <h6 className="text-base font-bold">{children}</h6>,
-  img: (props) => <Image alt={props.alt} {...props} />,
+  img: (props) => <Image {...props} alt={props.alt ?? ""} />,
   a: (props) => <Link {...props} />,
   code: (props) => <code {...props} />,
 };

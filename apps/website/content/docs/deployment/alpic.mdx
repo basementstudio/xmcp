@@ -2,21 +2,22 @@
 title: "Alpic"
 metadataTitle: "Alpic Deployment | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Learn how to deploy your xmcp application to Alpic."
+summary: "Deploy your xmcp MCP server to Alpic, the MCP-first cloud platform, with one-click zero-configuration deployment and managed hosting."
 description: "Alpic is a MCP-first cloud platform with one-click deployment for xmcp servers. Deploy your xmcp server to Alpic with zero-configuration."
 ---
 
 Get started by bootstrapping a [new project](https://app.alpic.ai/new/clone?repositoryUrl=https://github.com/alpic-ai/mcp-server-template-xmcp).
 
-This command will clone the xmcp template repository and setup zero-configuration deployment to Alpic.
+This clones the xmcp template repository and sets up zero-configuration deployment to Alpic.
 
 ## Deploy an existing project
 
-You can deploy your xmcp server to Alpic in 2 steps:
+You can deploy your xmcp server to Alpic in three steps:
 
-1. Create a new account on [app.alpic.ai](https://app.alpic.ai/).
-2. Connect your Github account to Alpic, and select the repository you want to deploy.
+1. Sign in with GitHub on [app.alpic.ai](https://app.alpic.ai/) and select **New Project**.
+2. Connect your GitHub organization and import the repository you want to deploy. Alpic detects the framework and build commands from the repository automatically, and you can adjust the install and build commands before deploying.
+3. Add the environment variables your server needs and choose the branch to sync with production. Alpic deploys a new version every time you push to that branch.
 
-You can then access your servers's specific MCP analytics, logs, and evals in the [Alpic dashboard](https://app.alpic.ai/).
+Once deployed, you can test your server in the built-in playground and access its MCP analytics, logs, and evals in the [Alpic dashboard](https://app.alpic.ai/).
 
 Learn more about deploying xmcp to Alpic in the [Alpic documentation](https://docs.alpic.ai/).

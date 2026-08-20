@@ -2,7 +2,7 @@
 title: "Transports"
 metadataTitle: "Transports | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Learn how to customize the transports configuration."
+summary: "Configure the transports for your xmcp MCP server, switching between HTTP and STDIO and tuning streamable HTTP and stdio options."
 description: "Customize the transport types for your MCP server."
 ---
 
@@ -41,6 +41,11 @@ const config: XmcpConfig = {
         "Authorization",
         "mcp-session-id",
         "mcp-protocol-version",
+        "x-mcp-client-name",
+        "x-mcp-client-version",
+        "x-mcp-client-title",
+        "x-mcp-client-website-url",
+        "x-mcp-client-description",
       ],
       exposedHeaders: ["Content-Type", "Authorization", "mcp-session-id"],
       credentials: false,

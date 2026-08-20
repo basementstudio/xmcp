@@ -1,5 +1,6 @@
 {
   "name": "Express with Adapter",
+  "private": true,
   "description": "Build a Node.js Express server with xmcp's adapter",
   "main": "dist/index.js",
   "scripts": {
@@ -20,7 +21,9 @@
     "xmcp": "workspace:*"
   },
   "keywords": [
-    "adapter"
+    "adapter",
+    "express",
+    "http"
   ],
   "author": "",
   "license": "MIT"

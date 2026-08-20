@@ -1,23 +1,54 @@
 import {
-  getAllBlogPosts,
+  getListedBlogPosts,
   getFeaturedBlogPost,
   type BlogPost,
 } from "../../utils/blog";
 import { BlogHero } from "../../components/blog/hero";
 import { BlogCard } from "@/components/home/blog";
+import { JsonLd } from "@/components/seo/json-ld";
+import {
+  getBlogCollectionSchema,
+  getBreadcrumbSchema,
+} from "@/lib/structured-data";
+import { SITE_URL } from "@/lib/base-url";
 
 export const dynamic = "force-static";
 
 export const metadata = {
-  title: "Blog - xmcp",
-  description: "Latest updates, guides, and insights about xmcp",
+  title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
+  description:
+    "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
   alternates: {
     canonical: "https://xmcp.dev/blog",
+    types: {
+      "text/markdown": "https://xmcp.dev/blog.md",
+    },
+  },
+  openGraph: {
+    title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
+    description:
+      "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
+    url: "https://xmcp.dev/blog",
+    siteName: "xmcp",
+    type: "website",
+    locale: "en_US",
+    images: {
+      url: "/xmcp-og.png",
+      width: 1200,
+      height: 630,
+    },
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
+    description:
+      "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
+    images: "/xmcp-og.png",
   },
 };
 
 export default function BlogPage() {
-  const posts = getAllBlogPosts();
+  const posts = getListedBlogPosts();
   const featuredPost = getFeaturedBlogPost();
 
   const regularPosts = featuredPost
@@ -25,7 +56,22 @@ export default function BlogPage() {
     : posts;
 
   return (
-    <main className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4">
+    <main
+      id="main-content"
+      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
+    >
+      <JsonLd
+        data={[
+          getBlogCollectionSchema(posts, SITE_URL),
+          getBreadcrumbSchema(
+            [
+              { name: "Home", url: "/" },
+              { name: "Blog", url: "/blog" },
+            ],
+            SITE_URL
+          ),
+        ]}
+      />
       <div className="col-span-full grid grid-cols-12 gap-y-8 py-8 md:py-16">
         <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
           <h1 className="display text-center text-balance z-10 text-gradient">

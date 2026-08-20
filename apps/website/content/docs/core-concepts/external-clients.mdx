@@ -2,7 +2,7 @@
 title: "External Clients"
 metadataTitle: "External Clients | xmcp Documentation"
 publishedAt: "2025-12-19"
-summary: "Connect to external MCP servers and generate typed clients."
+summary: "Connect to external MCP servers over HTTP or STDIO and generate fully typed TypeScript clients with autocomplete for tools, prompts, and resources."
 description: "Learn how to connect to external MCP servers via HTTP or STDIO and generate fully typed TypeScript clients with autocomplete support."
 ---
 
@@ -64,6 +64,21 @@ Example:
     url: "https://mcp.context7.com/mcp",
     headers: [
       { name: "CONTEXT7_API_KEY", env: "CONTEXT7_API_KEY" },
+    ],
+  },
+}
+```
+
+To make HTTP `extra.clientInfo` available on stateless tool calls, repeat client identity in the current request headers:
+
+```typescript
+{
+  assistant: {
+    url: "https://example.com/mcp",
+    headers: [
+      { name: "x-mcp-client-name", value: "my-client" },
+      { name: "x-mcp-client-version", value: "1.0.0" },
+      { name: "x-mcp-client-title", value: "My Client" },
     ],
   },
 }

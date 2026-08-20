@@ -1,7 +1,7 @@
 import fs from "fs";
 import fsPromises from "fs/promises";
 import path from "path";
-import matter from "gray-matter";
+import { parseFrontmatter } from "@/utils/frontmatter";
 import { source } from "@/lib/source";
 
 export function cleanId(id: string) {
@@ -76,7 +76,7 @@ export function getDocsPageBySlug(slug: string[] | undefined): DocsPage | null {
   }
 
   const fileContent = fs.readFileSync(filePath, "utf8");
-  const { data, content } = matter(fileContent);
+  const { data, content } = parseFrontmatter(fileContent);
 
   return {
     slug: slugPath,

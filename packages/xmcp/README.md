@@ -1,4 +1,6 @@
+
 <div align="center">
+
   <a href="https://xmcp.dev">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://assets.basehub.com/bf7c3bb1/303b8a62053c9d86ca3b972b5597ab5c/x.png">
@@ -11,6 +13,12 @@
 <a href="https://www.npmjs.com/package/xmcp"><img alt="NPM version" src="https://img.shields.io/npm/v/xmcp.svg?style=for-the-badge&labelColor=000000"></a>
 <a href="https://github.com/basementstudio/xmcp/blob/main/license.md"><img alt="License" src="https://img.shields.io/npm/l/xmcp.svg?style=for-the-badge&labelColor=000000"></a>
 
+
+</div>
+<div align="center">
+<a href="https://vercel.com/open-source-program">
+  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge-2026.svg" />
+</a>
 </div>
 
 ## The TypeScript MCP Framework
@@ -44,38 +52,6 @@ npx init-xmcp@latest
 
 ⊹ Visit [xmcp.dev](https://xmcp.dev) to learn more about the project.\
 ⊹ Visit [xmcp.dev/docs](https://xmcp.dev/docs) to view the full documentation.
-
-## Tool Elicitation
-
-Tool handlers can request user input with `extra.elicit()`:
-
-```ts
-export default async function (_args, extra) {
-  const result = await extra.elicit({
-    message: "Choose a deployment target",
-    requestedSchema: {
-      type: "object",
-      properties: {
-        environment: {
-          type: "string",
-          title: "Environment",
-          enum: ["staging", "production"],
-        },
-      },
-      required: ["environment"],
-    },
-  });
-
-  if (result.action !== "accept" || !result.content) {
-    return "Deployment cancelled.";
-  }
-
-  return `Deploying to ${result.content.environment}`;
-}
-```
-
-Form mode is intentionally limited to flat primitive fields and string enums.
-Use URL mode for auth, API key, payment, or other sensitive flows.
 
 ## Security
 

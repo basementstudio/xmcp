@@ -1,0 +1,35 @@
+import { getBlogLLMText } from "../../../lib/get-llm-text";
+import { estimateTokens } from "../../../lib/estimate-tokens";
+import { blogSource } from "../../../lib/source";
+import { SITE_URL } from "../../../lib/base-url";
+import { notFound } from "next/navigation";
+
+export const revalidate = false;
+
+export async function GET(
+  _req: Request,
+  { params }: RouteContext<"/llms-blog.mdx/[...slug]">
+) {
+  const { slug } = await params;
+  const page = blogSource.getPage(slug);
+  if (!page) notFound();
+
+  const text = await getBlogLLMText(page);
+
+  return new Response(text, {
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      // This route is the markdown half of Accept-based content negotiation,
+      // so caches must key on Accept to avoid mixing it with the HTML page.
+      Vary: "Accept",
+      "X-Content-Type-Options": "nosniff",
+      // The HTML page stays the sole indexable URL for this content.
+      Link: `<${SITE_URL}${page.url}>; rel="canonical"`,
+      "x-markdown-tokens": String(estimateTokens(text)),
+    },
+  });
+}
+
+export function generateStaticParams() {
+  return blogSource.generateParams();
+}

@@ -11,7 +11,7 @@ export function commetProvider(config: CommetProviderConfig): Middleware {
 
   const client = new Commet({
     apiKey: config.apiKey,
-    environment: config.environment,
+    debug: config.debug,
   });
 
   const headerName = config.customerHeader ?? "customer-key";

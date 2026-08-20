@@ -20,6 +20,16 @@ const OAUTH_PLUGINS = [
     href: "/docs/integrations/clerk",
   },
   {
+    label: "Descope",
+    icon: "descope" as const,
+    href: "/docs/integrations/descope",
+  },
+  {
+    label: "Scalekit",
+    icon: "scalekit" as const,
+    href: "/docs/integrations/scalekit",
+  },
+  {
     label: "WorkOS",
     icon: "workos" as const,
     href: "/docs/integrations/workos",

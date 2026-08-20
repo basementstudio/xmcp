@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/auth0 --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/auth0... --frozen-lockfile
 
       - name: Build @xmcp-dev/auth0
-        run: pnpm --filter @xmcp-dev/auth0 build
+        run: pnpm turbo build --filter=@xmcp-dev/auth0
 
       - name: Publish @xmcp-dev/auth0
         env:

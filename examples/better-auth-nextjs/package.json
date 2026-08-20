@@ -1,9 +1,11 @@
 {
   "name": "Next.js with Better Auth",
+  "private": true,
   "description": "Next.js app with xmcp and better-auth integration",
   "keywords": [
+    "authentication",
     "nextjs",
-    "authentication"
+    "better-auth"
   ],
   "scripts": {
     "dev": "xmcp dev & next dev --turbopack",
@@ -12,8 +14,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "better-auth": "^1.4.9",
-    "next": "16.2.3",
+    "better-auth": "^1.6.22",
+    "next": "16.2.11",
     "pg": "^8.16.3",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -28,7 +30,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
-    "eslint-config-next": "16.2.3",
+    "eslint-config-next": "16.2.6",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3"
   }

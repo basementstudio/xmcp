@@ -17,12 +17,12 @@ export function PostAuthors({ authors }: PostAuthorsProps) {
           key={author.id}
           href={author.xUrl}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="group flex items-center gap-3 hover:text-brand-white transition-colors"
         >
           <Image
             src={author.profilePicture}
-            alt={`${author.name} avatar`}
+            alt=""
             width={40}
             height={40}
             className="h-10 w-10 rounded-full border border-brand-neutral-500 bg-brand-neutral-800 object-cover"

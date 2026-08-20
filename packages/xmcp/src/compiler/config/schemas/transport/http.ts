@@ -1,4 +1,5 @@
 import { z } from "zod/v3";
+import { CLIENT_INFO_HEADER_NAMES } from "@/types/client-info";
 
 // ------------------------------------------------------------
 // Cors config schema
@@ -14,6 +15,7 @@ const corsConfigBaseSchema = z.object({
       "Authorization",
       "mcp-session-id",
       "mcp-protocol-version",
+      ...CLIENT_INFO_HEADER_NAMES,
     ]),
   exposedHeaders: z
     .union([z.string(), z.array(z.string())])
@@ -40,6 +42,9 @@ export const corsConfigSchema = corsConfigBaseSchema
       const headers = new Set(result.allowedHeaders);
       headers.add("mcp-session-id");
       headers.add("mcp-protocol-version");
+      for (const clientInfoHeaderName of CLIENT_INFO_HEADER_NAMES) {
+        headers.add(clientInfoHeaderName);
+      }
       result.allowedHeaders = Array.from(headers);
     }
     if (Array.isArray(result.exposedHeaders)) {

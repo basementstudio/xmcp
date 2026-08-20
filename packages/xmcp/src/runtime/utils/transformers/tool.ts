@@ -8,6 +8,7 @@ import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
+import { extractClientInfoFromHeaders } from "@/runtime/utils/client-info";
 import { elicitFromTool } from "../elicitation";
 import { validateContent } from "../validators";
 
@@ -78,7 +79,10 @@ function createToolExtraArguments(
   let clientInfo = undefined;
 
   try {
-    clientInfo = getHttpRequestContext().clientInfo;
+    const httpRequestContext = getHttpRequestContext();
+    clientInfo =
+      httpRequestContext.clientInfo ??
+      extractClientInfoFromHeaders(httpRequestContext.headers);
   } catch {
     // no HTTP request context available (for example, stdio transport)
   }

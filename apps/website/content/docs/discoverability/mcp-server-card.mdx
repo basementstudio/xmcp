@@ -1,0 +1,73 @@
+---
+title: "MCP Server Card"
+metadataTitle: "MCP Server Card | xmcp Documentation"
+publishedAt: "2026-06-26"
+summary: "xmcp automatically serves an MCP Server Card at /.well-known/mcp/server-card.json so agent discovery tools can find and auto-configure connections to your server."
+description: "Serve an MCP Server Card for automatic agent discovery."
+---
+
+xmcp automatically publishes an [MCP Server Card](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127) at `/.well-known/mcp/server-card.json`. This lets agent discovery tools find your server and auto-configure a connection without any manual setup.
+
+The card is built from the `serverInfo` fields in your `xmcp.config.ts`:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+  template: {
+    name: "My MCP Server",
+    description: "Describe what your server does.",
+    icons: [{ src: "https://example.com/icon.png", mimeType: "image/png" }],
+  },
+};
+
+export default config;
+```
+
+## Standalone HTTP servers
+
+No extra setup needed. Every xmcp HTTP server exposes the card automatically:
+
+```bash
+curl https://your-server.example.com/.well-known/mcp/server-card.json
+```
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "com.example.your-server/mcp",
+  "version": "1.0.0",
+  "title": "My MCP Server",
+  "description": "Describe what your server does.",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://your-server.example.com/mcp"
+    }
+  ]
+}
+```
+
+## Next.js adapter
+
+The route is not scaffolded automatically because not every project needs it. Add it manually when you want discovery:
+
+
+
+```typescript title="app/.well-known/mcp/server-card.json/route.ts"
+import { serverCardHandler } from "@xmcp/adapter";
+export { serverCardHandler as GET };
+```
+
+## Validation
+
+After deploying, verify your server card is discoverable:
+
+```bash
+curl -s https://isitagentready.com/api/scan \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://your-server.example.com"}'
+```
+
+Look for `checks.discovery.mcpServerCard.status === "pass"` in the response.

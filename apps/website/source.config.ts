@@ -8,6 +8,7 @@ import {
   rehypeCode,
   rehypeCodeDefaultOptions,
 } from "fumadocs-core/mdx-plugins";
+import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -24,10 +25,14 @@ export const docs = defineDocs({
 export const blog = defineDocs({
   dir: "content/blog",
   docs: {
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
     schema: frontmatterSchema.extend({
       category: z.string().optional(),
       order: z.number().optional(),
       featured: z.boolean().optional(),
+      unlisted: z.boolean().optional(),
       previewImage: z.string().optional(),
       textureImage: z.string().optional(),
       authors: z.array(z.string()).optional(),
@@ -45,8 +50,8 @@ export default defineConfig({
       langs: ["ts", "js", "html", "tsx", "jsx", "json", "mdx", "bash", "shell"],
       inline: "tailing-curly-colon",
       themes: {
-        light: "ayu-dark",
-        dark: "ayu-dark",
+        light: xmcpAyuDarkTheme,
+        dark: xmcpAyuDarkTheme,
       },
       transformers: [...(rehypeCodeDefaultOptions.transformers ?? [])],
     },

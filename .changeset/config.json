@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "changelog": [
+    "@changesets/cli/changelog",
+    {
+      "repo": "basementstudio/xmcp"
+    }
+  ],
+  "commit": false,
+  "fixed": [["xmcp", "create-xmcp-app", "init-xmcp"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@xmcp-dev/cli"],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  },
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  },
+  "snapshot": {
+    "useCalculatedVersion": true,
+    "prereleaseTemplate": "{tag}-{datetime}"
+  }
+}

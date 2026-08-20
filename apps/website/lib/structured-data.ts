@@ -1,0 +1,258 @@
+import type { BlogPost } from "@/utils/blog";
+import type { DocsMetadata } from "@/utils/docs";
+
+const ORG_NAME = "xmcp";
+const ORG_SAME_AS = [
+  "https://github.com/basementstudio/xmcp",
+  "https://x.com/xmcp_dev",
+];
+
+const absolute = (baseUrl: string, path: string): string =>
+  new URL(path, baseUrl).toString();
+
+// Stable @id so every publisher/creator reference across the page's scripts
+// merges into the one Organization node instead of creating blank-node copies.
+const orgId = (baseUrl: string) => `${baseUrl}/#organization`;
+
+const orgRef = (baseUrl: string) => ({
+  "@type": "Organization",
+  "@id": orgId(baseUrl),
+  name: ORG_NAME,
+  url: baseUrl,
+});
+
+export interface BreadcrumbItem {
+  readonly name: string;
+  readonly url: string;
+}
+
+export interface FaqItem {
+  /** Stable anchor id on /faq, also used as the Question `@id` fragment. */
+  readonly slug: string;
+  readonly question: string;
+  readonly answer: string;
+}
+
+export function getOrganizationSchema(baseUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": orgId(baseUrl),
+    name: ORG_NAME,
+    url: baseUrl,
+    logo: absolute(baseUrl, "/favicon.svg"),
+    sameAs: ORG_SAME_AS,
+  };
+}
+
+export function getSoftwareApplicationSchema(baseUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: ORG_NAME,
+    description:
+      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    url: baseUrl,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Node.js",
+    offers: {
+      "@type": "Offer",
+      price: 0,
+      priceCurrency: "USD",
+    },
+    sameAs: [...ORG_SAME_AS, "https://www.npmjs.com/package/xmcp"],
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export function getBlogCollectionSchema(
+  posts: readonly BlogPost[],
+  baseUrl: string
+) {
+  const url = absolute(baseUrl, "/blog");
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "xmcp Blog",
+    url,
+    mainEntityOfPage: url,
+    publisher: orgRef(baseUrl),
+    hasPart: posts.map((post) => ({
+      "@type": "BlogPosting",
+      headline: post.title,
+      url: absolute(baseUrl, `/blog/${post.slug}`),
+    })),
+  };
+}
+
+export interface TemplateListItem {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+}
+
+export function getTemplatesItemListSchema(
+  templates: readonly TemplateListItem[],
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: templates.map((template, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: template.name,
+      description: template.description,
+      url: absolute(baseUrl, `/templates/${template.slug}`),
+    })),
+  };
+}
+
+export interface TemplateSourceCode {
+  readonly slug: string;
+  readonly name: string;
+  readonly description: string;
+  readonly repositoryUrl: string;
+}
+
+export function getSoftwareSourceCodeSchema(
+  template: TemplateSourceCode,
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    name: template.name,
+    description: template.description,
+    url: absolute(baseUrl, `/templates/${template.slug}`),
+    codeRepository: template.repositoryUrl,
+    programmingLanguage: "TypeScript",
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export interface ShowcaseListItem {
+  readonly name: string;
+  readonly tagline: string;
+  readonly repositoryUrl?: string | null;
+}
+
+export function getShowcaseItemListSchema(
+  items: readonly ShowcaseListItem[],
+  baseUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Community MCP servers",
+    url: absolute(baseUrl, "/showcase"),
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      description: item.tagline,
+      ...(item.repositoryUrl ? { url: item.repositoryUrl } : {}),
+    })),
+  };
+}
+
+export function getWebSiteSchema(baseUrl: string) {
+  // The site search is a client-side dialog with no URL query endpoint, so we
+  // intentionally omit a SearchAction (a sitelinks searchbox needs a crawlable
+  // `?q=` target). Add `potentialAction` here if a search route is introduced.
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: ORG_NAME,
+    url: baseUrl,
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export function getBlogPostingSchema(post: BlogPost, baseUrl: string) {
+  const url = absolute(baseUrl, `/blog/${post.slug}`);
+  const image = post.previewImage
+    ? absolute(baseUrl, post.previewImage)
+    : absolute(baseUrl, `/api/og/blog/${post.slug}`);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description ?? post.summary ?? "",
+    image,
+    url,
+    mainEntityOfPage: url,
+    ...(post.date ? { datePublished: post.date } : {}),
+    author: post.authors.map((author) => ({
+      "@type": "Person",
+      name: author.name,
+      url: author.xUrl,
+      sameAs: author.xUrl,
+    })),
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export function getTechArticleSchema(
+  meta: DocsMetadata,
+  slug: string[] | undefined,
+  baseUrl: string
+) {
+  const slugPath = slug?.join("/") ?? "";
+  const url = absolute(baseUrl, `/docs/${slugPath}`);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: meta.title,
+    description: meta.summary ?? meta.description ?? "",
+    image: meta.ogImageUrl,
+    url,
+    mainEntityOfPage: url,
+    isPartOf: {
+      "@type": "WebSite",
+      name: `${ORG_NAME} Documentation`,
+      url: absolute(baseUrl, "/docs"),
+    },
+    publisher: orgRef(baseUrl),
+  };
+}
+
+export function getBreadcrumbSchema(items: BreadcrumbItem[], baseUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absolute(baseUrl, item.url),
+    })),
+  };
+}
+
+/**
+ * `pageUrl` is the absolute URL of the page that renders these questions as
+ * visible content. When passed, each Question gets its own anchor URL so answer
+ * engines can cite a single entry instead of the whole page.
+ */
+export function getFaqSchema(faqs: readonly FaqItem[], pageUrl?: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    ...(pageUrl ? { url: pageUrl, mainEntityOfPage: pageUrl } : {}),
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      ...(pageUrl
+        ? { "@id": `${pageUrl}#${faq.slug}`, url: `${pageUrl}#${faq.slug}` }
+        : {}),
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+}

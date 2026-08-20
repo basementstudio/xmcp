@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/clerk --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/clerk... --frozen-lockfile
 
       - name: Build @xmcp-dev/clerk
-        run: pnpm --filter @xmcp-dev/clerk build
+        run: pnpm turbo build --filter=@xmcp-dev/clerk
 
       - name: Publish @xmcp-dev/clerk
         env:

@@ -38,9 +38,9 @@ Instructions:
     maxRetries: 5,
     messages: [
       systemMessage,
-      ...convertToModelMessages(reqJson.messages, {
+      ...(await convertToModelMessages(reqJson.messages, {
         ignoreIncompleteToolCalls: true,
-      }),
+      })),
     ],
     toolChoice: "auto",
   });

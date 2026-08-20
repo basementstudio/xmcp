@@ -14,15 +14,19 @@ export const Header = () => {
           "w-full flex justify-center items-center z-100 px-4 py-2 gap-8 relative"
         }
       >
-        <div className="relative flex justify-center items-center text-sm text-brand-white gap-8">
+        <nav
+          aria-label="Main"
+          className="relative flex justify-center items-center text-sm text-brand-white gap-8"
+        >
           <div className="hidden md:flex gap-4">
             <AnimatedLink href="/">Home</AnimatedLink>
             <AnimatedLink href="/docs">Docs</AnimatedLink>
-            <AnimatedLink href="/examples">Examples</AnimatedLink>
+            <AnimatedLink href="/templates">Templates</AnimatedLink>
             <AnimatedLink href="/blog">Blog</AnimatedLink>
             <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+            <AnimatedLink href="/faq">FAQ</AnimatedLink>
           </div>
-        </div>
+        </nav>
         <div className="flex gap-2 ml-auto items-center">
           <SearchToggle />
           <AskAIButton />
@@ -50,6 +54,7 @@ const GithubButton = () => {
       href="https://github.com/basementstudio/xmcp"
       className="text-brand-white hover:text-brand-white/80 transition-colors hidden md:block"
       target="_blank"
+      rel="noopener noreferrer"
       aria-label="GitHub"
     >
       <svg
@@ -57,6 +62,7 @@ const GithubButton = () => {
         height="24"
         viewBox="0 0 24 24"
         fill="none"
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path

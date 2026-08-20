@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/commet",
   "description": "Commet integration for xmcp — subscription-aware billing, feature gating, and usage tracking",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -40,7 +40,7 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "@commet/node": "^1.9.0",
+    "@commet/node": "^5.0.0",
     "express": "^4.22.1"
   },
   "devDependencies": {
@@ -50,6 +50,6 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": "workspace:*"
+    "xmcp": ">=0.7.0 <1.0.0"
   }
 }

@@ -7,12 +7,12 @@ import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
-import ayuDark from "@shikijs/themes/ayu-dark";
 import { CopyButton } from "@/components/ui/copy-button";
+import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
-  themes: [ayuDark],
+  themes: [xmcpAyuDarkTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -106,7 +106,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
-        theme: "ayu-dark",
+        theme: XMCP_SHIKI_THEME_NAME,
         lang: "typescript",
         defaultColor: false,
         transformers: [

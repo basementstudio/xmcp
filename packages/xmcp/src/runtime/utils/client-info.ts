@@ -1,4 +1,5 @@
 import type { JsonRpcMessage } from "@/runtime/transports/http/base-streamable-http";
+import type { HttpHeaders } from "@/runtime/contexts/http-request-context";
 import type { McpClientInfo } from "@/types/client-info";
 import type { Implementation } from "@modelcontextprotocol/sdk/types";
 
@@ -75,4 +76,39 @@ export const extractClientInfoFromMessages = (
   }
 
   return undefined;
+};
+
+const getHeaderValue = (
+  headers: HttpHeaders,
+  headerName: string
+): string | undefined => {
+  const normalizedHeaderName = headerName.toLowerCase();
+
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() !== normalizedHeaderName) {
+      continue;
+    }
+
+    const headerValue = Array.isArray(value) ? value[0] : value;
+    if (typeof headerValue !== "string") {
+      return undefined;
+    }
+
+    const trimmedValue = headerValue.trim();
+    return trimmedValue.length > 0 ? trimmedValue : undefined;
+  }
+
+  return undefined;
+};
+
+export const extractClientInfoFromHeaders = (
+  headers: HttpHeaders
+): McpClientInfo | undefined => {
+  return parseClientInfoCandidate({
+    name: getHeaderValue(headers, "x-mcp-client-name"),
+    version: getHeaderValue(headers, "x-mcp-client-version"),
+    title: getHeaderValue(headers, "x-mcp-client-title"),
+    websiteUrl: getHeaderValue(headers, "x-mcp-client-website-url"),
+    description: getHeaderValue(headers, "x-mcp-client-description"),
+  });
 };

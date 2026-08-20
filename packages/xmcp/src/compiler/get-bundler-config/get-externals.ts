@@ -75,6 +75,16 @@ export function getExternals(): RspackOptions["externals"] {
       }
 
       /**
+       * When using Fastify, externalize fastify since it should come from
+       * the user's node_modules
+       */
+      if (xmcpConfig.experimental?.adapter === "fastify") {
+        if (request === "fastify" || request.startsWith("fastify/")) {
+          return callback(undefined, `commonjs ${request}`);
+        }
+      }
+
+      /**
        * When using NestJS, externalize NestJS-related packages
        * since they should come from the user's node_modules
        */
