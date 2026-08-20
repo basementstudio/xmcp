@@ -88,7 +88,7 @@ describe("Rendered", () => {
     expect(screen.getByText(/Render JSON Demo/)).toBeTruthy();
   });
 
-  it("reports validation errors in strict mode", () => {
+  it("requires an explicit MCP server URL", () => {
     render(
       <Rendered
         schemaJson={JSON.stringify({
@@ -99,8 +99,8 @@ describe("Rendered", () => {
       />
     );
 
-    expect(screen.getByText("Invalid App Schema")).toBeTruthy();
-    expect(screen.getAllByText(/mcpServerUrl/).length).toBeGreaterThan(0);
+    expect(screen.getByText("MCP Server URL Required")).toBeTruthy();
+    expect(screen.getByText(/serverUrl.*mcpServerUrl/)).toBeTruthy();
   });
 
   it("progressively renders a partial schema with a default MCP URL", () => {

@@ -39,7 +39,6 @@ interface SanitizedRenderSchema {
   usePresetTheme: boolean;
 }
 
-const DEFAULT_MCP_SERVER_URL = "http://localhost:6274";
 const MIN_THEME_CONTRAST_RATIO = 4.5;
 const GUARDED_THEME_TOKEN_PAIRS: Array<
   readonly [keyof ThemeTokens, keyof ThemeTokens]
@@ -408,7 +407,7 @@ function tryParseProgressiveJson(input: string): unknown {
 }
 
 function createDefaultJsonApp(
-  defaultMcpServerUrl: string = DEFAULT_MCP_SERVER_URL,
+  defaultMcpServerUrl: string,
   themeMode: ThemeMode = "light"
 ): AppSchema {
   return {
@@ -605,7 +604,7 @@ function sanitizeRenderableSchema(
 
 function tryBuildPreviewSchema(
   parsedInput: unknown,
-  defaultMcpServerUrl: string,
+  defaultMcpServerUrl: string | undefined,
   themeMode: ThemeMode
 ): AppSchema | null {
   if (!isPlainObject(parsedInput)) {
@@ -624,10 +623,18 @@ function tryBuildPreviewSchema(
     return null;
   }
 
+  const resolvedMcpServerUrl =
+    typeof parsedInput.mcpServerUrl === "string"
+      ? parsedInput.mcpServerUrl
+      : defaultMcpServerUrl;
+  if (!resolvedMcpServerUrl) {
+    return null;
+  }
+
   try {
     return validateSchema(
       deepMerge(
-        createDefaultJsonApp(defaultMcpServerUrl, themeMode),
+        createDefaultJsonApp(resolvedMcpServerUrl, themeMode),
         parsedInput
       )
     );
@@ -760,7 +767,7 @@ export function Rendered({
   previewMode = "progressive",
   themeMode = "light",
   themePreset = "zinc",
-  defaultMcpServerUrl = DEFAULT_MCP_SERVER_URL,
+  defaultMcpServerUrl,
   transportMode = "auto",
   serverUrl,
   allowedOrigins,
@@ -824,6 +831,20 @@ export function Rendered({
   if (!trimmedSchemaJson) {
     lastGoodSnapshotRef.current = null;
     return renderFrame(renderLoading());
+  }
+
+  const hasMcpServerUrl =
+    Boolean(serverUrl ?? defaultMcpServerUrl) ||
+    (isPlainObject(normalizedParsedInput) &&
+      typeof normalizedParsedInput.mcpServerUrl === "string");
+
+  if (!hasMcpServerUrl) {
+    return renderFrame(
+      renderErrorState(
+        "MCP Server URL Required",
+        "Configure serverUrl on the renderer or include mcpServerUrl in the AppSchema."
+      )
+    );
   }
 
   if (validatedSchema) {

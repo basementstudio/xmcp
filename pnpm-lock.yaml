@@ -1625,21 +1625,12 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      react:
-        specifier: '>=19.0.0'
-        version: 19.2.4
-      react-dom:
-        specifier: '>=19.0.0'
-        version: 19.2.4(react@19.2.4)
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
       tailwindcss:
         specifier: '>=4.0.0'
         version: 4.1.18
-      zod:
-        specifier: '>=3.25.0'
-        version: 4.4.3
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -1659,6 +1650,12 @@ importers:
       jsdom:
         specifier: ^26.1.0
         version: 26.1.0
+      react:
+        specifier: ^19.2.3
+        version: 19.2.4
+      react-dom:
+        specifier: ^19.2.3
+        version: 19.2.4(react@19.2.4)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -1668,6 +1665,9 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../xmcp
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.76
 
   packages/xmcp:
     dependencies:

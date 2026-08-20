@@ -13,6 +13,8 @@ interface TextareaComponentProps extends TextareaProps {
   actions?: Record<string, Action>;
 }
 
+const TEXTAREA_DEBOUNCE_MS = 300;
+
 export function Textarea({
   label,
   placeholder,
@@ -26,20 +28,25 @@ export function Textarea({
   const dispatch = useUiDispatch();
   const state = useUiSnapshot();
   const client = useRendererClient();
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
-  const handleChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const nextValue = event.target.value;
-    dispatch({ type: "SET_STATE", key: stateKey, value: nextValue });
+  const handleChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const nextValue = event.target.value;
+      dispatch({ type: "SET_STATE", key: stateKey, value: nextValue });
 
-    const onChange = actions?.onChange;
-    if (onChange) {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        executeAction(onChange, state.values, client, dispatch, nextValue);
-      }, 300);
-    }
-  }, [actions, stateKey, state.values, client, dispatch]);
+      const onChange = actions?.onChange;
+      if (onChange) {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          executeAction(onChange, state.values, client, dispatch, nextValue);
+        }, TEXTAREA_DEBOUNCE_MS);
+      }
+    },
+    [actions, stateKey, state.values, client, dispatch]
+  );
 
   return (
     <div className="flex flex-col gap-1.5">

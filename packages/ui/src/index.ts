@@ -8,11 +8,9 @@ export {
   renderJsonSchema,
 } from "./tool/render-json.js";
 
-// DSL builder
-export { ui } from "./dsl/index.js";
-
 // Validation helpers
 export { validateSchema } from "./schema/validate.js";
+export { normalizeToolResult } from "./actions/executor.js";
 export {
   SCHEMA_REFERENCE,
   SCHEMA_REFERENCE_URI,

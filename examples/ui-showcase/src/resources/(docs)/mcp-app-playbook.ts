@@ -26,10 +26,12 @@ export default function handler() {
   return {
     contents: [
       {
+        uri: "docs://mcp-app-playbook",
         mimeType: "application/json",
         text: JSON.stringify(playbook, null, 2),
       },
       {
+        uri: "docs://mcp-app-playbook",
         mimeType: "text/markdown",
         text: `# ${playbook.title}
 

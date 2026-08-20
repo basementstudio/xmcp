@@ -24,14 +24,14 @@ resource/composer demo.
 
 ## Relevant Files
 
-- [showcase.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/showcase.tsx)
-- [live-tool-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/live-tool-demo.tsx)
-- [host-theme-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/host-theme-demo.tsx)
-- [resource-composer-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/resource-composer-demo.tsx)
-- [schema-app-demo.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/schema-app-demo.tsx)
-- [render-json.tsx](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/tools/render-json.tsx)
-- [mcp-app-playbook.ts](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/resources/(docs)/mcp-app-playbook.ts)
-- [globals.css](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/src/globals.css)
+- [showcase.tsx](./src/tools/showcase.tsx)
+- [live-tool-demo.tsx](./src/tools/live-tool-demo.tsx)
+- [host-theme-demo.tsx](./src/tools/host-theme-demo.tsx)
+- [resource-composer-demo.tsx](./src/tools/resource-composer-demo.tsx)
+- [schema-app-demo.tsx](./src/tools/schema-app-demo.tsx)
+- [render-json.tsx](./src/tools/render-json.tsx)
+- [mcp-app-playbook.ts](<./src/resources/(docs)/mcp-app-playbook.ts>)
+- [globals.css](./src/globals.css)
 
 ## Start Here
 
@@ -47,5 +47,5 @@ Use `renderJson` afterward when you want a smaller schema-driven reference.
 
 ## Related Docs
 
-- [packages/ui/README.md](/Users/0xkoller/xmcp/xmcp/packages/ui/README.md)
-- [Custom Renderers](/Users/0xkoller/xmcp/xmcp/docs/ui/custom-renderers.md)
+- [packages/ui/README.md](../../packages/ui/README.md)
+- [UI rendering](https://xmcp.dev/docs/guides/ui-rendering)

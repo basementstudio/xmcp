@@ -26,10 +26,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  normalizeToolResult,
   useMcpApp,
 } from "@xmcp-dev/ui";
 import { type ToolMetadata, type McpUiDisplayMode } from "xmcp";
-import { parseToolResult } from "../lib/tool-result";
 
 export const metadata: ToolMetadata = {
   name: "liveToolDemo",
@@ -72,11 +72,8 @@ export default function handler() {
   const [lastModeResult, setLastModeResult] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const availableModes: McpUiDisplayMode[] = hostContext?.availableDisplayModes ?? [
-    "inline",
-    "fullscreen",
-    "pip",
-  ];
+  const availableModes: McpUiDisplayMode[] =
+    hostContext?.availableDisplayModes ?? ["inline", "fullscreen", "pip"];
   const currentMode = hostContext?.displayMode ?? "inline";
 
   const fetchStats = async () => {
@@ -86,20 +83,22 @@ export default function handler() {
     try {
       const result = await callTool("serverStats");
       setRawResult(result);
-      const parsed = parseToolResult<ServerStats>(result);
+      const parsed = normalizeToolResult(result) as ServerStats | null;
 
       if (!parsed) {
         throw new Error("Tool returned an unreadable payload");
       }
 
       setStats(parsed);
-      setHistory((previous) => [
-        {
-          ...parsed,
-          receivedAt: new Date().toLocaleTimeString(),
-        },
-        ...previous,
-      ].slice(0, MAX_HISTORY));
+      setHistory((previous) =>
+        [
+          {
+            ...parsed,
+            receivedAt: new Date().toLocaleTimeString(),
+          },
+          ...previous,
+        ].slice(0, MAX_HISTORY)
+      );
     } catch (nextError) {
       setError(
         nextError instanceof Error ? nextError.message : "Failed to call tool"
@@ -217,8 +216,12 @@ export default function handler() {
                 >
                   {polling ? "Polling" : "Manual"}
                 </Badge>
-                <Badge variant="outline" className="border-cyan-800 text-cyan-300">
-                  tools.call={hostCapabilities?.serverTools?.call ? "yes" : "unknown"}
+                <Badge
+                  variant="outline"
+                  className="border-cyan-800 text-cyan-300"
+                >
+                  tools.call=
+                  {hostCapabilities?.serverTools?.call ? "yes" : "unknown"}
                 </Badge>
               </div>
             </div>
@@ -251,8 +254,9 @@ export default function handler() {
             <Separator className="bg-slate-800" />
 
             <p className="text-xs text-[hsl(var(--muted-foreground))]">
-              Uses <code>tools/call</code> plus <code>ui/request-display-mode</code>.
-              The host decides whether fullscreen or PiP is allowed.
+              Uses <code>tools/call</code> plus{" "}
+              <code>ui/request-display-mode</code>. The host decides whether
+              fullscreen or PiP is allowed.
             </p>
           </CardContent>
         </Card>
@@ -308,7 +312,9 @@ export default function handler() {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-300">CPU</span>
-                    <span className="text-violet-400">{stats.cpuLoadPercent}%</span>
+                    <span className="text-violet-400">
+                      {stats.cpuLoadPercent}%
+                    </span>
                   </div>
                   <Progress value={stats.cpuLoadPercent} />
                 </div>
@@ -338,13 +344,18 @@ export default function handler() {
                 <TableBody>
                   {history.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-[hsl(var(--muted-foreground))]">
+                      <TableCell
+                        colSpan={4}
+                        className="text-[hsl(var(--muted-foreground))]"
+                      >
                         No tool calls yet.
                       </TableCell>
                     </TableRow>
                   ) : (
                     history.map((entry) => (
-                      <TableRow key={`${entry.timestamp}-${entry.requestCount}`}>
+                      <TableRow
+                        key={`${entry.timestamp}-${entry.requestCount}`}
+                      >
                         <TableCell>{entry.receivedAt}</TableCell>
                         <TableCell>{entry.cpuLoadPercent}%</TableCell>
                         <TableCell>{entry.memoryUsageMb} MB</TableCell>
@@ -367,7 +378,9 @@ export default function handler() {
             </CardHeader>
             <CardContent>
               <pre className="max-h-[340px] overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
-                {rawResult ? JSON.stringify(rawResult, null, 2) : "Call serverStats to inspect the MCP payload."}
+                {rawResult
+                  ? JSON.stringify(rawResult, null, 2)
+                  : "Call serverStats to inspect the MCP payload."}
               </pre>
             </CardContent>
           </Card>

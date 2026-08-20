@@ -202,5 +202,5 @@ Use the `xmcp/host-bridge` import path for the MCP App host bridge.
 
 ## Related Docs
 
-- [Custom Renderers](/Users/0xkoller/xmcp/xmcp/docs/ui/custom-renderers.md)
-- [ui-showcase README](/Users/0xkoller/xmcp/xmcp/examples/ui-showcase/README.md)
+- [UI rendering](https://xmcp.dev/docs/guides/ui-rendering)
+- [ui-showcase README](../../examples/ui-showcase/README.md)

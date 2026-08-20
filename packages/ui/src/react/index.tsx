@@ -7,7 +7,13 @@ import * as SwitchPrimitive from "@radix-ui/react-switch";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { cva, type VariantProps } from "class-variance-authority";
-import { createTheme, type ThemeMode, type ThemeTokens, useTheme, uiShellClassName } from "./theme.js";
+import {
+  createTheme,
+  type ThemeMode,
+  type ThemeTokens,
+  useTheme,
+  uiShellClassName,
+} from "./theme.js";
 import { cn } from "./utils.js";
 
 type DivProps = React.HTMLAttributes<HTMLDivElement>;
@@ -17,6 +23,7 @@ type ParagraphProps = React.HTMLAttributes<HTMLParagraphElement>;
 interface AppShellProps extends DivProps {
   theme?: ThemeMode;
   themeTokens?: Partial<ThemeTokens>;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 export function AppShell({
@@ -25,6 +32,7 @@ export function AppShell({
   theme,
   themeTokens,
   style,
+  ref,
   ...props
 }: AppShellProps) {
   const inheritedTheme = useTheme();
@@ -40,11 +48,8 @@ export function AppShell({
 
   return (
     <div
-      className={cn(
-        uiShellClassName,
-        "px-6 py-10",
-        className,
-      )}
+      ref={ref}
+      className={cn(uiShellClassName, "px-6 py-10", className)}
       style={{ ...resolvedTheme.style, ...style }}
       {...props}
     >
@@ -66,7 +71,7 @@ export function PageEyebrow({ className, children, ...props }: DivProps) {
     <div
       className={cn(
         "mb-2 text-sm font-medium text-[hsl(var(--muted-foreground))]",
-        className,
+        className
       )}
       {...props}
     >
@@ -80,7 +85,7 @@ export function PageTitle({ className, children, ...props }: HeadingProps) {
     <h1
       className={cn(
         "text-4xl font-bold tracking-tight text-[hsl(var(--foreground))] sm:text-5xl",
-        className,
+        className
       )}
       {...props}
     >
@@ -98,7 +103,7 @@ export function PageDescription({
     <p
       className={cn(
         "mt-4 max-w-3xl text-base leading-7 text-[hsl(var(--muted-foreground))]",
-        className,
+        className
       )}
       {...props}
     >
@@ -156,13 +161,7 @@ export function Card({ className, children, ...props }: DivProps) {
 
 export function CardHeader({ className, children, ...props }: DivProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col space-y-1.5 p-6",
-        className,
-      )}
-      {...props}
-    >
+    <div className={cn("flex flex-col space-y-1.5 p-6", className)} {...props}>
       {children}
     </div>
   );
@@ -173,7 +172,7 @@ export function CardTitle({ className, children, ...props }: HeadingProps) {
     <h3
       className={cn(
         "text-lg font-semibold leading-none tracking-tight text-[hsl(var(--card-foreground))]",
-        className,
+        className
       )}
       {...props}
     >
@@ -188,7 +187,10 @@ export function CardDescription({
   ...props
 }: ParagraphProps) {
   return (
-    <p className={cn("text-sm text-[hsl(var(--muted-foreground))]", className)} {...props}>
+    <p
+      className={cn("text-sm text-[hsl(var(--muted-foreground))]", className)}
+      {...props}
+    >
       {children}
     </p>
   );
@@ -204,13 +206,7 @@ export function CardContent({ className, children, ...props }: DivProps) {
 
 export function CardFooter({ className, children, ...props }: DivProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center p-6 pt-0",
-        className,
-      )}
-      {...props}
-    >
+    <div className={cn("flex items-center p-6 pt-0", className)} {...props}>
       {children}
     </div>
   );
@@ -245,11 +241,12 @@ export const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  },
+  }
 );
 
 interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
@@ -264,7 +261,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     );
-  },
+  }
 );
 Button.displayName = "Button";
 
@@ -276,7 +273,7 @@ export const Input = React.forwardRef<
     type={type}
     className={cn(
       "flex h-10 w-full rounded-[calc(var(--radius)-2px)] border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-[hsl(var(--background))] placeholder:text-[hsl(var(--muted-foreground))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-      className,
+      className
     )}
     ref={ref}
     {...props}
@@ -292,7 +289,7 @@ export const Textarea = React.forwardRef<
     ref={ref}
     className={cn(
       "flex min-h-[80px] w-full rounded-[calc(var(--radius)-2px)] border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-[hsl(var(--background))] placeholder:text-[hsl(var(--muted-foreground))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-      className,
+      className
     )}
     {...props}
   />
@@ -305,7 +302,10 @@ export const Label = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <label
     ref={ref}
-    className={cn("text-sm font-medium leading-none text-[hsl(var(--foreground))]", className)}
+    className={cn(
+      "text-sm font-medium leading-none text-[hsl(var(--foreground))]",
+      className
+    )}
     {...props}
   />
 ));
@@ -323,7 +323,7 @@ export const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-[calc(var(--radius)-2px)] border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-[hsl(var(--background))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-      className,
+      className
     )}
     {...props}
   >
@@ -347,12 +347,14 @@ export const SelectContent = React.forwardRef<
       className={cn(
         "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] shadow-md",
         position === "popper" && "translate-y-1",
-        className,
+        className
       )}
       position={position}
       {...props}
     >
-      <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+      <SelectPrimitive.Viewport className="p-1">
+        {children}
+      </SelectPrimitive.Viewport>
     </SelectPrimitive.Content>
   </SelectPrimitive.Portal>
 ));
@@ -366,7 +368,7 @@ export const SelectLabel = React.forwardRef<
     ref={ref}
     className={cn(
       "px-2 py-1.5 text-sm font-semibold text-[hsl(var(--muted-foreground))]",
-      className,
+      className
     )}
     {...props}
   />
@@ -381,7 +383,7 @@ export const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm text-[hsl(var(--foreground))] outline-none focus:bg-[hsl(var(--muted))] focus:text-[hsl(var(--foreground))] data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className,
+      className
     )}
     {...props}
   >
@@ -416,41 +418,46 @@ export const badgeVariants = cva(
           "border-transparent bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]",
         destructive:
           "border-transparent bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))]",
-        outline:
-          "border-[hsl(var(--border))] text-[hsl(var(--foreground))]",
+        outline: "border-[hsl(var(--border))] text-[hsl(var(--foreground))]",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
 export function Badge({
   className,
   variant,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> &
-  VariantProps<typeof badgeVariants>) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+}: React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  );
 }
 
 export const Separator = React.forwardRef<
   React.ElementRef<typeof SeparatorPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>
->(({ className, orientation = "horizontal", decorative = true, ...props }, ref) => (
-  <SeparatorPrimitive.Root
-    ref={ref}
-    decorative={decorative}
-    orientation={orientation}
-    className={cn(
-      "shrink-0 bg-[hsl(var(--border))]",
-      orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
-      className,
-    )}
-    {...props}
-  />
-));
+>(
+  (
+    { className, orientation = "horizontal", decorative = true, ...props },
+    ref
+  ) => (
+    <SeparatorPrimitive.Root
+      ref={ref}
+      decorative={decorative}
+      orientation={orientation}
+      className={cn(
+        "shrink-0 bg-[hsl(var(--border))]",
+        orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
+        className
+      )}
+      {...props}
+    />
+  )
+);
 Separator.displayName = SeparatorPrimitive.Root.displayName;
 
 export const Checkbox = React.forwardRef<
@@ -461,7 +468,7 @@ export const Checkbox = React.forwardRef<
     ref={ref}
     className={cn(
       "peer h-4 w-4 shrink-0 rounded-[4px] border border-[hsl(var(--primary))] ring-offset-[hsl(var(--background))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-[hsl(var(--primary))] data-[state=checked]:text-[hsl(var(--primary-foreground))]",
-      className,
+      className
     )}
     {...props}
   >
@@ -480,7 +487,7 @@ export const Switch = React.forwardRef<
     ref={ref}
     className={cn(
       "peer inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent bg-[hsl(var(--input))] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--background))] disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-[hsl(var(--primary))] data-[state=unchecked]:bg-[hsl(var(--input))]",
-      className,
+      className
     )}
     {...props}
   >
@@ -503,12 +510,16 @@ export function StatCard({
   return (
     <Card className={className}>
       <CardContent className="space-y-2 p-6">
-        <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">{label}</p>
+        <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+          {label}
+        </p>
         <div className="text-3xl font-semibold tracking-tight text-[hsl(var(--card-foreground))]">
           {value}
         </div>
         {detail ? (
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">{detail}</p>
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            {detail}
+          </p>
         ) : null}
       </CardContent>
     </Card>
@@ -520,10 +531,8 @@ const alertVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "border-[hsl(var(--border))] text-[hsl(var(--foreground))]",
-        info:
-          "border-[hsl(var(--border))] bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]",
+        default: "border-[hsl(var(--border))] text-[hsl(var(--foreground))]",
+        info: "border-[hsl(var(--border))] bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]",
         success:
           "border-[hsl(var(--border))] bg-[hsl(var(--muted))] text-[hsl(var(--foreground))]",
         warning:
@@ -535,7 +544,7 @@ const alertVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
 export function Alert({
@@ -549,7 +558,11 @@ export function Alert({
   title?: React.ReactNode;
 }) {
   return (
-    <div role="alert" className={cn(alertVariants({ variant }), className)} {...props}>
+    <div
+      role="alert"
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    >
       {title ? <AlertTitle>{title}</AlertTitle> : null}
       {children}
     </div>
@@ -558,12 +571,20 @@ export function Alert({
 
 export function AlertTitle({ className, ...props }: HeadingProps) {
   return (
-    <h5 className={cn("mb-1 font-medium leading-none tracking-tight", className)} {...props} />
+    <h5
+      className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+      {...props}
+    />
   );
 }
 
 export function AlertDescription({ className, ...props }: ParagraphProps) {
-  return <div className={cn("text-sm [&_p]:leading-relaxed", className)} {...props} />;
+  return (
+    <div
+      className={cn("text-sm [&_p]:leading-relaxed", className)}
+      {...props}
+    />
+  );
 }
 
 function LoaderGlyph() {
@@ -575,8 +596,19 @@ function LoaderGlyph() {
       viewBox="0 0 24 24"
       aria-hidden
     >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+      />
     </svg>
   );
 }
@@ -590,7 +622,7 @@ export function Loader({
     <div
       className={cn(
         "flex items-center gap-3 py-2 text-sm text-[hsl(var(--muted-foreground))]",
-        className,
+        className
       )}
       {...props}
     >
@@ -605,7 +637,11 @@ export const Table = React.forwardRef<
   React.TableHTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
   <div className="relative w-full overflow-auto">
-    <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
+    <table
+      ref={ref}
+      className={cn("w-full caption-bottom text-sm", className)}
+      {...props}
+    />
   </div>
 ));
 Table.displayName = "Table";
@@ -616,7 +652,10 @@ export const TableHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn("[&_tr]:border-b [&_tr]:border-[hsl(var(--border))]", className)}
+    className={cn(
+      "[&_tr]:border-b [&_tr]:border-[hsl(var(--border))]",
+      className
+    )}
     {...props}
   />
 ));
@@ -626,7 +665,11 @@ export const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <tbody ref={ref} className={cn("[&_tr:last-child]:border-0", className)} {...props} />
+  <tbody
+    ref={ref}
+    className={cn("[&_tr:last-child]:border-0", className)}
+    {...props}
+  />
 ));
 TableBody.displayName = "TableBody";
 
@@ -638,7 +681,7 @@ export const TableFooter = React.forwardRef<
     ref={ref}
     className={cn(
       "border-t border-[hsl(var(--border))] bg-[hsl(var(--muted))] font-medium [&>tr]:last:border-b-0",
-      className,
+      className
     )}
     {...props}
   />
@@ -653,7 +696,7 @@ export const TableRow = React.forwardRef<
     ref={ref}
     className={cn(
       "border-b border-[hsl(var(--border))] transition-colors hover:bg-[hsl(var(--muted))] data-[state=selected]:bg-[hsl(var(--muted))]",
-      className,
+      className
     )}
     {...props}
   />
@@ -668,7 +711,7 @@ export const TableHead = React.forwardRef<
     ref={ref}
     className={cn(
       "h-12 px-4 text-left align-middle text-xs font-medium uppercase tracking-[0.14em] text-[hsl(var(--muted-foreground))]",
-      className,
+      className
     )}
     {...props}
   />
@@ -679,7 +722,11 @@ export const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
-  <td ref={ref} className={cn("p-4 align-middle text-[hsl(var(--foreground))]", className)} {...props} />
+  <td
+    ref={ref}
+    className={cn("p-4 align-middle text-[hsl(var(--foreground))]", className)}
+    {...props}
+  />
 ));
 TableCell.displayName = "TableCell";
 
@@ -687,7 +734,14 @@ export const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={cn("mt-4 text-sm text-[hsl(var(--muted-foreground))]", className)} {...props} />
+  <caption
+    ref={ref}
+    className={cn(
+      "mt-4 text-sm text-[hsl(var(--muted-foreground))]",
+      className
+    )}
+    {...props}
+  />
 ));
 TableCaption.displayName = "TableCaption";
 
@@ -703,7 +757,7 @@ export const TabsList = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex h-10 items-center justify-center rounded-md bg-[hsl(var(--muted))] p-1 text-[hsl(var(--muted-foreground))]",
-      className,
+      className
     )}
     {...props}
   />
@@ -718,7 +772,7 @@ export const TabsTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-[hsl(var(--background))] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-[hsl(var(--background))] data-[state=active]:text-[hsl(var(--foreground))] data-[state=active]:shadow-sm",
-      className,
+      className
     )}
     {...props}
   />
@@ -733,7 +787,7 @@ export const TabsContent = React.forwardRef<
     ref={ref}
     className={cn(
       "mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--ring))]",
-      className,
+      className
     )}
     {...props}
   />
@@ -750,7 +804,7 @@ export const Progress = React.forwardRef<
     ref={ref}
     className={cn(
       "relative h-2 w-full overflow-hidden rounded-full bg-[hsl(var(--muted))]",
-      className,
+      className
     )}
     value={value}
     max={max}
@@ -775,7 +829,7 @@ export function Link({
     <a
       className={cn(
         "inline-flex items-center gap-1 text-sm font-medium text-[hsl(var(--primary))] underline-offset-4 hover:underline",
-        className,
+        className
       )}
       {...props}
     >

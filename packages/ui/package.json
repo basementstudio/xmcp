@@ -10,8 +10,8 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./styles.css": "./dist/styles.css"
   },
@@ -40,8 +40,8 @@
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0",
     "tailwindcss": ">=4.0.0",
-    "xmcp": ">=0.0.3",
-    "zod": ">=3.25.0"
+    "xmcp": ">=0.8.0 <1.0.0",
+    "zod": "^3.25.76 || ^4.0.0"
   },
   "peerDependenciesMeta": {
     "tailwindcss": {
@@ -55,9 +55,12 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "jsdom": "^26.1.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1",
-    "xmcp": "workspace:*"
+    "xmcp": "workspace:*",
+    "zod": "catalog:"
   },
   "license": "MIT"
 }
