@@ -21,6 +21,7 @@
     "zod": "^4.0.0"
   },
   "devDependencies": {
+    "@xmcp-dev/compiler": "latest",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
