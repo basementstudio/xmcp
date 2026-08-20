@@ -126,7 +126,7 @@ jobs:
         run: pnpm --filter @xmcp-dev/ui test
 
       - name: Build UI showcase example
-        run: pnpm --filter ui-showcase build
+        run: pnpm turbo build --filter=ui-showcase
 
       - name: Verify xmcp package build
         run: |
