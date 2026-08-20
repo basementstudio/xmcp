@@ -40,6 +40,8 @@ pnpm deploy
 npx wrangler deploy
 ```
 
+The first deploy prompts you to log in to your Cloudflare account. Once deployed, the Worker serves your configured endpoint, `/mcp` by default, on your `workers.dev` subdomain, along with a `/health` check route.
+
 ## Local development
 
 Run the watcher and Wrangler together:
