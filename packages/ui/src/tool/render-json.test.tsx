@@ -35,11 +35,11 @@ describe("createRenderJsonTool", () => {
   it("exposes stable renderJson metadata and schema guidance", () => {
     expect(renderJsonMetadata.name).toBe("renderJson");
     expect(renderJsonSchema.schemaJson.description).toContain(
-      "set-state-batch",
+      "set-state-batch"
     );
     expect(renderJsonSchema.schemaJson.description).toContain("open-link");
     expect(renderJsonSchema.schemaJson.description).toContain(
-      "javascript: URLs",
+      "javascript: URLs"
     );
   });
 
@@ -50,6 +50,8 @@ describe("createRenderJsonTool", () => {
       themePreset: "slate",
       defaultMcpServerUrl: "https://mcp.example.com",
       transportMode: "host",
+      serverUrl: "https://pinned.example.com",
+      allowedOrigins: ["https://pinned.example.com"],
     });
 
     const element = renderJsonTool.handler({ schemaJson: validSchema });
@@ -65,6 +67,8 @@ describe("createRenderJsonTool", () => {
     expect(props.themePreset).toBe("slate");
     expect(props.defaultMcpServerUrl).toBe("https://mcp.example.com");
     expect(props.transportMode).toBe("host");
+    expect(props.serverUrl).toBe("https://pinned.example.com");
+    expect(props.allowedOrigins).toEqual(["https://pinned.example.com"]);
   });
 });
 
@@ -92,7 +96,7 @@ describe("Rendered", () => {
           root: { type: "card", props: {} },
         })}
         previewMode="strict"
-      />,
+      />
     );
 
     expect(screen.getByText("Invalid App Schema")).toBeTruthy();
@@ -101,17 +105,45 @@ describe("Rendered", () => {
 
   it("progressively renders a partial schema with a default MCP URL", () => {
     const partialSchema =
-      "{\"title\":\"Partial\",\"root\":{\"type\":\"card\",\"props\":{\"title\":\"Card\"},\"children\":[{\"type\":\"text\",\"props\":{\"content\":\"Almost\"}}]";
+      '{"title":"Partial","root":{"type":"card","props":{"title":"Card"},"children":[{"type":"text","props":{"content":"Almost"}}]';
 
     render(
       <Rendered
         schemaJson={partialSchema}
         defaultMcpServerUrl="https://default.example.com"
-      />,
+      />
     );
 
     expect(screen.getByText("Partial")).toBeTruthy();
     expect(screen.getByText("Card")).toBeTruthy();
     expect(screen.getByText("Almost")).toBeTruthy();
+  });
+
+  it("renders a visible error when the MCP origin is not allowed", () => {
+    render(
+      <Rendered
+        schemaJson={validSchema}
+        transportMode="host"
+        allowedOrigins={["https://allowed.example.com"]}
+      />
+    );
+
+    expect(screen.getByText("MCP Server Not Allowed")).toBeTruthy();
+    expect(screen.getByText(/example.com.*allowlist/)).toBeTruthy();
+  });
+
+  it("rejects non-HTTP MCP server URLs", () => {
+    render(
+      <Rendered
+        schemaJson={JSON.stringify({
+          ...JSON.parse(validSchema),
+          mcpServerUrl: "ftp://example.com",
+        })}
+        transportMode="host"
+      />
+    );
+
+    expect(screen.getByText("Invalid App Schema")).toBeTruthy();
+    expect(screen.getByText(/http: or https:/)).toBeTruthy();
   });
 });

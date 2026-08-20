@@ -16,16 +16,93 @@ export interface AppProps {
   className?: string;
   inheritTheme?: boolean;
   transportMode?: "http" | "host" | "auto";
+  serverUrl?: string;
+  allowedOrigins?: string[];
 }
 
 const MCP_PROTOCOL_VERSION = "2025-11-25";
 const MCP_CLIENT_NAME = "xmcp-ui";
 const MCP_CLIENT_VERSION = "0.1.0";
 const MCP_REQUEST_TIMEOUT_MS = 30_000;
+const HTTP_HEADER_NAME_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+const RESERVED_MCP_HEADERS = new Set([
+  "accept",
+  "connection",
+  "content-length",
+  "content-type",
+  "cookie",
+  "host",
+  "mcp-session-id",
+  "origin",
+  "referer",
+  "te",
+  "trailer",
+  "transfer-encoding",
+  "upgrade",
+  "via",
+]);
 
 interface HttpMcpClientOptions {
   serverUrl: string;
   headers?: AppSchema["mcpHeaders"];
+}
+
+function isForbiddenHeaderName(name: string): boolean {
+  const normalizedName = name.toLowerCase();
+  return (
+    RESERVED_MCP_HEADERS.has(normalizedName) ||
+    normalizedName.startsWith("proxy-") ||
+    normalizedName.startsWith("sec-")
+  );
+}
+
+export function sanitizeMcpHeaders(
+  headers: AppSchema["mcpHeaders"]
+): NonNullable<AppSchema["mcpHeaders"]> {
+  return (headers ?? []).filter(
+    ({ name, value }) =>
+      HTTP_HEADER_NAME_PATTERN.test(name) &&
+      !isForbiddenHeaderName(name) &&
+      !/[\0\r\n]/.test(value)
+  );
+}
+
+function parseHttpUrl(value: string): URL | null {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+function getServerUrlError(
+  serverUrl: string,
+  allowedOrigins?: string[]
+): { title: string; message: string } | null {
+  const parsedServerUrl = parseHttpUrl(serverUrl);
+  if (!parsedServerUrl) {
+    return {
+      title: "Invalid MCP Server URL",
+      message: "The MCP server URL must use the http: or https: protocol.",
+    };
+  }
+
+  if (allowedOrigins) {
+    const normalizedOrigins = allowedOrigins
+      .map(parseHttpUrl)
+      .filter((url): url is URL => url !== null)
+      .map((url) => url.origin);
+
+    if (!normalizedOrigins.includes(parsedServerUrl.origin)) {
+      return {
+        title: "MCP Server Not Allowed",
+        message: `The MCP server origin ${parsedServerUrl.origin} is not in the configured allowlist.`,
+      };
+    }
+  }
+
+  return null;
 }
 
 function parseMcpResponse<T>(text: string, requestId: number): T {
@@ -87,7 +164,7 @@ export function createHttpMcpClient({
     if (sessionId) {
       headers["mcp-session-id"] = sessionId;
     }
-    for (const header of configuredHeaders ?? []) {
+    for (const header of sanitizeMcpHeaders(configuredHeaders)) {
       headers[header.name] = header.value;
     }
     return headers;
@@ -195,7 +272,7 @@ function AppBody({ schema, className, inheritTheme = false }: AppProps) {
   );
 }
 
-export function App({
+function ConfiguredApp({
   schema,
   className,
   inheritTheme = false,
@@ -270,6 +347,44 @@ export function App({
         )}
       </StateProvider>
     </RuntimeProvider>
+  );
+}
+
+function AppConfigurationError({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
+  return (
+    <div role="alert" className="rounded-lg border border-red-500 p-4">
+      <h1 className="font-semibold">{title}</h1>
+      <p>{message}</p>
+    </div>
+  );
+}
+
+export function App({ schema, serverUrl, allowedOrigins, ...props }: AppProps) {
+  const effectiveServerUrl = serverUrl ?? schema.mcpServerUrl;
+  const configurationError = getServerUrlError(
+    effectiveServerUrl,
+    allowedOrigins
+  );
+
+  if (configurationError) {
+    return <AppConfigurationError {...configurationError} />;
+  }
+
+  return (
+    <ConfiguredApp
+      {...props}
+      schema={{
+        ...schema,
+        mcpServerUrl: effectiveServerUrl,
+        mcpHeaders: sanitizeMcpHeaders(schema.mcpHeaders),
+      }}
+    />
   );
 }
 

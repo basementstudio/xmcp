@@ -24,6 +24,8 @@ export interface RenderedProps {
   themePreset?: RenderedThemePreset;
   defaultMcpServerUrl?: string;
   transportMode?: "http" | "host" | "auto";
+  serverUrl?: string;
+  allowedOrigins?: string[];
 }
 
 interface RenderSnapshot {
@@ -444,6 +446,14 @@ function applyThemeMode(input: unknown, themeMode: ThemeMode): unknown {
   return { ...input, theme: themeMode };
 }
 
+function applyServerUrl(input: unknown, serverUrl?: string): unknown {
+  if (!serverUrl || !isPlainObject(input)) {
+    return input;
+  }
+
+  return { ...input, mcpServerUrl: serverUrl };
+}
+
 function usesInlineThemeTokens(input: unknown): boolean {
   return isPlainObject(input) && isPlainObject(input.themeTokens);
 }
@@ -713,7 +723,9 @@ function renderSchemaPreview(
   resolvedThemeMode: ThemeMode,
   themePreset: RenderedThemePreset,
   className?: string,
-  transportMode: RenderedProps["transportMode"] = "auto"
+  transportMode: RenderedProps["transportMode"] = "auto",
+  serverUrl?: string,
+  allowedOrigins?: string[]
 ) {
   const sanitized = sanitizeRenderableSchema(schema, resolvedThemeMode);
 
@@ -729,6 +741,8 @@ function renderSchemaPreview(
         className={className ?? "mx-auto max-w-6xl min-h-0 p-0 m-0"}
         inheritTheme={sanitized.usePresetTheme}
         transportMode={transportMode}
+        serverUrl={serverUrl}
+        allowedOrigins={allowedOrigins}
       />,
       sanitized.usePresetTheme
         ? createTheme(
@@ -748,6 +762,8 @@ export function Rendered({
   themePreset = "zinc",
   defaultMcpServerUrl = DEFAULT_MCP_SERVER_URL,
   transportMode = "auto",
+  serverUrl,
+  allowedOrigins,
 }: RenderedProps) {
   const lastGoodSnapshotRef = React.useRef<RenderSnapshot | null>(null);
   const trimmedSchemaJson = schemaJson?.trim() ?? "";
@@ -766,7 +782,12 @@ export function Rendered({
   const resolvedThemeMode = resolveThemeMode(parsedInput, themeMode);
   const normalizedParsedInput =
     parsedInput !== undefined
-      ? normalizePreviewInput(applyThemeMode(parsedInput, resolvedThemeMode))
+      ? normalizePreviewInput(
+          applyServerUrl(
+            applyThemeMode(parsedInput, resolvedThemeMode),
+            serverUrl
+          )
+        )
       : parsedInput;
 
   let validatedSchema: AppSchema | null = null;
@@ -786,8 +807,11 @@ export function Rendered({
       ? tryParseProgressiveJson(trimmedSchemaJson)
       : normalizedParsedInput;
   const progressiveSchema = tryBuildPreviewSchema(
-    applyThemeMode(repairedPartialInput, resolvedThemeMode),
-    defaultMcpServerUrl,
+    applyServerUrl(
+      applyThemeMode(repairedPartialInput, resolvedThemeMode),
+      serverUrl
+    ),
+    serverUrl ?? defaultMcpServerUrl,
     resolvedThemeMode
   );
 
@@ -808,7 +832,9 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
-      transportMode
+      transportMode,
+      serverUrl,
+      allowedOrigins
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -820,7 +846,9 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
-      transportMode
+      transportMode,
+      serverUrl,
+      allowedOrigins
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -834,6 +862,8 @@ export function Rendered({
         className={className ?? "mx-auto max-w-6xl min-h-0 p-0 m-0"}
         inheritTheme={snapshot.usePresetTheme}
         transportMode={transportMode}
+        serverUrl={serverUrl}
+        allowedOrigins={allowedOrigins}
       />,
       snapshot.usePresetTheme
         ? createTheme(

@@ -18,15 +18,21 @@ const setStateActionSchema = z.object({
 
 const openLinkActionSchema = z.object({
   type: z.literal("open-link"),
-  url: z.string().refine(u => !u.toLowerCase().startsWith("javascript:"), { message: "javascript: URLs are not allowed" }),
+  url: z
+    .string()
+    .refine((u) => !u.toLowerCase().startsWith("javascript:"), {
+      message: "javascript: URLs are not allowed",
+    }),
 });
 
 const setStateBatchActionSchema = z.object({
   type: z.literal("set-state-batch"),
-  entries: z.array(z.object({
-    key: z.string(),
-    value: z.unknown(),
-  })),
+  entries: z.array(
+    z.object({
+      key: z.string(),
+      value: z.unknown(),
+    })
+  ),
 });
 
 const actionSchema = z.union([
@@ -153,7 +159,9 @@ export const buttonPropsSchema = z.object({
 
 export const badgePropsSchema = z.object({
   label: z.string(),
-  variant: z.enum(["default", "secondary", "destructive", "outline"]).optional(),
+  variant: z
+    .enum(["default", "secondary", "destructive", "outline"])
+    .optional(),
   className: z.string().optional(),
 });
 
@@ -194,14 +202,18 @@ export const progressPropsSchema = z.object({
   className: z.string().optional(),
 });
 
-export const imagePropsSchema = z.object({
-  src: z.string().optional(),
-  srcKey: z.string().optional(),
-  alt: z.string().optional(),
-  width: z.string().optional(),
-  height: z.string().optional(),
-  className: z.string().optional(),
-}).refine(d => d.src || d.srcKey, { message: "image requires src or srcKey" });
+export const imagePropsSchema = z
+  .object({
+    src: z.string().optional(),
+    srcKey: z.string().optional(),
+    alt: z.string().optional(),
+    width: z.string().optional(),
+    height: z.string().optional(),
+    className: z.string().optional(),
+  })
+  .refine((d) => d.src || d.srcKey, {
+    message: "image requires src or srcKey",
+  });
 
 export const linkPropsSchema = z.object({
   href: z.string(),
@@ -354,7 +366,7 @@ const componentSchema: z.ZodType = z.lazy(() =>
     alertComponentSchema,
     loaderComponentSchema,
     progressComponentSchema,
-  ]),
+  ])
 );
 
 // ── App schema ────────────────────────────────────────────────────────
@@ -363,13 +375,19 @@ const appSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   state: z.record(z.string(), z.unknown()).optional(),
-  mcpServerUrl: z.string().url(),
+  mcpServerUrl: z
+    .string()
+    .url()
+    .refine((value) => {
+      const protocol = new URL(value).protocol;
+      return protocol === "http:" || protocol === "https:";
+    }, "MCP server URL must use the http: or https: protocol"),
   mcpHeaders: z
     .array(
       z.object({
         name: z.string(),
         value: z.string(),
-      }),
+      })
     )
     .optional(),
   theme: z.enum(["dark", "light"]).optional(),
@@ -411,11 +429,9 @@ export function validateSchema(input: unknown): App {
 
   if (!result.success) {
     const messages = result.error.issues.map(
-      (issue) => `  - ${issue.path.join(".")}: ${issue.message}`,
+      (issue) => `  - ${issue.path.join(".")}: ${issue.message}`
     );
-    throw new Error(
-      `Invalid app schema:\n${messages.join("\n")}`,
-    );
+    throw new Error(`Invalid app schema:\n${messages.join("\n")}`);
   }
 
   return result.data as App;
