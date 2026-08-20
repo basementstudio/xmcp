@@ -19,7 +19,6 @@ function createDispatchLog() {
 }
 
 afterEach(() => {
-  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -29,8 +28,8 @@ describe("resolveTemplate", () => {
       resolveTemplate(
         "Search {{user.name}} for {{event.value}}",
         { user: { name: "Ada" } },
-        "weather",
-      ),
+        "weather"
+      )
     ).toBe("Search Ada for weather");
   });
 
@@ -47,15 +46,15 @@ describe("normalizeToolResult", () => {
       normalizeToolResult({
         structuredContent: { rows: [{ name: "A" }] },
         content: [{ type: "text", text: "ignored" }],
-      }),
+      })
     ).toEqual({ rows: [{ name: "A" }] });
   });
 
   it("parses JSON text content when present", () => {
     expect(
       normalizeToolResult({
-        content: [{ type: "text", text: "{\"ok\":true}" }],
-      }),
+        content: [{ type: "text", text: '{"ok":true}' }],
+      })
     ).toEqual({ ok: true });
   });
 });
@@ -75,7 +74,7 @@ describe("executeAction", () => {
       {},
       { callTool: vi.fn() },
       dispatch,
-      "updated",
+      "updated"
     );
 
     expect(actions).toEqual([
@@ -85,10 +84,9 @@ describe("executeAction", () => {
   });
 
   it("calls MCP tools with resolved args and stores normalized results", async () => {
-    vi.useFakeTimers();
     const { actions, dispatch } = createDispatchLog();
     const callTool = vi.fn().mockResolvedValue({
-      content: [{ type: "text", text: "[{\"name\":\"Ada\"}]" }],
+      content: [{ type: "text", text: '[{"name":"Ada"}]' }],
     });
 
     await executeAction(
@@ -100,7 +98,7 @@ describe("executeAction", () => {
       },
       { query: "alpha" },
       { callTool },
-      dispatch,
+      dispatch
     );
 
     expect(callTool).toHaveBeenCalledWith({
@@ -136,7 +134,7 @@ describe("executeAction", () => {
       action,
       { slug: "docs" },
       { callTool: vi.fn(), openLink },
-      dispatch,
+      dispatch
     );
 
     expect(openLink).toHaveBeenCalledWith("https://example.com/docs");

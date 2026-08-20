@@ -1,4 +1,10 @@
-import type { Action, CallToolAction, SetStateAction, OpenLinkAction, SetStateBatchAction } from "../schema/types.js";
+import type {
+  Action,
+  CallToolAction,
+  SetStateAction,
+  OpenLinkAction,
+  SetStateBatchAction,
+} from "../schema/types.js";
 import type { Dispatch } from "react";
 import type { UiAction } from "../renderer/StateProvider.js";
 import { getByPath } from "../state/path.js";
@@ -10,7 +16,7 @@ import { getByPath } from "../state/path.js";
 export function resolveTemplate(
   template: string,
   state: Record<string, unknown>,
-  eventValue?: unknown,
+  eventValue?: unknown
 ): string {
   return template.replace(/\{\{(.+?)\}\}/g, (_match, key: string) => {
     const trimmed = key.trim();
@@ -28,7 +34,7 @@ export function resolveTemplate(
 export function resolveArgs(
   args: Record<string, string>,
   state: Record<string, unknown>,
-  eventValue?: unknown,
+  eventValue?: unknown
 ): Record<string, string> {
   const resolved: Record<string, string> = {};
   for (const [key, value] of Object.entries(args)) {
@@ -63,8 +69,7 @@ function tryParseJson(value: unknown): unknown {
   }
   try {
     return JSON.parse(trimmed);
-  } catch (e) {
-    console.warn(`Failed to parse JSON in tool result: ${(e as Error).message}`);
+  } catch {
     return value;
   }
 }
@@ -73,7 +78,10 @@ export function normalizeToolResult(result: unknown): unknown {
   if (result && typeof result === "object") {
     const resultObj = result as Record<string, unknown>;
 
-    if ("structuredContent" in resultObj && resultObj.structuredContent != null) {
+    if (
+      "structuredContent" in resultObj &&
+      resultObj.structuredContent != null
+    ) {
       return resultObj.structuredContent;
     }
 
@@ -96,11 +104,14 @@ export async function executeAction(
   action: Action,
   state: Record<string, unknown>,
   client: {
-    callTool: (params: { name: string; arguments: Record<string, string> }) => Promise<unknown>;
+    callTool: (params: {
+      name: string;
+      arguments: Record<string, string>;
+    }) => Promise<unknown>;
     openLink?: (url: string) => Promise<void>;
   },
   dispatch: Dispatch<UiAction>,
-  eventValue?: unknown,
+  eventValue?: unknown
 ): Promise<void> {
   switch (action.type) {
     case "call-tool": {
@@ -111,14 +122,10 @@ export async function executeAction(
 
       try {
         const resolvedArgs = resolveArgs(callAction.args, state, eventValue);
-        const timeoutMs = 30_000;
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Tool call "${callAction.tool}" timed out after ${timeoutMs}ms`)), timeoutMs)
-        );
-        const result = await Promise.race([
-          client.callTool({ name: callAction.tool, arguments: resolvedArgs }),
-          timeoutPromise,
-        ]);
+        const result = await client.callTool({
+          name: callAction.tool,
+          arguments: resolvedArgs,
+        });
 
         dispatch({
           type: "SET_STATE",

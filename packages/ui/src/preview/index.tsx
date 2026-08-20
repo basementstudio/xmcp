@@ -1,6 +1,10 @@
 import * as React from "react";
 import { App } from "../renderer/App.js";
-import { createTheme, type ThemeMode, type ThemeTokens } from "../react/theme.js";
+import {
+  createTheme,
+  type ThemeMode,
+  type ThemeTokens,
+} from "../react/theme.js";
 import { validateSchema } from "../schema/validate.js";
 import type { App as AppSchema } from "../schema/types.js";
 
@@ -325,7 +329,7 @@ function normalizePreviewInput(input: unknown): unknown {
         columns: columns.map((column) =>
           isPlainObject(column)
             ? { ...column, width: normalizeCssSize(column.width) }
-            : column,
+            : column
         ),
       };
     }
@@ -403,7 +407,7 @@ function tryParseProgressiveJson(input: string): unknown {
 
 function createDefaultJsonApp(
   defaultMcpServerUrl: string = DEFAULT_MCP_SERVER_URL,
-  themeMode: ThemeMode = "light",
+  themeMode: ThemeMode = "light"
 ): AppSchema {
   return {
     title: "Preview",
@@ -420,9 +424,12 @@ function createDefaultJsonApp(
 
 function resolveThemeMode(
   input: unknown,
-  themeMode: ThemeMode = "light",
+  themeMode: ThemeMode = "light"
 ): ThemeMode {
-  if (isPlainObject(input) && (input.theme === "light" || input.theme === "dark")) {
+  if (
+    isPlainObject(input) &&
+    (input.theme === "light" || input.theme === "dark")
+  ) {
     return input.theme;
   }
 
@@ -442,7 +449,7 @@ function usesInlineThemeTokens(input: unknown): boolean {
 }
 
 function parseHslToken(
-  token: string,
+  token: string
 ): { h: number; s: number; l: number } | null {
   const parts = token.trim().split(/\s+/);
   if (parts.length < 3) {
@@ -497,7 +504,7 @@ function hslToRgb(token: string): [number, number, number] | null {
     return null;
   }
 
-  const hue = ((parsed.h % 360) + 360) % 360 / 360;
+  const hue = (((parsed.h % 360) + 360) % 360) / 360;
 
   if (parsed.s === 0) {
     return [parsed.l, parsed.l, parsed.l];
@@ -523,9 +530,7 @@ function relativeLuminance(token: string): number | null {
   }
 
   const [r, g, b] = rgb.map((channel) =>
-    channel <= 0.03928
-      ? channel / 12.92
-      : ((channel + 0.055) / 1.055) ** 2.4,
+    channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
   );
 
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
@@ -535,10 +540,7 @@ function contrastRatio(background: string, foreground: string): number | null {
   const backgroundLuminance = relativeLuminance(background);
   const foregroundLuminance = relativeLuminance(foreground);
 
-  if (
-    backgroundLuminance === null ||
-    foregroundLuminance === null
-  ) {
+  if (backgroundLuminance === null || foregroundLuminance === null) {
     return null;
   }
 
@@ -550,14 +552,14 @@ function contrastRatio(background: string, foreground: string): number | null {
 
 function hasAccessibleInlineThemeTokens(
   themeTokens: Partial<ThemeTokens>,
-  themeMode: ThemeMode,
+  themeMode: ThemeMode
 ): boolean {
   const resolvedTokens = createTheme(themeMode, themeTokens).tokens;
 
   for (const [backgroundKey, foregroundKey] of GUARDED_THEME_TOKEN_PAIRS) {
     const ratio = contrastRatio(
       resolvedTokens[backgroundKey],
-      resolvedTokens[foregroundKey],
+      resolvedTokens[foregroundKey]
     );
 
     if (ratio === null || ratio < MIN_THEME_CONTRAST_RATIO) {
@@ -570,7 +572,7 @@ function hasAccessibleInlineThemeTokens(
 
 function sanitizeRenderableSchema(
   schema: AppSchema,
-  resolvedThemeMode: ThemeMode,
+  resolvedThemeMode: ThemeMode
 ): SanitizedRenderSchema {
   if (
     !schema.themeTokens ||
@@ -594,7 +596,7 @@ function sanitizeRenderableSchema(
 function tryBuildPreviewSchema(
   parsedInput: unknown,
   defaultMcpServerUrl: string,
-  themeMode: ThemeMode,
+  themeMode: ThemeMode
 ): AppSchema | null {
   if (!isPlainObject(parsedInput)) {
     return null;
@@ -614,7 +616,10 @@ function tryBuildPreviewSchema(
 
   try {
     return validateSchema(
-      deepMerge(createDefaultJsonApp(defaultMcpServerUrl, themeMode), parsedInput),
+      deepMerge(
+        createDefaultJsonApp(defaultMcpServerUrl, themeMode),
+        parsedInput
+      )
     );
   } catch {
     return null;
@@ -691,10 +696,13 @@ function renderRawState(schemaJson: string) {
 
 function renderFrame(
   children: React.ReactNode,
-  themeStyle?: React.CSSProperties,
+  themeStyle?: React.CSSProperties
 ) {
   return (
-    <div className="bg-transparent p-0 font-sans text-inherit" style={themeStyle}>
+    <div
+      className="bg-transparent p-0 font-sans text-inherit"
+      style={themeStyle}
+    >
       <div className="mx-auto max-w-6xl">{children}</div>
     </div>
   );
@@ -705,7 +713,7 @@ function renderSchemaPreview(
   resolvedThemeMode: ThemeMode,
   themePreset: RenderedThemePreset,
   className?: string,
-  transportMode: RenderedProps["transportMode"] = "http",
+  transportMode: RenderedProps["transportMode"] = "auto"
 ) {
   const sanitized = sanitizeRenderableSchema(schema, resolvedThemeMode);
 
@@ -725,9 +733,9 @@ function renderSchemaPreview(
       sanitized.usePresetTheme
         ? createTheme(
             resolvedThemeMode,
-            renderedThemePresets[themePreset][resolvedThemeMode],
+            renderedThemePresets[themePreset][resolvedThemeMode]
           ).style
-        : undefined,
+        : undefined
     ),
   };
 }
@@ -739,7 +747,7 @@ export function Rendered({
   themeMode = "light",
   themePreset = "zinc",
   defaultMcpServerUrl = DEFAULT_MCP_SERVER_URL,
-  transportMode = "http",
+  transportMode = "auto",
 }: RenderedProps) {
   const lastGoodSnapshotRef = React.useRef<RenderSnapshot | null>(null);
   const trimmedSchemaJson = schemaJson?.trim() ?? "";
@@ -780,12 +788,12 @@ export function Rendered({
   const progressiveSchema = tryBuildPreviewSchema(
     applyThemeMode(repairedPartialInput, resolvedThemeMode),
     defaultMcpServerUrl,
-    resolvedThemeMode,
+    resolvedThemeMode
   );
 
   if (previewMode === "raw") {
     return renderFrame(
-      trimmedSchemaJson ? renderRawState(trimmedSchemaJson) : renderLoading(),
+      trimmedSchemaJson ? renderRawState(trimmedSchemaJson) : renderLoading()
     );
   }
 
@@ -800,7 +808,7 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
-      transportMode,
+      transportMode
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -812,7 +820,7 @@ export function Rendered({
       resolvedThemeMode,
       themePreset,
       className,
-      transportMode,
+      transportMode
     );
     lastGoodSnapshotRef.current = preview.snapshot;
     return preview.element;
@@ -830,9 +838,9 @@ export function Rendered({
       snapshot.usePresetTheme
         ? createTheme(
             snapshot.resolvedThemeMode,
-            renderedThemePresets[themePreset][snapshot.resolvedThemeMode],
+            renderedThemePresets[themePreset][snapshot.resolvedThemeMode]
           ).style
-        : undefined,
+        : undefined
     );
   }
 
@@ -842,8 +850,8 @@ export function Rendered({
         ? renderLoading()
         : renderErrorState(
             "Invalid JSON",
-            "The incoming value is not valid JSON yet.",
-          ),
+            "The incoming value is not valid JSON yet."
+          )
     );
   }
 
@@ -851,7 +859,7 @@ export function Rendered({
     renderErrorState(
       "Invalid App Schema",
       "The JSON parsed successfully, but it did not match the @xmcp-dev/ui app schema contract. The most common missing fields are mcpServerUrl and root.",
-      validationMessage ?? undefined,
-    ),
+      validationMessage ?? undefined
+    )
   );
 }

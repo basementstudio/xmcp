@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo } from "react";
 import type { App as AppSchema } from "../schema/types.js";
 import type {
   McpHostCallToolParams,
@@ -18,11 +18,166 @@ export interface AppProps {
   transportMode?: "http" | "host" | "auto";
 }
 
-function AppBody({
-  schema,
-  className,
-  inheritTheme = false,
-}: AppProps) {
+const MCP_PROTOCOL_VERSION = "2025-11-25";
+const MCP_CLIENT_NAME = "xmcp-ui";
+const MCP_CLIENT_VERSION = "0.1.0";
+const MCP_REQUEST_TIMEOUT_MS = 30_000;
+
+interface HttpMcpClientOptions {
+  serverUrl: string;
+  headers?: AppSchema["mcpHeaders"];
+}
+
+function parseMcpResponse<T>(text: string, requestId: number): T {
+  let response: Record<string, unknown> | undefined;
+
+  if (text.trim().startsWith("{")) {
+    response = JSON.parse(text) as Record<string, unknown>;
+  } else {
+    const dataLines = text
+      .split("\n")
+      .filter((line) => line.startsWith("data:"));
+
+    for (const line of dataLines) {
+      try {
+        const candidate = JSON.parse(line.slice(5).trim()) as Record<
+          string,
+          unknown
+        >;
+        if (candidate.id === requestId) {
+          response = candidate;
+          break;
+        }
+      } catch {
+        // Ignore non-JSON SSE frames and continue looking for this request id.
+      }
+    }
+  }
+
+  if (!response) {
+    const preview = text.length > 200 ? `${text.slice(0, 200)}...` : text;
+    throw new Error(`No matching MCP response found. Raw: ${preview}`);
+  }
+
+  if (response.error) {
+    const error = response.error as Record<string, unknown>;
+    throw new Error(
+      typeof error.message === "string" ? error.message : "MCP request failed"
+    );
+  }
+
+  return response.result as T;
+}
+
+export function createHttpMcpClient({
+  serverUrl,
+  headers: configuredHeaders,
+}: HttpMcpClientOptions) {
+  const baseUrl = serverUrl.replace(/\/+$/, "");
+  const mcpUrl = baseUrl.endsWith("/mcp") ? baseUrl : `${baseUrl}/mcp`;
+  let nextRequestId = 0;
+  let sessionId: string | null = null;
+  let initialized = false;
+
+  const getHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    };
+    if (sessionId) {
+      headers["mcp-session-id"] = sessionId;
+    }
+    for (const header of configuredHeaders ?? []) {
+      headers[header.name] = header.value;
+    }
+    return headers;
+  };
+
+  const sendRequest = async <T,>(
+    method: string,
+    params?: Record<string, unknown>
+  ): Promise<T> => {
+    const requestId = ++nextRequestId;
+    let response: Response;
+
+    try {
+      response = await fetch(mcpUrl, {
+        method: "POST",
+        headers: getHeaders(),
+        signal: AbortSignal.timeout(MCP_REQUEST_TIMEOUT_MS),
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method,
+          params: params ?? {},
+          id: requestId,
+        }),
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw new Error(
+          `MCP request timed out after ${MCP_REQUEST_TIMEOUT_MS / 1_000}s`
+        );
+      }
+      if (error instanceof TypeError) {
+        throw new Error("Failed to reach MCP endpoint");
+      }
+      throw new Error(error instanceof Error ? error.message : String(error));
+    }
+
+    const returnedSessionId = response.headers.get("mcp-session-id");
+    if (returnedSessionId) {
+      sessionId = returnedSessionId;
+    }
+
+    const text = await response.text();
+    if (!response.ok) {
+      const preview = text.length > 300 ? `${text.slice(0, 300)}...` : text;
+      throw new Error(
+        `MCP endpoint "${mcpUrl}" returned HTTP ${response.status}. ${preview}`
+      );
+    }
+
+    return parseMcpResponse<T>(text, requestId);
+  };
+
+  const initialize = async () => {
+    if (initialized) return;
+
+    await sendRequest("initialize", {
+      protocolVersion: MCP_PROTOCOL_VERSION,
+      capabilities: {},
+      clientInfo: { name: MCP_CLIENT_NAME, version: MCP_CLIENT_VERSION },
+    });
+
+    try {
+      await fetch(mcpUrl, {
+        method: "POST",
+        headers: getHeaders(),
+        signal: AbortSignal.timeout(MCP_REQUEST_TIMEOUT_MS),
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "notifications/initialized",
+        }),
+      });
+    } catch {
+      // Stateless servers may reject or close notification requests.
+    }
+
+    initialized = true;
+  };
+
+  return {
+    callTool: async (params: McpHostCallToolParams) => {
+      await initialize();
+      return sendRequest<McpHostToolResult>("tools/call", {
+        name: params.name,
+        arguments: params.arguments ?? {},
+      });
+    },
+  };
+}
+
+function AppBody({ schema, className, inheritTheme = false }: AppProps) {
   const theme = useTheme();
 
   return (
@@ -44,132 +199,18 @@ export function App({
   schema,
   className,
   inheritTheme = false,
-  transportMode = "http",
+  transportMode = "auto",
 }: AppProps) {
   const mcpApp = useMcpApp();
-  const idRef = useRef(0);
-  const sessionIdRef = useRef<string | null>(null);
-  const initializedRef = useRef(false);
 
-  const mcpClient = useMemo(() => {
-    // Ensure URL ends with /mcp
-    const baseUrl = schema.mcpServerUrl.replace(/\/+$/, "");
-    const mcpUrl = baseUrl.endsWith("/mcp") ? baseUrl : `${baseUrl}/mcp`;
-
-    const getHeaders = (): Record<string, string> => {
-      const h: Record<string, string> = {
-        "Content-Type": "application/json",
-        "Accept": "application/json, text/event-stream",
-      };
-      if (sessionIdRef.current) {
-        h["mcp-session-id"] = sessionIdRef.current;
-      }
-      if (schema.mcpHeaders) {
-        for (const header of schema.mcpHeaders) {
-          h[header.name] = header.value;
-        }
-      }
-      return h;
-    };
-
-    const sendRequest = async <T,>(
-      method: string,
-      params?: Record<string, unknown>
-    ): Promise<T> => {
-      let res: Response;
-      try {
-        res = await fetch(mcpUrl, {
-          method: "POST",
-          headers: getHeaders(),
-          signal: AbortSignal.timeout(30_000),
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            method,
-            params: params ?? {},
-            id: ++idRef.current,
-          }),
-        });
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          throw new Error("MCP request timed out after 30s");
-        }
-        if (error instanceof TypeError) {
-          throw new Error("Failed to reach MCP endpoint");
-        }
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(message);
-      }
-
-      // Capture session ID from response headers
-      const sid = res.headers.get("mcp-session-id");
-      if (sid) sessionIdRef.current = sid;
-
-      const text = await res.text();
-      if (!res.ok) {
-        const preview = text.length > 300 ? `${text.slice(0, 300)}...` : text;
-        throw new Error(
-          `MCP endpoint "${mcpUrl}" returned HTTP ${res.status}. ${preview}`,
-        );
-      }
-      // Parse SSE or JSON response
-      let json: Record<string, unknown> | undefined;
-      if (text.trim().startsWith("{")) {
-        json = JSON.parse(text) as Record<string, unknown>;
-      } else {
-        // SSE format: extract data lines, find the one with our id
-        const dataLines = text.split("\n").filter((l: string) => l.startsWith("data:"));
-        for (const line of dataLines) {
-          try {
-            const parsed = JSON.parse(line.slice(5).trim()) as Record<string, unknown>;
-            if (parsed.id || parsed.result || parsed.error) {
-              json = parsed;
-              break;
-            }
-          } catch {}
-        }
-        if (!json) {
-          const preview = text.length > 200 ? `${text.slice(0, 200)}...` : text;
-          throw new Error(`No valid MCP response found in SSE stream. Raw: ${preview}`);
-        }
-      }
-
-      if (!json) throw new Error("Empty response from MCP server");
-      if (json.error) {
-        const err = json.error as Record<string, unknown>;
-        throw new Error((err.message as string) || "MCP request failed");
-      }
-      return json.result as T;
-    };
-
-    const initialize = async () => {
-      if (initializedRef.current) return;
-      await sendRequest("initialize", {
-        protocolVersion: "2025-11-25",
-        capabilities: {},
-        clientInfo: { name: "xmcp-ui", version: "0.0.1" },
-      });
-      // Send initialized notification (no id = notification)
-      await fetch(mcpUrl, {
-        method: "POST",
-        headers: getHeaders(),
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          method: "notifications/initialized",
-        }),
-      });
-      initializedRef.current = true;
-    };
-
-    return {
-      callTool: async (params: McpHostCallToolParams) => {
-        await initialize();
-        return sendRequest<McpHostToolResult>("tools/call", {
-          name: params.name,
-          arguments: params.arguments ?? {},
-        });
-      },
-    };
-  }, [schema.mcpServerUrl, schema.mcpHeaders]);
+  const mcpClient = useMemo(
+    () =>
+      createHttpMcpClient({
+        serverUrl: schema.mcpServerUrl,
+        headers: schema.mcpHeaders,
+      }),
+    [schema.mcpHeaders, schema.mcpServerUrl]
+  );
 
   const hostClient = useMemo(
     () => ({

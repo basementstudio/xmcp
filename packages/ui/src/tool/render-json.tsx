@@ -98,7 +98,7 @@ export function createRenderJsonTool(config: RenderJsonToolConfig = {}) {
       themeMode={config.themeMode}
       themePreset={config.themePreset}
       defaultMcpServerUrl={config.defaultMcpServerUrl}
-      transportMode={config.transportMode}
+      transportMode={config.transportMode ?? "auto"}
     />
   );
 
