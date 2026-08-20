@@ -1,5 +1,6 @@
 export const nextJsTypeDefinition = `
 export const xmcpHandler: (req: Request) => Promise<Response>;
+export const serverCardHandler: (req: Request) => Response;
 export const withAuth: (handler: (req: Request) => Promise<Response>, authConfig: AuthConfig) => (req: Request) => Promise<Response>;
 export const resourceMetadataHandler: ({authorizationServers}: {authorizationServers: string[]}) => (req: Request) => Response;
 export const resourceMetadataOptions: (req: Request) => Response;
