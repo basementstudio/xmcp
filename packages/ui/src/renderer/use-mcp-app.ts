@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useSyncExternalStore, type RefObject } from "react";
 import {
   createMcpHostBridge,
   type McpHostCallToolParams,
   type McpHostBridge,
-  type McpHostBridgeState,
   type McpHostCapabilities,
   type McpHostContainerDimensions,
   type McpHostContext,
@@ -16,6 +15,23 @@ import {
   type McpUiDisplayMode,
   type McpHostUpdateModelContextParams,
 } from "xmcp/host-bridge";
+
+const SERVER_BRIDGE_STATE = {
+  isConnected: false,
+  hostContext: null,
+  hostCapabilities: null,
+} as const;
+
+let sharedBrowserBridge: McpHostBridge | null = null;
+
+export function getMcpHostBridge(): McpHostBridge {
+  if (typeof window === "undefined") {
+    return createMcpHostBridge();
+  }
+
+  sharedBrowserBridge ??= createMcpHostBridge();
+  return sharedBrowserBridge;
+}
 
 export interface UseMcpHostBridgeResult {
   callTool: (
@@ -41,26 +57,12 @@ export interface UseMcpHostBridgeResult {
 }
 
 export function useMcpHostBridge(): UseMcpHostBridgeResult {
-  const bridgeRef = useRef<McpHostBridge | null>(null);
-
-  if (!bridgeRef.current) {
-    bridgeRef.current = createMcpHostBridge();
-  }
-
-  const bridge = bridgeRef.current;
-  const [state, setState] = useState(() => bridge.getState());
-
-  useEffect(() => {
-    const unsubscribe = bridge.subscribe((nextState: McpHostBridgeState) => {
-      setState(nextState);
-    });
-
-    return () => {
-      unsubscribe();
-      bridge.dispose();
-      bridgeRef.current = null;
-    };
-  }, [bridge]);
+  const bridge = getMcpHostBridge();
+  const state = useSyncExternalStore(
+    bridge.subscribe,
+    bridge.getState,
+    () => SERVER_BRIDGE_STATE
+  );
 
   return {
     callTool: bridge.callTool,

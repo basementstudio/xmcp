@@ -26,11 +26,7 @@ export {
   defaultDarkTheme,
   defaultLightTheme,
 } from "./react/theme.js";
-export type {
-  ThemeMode,
-  ThemeTokens,
-  ThemeDefinition,
-} from "./react/theme.js";
+export type { ThemeMode, ThemeTokens, ThemeDefinition } from "./react/theme.js";
 export type {
   RenderedProps,
   RenderedPreviewMode,
@@ -134,6 +130,7 @@ export {
   useUiError,
 } from "./renderer/StateProvider.js";
 export {
+  getMcpHostBridge,
   useMcpApp,
   useMcpHostBridge,
   useAutoMcpAppSize,
