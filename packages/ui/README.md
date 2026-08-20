@@ -59,10 +59,25 @@ The package owns:
 - progressive preview behavior
 - default theme selection and fallback handling
 
+The tool description points models to `skill://xmcp-ui/schema-reference`. Add
+the package-owned handler as a normal xmcp resource:
+
+```ts
+export {
+  schemaReferenceResourceHandler as default,
+  schemaReferenceResourceMetadata as metadata,
+} from "@xmcp-dev/ui";
+```
+
+Save that file at
+`src/resources/(skill)/xmcp-ui/schema-reference.ts`. The `--ui-kit` template
+and `xmcp-ui init` command both create it automatically.
+
 ## Host-Backed Schema Apps
 
-If the same schema-driven app should call tools and host APIs through the MCP
-App host, use host-backed transport:
+Schema-driven apps default to `transportMode: "auto"`, preferring the MCP App
+host and falling back to direct HTTP in standalone previews. To require the
+host, use:
 
 ```tsx
 import { createRenderJsonTool } from "@xmcp-dev/ui";
@@ -83,6 +98,19 @@ Available values:
 - `http` for direct MCP HTTP transport
 - `host` for MCP App host transport
 - `auto` to prefer the host when connected and fall back otherwise
+
+For model-generated schemas, use `serverUrl` to pin the endpoint and
+`allowedOrigins` to reject any effective URL outside your allowlist:
+
+```tsx
+const renderJsonTool = createRenderJsonTool({
+  serverUrl: "https://mcp.example.com",
+  allowedOrigins: ["https://mcp.example.com"],
+});
+```
+
+Only HTTP(S) MCP URLs are accepted. Invalid, reserved, and unsafe model-provided
+headers are dropped before requests are sent.
 
 ## Custom React MCP Apps
 
@@ -172,8 +200,9 @@ npx @xmcp-dev/ui init
 ```
 
 The init command adds `src/globals.css`, `postcss.config.mjs`, a `renderJson`
-tool, and a small handwritten React MCP App. It updates missing dependencies in
-`package.json`, but it does not run install for you.
+tool, the `skill://xmcp-ui/schema-reference` resource, and a small handwritten
+React MCP App. It updates missing dependencies in `package.json`, but it does
+not run install for you.
 
 Useful options:
 

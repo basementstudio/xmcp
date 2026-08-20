@@ -47,7 +47,9 @@ npx create-xmcp-app@latest my-app --skip-install
 
 Use `--ui-kit` when you want the MCP App template to start with
 `@xmcp-dev/ui`, Tailwind, a schema-driven `renderJson` tool, and a small
-handwritten React MCP App.
+handwritten React MCP App. The generated config enables tools and resources,
+including the `skill://xmcp-ui/schema-reference` resource used by the renderer
+tool description.
 
 ## Getting Started
 

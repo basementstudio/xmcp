@@ -15,7 +15,9 @@ discovers what the host supports at connection time and can adapt accordingly.
 
 The MCP App runtime is exported from the main `xmcp` package at
 `xmcp/host-bridge`. The `@xmcp-dev/ui` package re-exports a React hook
-(`useMcpApp()`) that wraps the bridge for convenience.
+(`useMcpApp()`) that wraps one shared bridge for the iframe lifetime. React
+component cleanup unsubscribes only its observer, so Strict Mode remounts do
+not dispose the shared host connection.
 
 ## `useMcpApp()` hook
 
@@ -148,34 +150,34 @@ if no host traffic arrives within the connection timeout (2 seconds by default).
 The host environment context, updated reactively when the host sends
 `ui/notifications/host-context-changed`. Contains:
 
-| Field                  | Type                          | Description                                         |
-| ---------------------- | ----------------------------- | --------------------------------------------------- |
-| `theme`                | `string`                      | Host color theme (`"light"`, `"dark"`, etc.)        |
-| `displayMode`          | `string`                      | Current display mode                                |
-| `locale`               | `string`                      | Host locale (e.g. `"en-US"`)                        |
-| `timeZone`             | `string`                      | Host timezone                                       |
-| `platform`             | `string`                      | Host platform identifier                            |
-| `availableDisplayModes`| `McpUiDisplayMode[]`          | Which display modes the host supports               |
-| `containerDimensions`  | `{ width, height }`           | Current container size in pixels                    |
-| `safeAreaInsets`        | `{ top, right, bottom, left }`| Safe area insets for the app viewport               |
-| `toolInfo`             | `Record<string, unknown>`     | Metadata about the tool that launched this app      |
-| `deviceCapabilities`   | `Record<string, unknown>`     | Device-level capabilities                           |
-| `styles`               | `McpHostStyleContext`         | Theme variables and CSS provided by the host        |
+| Field                   | Type                           | Description                                    |
+| ----------------------- | ------------------------------ | ---------------------------------------------- |
+| `theme`                 | `string`                       | Host color theme (`"light"`, `"dark"`, etc.)   |
+| `displayMode`           | `string`                       | Current display mode                           |
+| `locale`                | `string`                       | Host locale (e.g. `"en-US"`)                   |
+| `timeZone`              | `string`                       | Host timezone                                  |
+| `platform`              | `string`                       | Host platform identifier                       |
+| `availableDisplayModes` | `McpUiDisplayMode[]`           | Which display modes the host supports          |
+| `containerDimensions`   | `{ width, height }`            | Current container size in pixels               |
+| `safeAreaInsets`        | `{ top, right, bottom, left }` | Safe area insets for the app viewport          |
+| `toolInfo`              | `Record<string, unknown>`      | Metadata about the tool that launched this app |
+| `deviceCapabilities`    | `Record<string, unknown>`      | Device-level capabilities                      |
+| `styles`                | `McpHostStyleContext`          | Theme variables and CSS provided by the host   |
 
 ### `hostCapabilities`
 
 What the host advertises it supports. Use this to conditionally enable features:
 
-| Field               | Type                 | Description                                       |
-| -------------------- | -------------------- | ------------------------------------------------- |
+| Field                | Type                    | Description                                       |
+| -------------------- | ----------------------- | ------------------------------------------------- |
 | `serverTools`        | `{ call, listChanged }` | Whether the host can call tools and track changes |
 | `serverResources`    | `{ read, listChanged }` | Whether the host can read resources               |
-| `openLinks`          | `boolean`            | Whether `openLink` is supported                   |
-| `updateModelContext` | `boolean \| string[]`| Whether model context updates are supported       |
-| `message`            | `boolean`            | Whether `sendMessage` is supported                |
-| `logging`            | `boolean`            | Whether `logMessage` is supported                 |
-| `downloadFile`       | `boolean`            | Whether file downloads are supported              |
-| `sandbox`            | `Record`             | Sandbox restrictions                              |
+| `openLinks`          | `boolean`               | Whether `openLink` is supported                   |
+| `updateModelContext` | `boolean \| string[]`   | Whether model context updates are supported       |
+| `message`            | `boolean`               | Whether `sendMessage` is supported                |
+| `logging`            | `boolean`               | Whether `logMessage` is supported                 |
+| `downloadFile`       | `boolean`               | Whether file downloads are supported              |
+| `sandbox`            | `Record`                | Sandbox restrictions                              |
 
 ```tsx
 const { hostCapabilities, openLink } = useMcpApp();

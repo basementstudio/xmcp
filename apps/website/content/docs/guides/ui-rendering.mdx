@@ -29,6 +29,13 @@ control.
 
 ## Quickstart
 
+To scaffold a new project with the package, stylesheet, tools, and schema
+reference resource already wired up:
+
+```bash
+npx create-xmcp-app@latest my-ui-server --ui-kit --yes
+```
+
 Import the package stylesheet once:
 
 ```css title="src/app/globals.css"
@@ -52,13 +59,27 @@ export const schema = renderJsonTool.schema;
 export default renderJsonTool.handler;
 ```
 
+Add the schema reference as a normal xmcp resource so the model can read the
+component contract named in the tool description:
+
+```ts title="src/resources/(skill)/xmcp-ui/schema-reference.ts"
+export {
+  schemaReferenceResourceHandler as default,
+  schemaReferenceResourceMetadata as metadata,
+} from "@xmcp-dev/ui";
+```
+
+Both `create-xmcp-app --ui-kit` and `npx @xmcp-dev/ui init` create this resource
+for you.
+
 The model supplies a `schemaJson` string and the package handles parsing,
 validation, progressive preview, theme fallback, and rendering.
 
-## Host-backed transport
+## Transport
 
-If tool calls and actions should route through the MCP App host instead of
-direct HTTP, set the transport mode:
+`transportMode` defaults to `"auto"`: tool calls use the MCP App host when the
+renderer is embedded in one and fall back to direct HTTP for standalone
+previews. Set `"host"` only when the app must require a host:
 
 ```tsx title="src/tools/render-json.tsx"
 import { createRenderJsonTool } from "@xmcp-dev/ui";
@@ -72,8 +93,31 @@ export const schema = renderJsonTool.schema;
 export default renderJsonTool.handler;
 ```
 
-Use `transportMode="auto"` to prefer the host when connected and fall back to
-HTTP outside supported hosts. The same option exists on `Rendered` and `App`.
+Use `"http"` to require direct HTTP. The same option exists on `Rendered` and
+`App`.
+
+## Constrain model-provided endpoints
+
+An AppSchema can include `mcpServerUrl` and `mcpHeaders`. When the schema comes
+from a model, pin the endpoint in server-owned configuration:
+
+```tsx title="src/tools/render-json.tsx"
+import { createRenderJsonTool } from "@xmcp-dev/ui";
+
+const renderJsonTool = createRenderJsonTool({
+  serverUrl: "https://mcp.example.com",
+  allowedOrigins: ["https://mcp.example.com"],
+});
+
+export const metadata = renderJsonTool.metadata;
+export const schema = renderJsonTool.schema;
+export default renderJsonTool.handler;
+```
+
+`serverUrl` ignores the schema's `mcpServerUrl`. `allowedOrigins` renders a
+visible error if the effective origin is not allowed. The renderer always
+rejects non-HTTP(S) endpoints and drops invalid, transport-reserved, or unsafe
+header entries before calling `fetch`.
 
 ## What the packaged path does for you
 
@@ -118,7 +162,8 @@ export default function renderDashboard({
       previewMode="progressive"
       themeMode="light"
       themePreset="zinc"
-      transportMode="auto"
+      serverUrl="https://mcp.example.com"
+      allowedOrigins={["https://mcp.example.com"]}
     />
   );
 }
@@ -154,7 +199,13 @@ export default function renderStrictApp({
   try {
     const parsed = JSON.parse(schemaJson);
     const appSchema = validateSchema(parsed);
-    return <App schema={appSchema} transportMode="auto" />;
+    return (
+      <App
+        schema={appSchema}
+        serverUrl="https://mcp.example.com"
+        allowedOrigins={["https://mcp.example.com"]}
+      />
+    );
   } catch (error) {
     return <pre>{error instanceof Error ? error.message : String(error)}</pre>;
   }

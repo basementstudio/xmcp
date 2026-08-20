@@ -11,7 +11,9 @@ If you're using [MCP Apps](/docs/core-concepts/tools#mcp-apps-metadata), xmcp pr
 - [CSS Modules](#css-modules)
 
 <Callout type="info">
-xmcp automatically detects and imports a `globals.css` file if it exists in `globals.css`, `src/globals.css`, or `src/tools/globals.css` (in priority order). You don't need to manually import it in every tool.
+  xmcp automatically detects and imports a `globals.css` file if it exists in
+  `globals.css`, `src/globals.css`, or `src/tools/globals.css` (in priority
+  order). You don't need to manually import it in every tool.
 </Callout>
 
 ## Tailwind CSS
@@ -51,15 +53,15 @@ Add the PostCSS plugin to your `postcss.config.mjs` file:
 ```js
 export default {
   plugins: {
-    '@tailwindcss/postcss': {},
+    "@tailwindcss/postcss": {},
   },
-}
+};
 ```
 
 Create a `globals.css` file in your project root (or `src/globals.css`) and import Tailwind:
 
 ```css
-@import 'tailwindcss';
+@import "tailwindcss";
 ```
 
 Now you can use Tailwind classes in your tools:
@@ -125,7 +127,8 @@ With this setup, the normal path is:
 - expose a tiny local `render-json` tool
 - let the package own parsing, progressive preview, validation hardening, and theme fallback
 
-If the same schema-driven app should run through an MCP App host, use:
+The renderer defaults to `transportMode: "auto"`, which prefers the MCP App
+host and falls back to HTTP for standalone previews. To require a host, use:
 
 ```tsx
 const renderJsonTool = createRenderJsonTool({
