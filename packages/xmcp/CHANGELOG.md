@@ -4,6 +4,16 @@
 
 ### Minor Changes
 
+- b7a2b3c: Move the development compiler into `@xmcp-dev/compiler` so production `xmcp` installs contain only the self-contained runtime. Existing `xmcp dev`, `xmcp build`, and `xmcp create` commands remain available through a runtime-package shim, but projects must add `@xmcp-dev/compiler` as a development dependency.
+
+### Patch Changes
+
+- b7a2b3c: Reduce published and generated bundle sizes by loading prebuilt runtime files from disk, avoiding vendored install duplicates, and removing compiler-only schema and terminal dependencies from runtime bundles.
+
+## 0.8.0
+
+### Minor Changes
+
 - Split the development compiler into `@xmcp-dev/compiler`. Existing `xmcp dev`,
   `xmcp build`, and `xmcp create` scripts continue to work through a small shim,
   but projects must install the matching compiler version as a development
