@@ -70,16 +70,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      '@xmcp-dev/compiler':
-        specifier: link:packages/compiler
-        version: link:packages/compiler
-      '@xmcp-dev/ui':
-        specifier: link:packages/ui
-        version: link:packages/ui
-      xmcp:
-        specifier: link:packages/xmcp
-        version: link:packages/xmcp
     devDependencies:
       '@changesets/cli':
         specifier: ^2.30.0
