@@ -1,56 +1,134 @@
 ---
-title: "xmcp vs FastMCP vs the Official MCP SDK: Which TypeScript Framework?"
-description: "An honest comparison of the main ways to build an MCP server in TypeScript — the official MCP SDK, FastMCP, Vercel's mcp-handler, and xmcp — covering developer experience, transports, auth, and deployment."
-summary: "An honest comparison of the main ways to build an MCP server in TypeScript — the official MCP SDK, FastMCP, Vercel's mcp-handler, and xmcp — covering developer experience, transports, auth, and deployment."
+title: "xmcp vs FastMCP vs the Official MCP SDK: A Measured Comparison"
+description: "A reproducible Node 20 comparison of xmcp, FastMCP, and the official MCP TypeScript SDK across package size, production installs, deploy footprints, bundles, protocol support, and developer experience."
+summary: "A reproducible Node 20 comparison of xmcp, FastMCP, and the official MCP TypeScript SDK across package size, production installs, deploy footprints, bundles, protocol support, and developer experience."
 category: "guides"
-date: "2026-06-19"
+date: "2026-08-20"
 unlisted: true
 authors:
   - 0xkoller
 ---
 
-If you're building an MCP server in TypeScript, you have a few realistic options. They're not all solving the same problem, so the right choice depends on how much you want to own versus how much you want handled for you. Here's a straight comparison.
+There are three realistic starting points for a TypeScript MCP server: use the official SDK directly, add an imperative framework such as FastMCP, or use a file-based framework such as xmcp. They optimize for different things, so a registry tarball alone does not tell you which one is smaller—or which one is right for your project.
 
-We'll look at four:
+This comparison uses runnable, exact-pinned fixtures and separates four measurements that are often conflated:
 
-- **The official MCP TypeScript SDK** (`@modelcontextprotocol/sdk`)
-- **FastMCP** (the TypeScript framework)
-- **Vercel's `mcp-handler`** (a Next.js / Nuxt adapter)
-- **xmcp** (the framework this blog belongs to)
+1. the package tarball downloaded from npm;
+2. a fresh production install with transitive dependencies;
+3. the documented deploy footprint;
+4. a normalized single-file bundle.
 
-## The official MCP TypeScript SDK
+It also checks the protocol behavior of each fixture against the current [MCP revision, `2026-07-28`](https://blog.modelcontextprotocol.io/posts/2026-07-28/).
 
-The official SDK is the reference implementation maintained alongside the protocol itself. Everything else in this list is built on top of it.
+## Versions and method
 
-It's intentionally **low-level**. You create a server instance, register tools imperatively, and wire up a transport yourself. That control is the point — if you need to do something unusual, nothing is hidden from you.
+The final run used Node 20.20.2 and npm 11.17.0 on Apple Silicon. The fixtures pin:
 
-The tradeoff is boilerplate. You manage tool registration, transport setup, and the surrounding server lifecycle by hand. For a quick tool or a production service where you'd rather not maintain that plumbing, it's more work than most people want.
+- the xmcp 0.8.1 migration candidate, packed locally from the 0.8.0 code line;
+- `@modelcontextprotocol/server` and `@modelcontextprotocol/node` 2.0.0;
+- FastMCP 4.16.5;
+- Zod 4.4.3; and
+- esbuild 0.28.2 for the normalized bundle view.
 
-**Choose the SDK when:** you're building tooling on top of MCP itself, you need maximum control, or you're learning how the protocol works under the hood.
+The official SDK fixture is a complete HTTP server built with Node's `http` module, `createMcpHandler`, and `toNodeHandler`. Every fixture exposes the same `add` and `echo` tools; the xmcp HTTP fixture also includes small client-identity and MRTR probes used by the packed E2E suite. Every M2 measurement installs the complete runnable fixture with development dependencies omitted.
 
-## FastMCP
+The benchmark lives in [`packages/xmcp/bench`](https://github.com/basementstudio/xmcp/tree/main/packages/xmcp/bench). Run `pnpm bench` to reproduce M1–M3, or pass local xmcp and compiler tarballs to reproduce the migration-candidate rows.
 
-FastMCP is a TypeScript framework built on top of the official SDK. Its pitch is the same one a lot of frameworks make: it provides an opinionated layer that handles the boilerplate automatically so you can focus on your tools rather than the protocol.
+## Results
 
-You register tools imperatively through the framework's API, and it handles client sessions and multiple transports for you — including STDIO, HTTP streaming with SSE compatibility, and a stateless mode for serverless deployments. It's a capable, well-scoped DX layer over the SDK.
+### M1: package tarball
 
-**Choose FastMCP when:** you want less boilerplate than the raw SDK and you're comfortable registering tools imperatively in code.
+| Fixture                       |    Tarball | Unpacked |
+| ----------------------------- | ---------: | -------: |
+| xmcp 0.8.1 candidate          |   1.44 MiB | 4.94 MiB |
+| FastMCP 4.16.5                | 379.67 KiB | 1.64 MiB |
+| Official server package 2.0.0 |   1.42 MiB | 6.01 MiB |
 
-## Vercel's mcp-handler
+FastMCP wins this narrow measurement. But this is the size of one published package, not the size of a runnable application. In particular, the official row measures `@modelcontextprotocol/server`; its Node adapter and Hono peer are counted in the fresh-install and deployment views below.
 
-`mcp-handler` is Vercel's official adapter for MCP. It's a different shape from the others: rather than a standalone framework, it's designed to add an MCP endpoint to an **existing Next.js (13+) or Nuxt (3+) app**. You define tools with Zod schemas and expose them through a handler in an API route.
+### M2: fresh production install
 
-It supports Streamable HTTP and SSE, with SSE resumability requiring an optional Redis integration. If your MCP server is really a feature of a larger Next.js application, adapting that app in place is convenient.
+| Fixture              | `node_modules` | Dependency entries |
+| -------------------- | -------------: | -----------------: |
+| xmcp 0.8.1 candidate |       9.29 MiB |                  2 |
+| Official SDK v2 HTTP |      13.25 MiB |                  6 |
+| FastMCP 4.16.5       |      38.93 MiB |                182 |
 
-**Choose mcp-handler when:** you already have a Next.js or Nuxt app and want to bolt an MCP endpoint onto it without standing up a separate service.
+This is the more useful local-install comparison. xmcp's production dependency tree contains its Zod peer and the packed runtime; Rspack and TypeScript are not production dependencies. The official SDK remains compact when assembled into a runnable Node HTTP server. FastMCP provides more framework behavior, and its larger transitive graph reflects that.
 
-## xmcp
+One Node 20 caveat is worth recording: FastMCP installed and its legacy HTTP fixture started successfully, but npm emitted an engine warning because the resolved `pipenet@1.4.2` dependency declares Node 22 or newer.
 
-xmcp is a standalone framework whose defining choice is **file-based discovery**. You don't register tools imperatively — you drop a file in `src/tools/` and it becomes a tool:
+### M3: deployment and bundle
+
+| Fixture              | Documented deploy footprint | Normalized bundled artifact |
+| -------------------- | --------------------------: | --------------------------: |
+| xmcp HTTP            |                    1.19 MiB |                    1.19 MiB |
+| xmcp STDIO           |                  524.71 KiB |                  524.69 KiB |
+| Official SDK v2 HTTP |                   13.25 MiB |                  646.54 KiB |
+| FastMCP HTTP         |                   38.93 MiB |                    1.80 MiB |
+
+The deployment view follows each project's normal output: xmcp's generated, self-contained `dist/`, or compiled source plus production `node_modules` for the other fixtures. The bundle view instead asks esbuild to collapse each non-xmcp fixture into one minified file and compares that file with xmcp's generated transport artifact.
+
+That distinction matters. The raw SDK produces the smallest normalized HTTP bundle, while xmcp produces the smallest ready-to-copy HTTP deployment directory. xmcp's generated output runs without `node_modules`; the benchmark smoke-tests exactly that deployment shape.
+
+## What changed in xmcp 0.8
+
+xmcp 0.8 split the product into two packages:
+
+- `xmcp` is the production runtime and CLI shim;
+- `@xmcp-dev/compiler` contains Rspack, TypeScript, and build-only tooling.
+
+Applications install the compiler as a development dependency. Production `xmcp` installs therefore no longer pull Rspack or TypeScript into the runtime tree. The generated server remains self-contained: removing `node_modules` after the build does not break HTTP, STDIO, CommonJS, ESM, or MCP App artifacts.
+
+The SDK v2 migration also reduced duplicated runtime code. Against an untouched packed xmcp 0.8.0 baseline:
+
+| Measure                          | 0.8.0 baseline | 0.8.1 candidate | Reduction |
+| -------------------------------- | -------------: | --------------: | --------: |
+| Runtime tarball                  |    2,018,611 B |     1,514,374 B |    24.98% |
+| Total emitted runtime JavaScript |    5,580,784 B |     4,369,487 B |    21.70% |
+
+Not every individual transport file became smaller—the new SDK implements more protocol behavior—but the adapter set shares substantially less duplicated code overall.
+
+## Protocol support as tested
+
+The [2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28) removes the required initialize handshake and protocol-level sessions. Requests carry their protocol revision, client identity, and capabilities in `_meta`; HTTP requests also use `Mcp-Method` and `Mcp-Name`. Multi Round-Trip Requests replace held-open server-to-client elicitation flows.
+
+| Capability                                | Official SDK 2.0.0          | FastMCP 4.16.5 fixture                 | xmcp 0.8.1  |
+| ----------------------------------------- | --------------------------- | -------------------------------------- | ----------- |
+| Native MCP `2026-07-28`                   | Yes                         | Not demonstrated by the tested fixture | Yes         |
+| 2025-era clients                          | Configurable legacy support | Yes                                    | Yes         |
+| Stateless HTTP without protocol sessions  | Yes                         | Offers HTTP modes                      | Yes, always |
+| `server/discover`                         | Yes                         | Tested request returned an error       | Yes         |
+| `Mcp-Method` / `Mcp-Name` routing headers | Yes                         | Not demonstrated by the tested fixture | Yes         |
+| Multi Round-Trip Requests                 | Yes                         | Not demonstrated by the tested fixture | Yes         |
+
+The FastMCP package at 4.16.5 directly declares the v1 `@modelcontextprotocol/sdk` monolith. Its exact-pinned fixture successfully completed a 2025-era initialize request and returned an `Mcp-Session-Id`; the same fixture did not complete a direct 2026 `server/discover` request. This is a point-in-time test result, not a prediction about FastMCP's roadmap.
+
+xmcp 0.8.1 uses the stable v2 server/client packages and keeps both client eras working. Modern requests use the 2026 envelope. Older requests go through the SDK's stateless fallback, which creates a fresh MCP server for every HTTP request. xmcp does not add a session cache or emit `Mcp-Session-Id`, and GET/DELETE session operations remain unavailable.
+
+## Developer experience
+
+Size is only one dimension.
+
+### Official SDK
+
+The official SDK is the reference implementation and the best choice when you want protocol-level control. You create a server, register each primitive, select a transport, and own the surrounding lifecycle. That explicitness is valuable for gateways, infrastructure, unusual transports, and learning the protocol.
+
+The tradeoff is boilerplate. The runnable benchmark fixture needs both server and Node adapter packages plus its HTTP wiring.
+
+### FastMCP
+
+FastMCP offers an imperative framework API over MCP. You create a `FastMCP` instance, call `addTool`, and let the framework manage transport behavior and other conveniences. It is a natural fit if you prefer a central in-code registry and want more abstraction than the raw SDK.
+
+Its npm tarball is the smallest of the three, while its tested production dependency tree and deployment footprint are the largest. Check its current Node and protocol compatibility against your deployment target.
+
+### xmcp
+
+xmcp's defining choice is file-based discovery. A file in `src/tools/`, `src/prompts/`, or `src/resources/` is the registration:
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
-import { type InferSchema } from "xmcp";
+import type { InferSchema } from "xmcp";
 
 export const schema = {
   name: z.string().describe("The name of the user to greet"),
@@ -61,38 +139,17 @@ export const metadata = {
   description: "Greet the user",
 };
 
-export default async function greet({ name }: InferSchema<typeof schema>) {
+export default function greet({ name }: InferSchema<typeof schema>) {
   return `Hello, ${name}!`;
 }
 ```
 
-There's no central registry to keep in sync — the file *is* the registration. That convention extends to resources and prompts, and xmcp leans into a batteries-included setup:
+The framework supplies HTTP and STDIO transports, Express/Fastify/NestJS/Next.js adapters, Cloudflare Workers output, auth integrations, and self-contained builds. It keeps the existing Zod 3-or-4 contract while registering schemas through SDK v2's Standard Schema interface.
 
-- **One-command scaffold** with `create-xmcp-app`, plus `xmcp create tool` for new primitives.
-- **STDIO and Streamable HTTP** transports configured with a single line in `xmcp.config.ts`; the HTTP transport is strictly stateless, so it fits serverless cleanly.
-- **Zero-config deploy to Vercel** — `vc deploy` works out of the box.
-- **Auth plugins** for Better Auth, Clerk, Auth0, WorkOS, and Scalekit, so OAuth-protecting your tools doesn't mean hand-rolling a resource server.
-- **Monetization** via x402 and Polar integrations for paid tools.
+## How to choose
 
-**Choose xmcp when:** you want a file-based DX, a standalone server (not tied to an existing meta-framework), and built-in answers for transports, auth, deployment, and monetization.
+- Choose the **official SDK** when maximum control and the smallest normalized bundle matter more than framework conventions.
+- Choose **FastMCP** when you want an imperative framework API and its feature set matches the protocol and Node versions you deploy.
+- Choose **xmcp** when you want file-based discovery, built-in adapters and auth, strictly stateless dual-era HTTP, and a small self-contained deployment.
 
-## Side by side
-
-| | Official SDK | FastMCP | mcp-handler | xmcp |
-| --- | --- | --- | --- | --- |
-| Shape | Low-level SDK | Framework over SDK | Next.js/Nuxt adapter | Standalone framework |
-| Tool definition | Imperative | Imperative | Imperative (in a route) | File-based discovery |
-| Scaffolding CLI | — | — | — | `create-xmcp-app` |
-| Transports | You wire it | STDIO + HTTP streaming | Streamable HTTP + SSE | STDIO + Streamable HTTP |
-| Built-in auth plugins | — | — | — | Better Auth, Clerk, Auth0, WorkOS, Scalekit |
-| Monetization | — | — | — | x402, Polar |
-| Best fit | Max control | Less boilerplate, imperative | Add MCP to an existing app | Batteries-included standalone server |
-
-## How to decide
-
-- Want **total control** or building protocol-level tooling? Use the **official SDK**.
-- Want a **lighter imperative framework**? **FastMCP** is a solid choice.
-- Already have a **Next.js or Nuxt app**? **mcp-handler** fits in place.
-- Want **file-based DX with auth, deploy, and monetization handled**? Try **xmcp**.
-
-There's no single winner — these are different tradeoffs between control and convenience. If the file-based approach appeals to you, the [build-from-scratch guide](/blog/build-mcp-server-typescript) gets you to a working xmcp server in a few minutes, and the [docs](/docs) cover the rest.
+These projects solve different layers of the stack. Measure the artifact you actually deploy, verify the protocol revision your clients use, and pick the abstraction whose conventions fit your team.
