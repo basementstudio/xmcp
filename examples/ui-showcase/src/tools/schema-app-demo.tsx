@@ -26,7 +26,7 @@ const schemaJson = JSON.stringify(
     title: "Schema-Driven Host App",
     description:
       "Declarative example proving that schema-rendered UIs can use host-backed MCP App transport.",
-    mcpServerUrl: "http://localhost:6274",
+    mcpServerUrl: "http://localhost:3001",
     theme: "dark",
     state: {
       stats: null,
@@ -136,7 +136,10 @@ export default function handler() {
                   Handwritten React is not the only supported path anymore.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-cyan-800 text-cyan-300">
+              <Badge
+                variant="outline"
+                className="border-cyan-800 text-cyan-300"
+              >
                 Declarative + host-backed
               </Badge>
             </div>

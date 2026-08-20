@@ -190,7 +190,10 @@ export function createHttpMcpClient({
         }),
       });
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
+      if (
+        error instanceof DOMException &&
+        (error.name === "AbortError" || error.name === "TimeoutError")
+      ) {
         throw new Error(
           `MCP request timed out after ${MCP_REQUEST_TIMEOUT_MS / 1_000}s`
         );
