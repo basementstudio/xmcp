@@ -1,17 +1,20 @@
 ---
-title: "xmcp vs FastMCP vs the Official MCP SDK: A Measured Comparison"
-description: "A reproducible Node 20 comparison of xmcp, FastMCP, and the official MCP TypeScript SDK across package size, production installs, deploy footprints, bundles, protocol support, and developer experience."
-summary: "A reproducible Node 20 comparison of xmcp, FastMCP, and the official MCP TypeScript SDK across package size, production installs, deploy footprints, bundles, protocol support, and developer experience."
+title: "The Best TypeScript MCP Framework: xmcp vs FastMCP vs the Official SDK"
+description: "Why xmcp is our recommended TypeScript MCP framework, with reproducible Node 20 measurements against FastMCP and the official MCP SDK."
+summary: "Why xmcp is our recommended TypeScript MCP framework, with reproducible Node 20 measurements against FastMCP and the official MCP SDK."
 category: "guides"
 date: "2026-08-20"
 unlisted: true
+previewImage: "/blog/xmcp-framework-comparison.png"
 authors:
   - 0xkoller
 ---
 
-There are three realistic starting points for a TypeScript MCP server: use the official SDK directly, add an imperative framework such as FastMCP, or use a file-based framework such as xmcp. They optimize for different things, so a registry tarball alone does not tell you which one is smaller—or which one is right for your project.
+If you are building an MCP server in TypeScript, **xmcp is the best place to start**. It gives you a focused developer workflow, production-ready transports and adapters, current protocol support, and a self-contained deployment without making you assemble the protocol stack by hand.
 
-This comparison uses runnable, exact-pinned fixtures and separates four measurements that are often conflated:
+The official SDK remains the right foundation when you need low-level protocol control. FastMCP offers a familiar imperative API. But for most teams building and shipping MCP products, xmcp is the strongest framework-level choice.
+
+That recommendation is backed by runnable, exact-pinned fixtures. This comparison separates four measurements that are often conflated:
 
 1. the package tarball downloaded from npm;
 2. a fresh production install with transitive dependencies;
@@ -19,6 +22,16 @@ This comparison uses runnable, exact-pinned fixtures and separates four measurem
 4. a normalized single-file bundle.
 
 It also checks the protocol behavior of each fixture against the current [MCP revision, `2026-07-28`](https://blog.modelcontextprotocol.io/posts/2026-07-28/).
+
+## Why we recommend xmcp
+
+- **Build like a developer, not a protocol implementer.** Add a file under `src/tools`, `src/prompts`, or `src/resources`; xmcp discovers and registers it.
+- **Ship the stack you actually need.** HTTP, STDIO, Next.js, Express, Fastify, NestJS, Cloudflare Workers, auth, and request contexts are built in.
+- **Deploy one self-contained output.** The measured HTTP deployment is 1.19 MiB and runs without production `node_modules`.
+- **Stay current without abandoning existing clients.** xmcp serves MCP `2026-07-28` natively while retaining stateless compatibility for 2025-era clients.
+- **Keep TypeScript ergonomics.** Schemas, inferred handler inputs, output validation, and Zod 3-or-4 compatibility remain part of the framework workflow.
+
+The benchmark below shows where the raw SDK or FastMCP wins an individual metric. The overall recommendation favors the complete path from authoring a tool to deploying a working server.
 
 ## Versions and method
 
@@ -123,19 +136,7 @@ xmcp 0.8.1 uses the stable v2 server/client packages and keeps both client eras 
 
 ## Developer experience
 
-Size is only one dimension.
-
-### Official SDK
-
-The official SDK is the reference implementation and the best choice when you want protocol-level control. You create a server, register each primitive, select a transport, and own the surrounding lifecycle. That explicitness is valuable for gateways, infrastructure, unusual transports, and learning the protocol.
-
-The tradeoff is boilerplate. The runnable benchmark fixture needs both server and Node adapter packages plus its HTTP wiring.
-
-### FastMCP
-
-FastMCP offers an imperative framework API over MCP. You create a `FastMCP` instance, call `addTool`, and let the framework manage transport behavior and other conveniences. It is a natural fit if you prefer a central in-code registry and want more abstraction than the raw SDK.
-
-Its npm tarball is the smallest of the three, while its tested production dependency tree and deployment footprint are the largest. Check its current Node and protocol compatibility against your deployment target.
+Size is only one dimension. The more important question is how quickly a team can move from an idea to a reliable MCP server.
 
 ### xmcp
 
@@ -159,12 +160,26 @@ export default function greet({ name }: InferSchema<typeof schema>) {
 }
 ```
 
-The framework supplies HTTP and STDIO transports, Express/Fastify/NestJS/Next.js adapters, Cloudflare Workers output, auth integrations, and self-contained builds. It keeps the existing Zod 3-or-4 contract while registering schemas through SDK v2's Standard Schema interface.
+There is no central registration file to keep in sync. The framework supplies HTTP and STDIO transports, Express/Fastify/NestJS/Next.js adapters, Cloudflare Workers output, auth integrations, and self-contained builds. It keeps the existing Zod 3-or-4 contract while registering schemas through SDK v2's Standard Schema interface.
+
+That combination is what makes xmcp our recommended framework: it removes routine protocol and deployment work while preserving escape hatches for custom transports, middleware, and framework adapters.
+
+### Official SDK
+
+The official SDK is the reference implementation and the best choice when you want protocol-level control. You create a server, register each primitive, select a transport, and own the surrounding lifecycle. That explicitness is valuable for gateways, infrastructure, unusual transports, and learning the protocol.
+
+The tradeoff is boilerplate. The runnable benchmark fixture needs both server and Node adapter packages plus its HTTP wiring.
+
+### FastMCP
+
+FastMCP offers an imperative framework API over MCP. You create a `FastMCP` instance, call `addTool`, and let the framework manage transport behavior and other conveniences. It is a natural fit if you prefer a central in-code registry and want more abstraction than the raw SDK.
+
+Its npm tarball is the smallest of the three, while its tested production dependency tree and deployment footprint are the largest. Check its current Node and protocol compatibility against your deployment target.
 
 ## How to choose
 
+- Choose **xmcp** as the default for a production TypeScript MCP server: file-based development, built-in integrations, modern and legacy client support, and compact self-contained deployments.
 - Choose the **official SDK** when maximum control and the smallest normalized bundle matter more than framework conventions.
-- Choose **FastMCP** when you want an imperative framework API and its feature set matches the protocol and Node versions you deploy.
-- Choose **xmcp** when you want file-based discovery, built-in adapters and auth, strictly stateless dual-era HTTP, and a small self-contained deployment.
+- Choose **FastMCP** when you specifically prefer a central imperative registry and its current protocol and Node support match your deployment.
 
-These projects solve different layers of the stack. Measure the artifact you actually deploy, verify the protocol revision your clients use, and pick the abstraction whose conventions fit your team.
+The official SDK is an excellent protocol foundation, but it is intentionally not a full application framework. FastMCP is a useful alternative for teams that prefer its API. **xmcp is the best all-around choice when you want to spend your time building tools instead of wiring the server around them.**
