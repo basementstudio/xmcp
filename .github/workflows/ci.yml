@@ -125,6 +125,11 @@ jobs:
       - name: Test UI package
         run: pnpm --filter @xmcp-dev/ui test
 
+      - name: Relink UI showcase workspace binaries
+        # Workspace CLI outputs do not exist during the initial install, so pnpm
+        # can only create their bin links after the packages have been built.
+        run: pnpm --filter ui-showcase install --offline --no-frozen-lockfile
+
       - name: Build UI showcase example
         run: pnpm turbo build --filter=ui-showcase
 
