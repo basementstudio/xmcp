@@ -2,7 +2,7 @@
 
 Generated 2026-08-18 on Darwin 25.5.0 (arm64), Node v26.4.0, npm 11.17.0.
 
-> The repository targets Node 20. These numbers are provisional until the benchmark is rerun on Node 20.
+> The repository targets Node 22. These numbers are provisional until the benchmark is rerun on Node 22.
 
 All versions are exact-pinned: xmcp 0.7.1, fastmcp 4.16.4, mcp-framework 0.2.22, tmcp 1.20.0, `@modelcontextprotocol/sdk` 1.30.0, Zod 4.1.13, and esbuild 0.28.2. Fresh-install measurements charge Zod to every framework.
 

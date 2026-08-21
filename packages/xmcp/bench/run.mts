@@ -278,7 +278,7 @@ const generated = `# Bundle benchmark results
 
 Generated ${new Date().toISOString().slice(0, 10)} on ${os.type()} ${os.release()} (${os.arch()}), Node ${process.version}, npm ${run("npm", ["--version"], benchRoot)}.
 
-> The repository targets Node 20. Results generated on another Node major are provisional and must be rerun on Node 20 before publication.
+> The repository targets Node 22. Results generated on another Node major are provisional and must be rerun on Node 22 before publication.
 
 All versions are exact-pinned. Install measurements add Zod 4.1.13 to every framework. View A follows each framework's documented deployment model: xmcp's self-contained \`dist/\`, or compiled source plus production \`node_modules\`. View B bundles non-xmcp fixtures with esbuild 0.28.2 and compares that single file with xmcp's generated transport file.
 

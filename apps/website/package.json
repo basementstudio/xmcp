@@ -79,7 +79,7 @@
     "@next/eslint-plugin-next": "^16.2.6",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/hast": "^3.0.4",
-    "@types/node": "^20.19.26",
+    "@types/node": "^22.19.2",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@xmcp-dev/compiler": "workspace:*",

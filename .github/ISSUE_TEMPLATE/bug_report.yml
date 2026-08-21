@@ -50,7 +50,7 @@ body:
           - Arch: arm64
           - Version: Darwin Kernel Version 23.6.0
         - Binaries:
-          - Node: 20.17.0
+          - Node: 22.14.0
           - npm: 10.8.2
           - Yarn: 1.22.22
           - pnpm: 9.10.0
