@@ -270,8 +270,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       xmcp:
-        specifier: latest
-        version: 0.8.0(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13))(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        specifier: workspace:*
+        version: link:../../packages/xmcp
       zod:
         specifier: ^4.1.13
         version: 4.1.13
