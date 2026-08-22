@@ -1,5 +1,11 @@
 # init-xmcp
 
+## 1.1.0
+
+### Minor Changes
+
+- 86844f7: Require Node.js 22 or newer when creating or initializing xmcp projects, and generate projects with the same minimum Node.js version.
+
 ## 1.0.0
 
 ## 0.8.0
