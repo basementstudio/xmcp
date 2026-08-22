@@ -1,20 +1,16 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { StreamableHTTPServerTransport as SdkStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp";
-import express, {
-  Express,
-  Request,
-  Response,
-  NextFunction,
-  RequestHandler,
-} from "express";
-import http, { IncomingMessage, ServerResponse } from "http";
-import { randomUUID } from "node:crypto";
-import type { TransportSendOptions } from "@modelcontextprotocol/sdk/shared/transport";
 import {
-  BaseHttpServerTransport,
-  JsonRpcMessage,
-  HttpTransportOptions,
-} from "./base-streamable-http";
+  McpServer,
+  createMcpHandler,
+  McpHttpHandler,
+} from "@modelcontextprotocol/server";
+import {
+  toNodeHandler,
+  NodeMcpRequestHandler,
+} from "@modelcontextprotocol/node";
+import express, { Express, Request, Response, NextFunction } from "express";
+import http from "http";
+import { randomUUID } from "node:crypto";
+import { HttpTransportOptions } from "./base-streamable-http";
 import homeTemplate from "../../templates/home";
 import { greenCheck } from "@/runtime/utils/terminal";
 import { findAvailablePort } from "@/runtime/utils/port-utils";
@@ -30,7 +26,6 @@ import {
 } from "@/runtime/utils/request-tool-names";
 import type { CorsConfig } from "@/config/schemas";
 import { DEFAULT_CORS_CONFIG } from "./cors/defaults";
-import { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 // Global type declarations for tool name context
@@ -38,61 +33,10 @@ declare global {
   var __XMCP_CURRENT_TOOL_NAME: string | string[] | undefined;
 }
 
-// Stateless node transport that delegates protocol handling to the MCP SDK.
-export class StatelessHttpServerTransport extends BaseHttpServerTransport {
-  private readonly debug: boolean;
-  private readonly transport: SdkStreamableHTTPServerTransport;
-
-  constructor(debug: boolean, _bodySizeLimit: string) {
-    super();
-    this.debug = debug;
-    this.transport = new SdkStreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    });
-
-    this.transport.onmessage = (message, extra) => {
-      this.onmessage?.(message as JsonRpcMessage, extra);
-    };
-    this.transport.onerror = (error) => {
-      this.onerror?.(error);
-    };
-    this.transport.onclose = () => {
-      this.onclose?.();
-    };
-  }
-
-  private log(message: string, ...args: unknown[]): void {
-    if (this.debug) {
-      console.log(`[StatelessHTTP] ${message}`, ...args);
-    }
-  }
-
-  async start(): Promise<void> {
-    await this.transport.start();
-  }
-
-  async close(): Promise<void> {
-    await this.transport.close();
-  }
-
-  async send(
-    message: JsonRpcMessage,
-    options?: TransportSendOptions
-  ): Promise<void> {
-    await this.transport.send(message as any, options);
-  }
-
-  async handleRequest(
-    req: IncomingMessage & { auth?: AuthInfo },
-    res: ServerResponse,
-    parsedBody?: unknown
-  ): Promise<void> {
-    this.log(`${req.method} ${req.url ?? req.headers.host ?? "/mcp"}`);
-    await this.transport.handleRequest(req, res, parsedBody);
-  }
-}
-
-// Stateless HTTP Transport wrapper
+// Stateless HTTP Transport wrapper. Protocol handling is delegated to the MCP
+// SDK's createMcpHandler, which serves 2026-07-28 requests natively and
+// answers 2025-era traffic through its stateless fallback (a fresh server per
+// request; no session state survives between requests).
 export class StatelessStreamableHTTPTransport {
   private app: Express;
   private server: http.Server;
@@ -103,6 +47,8 @@ export class StatelessStreamableHTTPTransport {
   private createServerFn: () => Promise<McpServer>;
   private corsConfig: CorsConfig;
   private providers: Provider[] | undefined;
+  private mcpHandler: McpHttpHandler;
+  private nodeMcpHandler: NodeMcpRequestHandler;
 
   constructor(
     createServerFn: () => Promise<McpServer>,
@@ -121,6 +67,15 @@ export class StatelessStreamableHTTPTransport {
     this.createServerFn = createServerFn;
     this.corsConfig = corsConfig;
     this.providers = providers;
+
+    this.mcpHandler = createMcpHandler(() => this.createServerFn(), {
+      legacy: "stateless",
+      onerror: (error) => this.log("MCP handler error:", error),
+    });
+    this.nodeMcpHandler = toNodeHandler(this.mcpHandler, {
+      onerror: (error) =>
+        console.error("[HTTP-server] Error handling MCP request:", error),
+    });
 
     // Setup JSON parsing middleware FIRST
     this.app.use(express.json({ limit: this.options.bodySizeLimit || "10mb" }));
@@ -292,40 +247,19 @@ export class StatelessStreamableHTTPTransport {
     req: Request,
     res: Response
   ): Promise<void> {
-    try {
-      const requestClientInfo = extractClientInfoFromMessages(req.body);
-      const server = await this.createServerFn();
-      const transport = new StatelessHttpServerTransport(
-        this.debug,
-        this.options.bodySizeLimit || "10mb"
-      );
+    const requestClientInfo = extractClientInfoFromMessages(req.body);
 
-      res.on("finish", () => {
-        global.__XMCP_CURRENT_TOOL_NAME = undefined;
-      });
-      res.on("close", () => {
-        void transport.close();
-        void server.close();
-        global.__XMCP_CURRENT_TOOL_NAME = undefined;
-      });
+    res.on("finish", () => {
+      global.__XMCP_CURRENT_TOOL_NAME = undefined;
+    });
+    res.on("close", () => {
+      global.__XMCP_CURRENT_TOOL_NAME = undefined;
+    });
 
-      setHttpRequestContext({ clientInfo: requestClientInfo });
+    setHttpRequestContext({ clientInfo: requestClientInfo });
 
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-    } catch (error) {
-      console.error("[HTTP-server] Error handling MCP request:", error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          jsonrpc: "2.0",
-          error: {
-            code: -32603,
-            message: "Internal server error",
-          },
-          id: null,
-        });
-      }
-    }
+    // express.json() already drained the stream; hand the parsed body through
+    await this.nodeMcpHandler(req, res, req.body);
   }
 
   public async start(): Promise<void> {
@@ -348,6 +282,7 @@ export class StatelessStreamableHTTPTransport {
 
   public shutdown(): void {
     this.log("Shutting down server");
+    void this.mcpHandler.close();
     this.server.close();
     process.exit(0);
   }

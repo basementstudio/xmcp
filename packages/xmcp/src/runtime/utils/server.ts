@@ -1,5 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { Implementation } from "@modelcontextprotocol/sdk/types";
+import { McpServer, Implementation } from "@modelcontextprotocol/server";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
 import { ToolMetadata } from "@/types/tool";
@@ -52,7 +51,9 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
-export const INJECTED_CONFIG = SERVER_INFO as Implementation & { instructions?: string };
+export const INJECTED_CONFIG = SERVER_INFO as Implementation & {
+  instructions?: string;
+};
 
 /* Loads all modules and injects them into the server */
 // would be better as a class and use dependency injection perhaps
@@ -77,17 +78,15 @@ export async function loadTools() {
 }
 
 export async function loadPrompts() {
-  const { promptModules, skippedPrompts } = await loadPromptModules(
-    injectedPrompts
-  );
+  const { promptModules, skippedPrompts } =
+    await loadPromptModules(injectedPrompts);
   reportPromptLoadIssues(skippedPrompts);
   return promptModules;
 }
 
 export async function loadResources() {
-  const { resourceModules, skippedResources } = await loadResourceModules(
-    injectedResources
-  );
+  const { resourceModules, skippedResources } =
+    await loadResourceModules(injectedResources);
   reportResourceLoadIssues(skippedResources);
   return resourceModules;
 }

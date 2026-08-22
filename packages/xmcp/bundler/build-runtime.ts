@@ -100,7 +100,12 @@ const config: RspackOptions = {
     minimize: true,
     splitChunks: false,
   },
-  plugins: [new TsCheckerRspackPlugin()],
+  plugins: [
+    new TsCheckerRspackPlugin(),
+    // The MCP SDK lazy-loads its JSON Schema validator via dynamic import;
+    // keep runtime bundles self-contained (they get re-bundled by user builds).
+    new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+  ],
   watch: mode === "development",
 };
 

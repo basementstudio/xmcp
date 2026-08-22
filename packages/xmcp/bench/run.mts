@@ -12,19 +12,19 @@ const fixtures = [
   {
     name: "xmcp-http",
     packageName: "xmcp",
-    version: "0.7.1",
+    version: "0.8.0",
     transport: "http",
   },
   {
     name: "xmcp-stdio",
     packageName: "xmcp",
-    version: "0.7.1",
+    version: "0.8.0",
     transport: "stdio",
   },
   {
     name: "fastmcp",
     packageName: "fastmcp",
-    version: "4.16.4",
+    version: "4.16.5",
     transport: "http",
   },
   {
@@ -36,8 +36,8 @@ const fixtures = [
   { name: "tmcp", packageName: "tmcp", version: "1.20.0", transport: "http" },
   {
     name: "sdk-raw",
-    packageName: "@modelcontextprotocol/sdk",
-    version: "1.30.0",
+    packageName: "@modelcontextprotocol/server",
+    version: "2.0.0",
     transport: "http",
   },
 ] as const;
@@ -110,6 +110,21 @@ function resetDirectory(target: string): void {
 }
 
 async function registryMetric(fixture: Fixture): Promise<RegistryResult> {
+  if (fixture.name.startsWith("xmcp-") && xmcpTarball) {
+    const [packed] = JSON.parse(
+      run(
+        "npm",
+        ["pack", path.resolve(xmcpTarball), "--dry-run", "--json"],
+        benchRoot
+      )
+    ) as Array<{ size: number; unpackedSize: number }>;
+    return {
+      name: fixture.name,
+      tarball: packed.size,
+      unpacked: packed.unpackedSize,
+    };
+  }
+
   const spec = `${fixture.packageName}@${fixture.version}`;
   const metadata = JSON.parse(
     run(
@@ -132,19 +147,21 @@ async function registryMetric(fixture: Fixture): Promise<RegistryResult> {
 function installMetric(fixture: Fixture): InstallResult {
   const target = path.join(workRoot, "install", fixture.name);
   resetDirectory(target);
+  const packageJson = JSON.parse(
+    fs.readFileSync(
+      path.join(fixturesRoot, fixture.name, "package.json"),
+      "utf-8"
+    )
+  );
+  delete packageJson.devDependencies;
+  if (fixture.name.startsWith("xmcp-") && xmcpTarball) {
+    packageJson.dependencies.xmcp = `file:${path.resolve(xmcpTarball)}`;
+  }
   fs.writeFileSync(
     path.join(target, "package.json"),
-    JSON.stringify({ private: true }, null, 2)
+    `${JSON.stringify(packageJson, null, 2)}\n`
   );
-  const packageSpec =
-    fixture.name.startsWith("xmcp-") && xmcpTarball
-      ? `file:${path.resolve(xmcpTarball)}`
-      : `${fixture.packageName}@${fixture.version}`;
-  run(
-    "npm",
-    ["install", "--legacy-peer-deps", packageSpec, "zod@4.1.13"],
-    target
-  );
+  run("npm", ["install", "--legacy-peer-deps", "--omit=dev"], target);
   const listed = runWithOutputOnError(
     "npm",
     ["ls", "--all", "--parseable"],
@@ -274,13 +291,17 @@ for (const fixture of selected) {
   }
 }
 
+const nodeVersionNotice = process.versions.node.startsWith("22.")
+  ? ""
+  : "\n> The repository targets Node 22. These results are provisional until rerun on Node 22.\n";
+
 const generated = `# Bundle benchmark results
 
 Generated ${new Date().toISOString().slice(0, 10)} on ${os.type()} ${os.release()} (${os.arch()}), Node ${process.version}, npm ${run("npm", ["--version"], benchRoot)}.
+${nodeVersionNotice}
+The xmcp rows use ${xmcpTarball ? "the packed local 0.8.1 migration candidate" : "xmcp 0.8.0 from the registry"}. The comparison fixtures are exact-pinned: FastMCP 4.16.5, mcp-framework 0.2.22, tmcp 1.20.0, \`@modelcontextprotocol/server\`/\`node\` 2.0.0, Zod 4.4.3, and esbuild 0.28.2.
 
-> The repository targets Node 22. Results generated on another Node major are provisional and must be rerun on Node 22 before publication.
-
-All versions are exact-pinned. Install measurements add Zod 4.1.13 to every framework. View A follows each framework's documented deployment model: xmcp's self-contained \`dist/\`, or compiled source plus production \`node_modules\`. View B bundles non-xmcp fixtures with esbuild 0.28.2 and compares that single file with xmcp's generated transport file.
+Fresh-install measurements install each complete runnable fixture with development dependencies omitted. View A follows each framework's documented deployment model: xmcp's self-contained \`dist/\`, or compiled source plus production \`node_modules\`. View B bundles non-xmcp fixtures with esbuild 0.28.2 and compares that single file with xmcp's generated transport file.
 
 ## M1 — registry package size
 

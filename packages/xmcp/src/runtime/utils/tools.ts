@@ -1,7 +1,7 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { z } from "zod";
+import { McpServer } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
+import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { isReactFile } from "./react";
@@ -31,7 +31,9 @@ export function pathToName(path: string): string {
 }
 
 /** Ensures toolConfig has its own annotations object with a title */
-export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annotations">): void {
+export function ensureAnnotations(
+  toolConfig: Pick<ToolMetadata, "name" | "annotations">
+): void {
   toolConfig.annotations = { ...(toolConfig.annotations ?? {}) };
   if (toolConfig.annotations.title === undefined) {
     toolConfig.annotations.title = toolConfig.name;
@@ -120,9 +122,7 @@ export function addToolsToServer(
         resourceSpecificMeta.ui.csp.resourceDomains || [];
 
       if (
-        !resourceSpecificMeta.ui.csp.resourceDomains.includes(
-          "https://esm.sh"
-        )
+        !resourceSpecificMeta.ui.csp.resourceDomains.includes("https://esm.sh")
       ) {
         resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
       }
@@ -161,21 +161,22 @@ export function addToolsToServer(
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
-      // Build the object schema using the project's Zod instance to avoid
-      // cross-instance v3 shape issues in tools/list JSON schema generation.
-      inputSchema: z.object(toolSchema),
+      // Assemble Standard Schemas per field so user schemas work regardless
+      // of which zod instance or major created them.
+      inputSchema: rawShapeToStandardSchema(toolSchema as unknown as RawShape),
       outputSchema: toolOutputSchema
-        ? z.object(toolOutputSchema).strict()
+        ? rawShapeToStandardSchema(toolOutputSchema as unknown as RawShape, {
+            strict: true,
+          })
         : undefined,
       annotations: toolConfig.annotations,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
-    // server as any prevents infinite type recursion
-    (server as any).registerTool(
+    server.registerTool(
       toolConfig.name,
       toolConfigFormatted,
-      transformedHandler
+      transformedHandler as never
     );
   });
 

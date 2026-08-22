@@ -1,17 +1,12 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import {
+  Client,
+  StreamableHTTPClientTransport,
+  type StreamableHTTPClientTransportOptions,
+} from "@modelcontextprotocol/client";
 import {
   StdioClientTransport,
   type StdioServerParameters,
-} from "@modelcontextprotocol/sdk/client/stdio.js";
-import {
-  StreamableHTTPClientTransport,
-  StreamableHTTPClientTransportOptions,
-} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import {
-  Request,
-  Result,
-  Notification,
-} from "@modelcontextprotocol/sdk/types.js";
+} from "@modelcontextprotocol/client/stdio";
 import type { Buffer } from "node:buffer";
 import { CustomHeaders, headersToRecord } from "./headers";
 
@@ -32,6 +27,9 @@ const CLIENT_CAPABILITIES = {
     },
     roots: { listChanged: true },
   },
+  // Probe server/discover at connect (protocol 2026-07-28), falling back to
+  // the classic initialize handshake against 2025-era servers.
+  versionNegotiation: { mode: "auto" },
 } as const;
 
 interface HttpClientOptions {
@@ -46,11 +44,8 @@ interface HttpClientOptions {
 export async function createHTTPClient({
   url,
   headers,
-}: HttpClientOptions): Promise<Client<Request, Notification, Result>> {
-  const client = new Client<Request, Notification, Result>(
-    CLIENT_IDENTITY,
-    CLIENT_CAPABILITIES
-  );
+}: HttpClientOptions): Promise<Client> {
+  const client = new Client(CLIENT_IDENTITY, CLIENT_CAPABILITIES);
 
   // ----- headers -----
   const headersRecord = headers
@@ -90,7 +85,7 @@ export interface StdioClientOptions extends StdioServerParameters {
 }
 
 export interface StdioClientConnection {
-  client: Client<Request, Notification, Result>;
+  client: Client;
   transport: StdioClientTransport;
 }
 
@@ -102,10 +97,7 @@ export async function createSTDIOClient(
 ): Promise<StdioClientConnection> {
   const { onStderrData, ...serverParams } = options;
 
-  const client = new Client<Request, Notification, Result>(
-    CLIENT_IDENTITY,
-    CLIENT_CAPABILITIES
-  );
+  const client = new Client(CLIENT_IDENTITY, CLIENT_CAPABILITIES);
 
   const transport = new StdioClientTransport({
     ...serverParams,

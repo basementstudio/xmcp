@@ -5,6 +5,7 @@ import {
   BannerPlugin,
   NormalModuleReplacementPlugin,
   IgnorePlugin,
+  optimize,
   type ResolveAlias,
 } from "@rspack/core";
 import path from "path";
@@ -174,6 +175,9 @@ export function getRspackConfig(
       : {}),
     experiments: isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
     resolve: {
+      // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
+      // validator through the "workerd" exports condition.
+      ...(isCloudflare ? { conditionNames: ["workerd", "..."] } : {}),
       fallback: {
         process: false,
         ...(isCloudflare ? nodeBuiltinFallbacks : {}),
@@ -212,6 +216,9 @@ export function getRspackConfig(
             resource.request = resource.request.replace(/^node:/, "");
           })
         : null,
+      // The MCP SDK lazy-loads its JSON Schema validator via dynamic import;
+      // keep server bundles self-contained instead of emitting async chunks.
+      new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
       isEsmOutput ? new EmitModulePackageJsonPlugin() : null,
       new CreateTypeDefinitionPlugin(),

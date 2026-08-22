@@ -101,6 +101,10 @@ function getConfig() {
     },
     plugins: [
       new TsCheckerRspackPlugin(),
+      // The MCP SDK lazy-loads its JSON Schema validator via dynamic import;
+      // keep every entry self-contained instead of emitting async chunks that
+      // break consumers bundling dist files.
+      new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       // add shebang to CLI output
       new rspack.BannerPlugin({
         banner: "#!/usr/bin/env node",

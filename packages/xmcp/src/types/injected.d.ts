@@ -38,18 +38,7 @@ declare const TEMPLATE_CONFIG: import("../config").TemplateConfig;
 
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
-declare const SERVER_INFO: import("@modelcontextprotocol/sdk/types").Implementation;
-
-// ─── DefinePlugin — individual CORS vars (legacy Express adapter) ──────────────
-
-declare const HTTP_CORS_ORIGIN: string;
-declare const HTTP_CORS_METHODS: string;
-declare const HTTP_CORS_ALLOWED_HEADERS: string;
-declare const HTTP_CORS_EXPOSED_HEADERS: string;
-declare const HTTP_CORS_CREDENTIALS: boolean;
-declare const HTTP_CORS_MAX_AGE: number;
-declare const HTTP_DEBUG: boolean;
-declare const HTTP_BODY_SIZE_LIMIT: string;
+declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation;
 
 // ─── DefinePlugin — runtime flags ─────────────────────────────────────────────
 

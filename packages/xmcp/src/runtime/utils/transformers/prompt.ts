@@ -1,9 +1,4 @@
-import {
-  GetPromptResult,
-  ServerRequest,
-  ServerNotification,
-} from "@modelcontextprotocol/sdk/types";
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+import { GetPromptResult, ServerContext } from "@modelcontextprotocol/server";
 import { PromptArgsRawShape } from "../prompts";
 import { contentValidators, validateContent } from "../validators";
 
@@ -20,7 +15,7 @@ export type PromptContent = GetPromptResult["messages"][number]["content"];
  */
 export type UserPromptHandler = (
   args: PromptArgsRawShape,
-  extra?: RequestHandlerExtra<ServerRequest, ServerNotification>
+  extra?: ServerContext
 ) => PromptContent | string | number | Promise<PromptContent | string | number>;
 
 /**
@@ -28,7 +23,7 @@ export type UserPromptHandler = (
  */
 export type McpPromptHandler = (
   args: PromptArgsRawShape,
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+  extra: ServerContext
 ) => GetPromptResult | Promise<GetPromptResult>;
 
 /**
@@ -51,7 +46,7 @@ export function transformPromptHandler(
 ): McpPromptHandler {
   return async (
     args: PromptArgsRawShape,
-    extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+    extra: ServerContext
   ): Promise<GetPromptResult> => {
     let response = handler(args, extra);
 
