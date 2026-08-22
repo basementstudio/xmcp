@@ -13,6 +13,8 @@ export type {
   ToolExtraArguments,
   InferSchema,
   ElicitResult,
+  SampleRequest,
+  SampleResult,
 } from "./types/tool";
 export type { McpClientInfo } from "./types/client-info";
 export type { PromptMetadata } from "./types/prompt";

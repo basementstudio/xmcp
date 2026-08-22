@@ -1,6 +1,10 @@
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
-import type { ElicitResult as McpElicitResult } from "@modelcontextprotocol/server";
+import type {
+  CreateMessageRequestParamsBase,
+  CreateMessageResult,
+  ElicitResult as McpElicitResult,
+} from "@modelcontextprotocol/server";
 import { UIMetadata } from "./ui-meta";
 import type { McpClientInfo } from "./client-info";
 
@@ -43,6 +47,10 @@ type InferCompatibleZodType<T extends CompatibleZodType> =
 export type ToolSchema = Record<string, CompatibleZodType>;
 export type ToolOutputSchema = Record<string, CompatibleZodType>;
 export type ElicitResult = McpElicitResult;
+// Task-augmented sampling is not wired through xmcp yet; the base params also
+// exclude the tools/toolChoice loop, which needs client tool-call handling.
+export type SampleRequest = Omit<CreateMessageRequestParamsBase, "task">;
+export type SampleResult = CreateMessageResult;
 
 export interface ToolRequestOptions {
   /** Progress notification callback */
@@ -181,6 +189,12 @@ export interface ToolExtraArguments {
     request: ElicitRequest,
     options?: ToolRequestOptions
   ) => Promise<ElicitResult>;
+
+  /** Requests an LLM completion from the connected client */
+  sample: (
+    request: SampleRequest,
+    options?: ToolRequestOptions
+  ) => Promise<SampleResult>;
 
   /**
    * Multi round-trip input responses carried by a retried request
