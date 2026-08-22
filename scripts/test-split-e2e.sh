@@ -4,8 +4,8 @@
 # Verifies, against packed npm tarballs (not workspace links):
 #   1. the `xmcp` CLI shim resolves a project-installed @xmcp-dev/compiler
 #   2. a built HTTP server runs from dist/ alone (no node_modules) and answers
-#      initialize, tools/list, and tools/call
-#   3. the same for a built stdio server
+#      both 2025-era and 2026-07-28 requests, including a full MRTR retry
+#   3. the same dual-era protocol coverage for a built stdio server
 #   4. `xmcp build` without @xmcp-dev/compiler fails with the install hint
 #   5. the xmcp/config export resolves from the packed runtime
 #   6. the React MCP App example exposes a standalone ESM UI resource
@@ -77,7 +77,9 @@ EOF
 # --- Stage 2: shim happy path (HTTP consumer builds via project compiler) ----
 HTTP_APP="$WORK_DIR/consumer-http"
 prepare_consumer "xmcp-http" "$HTTP_APP"
-(cd "$HTTP_APP" && npx xmcp build >build.log 2>&1) \
+cp "$REPO_ROOT/examples/http-transport/src/tools/preview-input-required.ts" \
+  "$HTTP_APP/src/tools/preview-input-required.ts"
+(cd "$HTTP_APP" && npm exec -c "xmcp build" >build.log 2>&1) \
   || { cat "$HTTP_APP/build.log" >&2; fail "xmcp build through the shim (HTTP consumer)"; }
 [ -f "$HTTP_APP/dist/http.js" ] || fail "shim build produced no dist/http.js"
 # The fixture declares "type": "module", so the build must emit ESM output
@@ -110,14 +112,62 @@ LIST_RES="$(mcp_post "$HTTP_PORT" '{"jsonrpc":"2.0","id":2,"method":"tools/list"
 echo "$LIST_RES" | grep -q '"add"' || { echo "$LIST_RES" >&2; fail "HTTP tools/list"; }
 CALL_RES="$(mcp_post "$HTTP_PORT" '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"add","arguments":{"a":2,"b":3}}}')"
 echo "$CALL_RES" | grep -q '"5"' || { echo "$CALL_RES" >&2; fail "HTTP tools/call add(2,3)"; }
+LEGACY_CLIENT_RES="$(curl -s --max-time "$REQUEST_TIMEOUT_S" "http://127.0.0.1:$HTTP_PORT/mcp" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "X-MCP-Client-Name: split-e2e-header" \
+  -H "X-MCP-Client-Version: 0.0.0" \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"client-info","arguments":{}}}')"
+echo "$LEGACY_CLIENT_RES" | grep -q 'split-e2e-header' || { echo "$LEGACY_CLIENT_RES" >&2; fail "HTTP legacy header client metadata"; }
+
+MODERN_META='"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{"elicitation":{"form":{}}},"io.modelcontextprotocol/clientInfo":{"name":"split-e2e-modern","version":"0.0.0"}}'
+modern_post() {
+  local method="$1" name="$2" payload="$3"
+  local headers=(
+    -H "Content-Type: application/json"
+    -H "Accept: application/json, text/event-stream"
+    -H "MCP-Protocol-Version: 2026-07-28"
+    -H "Mcp-Method: $method"
+  )
+  if [ -n "$name" ]; then headers+=(-H "Mcp-Name: $name"); fi
+  curl -s --max-time "$REQUEST_TIMEOUT_S" "http://127.0.0.1:$HTTP_PORT/mcp" \
+    "${headers[@]}" -d "$payload"
+}
+
+DISCOVER_RES="$(modern_post 'server/discover' '' "{\"jsonrpc\":\"2.0\",\"id\":101,\"method\":\"server/discover\",\"params\":{$MODERN_META}}")"
+echo "$DISCOVER_RES" | grep -q '"2026-07-28"' || { echo "$DISCOVER_RES" >&2; fail "HTTP modern server/discover"; }
+MODERN_LIST_RES="$(modern_post 'tools/list' '' "{\"jsonrpc\":\"2.0\",\"id\":102,\"method\":\"tools/list\",\"params\":{$MODERN_META}}")"
+echo "$MODERN_LIST_RES" | grep -q '"add"' || { echo "$MODERN_LIST_RES" >&2; fail "HTTP modern tools/list"; }
+MODERN_CALL_RES="$(modern_post 'tools/call' 'add' "{\"jsonrpc\":\"2.0\",\"id\":103,\"method\":\"tools/call\",\"params\":{\"name\":\"add\",\"arguments\":{\"a\":2,\"b\":3},$MODERN_META}}")"
+echo "$MODERN_CALL_RES" | grep -q '"5"' || { echo "$MODERN_CALL_RES" >&2; fail "HTTP modern tools/call add(2,3)"; }
+MODERN_CLIENT_RES="$(modern_post 'tools/call' 'client-info' "{\"jsonrpc\":\"2.0\",\"id\":107,\"method\":\"tools/call\",\"params\":{\"name\":\"client-info\",\"arguments\":{},$MODERN_META}}")"
+echo "$MODERN_CLIENT_RES" | grep -q 'split-e2e-modern' || { echo "$MODERN_CLIENT_RES" >&2; fail "HTTP modern envelope client metadata"; }
+
+MRTR_FIRST="$(modern_post 'tools/call' 'preview-input-required' "{\"jsonrpc\":\"2.0\",\"id\":104,\"method\":\"tools/call\",\"params\":{\"name\":\"preview-input-required\",\"arguments\":{\"theme\":\"night\"},$MODERN_META}}")"
+echo "$MRTR_FIRST" | grep -q '"resultType":"input_required"' || { echo "$MRTR_FIRST" >&2; fail "HTTP modern MRTR input_required"; }
+MRTR_FINAL="$(modern_post 'tools/call' 'preview-input-required' "{\"jsonrpc\":\"2.0\",\"id\":105,\"method\":\"tools/call\",\"params\":{\"name\":\"preview-input-required\",\"arguments\":{\"theme\":\"night\"},\"inputResponses\":{\"confirmation\":{\"action\":\"accept\",\"content\":{\"confirmed\":true}}},$MODERN_META}}")"
+echo "$MRTR_FINAL" | grep -q 'Theme.*night.*applied' || { echo "$MRTR_FINAL" >&2; fail "HTTP modern MRTR retry"; }
+
+HTTP_GET_STATUS="$(curl -s -o /dev/null -w '%{http_code}' --max-time "$REQUEST_TIMEOUT_S" "http://127.0.0.1:$HTTP_PORT/mcp")"
+[ "$HTTP_GET_STATUS" = "405" ] || fail "HTTP stateless GET must return 405"
+curl -s -D "$WORK_DIR/modern-headers.txt" -o /dev/null --max-time "$REQUEST_TIMEOUT_S" \
+  "http://127.0.0.1:$HTTP_PORT/mcp" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -H "MCP-Protocol-Version: 2026-07-28" \
+  -H "Mcp-Method: tools/list" \
+  -d "{\"jsonrpc\":\"2.0\",\"id\":106,\"method\":\"tools/list\",\"params\":{$MODERN_META}}"
+if grep -qi '^mcp-session-id:' "$WORK_DIR/modern-headers.txt"; then
+  fail "modern stateless HTTP response must not set Mcp-Session-Id"
+fi
 { kill "$SERVER_PID" && wait "$SERVER_PID"; } 2>/dev/null || true
 SERVER_PID=""
-pass "HTTP artifact serves initialize/tools/list/tools/call without node_modules"
+pass "HTTP artifact serves both protocol eras and MRTR without node_modules"
 
 # --- Stage 4: stdio artifact runs without node_modules -----------------------
 STDIO_APP="$WORK_DIR/consumer-stdio"
 prepare_consumer "xmcp-stdio" "$STDIO_APP"
-(cd "$STDIO_APP" && npx xmcp build >build.log 2>&1) \
+(cd "$STDIO_APP" && npm exec -c "xmcp build" >build.log 2>&1) \
   || { cat "$STDIO_APP/build.log" >&2; fail "xmcp build through the shim (stdio consumer)"; }
 [ -f "$STDIO_APP/dist/stdio.js" ] || fail "shim build produced no dist/stdio.js"
 
@@ -133,7 +183,16 @@ STDIO_RES="$(cd "$STDIO_DEPLOY" && printf '%s\n' \
 echo "$STDIO_RES" | grep -q '"serverInfo"' || { echo "$STDIO_RES" >&2; fail "stdio initialize"; }
 echo "$STDIO_RES" | grep -q '"add"' || { echo "$STDIO_RES" >&2; fail "stdio tools/list"; }
 echo "$STDIO_RES" | grep -q '"5"' || { echo "$STDIO_RES" >&2; fail "stdio tools/call add(2,3)"; }
-pass "stdio artifact answers initialize/tools/list/tools/call without node_modules"
+
+STDIO_MODERN_RES="$(cd "$STDIO_DEPLOY" && printf '%s\n' \
+  "{\"jsonrpc\":\"2.0\",\"id\":101,\"method\":\"server/discover\",\"params\":{$MODERN_META}}" \
+  "{\"jsonrpc\":\"2.0\",\"id\":102,\"method\":\"tools/list\",\"params\":{$MODERN_META}}" \
+  "{\"jsonrpc\":\"2.0\",\"id\":103,\"method\":\"tools/call\",\"params\":{\"name\":\"add\",\"arguments\":{\"a\":2,\"b\":3},$MODERN_META}}" \
+  | node dist/stdio.js 2>/dev/null)"
+echo "$STDIO_MODERN_RES" | grep -q '"2026-07-28"' || { echo "$STDIO_MODERN_RES" >&2; fail "stdio modern server/discover"; }
+echo "$STDIO_MODERN_RES" | grep -q '"add"' || { echo "$STDIO_MODERN_RES" >&2; fail "stdio modern tools/list"; }
+echo "$STDIO_MODERN_RES" | grep -q '"5"' || { echo "$STDIO_MODERN_RES" >&2; fail "stdio modern tools/call add(2,3)"; }
+pass "stdio artifact answers both protocol eras without node_modules"
 
 # --- Stage 5: missing compiler fails with the install hint -------------------
 BARE_APP="$WORK_DIR/consumer-bare"
@@ -147,7 +206,7 @@ EOF
 (cd "$BARE_APP" && npm install --legacy-peer-deps --no-fund --no-audit >install.log 2>&1) \
   || { cat "$BARE_APP/install.log" >&2; fail "npm install in bare consumer"; }
 set +e
-BARE_OUT="$(cd "$BARE_APP" && npx xmcp build 2>&1)"
+BARE_OUT="$(cd "$BARE_APP" && npm exec -c "xmcp build" 2>&1)"
 BARE_EXIT=$?
 set -e
 [ "$BARE_EXIT" -ne 0 ] || fail "xmcp build without compiler should exit non-zero"
@@ -171,7 +230,7 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 delete pkg.type;
 fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 ' "$HTTP_APP/package.json"
-(cd "$HTTP_APP" && rm -rf dist .xmcp && npx xmcp build >build-cjs.log 2>&1) \
+(cd "$HTTP_APP" && rm -rf dist .xmcp && npm exec -c "xmcp build" >build-cjs.log 2>&1) \
   || { cat "$HTTP_APP/build-cjs.log" >&2; fail "xmcp build in CommonJS mode"; }
 [ ! -f "$HTTP_APP/dist/package.json" ] \
   || fail "CommonJS build unexpectedly emitted a dist/package.json marker"
@@ -207,7 +266,7 @@ fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 EOF
 (cd "$REACT_APP" && npm install --legacy-peer-deps --no-fund --no-audit >install.log 2>&1) \
   || { cat "$REACT_APP/install.log" >&2; fail "npm install in React MCP App consumer"; }
-(cd "$REACT_APP" && npx xmcp build >build.log 2>&1) \
+(cd "$REACT_APP" && npm exec -c "xmcp build" >build.log 2>&1) \
   || { cat "$REACT_APP/build.log" >&2; fail "React MCP App build"; }
 [ -f "$REACT_APP/dist/http.js" ] || fail "React MCP App build produced no dist/http.js"
 grep -q '"type":"module"' "$REACT_APP/dist/package.json" 2>/dev/null \

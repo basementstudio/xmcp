@@ -30,6 +30,14 @@ const HEADERS = {
   "content-type": "application/json",
   accept: "text/event-stream, application/json",
 };
+const MODERN_META = {
+  "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+  "io.modelcontextprotocol/clientCapabilities": {},
+  "io.modelcontextprotocol/clientInfo": {
+    name: "modern-test",
+    version: "1.0.0",
+  },
+};
 
 describe("Fastify adapter", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,6 +84,31 @@ describe("Fastify adapter", () => {
       response.body.includes("test-server"),
       "response body must contain the server name"
     );
+  });
+
+  it("handles a modern server/discover request without creating a session", async () => {
+    const app = Fastify();
+    app.post("/mcp", xmcpHandler);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/mcp",
+      headers: {
+        ...HEADERS,
+        "mcp-protocol-version": "2026-07-28",
+        "mcp-method": "server/discover",
+      },
+      payload: {
+        jsonrpc: "2.0",
+        id: 2,
+        method: "server/discover",
+        params: { _meta: MODERN_META },
+      },
+    });
+
+    assert.strictEqual(response.statusCode, 200);
+    assert.ok(response.body.includes('"2026-07-28"'));
+    assert.strictEqual(response.headers["mcp-session-id"], undefined);
   });
 
   it("writes a 500 JSON-RPC error to reply.raw when createServer throws", async () => {

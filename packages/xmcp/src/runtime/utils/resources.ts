@@ -1,8 +1,8 @@
 import {
   McpServer,
   ResourceTemplate,
-} from "@modelcontextprotocol/sdk/server/mcp";
-import { ReadResourceResult } from "@modelcontextprotocol/sdk/types";
+  ReadResourceResult,
+} from "@modelcontextprotocol/server";
 import { ResourceFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { ZodRawShape } from "zod/v3";
