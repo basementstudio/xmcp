@@ -1,5 +1,6 @@
 import { Tag } from "../../ui/tag";
 import Image from "next/image";
+import { FeaturesCanvas } from "./features-canvas";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
@@ -22,10 +23,11 @@ export const HomeFeatures = () => {
           </p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
         {cards.map((card, index) => (
           <Card key={index} {...card} />
         ))}
+        <FeaturesCanvas />
       </div>
     </div>
   );
@@ -41,13 +43,20 @@ const Card = ({ asset, title, description }: CardProps) => {
   return (
     <div className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full">
       <div className="flex items-center justify-center w-full gap-2 mb-4">
-        <Image
-          src={asset}
-          alt={title}
-          className="mx-auto mix-blend-lighten bg-brand-black"
-          width={245}
-          height={200}
-        />
+        {/* The data attribute marks this box for the shared particles canvas;
+            the image stays as the SSR / reduced-motion / no-WebGL fallback */}
+        <div
+          data-feature-particles={asset}
+          className="relative mx-auto w-full max-w-[245px] aspect-[491/400]"
+        >
+          <Image
+            src={asset}
+            alt={title}
+            className="w-full h-full mix-blend-lighten bg-brand-black"
+            width={245}
+            height={200}
+          />
+        </div>
       </div>
       <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
       <p className="text-brand-neutral-100 pt-1">{description}</p>
