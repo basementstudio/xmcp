@@ -385,6 +385,74 @@ same tool serves both client generations. To carry server state across rounds
 (remember: it round-trips through the client), mint and verify it with
 `createRequestStateCodec`, also re-exported from `xmcp`.
 
+### Sampling
+
+Use `extra.sample()` when a tool needs an LLM completion from the connected client. The client keeps control of model access, selection, and permissions, so the server needs no model API key. Sampling only works when the connected client advertises the `sampling` capability; other clients reject the request.
+
+The request takes `messages` (text, image, or audio content), a required `maxTokens`, and optional `systemPrompt`, `modelPreferences` (model hints plus cost/speed/intelligence priorities), `temperature`, `stopSequences`, `includeContext`, and `metadata`. The result contains the `model` the client picked, the assistant `content`, and an optional `stopReason`.
+
+```typescript title="src/tools/preview-sampling.ts"
+import { z } from "zod";
+import {
+  type InferSchema,
+  type ToolExtraArguments,
+  type ToolMetadata,
+} from "xmcp";
+
+export const schema = {
+  text: z.string().describe("Text for the client's model to summarize"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "preview-sampling",
+  description: "Preview a basic extra.sample() flow in MCPJam",
+  annotations: {
+    title: "Preview sampling",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default async function previewSampling(
+  { text }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const result = await extra.sample({
+    messages: [
+      {
+        role: "user",
+        content: { type: "text", text: `Summarize in one sentence:\n${text}` },
+      },
+    ],
+    systemPrompt: "You summarize text concisely.",
+    modelPreferences: {
+      speedPriority: 0.8,
+    },
+    maxTokens: 200,
+  });
+
+  return JSON.stringify(result, null, 2);
+}
+```
+
+#### Quick check with MCPJam
+
+1. From the repo root, run `pnpm --dir examples/http-transport dev`.
+2. In another terminal, run `npx @mcpjam/inspector@latest`.
+3. Connect MCPJam to `http://127.0.0.1:3001/mcp`.
+4. Call `preview-sampling` with any text.
+5. MCPJam shows the incoming sampling request for approval. Approving runs the completion with its configured model and the tool returns the `model`, `content`, and `stopReason` from the result.
+
+<Callout type="info">
+  Like `extra.elicit()`, `extra.sample()` uses server-initiated requests, which
+  exist on 2025-era MCP connections only. On protocol revision `2026-07-28` it
+  throws with a message pointing at `inputRequired.createMessage()` — the multi
+  round-trip replacement described above. Sampling with `tools`/`toolChoice` and
+  task-augmented sampling are not wired through xmcp yet and are rejected with a
+  clear error.
+</Callout>
+
 ### 2. Template Literal Handlers
 
 Return HTML directly to create interactive widgets. xmcp automatically generates

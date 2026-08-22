@@ -14,6 +14,7 @@ import {
   mapImplementationToClientInfo,
 } from "@/runtime/utils/client-info";
 import { elicitFromTool } from "../elicitation";
+import { sampleFromTool } from "../sampling";
 import { validateContent } from "../validators";
 
 function validateAgainstOutputSchema(
@@ -134,6 +135,7 @@ function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
     sendRequest: (request, resultSchema, options) =>
       ctx.mcpReq.send(request, resultSchema as never, options),
     elicit: (request, options) => elicitFromTool(ctx, request, options),
+    sample: (request, options) => sampleFromTool(ctx, request, options),
     inputResponses: ctx.mcpReq.inputResponses,
     requestState: ctx.mcpReq.requestState,
   };
