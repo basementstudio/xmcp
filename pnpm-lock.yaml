@@ -270,8 +270,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       xmcp:
-        specifier: workspace:*
-        version: link:../../packages/xmcp
+        specifier: latest
+        version: 1.0.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1118,7 +1118,7 @@ importers:
         version: 5.1.0(esbuild@0.28.1)
       xmcp:
         specifier: latest
-        version: 0.8.0(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13))(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        version: 1.0.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -9362,17 +9362,20 @@ packages:
       utf-8-validate:
         optional: true
 
-  xmcp@0.8.0:
-    resolution: {integrity: sha512-J7idFacjDQnm8NVPpCky8VDZAxUxjxUng28CQZVIhadpyFdxcEhPUiA5Py43Hb7NSth1RQVlP7UR90svcmkZwA==}
+  xmcp@1.0.0:
+    resolution: {integrity: sha512-dzJXM6DiSpIUvtEKT5DBmcuonQIDCsilE06LIKOrSRwyG4FKXBfrpXxID9GqdyeBHluelw5rPw2yXeZNiJy0kQ==}
     hasBin: true
     peerDependencies:
-      '@modelcontextprotocol/sdk': ^1.26.0
+      '@modelcontextprotocol/client': ^2.0.0
+      '@modelcontextprotocol/server': ^2.0.0
       jose: ^6.1.3
       react: '>=19.0.0'
       react-dom: '>=19.0.0'
       zod: ^3.25.76 || ^4.0.0
     peerDependenciesMeta:
-      '@modelcontextprotocol/sdk':
+      '@modelcontextprotocol/client':
+        optional: true
+      '@modelcontextprotocol/server':
         optional: true
       jose:
         optional: true
@@ -18327,11 +18330,12 @@ snapshots:
 
   ws@8.21.0: {}
 
-  xmcp@0.8.0(@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13))(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
+  xmcp@1.0.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
     dependencies:
       zod: 4.1.13
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
+      '@modelcontextprotocol/client': 2.0.0
+      '@modelcontextprotocol/server': 2.0.0
       jose: 6.2.3
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
