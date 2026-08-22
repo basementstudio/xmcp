@@ -1,5 +1,12 @@
 # @xmcp-dev/polar
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [10bdd57]
+  - xmcp@1.0.0
+
 ## 0.1.7
 
 ### Patch Changes
