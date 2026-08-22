@@ -117,7 +117,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build main packages only
-        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui
 
       - name: Test xmcp runtime and compiler behavior
         run: |
@@ -127,7 +127,18 @@ jobs:
           pnpm --filter @xmcp-dev/compiler typecheck
 
       - name: Lint packages (if available)
-        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp || echo "No lint script available, skipping..."
+        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui || echo "No lint script available, skipping..."
+
+      - name: Test UI package
+        run: pnpm --filter @xmcp-dev/ui test
+
+      - name: Relink UI showcase workspace binaries
+        # Workspace CLI outputs do not exist during the initial install, so pnpm
+        # can only create their bin links after the packages have been built.
+        run: pnpm --filter ui-showcase install --offline --no-frozen-lockfile
+
+      - name: Build UI showcase example
+        run: pnpm turbo build --filter=ui-showcase
 
       - name: Verify xmcp package build
         run: |
