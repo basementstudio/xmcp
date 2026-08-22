@@ -1,9 +1,9 @@
 ---
-title: "The Best TypeScript MCP Framework: xmcp vs FastMCP vs the Official SDK"
-description: "Why xmcp is our recommended TypeScript MCP framework, with reproducible Node 20 measurements against FastMCP and the official MCP SDK."
-summary: "Why xmcp is our recommended TypeScript MCP framework, with reproducible Node 20 measurements against FastMCP and the official MCP SDK."
+title: "The Best TypeScript MCP Framework: xmcp v1 vs FastMCP vs the Official SDK"
+description: "Why xmcp v1 is our recommended TypeScript MCP framework, with reproducible Node 22 measurements against FastMCP and the official MCP SDK."
+summary: "Why xmcp v1 is our recommended TypeScript MCP framework, with reproducible Node 22 measurements against FastMCP and the official MCP SDK."
 category: "guides"
-date: "2026-08-20"
+date: "2026-08-22"
 unlisted: true
 previewImage: "/blog/xmcp-framework-comparison.png"
 authors:
@@ -33,19 +33,25 @@ It also checks the protocol behavior of each fixture against the current [MCP re
 
 The benchmark below shows where the raw SDK or FastMCP wins an individual metric. The overall recommendation favors the complete path from authoring a tool to deploying a working server.
 
+## xmcp is now v1
+
+xmcp 1.0 marks the framework's stable major line. It shipped the SDK v2 and MCP `2026-07-28` migration as a production contract: modern discovery and Multi Round-Trip Requests, stateless compatibility for 2025-era clients, current framework adapters, and self-contained builds.
+
+The current release is `xmcp@1.1.0`. It requires Node 22 or newer and adds `extra.sample()` for requesting LLM completions from a connected client directly inside a tool handler. Reaching v1 does not change xmcp's core workflow—it makes the modern runtime, compatibility guarantees, and deployment model the supported foundation going forward.
+
 ## Versions and method
 
-The final run used Node 20.20.2 and npm 11.17.0 on Apple Silicon. The fixtures pin:
+The final run used Node 22.23.2 and npm 11.17.0 on Apple Silicon. The fixtures pin:
 
-- the xmcp 0.8.1 migration candidate, packed locally from the 0.8.0 code line;
+- the released xmcp 1.1.0 source tag, packed locally with its matching compiler;
 - `@modelcontextprotocol/server` and `@modelcontextprotocol/node` 2.0.0;
-- FastMCP 4.16.5;
+- FastMCP 4.16.8;
 - Zod 4.4.3; and
 - esbuild 0.28.2 for the normalized bundle view.
 
 The official SDK fixture is a complete HTTP server built with Node's `http` module, `createMcpHandler`, and `toNodeHandler`. Every fixture exposes the same `add` and `echo` tools; the xmcp HTTP fixture also includes small client-identity and MRTR probes used by the packed E2E suite. Every M2 measurement installs the complete runnable fixture with development dependencies omitted.
 
-The benchmark lives in [`packages/xmcp/bench`](https://github.com/basementstudio/xmcp/tree/main/packages/xmcp/bench). Run `pnpm bench` to reproduce M1–M3, or pass local xmcp and compiler tarballs to reproduce the migration-candidate rows.
+The benchmark lives in [`packages/xmcp/bench`](https://github.com/basementstudio/xmcp/tree/main/packages/xmcp/bench). Run `pnpm bench` to reproduce M1–M3, or pass local xmcp and compiler tarballs to reproduce the release-build rows.
 
 ## Results
 
@@ -53,8 +59,8 @@ The benchmark lives in [`packages/xmcp/bench`](https://github.com/basementstudio
 
 | Fixture                       |    Tarball | Unpacked |
 | ----------------------------- | ---------: | -------: |
-| xmcp 0.8.1 candidate          |   1.44 MiB | 4.94 MiB |
-| FastMCP 4.16.5                | 379.67 KiB | 1.64 MiB |
+| xmcp 1.1.0                    |   1.44 MiB | 4.95 MiB |
+| FastMCP 4.16.8                | 384.61 KiB | 1.66 MiB |
 | Official server package 2.0.0 |   1.42 MiB | 6.01 MiB |
 
 FastMCP wins this narrow measurement. But this is the size of one published package, not the size of a runnable application. In particular, the official row measures `@modelcontextprotocol/server`; its Node adapter and Hono peer are counted in the fresh-install and deployment views below.
@@ -63,22 +69,22 @@ FastMCP wins this narrow measurement. But this is the size of one published pack
 
 | Fixture              | `node_modules` | Dependency entries |
 | -------------------- | -------------: | -----------------: |
-| xmcp 0.8.1 candidate |       9.29 MiB |                  2 |
+| xmcp 1.1.0           |       9.30 MiB |                  2 |
 | Official SDK v2 HTTP |      13.25 MiB |                  6 |
-| FastMCP 4.16.5       |      38.93 MiB |                182 |
+| FastMCP 4.16.8       |      38.99 MiB |                183 |
 
 This is the more useful local-install comparison. xmcp's production dependency tree contains its Zod peer and the packed runtime; Rspack and TypeScript are not production dependencies. The official SDK remains compact when assembled into a runnable Node HTTP server. FastMCP provides more framework behavior, and its larger transitive graph reflects that.
 
-One Node 20 caveat is worth recording: FastMCP installed and its legacy HTTP fixture started successfully, but npm emitted an engine warning because the resolved `pipenet@1.4.2` dependency declares Node 22 or newer.
+Node 22 is now the common baseline for this comparison. It is xmcp v1's minimum supported Node version, and FastMCP's current dependency graph installs and starts on the same runtime without a cross-engine caveat.
 
 ### M3: deployment and bundle
 
 | Fixture              | Documented deploy footprint | Normalized bundled artifact |
 | -------------------- | --------------------------: | --------------------------: |
 | xmcp HTTP            |                    1.19 MiB |                    1.19 MiB |
-| xmcp STDIO           |                  524.71 KiB |                  524.69 KiB |
+| xmcp STDIO           |                  526.81 KiB |                  526.79 KiB |
 | Official SDK v2 HTTP |                   13.25 MiB |                  646.54 KiB |
-| FastMCP HTTP         |                   38.93 MiB |                    1.80 MiB |
+| FastMCP HTTP         |                   38.99 MiB |                    1.80 MiB |
 
 The deployment view follows each project's normal output: xmcp's generated, self-contained `dist/`, or compiled source plus production `node_modules` for the other fixtures. The bundle view instead asks esbuild to collapse each non-xmcp fixture into one minified file and compares that file with xmcp's generated transport artifact.
 
@@ -93,15 +99,15 @@ xmcp 0.8 split the product into two packages:
 
 Applications install the compiler as a development dependency. Production `xmcp` installs therefore no longer pull Rspack or TypeScript into the runtime tree. The generated server remains self-contained: removing `node_modules` after the build does not break HTTP, STDIO, CommonJS, ESM, or MCP App artifacts.
 
-To measure that architectural change separately from the SDK v2 migration, we ran the same minimal HTTP fixture on Node 20 against the final 0.7 release (`xmcp@0.7.1`) and the first split release (`xmcp@0.8.0`). The production-install rows use the published packages with development dependencies omitted. The 0.7 build uses its embedded compiler; the 0.8 build uses `@xmcp-dev/compiler` packed from the matching 0.8.0 source tag.
+To measure that architectural change separately from the SDK v2 migration, we ran the same minimal HTTP fixture on Node 22 against the final 0.7 release (`xmcp@0.7.1`) and the first split release (`xmcp@0.8.0`). The production-install rows use the published packages with development dependencies omitted. The 0.7 build uses its embedded compiler; the 0.8 build uses `@xmcp-dev/compiler` packed from the matching 0.8.0 source tag.
 
 | Measure                        |   xmcp 0.7.1 |  xmcp 0.8.0 | Reduction |
 | ------------------------------ | -----------: | ----------: | --------: |
 | Runtime tarball                |  4,126,552 B | 2,018,611 B |    51.08% |
 | Unpacked runtime package       | 12,398,118 B | 6,054,013 B |    51.17% |
-| Fresh production install       |   101.12 MiB |   10.12 MiB |    89.99% |
+| Fresh production install       |   101.13 MiB |   10.12 MiB |    89.99% |
 | Production dependency entries  |          169 |           2 |    98.82% |
-| Full development install       |   101.12 MiB |   85.14 MiB |    15.81% |
+| Full development install       |   101.13 MiB |   85.14 MiB |    15.81% |
 | Development dependency entries |          169 |          77 |    54.44% |
 | Generated `dist/` directory    |  1,178,195 B | 1,166,645 B |     0.98% |
 | Generated HTTP artifact        |  1,074,696 B | 1,063,146 B |     1.07% |
@@ -110,10 +116,10 @@ This is why the 0.8 split should be described as an install and packaging improv
 
 The SDK v2 migration also reduced duplicated runtime code. Against an untouched packed xmcp 0.8.0 baseline:
 
-| Measure                          | 0.8.0 baseline | 0.8.1 candidate | Reduction |
-| -------------------------------- | -------------: | --------------: | --------: |
-| Runtime tarball                  |    2,018,611 B |     1,514,374 B |    24.98% |
-| Total emitted runtime JavaScript |    5,580,784 B |     4,369,487 B |    21.70% |
+| Measure                          | 0.8.0 baseline | 1.1.0 release | Reduction |
+| -------------------------------- | -------------: | ------------: | --------: |
+| Runtime tarball                  |    2,018,611 B |   1,514,986 B |    24.95% |
+| Total emitted runtime JavaScript |    5,580,784 B |   4,382,423 B |    21.47% |
 
 Not every individual transport file became smaller—the new SDK implements more protocol behavior—but the adapter set shares substantially less duplicated code overall.
 
@@ -121,7 +127,7 @@ Not every individual transport file became smaller—the new SDK implements more
 
 The [2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28) removes the required initialize handshake and protocol-level sessions. Requests carry their protocol revision, client identity, and capabilities in `_meta`; HTTP requests also use `Mcp-Method` and `Mcp-Name`. Multi Round-Trip Requests replace held-open server-to-client elicitation flows.
 
-| Capability                                | Official SDK 2.0.0          | FastMCP 4.16.5 fixture                 | xmcp 0.8.1  |
+| Capability                                | Official SDK 2.0.0          | FastMCP 4.16.8 fixture                 | xmcp 1.1.0  |
 | ----------------------------------------- | --------------------------- | -------------------------------------- | ----------- |
 | Native MCP `2026-07-28`                   | Yes                         | Not demonstrated by the tested fixture | Yes         |
 | 2025-era clients                          | Configurable legacy support | Yes                                    | Yes         |
@@ -130,9 +136,9 @@ The [2026-07-28 specification](https://modelcontextprotocol.io/specification/202
 | `Mcp-Method` / `Mcp-Name` routing headers | Yes                         | Not demonstrated by the tested fixture | Yes         |
 | Multi Round-Trip Requests                 | Yes                         | Not demonstrated by the tested fixture | Yes         |
 
-The FastMCP package at 4.16.5 directly declares the v1 `@modelcontextprotocol/sdk` monolith. Its exact-pinned fixture successfully completed a 2025-era initialize request and returned an `Mcp-Session-Id`; the same fixture did not complete a direct 2026 `server/discover` request. This is a point-in-time test result, not a prediction about FastMCP's roadmap.
+The FastMCP package at 4.16.8 directly declares the v1 `@modelcontextprotocol/sdk` monolith. Its exact-pinned fixture successfully completed a 2025-era initialize request and returned an `Mcp-Session-Id`; the same fixture returned an error for a direct 2026 `server/discover` request. This is a point-in-time test result, not a prediction about FastMCP's roadmap.
 
-xmcp 0.8.1 uses the stable v2 server/client packages and keeps both client eras working. Modern requests use the 2026 envelope. Older requests go through the SDK's stateless fallback, which creates a fresh MCP server for every HTTP request. xmcp does not add a session cache or emit `Mcp-Session-Id`, and GET/DELETE session operations remain unavailable.
+xmcp 1.1.0 uses the stable v2 server/client packages and keeps both client eras working. Modern requests use the 2026 envelope. Older requests go through the SDK's stateless fallback, which creates a fresh MCP server for every HTTP request. xmcp does not add a session cache or emit `Mcp-Session-Id`, and GET/DELETE session operations remain unavailable.
 
 ## Developer experience
 
