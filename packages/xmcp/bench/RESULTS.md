@@ -2,6 +2,8 @@
 
 Generated 2026-08-20 on Darwin 25.5.0 (arm64), Node v20.20.2, npm 11.17.0.
 
+> The repository targets Node 22. These results are provisional until rerun on Node 22.
+
 The xmcp rows use the packed local 0.8.1 migration candidate. The comparison fixtures are exact-pinned: FastMCP 4.16.5, mcp-framework 0.2.22, tmcp 1.20.0, `@modelcontextprotocol/server`/`node` 2.0.0, Zod 4.4.3, and esbuild 0.28.2.
 
 Fresh-install measurements install each complete runnable fixture with development dependencies omitted. View A follows each framework's documented deployment model: xmcp's self-contained `dist/`, or compiled source plus production `node_modules`. View B bundles non-xmcp fixtures with esbuild 0.28.2 and compares that single file with xmcp's generated transport file.

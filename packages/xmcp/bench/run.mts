@@ -291,9 +291,9 @@ for (const fixture of selected) {
   }
 }
 
-const nodeVersionNotice = process.versions.node.startsWith("20.")
+const nodeVersionNotice = process.versions.node.startsWith("22.")
   ? ""
-  : "\n> The repository targets Node 20. These results are provisional until rerun on Node 20.\n";
+  : "\n> The repository targets Node 22. These results are provisional until rerun on Node 22.\n";
 
 const generated = `# Bundle benchmark results
 

@@ -9,7 +9,7 @@ the scoped `AGENTS.md` file for any area you touch:
 
 ## Repo basics
 
-- Use Node 20 and pnpm.
+- Use Node 22 and pnpm.
 - All changes target `main`. There is no `canary` branch; canary npm releases are
   cut from `main` as Changesets snapshot releases.
 - Keep PRs focused. If related work appears while editing, leave it for a

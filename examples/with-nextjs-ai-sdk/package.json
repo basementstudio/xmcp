@@ -28,7 +28,7 @@
     "@xmcp-dev/compiler": "workspace:*",
     "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "^20.19.26",
+    "@types/node": "^22.19.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.1",
