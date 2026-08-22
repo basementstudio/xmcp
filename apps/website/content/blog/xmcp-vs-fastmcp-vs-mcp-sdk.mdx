@@ -35,7 +35,7 @@ The benchmark below shows where the raw SDK or FastMCP wins an individual metric
 
 ## xmcp is now v1
 
-xmcp 1.0 marks the framework's stable major line. It shipped the SDK v2 and MCP `2026-07-28` migration as a production contract: modern discovery and Multi Round-Trip Requests, stateless compatibility for 2025-era clients, current framework adapters, and self-contained builds.
+xmcp 1.1.0 is the framework's current stable major release. It ships the SDK v2 and MCP `2026-07-28` migration as a production contract: modern discovery and Multi Round-Trip Requests, stateless compatibility for 2025-era clients, current framework adapters, and self-contained builds.
 
 The current release is `xmcp@1.1.0`. It requires Node 22 or newer and adds `extra.sample()` for requesting LLM completions from a connected client directly inside a tool handler. Reaching v1 does not change xmcp's core workflow—it makes the modern runtime, compatibility guarantees, and deployment model the supported foundation going forward.
 
@@ -154,148 +154,51 @@ The deployment view follows each project's normal output: xmcp's generated, self
 
 That distinction matters. The raw SDK produces the smallest normalized HTTP bundle, while xmcp produces the smallest ready-to-copy HTTP deployment directory. xmcp's generated output runs without `node_modules`; the benchmark smoke-tests exactly that deployment shape.
 
-## What changed in xmcp 0.8
+## What changed by xmcp 1.1.0
 
-xmcp 0.8 split the product into two packages:
+xmcp 1.1.0 separates the product into two packages:
 
 - `xmcp` is the production runtime and CLI shim;
 - `@xmcp-dev/compiler` contains Rspack, TypeScript, and build-only tooling.
 
 Applications install the compiler as a development dependency. Production `xmcp` installs therefore no longer pull Rspack or TypeScript into the runtime tree. The generated server remains self-contained: removing `node_modules` after the build does not break HTTP, STDIO, CommonJS, ESM, or MCP App artifacts.
 
-To measure that architectural change separately from the SDK v2 migration, we ran the same minimal HTTP fixture on Node 22 against the final 0.7 release (`xmcp@0.7.1`) and the first split release (`xmcp@0.8.0`). The production-install rows use the published packages with development dependencies omitted. The 0.7 build uses its embedded compiler; the 0.8 build uses `@xmcp-dev/compiler` packed from the matching 0.8.0 source tag.
+To measure the complete improvement, we ran the same minimal HTTP fixture on Node 22 against the final 0.7 release (`xmcp@0.7.1`) and the current release (`xmcp@1.1.0`). The production-install rows use the published packages with development dependencies omitted. The 0.7 build uses its embedded compiler; the 1.1.0 build uses its matching `@xmcp-dev/compiler` package.
 
 <pre
-  aria-label="xmcp 0.7.1 and 0.8.0 comparison"
+  aria-label="xmcp 0.7.1 and 1.1.0 comparison"
   className="my-8 overflow-x-auto border border-brand-neutral-500 bg-black/20 p-4 !font-mono !text-xs !leading-6 !text-brand-neutral-200 sm:!text-sm"
 >
   {
     "+--------------------------------+--------------+-------------+-----------+"
   }
   <br />
-  {"| Measure                        | "}
-  <span className="!font-mono !text-brand-white">xmcp 0.7.1</span>
-  {"   | "}
-  <span className="!font-mono !text-brand-white">xmcp 0.8.0</span>
+  {"| Measure                        | xmcp 0.7.1   | "}
+  <span className="!font-mono !text-brand-white">xmcp 1.1.0</span>
   {"  | Reduction |"}
   <br />
   {
     "+--------------------------------+--------------+-------------+-----------+"
   }
   <br />
-  {"| Runtime tarball                | "}
-  <span className="!font-mono !text-brand-white">4,126,552 B</span>
-  {"  | "}
-  <span className="!font-mono !text-brand-white">2,018,611 B</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">51.08%</span>
-  {"    |"}
+  {"| Runtime tarball                | 4,126,552 B  | "}
+  <span className="!font-mono !text-brand-white">1,514,986 B</span>
+  {" | 63.29%    |"}
   <br />
-  {"| Unpacked runtime package       | "}
-  <span className="!font-mono !text-brand-white">12,398,118 B</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">6,054,013 B</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">51.17%</span>
-  {"    |"}
+  {"| Fresh production install       | 101.13 MiB   | "}
+  <span className="!font-mono !text-brand-white">9.30 MiB</span>
+  {"    | 90.80%    |"}
   <br />
-  {"| Fresh production install       | "}
-  <span className="!font-mono !text-brand-white">101.13 MiB</span>
-  {"   | "}
-  <span className="!font-mono !text-brand-white">10.12 MiB</span>
-  {"   | "}
-  <span className="!font-mono !text-brand-white">89.99%</span>
-  {"    |"}
-  <br />
-  {"| Production dependency entries  | "}
-  <span className="!font-mono !text-brand-white">169</span>
-  {"          | "}
+  {"| Production dependency entries  | 169          | "}
   <span className="!font-mono !text-brand-white">2</span>
-  {"           | "}
-  <span className="!font-mono !text-brand-white">98.82%</span>
-  {"    |"}
-  <br />
-  {"| Full development install       | "}
-  <span className="!font-mono !text-brand-white">101.13 MiB</span>
-  {"   | "}
-  <span className="!font-mono !text-brand-white">85.14 MiB</span>
-  {"   | "}
-  <span className="!font-mono !text-brand-white">15.81%</span>
-  {"    |"}
-  <br />
-  {"| Development dependency entries | "}
-  <span className="!font-mono !text-brand-white">169</span>
-  {"          | "}
-  <span className="!font-mono !text-brand-white">77</span>
-  {"          | "}
-  <span className="!font-mono !text-brand-white">54.44%</span>
-  {"    |"}
-  <br />
-  {"| Generated dist/ directory      | "}
-  <span className="!font-mono !text-brand-white">1,178,195 B</span>
-  {"  | "}
-  <span className="!font-mono !text-brand-white">1,166,645 B</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">0.98%</span>
-  {"     |"}
-  <br />
-  {"| Generated HTTP artifact        | "}
-  <span className="!font-mono !text-brand-white">1,074,696 B</span>
-  {"  | "}
-  <span className="!font-mono !text-brand-white">1,063,146 B</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">1.07%</span>
-  {"     |"}
+  {"           | 98.82%    |"}
   <br />
   {
     "+--------------------------------+--------------+-------------+-----------+"
   }
 </pre>
 
-This is why the 0.8 split should be described as an install and packaging improvement, not as a dramatic reduction in the generated server itself. The production tree is about 90% smaller because build tools moved out of the runtime package; the self-contained HTTP artifact is roughly unchanged.
-
-The SDK v2 migration also reduced duplicated runtime code. Against an untouched packed xmcp 0.8.0 baseline:
-
-<pre
-  aria-label="xmcp 0.8.0 and 1.1.0 comparison"
-  className="my-8 overflow-x-auto border border-brand-neutral-500 bg-black/20 p-4 !font-mono !text-xs !leading-6 !text-brand-neutral-200 sm:!text-sm"
->
-  {
-    "+----------------------------------+---------------------+--------------------+-----------+"
-  }
-  <br />
-  {"| Measure                          | "}
-  <span className="!font-mono !text-brand-white">xmcp 0.8.0 baseline</span>
-  {" | "}
-  <span className="!font-mono !text-brand-white">xmcp 1.1.0 release</span>
-  {" | Reduction |"}
-  <br />
-  {
-    "+----------------------------------+---------------------+--------------------+-----------+"
-  }
-  <br />
-  {"| Runtime tarball                  | "}
-  <span className="!font-mono !text-brand-white">2,018,611 B</span>
-  {"         | "}
-  <span className="!font-mono !text-brand-white">1,514,986 B</span>
-  {"        | "}
-  <span className="!font-mono !text-brand-white">24.95%</span>
-  {"    |"}
-  <br />
-  {"| Total emitted runtime JavaScript | "}
-  <span className="!font-mono !text-brand-white">5,580,784 B</span>
-  {"         | "}
-  <span className="!font-mono !text-brand-white">4,382,423 B</span>
-  {"        | "}
-  <span className="!font-mono !text-brand-white">21.47%</span>
-  {"    |"}
-  <br />
-  {
-    "+----------------------------------+---------------------+--------------------+-----------+"
-  }
-</pre>
-
-Not every individual transport file became smaller—the new SDK implements more protocol behavior—but the adapter set shares substantially less duplicated code overall.
+xmcp 1.1.0 cuts the production install by about 91% and the runtime tarball by 63% compared with 0.7.1. Build tooling now stays out of the production dependency tree, while the generated HTTP and STDIO servers remain self-contained and run without `node_modules`.
 
 ## Protocol support as tested
 
