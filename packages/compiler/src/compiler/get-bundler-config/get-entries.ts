@@ -1,4 +1,4 @@
-import { runtimeFolderPath, resolveXmcpSrcPath } from "@/utils/constants";
+import { runtimeFolderPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import path from "path";
 import { compilerContext } from "@/compiler/compiler-context";
@@ -10,9 +10,9 @@ export function getEntries(
   const { platforms } = compilerContext.getContext();
 
   if (platforms.cloudflare) {
-    const xmcpSrcPath = resolveXmcpSrcPath();
+    // Prebuilt worker runtime copied into .xmcp by InjectRuntimePlugin
     return {
-      worker: path.join(xmcpSrcPath, "runtime/platforms/cloudflare/worker.ts"),
+      worker: path.join(runtimeFolderPath, "cloudflare-worker.js"),
     };
   }
 

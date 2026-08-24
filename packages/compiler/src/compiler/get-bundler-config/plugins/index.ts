@@ -4,7 +4,7 @@ import path from "path";
 import { Compiler, Compilation, sources } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getRuntimeDirectoryPath } from "@/runtime-config";
-import { getXmcpConfig } from "@/compiler/compiler-context";
+import { compilerContext, getXmcpConfig } from "@/compiler/compiler-context";
 import {
   expressTypeDefinition,
   fastifyTypeDefinition,
@@ -101,6 +101,13 @@ export function readRuntimeFile(fileName: string): string {
  */
 function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
   const neededFiles: string[] = [];
+  const { platforms } = compilerContext.getContext();
+
+  // Cloudflare Workers builds use the prebuilt worker runtime as their entry
+  if (platforms.cloudflare) {
+    neededFiles.push("headers.js", "cloudflare-worker.js");
+    return neededFiles;
+  }
 
   // headers included if http is configured
   if (xmcpConfig.http) {
