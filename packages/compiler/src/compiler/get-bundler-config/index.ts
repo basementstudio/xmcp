@@ -13,7 +13,6 @@ import {
   distOutputPath,
   adapterOutputPath,
   cloudflareOutputPath,
-  resolveXmcpSrcPath,
   runtimeFolderPath,
 } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
@@ -79,7 +78,6 @@ export function getRspackConfig(
       ? "index.js"
       : "[name].js";
 
-  const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
   const nodeBuiltins = [
     "assert",
     "buffer",
@@ -173,7 +171,8 @@ export function getRspackConfig(
           externalsPresets: { node: false },
         }
       : {}),
-    experiments: isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
+    experiments:
+      isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
     resolve: {
       // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
       // validator through the "workerd" exports condition.
@@ -186,15 +185,7 @@ export function getRspackConfig(
         ...nodeBuiltinAliases,
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
-        "xmcp/plugins/x402":
-          isCloudflare && xmcpSrcPath
-            ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
-            : path.resolve(processFolder, ".xmcp/x402.js"),
-        ...(isCloudflare && xmcpSrcPath
-          ? {
-              "@": xmcpSrcPath,
-            }
-          : {}),
+        "xmcp/plugins/x402": path.resolve(processFolder, ".xmcp/x402.js"),
         ...zodAliases,
         ...resolveTsconfigPathsToAlias(),
       },

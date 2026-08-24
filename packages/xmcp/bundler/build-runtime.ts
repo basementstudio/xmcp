@@ -109,6 +109,138 @@ const config: RspackOptions = {
   watch: mode === "development",
 };
 
+// Node.js built-ins that are not available on Cloudflare Workers.
+// Mirrors the list the compiler uses when bundling user code for `--cf`.
+const nodeBuiltins = [
+  "assert",
+  "buffer",
+  "child_process",
+  "cluster",
+  "console",
+  "constants",
+  "crypto",
+  "dgram",
+  "dns",
+  "domain",
+  "events",
+  "fs",
+  "http",
+  "https",
+  "module",
+  "net",
+  "os",
+  "path",
+  "perf_hooks",
+  "process",
+  "punycode",
+  "querystring",
+  "readline",
+  "repl",
+  "stream",
+  "string_decoder",
+  "sys",
+  "timers",
+  "tls",
+  "tty",
+  "url",
+  "util",
+  "vm",
+  "worker_threads",
+  "zlib",
+];
+const nodeBuiltinAliases = nodeBuiltins.reduce<Record<string, string>>(
+  (acc, builtin) => {
+    acc[`node:${builtin}`] = builtin;
+    return acc;
+  },
+  {}
+);
+const nodeBuiltinFallbacks = nodeBuiltins.reduce<Record<string, false>>(
+  (acc, builtin) => {
+    acc[builtin] = false;
+    acc[`node:${builtin}`] = false;
+    return acc;
+  },
+  {}
+);
+const nodeBuiltinsRegex = new RegExp(`^(?:node:)?(${nodeBuiltins.join("|")})$`);
+
+/**
+ * Cloudflare Workers runtime bundle config.
+ *
+ * The published `xmcp` package ships only `dist/`, so the Cloudflare worker
+ * runtime has to be prebuilt here, the same way the Node.js transports and
+ * adapters above are. The compiler copies `dist/runtime/cloudflare-worker.js`
+ * into the user's `.xmcp/` folder and uses it as the `--cf` build entry.
+ *
+ * The bundle is emitted as ESM so the worker's `export default { fetch }`
+ * survives re-bundling by the user build. Injected globals (HTTP_CONFIG,
+ * TEMPLATE_CONFIG, INJECTED_MIDDLEWARE, INJECTED_TOOLS, IS_CLOUDFLARE, ...)
+ * are left as free identifiers for the compiler's Define/Provide plugins,
+ * exactly like in `http.js`.
+ */
+const cloudflareConfig: RspackOptions = {
+  name: "runtime-cloudflare",
+  entry: {
+    "cloudflare-worker": path.join(
+      srcPath,
+      "runtime/platforms/cloudflare/worker.ts"
+    ),
+  },
+  mode: "production",
+  devtool: false,
+  target: "webworker",
+  // AsyncLocalStorage is provided by workerd (nodejs_compat); the user build
+  // keeps it external as well.
+  externals: { async_hooks: "async_hooks" },
+  experiments: { outputModule: true },
+  output: {
+    filename: "[name].js",
+    path: runtimeOutputPath,
+    globalObject: "globalThis",
+    library: { type: "module" },
+    chunkFormat: "module",
+    module: true,
+    // The Node.js runtime build above owns `clean` for this folder.
+    clean: false,
+  },
+  module: config.module,
+  resolve: {
+    // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
+    // validator through the "workerd" exports condition.
+    conditionNames: ["workerd", "..."],
+    extensions: [".tsx", ".ts", ".jsx", ".js", ".json"],
+    fallback: {
+      process: false,
+      ...nodeBuiltinFallbacks,
+    },
+    alias: {
+      ...nodeBuiltinAliases,
+      "@": srcPath,
+      "xmcp/plugins/x402": path.join(srcPath, "plugins/x402"),
+    },
+  },
+  watchOptions: {
+    aggregateTimeout: 600,
+    ignored: /node_modules/,
+  },
+  optimization: {
+    minimize: true,
+    splitChunks: false,
+    runtimeChunk: false,
+  },
+  // The bundle is an intermediate artifact re-bundled by user builds.
+  performance: false,
+  plugins: [
+    new rspack.IgnorePlugin({ resourceRegExp: nodeBuiltinsRegex }),
+    new rspack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+      resource.request = resource.request.replace(/^node:/, "");
+    }),
+    new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+  ],
+  watch: mode === "development",
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -170,9 +302,48 @@ export function buildRuntime(onCompiled: (stats: any) => void) {
       compileStarted = true;
       console.log(chalk.bgGreen.bold("xmcp runtime compiled"));
 
-      onCompiled(stats);
+      buildCloudflareRuntime(() => onCompiled(stats));
     }
   };
 
   runCompiler(config, handleStats);
+}
+
+let cloudflareCompileStarted = false;
+
+function buildCloudflareRuntime(onCompiled: () => void) {
+  console.log(chalk.bgGreen.bold("Starting cloudflare runtime compilation"));
+
+  const handleStats = (err: Error | null, stats: any) => {
+    if (err) {
+      console.error("Cloudflare runtime build error:", err);
+      return;
+    }
+
+    if (stats?.hasErrors()) {
+      console.error(
+        "Cloudflare runtime build errors:",
+        stats.toString({
+          colors: true,
+          chunks: false,
+        })
+      );
+      return;
+    }
+
+    console.log(
+      stats?.toString({
+        colors: true,
+        chunks: false,
+      })
+    );
+
+    if (!cloudflareCompileStarted) {
+      cloudflareCompileStarted = true;
+      console.log(chalk.bgGreen.bold("xmcp cloudflare runtime compiled"));
+      onCompiled();
+    }
+  };
+
+  runCompiler(cloudflareConfig, handleStats);
 }
