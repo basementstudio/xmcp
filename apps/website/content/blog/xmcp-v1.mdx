@@ -1,0 +1,80 @@
+---
+title: "xmcp v1 is here"
+description: "xmcp v1 splits the compiler out of the runtime, moves to MCP revision 2026-07-28 through SDK v2, and keeps every existing tool, prompt and resource working unchanged."
+summary: "xmcp v1 splits the compiler out of the runtime, moves to MCP revision 2026-07-28 through SDK v2, and keeps every existing tool, prompt and resource working unchanged."
+category: "changelog"
+date: "2026-08-25"
+order: 10
+previewImage: "/blog/xmcp-v1.png"
+authors:
+  - valebearzotti
+---
+
+What started as a shortcut for building MCP servers in TypeScript is now a complete, production-ready framework with a far smaller footprint.
+
+A major version bump, not a migration.
+
+```bash
+npm install xmcp@latest
+npm install --save-dev @xmcp-dev/compiler@latest
+```
+
+## The runtime stopped carrying the compiler
+
+Through 0.7.1, `xmcp` shipped two kinds of software in one package: the runtime a built server needs to receive requests and run tools, and the compiler that discovers files, invokes Rspack and TypeScript, and produces the build.
+
+Both were necessary. They were not necessary at the same time. Once `xmcp build` finished, the compiler had no work left to do — and production installed it anyway.
+
+v1 splits them. `xmcp` is the runtime. `@xmcp-dev/compiler` is a development dependency.
+
+| Measure                  | 0.7.1      | 1.1.0    | Reduction |
+| ------------------------ | ---------- | -------- | --------- |
+| Fresh production install | 101.13 MiB | 9.30 MiB | 90.8%     |
+| Production dependencies  | 169        | 2        | 98.8%     |
+| Runtime tarball          | 4.13 MB    | 1.51 MB  | 63.3%     |
+
+The generated server was already self-contained, and still is. Delete `node_modules` after a build and the HTTP, STDIO, CommonJS, ESM and MCP App artifacts all keep running.
+
+## Current protocol, both client eras
+
+v1 moves to MCP revision [`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28) through SDK v2, where `@modelcontextprotocol/server` and `@modelcontextprotocol/client` replace the v1 monolith.
+
+Every transport — HTTP, STDIO, Cloudflare Workers, and the Next.js, Express, Fastify and NestJS adapters — serves both generations. Requests using the 2026 envelope (`server/discover`, `Mcp-Method` / `Mcp-Name` routing, cacheable list results) are handled natively. 2025-era clients go through the SDK's stateless fallback. HTTP stays strictly stateless either way: a fresh server per request, no session cache, no `Mcp-Session-Id`.
+
+Multi Round-Trip Requests replace held-open elicitation. A tool returns `inputRequired(...)` to ask for more before producing a result, and the same tool still serves 2025-era clients — the legacy shim converts it into real elicitation.
+
+Authoring has not changed. A file is still the registration:
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema } from "xmcp";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+};
+
+export default function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+Schemas now register through SDK v2's Standard Schema interface, which keeps the existing Zod 3-or-4 peer range working.
+
+## Sampling in 1.1
+
+`extra.sample()` lets a handler request an LLM completion from the connected client mid-tool, mirroring `extra.elicit()`. It supports text, image and audio messages, `systemPrompt`, `maxTokens`, `modelPreferences`, `temperature` and `stopSequences`.
+
+## Upgrading
+
+Keep the runtime and compiler on matching versions. Your existing tools, prompts, resources, configuration and package scripts work unchanged. v1 requires Node 22 or newer.
+
+```bash
+npx create-xmcp-app@latest
+```
+
+The [installation docs](https://xmcp.dev/docs/getting-started/installation) cover pnpm, Yarn and Bun. The benchmark fixtures behind the numbers above live in [`packages/xmcp/bench`](https://github.com/basementstudio/xmcp/tree/main/packages/xmcp/bench) — run `pnpm bench` to reproduce them.
