@@ -57,6 +57,11 @@ const nextConfig: NextConfig = {
         destination: "/templates/:slug",
         permanent: true,
       },
+      {
+        source: "/blog/xmcp-vs-fastmcp-vs-mcp-sdk",
+        destination: "/blog/xmcp-v1",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
