@@ -75,16 +75,19 @@ pnpm run build
 # Build all packages including examples
 pnpm run build:all
 
-# Run full CI test suite
+# Run the local self-check suite (lint, then test:build + test:cli —
+# this does not run the unit tests, changeset check, package-integrity, or
+# split-E2E suite that GitHub CI also runs)
 pnpm run ci
 
-# Run build-only CI (skip CLI tests)
+# Run build-only local check (skip CLI functional tests)
 pnpm run ci:build-only
 
 # Run individual test components
-pnpm run test:build         # Test build outputs only
-pnpm run test:cli           # Test CLI functionality
-pnpm run test:cli:skip      # Skip CLI tests (exits immediately)
+pnpm run test:build         # Verify build outputs for xmcp, @xmcp-dev/compiler,
+                            # create-xmcp-app, and init-xmcp
+pnpm run test:cli           # Requires test:build; smoke-test all three CLIs
+                            # (xmcp runs in a consumer with the compiler)
 
 # Linting options
 pnpm run lint               # Lint main packages only
