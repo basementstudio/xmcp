@@ -22,7 +22,7 @@ import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
-  EmitModulePackageJsonPlugin,
+  EmitPackageTypePlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
@@ -50,13 +50,12 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
+  const isAdapter = !!xmcpConfig.experimental?.adapter;
+  const prefersEsm = projectPrefersEsm(processFolder);
   // ESM output only applies to the plain node server builds: Cloudflare is
   // already ESM, and adapter output is consumed by the host framework's
   // own module pipeline.
-  const isEsmOutput =
-    !isCloudflare &&
-    !xmcpConfig.experimental?.adapter &&
-    projectPrefersEsm(processFolder);
+  const isEsmOutput = !isCloudflare && !isAdapter && prefersEsm;
   const projectZodPath = path.join(processFolder, "node_modules", "zod");
   const zodAliases: ResolveAlias = fs.existsSync(projectZodPath)
     ? {
@@ -211,7 +210,11 @@ export function getRspackConfig(
       // keep server bundles self-contained instead of emitting async chunks.
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
-      isEsmOutput ? new EmitModulePackageJsonPlugin() : null,
+      // Adapter output is always commonjs2, so mark .xmcp/adapter as CommonJS;
+      // otherwise a "type": "module" host app would load it as ESM.
+      isEsmOutput || (isAdapter && !isCloudflare)
+        ? new EmitPackageTypePlugin(isEsmOutput ? "module" : "commonjs")
+        : null,
       new CreateTypeDefinitionPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
@@ -219,8 +222,11 @@ export function getRspackConfig(
       rules: [
         // The prebuilt runtime files copied into .xmcp are CommonJS; when the
         // application package.json declares "type": "module" they would be
-        // parsed as strict ESM and their require() calls left unresolved.
-        ...(isEsmOutput
+        // parsed as strict ESM and their exports and require() calls left
+        // unresolved. This also covers adapter entries such as
+        // .xmcp/adapter-nextjs.js; Cloudflare is excluded because its prebuilt
+        // worker runtime is ESM.
+        ...(!isCloudflare && prefersEsm
           ? [
               {
                 test: /\.js$/,

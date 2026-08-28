@@ -65,23 +65,27 @@ export function getRuntimeFileNames(): string[] {
 }
 
 /**
- * Marks the output directory as ESM so the self-contained dist keeps running
- * when deployed away from the project's package.json.
+ * Emits a package.json marking the output directory's module format: "module"
+ * so the self-contained ESM dist keeps running when deployed away from the
+ * project's package.json, or "commonjs" so the CommonJS adapter output loads
+ * correctly inside a "type": "module" host app.
  */
-export class EmitModulePackageJsonPlugin {
+export class EmitPackageTypePlugin {
+  constructor(private readonly packageType: "module" | "commonjs") {}
+
   apply(compiler: Compiler) {
     compiler.hooks.thisCompilation.tap(
-      "EmitModulePackageJsonPlugin",
+      "EmitPackageTypePlugin",
       (compilation) => {
         compilation.hooks.processAssets.tap(
           {
-            name: "EmitModulePackageJsonPlugin",
+            name: "EmitPackageTypePlugin",
             stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
             compilation.emitAsset(
               "package.json",
-              new sources.RawSource(`{"type":"module"}\n`)
+              new sources.RawSource(`{"type":"${this.packageType}"}\n`)
             );
           }
         );

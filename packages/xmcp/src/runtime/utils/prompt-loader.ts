@@ -1,3 +1,4 @@
+import { unwrapInteropModule } from "./module-interop";
 import type { PromptFile } from "./server";
 
 const EMPTY_PROMPT_FILE_MESSAGE = "File is empty.";
@@ -71,7 +72,7 @@ export async function loadPromptModules(
 
   const results = await Promise.all(
     Object.entries(loaders).map(async ([path, loadPrompt]) => {
-      const promptModule = await loadPrompt();
+      const promptModule = unwrapInteropModule(await loadPrompt());
       const classification = classifyPromptModule(promptModule, path);
 
       if (classification === "empty") {

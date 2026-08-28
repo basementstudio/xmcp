@@ -10,6 +10,9 @@ import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 // stateless fallback.
 const mcpHandler = createMcpHandler(initializeMcpServer, {
   legacy: "stateless",
+  onerror: HTTP_CONFIG.debug
+    ? (error) => console.error("[Next.js MCP] MCP handler error:", error)
+    : undefined,
 });
 
 /**

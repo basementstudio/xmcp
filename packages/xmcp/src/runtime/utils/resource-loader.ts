@@ -1,3 +1,4 @@
+import { unwrapInteropModule } from "./module-interop";
 import type { ResourceFile } from "./server";
 
 const EMPTY_RESOURCE_FILE_MESSAGE = "File is empty.";
@@ -71,7 +72,7 @@ export async function loadResourceModules(
 
   const results = await Promise.all(
     Object.entries(loaders).map(async ([path, loadResource]) => {
-      const resourceModule = await loadResource();
+      const resourceModule = unwrapInteropModule(await loadResource());
       const classification = classifyResourceModule(resourceModule, path);
 
       if (classification === "empty") {

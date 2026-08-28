@@ -9,6 +9,8 @@
 #   4. `xmcp build` without @xmcp-dev/compiler fails with the install hint
 #   5. the xmcp/config export resolves from the packed runtime
 #   6. the React MCP App example exposes a standalone ESM UI resource
+#   7. the Next.js adapter build emits a loadable CommonJS bundle in both
+#      "type": "module" and CommonJS projects
 #
 # Run from the repo root: bash scripts/test-split-e2e.sh
 set -euo pipefail
@@ -300,5 +302,43 @@ echo "$REACT_RESOURCE_RES" | grep -q 'id=\\"root\\"' \
 { kill "$SERVER_PID" && wait "$SERVER_PID"; } 2>/dev/null || true
 SERVER_PID=""
 pass "React MCP App builds as ESM and serves tool UI without node_modules"
+
+# --- Stage 9: Next.js adapter output loads in a "type": "module" project -----
+ADAPTER_APP="$WORK_DIR/consumer-nextjs-adapter"
+prepare_consumer "xmcp-nextjs-adapter" "$ADAPTER_APP"
+
+check_adapter_output() {
+  local label="$1"
+  [ -f "$ADAPTER_APP/.xmcp/adapter/index.js" ] \
+    || fail "$label adapter build produced no .xmcp/adapter/index.js"
+  if grep -qE 'INJECTED_(TOOLS|PROMPTS|RESOURCES|MIDDLEWARE)' "$ADAPTER_APP/.xmcp/adapter/index.js"; then
+    fail "$label adapter bundle left injected placeholders unsubstituted"
+  fi
+  grep -q '"type":"commonjs"' "$ADAPTER_APP/.xmcp/adapter/package.json" 2>/dev/null \
+    || fail "$label adapter build did not emit the .xmcp/adapter/package.json commonjs marker"
+  (cd "$ADAPTER_APP" && node -e '
+const adapter = require("./.xmcp/adapter/index.js");
+if (typeof adapter.xmcpHandler !== "function") {
+  throw new Error("xmcpHandler missing; exports: " + Object.keys(adapter).join(", "));
+}
+') || fail "$label adapter bundle did not load as CommonJS with an xmcpHandler export"
+}
+
+(cd "$ADAPTER_APP" && npm exec -c "xmcp build" >build.log 2>&1) \
+  || { cat "$ADAPTER_APP/build.log" >&2; fail "xmcp build (ESM Next.js adapter consumer)"; }
+check_adapter_output "ESM"
+
+# The same consumer without "type": "module" must keep working.
+node -e '
+const fs = require("fs");
+const pkgPath = process.argv[1];
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+delete pkg.type;
+fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+' "$ADAPTER_APP/package.json"
+(cd "$ADAPTER_APP" && rm -rf .xmcp && npm exec -c "xmcp build" >build-cjs.log 2>&1) \
+  || { cat "$ADAPTER_APP/build-cjs.log" >&2; fail "xmcp build (CommonJS Next.js adapter consumer)"; }
+check_adapter_output "CommonJS"
+pass "Next.js adapter output loads as CommonJS in ESM and CommonJS projects"
 
 echo "All split E2E checks passed."

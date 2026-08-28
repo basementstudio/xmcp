@@ -1,3 +1,4 @@
+import { unwrapInteropModule } from "./module-interop";
 import type { ToolFile } from "./server";
 
 const EMPTY_TOOL_FILE_MESSAGE = "File is empty.";
@@ -71,7 +72,7 @@ export async function loadToolModules(
 
   const results = await Promise.all(
     Object.entries(loaders).map(async ([path, loadTool]) => {
-      const toolModule = await loadTool();
+      const toolModule = unwrapInteropModule(await loadTool());
       const classification = classifyToolModule(toolModule, path);
 
       if (classification === "empty") {
