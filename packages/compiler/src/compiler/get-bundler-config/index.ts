@@ -22,7 +22,7 @@ import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
-  EmitModulePackageJsonPlugin,
+  EmitPackageJsonTypePlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
@@ -53,10 +53,15 @@ export function getRspackConfig(
   // ESM output only applies to the plain node server builds: Cloudflare is
   // already ESM, and adapter output is consumed by the host framework's
   // own module pipeline.
+  const projectIsEsm = projectPrefersEsm(processFolder);
   const isEsmOutput =
-    !isCloudflare &&
-    !xmcpConfig.experimental?.adapter &&
-    projectPrefersEsm(processFolder);
+    !isCloudflare && !xmcpConfig.experimental?.adapter && projectIsEsm;
+  // Nothing xmcp writes into .xmcp is strict ESM: the prebuilt runtimes are
+  // CommonJS bundles and the generated files are meant to be re-bundled. An
+  // application package.json with "type": "module" would otherwise put the
+  // whole folder under strict ESM parsing. Cloudflare is left alone: its
+  // prebuilt worker is genuinely ESM and is its own entry.
+  const relaxXmcpModuleType = projectIsEsm && !isCloudflare;
   const projectZodPath = path.join(processFolder, "node_modules", "zod");
   const zodAliases: ResolveAlias = fs.existsSync(projectZodPath)
     ? {
@@ -211,22 +216,30 @@ export function getRspackConfig(
       // keep server bundles self-contained instead of emitting async chunks.
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
-      isEsmOutput ? new EmitModulePackageJsonPlugin() : null,
+      isEsmOutput ? new EmitPackageJsonTypePlugin("module") : null,
+      // Adapter output is CommonJS; pin it so host apps with
+      // "type": "module" don't parse index.js as ESM.
+      xmcpConfig.experimental?.adapter
+        ? new EmitPackageJsonTypePlugin("commonjs")
+        : null,
       new CreateTypeDefinitionPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
     module: {
       rules: [
-        // The prebuilt runtime files copied into .xmcp are CommonJS; when the
-        // application package.json declares "type": "module" they would be
-        // parsed as strict ESM and their require() calls left unresolved.
-        ...(isEsmOutput
+        // Strict ESM parsing of .xmcp breaks the folder three ways: the
+        // prebuilt runtimes' require() calls are left unresolved, their
+        // module.exports assignment goes dead (which strips every export off
+        // the adapter bundle), and externalized user files get ESM default
+        // interop that the host bundler re-resolving them does not apply.
+        // "auto" keeps CommonJS semantics while still allowing the ESM syntax
+        // the generated files use.
+        ...(relaxXmcpModuleType
           ? [
               {
                 test: /\.js$/,
                 include: runtimeFolderPath,
-                exclude: /import-map\.js$/,
-                type: "javascript/dynamic" as const,
+                type: "javascript/auto" as const,
               },
             ]
           : []),
