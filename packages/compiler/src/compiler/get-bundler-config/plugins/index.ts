@@ -65,23 +65,33 @@ export function getRuntimeFileNames(): string[] {
 }
 
 /**
- * Marks the output directory as ESM so the self-contained dist keeps running
- * when deployed away from the project's package.json.
+ * Pins the module format of the output directory with a nested package.json,
+ * so the emitted bundle is parsed the way it was written no matter what the
+ * surrounding project declares.
+ *
+ * ESM builds need `"type": "module"` so the self-contained dist keeps running
+ * when deployed away from the project's package.json. Adapter builds always
+ * emit CommonJS (the host framework re-bundles them), so they need
+ * `"type": "commonjs"`: inside an app whose package.json declares
+ * `"type": "module"`, `index.js` would otherwise be read as ESM and the
+ * bundle's `module.exports` assignment would produce a module with no exports.
  */
-export class EmitModulePackageJsonPlugin {
+export class EmitPackageJsonTypePlugin {
+  constructor(public readonly moduleType: "module" | "commonjs") {}
+
   apply(compiler: Compiler) {
     compiler.hooks.thisCompilation.tap(
-      "EmitModulePackageJsonPlugin",
+      "EmitPackageJsonTypePlugin",
       (compilation) => {
         compilation.hooks.processAssets.tap(
           {
-            name: "EmitModulePackageJsonPlugin",
+            name: "EmitPackageJsonTypePlugin",
             stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
             compilation.emitAsset(
               "package.json",
-              new sources.RawSource(`{"type":"module"}\n`)
+              new sources.RawSource(`{"type":"${this.moduleType}"}\n`)
             );
           }
         );
