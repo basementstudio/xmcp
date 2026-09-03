@@ -88,6 +88,14 @@ export class StatelessStreamableHTTPTransport {
     this.setupEndpointRoute();
   }
 
+  /**
+   * The wired Express app, for platforms that own the server themselves and
+   * hand the transport one request at a time instead of calling `start()`.
+   */
+  public get requestListener(): Express {
+    return this.app;
+  }
+
   private log(message: string, ...args: any[]): void {
     if (this.debug) {
       console.log(`[StatelessHTTP] ${message}`, ...args);

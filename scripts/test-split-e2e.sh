@@ -8,7 +8,8 @@
 #   3. the same dual-era protocol coverage for a built stdio server
 #   4. `xmcp build` without @xmcp-dev/compiler fails with the install hint
 #   5. the xmcp/config export resolves from the packed runtime
-#   6. the React MCP App example exposes a standalone ESM UI resource
+#   6. a --vercel build emits a callable request handler that starts no server
+#   7. the React MCP App example exposes a standalone ESM UI resource
 #
 # Run from the repo root: bash scripts/test-split-e2e.sh
 set -euo pipefail
@@ -46,6 +47,69 @@ wait_for_http_server() {
     sleep "$READY_INTERVAL_S"
   done
   fail "$label server did not accept connections"
+}
+
+# Loads a --vercel build's function entry the way the platform launcher does:
+# it must export a request handler, it must not open a server of its own, and
+# it must answer an MCP request when the caller owns the server. A listening
+# socket here is the regression this check exists for -- it keeps the booting
+# invocation alive until the function's maximum duration kills it.
+assert_vercel_function() {
+  local app_dir="$1" label="$2"
+  local entry="$app_dir/.vercel/output/functions/api/index.func/index.js"
+
+  [ -f "$entry" ] || fail "$label --vercel build produced no function entry"
+
+  node --input-type=module -e '
+    import http from "node:http";
+    import { pathToFileURL } from "node:url";
+
+    const [entry, label] = process.argv.slice(1);
+    const loaded = await import(pathToFileURL(entry).href);
+    const handler = typeof loaded === "function" ? loaded : loaded.default;
+
+    if (typeof handler !== "function") {
+      console.error(`${label}: function entry exports no handler`);
+      process.exit(1);
+    }
+
+    const listeners = process._getActiveHandles().filter(
+      (handle) => handle.constructor?.name === "Server"
+    );
+    if (listeners.length > 0) {
+      console.error(`${label}: function entry started a server of its own`);
+      process.exit(1);
+    }
+
+    const server = http.createServer((req, res) => handler(req, res));
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const { port } = server.address();
+
+    const response = await fetch(`http://127.0.0.1:${port}/mcp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-03-26",
+          capabilities: {},
+          clientInfo: { name: "split-e2e", version: "0.0.0" },
+        },
+      }),
+    });
+    const body = await response.text();
+    server.close();
+
+    if (!body.includes("\"serverInfo\"")) {
+      console.error(`${label}: initialize through the handler returned ${body}`);
+      process.exit(1);
+    }
+  ' "$entry" "$label" || fail "$label --vercel function entry"
 }
 
 # --- Stage 1: build and pack both packages -----------------------------------
@@ -247,7 +311,28 @@ echo "$CJS_RES" | grep -q '"5"' || { echo "$CJS_RES" >&2; fail "CommonJS HTTP to
 SERVER_PID=""
 pass "CommonJS project still builds and serves CommonJS output"
 
-# --- Stage 8: React MCP App builds and serves its UI from ESM dist/ ----------
+# --- Stage 8: a --vercel build emits a callable handler, not a server --------
+# Both module formats, because the handler reaches the platform as the module's
+# default export and only the CommonJS output has to unwrap it.
+(cd "$HTTP_APP" && rm -rf dist .xmcp .vercel && npm exec -c "xmcp build --vercel" >build-vercel-cjs.log 2>&1) \
+  || { cat "$HTTP_APP/build-vercel-cjs.log" >&2; fail "xmcp build --vercel in CommonJS mode"; }
+[ ! -f "$HTTP_APP/dist/http.js" ] \
+  || fail "--vercel build emitted the standalone server entry"
+assert_vercel_function "$HTTP_APP" "CommonJS"
+
+node -e '
+const fs = require("fs");
+const pkgPath = process.argv[1];
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+pkg.type = "module";
+fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+' "$HTTP_APP/package.json"
+(cd "$HTTP_APP" && rm -rf dist .xmcp .vercel && npm exec -c "xmcp build --vercel" >build-vercel-esm.log 2>&1) \
+  || { cat "$HTTP_APP/build-vercel-esm.log" >&2; fail "xmcp build --vercel in ESM mode"; }
+assert_vercel_function "$HTTP_APP" "ESM"
+pass "--vercel builds export a callable handler and start no server"
+
+# --- Stage 9: React MCP App builds and serves its UI from ESM dist/ ----------
 REACT_APP="$WORK_DIR/consumer-react-app"
 mkdir -p "$REACT_APP"
 cp "$REPO_ROOT/examples/mcp-app-react/package.json" \

@@ -2,6 +2,7 @@ import { runtimeFolderPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import path from "path";
 import { compilerContext } from "@/compiler/compiler-context";
+import { isVercelFunctionBuild } from "@/compiler/runtime-target";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
@@ -23,7 +24,11 @@ export function getEntries(
   if (xmcpConfig["http"]) {
     // non adapter mode
     if (!xmcpConfig.experimental?.adapter) {
-      entries["http"] = path.join(runtimeFolderPath, "http.js");
+      // Vercel serves the build as a function: it gets the runtime that
+      // exports a handler, where a standalone deployment gets the one that
+      // starts a server of its own.
+      const entryName = isVercelFunctionBuild(xmcpConfig) ? "vercel" : "http";
+      entries[entryName] = path.join(runtimeFolderPath, `${entryName}.js`);
     }
 
     // adapter mode enabled

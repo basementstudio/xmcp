@@ -241,6 +241,57 @@ const cloudflareConfig: RspackOptions = {
   watch: mode === "development",
 };
 
+/**
+ * Vercel runtime bundle config.
+ *
+ * The compiler copies `dist/runtime/vercel.js` into the user's `.xmcp/` folder
+ * and uses it as the `--vercel` build entry, the same way it uses `http.js`
+ * for a standalone server.
+ *
+ * Like the Cloudflare worker above, the bundle is emitted as ESM so its
+ * `export default handler` survives re-bundling by the user build: a CommonJS
+ * entry would leave the user build nothing to re-export, and the platform
+ * would receive a module with no handler on it. Node target, though — this
+ * runs on Node, not on workerd.
+ */
+const vercelConfig: RspackOptions = {
+  name: "runtime-vercel",
+  entry: {
+    vercel: path.join(srcPath, "runtime/platforms/vercel"),
+  },
+  mode: "production",
+  devtool: false,
+  target: "node",
+  externalsPresets: { node: true },
+  externals: config.externals,
+  experiments: { outputModule: true },
+  output: {
+    filename: "[name].js",
+    path: runtimeOutputPath,
+    globalObject: "globalThis",
+    library: { type: "module" },
+    chunkFormat: "module",
+    module: true,
+    // The Node.js runtime build above owns `clean` for this folder.
+    clean: false,
+  },
+  module: config.module,
+  resolve: config.resolve,
+  watchOptions: {
+    aggregateTimeout: 600,
+    ignored: /node_modules/,
+  },
+  optimization: {
+    minimize: true,
+    splitChunks: false,
+    runtimeChunk: false,
+  },
+  // The bundle is an intermediate artifact re-bundled by user builds.
+  performance: false,
+  plugins: [new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 })],
+  watch: mode === "development",
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -341,9 +392,48 @@ function buildCloudflareRuntime(onCompiled: () => void) {
     if (!cloudflareCompileStarted) {
       cloudflareCompileStarted = true;
       console.log(chalk.bgGreen.bold("xmcp cloudflare runtime compiled"));
-      onCompiled();
+      buildVercelRuntime(onCompiled);
     }
   };
 
   runCompiler(cloudflareConfig, handleStats);
+}
+
+let vercelCompileStarted = false;
+
+function buildVercelRuntime(onCompiled: () => void) {
+  console.log(chalk.bgGreen.bold("Starting vercel runtime compilation"));
+
+  const handleStats = (err: Error | null, stats: any) => {
+    if (err) {
+      console.error("Vercel runtime build error:", err);
+      return;
+    }
+
+    if (stats?.hasErrors()) {
+      console.error(
+        "Vercel runtime build errors:",
+        stats.toString({
+          colors: true,
+          chunks: false,
+        })
+      );
+      return;
+    }
+
+    console.log(
+      stats?.toString({
+        colors: true,
+        chunks: false,
+      })
+    );
+
+    if (!vercelCompileStarted) {
+      vercelCompileStarted = true;
+      console.log(chalk.bgGreen.bold("xmcp vercel runtime compiled"));
+      onCompiled();
+    }
+  };
+
+  runCompiler(vercelConfig, handleStats);
 }
