@@ -11,23 +11,36 @@
  * server and this entry only hands the listener over.
  */
 import type { IncomingMessage, ServerResponse } from "http";
+import { StatelessStreamableHTTPTransport } from "@/runtime/transports/http/stateless-streamable-http";
 import { createHttpTransport } from "@/runtime/transports/http/create-transport";
 
 // Built once per instance and reused across invocations. Each request is still
 // handled statelessly by the transport: nothing about a request survives it.
-const transport = createHttpTransport();
+let transport: Promise<StatelessStreamableHTTPTransport> | undefined;
 
-// A failed build (a middleware module that throws, say) is reported to the
-// request that awaits it below; this keeps it from surfacing as an unhandled
-// rejection at import time instead, which would take the instance down before
-// it could answer anything.
-transport.catch(() => {});
+function getTransport(): Promise<StatelessStreamableHTTPTransport> {
+  if (!transport) {
+    // A build that fails (a middleware module that throws, say) is reported to
+    // the request that awaited it and then dropped, so the next invocation on
+    // this instance builds again rather than replaying the same rejection for
+    // the rest of the instance's life. The rejection is attached here as well,
+    // because a request that arrives while the build is still running would
+    // otherwise leave it unhandled.
+    transport = createHttpTransport();
+    transport.catch((error) => {
+      console.error("[HTTP-server] Error building the MCP server:", error);
+      transport = undefined;
+    });
+  }
+
+  return transport;
+}
 
 export default async function handler(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
-  const { requestListener } = await transport;
+  const { requestListener } = await getTransport();
 
   requestListener(req, res);
 }

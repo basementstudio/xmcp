@@ -18,6 +18,7 @@ import {
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getEntries } from "./get-entries";
+import { isVercelFunctionBuild } from "@/compiler/runtime-target";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
@@ -153,7 +154,7 @@ export function getRspackConfig(
             chunkFormat: "module",
             module: true,
           }
-        : platforms.vercel
+        : isVercelFunctionBuild(xmcpConfig)
           ? {
               // The Vercel entry's default export is the request handler
               // itself, and the platform reads `module.exports` as the

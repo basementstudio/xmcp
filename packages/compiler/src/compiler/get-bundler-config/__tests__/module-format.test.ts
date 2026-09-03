@@ -161,12 +161,45 @@ describe("vercel function output", () => {
     });
   });
 
-  it("leaves an ESM build's default export alone", () => {
+  // An ESM bundle already exports its default; only the entry changes.
+  it("keeps ESM output as it is while still building the handler entry", () => {
     const esm = buildConfig(httpConfig, {
       projectType: "module",
       platforms: { vercel: true },
     });
 
     assert.deepStrictEqual(esm.output?.library, { type: "module" });
+    assert.deepStrictEqual(Object.keys(esm.entry as Record<string, string>), [
+      "vercel",
+    ]);
+  });
+
+  // Vercel sets VERCEL=1 for every build it runs, adapter projects included,
+  // but an adapter build is not the function: the host framework serves the
+  // endpoint and re-bundles this output. Unwrapping a default export it does
+  // not have would leave the adapter bundle with no exports at all.
+  it("leaves an adapter build alone even when the platform is vercel", () => {
+    for (const projectType of ["module", "commonjs", undefined] as const) {
+      const config = buildConfig(adapterConfig, {
+        projectType,
+        platforms: { vercel: true },
+      });
+
+      assert.strictEqual(
+        config.output?.libraryTarget,
+        "commonjs2",
+        `adapter output should stay CommonJS for a "${projectType}" project`
+      );
+      assert.strictEqual(
+        config.output?.library,
+        undefined,
+        `adapter output should not unwrap a default export for a "${projectType}" project`
+      );
+      assert.deepStrictEqual(
+        Object.keys(config.entry as Record<string, string>),
+        ["adapter"],
+        `adapter build should keep its own entry for a "${projectType}" project`
+      );
+    }
   });
 });

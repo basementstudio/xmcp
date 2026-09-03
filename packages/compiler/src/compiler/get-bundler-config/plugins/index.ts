@@ -5,6 +5,7 @@ import { Compiler, Compilation, sources } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getRuntimeDirectoryPath } from "@/runtime-config";
 import { compilerContext, getXmcpConfig } from "@/compiler/compiler-context";
+import { isVercelFunctionBuild } from "@/compiler/runtime-target";
 import {
   expressTypeDefinition,
   fastifyTypeDefinition,
@@ -137,7 +138,7 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-nestjs.js");
     } else if (xmcpConfig.experimental?.adapter === "fastify") {
       neededFiles.push("adapter-fastify.js");
-    } else if (platforms.vercel) {
+    } else if (isVercelFunctionBuild(xmcpConfig)) {
       // Vercel serves the build as a function, so it gets the runtime that
       // exports a handler rather than the one that starts a server.
       neededFiles.push("vercel.js");
