@@ -23,7 +23,13 @@ export function getEntries(
   if (xmcpConfig["http"]) {
     // non adapter mode
     if (!xmcpConfig.experimental?.adapter) {
-      entries["http"] = path.join(runtimeFolderPath, "http.js");
+      // Vercel serves the build as a function: it gets the runtime that
+      // exports a handler, where a standalone deployment gets the one that
+      // starts a server of its own.
+      entries[platforms.vercel ? "vercel" : "http"] = path.join(
+        runtimeFolderPath,
+        platforms.vercel ? "vercel.js" : "http.js"
+      );
     }
 
     // adapter mode enabled

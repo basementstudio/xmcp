@@ -20,7 +20,7 @@ vc deploy
 
 No configuration is needed: when Vercel builds your project, `xmcp build` detects the environment and emits the Vercel output automatically. Your server runs as a [Vercel Function](https://vercel.com/docs/functions) with [Fluid compute](https://vercel.com/docs/fluid-compute) by default, available at `https://<your-project>.vercel.app` on your configured endpoint, `/mcp` by default.
 
-The deployment serves the built HTTP server, so your project needs the HTTP transport enabled in `xmcp.config.ts`. You can also produce the same output outside of Vercel's build environment with `xmcp build --vercel`.
+The deployment serves your tools over the HTTP transport, so your project needs it enabled in `xmcp.config.ts`. The build emits a request handler for the platform to invoke rather than a server that listens on a port of its own, so a Vercel build produces `dist/vercel.js` where a standalone build produces `dist/http.js`. You can also produce the same output outside of Vercel's build environment with `xmcp build --vercel`.
 
 ## Get started with Vercel CLI
 

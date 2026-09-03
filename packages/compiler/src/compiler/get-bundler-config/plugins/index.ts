@@ -137,6 +137,10 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-nestjs.js");
     } else if (xmcpConfig.experimental?.adapter === "fastify") {
       neededFiles.push("adapter-fastify.js");
+    } else if (platforms.vercel) {
+      // Vercel serves the build as a function, so it gets the runtime that
+      // exports a handler rather than the one that starts a server.
+      neededFiles.push("vercel.js");
     } else {
       neededFiles.push("http.js");
     }

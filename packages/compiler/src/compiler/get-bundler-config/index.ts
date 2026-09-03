@@ -153,9 +153,16 @@ export function getRspackConfig(
             chunkFormat: "module",
             module: true,
           }
-        : {
-            libraryTarget: "commonjs2",
-          }),
+        : platforms.vercel
+          ? {
+              // The Vercel entry's default export is the request handler
+              // itself, and the platform reads `module.exports` as the
+              // handler rather than as the entry's module object.
+              library: { type: "commonjs2", export: "default" },
+            }
+          : {
+              libraryTarget: "commonjs2",
+            }),
       clean: {
         keep:
           xmcpConfig.experimental?.adapter || isCloudflare

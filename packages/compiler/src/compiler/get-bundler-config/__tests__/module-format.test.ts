@@ -26,13 +26,19 @@ function projectFolder(type?: "module" | "commonjs"): string {
 
 function buildConfig(
   xmcpConfig: XmcpConfigOutputSchema,
-  { projectType }: { projectType?: "module" | "commonjs" } = {}
+  {
+    projectType,
+    platforms = {},
+  }: {
+    projectType?: "module" | "commonjs";
+    platforms?: { vercel?: boolean; cloudflare?: boolean };
+  } = {}
 ) {
   process.chdir(projectFolder(projectType));
   return compilerContext.provider(
     {
       mode: "production",
-      platforms: {},
+      platforms,
       toolPaths: new Set(),
       promptPaths: new Set(),
       resourcePaths: new Set(),
@@ -114,5 +120,53 @@ describe("plain server output module format", () => {
       emittedPackageJsonTypes(cjs.plugins as unknown[]),
       []
     );
+  });
+});
+
+describe("vercel function output", () => {
+  // Vercel serves the build as a function, so the entry is the runtime that
+  // exports a handler. A server entry would leave the platform nothing to
+  // call, and its listening socket would hold the invocation open until the
+  // function's maximum duration killed it.
+  it("builds the handler runtime instead of the server one", () => {
+    for (const projectType of ["module", "commonjs", undefined] as const) {
+      const config = buildConfig(httpConfig, {
+        projectType,
+        platforms: { vercel: true },
+      });
+
+      assert.deepStrictEqual(
+        Object.keys(config.entry as Record<string, string>),
+        ["vercel"],
+        `vercel build should use the handler entry for a "${projectType}" project`
+      );
+      assert.match(
+        (config.entry as Record<string, string>).vercel,
+        /vercel\.js$/
+      );
+    }
+  });
+
+  // The handler is the entry's default export; CommonJS output has to unwrap
+  // it so `module.exports` is the function the platform calls.
+  it("exports the handler itself from a CommonJS build", () => {
+    const cjs = buildConfig(httpConfig, {
+      projectType: "commonjs",
+      platforms: { vercel: true },
+    });
+
+    assert.deepStrictEqual(cjs.output?.library, {
+      type: "commonjs2",
+      export: "default",
+    });
+  });
+
+  it("leaves an ESM build's default export alone", () => {
+    const esm = buildConfig(httpConfig, {
+      projectType: "module",
+      platforms: { vercel: true },
+    });
+
+    assert.deepStrictEqual(esm.output?.library, { type: "module" });
   });
 });
