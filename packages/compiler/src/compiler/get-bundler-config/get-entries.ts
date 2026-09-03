@@ -26,10 +26,8 @@ export function getEntries(
       // Vercel serves the build as a function: it gets the runtime that
       // exports a handler, where a standalone deployment gets the one that
       // starts a server of its own.
-      entries[platforms.vercel ? "vercel" : "http"] = path.join(
-        runtimeFolderPath,
-        platforms.vercel ? "vercel.js" : "http.js"
-      );
+      const entryName = platforms.vercel ? "vercel" : "http";
+      entries[entryName] = path.join(runtimeFolderPath, `${entryName}.js`);
     }
 
     // adapter mode enabled
