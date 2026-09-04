@@ -241,6 +241,23 @@ describe("Config System - Injection Functions", () => {
     assert.equal(config.debug, true); // mode === "development"
   });
 
+  it("should omit maxSubscriptions from HTTP variables when it is unset", () => {
+    const variables = injectHttpVariables(true, "development");
+    const config = JSON.parse(variables.HTTP_CONFIG!);
+
+    assert.equal("maxSubscriptions" in config, false);
+  });
+
+  it("should inject maxSubscriptions when set, including zero", () => {
+    const variables = injectHttpVariables(
+      { maxSubscriptions: 0 },
+      "development"
+    );
+    const config = JSON.parse(variables.HTTP_CONFIG!);
+
+    assert.equal(config.maxSubscriptions, 0);
+  });
+
   it("should not inject HTTP variables when http is false", () => {
     const variables = injectHttpVariables(false, "development");
     assert.deepEqual(variables, {});
