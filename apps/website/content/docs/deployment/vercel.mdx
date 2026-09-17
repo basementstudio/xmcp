@@ -22,6 +22,13 @@ No configuration is needed: when Vercel builds your project, `xmcp build` detect
 
 The deployment serves your tools over the HTTP transport, so your project needs it enabled in `xmcp.config.ts`. The build emits a request handler for the platform to invoke rather than a server that listens on a port of its own, so a Vercel build produces `dist/vercel.js` where a standalone build produces `dist/http.js`. You can also produce the same output outside of Vercel's build environment with `xmcp build --vercel`.
 
+A Vercel Function has a maximum duration, so consider setting
+[`maxSubscriptions`](/docs/configuration/transports#subscription-streams) to
+`0` in `xmcp.config.ts`. A `subscriptions/listen` stream stays open until the
+client disconnects, which on a function means it is held until the invocation
+hits its limit and is killed with a runtime timeout error, having billed the
+whole window.
+
 ## Get started with Vercel CLI
 
 You can initialize a new xmcp app with Vercel CLI with the following command:
