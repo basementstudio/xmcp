@@ -8,6 +8,7 @@ export type Capability =
   | "resources"
   | "templates"
   | "input-required"
+  | "request-context"
   | "stateless-http";
 export interface Target {
   fixture: Fixture;
@@ -24,6 +25,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "resources",
   "templates",
   "input-required",
+  "request-context",
 ];
 
 export function getTargetCapabilities(

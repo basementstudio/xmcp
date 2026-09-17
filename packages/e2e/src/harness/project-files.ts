@@ -1,3 +1,5 @@
+import { REQUEST_CONTEXT_FILES } from "../fixtures/request-context.js";
+
 // These are real application modules compiled by xmcp, not mocked handlers.
 export const TOOL_ADD = `import { z } from "zod";
 export const schema = { a: z.number(), b: z.number() };
@@ -7,6 +9,7 @@ export default function add({ a, b }: { a: number; b: number }) { return { sum: 
 `;
 
 export const DEFAULT_FILES: Record<string, string> = {
+  ...REQUEST_CONTEXT_FILES,
   "src/tools/add.ts": TOOL_ADD,
   "src/tools/client-info.ts": `import type { ToolExtraArguments } from "xmcp";
 export const metadata = { name: "client-info", description: "Echo request client identity" };

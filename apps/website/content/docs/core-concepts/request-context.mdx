@@ -1,0 +1,52 @@
+---
+title: "Request Context"
+metadataTitle: "Request Context | xmcp Documentation"
+description: "Read client identity, HTTP request details, and cancellation state from tool handlers and their async helpers."
+---
+
+Use `getRequestContext()` inside a tool or its async helpers to read the current request without passing the tool's extra arguments through each function.
+
+```typescript title="src/tools/request-context.ts"
+import { getRequestContext } from "xmcp";
+
+async function describeRequest() {
+  const context = getRequestContext();
+  await Promise.resolve();
+  context.signal.throwIfAborted();
+
+  return {
+    clientInfo: context.clientInfo ?? null,
+    httpRequestId: context.http?.id ?? null,
+    requestLabel: context.http?.headers["x-request-label"] ?? null,
+  };
+}
+
+export default async function requestContext() {
+  return { structuredContent: await describeRequest() };
+}
+```
+
+The context stays with the tool's async execution and is isolated from concurrent requests. This accessor is available during tool execution; it is not available at module initialization, in Express middleware, or in prompt and resource handlers. Calling it outside a tool request throws a descriptive error.
+
+## Available fields
+
+The exported `RequestContext` type contains:
+
+| Field          | Meaning                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. Uses the same identity as `extra.clientInfo`.                |
+| `http.id`      | xmcp's generated HTTP request ID. This is separate from the JSON-RPC message ID.                                                                 |
+| `http.headers` | A read-only copy of the current HTTP headers. Values can be strings, arrays of strings, or `undefined`. Standard HTTP header keys are lowercase. |
+| `signal`       | The original SDK `AbortSignal`, also supplied as `extra.signal`.                                                                                 |
+
+`http` is absent on STDIO. Check that it exists before using HTTP-specific data. Client information can be absent on either transport when the client does not supply it.
+
+The context, client information, HTTP details, and header arrays are frozen snapshots. Reading the context does not expose setters or change handler arguments. The cancellation signal remains live: pass it to operations such as `fetch(url, { signal })` or check `signal.throwIfAborted()` during work. Cancellation delivery follows the underlying transport's behavior.
+
+## Client identity on stateless HTTP
+
+Modern clients can supply identity in the protocol's per-request metadata. For legacy HTTP clients, repeat `x-mcp-client-name` and `x-mcp-client-version` on each request that needs identity. Optional headers are `x-mcp-client-title`, `x-mcp-client-website-url`, and `x-mcp-client-description`.
+
+The accessor does not retain metadata from an earlier `initialize` request. STDIO can use the identity negotiated for its connection. Client identity is supplied by the client; it is not authentication information.
+
+See the runnable [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport) for a tool and a curl request using the accessor.
