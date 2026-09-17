@@ -10,6 +10,31 @@ env:
   SKIP_CLI_TESTS: true
 
 jobs:
+  e2e-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @xmcp-dev/e2e typecheck
+      - run: pnpm --filter @xmcp-dev/e2e test:unit
+      - run: pnpm --filter @xmcp-dev/e2e test:fast
+      - name: Upload failed fixture logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-conformance-logs
+          path: packages/e2e/.work/**/*.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+
   changeset-check:
     # Flags a PR that edits a releasable package without adding a changeset.
     # Only packages/** counts — the website and examples are private, so
