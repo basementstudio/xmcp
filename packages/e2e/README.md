@@ -24,7 +24,8 @@ required. The root aliases are `test:e2e:fast` and `test:e2e`.
 
 The shared checks cover tool discovery, input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
-prompts, static resources, resource templates, and tool input requests. HTTP
+prompts, static resources, resource templates, tool input requests, and read-only
+request context (identity, HTTP details, and the live signal). HTTP
 targets additionally verify independent requests without sessions and that
 client identity comes from the current request. Capability-based skips include
 a reason: HTTP-specific checks are skipped for STDIO, and input requests are

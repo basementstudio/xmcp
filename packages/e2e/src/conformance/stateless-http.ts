@@ -10,10 +10,18 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
   whenSupported(
     "stateless-http",
     "handles independent requests without a session or cached client metadata",
-    async ({ url }) => {
+    async ({ url, capabilities }) => {
       // Use the legacy wire directly so each request's identity is explicit.
       // These requests deliberately have no initialize handshake or session ID.
-      for (const name of ["first-request", "second-request", undefined]) {
+      const calls = ["first-request", "second-request", undefined].flatMap(
+        (name) =>
+          (capabilities.has("request-context")
+            ? ["client-info", "request-context"]
+            : ["client-info"]
+          ).map((tool) => ({ name, tool }))
+      );
+      const requestIds = new Set<string>();
+      for (const { name, tool } of calls) {
         const response = await fetch(url!, {
           method: "POST",
           headers: {
@@ -28,7 +36,7 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
             jsonrpc: "2.0",
             id: 1,
             method: "tools/call",
-            params: { name: "client-info", arguments: {} },
+            params: { name: tool, arguments: {} },
           }),
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
@@ -48,6 +56,16 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
           payload?.result?.structuredContent?.clientInfo,
           name ? { name, version: "1.0.0" } : null
         );
+        if (tool === "request-context") {
+          const { http } = payload.result.structuredContent;
+          assert.equal(http.headers["x-mcp-client-name"], name);
+          assert.equal(typeof http.id, "string");
+          assert.ok(
+            !requestIds.has(http.id),
+            "HTTP requests must have distinct IDs"
+          );
+          requestIds.add(http.id);
+        }
       }
     }
   );
