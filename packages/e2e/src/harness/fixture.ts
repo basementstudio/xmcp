@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { createServer } from "node:net";
 import { DEFAULT_FILES, adapterHost } from "./project-files.js";
 import { runCommand } from "./process.js";
+import type { Capability } from "./target.js";
 
 export const E2E_ROOT = fileURLToPath(new URL("../../", import.meta.url));
 export const REPO_ROOT = join(E2E_ROOT, "../..");
@@ -30,6 +31,8 @@ export interface FixtureSpec {
   files?: Record<string, string>;
   /** TypeScript config object members appended after defaultConfig is spread. */
   configFragment?: string;
+  /** Conformance capabilities; omitted uses the standard fixture's capabilities. */
+  capabilities?: readonly Capability[];
 }
 export interface Fixture {
   spec: FixtureSpec;

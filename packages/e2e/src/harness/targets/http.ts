@@ -6,7 +6,7 @@ import {
   CLIENT_INFO,
   type ProtocolMode,
 } from "../client-options.js";
-import { BASE_CAPABILITIES, type Target } from "../target.js";
+import { getTargetCapabilities, type Target } from "../target.js";
 import type { Fixture } from "../fixture.js";
 
 export async function startHttpTarget(
@@ -41,19 +41,7 @@ export async function startHttpTarget(
       mode,
       client,
       url,
-      capabilities: new Set([
-        ...BASE_CAPABILITIES.filter(
-          (capability) => mode !== "legacy" || capability !== "input-required"
-        ),
-        "stateless-http",
-      ]),
-      unsupportedReasons:
-        mode === "legacy"
-          ? {
-              "input-required":
-                "Stateless legacy HTTP cannot receive server-to-client input requests",
-            }
-          : {},
+      ...getTargetCapabilities(fixture.spec, mode),
       async close() {
         try {
           await client.close();

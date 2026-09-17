@@ -105,6 +105,61 @@ Omitting both options retains the standard fixture. Both E2E commands include
 default tool preservation, and custom server instructions through a real HTTP
 client.
 
-Feature-scoped registration modules and the client-under-test harness belong to
-subsequent roadmap entries. No public API changes or separate website/example
+## Feature-scoped conformance groups
+
+Each feature owns a top-level TypeScript module under `src/conformance/`, exporting
+`register(getTarget, onFailure?)`. `index.ts` discovers these modules in filename
+order and composes them before the matrix runs. Adding a group needs no index
+changes. Declaration files and subdirectories are ignored; shared helpers belong
+under `src/harness/`. A group missing its registration function fails startup.
+
+Use `createConformanceChecks` for the shared capability guard, request timeout,
+skip reasons, and failure reporting. For example, an additional tools group can
+register a check against the standard fixture:
+
+```ts
+import assert from "node:assert/strict";
+import { REQUEST_OPTIONS } from "../harness/client-options.js";
+import {
+  createConformanceChecks,
+  type GetTarget,
+} from "../harness/conformance.js";
+
+export function register(getTarget: GetTarget, onFailure?: () => void) {
+  const whenSupported = createConformanceChecks(getTarget, onFailure);
+  whenSupported("tools", "discovers the add tool", async ({ client }) => {
+    const { tools } = await client.listTools({}, REQUEST_OPTIONS);
+    assert.ok(tools.some((tool) => tool.name === "add"));
+  });
+}
+```
+
+The target getter runs inside each check, after fixture startup. Forward the
+optional `onFailure` callback to retain diagnostics when a group fails. Groups
+can also be registered individually by importing their `register` function.
+
+Set `FixtureSpec.capabilities` to select which checks apply to a custom fixture:
+
+```ts
+const fixture = await createFixture({
+  kind: "http",
+  moduleType: "module",
+  capabilities: ["tools", "resources"],
+});
+```
+
+An explicit list replaces the standard conformance capabilities; an empty list
+skips all capability-gated checks. Omitting it preserves the existing matrix.
+These declarations select tests, not the server's advertised MCP capabilities or
+generated files. Both HTTP and STDIO targets derive their capabilities from the
+fixture spec, then exclude combinations the transport cannot support. Declaring
+`stateless-http` on STDIO or `input-required` on legacy HTTP cannot enable them.
+
+For a new capability, add its name to `Capability` in `src/harness/target.ts`, add
+its feature group, and declare it on fixtures that supply the required files and
+config. Unsupported checks retain an explicit transport reason when available,
+otherwise they print `<fixture label> does not support <capability>`.
+
+The client-under-test harness belongs to a subsequent roadmap entry.
+No public API changes or separate website/example
 updates are needed: the generated applications are the runnable test examples.
