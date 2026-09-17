@@ -1,16 +1,15 @@
-import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import {
+  StdioClientTransport,
+  type StdioServerParameters,
+} from "@modelcontextprotocol/client/stdio";
 import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type ProtocolMode } from "../client-options.js";
 import { getTargetCapabilities, type Target } from "../target.js";
 import type { Fixture } from "../fixture.js";
 
-export async function startStdioTarget(
-  fixture: Fixture,
-  mode: ProtocolMode
-): Promise<Target> {
-  const client = createClient(mode);
-  const transport = new StdioClientTransport({
+export function getStdioLaunch(fixture: Fixture, logName: string) {
+  const parameters: StdioServerParameters = {
     command: process.execPath,
     args: [join(fixture.directory, "dist/stdio.js")],
     cwd: fixture.directory,
@@ -23,10 +22,23 @@ export async function startStdioTarget(
       ),
       XMCP_TELEMETRY_DISABLED: "true",
     },
-  });
-  transport.stderr?.on("data", (chunk) =>
-    appendFileSync(join(fixture.directory, `server-${mode}.log`), chunk)
-  );
+  };
+  return {
+    parameters,
+    onStderrData: (chunk: Buffer) => {
+      appendFileSync(join(fixture.directory, `server-${logName}.log`), chunk);
+    },
+  };
+}
+
+export async function startStdioTarget(
+  fixture: Fixture,
+  mode: ProtocolMode
+): Promise<Target> {
+  const client = createClient(mode);
+  const { parameters, onStderrData } = getStdioLaunch(fixture, mode);
+  const transport = new StdioClientTransport(parameters);
+  transport.stderr?.on("data", onStderrData);
   try {
     await client.connect(transport);
   } catch (error) {

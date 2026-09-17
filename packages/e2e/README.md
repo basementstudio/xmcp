@@ -10,10 +10,10 @@ pnpm --filter @xmcp-dev/e2e test:fast
 pnpm --filter @xmcp-dev/e2e test
 ```
 
-Both E2E commands build the local runtime and compiler through Turbo before
-generating and compiling real fixture projects. No global xmcp installation,
-external server, credentials, or deployed infrastructure is required. The root
-aliases are `test:e2e:fast` and `test:e2e`.
+Typechecking and both E2E commands build the local runtime and compiler through
+Turbo first. The tests then generate and compile real fixture projects. No global
+xmcp installation, external server, credentials, or deployed infrastructure is
+required. The root aliases are `test:e2e:fast` and `test:e2e`.
 
 ## Coverage
 
@@ -160,6 +160,46 @@ its feature group, and declare it on fixtures that supply the required files and
 config. Unsupported checks retain an explicit transport reason when available,
 otherwise they print `<fixture label> does not support <capability>`.
 
-The client-under-test harness belongs to a subsequent roadmap entry.
-No public API changes or separate website/example
-updates are needed: the generated applications are the runnable test examples.
+## Client tests
+
+`prepareClientTarget(fixture)` prepares an already compiled fixture for a client
+under test without connecting the harness's own client. HTTP fixtures (including
+adapter hosts) return `{ type: "http", url, close }` once the server listens.
+STDIO fixtures return `{ type: "stdio", parameters, onStderrData }`; the client
+spawns the supplied command and owns its streams and process lifecycle.
+
+For HTTP, connect the client to `target.url`, close the client after the test,
+then call `target.close()` to stop the fixture server. For STDIO, pass the launch
+parameters and log handler to the client factory:
+
+```ts
+const connection = await createSTDIOClient({
+  ...target.parameters,
+  onStderrData: target.onStderrData,
+});
+try {
+  const result = await connection.client.callTool(
+    { name: "add", arguments: { a: 2, b: 3 } },
+    REQUEST_OPTIONS
+  );
+  assert.deepEqual(result.structuredContent, { sum: 5 });
+} finally {
+  await disconnectSTDIOClient(connection);
+}
+```
+
+The caller owns the fixture directory: dispose successful fixtures after all
+clients and servers stop, and retain failed fixtures for diagnostics. Client
+targets write server output to `server-client.log` alongside `build.log`.
+
+Both E2E commands run `src/tests/client.test.ts`, which demonstrates the complete
+lifecycle and checks tool discovery and invocation through xmcp's public
+`createHTTPClient` and `createSTDIOClient` factories with CommonJS and ESM server
+fixtures. These factories use their default `auto` negotiation; the server
+conformance matrix continues to cover both protocol modes. The tests load xmcp
+with `createRequire` because its bundled CommonJS entry does not expose synthetic
+ESM named exports. Typechecking builds first so the public declarations exist in
+a fresh checkout.
+
+This package changes no public APIs. The generated applications are its runnable
+examples, so separate website docs and public examples are not needed.
