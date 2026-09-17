@@ -2,7 +2,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient, type ProtocolMode } from "../client-options.js";
-import { BASE_CAPABILITIES, type Target } from "../target.js";
+import { getTargetCapabilities, type Target } from "../target.js";
 import type { Fixture } from "../fixture.js";
 
 export async function startStdioTarget(
@@ -37,7 +37,7 @@ export async function startStdioTarget(
     fixture,
     mode,
     client,
-    capabilities: new Set(BASE_CAPABILITIES),
+    ...getTargetCapabilities(fixture.spec, mode),
     async close() {
       try {
         await client.close();

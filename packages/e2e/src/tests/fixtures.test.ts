@@ -13,6 +13,7 @@ test(
     const fixture = await createFixture({
       kind: "http",
       moduleType: "module",
+      capabilities: ["tools"],
       files: {
         "src/tools/features/extra.ts": `export const metadata = { name: "feature-extra", description: "Feature fixture tool" };
 export default function extra() { return "extra tool result"; }
@@ -35,6 +36,7 @@ export default function overridden() { return "overridden tool result"; }
       }
     });
     target = await startHttpTarget(fixture, "auto");
+    assert.deepEqual(target.capabilities, new Set(["tools"]));
     const { tools } = await target.client.listTools({}, REQUEST_OPTIONS);
     assert.ok(tools.some((tool) => tool.name === "feature-extra"));
     assert.ok(tools.some((tool) => tool.name === "add"));
