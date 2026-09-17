@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "prepare:fixtures": "pnpm --dir ../.. exec turbo run build --filter=xmcp --filter=@xmcp-dev/compiler",
-    "test:fast": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/fixtures.test.ts",
-    "test": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/adapters.test.ts src/tests/fixtures.test.ts",
+    "test:fast": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts",
+    "test": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/adapters.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts",
     "test:unit": "node --import tsx --test src/harness/__tests__/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm prepare:fixtures && tsc --noEmit"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.0.0",
