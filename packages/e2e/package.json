@@ -1,0 +1,33 @@
+{
+  "name": "@xmcp-dev/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:fixtures": "pnpm --dir ../.. exec turbo run build --filter=xmcp --filter=@xmcp-dev/compiler",
+    "test:fast": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts",
+    "test": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/adapters.test.ts",
+    "test:unit": "node --import tsx --test src/harness/__tests__/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "@nestjs/common": "^11.1.18",
+    "@nestjs/core": "^11.1.18",
+    "@nestjs/platform-express": "^11.1.18",
+    "@types/node": "^22.19.2",
+    "@types/react": "^19.2.7",
+    "@xmcp-dev/compiler": "workspace:*",
+    "express": "^4.22.1",
+    "fastify": "^5.0.0",
+    "next": "^16.2.11",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  }
+}
