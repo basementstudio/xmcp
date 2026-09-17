@@ -66,7 +66,45 @@ To rerun a single target after building the packages, use Node's test-name filte
 pnpm --filter @xmcp-dev/e2e exec node --import tsx --test --test-name-pattern='express/commonjs' src/tests/adapters.test.ts
 ```
 
-This package supplies the missing Batch 0.1 foundation. Per-feature fixture
-overrides, feature-scoped registration modules, and the client-under-test harness
-belong to subsequent entries. No public API changes or separate website/example
+## Per-feature fixtures
+
+Pass optional `files` and `configFragment` fields to `createFixture` to add a
+feature's tools, prompts, resources, middleware, or configuration:
+
+```ts
+const fixture = await createFixture({
+  kind: "http",
+  moduleType: "module",
+  files: {
+    "src/tools/feature.ts": `export const metadata = { name: "feature" };
+export default function feature() { return "feature result"; }
+`,
+  },
+  configFragment: `template: {
+    ...defaultConfig.template,
+    instructions: "Use the feature tool to try this fixture.",
+  },`,
+});
+```
+
+Files are written after all defaults, including adapter hosts, and before the
+xmcp build. Matching paths replace default files; other defaults remain intact.
+Paths must be relative to the fixture directory and cannot escape it or write
+into its linked `node_modules` directory.
+
+`configFragment` contains TypeScript object members, without an enclosing object
+or `export default`. They follow `...defaultConfig` in the generated config, so
+matching top-level fields replace defaults. Spread `defaultConfig.http`,
+`defaultConfig.template`, or another existing field when extending a nested
+object to retain its defaults. The fragment may include functions and expressions;
+it is trusted test source, not JSON or a deep merge. A file override for
+`xmcp.config.ts` replaces the entire generated config, including the fragment.
+
+Omitting both options retains the standard fixture. Both E2E commands include
+`src/tests/fixtures.test.ts`, which checks added tool discovery, file replacement,
+default tool preservation, and custom server instructions through a real HTTP
+client.
+
+Feature-scoped registration modules and the client-under-test harness belong to
+subsequent roadmap entries. No public API changes or separate website/example
 updates are needed: the generated applications are the runnable test examples.
