@@ -7,7 +7,7 @@ import {
   readFile,
   access,
 } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join, normalize, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:net";
 import { DEFAULT_FILES, adapterHost } from "./project-files.js";
@@ -26,6 +26,10 @@ export type ModuleType = "commonjs" | "module";
 export interface FixtureSpec {
   kind: FixtureKind;
   moduleType: ModuleType;
+  /** Fixture-relative files written after all defaults; matching paths replace them. */
+  files?: Record<string, string>;
+  /** TypeScript config object members appended after defaultConfig is spread. */
+  configFragment?: string;
 }
 export interface Fixture {
   spec: FixtureSpec;
@@ -46,6 +50,25 @@ async function availablePort(): Promise<number> {
 }
 
 export async function createFixture(spec: FixtureSpec): Promise<Fixture> {
+  // Validate before creating anything. Dependencies are symlinked, so writing
+  // beneath node_modules could otherwise mutate the shared workspace packages.
+  const extraFiles = Object.entries(spec.files ?? {}).map(
+    ([path, contents]) => {
+      const relativePath = normalize(path);
+      if (
+        isAbsolute(relativePath) ||
+        relativePath === "." ||
+        relativePath === ".." ||
+        relativePath.startsWith(`..${sep}`) ||
+        relativePath.split(sep)[0] === "node_modules"
+      ) {
+        throw new Error(
+          `Fixture file must stay inside the project and outside node_modules: ${path}`
+        );
+      }
+      return [relativePath, contents] as const;
+    }
+  );
   const label = `${spec.kind}-${spec.moduleType}`;
   const work = join(E2E_ROOT, ".work");
   await mkdir(work, { recursive: true });
@@ -106,7 +129,13 @@ export async function createFixture(spec: FixtureSpec): Promise<Fixture> {
       },
       include: ["src/**/*.ts", "xmcp.config.ts"],
     }),
-    "xmcp.config.ts": `import type { XmcpConfig } from "xmcp";\nexport default ${JSON.stringify(config)} satisfies XmcpConfig;\n`,
+    "xmcp.config.ts": `import type { XmcpConfig } from "xmcp";
+const defaultConfig = ${JSON.stringify(config)} satisfies XmcpConfig;
+export default {
+  ...defaultConfig,
+  ${spec.configFragment ?? ""}
+} satisfies XmcpConfig;
+`,
     ...DEFAULT_FILES,
   };
   for (const [relativePath, contents] of Object.entries(files)) {
@@ -133,6 +162,11 @@ export async function createFixture(spec: FixtureSpec): Promise<Fixture> {
       join(directory, "next.config.mjs"),
       `export default { devIndicators: false };\n`
     );
+  }
+  for (const [relativePath, contents] of extraFiles) {
+    const path = join(directory, relativePath);
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, contents);
   }
   await runCommand(
     process.execPath,
