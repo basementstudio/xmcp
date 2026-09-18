@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "xmcp dev & basehub dev & next dev",
-    "build": "xmcp build && basehub && next build",
+    "dev": "xmcp dev & next dev",
+    "build": "xmcp build && next build",
     "start": "next start",
     "lint": "eslint ."
   },
@@ -38,7 +38,6 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^2.0.0",
     "ai": "^6.0.197",
-    "basehub": "^9.5.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",

@@ -30,9 +30,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
-        hostname: "assets.basehub.com",
-      },
-      {
         hostname: "raw.githubusercontent.com",
       },
       {

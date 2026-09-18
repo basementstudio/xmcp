@@ -4,6 +4,16 @@ packages:
   - "apps/*"
   - "examples/*"
 
+# Fiber augments React's JSX types. Resolve them from its consumer instead of
+# whichever @types/react version is hoisted by a full workspace installation.
+packageExtensions:
+  "@react-three/fiber@9.4.2":
+    peerDependencies:
+      "@types/react": "^19.0.0"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+
 catalog:
   # Shared dependencies across workspace
   typescript: ^5.8.3

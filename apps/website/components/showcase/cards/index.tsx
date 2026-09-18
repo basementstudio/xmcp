@@ -3,17 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { CopyButton } from "../../ui/copy-button";
 import { Tag } from "@/components/ui/tag";
-
-export type ShowcaseItem = {
-  name: string;
-  tagline: string;
-  repositoryUrl?: string | null;
-  logo: {
-    url: string;
-  };
-  connection: string;
-  tag?: string;
-};
+import type { ShowcaseItem } from "@/utils/content";
 
 export function ShowcaseCards({ mcps }: { mcps: readonly ShowcaseItem[] }) {
   return (
@@ -44,7 +34,7 @@ export async function ShowcaseCard({
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded overflow-hidden">
             <Image
-              src={logo.url}
+              src={logo}
               alt={`${name} logo`}
               width={32}
               height={32}
