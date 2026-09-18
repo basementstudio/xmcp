@@ -67,6 +67,8 @@ overrides:
   find-my-way@<9.7.0: 9.7.0
   better-auth@>=1.1.3 <1.6.22: 1.6.22
 
+packageExtensionsChecksum: sha256-Hwf2b+HIH17B4KAgzazKZYFutWCsRgOkypi4uGrd9JQ=
+
 importers:
 
   .:
@@ -3929,6 +3931,7 @@ packages:
   '@react-three/fiber@9.4.2':
     resolution: {integrity: sha512-H4B4+FDNHpvIb4FmphH4ubxOfX5bxmfOw0+3pkQwR9u9wFiyMS7wUDkNn0m4RqQuiLWeia9jfN1eBvtyAVGEog==}
     peerDependencies:
+      '@types/react': ^19.0.0
       expo: '>=43.0'
       expo-asset: '>=8.4'
       expo-file-system: '>=11.0'
@@ -3938,6 +3941,8 @@ packages:
       react-native: '>=0.78'
       three: '>=0.156'
     peerDependenciesMeta:
+      '@types/react':
+        optional: true
       expo:
         optional: true
       expo-asset:
@@ -11749,9 +11754,9 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.4)
       zustand: 5.0.9(@types/react@19.2.14)(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4))
     optionalDependencies:
+      '@types/react': 19.2.14
       react-dom: 19.2.4(react@19.2.4)
     transitivePeerDependencies:
-      - '@types/react'
       - immer
 
   '@rolldown/pluginutils@1.0.0-rc.3': {}
