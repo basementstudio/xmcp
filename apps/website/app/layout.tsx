@@ -98,8 +98,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // RootProvider's next-themes script sets theme attributes before hydration.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#000000" />
       </head>
