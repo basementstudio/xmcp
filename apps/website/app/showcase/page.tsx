@@ -1,11 +1,8 @@
 import { Metadata } from "next";
-import { ShowcaseForm } from "../../components/showcase/form";
-import {
-  ShowcaseCards,
-  type ShowcaseItem,
-} from "../../components/showcase/cards";
+import { ShowcaseCards } from "@/components/showcase/cards";
+import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
-import { fetchMCPs } from "@/basehub/";
+import { getShowcaseItems } from "@/utils/content";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBreadcrumbSchema,
@@ -43,8 +40,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ShowcasePage() {
-  const mcps = (await fetchMCPs()) as ShowcaseItem[];
+export default function ShowcasePage() {
+  const mcps = getShowcaseItems();
 
   return (
     <main
@@ -91,8 +88,29 @@ export default async function ShowcasePage() {
               </div>
             </div>
 
-            <div className="col-span-12">
-              <ShowcaseForm />
+            <div className="col-span-12 lg:col-span-9 lg:col-start-2 flex flex-col items-start gap-4">
+              <p className="text-brand-neutral-100 text-base max-w-[650px]">
+                Add your server’s Markdown entry and logo to the repository,
+                then open a pull request for review. See the{" "}
+                <a
+                  href="https://github.com/basementstudio/xmcp/blob/main/apps/website/README.md#showcase-submissions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-4 hover:text-brand-white"
+                >
+                  submission guide
+                </a>{" "}
+                for the entry format and steps.
+              </p>
+              <Button asChild variant="primary">
+                <a
+                  href="https://github.com/basementstudio/xmcp/tree/main/apps/website/content/showcase"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Submit a pull request
+                </a>
+              </Button>
             </div>
           </div>
         </div>
