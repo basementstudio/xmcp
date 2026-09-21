@@ -3,8 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"],
-      "env": ["BASEHUB_TOKEN"]
+      "outputs": ["dist/**", ".next/**"]
     },
     "lint": {
       "outputs": []

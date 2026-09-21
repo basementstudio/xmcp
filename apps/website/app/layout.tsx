@@ -1,6 +1,5 @@
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
-import { Toolbar } from "basehub/next-toolbar";
 import { Footer } from "../components/layout/footer";
 import { Header } from "../components/layout/header";
 import { Metadata } from "next";
@@ -14,10 +13,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
-import {
-  getOrganizationSchema,
-  getWebSiteSchema,
-} from "@/lib/structured-data";
+import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -102,8 +98,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // RootProvider's next-themes script sets theme attributes before hydration.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#000000" />
       </head>
@@ -140,7 +137,6 @@ export default function RootLayout({
           <Footer />
           <Toaster />
         </RootProvider>
-        <Toolbar />
         <WebMCPProvider />
         <Analytics />
         <SpeedInsights />
