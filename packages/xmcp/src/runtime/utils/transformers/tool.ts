@@ -9,6 +9,7 @@ import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
+import { withRequestContext } from "@/runtime/contexts/request-context";
 import {
   extractClientInfoFromHeaders,
   mapImplementationToClientInfo,
@@ -168,7 +169,9 @@ export function transformToolHandler(
     ctx: ServerContext
   ): Promise<CallToolResult | InputRequiredResult> => {
     const toolExtra = createToolExtraArguments(ctx);
-    let response: any = handler(args, toolExtra);
+    let response: any = withRequestContext(ctx, toolExtra.clientInfo, () =>
+      handler(args, toolExtra)
+    );
 
     // only await if it's actually a promise
     if (response instanceof Promise) {
