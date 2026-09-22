@@ -79,6 +79,8 @@ previews. Decorative textures and shadows have low fetch priority so they do not
 compete with the main preview. Detail pages preload only the principal preview.
 Local SVG provider artwork stays vector-based and does not need a blur preview;
 remote raster covers keep Next.js optimization without inventing blur metadata.
+Template README code snippets also use the docs theme variables and shared
+black code-block background.
 
 For performance checks, build and run production, not the development server:
 
