@@ -17,6 +17,9 @@ declare const INJECTED_RESOURCES: Record<
 
 declare const INJECTED_MIDDLEWARE:
   | (() => Promise<{
+      mcp?:
+        | import("./mcp-middleware").McpMiddleware
+        | import("./mcp-middleware").McpMiddleware[];
       default?:
         | import("./middleware").Middleware
         | import("./middleware").Middleware[]

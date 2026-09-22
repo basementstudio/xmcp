@@ -26,8 +26,13 @@ The shared checks cover tool discovery, input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
 prompts, static resources, resource templates, tool input requests, and read-only
 request context (identity, HTTP details, and the live signal), request-local
-values, and progress notifications. Concurrent calls verify independent local
-values and progress routing; calls without tokens verify the no-op path. HTTP
+values, progress notifications, and MCP tool middleware. Middleware checks cover
+ordering, result stamps, request-local values, denial, and short-circuit results.
+Concurrent calls verify independent local
+values and progress routing; calls without tokens verify the no-op path. STDIO
+progress checks use explicit tokens on a separate SDK client: the SDK's built-in
+`onprogress` callback can race result cleanup when both messages arrive in one
+read. The check still asserts every notification, with no sleeps or retries. HTTP
 targets additionally verify independent requests without sessions and that
 client identity comes from the current request. Capability-based skips include
 a reason: HTTP-specific checks are skipped for STDIO, and input requests are
@@ -38,7 +43,8 @@ the initialize handshake. CommonJS fixtures use the default package format (no
 `type` field), matching existing projects; explicitly setting `type: commonjs`
 currently makes the compiler reject its generated ESM import map. ESM fixtures
 set `type: module`. Next.js hosts the compiled xmcp adapter in a real
-App Router development server. This does not test Next.js production packaging
+App Router development server under `next-host/`, separate from xmcp's sources
+so the frameworks' `src/middleware.ts` conventions do not collide. This does not test Next.js production packaging
 or cloud deployments. The existing `scripts/test-split-e2e.sh` remains responsible
 for package distribution and standalone bundle checks.
 

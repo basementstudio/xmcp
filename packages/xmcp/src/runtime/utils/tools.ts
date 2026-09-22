@@ -9,6 +9,9 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import type { McpMiddleware } from "@/types/mcp-middleware";
+import { wrapToolWithMiddleware } from "./mcp-middleware";
+import type { McpToolHandler } from "./transformers/tool";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -43,7 +46,8 @@ export function ensureAnnotations(
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
-  toolModules: Map<string, ToolFile>
+  toolModules: Map<string, ToolFile>,
+  middleware: readonly McpMiddleware[] = []
 ): McpServer {
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -176,7 +180,11 @@ export function addToolsToServer(
     server.registerTool(
       toolConfig.name,
       toolConfigFormatted,
-      transformedHandler as never
+      wrapToolWithMiddleware(
+        transformedHandler as McpToolHandler,
+        toolConfig.name,
+        middleware
+      ) as never
     );
   });
 

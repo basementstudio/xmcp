@@ -4,6 +4,12 @@ export type {
   WebMiddleware,
   WebMiddlewareContext,
 } from "./types/middleware";
+export type {
+  McpMiddleware,
+  McpMiddlewareContext,
+  McpMiddlewareNext,
+  McpMiddlewareResult,
+} from "./types/mcp-middleware";
 dotenv.config();
 
 export type {

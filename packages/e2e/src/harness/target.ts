@@ -10,6 +10,7 @@ export type Capability =
   | "input-required"
   | "request-context"
   | "request-helpers"
+  | "mcp-middleware"
   | "stateless-http";
 export interface Target {
   fixture: Fixture;
@@ -28,6 +29,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "input-required",
   "request-context",
   "request-helpers",
+  "mcp-middleware",
 ];
 
 export function getTargetCapabilities(

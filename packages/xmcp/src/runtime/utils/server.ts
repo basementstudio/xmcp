@@ -16,6 +16,7 @@ import {
   reportResourceLoadIssues,
 } from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import { normalizeMcpMiddleware } from "./mcp-middleware";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -63,9 +64,12 @@ export async function configureServer(
   promptModules: Map<string, PromptFile>,
   resourceModules: Map<string, ResourceFile>
 ): Promise<McpServer> {
+  // Shared setup also serves STDIO and adapters that do not mount HTTP middleware.
+  const middlewareModule = await INJECTED_MIDDLEWARE?.();
+  const middleware = normalizeMcpMiddleware(middlewareModule?.mcp);
   uIResourceRegistry.clear();
 
-  addToolsToServer(server, toolModules);
+  addToolsToServer(server, toolModules, middleware);
   addPromptsToServer(server, promptModules);
   addResourcesToServer(server, resourceModules);
   return server;
