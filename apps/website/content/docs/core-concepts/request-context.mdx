@@ -4,7 +4,7 @@ metadataTitle: "Request Context | xmcp Documentation"
 description: "Access request metadata, share local values, and report progress from tool handlers and their async helpers."
 ---
 
-Use `getRequestContext()` inside a tool or its async helpers to read the current request without passing the tool's extra arguments through each function.
+Use `getRequestContext()` inside a tool, its MCP middleware, or their async helpers to read the current request without passing the tool's extra arguments through each function.
 
 ```typescript title="src/tools/request-context.ts"
 import { getRequestContext } from "xmcp";
@@ -26,7 +26,7 @@ export default async function requestContext() {
 }
 ```
 
-The context stays with the tool's async execution and is isolated from concurrent requests. This accessor is available during tool execution; it is not available at module initialization, in Express middleware, or in prompt and resource handlers. Calling it outside a tool request throws a descriptive error.
+The context stays with the tool's async execution and is isolated from concurrent requests. [MCP tool middleware](/docs/core-concepts/middlewares#mcp-tool-middleware) shares the same scope before and after `next()`. This accessor is not available at module initialization, in Express middleware, or in prompt and resource handlers. Calling it outside a tool request throws a descriptive error.
 
 ## Available fields
 

@@ -2,11 +2,15 @@
 title: "Middlewares"
 metadataTitle: "Middlewares | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Use middlewares in your xmcp MCP server to intercept, transform, and gate incoming requests and outgoing responses across tools, prompts, and resources."
-description: "Useful for intercepting and processing requests and responses."
+summary: "Use HTTP middleware and MCP tool middleware to inspect requests, gate tool execution, and transform results."
+description: "Intercept HTTP requests and MCP tool calls using src/middleware.ts."
 ---
 
-Middlewares intercept HTTP requests and responses, enabling authentication, rate limiting, and other processing tasks.
+Define HTTP middleware with the default export of `src/middleware.ts`, and MCP tool middleware with its named `mcp` export. Both can live in the same file.
+
+## HTTP middleware
+
+HTTP middleware intercepts requests and responses, enabling authentication, rate limiting, and other processing tasks.
 
 Create a `src/middleware.ts` file to define your middleware:
 
@@ -40,7 +44,7 @@ Define multiple middlewares as an array to chain them in sequence:
 ```typescript title="src/middleware.ts"
 import { type Middleware } from "xmcp";
 
-const middleware: Middleware = [
+const middleware: Middleware[] = [
   async (req, res, next) => {
     // First middleware
     return next();
@@ -53,6 +57,55 @@ const middleware: Middleware = [
 
 export default middleware;
 ```
+
+## MCP tool middleware
+
+Export one `McpMiddleware` function or an array as `mcp`. xmcp discovers it through the same `src/middleware.ts` file and applies it to registered tool calls over HTTP, STDIO, and the Node adapters. A default export is optional.
+
+```typescript title="src/middleware.ts"
+import { type McpMiddleware } from "xmcp";
+
+const stampResult: McpMiddleware = async (ctx, next) => {
+  const result = await next();
+  return { ...result, _meta: { ...result._meta, tool: ctx.params.name } };
+};
+
+const checkName: McpMiddleware = (ctx, next) => {
+  if (ctx.params.name === "greet" && ctx.params.arguments.name === "blocked") {
+    return {
+      isError: true,
+      content: [{ type: "text", text: "This name is blocked" }],
+    };
+  }
+  return next();
+};
+
+export const mcp = [stampResult, checkName];
+```
+
+The first function enters first and receives the result last. `await next()` runs the remaining chain and the tool. Return a protocol result without calling `next()` to skip the remaining chain and handler. Call `next()` at most once; calling it twice rejects rather than executing the tool again. Return or await its promise so work stays inside the request lifecycle.
+
+`ctx` includes:
+
+| Field                           | Meaning                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `method`                        | Currently always `"tools/call"`.                                                             |
+| `params.name`                   | The registered tool name, including a name set through metadata.                             |
+| `params.arguments`              | The SDK-validated tool arguments, exposed for reading.                                       |
+| `clientInfo`, `http`, `signal`  | The same metadata and live signal as [request context](/docs/core-concepts/request-context). |
+| `set`, `get`, `progress`, `log` | The request-context helpers, shared with the tool and other middleware.                      |
+
+`getRequestContext()` also works in MCP middleware, before and after `next()`. Its local values last for one invocation and are isolated from other requests. HTTP metadata is absent on STDIO.
+
+Middleware receives normalized MCP tool results from `next()`. Returned results must follow the MCP result format; string and number shorthand belongs in tool handlers. Exceptions propagate to the SDK's existing tool-error handling. Invalid `mcp` exports or a failed middleware import prevent server setup from completing.
+
+This hook runs after the SDK resolves the tool and validates its input. It currently covers registered `tools/call` handlers only; it does not intercept unknown tools, invalid inputs, listings, prompts, resources, or completion requests. Keep output-schema requirements intact when changing a result, and preserve interim `inputRequired` results when passing through multi-round tools.
+
+The default HTTP export retains its existing transport behavior. STDIO loads the module to read `mcp` but does not invoke the default HTTP middleware. Keep module-level code safe to import on both transports.
+
+For the Next.js adapter, keep the xmcp project separate from the Next.js application's source directory and import its compiled adapter into the route. Next.js reserves `src/middleware.ts` for its own request hook; placing xmcp's middleware there can make Next.js compile it as a Next.js hook. For example, use sibling `mcp/` and `web/` projects, with xmcp's file at `mcp/src/middleware.ts` and the Next.js route in `web/app/`.
+
+See the runnable [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) for both exports together and curl requests that exercise each chain.
 
 ## Accessing headers
 
