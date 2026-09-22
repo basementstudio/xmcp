@@ -5,6 +5,7 @@ export interface HttpTransportOptions {
   host?: string;
   endpoint?: string;
   bodySizeLimit?: string;
+  maxSubscriptions?: number;
   debug?: boolean;
   template?: TemplateConfig;
 }
