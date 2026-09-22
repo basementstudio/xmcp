@@ -1,5 +1,12 @@
 # xmcp
 
+## 1.2.0
+
+### Minor Changes
+
+- 0ca4841: Add request-local `set`/`get` values and `progress`/`log` helpers to `getRequestContext()`. Progress is optional without a request token, and logging respects the SDK's capability and level checks.
+- b5ca4c8: Add `getRequestContext()` for read-only access to client identity, HTTP request details, and the cancellation signal from tool handlers and their async helpers.
+
 ## 1.1.3
 
 ### Patch Changes
