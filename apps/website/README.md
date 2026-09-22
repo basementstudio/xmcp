@@ -14,6 +14,101 @@ editing any of these files goes through a pull request and deployment.
 No CMS account or token is needed. Templates continue to use the
 [`xmcp-dev/templates`](https://github.com/xmcp-dev/templates) repository.
 
+## Image and animation performance
+
+The homepage starts its particle animation on hydration. Its lossless
+`/xmcp.webp` texture is preloaded by the homepage for its GPU renderer;
+keep their URLs and anonymous CORS mode aligned to avoid
+duplicate downloads. `/x.webp` is the footer texture. Both retain the original
+PNG dimensions and decoded pixels. The PNGs remain error fallbacks.
+The hero shows the canvas directly, without a still-image loading placeholder;
+static hero artwork only mounts for reduced motion or a rendering failure.
+
+The hero uses a dedicated WebGPU renderer on supported devices in secure contexts
+(HTTPS or localhost). It renders the same 148,225 particles with WGSL shaders and
+instanced quads, preserving the point sizing, camera, cursor trail, motion and
+ACES/sRGB color pipeline. WebGPU cannot draw variable-sized point primitives, so
+small rasterization differences from WebGL are expected. Keep `webgpu-shader.ts`
+and the GLSL equations in `particles-cursor-animation.tsx` aligned when changing
+the effect. The native path uses existing WebGPU type declarations and adds no
+runtime dependency.
+
+Missing adapters, initialization errors, GPU validation errors and device loss
+load the original WebGL hero as a fallback. Three.js and React Three Fiber are
+downloaded only for that fallback or the deferred footer. If both renderers
+fail, the static artwork remains available. Native buffers, textures and devices
+are released on teardown; resize replaces only the canvas attachments. `?debug`
+works with either hero renderer. Inspect `canvas[data-renderer="webgpu"]` and its
+`data-ready` attribute to confirm the native path is rendering.
+
+The shared footer imports its scene as it approaches the viewport. Both scenes
+stop rendering offscreen or in a hidden tab. Reduced motion and unavailable
+WebGL use static artwork in the same reserved space. `?debug` loads the Leva
+controls separately; normal visits do not download them. The AI dialog similarly
+loads on first open (or warms on button focus/hover), then stays mounted to retain
+conversation state.
+
+Shared Home links disable automatic prefetch: prefetching the homepage also
+pulls its eager WebGL assets into unrelated routes. Navigation still uses Next.js
+links; other routes retain their existing prefetch behavior.
+
+WebGL drawing-buffer preservation remains enabled: disabling it caused surrounding
+text and buttons to disappear in Chromium visual checks. Recheck visual output
+before changing that renderer option.
+
+Use static image imports where possible to retain dimensions and blur metadata.
+Match `sizes` to the image's actual grid and maximum width; homepage and blog
+listing cards have different breakpoints. Keep lower-page images lazy and use
+preload only for a principal above-the-fold image. Raster template previews on
+the configured GitHub hosts use Next.js optimization; SVGs and other hosts keep
+direct loading. Image quality uses the existing Next.js default of 75.
+
+Blog covers use `lib/blog-images.ts` to map frontmatter URLs to static imports.
+Register new covers there to include blur previews in the initial HTML and use
+content-hashed image URLs; unregistered images still load through Next.js.
+Keep the frontmatter URLs unchanged for feeds and social cards. The featured
+cover is preloaded, and the first three listing cards load eagerly so the first
+desktop row starts downloading before layout. Remaining listing cards and the
+homepage blog strip stay lazy. This preserves AVIF/WebP delivery and quality
+while avoiding empty image slots during loading.
+
+Template listings likewise load their first three previews eagerly, including
+after pagination or filtering; lower cards and related templates remain lazy.
+Shared card/detail textures and the listing header use static imports with blur
+previews. Decorative textures and shadows have low fetch priority so they do not
+compete with the main preview. Detail pages preload only the principal preview.
+Local SVG provider artwork stays vector-based and does not need a blur preview;
+remote raster covers keep Next.js optimization without inventing blur metadata.
+Template README code snippets also use the docs theme variables and shared
+black code-block background.
+
+For performance checks, build and run production, not the development server:
+
+```bash
+pnpm --filter website build
+pnpm --filter website start
+```
+
+Compare three fresh-browser runs of `/`, `/blog`, `/blog/xmcp-v1`, `/templates`,
+`/templates/express`, and `/docs` at the same viewport, network and CPU settings.
+Record transferred script/image bytes, LCP, CLS, and long-task blocking, plus
+time to the first textured hero frame: canvas animation is not represented by
+LCP. Keep image-optimizer cache state comparable and do not benchmark while a
+build is running. If the templates API is rate-limited, use an existing
+`GITHUB_TOKEN` in the build environment rather than measuring the empty catalogue.
+
+Check the waterfall for one early hero texture request, no initial Leva or chat
+chunk, and no footer WebGL on a long page until it approaches the viewport.
+Also check mobile/desktop resizing, cursor interaction, scrolling away/back,
+hidden-tab resume, reduced motion, blocked textures/WebGL, and reopening chat.
+For WebGPU, additionally test a missing adapter, rejected device/pipeline,
+device loss and unmount during initialization. Compare native and WebGL fallback
+on the same browser and hardware; headless browsers may expose `navigator.gpu`
+without offering an adapter. Record the actual backend and GPU adapter, and
+measure first textured submission/frame separately from steady-state animation.
+This website is the runnable example for these loading behaviors; no framework
+API or separate example package changes are required.
+
 ## Showcase submissions
 
 1. Fork the repository and create a branch.

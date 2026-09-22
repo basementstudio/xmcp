@@ -8,6 +8,7 @@ import { getLatestVersion } from "@/lib/get-version";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getSoftwareApplicationSchema } from "@/lib/structured-data";
 import { SITE_URL } from "@/lib/base-url";
+import { preload } from "react-dom";
 
 export const dynamic = "force-static";
 
@@ -24,6 +25,12 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
+  // Match TextureLoader's anonymous image request so it reuses this download.
+  preload("/xmcp.webp", {
+    as: "image",
+    crossOrigin: "anonymous",
+    fetchPriority: "high",
+  });
   const version = await getLatestVersion();
 
   return (

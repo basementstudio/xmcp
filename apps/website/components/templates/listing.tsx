@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/icons";
 import { cn } from "@/utils/cn";
 import { TemplateCard } from "./card";
+import HeaderTexture from "@public/textures/text6.png";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -79,12 +80,15 @@ export function TemplatesListing({
         >
           <div className="absolute left-1/2 top-20 h-[180px] w-[300px] -translate-x-1/2 rounded-full bg-[#D9D9D9] opacity-20 blur-[110px] md:h-[240px] md:w-[380px] md:opacity-24 md:blur-[130px]" />
           <Image
-            src="/textures/text6.png"
+            src={HeaderTexture}
+            placeholder="blur"
             alt=""
             aria-hidden
             width={1217}
             height={956}
-            priority
+            sizes="(min-width: 768px) 720px, 560px"
+            loading="eager"
+            fetchPriority="low"
             className="pointer-events-none select-none absolute left-1/2 top-[-40px] h-auto w-[560px] -translate-x-1/2 rotate-[-64.61deg] opacity-16 mix-blend-plus-lighter md:top-[-80px] md:w-[720px] md:opacity-20"
           />
         </div>
@@ -159,8 +163,12 @@ export function TemplatesListing({
         <div className="min-h-[60vh] flex flex-col gap-6">
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.length > 0 ? (
-              pageItems.map((item) => (
-                <TemplateCard key={item.slug} {...item} />
+              pageItems.map((item, index) => (
+                <TemplateCard
+                  key={item.slug}
+                  {...item}
+                  loading={index < 3 ? "eager" : "lazy"}
+                />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
