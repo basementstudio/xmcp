@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "../../utils/cn";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 import { Tag } from "@/components/ui/tag";
 import {
   resolveTemplatePreviewImage,

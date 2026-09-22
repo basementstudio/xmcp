@@ -2,7 +2,7 @@ import { getAllBlogPosts } from "../utils/blog";
 import type { MetadataRoute } from "next";
 import { source } from "@/lib/source";
 import { SITE_URL } from "@/lib/base-url";
-import { fetchTemplates } from "@/app/templates/utils/github";
+import { getTemplates } from "@/app/templates/utils/content";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 
@@ -88,10 +88,10 @@ export default async function sitemap() {
     } as MetadataRoute.Sitemap[number];
   });
 
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
 
-  // No lastModified for templates and categories: the GitHub API gives us no
-  // content dates, and stamping "today" on every revalidation churns the value.
+  // Template content has no publication dates; omit lastModified instead of
+  // changing it on every rebuild.
   const templateRoutes: MetadataRoute.Sitemap[number][] = templates.map(
     (template) => ({
       url: url(`/templates/${template.slug}`),

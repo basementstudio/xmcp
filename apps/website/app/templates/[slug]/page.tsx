@@ -3,10 +3,10 @@ import Image from "next/image";
 import PreviewTexture from "@public/textures/text5.png";
 import { notFound } from "next/navigation";
 import {
-  fetchTemplateBySlug,
-  fetchTemplateReadme,
-  fetchTemplates,
-} from "@/app/templates/utils/github";
+  getTemplateBySlug,
+  getTemplateReadme,
+  getTemplates,
+} from "@/app/templates/utils/content";
 import {
   formatRepositoryLabel,
   humanizeMetadataName,
@@ -43,7 +43,7 @@ type TemplateDetailPageProps = {
 };
 
 export async function generateStaticParams() {
-  const items = await fetchTemplates();
+  const items = getTemplates();
   return items.map((item) => ({ slug: item.slug }));
 }
 
@@ -51,7 +51,7 @@ export async function generateMetadata(
   props: TemplateDetailPageProps
 ): Promise<Metadata> {
   const params = await props.params;
-  const template = await fetchTemplateBySlug(params.slug);
+  const template = getTemplateBySlug(params.slug);
 
   if (!template) {
     return {
@@ -114,14 +114,14 @@ export default async function TemplateDetailPage(
   props: TemplateDetailPageProps
 ) {
   const params = await props.params;
-  const items = await fetchTemplates();
+  const items = getTemplates();
   const template = items.find((item) => item.slug === params.slug) ?? null;
 
   if (!template) {
     notFound();
   }
 
-  const readmeContent = await fetchTemplateReadme(template);
+  const readmeContent = getTemplateReadme(template);
   const moreTemplates = rankRelatedItems(template, items);
   const deployOptions = buildDeployOptions(template);
   const pageUrl = `${SITE_URL}/templates/${template.slug}`;

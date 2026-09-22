@@ -1,6 +1,6 @@
 import { source } from "../../lib/source";
 import { getAllBlogPosts } from "../../utils/blog";
-import { fetchTemplates } from "../templates/utils/github";
+import { getTemplates } from "../templates/utils/content";
 import { FAQ_ITEMS } from "../../content/faq";
 
 export const revalidate = false;
@@ -78,9 +78,7 @@ export async function GET() {
       .join("\n")
   );
 
-  // fetchTemplates returns [] when the GitHub API is unavailable; the docs
-  // and blog sections above never depend on that fetch.
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
   if (templates.length > 0) {
     scanned.push("## Templates");
     scanned.push(

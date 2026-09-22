@@ -4,7 +4,7 @@ import { useMemo, useState, useDeferredValue } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { tagClassName } from "@/components/ui/tag";
 import { Input } from "@/components/ui/input";
