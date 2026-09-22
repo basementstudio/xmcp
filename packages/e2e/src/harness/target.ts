@@ -9,6 +9,7 @@ export type Capability =
   | "templates"
   | "input-required"
   | "request-context"
+  | "request-helpers"
   | "stateless-http";
 export interface Target {
   fixture: Fixture;
@@ -26,6 +27,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "templates",
   "input-required",
   "request-context",
+  "request-helpers",
 ];
 
 export function getTargetCapabilities(
