@@ -1,24 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { cn } from "@/lib/cn";
-import { AskAIDialog } from "./ask-dialog";
 import { Icons } from "../icons";
 import { detectWindowsFromClient } from "@/utils/detect-os";
 
+const loadDialog = () => import("./ask-dialog");
+const AskAIDialog = lazy(() =>
+  loadDialog().then((module) => ({ default: module.AskAIDialog }))
+);
+const warmDialog = () => {
+  void loadDialog().catch(() => {});
+};
+
+// The platform does not change during a visit; only hydration needs a snapshot.
+const subscribePlatform = () => () => {};
+const serverPlatform = () => null;
+
 export function AskAIButtonClient() {
   const [open, setOpen] = useState(false);
-  const [isWindows, setIsWindows] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setIsWindows(detectWindowsFromClient());
-  }, []);
+  const [hasOpened, setHasOpened] = useState(false);
+  const isWindows = useSyncExternalStore(
+    subscribePlatform,
+    detectWindowsFromClient,
+    serverPlatform
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check for Cmd+I (Mac) or Ctrl+I (Windows/Linux)
       if ((e.metaKey || e.ctrlKey) && e.key === "i") {
         e.preventDefault();
+        setHasOpened(true);
         setOpen(true);
       }
     };
@@ -38,7 +57,12 @@ export function AskAIButtonClient() {
           "hover:bg-white/10 rounded-xs bg-brand-black",
           "transition-colors duration-200 ease-in-out cursor-pointer"
         )}
-        onClick={() => setOpen(true)}
+        onPointerEnter={warmDialog}
+        onFocus={warmDialog}
+        onClick={() => {
+          setHasOpened(true);
+          setOpen(true);
+        }}
       >
         Ask AI
         <span
@@ -61,13 +85,28 @@ export function AskAIButtonClient() {
           "transition-colors duration-200 ease-in-out cursor-pointer",
           "shadow-lg"
         )}
-        onClick={() => setOpen(true)}
+        onPointerEnter={warmDialog}
+        onFocus={warmDialog}
+        onClick={() => {
+          setHasOpened(true);
+          setOpen(true);
+        }}
         aria-label="Ask AI"
       >
         <Icons.chat className="size-4" />{" "}
       </button>
 
-      <AskAIDialog open={open} onOpenChange={setOpen} />
+      {hasOpened && (
+        <Suspense
+          fallback={
+            <span role="status" className="sr-only">
+              Loading chat…
+            </span>
+          }
+        >
+          <AskAIDialog open={open} onOpenChange={setOpen} />
+        </Suspense>
+      )}
     </>
   );
 }

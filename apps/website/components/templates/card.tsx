@@ -3,8 +3,12 @@ import Image from "next/image";
 import { cn } from "../../utils/cn";
 import type { TemplateItem } from "@/app/templates/utils/github";
 import { Tag } from "@/components/ui/tag";
-import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
+import {
+  resolveTemplatePreviewImage,
+  shouldBypassImageOptimization,
+} from "@/lib/template-preview-image";
 import Shadow from "./shadow.png";
+import Texture from "@public/textures/text5.png";
 
 function getFallbackImageClass(src: string) {
   switch (src) {
@@ -52,6 +56,7 @@ type TemplateCardProps = {
   href?: string;
   ctaLabel?: string;
   target?: string;
+  loading?: "eager" | "lazy";
 } & TemplateItem;
 
 export function TemplateCard({
@@ -59,6 +64,7 @@ export function TemplateCard({
   href,
   ctaLabel,
   target,
+  loading = "lazy",
   ...item
 }: TemplateCardProps) {
   const { name, description } = item;
@@ -119,8 +125,8 @@ export function TemplateCard({
                 alt={`${displayName} preview`}
                 width={1200}
                 height={630}
-                sizes="(max-width: 768px) 100vw, 33vw"
-                unoptimized
+                sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
+                unoptimized={shouldBypassImageOptimization(previewImage.src)}
                 className={cn(
                   "absolute opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]",
                   previewImage.isFallback && previewImage.isNextJsFallback
@@ -129,26 +135,30 @@ export function TemplateCard({
                       ? getFallbackImageClass(previewImage.src)
                       : "-bottom-7 left-0 w-full"
                 )}
-                priority={false}
+                loading={loading}
               />
             </div>
             <Image
-              src="/textures/text5.png"
+              src={Texture}
+              placeholder="blur"
               alt=""
               aria-hidden
               fill
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
               className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-screen opacity-10 group-hover:opacity-55 transition-opacity duration-300"
-              priority={false}
+              loading={loading}
+              fetchPriority="low"
             />
             <Image
               src={Shadow}
+              placeholder="blur"
               alt=""
               aria-hidden
               fill
-              sizes="(max-width: 768px) 100vw, 33vw"
+              sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
               className="absolute inset-x-0 bottom-0 h-[140px] object-cover opacity-10 group-hover:opacity-15 transition-opacity duration-200"
-              priority={false}
+              loading={loading}
+              fetchPriority="low"
             />
           </div>
           <div

@@ -1,9 +1,15 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+/* eslint-disable react-hooks/immutability -- Three.js uniforms and displacement vectors are mutable GPU resources, updated only in effects and frame callbacks. */
+
+import { useRef, useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { useFrame, useThree, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import { useControls, folder } from "leva";
+import { FOOTER_CONTROLS } from "@/components/particles/controls";
+import { createParticleGeometry } from "@/components/particles/geometry";
+const DebugControls = lazy(
+  () => import("@/components/particles/debug-controls")
+);
 
 const vertexShader = `
 uniform vec2 uResolution;
@@ -157,7 +163,12 @@ void main()
 }
 `;
 
-export default function PrefooterParticlesCursorAnimation() {
+export default function PrefooterParticlesCursorAnimation({
+  onReady,
+}: {
+  onReady: () => void;
+}) {
+  const ready = useRef(false);
   const { size, camera, raycaster, gl } = useThree();
   const meshRef = useRef<THREE.Points>(null);
   const interactivePlaneRef = useRef<THREE.Mesh>(null);
@@ -167,118 +178,7 @@ export default function PrefooterParticlesCursorAnimation() {
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("debug");
 
-  const controls = isDebugMode
-    ? // eslint-disable-next-line react-hooks/rules-of-hooks
-      useControls({
-        "Mouse Effect": folder({
-          mouseAreaSize: {
-            value: 0.26,
-            min: 0.05,
-            max: 1,
-            step: 0.01,
-          },
-          displacementForce: {
-            value: 2.0,
-            min: 0,
-            max: 10,
-            step: 0.1,
-          },
-        }),
-        "Particle Settings": folder({
-          particleQuantity: {
-            value: 128,
-            min: 32,
-            max: 512,
-            step: 32,
-          },
-          particleSize: {
-            value: 0.14,
-            min: 0.01,
-            max: 1,
-            step: 0.01,
-          },
-          motionBlurStrength: {
-            value: 1.3,
-            min: 0,
-            max: 3,
-            step: 0.1,
-          },
-        }),
-        Displacement: folder({
-          displacementStrength: {
-            value: 2.8,
-            min: 0,
-            max: 10,
-            step: 0.1,
-          },
-          smoothstepMin: {
-            value: 0.35,
-            min: 0,
-            max: 1,
-            step: 0.01,
-          },
-          smoothstepMax: {
-            value: 0.82,
-            min: 0,
-            max: 1,
-            step: 0.01,
-          },
-        }),
-        "Cursor Trail": folder({
-          fadeSpeed: {
-            value: 0.03,
-            min: 0.001,
-            max: 0.1,
-            step: 0.001,
-          },
-          glowSizeMultiplier: {
-            value: 0.22,
-            min: 0.1,
-            max: 1,
-            step: 0.01,
-          },
-          speedAlphaMultiplier: {
-            value: 0.18,
-            min: 0.01,
-            max: 0.3,
-            step: 0.01,
-          },
-          cursorSmoothing: {
-            value: 0.2,
-            min: 0.01,
-            max: 0.5,
-            step: 0.01,
-          },
-          cursorLerpStrength: {
-            value: 0.24,
-            min: 0.01,
-            max: 0.3,
-            step: 0.01,
-          },
-        }),
-        Advanced: folder({
-          canvasResolution: {
-            value: 256,
-            min: 64,
-            max: 512,
-            step: 64,
-          },
-        }),
-      })
-    : {
-        mouseAreaSize: 0.26,
-        displacementForce: 2.0,
-        particleQuantity: 128,
-        particleSize: 0.14,
-        motionBlurStrength: 1.3,
-        smoothstepMin: 0.35,
-        smoothstepMax: 0.82,
-        fadeSpeed: 0.03,
-        speedAlphaMultiplier: 0.18,
-        cursorSmoothing: 0.2,
-        cursorLerpStrength: 0.24,
-        canvasResolution: 256,
-      };
+  const [controls, setControls] = useState(FOOTER_CONTROLS);
 
   const {
     particleQuantity,
@@ -328,17 +228,10 @@ export default function PrefooterParticlesCursorAnimation() {
     return img;
   }, []);
 
-  const pictureTexture = useMemo(() => {
-    const loader = new THREE.TextureLoader();
-    return loader.load("/x.png");
-  }, []);
-
-  const imageAspect = useMemo(() => {
-    if (pictureTexture.image) {
-      return pictureTexture.image.width / pictureTexture.image.height;
-    }
-    return 176 / 212; // Default to x.png aspect ratio
-  }, [pictureTexture]);
+  // useLoader suspends until the image is decoded and propagates failures to
+  // the canvas boundary. Its shared texture cache owns the texture lifetime.
+  const pictureTexture = useLoader(THREE.TextureLoader, "/x.webp");
+  const imageAspect = pictureTexture.image.width / pictureTexture.image.height;
 
   const planeSize = useMemo(() => {
     if (!(camera instanceof THREE.PerspectiveCamera))
@@ -356,38 +249,20 @@ export default function PrefooterParticlesCursorAnimation() {
       height: visibleHeight * 0.8,
       aspect: imageAspect,
     };
-  }, [camera, size, imageAspect]);
+  }, [camera, imageAspect]);
 
-  const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(
-      planeSize.width,
-      planeSize.height,
-      particleQuantity,
-      particleQuantity
-    );
-    geo.setIndex(null);
-    geo.deleteAttribute("normal");
-
-    const count = geo.attributes.position.count;
-    const intensitiesArray = new Float32Array(count);
-    const anglesArray = new Float32Array(count);
-
-    for (let i = 0; i < count; i++) {
-      intensitiesArray[i] = Math.random();
-      anglesArray[i] = Math.random() * Math.PI * 2;
-    }
-
-    geo.setAttribute(
-      "aIntensity",
-      new THREE.BufferAttribute(intensitiesArray, 1)
-    );
-    geo.setAttribute("aAngle", new THREE.BufferAttribute(anglesArray, 1));
-
-    return geo;
-  }, [planeSize, particleQuantity]);
+  const geometry = useMemo(
+    () =>
+      createParticleGeometry(
+        planeSize.width,
+        planeSize.height,
+        particleQuantity
+      ),
+    [planeSize.width, planeSize.height, particleQuantity]
+  );
 
   const material = useMemo(() => {
-    const pixelRatio = Math.min(window.devicePixelRatio, 2);
+    const pixelRatio = gl.getPixelRatio();
 
     return new THREE.ShaderMaterial({
       vertexShader,
@@ -412,6 +287,7 @@ export default function PrefooterParticlesCursorAnimation() {
       blending: THREE.AdditiveBlending,
     });
   }, [
+    gl,
     size,
     pictureTexture,
     displacement.texture,
@@ -444,7 +320,7 @@ export default function PrefooterParticlesCursorAnimation() {
   }, [displacement, gl]);
 
   useEffect(() => {
-    const pixelRatio = Math.min(window.devicePixelRatio, 2);
+    const pixelRatio = gl.getPixelRatio();
     material.uniforms.uResolution.value.set(
       size.width * pixelRatio,
       size.height * pixelRatio
@@ -456,6 +332,7 @@ export default function PrefooterParticlesCursorAnimation() {
     material.uniforms.uMotionBlurStrength.value = motionBlurStrength;
     material.uniforms.uViewportWidth.value = size.width;
   }, [
+    gl,
     size,
     material,
     displacementForce,
@@ -464,19 +341,6 @@ export default function PrefooterParticlesCursorAnimation() {
     smoothstepMax,
     motionBlurStrength,
   ]);
-
-  // Update interactive plane when planeSize changes
-  useEffect(() => {
-    if (interactivePlaneRef.current) {
-      const planeGeo = interactivePlaneRef.current
-        .geometry as THREE.PlaneGeometry;
-      planeGeo.dispose();
-      interactivePlaneRef.current.geometry = new THREE.PlaneGeometry(
-        planeSize.width,
-        planeSize.height
-      );
-    }
-  }, [planeSize]);
 
   useFrame((state) => {
     if (!interactivePlaneRef.current || !displacement.context) return;
@@ -561,8 +425,21 @@ export default function PrefooterParticlesCursorAnimation() {
     displacement.texture.needsUpdate = true;
   });
 
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => displacement.texture.dispose(), [displacement.texture]);
+
   return (
     <>
+      {isDebugMode && (
+        <Suspense fallback={null}>
+          <DebugControls
+            name="footer"
+            defaults={FOOTER_CONTROLS}
+            onChange={setControls}
+          />
+        </Suspense>
+      )}
       <mesh ref={interactivePlaneRef} visible={false} position={[0, 0, 0]}>
         <planeGeometry args={[planeSize.width, planeSize.height]} />
         <meshBasicMaterial color="red" side={THREE.DoubleSide} />
@@ -570,6 +447,12 @@ export default function PrefooterParticlesCursorAnimation() {
 
       <points
         ref={meshRef}
+        onAfterRender={() => {
+          if (!ready.current) {
+            ready.current = true;
+            onReady();
+          }
+        }}
         geometry={geometry}
         material={material}
         position={[0, 0, 0]}

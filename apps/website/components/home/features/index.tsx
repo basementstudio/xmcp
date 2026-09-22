@@ -1,5 +1,5 @@
 import { Tag } from "../../ui/tag";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
@@ -32,7 +32,7 @@ export const HomeFeatures = () => {
 };
 
 interface CardProps {
-  asset: string;
+  asset: StaticImageData;
   title: string;
   description: string;
 }
@@ -47,6 +47,8 @@ const Card = ({ asset, title, description }: CardProps) => {
           className="mx-auto mix-blend-lighten bg-brand-black"
           width={245}
           height={200}
+          sizes="245px"
+          placeholder="blur"
         />
       </div>
       <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
@@ -57,39 +59,39 @@ const Card = ({ asset, title, description }: CardProps) => {
 
 const cards = [
   {
-    asset: Feature1.src,
+    asset: Feature1,
     title: "File System Routing",
     description:
       "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
-    asset: Feature2.src,
+    asset: Feature2,
     title: "Integrations",
     description:
       "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
-    asset: Feature3.src,
+    asset: Feature3,
     title: "Middlewares",
     description:
       "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
-    asset: Feature4.src,
+    asset: Feature4,
     title: "Extensible Configuration",
     description:
       "Customize every aspect of your MCP server with flexible configuration options.",
   },
 
   {
-    asset: Feature5.src,
+    asset: Feature5,
     title: "Multiple Transport Support",
     description:
       "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
 
   {
-    asset: Feature6.src,
+    asset: Feature6,
     title: "Plug & play to your apps",
     description:
       "Initialize xmcp directly in your existing Next.js or Express projects with one command.",

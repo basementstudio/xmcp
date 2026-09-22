@@ -19,8 +19,7 @@ function stripBrokenInternalLinks(source: string): string {
   );
   return inlineReplaced.replace(
     /^\s{0,3}\[([^\]]+)\]:\s+(.+)$/gm,
-    (match, _, url: string) =>
-      BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match
+    (match, _, url: string) => (BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match)
   );
 }
 
@@ -91,6 +90,7 @@ function ReadmeImg(props: ComponentProps<"img">) {
       src={src}
       alt={props.alt ?? ""}
       loading="lazy"
+      decoding="async"
       referrerPolicy={isRemote ? "no-referrer" : undefined}
       className="inline-block max-w-full h-auto rounded-xs"
     />
