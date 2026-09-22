@@ -59,9 +59,9 @@ before changing that renderer option.
 Use static image imports where possible to retain dimensions and blur metadata.
 Match `sizes` to the image's actual grid and maximum width; homepage and blog
 listing cards have different breakpoints. Keep lower-page images lazy and use
-preload only for a principal above-the-fold image. Raster template previews on
-the configured GitHub hosts use Next.js optimization; SVGs and other hosts keep
-direct loading. Image quality uses the existing Next.js default of 75.
+preload only for a principal above-the-fold image. Local raster template previews
+use Next.js optimization; SVG artwork keeps direct loading. Image quality uses
+the existing Next.js default of 75.
 
 Blog covers use `lib/blog-images.ts` to map frontmatter URLs to static imports.
 Register new covers there to include blur previews in the initial HTML and use
@@ -94,8 +94,8 @@ Compare three fresh-browser runs of `/`, `/blog`, `/blog/xmcp-v1`, `/templates`,
 Record transferred script/image bytes, LCP, CLS, and long-task blocking, plus
 time to the first textured hero frame: canvas animation is not represented by
 LCP. Keep image-optimizer cache state comparable and do not benchmark while a
-build is running. If the templates API is rate-limited, use an existing
-`GITHUB_TOKEN` in the build environment rather than measuring the empty catalogue.
+build is running. Template metadata and detail content are local; template pages must remain
+populated even when GitHub is unavailable.
 
 Check the waterfall for one early hero texture request, no initial Leva or chat
 chunk, and no footer WebGL on a long page until it approaches the viewport.
@@ -108,6 +108,59 @@ without offering an adapter. Record the actual backend and GPU adapter, and
 measure first textured submission/frame separately from steady-state animation.
 This website is the runnable example for these loading behaviors; no framework
 API or separate example package changes are required.
+
+## Templates
+
+The template catalog and detail-page READMEs live in `content/templates/*.md`.
+The website loads these local files at build time; listing, search, categories,
+HTML and Markdown detail pages, sitemap and LLM indexes do not fetch GitHub or
+require a `GITHUB_TOKEN`. Changes appear on the next deployment. The runnable
+template source code remains in `xmcp-dev/templates`, linked from each page.
+
+To add or update an entry, edit a Markdown file named after its URL slug:
+
+```md
+---
+name: "Express Starter"
+description: "An Express MCP server using xmcp's adapter"
+category: "framework"
+tags: ["express", "adapter", "http"]
+---
+
+# Express Starter
+
+Your setup guide and runnable code snippets go here.
+```
+
+`name`, `description`, and a nonempty Markdown body are required. The filename
+sets `/templates/<slug>`; use lowercase letters, numbers and hyphens. `category`
+and `tags` drive filtering, search, related templates and the existing local
+provider artwork. An optional `previewUrl` must point to an existing file under
+`public` (for example, `/templates/my-template.webp`); supported raster images
+retain Next.js optimization and the listing's eager/lazy loading rules.
+
+Source links default to `xmcp-dev/templates`, branch `main`, and a folder matching
+the slug. Override `sourceRepo`, `sourceBranch` or `path` when needed. Optional
+`websiteUrl`, `demoUrl`, `deployUrl` and `replitUrl` accept HTTP(S) URLs. Keep the
+body aligned with the runnable template source when changing setup instructions.
+Invalid metadata, missing preview files, empty bodies, or an empty catalog fail
+the build instead of silently publishing an empty template listing.
+
+The initial 13 entries were copied from `xmcp-dev/templates` at commit
+`04a745014c289042d4673e86a9c08dd51069d0d7`. They are maintained here going forward; there is no
+runtime synchronization. GitHub credentials configured for other services do
+not affect this catalog and do not need to be copied into the website code.
+
+Run the loader regression tests from the repository root with the existing
+workspace test tooling:
+
+```bash
+pnpm --filter xmcp exec tsx --test ../../apps/website/app/templates/utils/content.test.ts
+```
+
+The website is the runnable example. Check `/templates`, search with and without
+matches, a category, `/templates/express` and `/templates/express.md`. These
+routes should keep working with GitHub API and raw-content requests blocked.
 
 ## Showcase submissions
 

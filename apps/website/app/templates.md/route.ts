@@ -1,4 +1,4 @@
-import { fetchTemplates } from "../templates/utils/github";
+import { getTemplates } from "../templates/utils/content";
 import { estimateTokens } from "../../lib/estimate-tokens";
 import { SITE_URL } from "../../lib/base-url";
 
@@ -10,9 +10,7 @@ export async function GET() {
     "> Production-ready MCP server templates built with xmcp — authentication, transports, monetization, and integrations you can fork and deploy.",
   ];
 
-  // fetchTemplates returns [] when the GitHub API is unavailable; keep the
-  // header so the route degrades instead of failing.
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
   if (templates.length > 0) {
     // Like /blog.md, entries link to the .md twins; /llms.txt keeps linking
     // the canonical HTML URLs.

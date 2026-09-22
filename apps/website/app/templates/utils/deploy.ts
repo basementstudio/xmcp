@@ -1,4 +1,4 @@
-import type { TemplateItem } from "./github";
+import type { TemplateItem } from "./content";
 import type {
   DeployOption,
   DeployProvider,
