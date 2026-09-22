@@ -40,3 +40,29 @@ metadata.
 The accessor is available in tool handlers and their async helpers. Calling it
 at module initialization or outside that request scope throws. HTTP details are
 absent when a tool runs over STDIO.
+
+## Request-local values and progress
+
+`src/tools/request-progress.ts` normalizes a list of strings. Its helper reads and
+updates the completed count with `context.get()` and `context.set()`, then sends
+progress with `context.progress()`. Every tool invocation starts with empty local
+values, including concurrent calls and later retries.
+
+Supply a progress token to receive progress notifications in the HTTP response:
+
+```sh
+curl -N http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"request-progress","arguments":{"items":[" first ","second"]},"_meta":{"progressToken":"normalize-demo"}}}'
+```
+
+The response includes progress values `0`, `1`, and `2` with a total of `2`,
+followed by the normalized result. Omitting `_meta.progressToken` still runs the
+tool successfully and sends no progress notifications. SDK clients can opt in
+with their `callTool` request option `onprogress`.
+
+The tool also calls `context.log()`, which follows the SDK's logging capability
+and level checks. xmcp's default server does not enable MCP logging, so this call
+is a no-op in the example; it does not write to stdout or stderr.

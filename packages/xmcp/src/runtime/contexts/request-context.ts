@@ -1,4 +1,4 @@
-import type { ServerContext } from "@modelcontextprotocol/server";
+import type { LoggingLevel, ServerContext } from "@modelcontextprotocol/server";
 import type { McpClientInfo } from "../../types/client-info";
 import { createContext } from "../../utils/context";
 import { getHttpRequestContext } from "./http-request-context";
@@ -14,6 +14,14 @@ export interface RequestContext {
   };
   /** The live cancellation signal supplied by the MCP SDK. */
   readonly signal: AbortSignal;
+  /** Store a value for this tool invocation, shared with its async helpers. */
+  set(key: string | symbol, value: unknown): void;
+  /** Read a request-local value. The type parameter is a compile-time cast. */
+  get<T = unknown>(key: string | symbol): T | undefined;
+  /** Send progress when the current request supplies a progress token. */
+  progress(value: number, total?: number): Promise<void>;
+  /** Send an MCP log message using the SDK's capability and level checks. */
+  log(level: LoggingLevel, data: unknown): Promise<void>;
 }
 
 // Reuse the shared context registry so bundled handlers and the runtime see
@@ -40,6 +48,8 @@ export function withRequestContext<T>(
   clientInfo: McpClientInfo | undefined,
   callback: () => T
 ): T {
+  // This map belongs to one invocation, including one round of a retried tool.
+  const values = new Map<string | symbol, unknown>();
   let http: RequestContext["http"];
   // STDIO must never read an HTTP context's legacy fallback value.
   if (ctx.http) {
@@ -60,6 +70,29 @@ export function withRequestContext<T>(
       clientInfo: clientInfo ? Object.freeze({ ...clientInfo }) : undefined,
       http,
       signal: ctx.mcpReq.signal,
+      set(key: string | symbol, value: unknown) {
+        values.set(key, value);
+      },
+      get<T = unknown>(key: string | symbol): T | undefined {
+        return values.get(key) as T | undefined;
+      },
+      async progress(value: number, total?: number) {
+        const progressToken = ctx.mcpReq._meta?.progressToken;
+        if (progressToken === undefined) return;
+        await ctx.mcpReq.notify({
+          method: "notifications/progress",
+          params: {
+            progressToken,
+            progress: value,
+            ...(total === undefined ? {} : { total }),
+          },
+        });
+      },
+      log(level: LoggingLevel, data: unknown) {
+        // The SDK already no-ops without logging capability and applies the
+        // per-request modern log level or the legacy connection's filter.
+        return ctx.mcpReq.log(level, data);
+      },
     }),
     callback
   );
