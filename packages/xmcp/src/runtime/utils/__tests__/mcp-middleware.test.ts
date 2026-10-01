@@ -2,12 +2,17 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   CLIENT_INFO_META_KEY,
+  McpServer,
+  InMemoryTransport,
+  ResourceTemplate,
   type ServerContext,
 } from "@modelcontextprotocol/server";
+import { Client } from "@modelcontextprotocol/client";
 import type { McpMiddleware } from "@/types/mcp-middleware";
 import { getRequestContext } from "../../contexts/request-context";
 import {
   normalizeMcpMiddleware,
+  registerWithMcpMiddleware,
   wrapToolWithMiddleware,
 } from "../mcp-middleware";
 import { transformToolHandler } from "../transformers/tool";
@@ -70,7 +75,7 @@ test("middleware runs in order and shares one request scope with the tool and as
   ]);
   assert.throws(
     getRequestContext,
-    /only be used while handling a tool request/
+    /only be used while handling an MCP request/
   );
 });
 
@@ -109,7 +114,7 @@ for (const source of ["middleware", "tool"] as const) {
     );
     assert.throws(
       getRequestContext,
-      /only be used while handling a tool request/
+      /only be used while handling an MCP request/
     );
   });
 }
@@ -157,4 +162,95 @@ test("rejects invalid middleware exports instead of silently ignoring them", () 
       /must export mcp as a function or an array/
     );
   }
+});
+
+test("wraps SDK template callbacks once, preserves listing parameters, and restores registration", async (t) => {
+  const server = new McpServer({ name: "middleware-test", version: "1" });
+  const original = server.server.setRequestHandler;
+  const events: string[] = [];
+  const middleware: McpMiddleware = async (ctx, next) => {
+    events.push(ctx.method + " before");
+    assert.strictEqual(ctx.signal, getRequestContext().signal);
+    assert.equal(ctx.get("value"), undefined);
+    ctx.set("value", "request value");
+    if (ctx.method === "resources/list")
+      assert.equal(ctx.params.cursor, "page");
+    const result = await next();
+    assert.equal(ctx.get("callback"), ctx.method);
+    events.push(ctx.method + " after");
+    return result;
+  };
+  function callback(method: string) {
+    assert.equal(getRequestContext().get("value"), "request value");
+    getRequestContext().set("callback", method);
+    events.push(method + " callback");
+  }
+  registerWithMcpMiddleware(server, [middleware], () => {
+    server.registerResource(
+      "template",
+      new ResourceTemplate("test://items/{id}", {
+        list: async () => {
+          callback("resources/list");
+          return { resources: [{ name: "one", uri: "test://items/one" }] };
+        },
+        complete: {
+          id: async () => {
+            callback("completion/complete");
+            return ["one"];
+          },
+        },
+      }),
+      {},
+      async (uri) => {
+        callback("resources/read");
+        return { contents: [{ uri: uri.href, text: "one" }] };
+      }
+    );
+  });
+  assert.strictEqual(server.server.setRequestHandler, original);
+  const client = new Client({ name: "test", version: "1" });
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  t.after(async () => {
+    await client.close();
+    await server.close();
+  });
+  await server.connect(serverTransport);
+  await client.connect(clientTransport);
+  await client.ping();
+  assert.deepEqual(events, []);
+  const listing = await client.listResources({ cursor: "page" });
+  assert.equal(listing.resources[0].uri, "test://items/one");
+  const read = await client.readResource({ uri: "test://items/one" });
+  assert.ok("text" in read.contents[0]);
+  assert.equal(read.contents[0].text, "one");
+  const completion = await client.complete({
+    ref: { type: "ref/resource", uri: "test://items/{id}" },
+    argument: { name: "id", value: "o" },
+  });
+  assert.deepEqual(completion.completion.values, ["one"]);
+  assert.deepEqual(
+    events,
+    ["resources/list", "resources/read", "completion/complete"].flatMap(
+      (method) => [method + " before", method + " callback", method + " after"]
+    )
+  );
+  assert.throws(
+    getRequestContext,
+    /only be used while handling an MCP request/
+  );
+});
+
+test("restores the SDK registration method after setup fails", () => {
+  const server = new McpServer({ name: "middleware-test", version: "1" });
+  const original = server.server.setRequestHandler;
+  const failure = new Error("registration failed");
+  assert.throws(
+    () =>
+      registerWithMcpMiddleware(server, [], () => {
+        throw failure;
+      }),
+    (error) => error === failure
+  );
+  assert.strictEqual(server.server.setRequestHandler, original);
 });

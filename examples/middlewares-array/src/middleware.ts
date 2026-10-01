@@ -18,6 +18,7 @@ const middleware: Middleware[] = [
 export default middleware;
 
 const stampResult: McpMiddleware = async (ctx, next) => {
+  if (ctx.method !== "tools/call") return next();
   ctx.set("example.tool", ctx.params.name);
   const result = await next();
   return {
@@ -27,7 +28,11 @@ const stampResult: McpMiddleware = async (ctx, next) => {
 };
 
 const checkName: McpMiddleware = (ctx, next) => {
-  if (ctx.params.name === "greet" && ctx.params.arguments.name === "blocked") {
+  if (
+    ctx.method === "tools/call" &&
+    ctx.params.name === "greet" &&
+    ctx.params.arguments.name === "blocked"
+  ) {
     return {
       isError: true,
       content: [
@@ -38,4 +43,23 @@ const checkName: McpMiddleware = (ctx, next) => {
   return next();
 };
 
-export const mcp = [stampResult, checkName];
+const protectResource: McpMiddleware = async (ctx, next) => {
+  if (
+    ctx.method === "resources/read" &&
+    new URL(ctx.params.uri).href === "demo://private"
+  ) {
+    throw new Error("This resource is private");
+  }
+  const result = await next();
+  if (ctx.method === "resources/list" && Array.isArray(result.resources)) {
+    return {
+      ...result,
+      resources: result.resources.filter(
+        (resource) => resource.uri !== "demo://private"
+      ),
+    };
+  }
+  return result;
+};
+
+export const mcp = [stampResult, checkName, protectResource];

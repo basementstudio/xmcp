@@ -37,7 +37,7 @@ function serverContext(
 const outsideRequest = () =>
   assert.throws(
     getRequestContext,
-    /only be used while handling a tool request/
+    /only be used while handling an MCP request/
   );
 
 test("throws outside a tool request before and after a successful handler", async () => {

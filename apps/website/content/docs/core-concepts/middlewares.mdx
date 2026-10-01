@@ -2,11 +2,11 @@
 title: "Middlewares"
 metadataTitle: "Middlewares | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Use HTTP middleware and MCP tool middleware to inspect requests, gate tool execution, and transform results."
-description: "Intercept HTTP requests and MCP tool calls using src/middleware.ts."
+summary: "Use HTTP middleware and MCP middleware to inspect requests, gate execution, and transform results."
+description: "Intercept HTTP requests and MCP operations using src/middleware.ts."
 ---
 
-Define HTTP middleware with the default export of `src/middleware.ts`, and MCP tool middleware with its named `mcp` export. Both can live in the same file.
+Define HTTP middleware with the default export of `src/middleware.ts`, and MCP middleware with its named `mcp` export. Both can live in the same file.
 
 ## HTTP middleware
 
@@ -58,20 +58,25 @@ const middleware: Middleware[] = [
 export default middleware;
 ```
 
-## MCP tool middleware
+## MCP middleware
 
-Export one `McpMiddleware` function or an array as `mcp`. xmcp discovers it through the same `src/middleware.ts` file and applies it to registered tool calls over HTTP, STDIO, and the Node adapters. A default export is optional.
+Export one `McpMiddleware` function or an array as `mcp`. xmcp discovers it through the same `src/middleware.ts` file and applies it to tool calls, prompts, resource reads, completions, and listings over HTTP, STDIO, and the Node adapters. A default export is optional.
 
 ```typescript title="src/middleware.ts"
 import { type McpMiddleware } from "xmcp";
 
 const stampResult: McpMiddleware = async (ctx, next) => {
+  if (ctx.method !== "tools/call") return next();
   const result = await next();
   return { ...result, _meta: { ...result._meta, tool: ctx.params.name } };
 };
 
 const checkName: McpMiddleware = (ctx, next) => {
-  if (ctx.params.name === "greet" && ctx.params.arguments.name === "blocked") {
+  if (
+    ctx.method === "tools/call" &&
+    ctx.params.name === "greet" &&
+    ctx.params.arguments.name === "blocked"
+  ) {
     return {
       isError: true,
       content: [{ type: "text", text: "This name is blocked" }],
@@ -83,23 +88,56 @@ const checkName: McpMiddleware = (ctx, next) => {
 export const mcp = [stampResult, checkName];
 ```
 
-The first function enters first and receives the result last. `await next()` runs the remaining chain and the tool. Return a protocol result without calling `next()` to skip the remaining chain and handler. Call `next()` at most once; calling it twice rejects rather than executing the tool again. Return or await its promise so work stays inside the request lifecycle.
+The first function enters first and receives the result last. `await next()` runs the remaining chain and the operation handler. Return a protocol result without calling `next()` to skip the remaining chain and handler. Call `next()` at most once; calling it twice rejects rather than executing the handler again. Return or await its promise so work stays inside the request lifecycle.
 
-`ctx` includes:
+`ctx.method` identifies the operation and narrows `ctx.params`:
 
-| Field                           | Meaning                                                                                      |
-| ------------------------------- | -------------------------------------------------------------------------------------------- |
-| `method`                        | Currently always `"tools/call"`.                                                             |
-| `params.name`                   | The registered tool name, including a name set through metadata.                             |
-| `params.arguments`              | The SDK-validated tool arguments, exposed for reading.                                       |
-| `clientInfo`, `http`, `signal`  | The same metadata and live signal as [request context](/docs/core-concepts/request-context). |
-| `set`, `get`, `progress`, `log` | The request-context helpers, shared with the tool and other middleware.                      |
+| Method                                                                     | Parameters                                               |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `tools/call`                                                               | `name` and SDK-validated `arguments`                     |
+| `prompts/get`                                                              | `name` and optional `arguments`                          |
+| `resources/read`                                                           | `uri`, for static, templated, and generated UI resources |
+| `completion/complete`                                                      | `ref`, `argument`, and optional completion `context`     |
+| `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list` | Optional pagination `cursor` and request metadata        |
 
-`getRequestContext()` also works in MCP middleware, before and after `next()`. Its local values last for one invocation and are isolated from other requests. HTTP metadata is absent on STDIO.
+Always check `ctx.method` before accessing operation-specific parameters. Existing middleware that assumes every request is a tool call should begin with `if (ctx.method !== "tools/call") return next();`.
 
-Middleware receives normalized MCP tool results from `next()`. Returned results must follow the MCP result format; string and number shorthand belongs in tool handlers. Exceptions propagate to the SDK's existing tool-error handling. Invalid `mcp` exports or a failed middleware import prevent server setup from completing.
+`ctx` also includes `clientInfo`, `http`, `signal`, `set`, `get`, `progress`, and `log` from [request context](/docs/core-concepts/request-context). `getRequestContext()` works before and after `next()`, and inside prompt, resource, and completion callbacks. Local values last for one operation and are isolated from concurrent requests. HTTP metadata is absent on STDIO.
 
-This hook runs after the SDK resolves the tool and validates its input. It currently covers registered `tools/call` handlers only; it does not intercept unknown tools, invalid inputs, listings, prompts, resources, or completion requests. Keep output-schema requirements intact when changing a result, and preserve interim `inputRequired` results when passing through multi-round tools.
+Middleware receives normalized MCP results from `next()`. Return the result format for the current method; string and number shorthand belongs in component handlers. Check the result shape before accessing method-specific fields. Exceptions retain SDK behavior: tools produce tool-error results, while reads, prompts, completion, and listings reject with protocol errors. Invalid `mcp` exports or a failed middleware import prevent server setup from completing.
+
+Tool middleware runs after the SDK resolves the tool and validates its input. Other methods are wrapped at SDK request-handler registration, before component lookup or callbacks. Resource template reads, template listing callbacks, and completion callbacks share that same chain and request scope. Only methods installed by the registered components are available. Initialization, ping, notifications, and unknown methods are unaffected.
+
+Keep output-schema requirements intact when changing a tool result, and preserve interim `inputRequired` results when passing through multi-round tools.
+
+### Filter discovery and deny direct access
+
+Filtering a listing alone does not prevent clients from calling a known name or URI. Enforce the corresponding operation as well:
+
+```typescript title="src/middleware.ts"
+import { type McpMiddleware } from "xmcp";
+
+export const mcp: McpMiddleware = async (ctx, next) => {
+  if (
+    ctx.method === "resources/read" &&
+    new URL(ctx.params.uri).href === "demo://private"
+  ) {
+    throw new Error("This resource is private");
+  }
+  const result = await next();
+  if (ctx.method === "resources/list" && Array.isArray(result.resources)) {
+    return {
+      ...result,
+      resources: result.resources.filter(
+        (resource) => resource.uri !== "demo://private"
+      ),
+    };
+  }
+  return result;
+};
+```
+
+The same pattern applies to prompt and tool listings. Completion middleware can return `{ completion: { values: [] } }` without calling `next()` to suppress suggestions for a restricted prompt or resource reference.
 
 The default HTTP export retains its existing transport behavior. STDIO loads the module to read `mcp` but does not invoke the default HTTP middleware. Keep module-level code safe to import on both transports.
 

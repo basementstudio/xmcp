@@ -1,10 +1,10 @@
 ---
 title: "Request Context"
 metadataTitle: "Request Context | xmcp Documentation"
-description: "Access request metadata, share local values, and report progress from tool handlers and their async helpers."
+description: "Access request metadata, share local values, and report progress from MCP handlers, middleware, and their async helpers."
 ---
 
-Use `getRequestContext()` inside a tool, its MCP middleware, or their async helpers to read the current request without passing the tool's extra arguments through each function.
+Use `getRequestContext()` inside a tool, prompt, resource, MCP middleware, or their async helpers to read the current request without passing extra arguments through each function.
 
 ```typescript title="src/tools/request-context.ts"
 import { getRequestContext } from "xmcp";
@@ -26,7 +26,7 @@ export default async function requestContext() {
 }
 ```
 
-The context stays with the tool's async execution and is isolated from concurrent requests. [MCP tool middleware](/docs/core-concepts/middlewares#mcp-tool-middleware) shares the same scope before and after `next()`. This accessor is not available at module initialization, in Express middleware, or in prompt and resource handlers. Calling it outside a tool request throws a descriptive error.
+The context stays with the operation's async execution and is isolated from concurrent requests. [MCP middleware](/docs/core-concepts/middlewares#mcp-middleware) shares the same scope before and after `next()`. The scope also includes resource template listing callbacks and prompt or resource completion callbacks. This accessor is not available at module initialization or in Express middleware. Calling it outside an MCP operation throws a descriptive error.
 
 ## Available fields
 
@@ -34,10 +34,10 @@ The exported `RequestContext` type contains:
 
 | Field          | Meaning                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. Uses the same identity as `extra.clientInfo`.                |
+| `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. For tools, uses the same identity as `extra.clientInfo`.     |
 | `http.id`      | xmcp's generated HTTP request ID. This is separate from the JSON-RPC message ID.                                                                 |
 | `http.headers` | A read-only copy of the current HTTP headers. Values can be strings, arrays of strings, or `undefined`. Standard HTTP header keys are lowercase. |
-| `signal`       | The original SDK `AbortSignal`, also supplied as `extra.signal`.                                                                                 |
+| `signal`       | The original SDK `AbortSignal`, also supplied as `extra.signal` for tools.                                                                       |
 
 `http` is absent on STDIO. Check that it exists before using HTTP-specific data. Client information can be absent on either transport when the client does not supply it.
 
@@ -45,7 +45,7 @@ The context object, client information, HTTP details, and header arrays are froz
 
 ## Request-local values
 
-Use `context.set(key, value)` and `context.get<T>(key)` to share values between a tool and its async helpers. Keys can be strings or symbols. Setting an existing key replaces its value; reading an unset key returns `undefined`.
+Use `context.set(key, value)` and `context.get<T>(key)` to share values between a handler, its middleware, and async helpers. Keys can be strings or symbols. Setting an existing key replaces its value; reading an unset key returns `undefined`.
 
 ```typescript title="src/tools/request-count.ts"
 import { getRequestContext } from "xmcp";
@@ -68,7 +68,7 @@ export default async function requestCount() {
 }
 ```
 
-Values belong to one tool invocation. Concurrent calls, later requests on the same connection, and each retry of a multi-round tool start with an empty store. Local values are not a session or a substitute for the protocol's `requestState`. Values are stored by reference, and the generic type parameter on `get<T>()` is a TypeScript cast, not runtime validation.
+Values belong to one MCP operation. Concurrent calls, later requests on the same connection, and each retry of a multi-round tool start with an empty store. Local values are not a session or a substitute for the protocol's `requestState`. Values are stored by reference, and the generic type parameter on `get<T>()` is a TypeScript cast, not runtime validation.
 
 ## Progress notifications
 

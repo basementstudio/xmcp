@@ -7,6 +7,7 @@ export type {
 export type {
   McpMiddleware,
   McpMiddlewareContext,
+  McpMiddlewareMethod,
   McpMiddlewareNext,
   McpMiddlewareResult,
 } from "./types/mcp-middleware";

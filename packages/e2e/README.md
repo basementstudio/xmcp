@@ -26,8 +26,10 @@ The shared checks cover tool discovery, input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
 prompts, static resources, resource templates, tool input requests, and read-only
 request context (identity, HTTP details, and the live signal), request-local
-values, progress notifications, and MCP tool middleware. Middleware checks cover
-ordering, result stamps, request-local values, denial, and short-circuit results.
+values, progress notifications, and MCP middleware. Middleware checks cover
+ordering, result stamps, request-local values, denial, and short-circuit results,
+plus filtering all four catalogs, denying direct prompt/resource access, and
+sharing context with static resources, templates, prompts, and completions.
 Concurrent calls verify independent local
 values and progress routing; calls without tokens verify the no-op path. STDIO
 progress checks use explicit tokens on a separate SDK client: the SDK's built-in
