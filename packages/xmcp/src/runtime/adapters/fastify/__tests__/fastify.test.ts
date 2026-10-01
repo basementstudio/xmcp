@@ -24,6 +24,7 @@ g["HTTP_CORS_CONFIG"] = {
 g["INJECTED_TOOLS"] = {};
 g["INJECTED_PROMPTS"] = {};
 g["INJECTED_RESOURCES"] = {};
+g["INJECTED_MIDDLEWARE"] = undefined;
 g["SERVER_INFO"] = { name: "test-server", version: "0.0.0" };
 
 const HEADERS = {

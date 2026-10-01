@@ -172,28 +172,26 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
-  // if adapter is not enabled, handle middleware
-  if (!xmcpConfig.experimental?.adapter) {
-    // handle middleware
-    watcher.watch("./src/middleware.ts", {
-      onAdd: async () => {
-        compilerContext.setContext({
-          hasMiddleware: true,
-        });
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-      onUnlink: async () => {
-        compilerContext.setContext({
-          hasMiddleware: false,
-        });
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-    });
-  }
+  // Every transport loads the named MCP middleware export. Adapters continue
+  // to leave the default HTTP middleware export to their host application.
+  watcher.watch("./src/middleware.ts", {
+    onAdd: async () => {
+      compilerContext.setContext({
+        hasMiddleware: true,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+    onUnlink: async () => {
+      compilerContext.setContext({
+        hasMiddleware: false,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+  });
 
   // start compiler
   watcher.onReady(async () => {

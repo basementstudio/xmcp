@@ -14,7 +14,9 @@ export async function startHttpServer(fixture: Fixture, logName: string) {
   const running = startProcess(
     process.execPath,
     [join(fixture.directory, entry)],
-    fixture.directory,
+    fixture.spec.kind === "nextjs"
+      ? join(fixture.directory, "next-host")
+      : fixture.directory,
     join(fixture.directory, `server-${logName}.log`)
   );
   try {

@@ -9,7 +9,6 @@ import { ZodRawShape } from "zod/v3";
 import type { ToolExtraArguments } from "@/types/tool";
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getClientInfoContext } from "@/runtime/contexts/client-info-context";
-import { withRequestContext } from "@/runtime/contexts/request-context";
 import {
   extractClientInfoFromHeaders,
   mapImplementationToClientInfo,
@@ -94,7 +93,9 @@ function headersFromWebRequest(
   return headers;
 }
 
-function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
+export function resolveToolClientInfo(
+  ctx: ServerContext
+): ToolExtraArguments["clientInfo"] {
   // 2026-07-28 requests carry client identity in the per-request _meta
   // envelope; earlier eras fall back to the x-mcp-client-* headers or the
   // initialize handshake capture.
@@ -122,6 +123,11 @@ function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
     }
   }
 
+  return clientInfo;
+}
+
+function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
+  const clientInfo = resolveToolClientInfo(ctx);
   const requestHeaders = headersFromWebRequest(ctx.http?.req);
 
   return {
@@ -169,9 +175,7 @@ export function transformToolHandler(
     ctx: ServerContext
   ): Promise<CallToolResult | InputRequiredResult> => {
     const toolExtra = createToolExtraArguments(ctx);
-    let response: any = withRequestContext(ctx, toolExtra.clientInfo, () =>
-      handler(args, toolExtra)
-    );
+    let response: any = handler(args, toolExtra);
 
     // only await if it's actually a promise
     if (response instanceof Promise) {

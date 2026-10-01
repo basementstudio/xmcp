@@ -1,5 +1,6 @@
 import { REQUEST_CONTEXT_FILES } from "../fixtures/request-context.js";
 import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
+import { MCP_MIDDLEWARE_FILES } from "../fixtures/mcp-middleware.js";
 
 // These are real application modules compiled by xmcp, not mocked handlers.
 export const TOOL_ADD = `import { z } from "zod";
@@ -12,6 +13,7 @@ export default function add({ a, b }: { a: number; b: number }) { return { sum: 
 export const DEFAULT_FILES: Record<string, string> = {
   ...REQUEST_CONTEXT_FILES,
   ...REQUEST_HELPERS_FILES,
+  ...MCP_MIDDLEWARE_FILES,
   "src/tools/add.ts": TOOL_ADD,
   "src/tools/client-info.ts": `import type { ToolExtraArguments } from "xmcp";
 export const metadata = { name: "client-info", description: "Echo request client identity" };
@@ -80,7 +82,7 @@ NestFactory.create(AppModule, { logger: false }).then(async (app) => {
 `;
     case "nextjs":
       return `const next = require("next");
-const app = next({ dev: true, dir: process.cwd(), hostname: "127.0.0.1" });
+const app = next({ dev: true, dir: require("node:path").join(__dirname, "next-host"), hostname: "127.0.0.1" });
 app.prepare().then(() => {
   const server = require("node:http").createServer(app.getRequestHandler()); ${LISTEN}
 });

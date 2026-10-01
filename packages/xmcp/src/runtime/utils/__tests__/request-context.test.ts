@@ -6,7 +6,16 @@ import {
 } from "@modelcontextprotocol/server";
 import { getRequestContext } from "../../contexts/request-context";
 import { httpRequestContextProvider } from "../../contexts/http-request-context";
-import { transformToolHandler } from "../transformers/tool";
+import {
+  transformToolHandler as transform,
+  type UserToolHandler,
+} from "../transformers/tool";
+import { wrapToolWithMiddleware } from "../mcp-middleware";
+
+// Exercise the same request boundary used by tool registration.
+function createToolHandler(handler: UserToolHandler) {
+  return wrapToolWithMiddleware(transform(handler), "context-test", []);
+}
 
 function serverContext(
   signal = new AbortController().signal,
@@ -35,7 +44,7 @@ test("throws outside a tool request before and after a successful handler", asyn
   outsideRequest();
   await httpRequestContextProvider({ id: "http-id", headers: {} }, async () => {
     outsideRequest();
-    await transformToolHandler(() => {
+    await createToolHandler(() => {
       assert.equal(getRequestContext().http?.id, "http-id");
       return "ok";
     })({}, serverContext(undefined, true));
@@ -72,7 +81,7 @@ test("isolates overlapping HTTP requests across async helpers", async () => {
         clientInfo: { name, version: "1.0.0" },
       },
       () =>
-        transformToolHandler(async (_args, extra) => {
+        createToolHandler(async (_args, extra) => {
           const context = await helper();
           assert.equal(context.http?.id, name);
           assert.equal(context.http?.headers["x-request"], name);
@@ -94,9 +103,9 @@ test("isolates overlapping HTTP requests across async helpers", async () => {
 test("does not expose HTTP details on STDIO after an HTTP request", async () => {
   await httpRequestContextProvider(
     { id: "previous-http", headers: { "x-request": "previous" } },
-    () => transformToolHandler(() => "ok")({}, serverContext(undefined, true))
+    () => createToolHandler(() => "ok")({}, serverContext(undefined, true))
   );
-  await transformToolHandler(() => {
+  await createToolHandler(() => {
     const context = getRequestContext();
     assert.equal(context.http, undefined);
     assert.deepEqual(context.clientInfo, {
@@ -111,7 +120,7 @@ test("copies and freezes metadata without freezing the underlying request", asyn
   const headers = { "x-values": ["one", "two"] };
   const clientInfo = { name: "client", version: "1.0.0" };
   await httpRequestContextProvider({ id: "http-id", headers, clientInfo }, () =>
-    transformToolHandler((_args, extra) => {
+    createToolHandler((_args, extra) => {
       const context = getRequestContext();
       assert.ok(Object.isFrozen(context));
       assert.ok(Object.isFrozen(context.http));
@@ -131,7 +140,7 @@ test("copies and freezes metadata without freezing the underlying request", asyn
 test("preserves the live SDK signal and clears scope after handler errors", async () => {
   const controller = new AbortController();
   const reason = new Error("cancelled");
-  const handler = transformToolHandler(async () => {
+  const handler = createToolHandler(async () => {
     const { signal } = getRequestContext();
     assert.strictEqual(signal, controller.signal);
     assert.equal(signal.aborted, false);
@@ -149,7 +158,7 @@ test("preserves the live SDK signal and clears scope after handler errors", asyn
   const error = new Error("handler failed");
   await assert.rejects(
     async () =>
-      transformToolHandler(() => {
+      createToolHandler(() => {
         throw error;
       })({}, serverContext()),
     (caught: unknown) => caught === error

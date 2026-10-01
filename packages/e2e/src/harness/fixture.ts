@@ -76,6 +76,10 @@ export async function createFixture(spec: FixtureSpec): Promise<Fixture> {
   const work = join(E2E_ROOT, ".work");
   await mkdir(work, { recursive: true });
   const directory = await mkdtemp(join(work, `${label}-`));
+  // Sibling projects keep Next.js from discovering xmcp's middleware in an
+  // ancestor source directory. Dependencies are shared from the fixture root.
+  const projectDirectory =
+    spec.kind === "nextjs" ? join(directory, "mcp") : directory;
   const manifest = JSON.parse(
     await readFile(join(E2E_ROOT, "package.json"), "utf8")
   );
@@ -142,7 +146,7 @@ export default {
     ...DEFAULT_FILES,
   };
   for (const [relativePath, contents] of Object.entries(files)) {
-    const path = join(directory, relativePath);
+    const path = join(projectDirectory, relativePath);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, contents);
   }
@@ -152,34 +156,41 @@ export default {
       adapterHost(spec.kind as Parameters<typeof adapterHost>[0])
     );
   if (spec.kind === "nextjs") {
-    await mkdir(join(directory, "app/mcp"), { recursive: true });
+    // Next.js also reserves src/middleware.ts. Host its app separately from
+    // the xmcp sources, importing the compiled adapter across that boundary.
+    const nextDirectory = join(directory, "next-host");
+    await mkdir(join(nextDirectory, "app/mcp"), { recursive: true });
     await writeFile(
-      join(directory, "app/mcp/route.js"),
-      `import adapter from "../../.xmcp/adapter/index.js";\nexport const dynamic = "force-dynamic";\nexport const POST = adapter.xmcpHandler;\nexport const GET = adapter.xmcpHandler;\nexport const OPTIONS = adapter.xmcpHandler;\n`
+      join(nextDirectory, "package.json"),
+      JSON.stringify({ name: "next-host", private: true })
     );
     await writeFile(
-      join(directory, "app/layout.js"),
+      join(nextDirectory, "app/mcp/route.js"),
+      `import adapter from "../../../mcp/.xmcp/adapter/index.js";\nexport const dynamic = "force-dynamic";\nexport const POST = adapter.xmcpHandler;\nexport const GET = adapter.xmcpHandler;\nexport const OPTIONS = adapter.xmcpHandler;\n`
+    );
+    await writeFile(
+      join(nextDirectory, "app/layout.js"),
       `export default function Layout({children}) { return <html><body>{children}</body></html>; }\n`
     );
     await writeFile(
-      join(directory, "next.config.mjs"),
+      join(nextDirectory, "next.config.mjs"),
       `export default { devIndicators: false };\n`
     );
   }
   for (const [relativePath, contents] of extraFiles) {
-    const path = join(directory, relativePath);
+    const path = join(projectDirectory, relativePath);
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, contents);
   }
   await runCommand(
     process.execPath,
     [join(REPO_ROOT, "packages/xmcp/dist/cli.js"), "build"],
-    directory,
+    projectDirectory,
     join(directory, "build.log")
   );
   await access(
     join(
-      directory,
+      projectDirectory,
       isAdapter ? ".xmcp/adapter/index.js" : `dist/${spec.kind}.js`
     )
   );
