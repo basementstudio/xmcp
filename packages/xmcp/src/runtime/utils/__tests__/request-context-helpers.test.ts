@@ -69,7 +69,7 @@ test("overlapping tool invocations do not share local values", async () => {
   );
   assert.throws(
     getRequestContext,
-    /only be used while handling a tool request/
+    /only be used while handling an MCP request/
   );
 });
 

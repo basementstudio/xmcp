@@ -1,10 +1,10 @@
 export const MCP_MIDDLEWARE_FILES = {
   "src/middleware.ts": `import { getRequestContext, type McpMiddleware } from "xmcp";
+import { operations } from "./operation-middleware";
 const outer: McpMiddleware = async (ctx, next) => {
-  if (!ctx.params.name.startsWith("middleware-")) return next();
+  if (ctx.method !== "tools/call" || !ctx.params.name.startsWith("middleware-")) return next();
   if (ctx.params.name === "middleware-denied") throw new Error("Denied by MCP middleware");
   if (ctx.params.name === "middleware-short-circuit") return { content: [{ type: "text", text: "short-circuited" }] };
-  if (ctx.method !== "tools/call") throw new Error("Wrong method");
   ctx.set("trace", ["outer before"]);
   ctx.set("label", ctx.params.arguments.label);
   const result = await next();
@@ -13,14 +13,14 @@ const outer: McpMiddleware = async (ctx, next) => {
   return { ...result, _meta: { ...result._meta, trace, label: ctx.get("label") } };
 };
 const inner: McpMiddleware = async (ctx, next) => {
-  if (!ctx.params.name.startsWith("middleware-")) return next();
+  if (ctx.method !== "tools/call" || !ctx.params.name.startsWith("middleware-")) return next();
   const trace = ctx.get<string[]>("trace")!;
   trace.push("inner before");
   const result = await next();
   trace.push("inner after");
   return result;
 };
-export const mcp = [outer, inner];
+export const mcp = [operations, outer, inner];
 `,
   "src/tools/middleware-echo.ts": `import { getRequestContext } from "xmcp";
 import { z } from "zod";

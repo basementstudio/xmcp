@@ -16,7 +16,10 @@ import {
   reportResourceLoadIssues,
 } from "./resource-loader";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
-import { normalizeMcpMiddleware } from "./mcp-middleware";
+import {
+  normalizeMcpMiddleware,
+  registerWithMcpMiddleware,
+} from "./mcp-middleware";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -69,9 +72,11 @@ export async function configureServer(
   const middleware = normalizeMcpMiddleware(middlewareModule?.mcp);
   uIResourceRegistry.clear();
 
-  addToolsToServer(server, toolModules, middleware);
-  addPromptsToServer(server, promptModules);
-  addResourcesToServer(server, resourceModules);
+  registerWithMcpMiddleware(server, middleware, () => {
+    addToolsToServer(server, toolModules, middleware);
+    addPromptsToServer(server, promptModules);
+    addResourcesToServer(server, resourceModules);
+  });
   return server;
 }
 

@@ -14,7 +14,7 @@ export interface RequestContext {
   };
   /** The live cancellation signal supplied by the MCP SDK. */
   readonly signal: AbortSignal;
-  /** Store a value for this tool invocation, shared with its async helpers. */
+  /** Store a value for this MCP operation, shared with its async helpers. */
   set(key: string | symbol, value: unknown): void;
   /** Read a request-local value. The type parameter is a compile-time cast. */
   get<T = unknown>(key: string | symbol): T | undefined;
@@ -31,18 +31,18 @@ const requestContext = createContext<RequestContext>({
   fallback: false,
 });
 
-/** Read the current tool request from a handler or one of its async helpers. */
+/** Read the current MCP request from a handler or one of its async helpers. */
 export function getRequestContext(): RequestContext {
   try {
     return requestContext.getContext();
   } catch {
     throw new Error(
-      "getRequestContext() can only be used while handling a tool request."
+      "getRequestContext() can only be used while handling an MCP request."
     );
   }
 }
 
-/** Internal boundary around user tool execution; handler arguments stay intact. */
+/** Internal boundary around MCP operation execution; handler arguments stay intact. */
 export function withRequestContext<T>(
   ctx: ServerContext,
   clientInfo: McpClientInfo | undefined,
