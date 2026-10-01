@@ -1,5 +1,6 @@
 import { REQUEST_CONTEXT_FILES } from "../fixtures/request-context.js";
 import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
+import { MIDDLEWARE_LIFECYCLE_FILES } from "../fixtures/middleware-lifecycle.js";
 import { MCP_MIDDLEWARE_FILES } from "../fixtures/mcp-middleware.js";
 import { OPERATION_MIDDLEWARE_FILES } from "../fixtures/operation-middleware.js";
 
@@ -15,6 +16,7 @@ export const DEFAULT_FILES: Record<string, string> = {
   ...REQUEST_CONTEXT_FILES,
   ...REQUEST_HELPERS_FILES,
   ...MCP_MIDDLEWARE_FILES,
+  ...MIDDLEWARE_LIFECYCLE_FILES,
   ...OPERATION_MIDDLEWARE_FILES,
   "src/tools/add.ts": TOOL_ADD,
   "src/tools/client-info.ts": `import type { ToolExtraArguments } from "xmcp";

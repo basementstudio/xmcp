@@ -22,6 +22,7 @@ test("preserves default capabilities for every transport and protocol mode", () 
       if (kind !== "stdio") expected.add("stateless-http");
       if (kind !== "stdio" && mode === "legacy") {
         expected.delete("input-required");
+        expected.delete("middleware-input-required");
         assert.match(
           unsupportedReasons?.["input-required"] ?? "",
           /Stateless legacy HTTP/
