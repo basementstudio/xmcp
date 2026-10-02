@@ -29,6 +29,7 @@ export function injectHttpVariables(
       host: resolvedConfig.host,
       bodySizeLimit: resolvedConfig.bodySizeLimit,
       endpoint: resolvedConfig.endpoint,
+      maxSubscriptions: resolvedConfig.maxSubscriptions,
       debug: mode === "development",
     }),
   };
