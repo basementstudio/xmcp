@@ -1,6 +1,7 @@
+import type { ComponentMetadata } from "./component";
 import { UIMetadata } from "./ui-meta";
 
-export interface ResourceMetadata {
+export interface ResourceMetadata extends ComponentMetadata {
   name: string;
   title?: string;
   description?: string;
