@@ -4,13 +4,8 @@ import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
 import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
-
-interface PromptMetadata {
-  name: string;
-  title: string;
-  description: string;
-  role?: string;
-}
+import type { PromptMetadata } from "@/types/prompt";
+import { toMcpMetadata } from "./component-metadata";
 
 export type PromptArgsRawShape = {
   [k: string]:
@@ -39,6 +34,8 @@ export function addPromptsToServer(
       Object.assign(promptConfig, metadata);
     }
 
+    if (promptConfig.enabled === false) return;
+
     // Transform the user's handler into an MCP-compatible handler
     const transformedHandler = transformPromptHandler(
       handler,
@@ -59,6 +56,8 @@ export function addPromptsToServer(
       {
         title: promptConfig.title,
         description: promptConfig.description,
+        icons: promptConfig.icons,
+        _meta: toMcpMetadata(promptConfig)._meta,
         argsSchema: rawShapeToStandardSchema(
           promptSchema as unknown as RawShape
         ),

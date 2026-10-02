@@ -1,3 +1,4 @@
+import { COMPONENT_METADATA_FILES } from "../fixtures/component-metadata.js";
 import { REQUEST_CONTEXT_FILES } from "../fixtures/request-context.js";
 import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
 import { MIDDLEWARE_LIFECYCLE_FILES } from "../fixtures/middleware-lifecycle.js";
@@ -16,6 +17,7 @@ export default function add({ a, b }: { a: number; b: number }) { return { sum: 
 `;
 
 export const DEFAULT_FILES: Record<string, string> = {
+  ...COMPONENT_METADATA_FILES,
   ...REQUEST_CONTEXT_FILES,
   ...REQUEST_HELPERS_FILES,
   ...MCP_MIDDLEWARE_FILES,

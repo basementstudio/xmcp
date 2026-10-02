@@ -153,6 +153,46 @@ The metadata object provides:
 - **Description**: Brief explanation of what the prompt does
 - **Role**: The role for single content, string, or number returns. Can be either `user` or `assistant`; defaults to `assistant`. Message arrays and full results use each message's explicit role.
 
+### Icons, tags, and availability
+
+`PromptMetadata` accepts optional `icons`, `tags`, and `enabled` fields:
+
+```typescript
+import type { PromptMetadata } from "xmcp";
+
+export const metadata: PromptMetadata = {
+  name: "review-code",
+  title: "Review Code",
+  description: "An example prompt",
+  icons: [
+    {
+      src: "https://example.com/icon.png",
+      mimeType: "image/png",
+      sizes: ["48x48"],
+      theme: "dark",
+    },
+  ],
+  tags: ["example"],
+  enabled: true,
+};
+```
+
+Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
+and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
+Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
+When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
+Tags alone do not change availability.
+
+Prompts are enabled by default. Set `enabled: false` to skip registration: the
+prompt is absent from `prompts/list`, and `prompts/get` returns a not-found error.
+Custom `metadata._meta` values are also exposed in `prompts/list`.
+
+Availability is evaluated during server setup; modules are still imported.
+Rebuild and restart the server after changing metadata in production.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+demonstrates icons, tags, and a disabled experimental tool.
+
 ### Implementation (required)
 
 The default export function that performs the actual work.

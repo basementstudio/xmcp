@@ -13,6 +13,7 @@ import { flattenMeta } from "./ui/flatten-meta";
 import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { toMcpMetadata } from "./component-metadata";
 
 /**
  * Get the appropriate pathToToolName function based on runtime environment.
@@ -241,6 +242,8 @@ export function addResourcesToServer(
       Object.assign(resourceConfig, metadata);
     }
 
+    if (resourceConfig.enabled === false) return;
+
     let resourceSchema: ZodRawShape = {};
     if (isZodRawShape(schema)) {
       resourceSchema = schema;
@@ -277,7 +280,7 @@ export function addResourcesToServer(
       server.registerResource(
         resourceConfig.name as string,
         uri,
-        resourceConfig,
+        toMcpMetadata(resourceConfig),
         transformedHandler
       );
     } else {
@@ -330,7 +333,7 @@ export function addResourcesToServer(
       server.registerResource(
         resourceConfig.name as string,
         resourceTemplate,
-        resourceConfig,
+        toMcpMetadata(resourceConfig),
         templateCallback
       );
     }

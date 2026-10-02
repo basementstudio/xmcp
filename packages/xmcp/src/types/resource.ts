@@ -1,3 +1,4 @@
+import type { ComponentMetadata } from "./component";
 import { UIMetadata } from "./ui-meta";
 import type { CompleteResourceTemplateCallback } from "@modelcontextprotocol/server";
 
@@ -7,7 +8,7 @@ export type ResourceCompletions = Record<
   CompleteResourceTemplateCallback
 >;
 
-export interface ResourceMetadata {
+export interface ResourceMetadata extends ComponentMetadata {
   name: string;
   title?: string;
   description?: string;

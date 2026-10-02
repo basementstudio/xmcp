@@ -47,6 +47,35 @@ The response suggests `alice`. Read `users://alice/profile` with `resources/read
 to fetch the profile. The existing `team-greeting` prompt continues to support
 `completable()` for its arguments.
 
+## Component metadata
+
+The `greet` tool, `review-code` prompt, and `app-config` resource include inline
+icons and tags. Request `tools/list`, `prompts/list`, or `resources/list` to see
+`icons` and `_meta["xmcp/tags"]`:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":5,"method":"tools/list","params":{}}'
+```
+
+`src/tools/experimental-greeting.ts` has `enabled: false`, so it is absent from
+the list. Calling it directly returns a not-found error:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"experimental-greeting","arguments":{}}}'
+```
+
+Change `enabled` to `true`, rebuild, and restart to make the tool available.
+The same metadata options work for prompts, static resources, and resource
+templates. Disabling a UI tool also omits its generated UI resource.
+
 ## Request context
 
 `src/tools/request-context.ts` reads `getRequestContext()` inside an async helper.

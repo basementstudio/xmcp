@@ -12,6 +12,7 @@ import { isPaidHandler, getX402Registry } from "@/plugins/x402";
 import type { McpMiddleware } from "@/types/mcp-middleware";
 import { wrapToolWithMiddleware } from "./mcp-middleware";
 import type { McpToolHandler } from "./transformers/tool";
+import { toMcpMetadata } from "./component-metadata";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -63,6 +64,8 @@ export function addToolsToServer(
       Object.assign(toolConfig, metadata);
     }
 
+    if (toolConfig.enabled === false) return;
+
     // Register paid tools in x402 registry if plugin is installed
     if (isPaidHandler(handler)) {
       const registry = getX402Registry();
@@ -95,9 +98,7 @@ export function addToolsToServer(
     // Make sure tools has annotations with a title
     ensureAnnotations(toolConfig);
 
-    if (toolConfig._meta === undefined) {
-      toolConfig._meta = {};
-    }
+    toolConfig._meta = { ...toMcpMetadata(toolConfig)._meta };
 
     const isReact = isReactFile(path);
 
@@ -174,6 +175,7 @@ export function addToolsToServer(
           })
         : undefined,
       annotations: toolConfig.annotations,
+      icons: toolConfig.icons,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
