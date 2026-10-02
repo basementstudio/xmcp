@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "xmcp dev & next dev",
-    "build": "xmcp build && next build",
+    "dev": "node scripts/fetch-releases.mjs && (xmcp dev & next dev)",
+    "build": "node scripts/fetch-releases.mjs && xmcp build && next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "changelog:refresh": "node scripts/fetch-releases.mjs",
+    "test:changelog": "node --test scripts/fetch-releases.test.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",

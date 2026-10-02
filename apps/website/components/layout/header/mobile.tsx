@@ -41,7 +41,7 @@ export const MobileMenu = () => {
   };
 
   return (
-    <div className="md:hidden size-5">
+    <div className="xl:hidden size-5">
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <button
@@ -117,6 +117,13 @@ export const MobileMenu = () => {
                   FAQ
                 </AnimatedLink>
               </div>
+              <AnimatedLink
+                href="/changelog"
+                className="text-white text-lg"
+                onClick={handleLinkClick}
+              >
+                Changelog
+              </AnimatedLink>
             </nav>
           </div>
         </SheetContent>
