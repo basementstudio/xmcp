@@ -574,6 +574,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/execution-observability:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.4.3
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/ext-apps:
     dependencies:
       react:

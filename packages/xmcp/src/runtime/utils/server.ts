@@ -1,25 +1,28 @@
-import { McpServer, Implementation } from "@modelcontextprotocol/server";
-import { addToolsToServer } from "./tools";
-import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
-import { ToolMetadata } from "@/types/tool";
-import { PromptMetadata } from "@/types/prompt";
-import { UserToolHandler } from "./transformers/tool";
-import { UserPromptHandler } from "./transformers/prompt";
-import { UserResourceHandler } from "./transformers/resource";
+import { Implementation, McpServer } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
-import { addResourcesToServer } from "./resources";
-import { ResourceMetadata, ResourceCompletions } from "@/types/resource";
+
+import { PromptMetadata } from "@/types/prompt";
+import { ResourceCompletions, ResourceMetadata } from "@/types/resource";
+import { ToolMetadata } from "@/types/tool";
+
+import { createExecutionLogger } from "./execution-logger";
 import { uIResourceRegistry } from "./ext-apps-registry";
-import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
-import {
-  loadResourceModules,
-  reportResourceLoadIssues,
-} from "./resource-loader";
-import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 import {
   normalizeMcpMiddleware,
   registerWithMcpMiddleware,
 } from "./mcp-middleware";
+import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
+import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
+import {
+  loadResourceModules,
+  reportResourceLoadIssues,
+} from "./resource-loader";
+import { addResourcesToServer } from "./resources";
+import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
+import { addToolsToServer } from "./tools";
+import { UserPromptHandler } from "./transformers/prompt";
+import { UserResourceHandler } from "./transformers/resource";
+import { UserToolHandler } from "./transformers/tool";
 
 export type ToolFile = {
   metadata: ToolMetadata;
@@ -71,12 +74,22 @@ export async function configureServer(
   // Shared setup also serves STDIO and adapters that do not mount HTTP middleware.
   const middlewareModule = await INJECTED_MIDDLEWARE?.();
   const middleware = normalizeMcpMiddleware(middlewareModule?.mcp);
+  // Older compilers do not inject this optional feature flag.
+  const executionLogger =
+    typeof OBSERVABILITY_CONFIG !== "undefined" && OBSERVABILITY_CONFIG.enabled
+      ? createExecutionLogger()
+      : undefined;
+  if (executionLogger) middleware.unshift(executionLogger.middleware);
   uIResourceRegistry.clear();
 
   registerWithMcpMiddleware(server, middleware, () => {
     addToolsToServer(server, toolModules, middleware);
     addPromptsToServer(server, promptModules);
-    addResourcesToServer(server, resourceModules);
+    addResourcesToServer(
+      server,
+      resourceModules,
+      executionLogger?.registerResource
+    );
   });
   return server;
 }

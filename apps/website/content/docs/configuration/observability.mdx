@@ -1,0 +1,73 @@
+---
+title: "Execution Logs"
+metadataTitle: "Execution Logs | xmcp Documentation"
+description: "Enable structured execution logs for tools, prompts, and resources without logging their inputs or results."
+---
+
+Enable execution logging in `xmcp.config.ts`:
+
+```typescript
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  observability: { enabled: true },
+} satisfies XmcpConfig;
+```
+
+Omitting `observability`, or setting `enabled: false`, disables these logs. Restart development or rebuild your application after changing the configuration.
+
+Each tool call, prompt retrieval, and resource read emits an `execution.start` event followed by an `execution.end` event. The logger runs before your MCP middleware, so it also records middleware failures and short-circuited results. Listings and completion requests are excluded. Tool arguments rejected by SDK validation before execution do not enter the execution logger.
+
+Events are JSON lines written with `console.error`: stderr on Node.js, including STDIO servers, and the platform's error console on Cloudflare Workers. STDIO stdout remains reserved for MCP messages. Logging is independent of build telemetry and does not send data to an external service.
+
+## Event fields
+
+The logs use [Elastic Common Schema field conventions](https://www.elastic.co/docs/reference/ecs/ecs-event) with xmcp-specific details under `xmcp`:
+
+| Field                   | Meaning                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| `@timestamp`            | UTC timestamp of the event.                                                                  |
+| `event.action`          | `execution.start` or `execution.end`.                                                        |
+| `event.duration`        | Elapsed execution time in **nanoseconds**, present on the end event.                         |
+| `event.outcome`         | `success`, `failure`, or `unknown`, present on the end event.                                |
+| `transaction.id`        | Generated correlation ID shared by the execution's start and end events.                     |
+| `http.request.id`       | xmcp's HTTP request ID, when available.                                                      |
+| `xmcp.method`           | `tools/call`, `prompts/get`, or `resources/read`.                                            |
+| `xmcp.component`        | Tool/prompt name or registered resource name. Unmatched resource reads use `unknown`.        |
+| `xmcp.status`           | `success`, `failure`, `cancelled`, `input_required`, or `unknown`, present on the end event. |
+| `error.message`         | A safe summary for returned error results, thrown exceptions, or thrown cancellation.        |
+| `trace.id`, `parent.id` | Incoming W3C trace and parent IDs when a valid HTTP `traceparent` is supplied.               |
+
+`log.level` is `error` for failed end events and `info` otherwise. Events also identify their ECS kind (`event`), category (`api`), and type (`start` or `end`).
+
+For example, an end event for a successful tool call looks like:
+
+```json
+{
+  "@timestamp": "2026-10-02T12:00:00.000Z",
+  "log": { "level": "info" },
+  "transaction": { "id": "dce66534-9c5f-4fef-8562-219564b0a4cb" },
+  "xmcp": { "method": "tools/call", "component": "greet", "status": "success" },
+  "event": {
+    "kind": "event",
+    "category": ["api"],
+    "type": ["end"],
+    "action": "execution.end",
+    "duration": 3200000,
+    "outcome": "success"
+  }
+}
+```
+
+Returned `isError` results and thrown exceptions count as failures. Cancellation is recorded when the request's cancellation signal is aborted as execution settles; it does not force uncooperative work to stop. A multi-round tool produces a separate event pair and correlation ID for each round: intermediate rounds have `input_required`, followed by the final round's outcome. `cancelled` and `input_required` map to ECS outcome `unknown`. Logging or inspection failures never replace the original result or exception; the sink may drop events if it cannot write them.
+
+## Privacy and trace correlation
+
+Execution logs exclude arguments, results, raw resource URIs, error stacks, original exception messages, credentials, and raw request headers. Resource names come from registration, so dynamic URI parameters and query strings are not logged. Error summaries distinguish an exception from an error result without copying their potentially sensitive contents. Keep component names free of secrets.
+
+Valid incoming [W3C trace context](https://www.w3.org/TR/trace-context/) contributes only trace and parent identifiers. These IDs are caller-supplied correlation data, not authentication. No baggage or tracestate is logged. Browser clients sending `traceparent` must include it in their configured CORS allowed headers. STDIO does not have HTTP trace headers.
+
+These events do not create OpenTelemetry spans, configure an exporter, or enable MCP protocol log notifications. `getRequestContext().log()` retains its existing behavior.
+
+See the runnable [execution observability example](https://github.com/basementstudio/xmcp/tree/main/examples/execution-observability) for HTTP and STDIO configurations and a failing tool.
