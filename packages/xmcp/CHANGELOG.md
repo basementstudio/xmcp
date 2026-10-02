@@ -1,5 +1,15 @@
 # xmcp
 
+## 1.2.0
+
+### Minor Changes
+
+- 826c21b: Extend MCP middleware to prompts, resource reads, completion, and component listings, sharing request context across each operation. Check `ctx.method` before accessing operation-specific parameters in existing tool middleware.
+- 176ac1d: Support a named `mcp` middleware export in `src/middleware.ts` for tool calls across HTTP, STDIO, and Node adapters. Middleware can inspect validated arguments, share request-local values with tools, transform results, or short-circuit execution.
+- ae2658a: Allow prompt handlers to return message arrays or full prompt results, preserving message roles, order, descriptions, and metadata. Export the `PromptMessage` and `GetPromptResult` types for typed prompt handlers.
+- 0ca4841: Add request-local `set`/`get` values and `progress`/`log` helpers to `getRequestContext()`. Progress is optional without a request token, and logging respects the SDK's capability and level checks.
+- b5ca4c8: Add `getRequestContext()` for read-only access to client identity, HTTP request details, and the cancellation signal from tool handlers and their async helpers.
+
 ## 1.1.3
 
 ### Patch Changes

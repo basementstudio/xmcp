@@ -1,5 +1,11 @@
 # @xmcp-dev/compiler
 
+## 1.2.0
+
+### Minor Changes
+
+- 176ac1d: Support a named `mcp` middleware export in `src/middleware.ts` for tool calls across HTTP, STDIO, and Node adapters. Middleware can inspect validated arguments, share request-local values with tools, transform results, or short-circuit execution.
+
 ## 1.1.3
 
 ### Patch Changes
