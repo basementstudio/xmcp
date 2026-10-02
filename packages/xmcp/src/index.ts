@@ -38,6 +38,7 @@ export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export { image, audio, embeddedResource } from "./runtime/utils/content";
 export { getRequestContext } from "./runtime/contexts/request-context";
 export type { RequestContext } from "./runtime/contexts/request-context";
 

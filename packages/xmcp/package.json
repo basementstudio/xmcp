@@ -44,6 +44,10 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "node": "./dist/node.js"
+    },
     "./host-bridge": {
       "types": "./dist/host-bridge.d.ts",
       "import": "./dist/host-bridge.js",
@@ -71,6 +75,9 @@
   },
   "typesVersions": {
     "*": {
+      "node": [
+        "dist/node.d.ts"
+      ],
       "host-bridge": [
         "dist/host-bridge.d.ts"
       ],
