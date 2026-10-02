@@ -18,11 +18,12 @@ export const Header = () => {
           aria-label="Main"
           className="relative flex justify-center items-center text-sm text-brand-white gap-8"
         >
-          <div className="hidden md:flex gap-4">
+          <div className="hidden xl:flex gap-4">
             <AnimatedLink href="/">Home</AnimatedLink>
             <AnimatedLink href="/docs">Docs</AnimatedLink>
             <AnimatedLink href="/templates">Templates</AnimatedLink>
             <AnimatedLink href="/blog">Blog</AnimatedLink>
+            <AnimatedLink href="/changelog">Changelog</AnimatedLink>
             <AnimatedLink href="/showcase">Showcase</AnimatedLink>
             <AnimatedLink href="/faq">FAQ</AnimatedLink>
           </div>
@@ -36,7 +37,7 @@ export const Header = () => {
         <Link
           href="/"
           prefetch={false}
-          className="absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 left-4 top-1/2 -translate-y-1/2"
+          className="absolute xl:left-1/2 xl:top-1/2 xl:-translate-x-1/2 xl:-translate-y-1/2 left-4 top-1/2 -translate-y-1/2"
           aria-label="Home"
         >
           <LogoContextMenu>
@@ -53,7 +54,7 @@ const GithubButton = () => {
   return (
     <Link
       href="https://github.com/basementstudio/xmcp"
-      className="text-brand-white hover:text-brand-white/80 transition-colors hidden md:block"
+      className="text-brand-white hover:text-brand-white/80 transition-colors hidden xl:block"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="GitHub"

@@ -74,6 +74,11 @@ const nextConfig: NextConfig = {
         { source: "/", has: acceptsMarkdown, destination: "/index.md" },
         { source: "/blog", has: acceptsMarkdown, destination: "/blog.md" },
         {
+          source: "/changelog",
+          has: acceptsMarkdown,
+          destination: "/changelog.md",
+        },
+        {
           source: "/templates",
           has: acceptsMarkdown,
           destination: "/templates.md",
