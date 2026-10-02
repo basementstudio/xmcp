@@ -597,6 +597,68 @@ export default async function getProfile() {
 - `image` - Base64-encoded images with mimeType
 - `audio` - Base64-encoded audio with mimeType
 - `resource_link` - Links to MCP resources
+- `resource` - Embedded text or binary resources
+
+### Media helpers
+
+Use `image`, `audio`, and `embeddedResource` to build content blocks from bytes
+or text. Put the returned blocks in a tool's `content` array; they also work as
+prompt message content.
+
+```typescript title="src/tools/media-preview.ts"
+import { image, embeddedResource } from "xmcp";
+
+export default function mediaPreview() {
+  const png = Uint8Array.from(
+    atob(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    ),
+    (character) => character.charCodeAt(0)
+  );
+  return {
+    content: [
+      { type: "text", text: "A one-pixel image" },
+      image(png, "image/png"),
+      embeddedResource("note://pixel", "A one-pixel PNG", "text/plain"),
+    ],
+  };
+}
+```
+
+| Helper                                      | Input                                         | Result                                        |
+| ------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| `image(bytes, mimeType)`                    | `Uint8Array`, Node `Buffer`, or `ArrayBuffer` | An image block with base64 `data`             |
+| `audio(bytes, mimeType)`                    | The same byte types                           | An audio block with base64 `data`             |
+| `embeddedResource(uri, content, mimeType?)` | A string or the same byte types               | A resource block with `text` or base64 `blob` |
+
+Pass raw bytes to `image` and `audio`, with an explicit MIME type. They encode
+the bytes without detecting or converting the media format. Byte views encode
+only their visible range. `embeddedResource` keeps strings as text and does not
+register the URI in the server's resource catalog.
+
+On Cloudflare Workers, import the same helpers from `xmcp/cloudflare`. They use
+Web APIs without depending on `Buffer` or the filesystem. See the runnable
+[Cloudflare Workers example](https://github.com/basementstudio/xmcp/tree/main/examples/cloudflare-workers).
+
+#### Files in Node
+
+The `xmcp/node` entry provides asynchronous file-reading helpers:
+
+```typescript title="src/tools/chart.ts"
+import { imageFromFile } from "xmcp/node";
+
+export default async function chart() {
+  return { content: [await imageFromFile("assets/chart.png", "image/png")] };
+}
+```
+
+Supply an existing file path (relative to the running process's working
+directory) or a `file:` URL. `audioFromFile(path, mimeType)` reads audio in the
+same way. `embeddedResourceFromFile(path, uri, mimeType?)` always returns a
+base64 resource blob, including for text files. For a text resource, pass the
+decoded text to `embeddedResource` instead. File-reading errors propagate to
+the caller. Include these files when deploying your application; xmcp does not
+copy them into the compiled output.
 
 ### Structured Outputs
 

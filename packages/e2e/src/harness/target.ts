@@ -6,6 +6,7 @@ export type Capability =
   | "tools"
   | "prompts"
   | "multi-message-prompts"
+  | "media-content"
   | "resources"
   | "templates"
   | "resource-completion"
@@ -30,6 +31,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "tools",
   "prompts",
   "multi-message-prompts",
+  "media-content",
   "resources",
   "templates",
   "resource-completion",
