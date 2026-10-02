@@ -1,3 +1,4 @@
+import { isTanstackAdapter } from "./runtime-target";
 import { rspack } from "@rspack/core";
 import { getRspackConfig } from "./get-bundler-config";
 import chalk from "chalk";
@@ -357,7 +358,11 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         }
       }
 
-      if (mode === "development" && platforms.cloudflare) {
+      if (
+        mode === "development" &&
+        platforms.cloudflare &&
+        !isTanstackAdapter(xmcpConfig)
+      ) {
         try {
           await buildCloudflareOutput({ log: firstBuild });
         } catch (error) {

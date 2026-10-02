@@ -3,7 +3,12 @@ import fs from "fs-extra";
 import path from "path";
 import { readTsConfigFile } from "../utils/read-config-file.js";
 
-export type Framework = "nextjs" | "nestjs" | "express" | "fastify";
+export type Framework =
+  | "nextjs"
+  | "nestjs"
+  | "express"
+  | "fastify"
+  | "tanstack";
 
 export function detectFramework(projectRoot: string): Framework {
   const packageJson = JSON.parse(
@@ -21,6 +26,13 @@ export function detectFramework(projectRoot: string): Framework {
   // Check for Next.js
   if (packageJson.dependencies?.next || packageJson.devDependencies?.next) {
     return "nextjs";
+  }
+
+  if (
+    packageJson.dependencies?.["@tanstack/react-start"] ||
+    packageJson.devDependencies?.["@tanstack/react-start"]
+  ) {
+    return "tanstack";
   }
 
   // Check for Fastify

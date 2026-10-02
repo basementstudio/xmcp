@@ -10,6 +10,13 @@ export function getEntries(
 ): Record<string, string> {
   const { platforms } = compilerContext.getContext();
 
+  if (xmcpConfig.experimental?.adapter === "tanstack" && xmcpConfig.http) {
+    const runtime = platforms.cloudflare
+      ? "adapter-tanstack-cloudflare.js"
+      : "adapter-tanstack.js";
+    return { adapter: path.join(runtimeFolderPath, runtime) };
+  }
+
   if (platforms.cloudflare) {
     // Prebuilt worker runtime copied into .xmcp by InjectRuntimePlugin
     return {
