@@ -9,7 +9,11 @@ import type {
 } from "../../types/mcp-middleware";
 
 type Status =
-  "success" | "failure" | "cancelled" | "input_required" | "unknown";
+  | "success"
+  | "failure"
+  | "cancelled"
+  | "input_required"
+  | "unknown";
 
 /** Only trace identifiers are copied; baggage, tracestate and raw headers stay private. */
 function traceFields(context: McpMiddlewareContext) {

@@ -50,4 +50,5 @@ declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation
 declare const IS_CLOUDFLARE: boolean;
 
 declare const INJECTED_CLIENT_BUNDLES:
-  Record<string, { js: string; css?: string }> | undefined;
+  | Record<string, { js: string; css?: string }>
+  | undefined;
