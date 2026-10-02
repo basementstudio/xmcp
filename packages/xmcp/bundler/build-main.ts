@@ -32,6 +32,11 @@ function getConfig() {
     name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
+      node: {
+        import: path.join(srcPath, "node.ts"),
+        // Static CommonJS exports also support named imports in Node ESM.
+        library: { type: "commonjs-static" },
+      },
       "host-bridge": path.join(srcPath, "host-bridge.ts"),
       cloudflare: path.join(srcPath, "cloudflare.ts"),
       config: path.join(srcPath, "config", "index.ts"),

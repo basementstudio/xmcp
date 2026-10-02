@@ -285,6 +285,30 @@ pass "missing @xmcp-dev/compiler exits non-zero with the install hint"
   || fail "import(\"xmcp/config\")"
 pass "xmcp/config resolves via require and import"
 
+# Node-only helpers must work through the packed subpath in CommonJS and ESM.
+(cd "$HTTP_APP" && node --input-type=module <<'EOF'
+import assert from "node:assert/strict";
+import { writeFile, unlink } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { pathToFileURL } from "node:url";
+import { imageFromFile, audioFromFile, embeddedResourceFromFile } from "xmcp/node";
+const require = createRequire(import.meta.url);
+const helpers = require("xmcp/node");
+const path = pathToFileURL(`${process.cwd()}/media.bin`);
+await writeFile(path, new Uint8Array([0, 255]));
+try {
+  for (const api of [helpers, { imageFromFile, audioFromFile, embeddedResourceFromFile }]) {
+    assert.deepEqual(await api.imageFromFile(path, "image/png"), { type: "image", data: "AP8=", mimeType: "image/png" });
+    assert.deepEqual(await api.audioFromFile(path, "audio/wav"), { type: "audio", data: "AP8=", mimeType: "audio/wav" });
+    assert.deepEqual(await api.embeddedResourceFromFile(path, "data://file"), { type: "resource", resource: { uri: "data://file", blob: "AP8=" } });
+  }
+} finally {
+  await unlink(path);
+}
+EOF
+) || fail "xmcp/node file helpers through packed CommonJS and ESM exports"
+pass "xmcp/node file helpers work via require and named ESM imports"
+
 # --- Stage 7: CommonJS projects still get CommonJS output --------------------
 # Strip "type": "module" from the HTTP consumer and rebuild.
 node -e '
