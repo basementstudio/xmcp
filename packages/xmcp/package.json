@@ -101,7 +101,7 @@
     "analyze": "cross-env GENERATE_STATS=true pnpm build && pnpm tsx scripts/analyze-rspack-stats.ts",
     "bench": "tsx bench/run.mts",
     "test:config": "pnpm --dir ../compiler test:config",
-    "test:adapters": "node --import tsx --test src/runtime/adapters/fastify/__tests__/*.test.ts",
+    "test:adapters": "node --import tsx --test src/runtime/adapters/*/__tests__/*.test.ts",
     "test:runtime": "node --import tsx --test src/runtime/utils/__tests__/*.test.ts src/runtime/utils/ui/__tests__/*.test.ts"
   },
   "dependencies": {},

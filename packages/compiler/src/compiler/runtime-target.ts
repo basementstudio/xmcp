@@ -1,6 +1,10 @@
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 
+export function isTanstackAdapter(config: XmcpConfigOutputSchema): boolean {
+  return config.experimental?.adapter === "tanstack";
+}
+
 /**
  * Whether this build emits the function entry Vercel invokes per request.
  *

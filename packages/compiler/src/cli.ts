@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { isTanstackAdapter } from "./compiler/runtime-target";
 import { Command } from "commander";
 import { compile } from "./compiler";
 import { buildVercelOutput } from "./platforms/build-vercel-output";
@@ -74,7 +75,7 @@ program
                 );
               }
             }
-            if (isCloudflareBuild) {
+            if (isCloudflareBuild && !isTanstackAdapter(xmcpConfig!)) {
               console.log(`${xmcpLogo} Building for Cloudflare Workers...`);
               try {
                 await buildCloudflareOutput();

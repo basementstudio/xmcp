@@ -1,0 +1,31 @@
+{
+  "name": "tanstack-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TanStack Start MCP adapter on Node.js",
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & vite dev)",
+    "build": "xmcp build && vite build && tsc --noEmit",
+    "preview": "vite preview",
+    "start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@tanstack/react-start": "^1.168.60",
+    "@tanstack/react-router": "^1.170.41",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.2",
+    "nitro": "3.0.260903-beta"
+  }
+}

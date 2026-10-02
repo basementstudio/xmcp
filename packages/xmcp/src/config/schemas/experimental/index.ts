@@ -8,6 +8,7 @@ export const adapterConfigSchema = z.enum([
   "nextjs",
   "nestjs",
   "fastify",
+  "tanstack",
 ]);
 
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;

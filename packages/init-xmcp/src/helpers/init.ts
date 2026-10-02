@@ -10,7 +10,14 @@ import { createPrompt } from "./create-prompt.js";
 import { createResources } from "./create-resources.js";
 import { createNestJsModule } from "./create-nestjs-module.js";
 
+import {
+  assertTanstackRouteAvailable,
+  createTanstackRoute,
+  getTanstackRoute,
+} from "./create-tanstack-route.js";
+
 interface InitOptions {
+  cloudflare?: boolean;
   projectRoot: string;
   framework: Framework;
   toolsPath: string | undefined;
@@ -31,13 +38,28 @@ export async function init(options: InitOptions) {
     routePath,
     packageManager,
     version,
+    cloudflare,
   } = options;
 
-  generateConfig(projectRoot, framework, toolsPath, promptsPath, resourcesPath);
+  if (framework === "tanstack" && routePath) {
+    assertTanstackRouteAvailable(projectRoot, routePath);
+  }
+  const endpoint =
+    framework === "tanstack" && routePath
+      ? getTanstackRoute(projectRoot, routePath).endpoint
+      : undefined;
+  generateConfig(
+    projectRoot,
+    framework,
+    toolsPath,
+    promptsPath,
+    resourcesPath,
+    endpoint
+  );
 
   await install(projectRoot, packageManager, version);
 
-  updatePackageJson(projectRoot);
+  updatePackageJson(projectRoot, { framework, cloudflare });
 
   updateTsConfig(projectRoot);
 
@@ -57,6 +79,10 @@ export async function init(options: InitOptions) {
 
   if (framework === "nextjs" && routePath) {
     createRoute(projectRoot, routePath);
+  }
+
+  if (framework === "tanstack" && routePath) {
+    createTanstackRoute(projectRoot, routePath);
   }
 
   if (framework === "nestjs") {
