@@ -8,7 +8,7 @@ import { isZodRawShape, pathToName } from "./tools";
 import { ZodRawShape } from "zod/v3";
 import { transformResourceHandler } from "./transformers/resource";
 import { composeUriFromPath } from "./utils/resource-uri-composer";
-import { ResourceMetadata } from "@/types/resource";
+import { ResourceMetadata, ResourceCompletions } from "@/types/resource";
 import { flattenMeta } from "./ui/flatten-meta";
 import { generateUIHTML } from "./react/generate-html";
 import { pathToToolNameMd5, pathToToolNameDjb2 } from "./path-to-tool-name";
@@ -235,7 +235,7 @@ export function addResourcesToServer(
       description: "No description provided",
     };
 
-    const { default: handler, metadata, schema } = resourceModule;
+    const { default: handler, metadata, schema, complete } = resourceModule;
 
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(resourceConfig, metadata);
@@ -282,8 +282,17 @@ export function addResourcesToServer(
       );
     } else {
       // register as a resource template (dynamic URI with parameters)
+      // Only template variables with own callbacks complete; inherited object
+      // keys such as "toString" must behave like any other unknown argument.
+      const completionCallbacks: ResourceCompletions = Object.create(null);
+      for (const parameter of resourceInfo.parameters) {
+        if (complete && Object.hasOwn(complete, parameter)) {
+          completionCallbacks[parameter] = complete[parameter];
+        }
+      }
       const resourceTemplate = new ResourceTemplate(uri, {
         list: undefined,
+        complete: completionCallbacks,
       });
 
       // create template callback that directly uses variables instead of re-parsing URI

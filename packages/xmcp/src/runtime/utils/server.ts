@@ -8,7 +8,7 @@ import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { ZodRawShape } from "zod/v3";
 import { addResourcesToServer } from "./resources";
-import { ResourceMetadata } from "@/types/resource";
+import { ResourceMetadata, ResourceCompletions } from "@/types/resource";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { loadPromptModules, reportPromptLoadIssues } from "./prompt-loader";
 import {
@@ -37,6 +37,7 @@ export type PromptFile = {
 export type ResourceFile = {
   metadata: ResourceMetadata;
   schema: ZodRawShape;
+  complete?: ResourceCompletions;
   default: UserResourceHandler;
 };
 
