@@ -11,6 +11,25 @@ pnpm start
 
 The server listens at `http://localhost:3001/mcp`.
 
+## Multi-message prompts
+
+`src/prompts/classify-sentiment.ts` returns a full prompt result with two example
+exchanges followed by the supplied text. Every message declares its own role;
+xmcp preserves their order. Fetch the conversation with:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"prompts/get","params":{"name":"classify-sentiment","arguments":{"text":"This was wonderful"}}}'
+```
+
+The result includes a description and five messages with roles `user`,
+`assistant`, `user`, `assistant`, `user`. To return just the conversation, a
+handler can return a `PromptMessage[]` directly. Both `PromptMessage` and
+`GetPromptResult` are exported as types from `xmcp`.
+
 ## Request context
 
 `src/tools/request-context.ts` reads `getRequestContext()` inside an async helper.
