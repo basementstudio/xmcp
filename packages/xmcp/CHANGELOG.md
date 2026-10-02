@@ -1,5 +1,13 @@
 # xmcp
 
+## 1.3.0
+
+### Minor Changes
+
+- c844b6d: Add `image`, `audio`, and `embeddedResource` content helpers, available from `xmcp` and `xmcp/cloudflare`. Add Node-only file-reading variants under `xmcp/node`.
+- 1656cdc: Support a named `complete` export on resource template files for URI argument suggestions, including asynchronous and context-dependent completion callbacks. Export `ResourceCompletions` for typed callback maps.
+- a1f4d67: Add a TanStack Start adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+
 ## 1.2.0
 
 ### Minor Changes
