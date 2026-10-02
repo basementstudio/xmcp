@@ -24,7 +24,8 @@ required. The root aliases are `test:e2e:fast` and `test:e2e`.
 
 The shared checks cover tool discovery, input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
-prompts, static resources, resource templates, tool input requests, and read-only
+prompts (including few-shot message arrays and full results), static resources,
+resource templates, tool input requests, and read-only
 request context (identity, HTTP details, and the live signal), request-local
 values, progress notifications, and MCP middleware. Middleware checks cover
 ordering, result stamps, request-local values, denial, and short-circuit results,

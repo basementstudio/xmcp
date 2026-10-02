@@ -24,7 +24,11 @@ export type {
   SampleResult,
 } from "./types/tool";
 export type { McpClientInfo } from "./types/client-info";
-export type { PromptMetadata } from "./types/prompt";
+export type {
+  PromptMetadata,
+  PromptMessage,
+  GetPromptResult,
+} from "./types/prompt";
 export type { ResourceMetadata } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 

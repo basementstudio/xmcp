@@ -5,6 +5,7 @@ import type { ProtocolMode } from "./client-options.js";
 export type Capability =
   | "tools"
   | "prompts"
+  | "multi-message-prompts"
   | "resources"
   | "templates"
   | "input-required"
@@ -27,6 +28,7 @@ export interface Target {
 export const BASE_CAPABILITIES: readonly Capability[] = [
   "tools",
   "prompts",
+  "multi-message-prompts",
   "resources",
   "templates",
   "input-required",
