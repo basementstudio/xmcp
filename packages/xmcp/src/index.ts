@@ -29,7 +29,7 @@ export type {
   PromptMessage,
   GetPromptResult,
 } from "./types/prompt";
-export type { ResourceMetadata } from "./types/resource";
+export type { ResourceMetadata, ResourceCompletions } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 
 export type { XmcpConfigInputSchema as XmcpConfig } from "./config";

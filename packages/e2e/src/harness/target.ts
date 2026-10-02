@@ -8,6 +8,7 @@ export type Capability =
   | "multi-message-prompts"
   | "resources"
   | "templates"
+  | "resource-completion"
   | "input-required"
   | "request-context"
   | "request-helpers"
@@ -31,6 +32,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "multi-message-prompts",
   "resources",
   "templates",
+  "resource-completion",
   "input-required",
   "request-context",
   "request-helpers",

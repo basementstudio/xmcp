@@ -1,4 +1,11 @@
 import { UIMetadata } from "./ui-meta";
+import type { CompleteResourceTemplateCallback } from "@modelcontextprotocol/server";
+
+/** Completion callbacks keyed by the resource's URI template parameters. */
+export type ResourceCompletions = Record<
+  string,
+  CompleteResourceTemplateCallback
+>;
 
 export interface ResourceMetadata {
   name: string;
