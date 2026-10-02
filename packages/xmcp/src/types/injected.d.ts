@@ -39,6 +39,8 @@ declare const HTTP_CORS_CONFIG: import("../config").CorsConfig;
 
 declare const TEMPLATE_CONFIG: import("../config").TemplateConfig;
 
+declare const OBSERVABILITY_CONFIG: { enabled: boolean };
+
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
 declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation;
@@ -48,5 +50,4 @@ declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation
 declare const IS_CLOUDFLARE: boolean;
 
 declare const INJECTED_CLIENT_BUNDLES:
-  | Record<string, { js: string; css?: string }>
-  | undefined;
+  Record<string, { js: string; css?: string }> | undefined;
