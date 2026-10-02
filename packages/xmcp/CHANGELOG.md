@@ -1,5 +1,11 @@
 # xmcp
 
+## 1.4.0
+
+### Minor Changes
+
+- 7a3097c: Add optional icons, tags, and enabled metadata for tools, prompts, resources, and resource templates. Expose tags under `_meta["xmcp/tags"]` and omit disabled components and their generated UI resources from registration, listings, and direct requests.
+
 ## 1.3.0
 
 ### Minor Changes
