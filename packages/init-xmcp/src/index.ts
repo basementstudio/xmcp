@@ -4,6 +4,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { init } from "./helpers/init.js";
+import { detectTanstackCloudflare } from "./helpers/create-tanstack-route.js";
 import {
   detectFramework,
   detectTypeScript,
@@ -45,6 +46,11 @@ const program = new Command()
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-prompts", "Skip prompt creation", false)
   .option("--skip-resources", "Skip resource creation", false)
+  .option(
+    "--cf",
+    "Build the TanStack Start adapter for Cloudflare Workers",
+    false
+  )
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
@@ -129,6 +135,13 @@ const program = new Command()
       }
     }
 
+    if (detectedFramework === "tanstack" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes";
+    }
+    const cloudflare =
+      detectedFramework === "tanstack" &&
+      (options.cf || detectTanstackCloudflare(projectRoot));
+
     // determine package manager
     let packageManager: "npm" | "yarn" | "pnpm" | "bun";
     if (detectedPackageManager) {
@@ -183,12 +196,15 @@ const program = new Command()
         });
       }
 
-      if (detectedFramework === "nextjs" && !options.skipRoute) {
+      if (
+        (detectedFramework === "nextjs" || detectedFramework === "tanstack") &&
+        !options.skipRoute
+      ) {
         prompts.push({
           type: "input",
           name: "routePath",
           message: "Route directory path:",
-          default: routePath, // will not be undefined if detectedFramework is nextjs
+          default: routePath,
         });
       }
 
@@ -240,7 +256,7 @@ const program = new Command()
       }
 
       if (
-        detectedFramework === "nextjs" &&
+        (detectedFramework === "nextjs" || detectedFramework === "tanstack") &&
         !options.skipRoute &&
         answers.routePath
       ) {
@@ -284,8 +300,8 @@ const program = new Command()
     }
 
     // check if route directory already exists and has content
-    if (routePath) {
-      // means detectedFramework is nextjs
+    if (routePath && detectedFramework === "nextjs") {
+      // Existing Next.js route-directory handling.
       const routeDirPath = path.join(projectRoot, routePath);
       if (fs.existsSync(routeDirPath)) {
         const routeDirContent = fs.readdirSync(routeDirPath);
@@ -328,6 +344,7 @@ const program = new Command()
         routePath,
         packageManager,
         version: packageJson.version,
+        cloudflare,
       });
 
       console.log(chalk.green("\n✔ xmcp initialized successfully!"));
@@ -348,7 +365,9 @@ const program = new Command()
       }
 
       if (routePath) {
-        console.log(`   • ${routePath}/route.ts`);
+        console.log(
+          `   • ${routePath}/${detectedFramework === "tanstack" ? "mcp.ts" : "route.ts"}`
+        );
       }
 
       if (detectedFramework === "nestjs") {

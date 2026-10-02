@@ -101,6 +101,7 @@ export async function GET() {
   scanned.push("## Pages");
   scanned.push(
     [
+      "- [Changelog](/changelog): stable xmcp releases and release notes",
       "- [Showcase](/showcase): community MCP servers built with xmcp",
       "- [Telemetry](/telemetry): what anonymous telemetry xmcp collects and how to opt out",
     ].join("\n")
@@ -111,6 +112,7 @@ export async function GET() {
     [
       "- [llms-full.txt](/llms-full.txt): complete documentation and blog content in one file",
       "- [index.md](/index.md): site overview in markdown",
+      "- [changelog.md](/changelog.md): stable xmcp release notes in markdown",
       "- [blog.md](/blog.md): blog index in markdown",
       "- [templates.md](/templates.md): templates index in markdown",
       "- [faq.md](/faq.md): frequently asked questions with full answers in markdown",

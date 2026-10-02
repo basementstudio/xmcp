@@ -5,6 +5,7 @@ import { MIDDLEWARE_LIFECYCLE_FILES } from "../fixtures/middleware-lifecycle.js"
 import { MCP_MIDDLEWARE_FILES } from "../fixtures/mcp-middleware.js";
 import { OPERATION_MIDDLEWARE_FILES } from "../fixtures/operation-middleware.js";
 import { MULTI_MESSAGE_PROMPT_FILES } from "../fixtures/multi-message-prompts.js";
+import { RESOURCE_COMPLETION_FILES } from "../fixtures/resource-completion.js";
 import { MEDIA_CONTENT_FILES } from "../fixtures/media-content.js";
 
 // These are real application modules compiled by xmcp, not mocked handlers.
@@ -23,6 +24,7 @@ export const DEFAULT_FILES: Record<string, string> = {
   ...MIDDLEWARE_LIFECYCLE_FILES,
   ...OPERATION_MIDDLEWARE_FILES,
   ...MULTI_MESSAGE_PROMPT_FILES,
+  ...RESOURCE_COMPLETION_FILES,
   ...MEDIA_CONTENT_FILES,
   "src/tools/add.ts": TOOL_ADD,
   "src/tools/client-info.ts": `import type { ToolExtraArguments } from "xmcp";

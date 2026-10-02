@@ -30,6 +30,23 @@ The result includes a description and five messages with roles `user`,
 handler can return a `PromptMessage[]` directly. Both `PromptMessage` and
 `GetPromptResult` are exported as types from `xmcp`.
 
+## Resource-template completion
+
+`src/resources/(users)/[userId]/profile.ts` exports `complete.userId` to suggest
+user IDs. Request suggestions using the URI template, including its braces:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":4,"method":"completion/complete","params":{"ref":{"type":"ref/resource","uri":"users://{userId}/profile"},"argument":{"name":"userId","value":"a"}}}'
+```
+
+The response suggests `alice`. Read `users://alice/profile` with `resources/read`
+to fetch the profile. The existing `team-greeting` prompt continues to support
+`completable()` for its arguments.
+
 ## Component metadata
 
 The `greet` tool, `review-code` prompt, and `app-config` resource include inline

@@ -14,6 +14,43 @@ editing any of these files goes through a pull request and deployment.
 No CMS account or token is needed. Templates continue to use the
 [`xmcp-dev/templates`](https://github.com/xmcp-dev/templates) repository.
 
+## Changelog
+
+`/changelog` and `/changelog.md` display stable framework releases from
+[GitHub Releases](https://github.com/basementstudio/xmcp/releases), including
+legacy `v…` tags and current `xmcp@…` tags. Companion packages, drafts, and
+prereleases are excluded. Notes stay as published on GitHub; releases without
+notes still appear.
+
+The website build and development commands first fetch every API page into the
+ignored `.generated/releases.json` snapshot. Production serves static HTML and
+Markdown without contacting GitHub. New releases and edits appear on the next
+deployment. The website Turbo build cache is disabled to refresh even on an
+unchanged redeploy; dependency builds retain their caches.
+
+Public releases need no credentials. Optionally set `GITHUB_TOKEN` in the build
+or shell environment for authenticated API limits. This script reads the process
+environment, not Next.js `.env` files; never use a `NEXT_PUBLIC_` token. Network,
+API, or malformed-data failures stop startup/build and remove the old snapshot.
+Retry after resolving the failure; an existing deployment remains available.
+
+To refresh during local development:
+
+```bash
+pnpm --filter website changelog:refresh
+```
+
+Run the loader tests and Markdown rendering checks:
+
+```bash
+pnpm --filter website test:changelog
+pnpm --filter xmcp exec tsx --test ../../apps/website/components/changelog/release-notes.test.tsx
+```
+
+Check `/changelog`, a version permalink, and `/changelog.md` on desktop and mobile.
+Sending `Accept: text/markdown` to `/changelog` returns the same Markdown document.
+The website is the runnable example; no framework API or separate example is needed.
+
 ## Image and animation performance
 
 The homepage starts its particle animation on hydration. Its lossless

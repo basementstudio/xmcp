@@ -15,7 +15,7 @@
 
 # init-xmcp
 
-Initialize `xmcp` applications with one command on top of Next.js and Express projects. Unlock the power of `xmcp` discovery and integration with your existing codebase.
+Initialize `xmcp` applications with one command on top of Next.js, TanStack Start, NestJS, Express, and Fastify projects. Unlock the power of `xmcp` discovery and integration with your existing codebase.
 
 ## Usage
 
@@ -31,8 +31,23 @@ npx init-xmcp@latest
 - `--tools-path <path>`: Specify custom tools path (default: "")
 - `--route-path <path>`: Specify custom route path (default: "")
 - `--skip-tools`: Skip tool creation (default: false)
+- `--cf`: Build the TanStack Start adapter for Cloudflare Workers (also inferred from `@cloudflare/vite-plugin`).
 - `--skip-route`: Skip route creation (default: false)
 - `-h, --help`: Display help message.
+
+## TanStack Start
+
+React Start projects are detected through `@tanstack/react-start`. Initialization
+creates `src/routes/mcp.ts`, discovers handlers in the configured directories, and
+builds the adapter before Vite starts. `--route-path src/routes/api` creates an
+`/api/mcp` endpoint. Existing route files are preserved; use `--skip-route` to
+integrate manually. All options work with `--yes`.
+
+Use `--cf` for Workers builds if the Cloudflare Vite plugin is not installed yet.
+Your application owns its hosting setup, including Vite and Wrangler configuration;
+Workers require `nodejs_compat`. See the
+[TanStack Start guide](https://xmcp.dev/docs/adapters/tanstack) for Node and Workers
+examples, manual setup, authentication, and CORS.
 
 ## Getting Started
 

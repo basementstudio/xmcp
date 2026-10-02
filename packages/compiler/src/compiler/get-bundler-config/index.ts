@@ -51,14 +51,15 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
-  // ESM output only applies to the plain node server builds: Cloudflare is
-  // already ESM, and adapter output is consumed by the host framework's
-  // own module pipeline.
+  const isTanstack = xmcpConfig.experimental?.adapter === "tanstack";
+  // Plain Node servers follow the application module type. TanStack and
+  // Workers always emit ESM so their host bundlers can follow named exports.
   const projectIsEsm = projectPrefersEsm(processFolder);
   const isEsmOutput =
     !isCloudflare && !xmcpConfig.experimental?.adapter && projectIsEsm;
-  // Nothing xmcp writes into .xmcp is strict ESM: the prebuilt runtimes are
-  // CommonJS bundles and the generated files are meant to be re-bundled. An
+  const emitModule = isCloudflare || isEsmOutput || isTanstack;
+  // Existing Node runtimes are CommonJS, while the generated import registry
+  // uses ESM syntax. Parse both when the host app declares ESM. An
   // application package.json with "type": "module" would otherwise put the
   // whole folder under strict ESM parsing. Cloudflare is left alone: its
   // prebuilt worker is genuinely ESM and is its own entry.
@@ -72,17 +73,19 @@ export function getRspackConfig(
       }
     : {};
 
-  const outputPath = isCloudflare
-    ? cloudflareOutputPath
-    : xmcpConfig.experimental?.adapter
-      ? adapterOutputPath
-      : distOutputPath;
+  const outputPath =
+    isCloudflare && !isTanstack
+      ? cloudflareOutputPath
+      : xmcpConfig.experimental?.adapter
+        ? adapterOutputPath
+        : distOutputPath;
 
-  const outputFilename = isCloudflare
-    ? "worker.js"
-    : xmcpConfig.experimental?.adapter
-      ? "index.js"
-      : "[name].js";
+  const outputFilename =
+    isCloudflare && !isTanstack
+      ? "worker.js"
+      : xmcpConfig.experimental?.adapter
+        ? "index.js"
+        : "[name].js";
 
   const nodeBuiltins = [
     "assert",
@@ -143,12 +146,18 @@ export function getRspackConfig(
   const config: RspackOptions = {
     mode,
     watch: mode === "development",
-    devtool: mode === "development" ? "eval-cheap-module-source-map" : false,
+    // Workers reject eval(), and TanStack needs to process the adapter module.
+    devtool:
+      mode === "development"
+        ? isTanstack
+          ? "source-map"
+          : "eval-cheap-module-source-map"
+        : false,
     output: {
       filename: outputFilename,
       path: outputPath,
       globalObject: "globalThis",
-      ...(isCloudflare || isEsmOutput
+      ...(emitModule
         ? {
             library: { type: "module" },
             chunkFormat: "module",
@@ -172,20 +181,26 @@ export function getRspackConfig(
       },
     },
     target: isCloudflare ? "webworker" : "node",
-    externals: isCloudflare
-      ? { async_hooks: "async_hooks" }
-      : getExternals(isEsmOutput),
+    externals:
+      isCloudflare && !isTanstack
+        ? { async_hooks: "async_hooks" }
+        : getExternals(isEsmOutput),
     // The node externals preset emits require() for builtins even in module
     // output; disable it for ESM so getExternals handles builtins through
-    // externalsType node-commonjs (createRequire) instead.
-    ...(isEsmOutput
+    // externalsType node-commonjs (createRequire) instead. TanStack keeps
+    // native imports for Vite to resolve on either deployment target.
+    ...(isTanstack
       ? {
-          externalsType: "node-commonjs" as const,
-          externalsPresets: { node: false },
+          externalsType: "module" as const,
+          externalsPresets: { node: false, web: false },
         }
-      : {}),
-    experiments:
-      isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
+      : isEsmOutput
+        ? {
+            externalsType: "node-commonjs" as const,
+            externalsPresets: { node: false },
+          }
+        : {}),
+    experiments: emitModule ? { outputModule: true } : undefined,
     resolve: {
       // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
       // validator through the "workerd" exports condition.
@@ -224,10 +239,12 @@ export function getRspackConfig(
       // keep server bundles self-contained instead of emitting async chunks.
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
-      isEsmOutput ? new EmitPackageJsonTypePlugin("module") : null,
-      // Adapter output is CommonJS; pin it so host apps with
+      isEsmOutput || isTanstack
+        ? new EmitPackageJsonTypePlugin("module")
+        : null,
+      // Existing adapters emit CommonJS; pin them so host apps with
       // "type": "module" don't parse index.js as ESM.
-      xmcpConfig.experimental?.adapter
+      xmcpConfig.experimental?.adapter && !isTanstack
         ? new EmitPackageJsonTypePlugin("commonjs")
         : null,
       new CreateTypeDefinitionPlugin(),

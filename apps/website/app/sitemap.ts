@@ -46,6 +46,7 @@ export default async function sitemap() {
     "": 1,
     "/docs": 0.9,
     "/blog": 0.9,
+    "/changelog": 0.8,
     "/templates": 0.8,
     "/showcase": 0.7,
     "/faq": 0.7,
@@ -109,6 +110,11 @@ export default async function sitemap() {
 
   return [
     ...routes,
+    {
+      url: url("/changelog"),
+      changeFrequency: "weekly",
+      priority: topLevelPriority["/changelog"],
+    } as MetadataRoute.Sitemap[number],
     ...blogRoutes,
     ...docRoutes,
     ...templateRoutes,

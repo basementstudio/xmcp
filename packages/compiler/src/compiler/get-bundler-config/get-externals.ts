@@ -2,15 +2,15 @@ import { getXmcpConfig } from "../compiler-context";
 import { builtinModules } from "module";
 import { getRuntimeFileNames } from "./plugins";
 import { RspackOptions } from "@rspack/core";
+import path from "node:path";
+import { adapterOutputPath, runtimeFolderPath } from "@/utils/constants";
 
 /**
  * This function will decide if a file is bundled by xmcp compiler or not.
  * We want to avoid building node modules.
  * When using Next.js, we want to avoid building tools/*, since the nextjs compiler will handle that code.
  */
-export function getExternals(
-  esmOutput = false
-): RspackOptions["externals"] {
+export function getExternals(esmOutput = false): RspackOptions["externals"] {
   const xmcpConfig = getXmcpConfig();
 
   const replacedImports = new Set<string>();
@@ -21,6 +21,27 @@ export function getExternals(
 
       if (!request) {
         return callback();
+      }
+
+      if (xmcpConfig.experimental?.adapter === "tanstack") {
+        // Preserve imports from the generated registry: Vite must compile user
+        // handlers and any TanStack server functions they import.
+        if (data.context === runtimeFolderPath && request.startsWith("../")) {
+          const relative = path
+            .relative(adapterOutputPath, path.resolve(data.context, request))
+            .split(path.sep)
+            .join("/");
+          return callback(
+            undefined,
+            `module ${relative.startsWith(".") ? relative : `./${relative}`}`
+          );
+        }
+        if (
+          builtinModules.includes(request) ||
+          builtinModules.includes(request.replace(/^node:/, ""))
+        ) {
+          return callback(undefined, `module ${request}`);
+        }
       }
 
       /**

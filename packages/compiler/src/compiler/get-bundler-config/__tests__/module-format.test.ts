@@ -29,15 +29,17 @@ function buildConfig(
   {
     projectType,
     platforms = {},
+    mode = "production",
   }: {
     projectType?: "module" | "commonjs";
+    mode?: "development" | "production";
     platforms?: { vercel?: boolean; cloudflare?: boolean };
   } = {}
 ) {
   process.chdir(projectFolder(projectType));
   return compilerContext.provider(
     {
-      mode: "production",
+      mode,
       platforms,
       toolPaths: new Set(),
       promptPaths: new Set(),
@@ -201,5 +203,52 @@ describe("vercel function output", () => {
         `adapter build should keep its own entry for a "${projectType}" project`
       );
     }
+  });
+});
+
+describe("TanStack adapter output", () => {
+  const tanstack = configSchema.parse({
+    http: true,
+    experimental: { adapter: "tanstack" },
+  });
+
+  it("emits an ESM adapter for Node and Workers, independent of package type", () => {
+    for (const cloudflare of [false, true]) {
+      for (const projectType of ["module", "commonjs", undefined] as const) {
+        const config = buildConfig(tanstack, {
+          projectType,
+          platforms: { cloudflare },
+        });
+        assert.deepEqual(config.output?.library, { type: "module" });
+        assert.equal(config.output?.filename, "index.js");
+        assert.match(config.output?.path ?? "", /\.xmcp\/adapter$/);
+        assert.deepEqual(emittedPackageJsonTypes(config.plugins as unknown[]), [
+          "module",
+        ]);
+        assert.deepEqual(Object.keys(config.entry as object), ["adapter"]);
+        assert.match(
+          (config.entry as Record<string, string>).adapter,
+          cloudflare
+            ? /adapter-tanstack-cloudflare\.js$/
+            : /adapter-tanstack\.js$/
+        );
+        assert.equal(config.target, cloudflare ? "webworker" : "node");
+      }
+    }
+  });
+
+  it("uses source maps without eval in development on Workers", () => {
+    const config = buildConfig(tanstack, {
+      mode: "development",
+      platforms: { cloudflare: true },
+    });
+    assert.equal(config.devtool, "source-map");
+  });
+
+  it("keeps standalone Workers output separate", () => {
+    const config = buildConfig(httpConfig, { platforms: { cloudflare: true } });
+    assert.equal(config.output?.filename, "worker.js");
+    assert.match(config.output?.path ?? "", /\.xmcp\/cloudflare$/);
+    assert.deepEqual(Object.keys(config.entry as object), ["worker"]);
   });
 });

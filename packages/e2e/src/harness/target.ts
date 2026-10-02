@@ -10,6 +10,7 @@ export type Capability =
   | "media-content"
   | "resources"
   | "templates"
+  | "resource-completion"
   | "input-required"
   | "request-context"
   | "request-helpers"
@@ -35,6 +36,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "media-content",
   "resources",
   "templates",
+  "resource-completion",
   "input-required",
   "request-context",
   "request-helpers",

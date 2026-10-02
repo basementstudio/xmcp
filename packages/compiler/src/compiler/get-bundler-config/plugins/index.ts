@@ -11,6 +11,7 @@ import {
   fastifyTypeDefinition,
   nestJsTypeDefinition,
   nextJsTypeDefinition,
+  tanstackTypeDefinition,
 } from "./types";
 
 /**
@@ -71,7 +72,7 @@ export function getRuntimeFileNames(): string[] {
  * surrounding project declares.
  *
  * ESM builds need `"type": "module"` so the self-contained dist keeps running
- * when deployed away from the project's package.json. Adapter builds always
+ * when deployed away from the project's package.json. TanStack also emits ESM for Vite. Other adapter builds
  * emit CommonJS (the host framework re-bundles them), so they need
  * `"type": "commonjs"`: inside an app whose package.json declares
  * `"type": "module"`, `index.js` would otherwise be read as ESM and the
@@ -113,6 +114,15 @@ export function readRuntimeFile(fileName: string): string {
 function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
   const neededFiles: string[] = [];
   const { platforms } = compilerContext.getContext();
+
+  if (xmcpConfig.experimental?.adapter === "tanstack" && xmcpConfig.http) {
+    return [
+      "headers.js",
+      platforms.cloudflare
+        ? "adapter-tanstack-cloudflare.js"
+        : "adapter-tanstack.js",
+    ];
+  }
 
   // Cloudflare Workers builds use the prebuilt worker runtime as their entry
   if (platforms.cloudflare) {
@@ -187,7 +197,9 @@ export class CreateTypeDefinitionPlugin {
         // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
         if (xmcpConfig.experimental?.adapter) {
           let typeDefinitionContent = "";
-          if (xmcpConfig.experimental?.adapter === "nextjs") {
+          if (xmcpConfig.experimental?.adapter === "tanstack") {
+            typeDefinitionContent = tanstackTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "nextjs") {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter === "express") {
             typeDefinitionContent = expressTypeDefinition;
