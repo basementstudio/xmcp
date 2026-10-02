@@ -5,9 +5,11 @@ import {
   McpServer,
   InMemoryTransport,
   ResourceTemplate,
+  inputRequired,
   type ServerContext,
 } from "@modelcontextprotocol/server";
 import { Client } from "@modelcontextprotocol/client";
+import { z } from "zod/v3";
 import type { McpMiddleware } from "@/types/mcp-middleware";
 import { getRequestContext } from "../../contexts/request-context";
 import {
@@ -254,3 +256,108 @@ test("restores the SDK registration method after setup fails", () => {
   );
   assert.strictEqual(server.server.setRequestHandler, original);
 });
+
+test("passes interim input requests and opaque state through middleware without normalization", async () => {
+  const interim = Object.freeze(
+    inputRequired({
+      requestState: "opaque-state:round-2",
+      inputRequests: {
+        approval: inputRequired.elicit({
+          message: "Approve?",
+          requestedSchema: {
+            type: "object",
+            properties: { confirmed: { type: "boolean" } },
+            required: ["confirmed"],
+          },
+        }),
+        summary: inputRequired.createMessage({
+          messages: [
+            { role: "user", content: { type: "text", text: "Summarize" } },
+          ],
+          maxTokens: 100,
+        }),
+      },
+    })
+  );
+  const expected = structuredClone(interim);
+  const observed: unknown[] = [];
+  const passthrough: McpMiddleware = async (_ctx, next) => {
+    const result = await next();
+    observed.push(result);
+    return result;
+  };
+  const handler = wrapToolWithMiddleware(
+    transformToolHandler(
+      () => interim,
+      { "ui/resourceUri": "ui://example" },
+      { count: z.number() },
+      "multi-round"
+    ),
+    "multi-round",
+    [passthrough, passthrough]
+  );
+  const result = await handler({}, serverContext());
+  assert.strictEqual(result, interim);
+  assert.deepEqual(result, expected);
+  assert.equal(observed.length, 2);
+  for (const value of observed) assert.strictEqual(value, interim);
+  assert.equal("content" in result, false);
+  assert.equal("structuredContent" in result, false);
+  assert.equal("_meta" in result, false);
+});
+
+for (const alreadyAborted of [false, true]) {
+  test(`preserves the original cancellation signal and reason (${alreadyAborted ? "before entry" : "during execution"})`, async () => {
+    const controller = new AbortController();
+    const reason = new Error("client cancelled this request");
+    const ctx = serverContext();
+    ctx.mcpReq.signal = controller.signal;
+    const entered = Promise.withResolvers<void>();
+    const trace: string[] = [];
+    const observer =
+      (name: string): McpMiddleware =>
+      async (context, next) => {
+        assert.strictEqual(context.signal, controller.signal);
+        try {
+          return await next();
+        } finally {
+          assert.strictEqual(getRequestContext().signal, controller.signal);
+          assert.equal(context.signal.aborted, true);
+          assert.strictEqual(context.signal.reason, reason);
+          trace.push(name);
+        }
+      };
+    const handler = wrapToolWithMiddleware(
+      transformToolHandler(async (_args, extra) => {
+        assert.strictEqual(extra.signal, controller.signal);
+        assert.strictEqual(getRequestContext().signal, extra.signal);
+        entered.resolve();
+        if (!extra.signal.aborted) {
+          await new Promise<void>((resolve) =>
+            extra.signal.addEventListener("abort", () => resolve(), {
+              once: true,
+            })
+          );
+        }
+        trace.push("tool");
+        extra.signal.throwIfAborted();
+        return "unreachable";
+      }),
+      "cancelled",
+      [observer("outer"), observer("inner")]
+    );
+    if (alreadyAborted) controller.abort(reason);
+    const pending = handler({}, ctx);
+    await entered.promise;
+    if (!alreadyAborted) controller.abort(reason);
+    await assert.rejects(
+      async () => pending,
+      (error) => error === reason
+    );
+    assert.deepEqual(trace, ["tool", "inner", "outer"]);
+    assert.throws(
+      getRequestContext,
+      /only be used while handling an MCP request/
+    );
+  });
+}

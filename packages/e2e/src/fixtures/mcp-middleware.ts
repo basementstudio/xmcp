@@ -1,6 +1,7 @@
 export const MCP_MIDDLEWARE_FILES = {
   "src/middleware.ts": `import { getRequestContext, type McpMiddleware } from "xmcp";
 import { operations } from "./operation-middleware";
+import { lifecycle } from "./lifecycle-middleware";
 const outer: McpMiddleware = async (ctx, next) => {
   if (ctx.method !== "tools/call" || !ctx.params.name.startsWith("middleware-")) return next();
   if (ctx.params.name === "middleware-denied") throw new Error("Denied by MCP middleware");
@@ -20,7 +21,7 @@ const inner: McpMiddleware = async (ctx, next) => {
   trace.push("inner after");
   return result;
 };
-export const mcp = [operations, outer, inner];
+export const mcp = [operations, ...lifecycle, outer, inner];
 `,
   "src/tools/middleware-echo.ts": `import { getRequestContext } from "xmcp";
 import { z } from "zod";

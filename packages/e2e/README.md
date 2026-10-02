@@ -30,6 +30,14 @@ values, progress notifications, and MCP middleware. Middleware checks cover
 ordering, result stamps, request-local values, denial, and short-circuit results,
 plus filtering all four catalogs, denying direct prompt/resource access, and
 sharing context with static resources, templates, prompts, and completions.
+Lifecycle checks run two elicitation rounds through middleware, preserving
+opaque request state and using fresh local values on each re-entry. Cancellation
+checks wait for the handler to start, then verify that both the handler and
+middleware observe the same aborted signal. A test-owned loopback HTTP probe
+receives those observations after the MCP response stream closes; the application
+does not retain state for a later request. Modern HTTP and both STDIO modes use
+SDK client cancellation. Legacy stateless HTTP closes the original request's
+stream explicitly, since a separate cancellation notification cannot reach it.
 Concurrent calls verify independent local
 values and progress routing; calls without tokens verify the no-op path. STDIO
 progress checks use explicit tokens on a separate SDK client: the SDK's built-in
@@ -38,7 +46,8 @@ read. The check still asserts every notification, with no sleeps or retries. HTT
 targets additionally verify independent requests without sessions and that
 client identity comes from the current request. Capability-based skips include
 a reason: HTTP-specific checks are skipped for STDIO, and input requests are
-skipped for stateless legacy HTTP, which cannot receive server-to-client requests.
+skipped for stateless legacy HTTP, which cannot receive server-to-client requests
+(including the middleware elicitation check).
 
 `auto` uses the SDK's modern discovery negotiation; `legacy` explicitly selects
 the initialize handshake. CommonJS fixtures use the default package format (no

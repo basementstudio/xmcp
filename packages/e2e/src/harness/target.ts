@@ -12,6 +12,8 @@ export type Capability =
   | "request-helpers"
   | "mcp-middleware"
   | "operation-middleware"
+  | "middleware-input-required"
+  | "middleware-cancellation"
   | "stateless-http";
 export interface Target {
   fixture: Fixture;
@@ -32,6 +34,8 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "request-helpers",
   "mcp-middleware",
   "operation-middleware",
+  "middleware-input-required",
+  "middleware-cancellation",
 ];
 
 export function getTargetCapabilities(
@@ -46,8 +50,11 @@ export function getTargetCapabilities(
     if (spec.capabilities === undefined) capabilities.add("stateless-http");
     if (mode === "legacy") {
       capabilities.delete("input-required");
+      capabilities.delete("middleware-input-required");
       unsupportedReasons["input-required"] =
         "Stateless legacy HTTP cannot receive server-to-client input requests";
+      unsupportedReasons["middleware-input-required"] =
+        unsupportedReasons["input-required"];
     }
   }
   return { capabilities, unsupportedReasons };
