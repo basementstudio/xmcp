@@ -1,17 +1,18 @@
 import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
-import {
-  getResolvedHttpConfig,
-  getResolvedCorsConfig,
-  getResolvedPathsConfig,
-  getResolvedTemplateConfig,
-  getResolvedExperimentalConfig,
-  getResolvedTypescriptConfig,
-} from "@/runtime-config";
+
 import type {
   HttpTransportConfig,
   ResolvedHttpConfig,
   XmcpConfigOutputSchema,
+} from "@/runtime-config";
+import {
+  getResolvedCorsConfig,
+  getResolvedExperimentalConfig,
+  getResolvedHttpConfig,
+  getResolvedPathsConfig,
+  getResolvedTemplateConfig,
+  getResolvedTypescriptConfig,
 } from "@/runtime-config";
 
 export function injectHttpVariables(
@@ -202,6 +203,24 @@ export function injectTypescriptVariables(userConfig: XmcpConfigOutputSchema) {
 
 export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 
+export function injectObservabilityVariables(
+  userConfig: XmcpConfigOutputSchema
+) {
+  return {
+    OBSERVABILITY_CONFIG: JSON.stringify({
+      enabled: userConfig.observability?.enabled ?? false,
+    }),
+  };
+}
+
+export function injectComponentsVariables(userConfig: XmcpConfigOutputSchema) {
+  return {
+    COMPONENTS_CONFIG: JSON.stringify(userConfig.components ?? {}),
+  };
+}
+
+export type ComponentsVariables = ReturnType<typeof injectComponentsVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
@@ -210,4 +229,6 @@ export type InjectedVariables =
   | TemplateVariables
   | ServerInfoVariables
   | AdapterVariables
-  | TypescriptVariables;
+  | TypescriptVariables
+  | ComponentsVariables
+  | ReturnType<typeof injectObservabilityVariables>;

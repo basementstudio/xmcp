@@ -1,5 +1,13 @@
 # xmcp
 
+## 1.5.0
+
+### Minor Changes
+
+- a4950f9: Add optional component include/exclude rules by name or tag in xmcp.config.ts. Apply them before registration across tools, prompts, static resources, and resource templates, with generated UI resources following their owning tool.
+- 73deb2e: Add opt-in structured execution logging for tools, prompts, and resource reads through `observability.enabled`, with execution correlation, timing, safe outcomes, and HTTP trace context.
+- 4f501f0: Add the Node.js `xmcp/client` entry with `createClient` and `withClient` for managed HTTP and STDIO connections. Register sampling, elicitation, and roots handlers before connecting, advertise only configured capabilities, and await cleanup after failed connections or scoped operations.
+
 ## 1.4.1
 
 ### Patch Changes

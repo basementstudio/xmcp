@@ -11,7 +11,8 @@
     "build": "xmcp build",
     "dev": "xmcp dev",
     "start": "node dist/http.js",
-    "generate": "xmcp-dev-cli generate"
+    "generate": "xmcp-dev-cli generate",
+    "managed": "node managed-client.mjs"
   },
   "dependencies": {
     "@xmcp-dev/cli": "workspace:*",

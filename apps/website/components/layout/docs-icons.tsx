@@ -39,6 +39,8 @@ export const sidebarIcons: Partial<
   "/docs/configuration/custom-directories": ArchiveIcon,
   "/docs/configuration/bundler": CubeIcon,
   "/docs/configuration/telemetry": BarChartIcon,
+  "/docs/configuration/observability": BarChartIcon,
+  "/docs/configuration/components": LayersIcon,
   "/docs/core-concepts/request-context": IdCardIcon,
   "/docs/core-concepts/tools": LightningBoltIcon,
   "/docs/core-concepts/prompts": ChatBubbleIcon,

@@ -1,25 +1,29 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+
 import {
+  getResolvedCorsConfig,
+  getResolvedExperimentalConfig,
   getResolvedHttpConfig,
-  getResolvedStdioConfig,
   getResolvedPathsConfig,
+  getResolvedStdioConfig,
   getResolvedTemplateConfig,
   getResolvedTypescriptConfig,
-  getResolvedExperimentalConfig,
-  getResolvedCorsConfig,
 } from "@/runtime-config";
+import { configSchema } from "@/runtime-config";
+
 import {
-  injectHttpVariables,
+  injectAdapterVariables,
   injectCorsVariables,
+  injectHttpVariables,
+  injectObservabilityVariables,
+  injectComponentsVariables,
   injectPathsVariables,
+  injectServerInfoVariables,
+  injectStdioVariables,
   injectTemplateVariables,
   injectTypescriptVariables,
-  injectAdapterVariables,
-  injectStdioVariables,
-  injectServerInfoVariables,
 } from "../injection";
-import { configSchema } from "@/runtime-config";
 
 describe("Config System - Zod Defaults", () => {
   it("should apply defaults when parsing empty config", () => {
@@ -459,5 +463,88 @@ describe("Config System - Backward Compatibility", () => {
     const config = configSchema.parse({ paths: { tools: true } });
     const resolved = getResolvedPathsConfig(config);
     assert.equal(resolved.tools, "src/tools");
+  });
+});
+
+describe("Execution observability config", () => {
+  it("is disabled unless explicitly enabled and reaches the runtime injection", () => {
+    for (const input of [
+      {},
+      { observability: { enabled: false } },
+      { observability: { enabled: true } },
+    ]) {
+      const config = configSchema.parse(input);
+      assert.deepEqual(
+        JSON.parse(injectObservabilityVariables(config).OBSERVABILITY_CONFIG),
+        {
+          enabled: input.observability?.enabled ?? false,
+        }
+      );
+    }
+  });
+
+  it("rejects missing/non-boolean enabled values", () => {
+    for (const observability of [
+      true,
+      {},
+      { enabled: "true" },
+      { enabled: 1 },
+    ]) {
+      assert.equal(configSchema.safeParse({ observability }).success, false);
+    }
+  });
+});
+
+describe("Component visibility config", () => {
+  it("keeps rules optional and preserves explicit empty selectors", () => {
+    assert.equal(configSchema.parse({}).components, undefined);
+    for (const components of [
+      {},
+      { include: {} },
+      { include: { names: [] } },
+      { exclude: { tags: [] } },
+    ]) {
+      assert.deepEqual(
+        configSchema.parse({ components }).components,
+        components
+      );
+    }
+    assert.deepEqual(
+      JSON.parse(injectComponentsVariables({}).COMPONENTS_CONFIG),
+      {}
+    );
+  });
+
+  it("retains name/tag selectors through parsing and runtime injection", () => {
+    const components = {
+      include: { names: ["search"], tags: ["public"] },
+      exclude: { names: ["internal"], tags: ["experimental"] },
+    };
+    const parsed = configSchema.parse({ components });
+    assert.deepEqual(parsed.components, components);
+    assert.deepEqual(
+      JSON.parse(injectComponentsVariables(parsed).COMPONENTS_CONFIG),
+      components
+    );
+  });
+
+  it("rejects malformed rules and misspelled selectors instead of silently allowing components", () => {
+    for (const components of [
+      false,
+      null,
+      [],
+      { include: ["search"] },
+      { exclude: { names: "internal" } },
+      { include: { tags: [1] } },
+      { exclude: { tags: [""] } },
+      { exclude: { tag: ["internal"] } },
+      { includes: { names: ["search"] } },
+    ]) {
+      assert.equal(
+        configSchema.safeParse({ components }).success,
+        false,
+        JSON.stringify(components)
+      );
+    }
   });
 });

@@ -1,3 +1,4 @@
+import { VISIBILITY_CONFIG } from "../fixtures/component-visibility.js";
 import {
   mkdir,
   mkdtemp,
@@ -108,6 +109,7 @@ export async function createFixture(spec: FixtureSpec): Promise<Fixture> {
         }),
     ...(isAdapter ? { experimental: { adapter: spec.kind } } : {}),
     template: { name: "xmcp-e2e", description: "Conformance fixture" },
+    components: VISIBILITY_CONFIG,
   };
   const files = {
     "package.json": JSON.stringify(
