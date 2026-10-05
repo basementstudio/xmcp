@@ -75,7 +75,7 @@ async function body(response: Response) {
   return JSON.parse(text);
 }
 
-describe("TanStack Start adapter", () => {
+describe("TanStack adapter", () => {
   it("initializes without a session and does not carry client identity into later calls", async () => {
     const initialized = await xmcpHandler(
       request("initialize", {

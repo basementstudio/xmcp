@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "TanStack Start MCP adapter on Node.js",
+  "description": "TanStack MCP adapter on Node.js",
   "scripts": {
     "dev": "xmcp build && (xmcp dev & vite dev)",
     "build": "xmcp build && vite build && tsc --noEmit",

@@ -10,7 +10,7 @@ export interface XmcpHandlerOptions {
 // The SDK creates a fresh server for each request, including legacy clients.
 const handler = createMcpHandler(createServer, { legacy: "stateless" });
 
-/** Handle a TanStack Start server route's Web Request. */
+/** Handle a TanStack server route's Web Request. */
 export async function xmcpHandler(
   request: Request,
   options: XmcpHandlerOptions = {}
