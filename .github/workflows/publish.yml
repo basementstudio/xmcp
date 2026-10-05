@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [22.14.0]
+        node-version: [22.x]
 
     steps:
       - name: Checkout code
@@ -47,6 +47,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Verify Rspack native binding
+        run: pnpm --filter xmcp exec node -e 'require("@rspack/core")'
 
       - name: Dry run Changesets version
         if: github.event_name == 'workflow_dispatch'
