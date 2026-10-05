@@ -1,5 +1,12 @@
 # @xmcp-dev/compiler
 
+## 1.5.0
+
+### Minor Changes
+
+- a4950f9: Add optional component include/exclude rules by name or tag in xmcp.config.ts. Apply them before registration across tools, prompts, static resources, and resource templates, with generated UI resources following their owning tool.
+- 73deb2e: Add opt-in structured execution logging for tools, prompts, and resource reads through `observability.enabled`, with execution correlation, timing, safe outcomes, and HTTP trace context.
+
 ## 1.4.1
 
 ## 1.4.0
