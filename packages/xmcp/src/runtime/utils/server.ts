@@ -1,4 +1,5 @@
 import { McpServer, Implementation } from "@modelcontextprotocol/server";
+import { filterComponents } from "./component-visibility";
 import { addToolsToServer } from "./tools";
 import { addPromptsToServer, PromptArgsRawShape } from "./prompts";
 import { ToolMetadata } from "@/types/tool";
@@ -72,11 +73,18 @@ export async function configureServer(
   const middlewareModule = await INJECTED_MIDDLEWARE?.();
   const middleware = normalizeMcpMiddleware(middlewareModule?.mcp);
   uIResourceRegistry.clear();
+  // Older compilers do not inject this optional configuration.
+  const components =
+    typeof COMPONENTS_CONFIG === "undefined" ? undefined : COMPONENTS_CONFIG;
 
   registerWithMcpMiddleware(server, middleware, () => {
-    addToolsToServer(server, toolModules, middleware);
-    addPromptsToServer(server, promptModules);
-    addResourcesToServer(server, resourceModules);
+    addToolsToServer(
+      server,
+      filterComponents(toolModules, components),
+      middleware
+    );
+    addPromptsToServer(server, filterComponents(promptModules, components));
+    addResourcesToServer(server, filterComponents(resourceModules, components));
   });
   return server;
 }

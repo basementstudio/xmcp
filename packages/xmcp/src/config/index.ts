@@ -7,6 +7,7 @@ import {
   templateConfigSchema,
   typescriptConfigSchema,
   bundlerConfigSchema,
+  componentsConfigSchema,
 } from "./schemas";
 import type { RspackOptions } from "@rspack/core";
 
@@ -21,6 +22,7 @@ export const configSchema = z.object({
   bundler: bundlerConfigSchema.optional(),
   template: templateConfigSchema.optional(),
   typescript: typescriptConfigSchema.optional(),
+  components: componentsConfigSchema.optional(),
 });
 
 type BundlerConfigType = { bundler?: (config: RspackOptions) => RspackOptions };
@@ -59,6 +61,8 @@ export type {
   BundlerConfig,
   TemplateConfig,
   TypescriptConfig,
+  ComponentsConfig,
+  ComponentSelector,
 } from "./schemas";
 
 export {
