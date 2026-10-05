@@ -78,3 +78,27 @@ their own Hono server command. Hosting configuration remains the app's responsib
 
 See the [Hono guide](https://xmcp.dev/docs/adapters/hono) and
 [SvelteKit guide](https://xmcp.dev/docs/adapters/sveltekit) for Node and Workers setup.
+
+## Nuxt, React Router, and Astro
+
+Initialization detects `nuxt`, `@react-router/dev` (Framework Mode), and `astro`.
+Default routes are `server/routes/mcp.ts`, `app/routes/mcp.ts`, and
+`src/pages/mcp.ts`, respectively. React Router users must register the generated
+resource route in their existing route configuration. Astro users must have a
+server adapter; the generated endpoint disables prerendering.
+
+These adapters use the same Fetch handler and relative imports as Hono and
+SvelteKit. They preserve TypeScript configuration and existing host commands.
+`--route-path`, `--skip-route`, component skip flags, and `--yes` work for all three.
+Nuxt also detects conflicts with method-specific route files.
+
+Workers mode is inferred from `@cloudflare/vite-plugin`, Nuxt's `wrangler`, or
+Astro's `@astrojs/cloudflare`; `--cf` overrides detection. Configure the host's
+Workers integration and `nodejs_compat` separately. See the
+[Nuxt](https://xmcp.dev/docs/adapters/nuxt),
+[React Router](https://xmcp.dev/docs/adapters/react-router), and
+[Astro](https://xmcp.dev/docs/adapters/astro) guides and runnable examples.
+
+For Nuxt, include `.xmcp` in `nitro.externals.inline` in your existing Nuxt config
+so Nitro bundles and watches the generated adapter during development. The CLI
+prints this step; see the [Nuxt guide](https://xmcp.dev/docs/adapters/nuxt).

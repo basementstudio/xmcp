@@ -3,6 +3,7 @@ import {
   createFetchRoute,
   getFetchRoute,
   isFetchFramework,
+  isRoutedFetchFramework,
 } from "./create-fetch-route.js";
 import { generateConfig } from "./generate-config.js";
 import { install } from "./install.js";
@@ -50,7 +51,7 @@ export async function init(options: InitOptions) {
   if (framework === "tanstack" && routePath) {
     assertTanstackRouteAvailable(projectRoot, routePath);
   }
-  const hasFetchRoute = framework === "hono" || framework === "sveltekit";
+  const hasFetchRoute = isRoutedFetchFramework(framework);
   if (hasFetchRoute && routePath) {
     assertFetchRouteAvailable(projectRoot, framework, routePath);
   }

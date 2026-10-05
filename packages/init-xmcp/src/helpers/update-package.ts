@@ -23,8 +23,17 @@ export function updatePackageJson(
   packageJson.devDependencies["@xmcp-dev/compiler"] ??= "latest";
 
   const fetchFramework = isFetchFramework(options.framework);
-  const viteFramework =
-    options.framework === "tanstack" || options.framework === "sveltekit";
+  const hostCommands = {
+    tanstack: "vite",
+    sveltekit: "vite",
+    nuxt: "nuxt",
+    "react-router": "react-router",
+    astro: "astro",
+  };
+  const host =
+    options.framework && options.framework in hostCommands
+      ? hostCommands[options.framework as keyof typeof hostCommands]
+      : undefined;
   const platformFlag = fetchFramework && options.cloudflare ? " --cf" : "";
   const build = `xmcp build${platformFlag}`;
   const dev = `xmcp dev${platformFlag}`;
@@ -33,9 +42,7 @@ export function updatePackageJson(
   if (packageJson.scripts.build) {
     packageJson.scripts.build = `${build} && ${packageJson.scripts.build}`;
   } else {
-    packageJson.scripts.build = viteFramework
-      ? `${build} && vite build`
-      : build;
+    packageJson.scripts.build = host ? `${build} && ${host} build` : build;
   }
 
   if (packageJson.scripts.dev) {
@@ -44,8 +51,8 @@ export function updatePackageJson(
       : `${dev} & ${packageJson.scripts.dev}`;
   } else {
     packageJson.scripts.dev = fetchFramework
-      ? viteFramework
-        ? `${build} && (${dev} & vite dev)`
+      ? host
+        ? `${build} && (${dev} & ${host} dev)`
         : `${build} && ${dev}`
       : dev;
   }

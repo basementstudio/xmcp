@@ -7,7 +7,10 @@
     "fastify",
     "tanstack",
     "hono",
-    "sveltekit"
+    "sveltekit",
+    "nuxt",
+    "react-router",
+    "astro"
   ],
   "defaultOpen": true,
   "root": true

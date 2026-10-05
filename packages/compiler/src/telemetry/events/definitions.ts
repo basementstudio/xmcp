@@ -28,6 +28,9 @@ export enum AdapterType {
   TANSTACK = "tanstack",
   HONO = "hono",
   SVELTEKIT = "sveltekit",
+  NUXT = "nuxt",
+  REACT_ROUTER = "react-router",
+  ASTRO = "astro",
 }
 
 type EventPayload = {

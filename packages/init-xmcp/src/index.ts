@@ -49,11 +49,7 @@ const program = new Command()
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-prompts", "Skip prompt creation", false)
   .option("--skip-resources", "Skip resource creation", false)
-  .option(
-    "--cf",
-    "Build a TanStack, Hono, or SvelteKit adapter for Cloudflare Workers",
-    false
-  )
+  .option("--cf", "Build a Fetch adapter for Cloudflare Workers", false)
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
@@ -146,6 +142,18 @@ const program = new Command()
     }
     if (detectedFramework === "sveltekit" && !options.skipRoute) {
       routePath = options.routePath || "src/routes/mcp";
+    }
+    if (!options.skipRoute) {
+      const defaults = {
+        nuxt: "server/routes",
+        "react-router": "app/routes",
+        astro: "src/pages",
+      };
+      if (detectedFramework in defaults) {
+        routePath =
+          options.routePath ||
+          defaults[detectedFramework as keyof typeof defaults];
+      }
     }
     const cloudflare =
       isFetchFramework(detectedFramework) &&
@@ -407,6 +415,18 @@ const program = new Command()
         }
         console.log(
           "Keep your existing Hono dev/build commands after the xmcp commands. See https://xmcp.dev/docs/adapters/hono"
+        );
+      }
+
+      if (detectedFramework === "nuxt") {
+        console.log(
+          "Add .xmcp to nitro.externals.inline in nuxt.config.ts so Nitro bundles the adapter during development. See https://xmcp.dev/docs/adapters/nuxt"
+        );
+      }
+
+      if (detectedFramework === "react-router" && routePath) {
+        console.log(
+          `Register ${routePath}/mcp.ts as a resource route in your route config (no default component). See https://xmcp.dev/docs/adapters/react-router`
         );
       }
 

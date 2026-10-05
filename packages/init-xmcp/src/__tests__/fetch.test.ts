@@ -13,11 +13,35 @@ import {
 } from "../helpers/create-fetch-route.js";
 import { updatePackageJson } from "../helpers/update-package.js";
 
-for (const framework of ["hono", "sveltekit"] as const) {
+for (const framework of [
+  "hono",
+  "sveltekit",
+  "nuxt",
+  "react-router",
+  "astro",
+] as const) {
   describe(`${framework} initialization`, () => {
     let root: string;
-    const dependency = framework === "hono" ? "hono" : "@sveltejs/kit";
-    const directory = framework === "hono" ? "src/routes" : "src/routes/mcp";
+    const dependency = {
+      hono: "hono",
+      sveltekit: "@sveltejs/kit",
+      nuxt: "nuxt",
+      "react-router": "@react-router/dev",
+      astro: "astro",
+    }[framework];
+    const directory = {
+      hono: "src/routes",
+      sveltekit: "src/routes/mcp",
+      nuxt: "server/routes",
+      "react-router": "app/routes",
+      astro: "src/pages",
+    }[framework];
+    const customDirectory =
+      framework === "astro"
+        ? "custom/pages/api"
+        : framework === "nuxt"
+          ? "custom/routes/api"
+          : "custom/routes/api/mcp";
     beforeEach(() => {
       root = fs.mkdtempSync(path.join(os.tmpdir(), `xmcp-${framework}-`));
     });
@@ -71,7 +95,7 @@ for (const framework of ["hono", "sveltekit"] as const) {
           [section]: {
             [dependency]: "*",
             fastify: "*",
-            ...(framework === "sveltekit" ? { hono: "*" } : {}),
+            ...(framework !== "hono" ? { hono: "*" } : {}),
           },
         });
         assert.equal(detectFramework(root), framework);
@@ -84,7 +108,13 @@ for (const framework of ["hono", "sveltekit"] as const) {
       for (const section of ["dependencies", "devDependencies"]) {
         for (const pkg of [
           "@cloudflare/vite-plugin",
-          framework === "hono" ? "wrangler" : "@sveltejs/adapter-cloudflare",
+          {
+            hono: "wrangler",
+            sveltekit: "@sveltejs/adapter-cloudflare",
+            nuxt: "wrangler",
+            "react-router": "@cloudflare/vite-plugin",
+            astro: "@astrojs/cloudflare",
+          }[framework],
         ]) {
           fs.writeJsonSync(path.join(root, "package.json"), {
             [section]: { [pkg]: "*" },
@@ -95,7 +125,7 @@ for (const framework of ["hono", "sveltekit"] as const) {
     });
 
     it("generates default and custom routes with relative imports", () => {
-      for (const routeDirectory of [directory, "custom/routes/api/mcp"]) {
+      for (const routeDirectory of [directory, customDirectory]) {
         createFetchRoute(root, framework, routeDirectory);
         const route = getFetchRoute(root, framework, routeDirectory);
         assert.equal(
@@ -108,7 +138,7 @@ for (const framework of ["hono", "sveltekit"] as const) {
             content,
             /mcp.all\("\/", \(c\) => xmcpHandler\(c.req.raw\)\)/
           );
-        } else {
+        } else if (framework === "sveltekit") {
           for (const method of ["GET", "POST", "DELETE"])
             assert.ok(
               content.includes(`export const ${method}: RequestHandler`)
@@ -117,6 +147,16 @@ for (const framework of ["hono", "sveltekit"] as const) {
             route.endpoint,
             routeDirectory === directory ? "/mcp" : "/api/mcp"
           );
+        } else if (framework === "nuxt") {
+          assert.match(content, /defineEventHandler/);
+          assert.match(content, /toWebRequest\(event\)/);
+        } else if (framework === "react-router") {
+          assert.match(content, /export function loader/);
+          assert.match(content, /export function action/);
+          assert.doesNotMatch(content, /export default/);
+        } else {
+          assert.match(content, /export const prerender = false/);
+          assert.match(content, /export const ALL: APIRoute/);
         }
       }
     });
@@ -132,6 +172,26 @@ for (const framework of ["hono", "sveltekit"] as const) {
         assert.equal(fs.readFileSync(file, "utf8"), "existing route");
         fs.removeSync(file);
       }
+    });
+
+    it("preserves framework-specific route variants", () => {
+      const variants = {
+        hono: ".js",
+        sveltekit: ".js",
+        nuxt: ".post.ts",
+        "react-router": ".tsx",
+        astro: ".astro",
+      };
+      const file = getFetchRoute(root, framework, directory).file.replace(
+        /\.ts$/,
+        variants[framework]
+      );
+      fs.outputFileSync(file, "existing route");
+      assert.throws(
+        () => createFetchRoute(root, framework, directory),
+        /--skip-route/
+      );
+      assert.equal(fs.readFileSync(file, "utf8"), "existing route");
     });
 
     it("prepends adapter builds and preserves host and deployment scripts", () => {
@@ -157,6 +217,8 @@ for (const framework of ["hono", "sveltekit"] as const) {
       );
       const result = cli();
       assert.equal(result.status, 0, result.stdout + result.stderr);
+      if (framework === "nuxt")
+        assert.match(result.stdout, /nitro\.externals\.inline/);
       assert.ok(fs.existsSync(getFetchRoute(root, framework, directory).file));
       assert.equal(
         fs.readFileSync(path.join(root, "tsconfig.json"), "utf8"),
@@ -172,14 +234,12 @@ for (const framework of ["hono", "sveltekit"] as const) {
 
     it("honors custom route directories", () => {
       fixture();
-      const result = cli("--route-path", "custom/routes/api/mcp");
+      const result = cli("--route-path", customDirectory);
       assert.equal(result.status, 0, result.stdout + result.stderr);
       assert.ok(
-        fs.existsSync(
-          getFetchRoute(root, framework, "custom/routes/api/mcp").file
-        )
+        fs.existsSync(getFetchRoute(root, framework, customDirectory).file)
       );
-      if (framework === "sveltekit")
+      if (["sveltekit", "nuxt", "astro"].includes(framework))
         assert.match(
           fs.readFileSync(path.join(root, "xmcp.config.ts"), "utf8"),
           /endpoint: "\/api\/mcp"/

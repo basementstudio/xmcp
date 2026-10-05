@@ -1,0 +1,36 @@
+{
+  "name": "react-router-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & react-router dev)",
+    "build": "xmcp build && react-router build && react-router typegen && tsc --noEmit",
+    "start": "react-router-serve build/server/index.js",
+    "dev:cf": "xmcp build --cf && (xmcp dev --cf & cross-env XMCP_CLOUDFLARE=1 react-router dev)",
+    "build:cf": "xmcp build --cf && cross-env XMCP_CLOUDFLARE=1 react-router build",
+    "preview:cf": "cross-env XMCP_CLOUDFLARE=1 vite preview",
+    "deploy:cf": "pnpm build:cf && wrangler deploy"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router": "^8.4.0",
+    "@react-router/serve": "^8.4.0",
+    "isbot": "^5"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.147.0",
+    "cross-env": "^7.0.3",
+    "@react-router/dev": "^8.4.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "vite": "^8.3.2",
+    "@cloudflare/vite-plugin": "^1.62.5"
+  }
+}

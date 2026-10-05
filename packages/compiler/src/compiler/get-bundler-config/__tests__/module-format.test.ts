@@ -206,7 +206,14 @@ describe("vercel function output", () => {
   });
 });
 
-for (const adapter of ["tanstack", "hono", "sveltekit"]) {
+for (const adapter of [
+  "tanstack",
+  "hono",
+  "sveltekit",
+  "nuxt",
+  "react-router",
+  "astro",
+]) {
   describe(`${adapter} adapter output`, () => {
     const fetchAdapter = configSchema.parse({
       http: true,

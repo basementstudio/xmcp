@@ -10,7 +10,10 @@ export type Framework =
   | "fastify"
   | "tanstack"
   | "hono"
-  | "sveltekit";
+  | "sveltekit"
+  | "nuxt"
+  | "react-router"
+  | "astro";
 
 export function detectFramework(projectRoot: string): Framework {
   const packageJson = JSON.parse(
@@ -39,6 +42,9 @@ export function detectFramework(projectRoot: string): Framework {
 
   for (const [dependency, framework] of [
     ["@sveltejs/kit", "sveltekit"],
+    ["nuxt", "nuxt"],
+    ["@react-router/dev", "react-router"],
+    ["astro", "astro"],
     ["hono", "hono"],
   ] as const) {
     if (
