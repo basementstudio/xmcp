@@ -19,7 +19,7 @@ export function Grid({
       columns={columns}
       gap={gap}
       className={[
-        "rounded-xl border border-slate-800/80 bg-slate-900/40 p-4",
+        "rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4",
         className,
       ]
         .filter(Boolean)

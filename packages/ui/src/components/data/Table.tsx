@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../react/index.js";
-import { cn } from "../../react/utils.js";
 
 interface TableComponentProps {
   dataKey: string;
@@ -26,7 +25,7 @@ export function Table({ dataKey, columns, className }: TableComponentProps) {
   if (data.length === 0) {
     return (
       <Card className="border-dashed">
-        <CardContent className="p-8 text-center text-sm text-slate-400">
+        <CardContent className="p-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
           No data available
         </CardContent>
       </Card>
@@ -37,12 +36,11 @@ export function Table({ dataKey, columns, className }: TableComponentProps) {
     <Card className={className}>
       <BaseTable>
         <TableHeader>
-          <TableRow className="bg-slate-900/70 hover:bg-slate-900/70">
+          <TableRow className="bg-[hsl(var(--muted))] hover:bg-[hsl(var(--muted))]">
             {columns.map((col) => (
               <TableHead
                 key={col.key}
                 scope="col"
-                className={cn("text-slate-400")}
                 style={col.width ? { width: col.width } : undefined}
               >
                 {col.label}

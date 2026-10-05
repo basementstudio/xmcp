@@ -28,7 +28,9 @@ export function Text({
 
   const className = cn(
     variantStyles[variant] ?? variantStyles.body,
-    variant === "caption" ? "text-slate-400" : "text-slate-50",
+    variant === "caption"
+      ? "text-[hsl(var(--muted-foreground))]"
+      : "text-[hsl(var(--foreground))]",
     overrideClassName
   );
 
