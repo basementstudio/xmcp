@@ -8,7 +8,9 @@ export type Framework =
   | "nestjs"
   | "express"
   | "fastify"
-  | "tanstack";
+  | "tanstack"
+  | "hono"
+  | "sveltekit";
 
 export function detectFramework(projectRoot: string): Framework {
   const packageJson = JSON.parse(
@@ -33,6 +35,18 @@ export function detectFramework(projectRoot: string): Framework {
     packageJson.devDependencies?.["@tanstack/react-start"]
   ) {
     return "tanstack";
+  }
+
+  for (const [dependency, framework] of [
+    ["@sveltejs/kit", "sveltekit"],
+    ["hono", "hono"],
+  ] as const) {
+    if (
+      packageJson.dependencies?.[dependency] ||
+      packageJson.devDependencies?.[dependency]
+    ) {
+      return framework;
+    }
   }
 
   // Check for Fastify

@@ -1,3 +1,9 @@
+import {
+  assertFetchRouteAvailable,
+  createFetchRoute,
+  getFetchRoute,
+  isFetchFramework,
+} from "./create-fetch-route.js";
 import { generateConfig } from "./generate-config.js";
 import { install } from "./install.js";
 import { updatePackageJson } from "./update-package.js";
@@ -44,10 +50,16 @@ export async function init(options: InitOptions) {
   if (framework === "tanstack" && routePath) {
     assertTanstackRouteAvailable(projectRoot, routePath);
   }
+  const hasFetchRoute = framework === "hono" || framework === "sveltekit";
+  if (hasFetchRoute && routePath) {
+    assertFetchRouteAvailable(projectRoot, framework, routePath);
+  }
   const endpoint =
     framework === "tanstack" && routePath
       ? getTanstackRoute(projectRoot, routePath).endpoint
-      : undefined;
+      : hasFetchRoute && routePath
+        ? getFetchRoute(projectRoot, framework, routePath).endpoint
+        : undefined;
   generateConfig(
     projectRoot,
     framework,
@@ -61,7 +73,8 @@ export async function init(options: InitOptions) {
 
   updatePackageJson(projectRoot, { framework, cloudflare });
 
-  updateTsConfig(projectRoot);
+  // Fetch routes use relative imports. Preserve host-generated paths and includes.
+  if (!isFetchFramework(framework)) updateTsConfig(projectRoot);
 
   updateGitignore(projectRoot);
 
@@ -83,6 +96,10 @@ export async function init(options: InitOptions) {
 
   if (framework === "tanstack" && routePath) {
     createTanstackRoute(projectRoot, routePath);
+  }
+
+  if (hasFetchRoute && routePath) {
+    createFetchRoute(projectRoot, framework, routePath);
   }
 
   if (framework === "nestjs") {

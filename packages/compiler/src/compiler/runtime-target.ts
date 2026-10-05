@@ -1,8 +1,10 @@
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 
-export function isTanstackAdapter(config: XmcpConfigOutputSchema): boolean {
-  return config.experimental?.adapter === "tanstack";
+export function isFetchAdapter(config: XmcpConfigOutputSchema): boolean {
+  return ["tanstack", "hono", "sveltekit"].includes(
+    config.experimental?.adapter ?? ""
+  );
 }
 
 /**

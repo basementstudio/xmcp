@@ -1,3 +1,4 @@
+import { isFetchFramework } from "./create-fetch-route.js";
 import path from "path";
 import fs from "fs-extra";
 import type { Framework } from "./detect-framework.js";
@@ -21,8 +22,10 @@ export function updatePackageJson(
   packageJson.devDependencies = packageJson.devDependencies ?? {};
   packageJson.devDependencies["@xmcp-dev/compiler"] ??= "latest";
 
-  const tanstack = options.framework === "tanstack";
-  const platformFlag = tanstack && options.cloudflare ? " --cf" : "";
+  const fetchFramework = isFetchFramework(options.framework);
+  const viteFramework =
+    options.framework === "tanstack" || options.framework === "sveltekit";
+  const platformFlag = fetchFramework && options.cloudflare ? " --cf" : "";
   const build = `xmcp build${platformFlag}`;
   const dev = `xmcp dev${platformFlag}`;
 
@@ -30,16 +33,20 @@ export function updatePackageJson(
   if (packageJson.scripts.build) {
     packageJson.scripts.build = `${build} && ${packageJson.scripts.build}`;
   } else {
-    packageJson.scripts.build = tanstack ? `${build} && vite build` : build;
+    packageJson.scripts.build = viteFramework
+      ? `${build} && vite build`
+      : build;
   }
 
   if (packageJson.scripts.dev) {
-    packageJson.scripts.dev = tanstack
+    packageJson.scripts.dev = fetchFramework
       ? `${build} && (${dev} & ${packageJson.scripts.dev})`
       : `${dev} & ${packageJson.scripts.dev}`;
   } else {
-    packageJson.scripts.dev = tanstack
-      ? `${build} && (${dev} & vite dev)`
+    packageJson.scripts.dev = fetchFramework
+      ? viteFramework
+        ? `${build} && (${dev} & vite dev)`
+        : `${build} && ${dev}`
       : dev;
   }
 

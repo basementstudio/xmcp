@@ -9,6 +9,8 @@ export const adapterConfigSchema = z.enum([
   "nestjs",
   "fastify",
   "tanstack",
+  "hono",
+  "sveltekit",
 ]);
 
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;

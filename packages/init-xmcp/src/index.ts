@@ -4,7 +4,10 @@ import { Command } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { init } from "./helpers/init.js";
-import { detectTanstackCloudflare } from "./helpers/create-tanstack-route.js";
+import {
+  detectFetchCloudflare,
+  isFetchFramework,
+} from "./helpers/create-fetch-route.js";
 import {
   detectFramework,
   detectTypeScript,
@@ -46,7 +49,11 @@ const program = new Command()
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-prompts", "Skip prompt creation", false)
   .option("--skip-resources", "Skip resource creation", false)
-  .option("--cf", "Build the TanStack adapter for Cloudflare Workers", false)
+  .option(
+    "--cf",
+    "Build a TanStack, Hono, or SvelteKit adapter for Cloudflare Workers",
+    false
+  )
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
@@ -134,9 +141,15 @@ const program = new Command()
     if (detectedFramework === "tanstack" && !options.skipRoute) {
       routePath = options.routePath || "src/routes";
     }
+    if (detectedFramework === "hono" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes";
+    }
+    if (detectedFramework === "sveltekit" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes/mcp";
+    }
     const cloudflare =
-      detectedFramework === "tanstack" &&
-      (options.cf || detectTanstackCloudflare(projectRoot));
+      isFetchFramework(detectedFramework) &&
+      (options.cf || detectFetchCloudflare(projectRoot, detectedFramework));
 
     // determine package manager
     let packageManager: "npm" | "yarn" | "pnpm" | "bun";
@@ -193,7 +206,8 @@ const program = new Command()
       }
 
       if (
-        (detectedFramework === "nextjs" || detectedFramework === "tanstack") &&
+        (detectedFramework === "nextjs" ||
+          isFetchFramework(detectedFramework)) &&
         !options.skipRoute
       ) {
         prompts.push({
@@ -252,7 +266,8 @@ const program = new Command()
       }
 
       if (
-        (detectedFramework === "nextjs" || detectedFramework === "tanstack") &&
+        (detectedFramework === "nextjs" ||
+          isFetchFramework(detectedFramework)) &&
         !options.skipRoute &&
         answers.routePath
       ) {
@@ -362,7 +377,7 @@ const program = new Command()
 
       if (routePath) {
         console.log(
-          `   • ${routePath}/${detectedFramework === "tanstack" ? "mcp.ts" : "route.ts"}`
+          `   • ${routePath}/${detectedFramework === "sveltekit" ? "+server.ts" : isFetchFramework(detectedFramework) ? "mcp.ts" : "route.ts"}`
         );
       }
 
@@ -375,9 +390,25 @@ const program = new Command()
 
       console.log(chalk.blue("\n❯ Files updated:"));
       console.log(`   • package.json`);
-      console.log(`   • tsconfig.json`);
+      if (!isFetchFramework(detectedFramework))
+        console.log(`   • tsconfig.json`);
 
       console.log(chalk.blue("\nNext steps:"));
+
+      if (detectedFramework === "hono") {
+        if (routePath) {
+          console.log(
+            `Mount the router from ${routePath}/mcp.ts in your Hono app:\n\napp.route("/mcp", mcp);\n`
+          );
+        } else {
+          console.log(
+            'Import xmcpHandler from .xmcp/adapter/index.js and register app.all("/mcp", (c) => xmcpHandler(c.req.raw)).'
+          );
+        }
+        console.log(
+          "Keep your existing Hono dev/build commands after the xmcp commands. See https://xmcp.dev/docs/adapters/hono"
+        );
+      }
 
       // code integration for express projects
       if (detectedFramework === "express") {

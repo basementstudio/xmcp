@@ -30,7 +30,7 @@ const config: XmcpConfig = {
     resources: ${resourcesPath ? `"${resourcesPath}"` : "false"},
   },`;
 
-  if (frameworkAdapter === "nextjs" || frameworkAdapter === "tanstack") {
+  if (["nextjs", "tanstack", "hono", "sveltekit"].includes(frameworkAdapter)) {
     configContent += `
   typescript: {
     skipTypeCheck: true,

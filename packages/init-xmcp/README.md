@@ -57,3 +57,24 @@ examples, manual setup, authentication, and CORS.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](<[LICENSE](https://github.com/basementstudio/xmcp/blob/main/license.md)>) file for details.
+
+## Hono and SvelteKit
+
+`hono` and `@sveltejs/kit` are detected in dependencies or dev dependencies.
+Hono setup creates `src/routes/mcp.ts`; mount its default router in your app with
+`app.route("/mcp", mcp)`. SvelteKit setup creates `src/routes/mcp/+server.ts`.
+Both use relative adapter imports and preserve the host's TypeScript configuration.
+
+`--route-path` selects the directory containing `mcp.ts` (Hono) or `+server.ts`
+(SvelteKit). Existing TypeScript or JavaScript route files are preserved and
+reported as conflicts. `--skip-route`, other component skip flags, and `--yes`
+remain available.
+
+Workers mode is inferred from `@cloudflare/vite-plugin`, Hono's `wrangler`, or
+SvelteKit's `@sveltejs/adapter-cloudflare`. `--cf` selects it explicitly. Existing
+host and deploy scripts are preserved; xmcp builds run before the host build and
+before starting development watchers. Apps without host scripts must provide
+their own Hono server command. Hosting configuration remains the app's responsibility.
+
+See the [Hono guide](https://xmcp.dev/docs/adapters/hono) and
+[SvelteKit guide](https://xmcp.dev/docs/adapters/sveltekit) for Node and Workers setup.

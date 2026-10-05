@@ -54,6 +54,8 @@ export const sidebarIcons: Partial<
   "/docs/adapters/nestjs": Icons.nestjs,
   "/docs/adapters/express": Icons.express,
   "/docs/adapters/fastify": Icons.fastify,
+  "/docs/adapters/hono": Icons.hono,
+  "/docs/adapters/sveltekit": Icons.sveltekit,
   "/docs/deployment/vercel": Icons.vercel,
   "/docs/deployment/cloudflare": Icons.cloudflare,
   "/docs/deployment/alpic": Icons.alpic,
