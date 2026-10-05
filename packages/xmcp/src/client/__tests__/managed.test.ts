@@ -72,6 +72,20 @@ test("failed connect awaits subprocess cleanup before rejecting", async () => {
   assertExited(server.observation().pid);
 });
 
+test("explicitly piped stderr is forwarded when no callback is supplied", async (context) => {
+  const server = fixture();
+  let stderr = "";
+  context.mock.method(process.stderr, "write", (chunk: Buffer) => {
+    stderr += chunk.toString();
+    return true;
+  });
+  const { onStderrData: _onStderrData, ...options } = server.options;
+  await withClient({ ...server.definition, stderr: "pipe" }, () => {}, options);
+  const observation = JSON.parse(stderr.trim());
+  assert.deepEqual(observation.capabilities, {});
+  assertExited(observation.pid);
+});
+
 test("no handlers advertises no optional capabilities and close reaps the process", async () => {
   const server = fixture();
   const client = await createClient(server.definition, server.options);

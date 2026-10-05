@@ -45,7 +45,7 @@ const tools = await withClient(
 );
 ```
 
-These definitions use an explicit `name`, `type`, and, for STDIO, `command` and `args`. The shorthand `npm` and URL entries in `src/clients.ts` below are resolved by the generator; pass a resolved `ClientDefinition` to the managed API. HTTP headers support the same static values and environment references shown below. STDIO definitions support `env`, `cwd`, and `stderr`. Stderr is inherited by default; passing `onStderrData` in the options pipes it to your callback unless the definition explicitly selects another stderr strategy.
+These definitions use an explicit `name`, `type`, and, for STDIO, `command` and `args`. The shorthand `npm` and URL entries in `src/clients.ts` below are resolved by the generator; pass a resolved `ClientDefinition` to the managed API. HTTP headers support the same static values and environment references shown below. STDIO definitions support `env`, `cwd`, and `stderr`. Stderr is inherited by default; passing `onStderrData` in the options pipes it to your callback unless the definition explicitly selects another stderr strategy. An explicitly piped stream without a callback is forwarded to the parent's stderr.
 
 ### Client handlers
 

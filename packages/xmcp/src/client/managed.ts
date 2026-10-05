@@ -31,7 +31,7 @@ export interface ManagedClientOptions {
   versionNegotiation?: ClientOptions["versionNegotiation"];
   /** SDK connection options, including timeout and cancellation signal. */
   connect?: ConnectOptions;
-  /** Receives piped subprocess stderr; otherwise stderr is inherited. */
+  /** Receives piped subprocess stderr; otherwise it is forwarded to stderr. */
   onStderrData?: (chunk: Buffer) => void;
 }
 
@@ -71,8 +71,16 @@ export async function createClient(
           stderr:
             definition.stderr ?? (options.onStderrData ? "pipe" : "inherit"),
         });
-  if (transport instanceof StdioClientTransport && options.onStderrData) {
-    transport.stderr?.on("data", options.onStderrData);
+  if (transport instanceof StdioClientTransport) {
+    // Drain an explicitly piped stream even without a callback so a noisy
+    // subprocess cannot block on its stderr buffer.
+    transport.stderr?.on(
+      "data",
+      options.onStderrData ??
+        ((chunk: Buffer) => {
+          process.stderr.write(chunk);
+        })
+    );
   }
 
   // The SDK may start closing after a failed handshake without awaiting it.
