@@ -20,7 +20,14 @@ interface SelectComponentProps extends SelectProps {
   actions?: Record<string, Action>;
 }
 
-export function Select({ label, stateKey, options, placeholder, className, actions }: SelectComponentProps) {
+export function Select({
+  label,
+  stateKey,
+  options,
+  placeholder,
+  className,
+  actions,
+}: SelectComponentProps) {
   const id = useId();
   const value = useUiState(stateKey);
   const dispatch = useUiDispatch();
@@ -39,16 +46,19 @@ export function Select({ label, stateKey, options, placeholder, className, actio
   return (
     <div className="flex flex-col gap-1.5">
       {label ? <Label htmlFor={id}>{label}</Label> : null}
-      <BaseSelect value={value != null ? String(value) : undefined} onValueChange={handleChange}>
+      <BaseSelect
+        value={value != null ? String(value) : undefined}
+        onValueChange={handleChange}
+      >
         <SelectTrigger id={id} className={className}>
           <SelectValue placeholder={placeholder ?? "Select an option"} />
         </SelectTrigger>
         <SelectContent>
-        {options.map((opt) => (
-          <SelectItem key={opt.value} value={opt.value}>
-            {opt.label}
-          </SelectItem>
-        ))}
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </BaseSelect>
     </div>

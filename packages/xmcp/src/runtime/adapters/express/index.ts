@@ -1,75 +1,48 @@
 import { Request, Response } from "express";
+import { createMcpHandler } from "@modelcontextprotocol/server";
+import { toNodeHandler } from "@modelcontextprotocol/node";
 import { createServer } from "@/runtime/utils/server";
-import { StatelessHttpServerTransport } from "@/runtime/transports/http/stateless-streamable-http";
 import { setHeaders } from "@/runtime/transports/http/cors";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import type { CorsConfig } from "@/config";
 
-// cors config
-const corsOrigin = HTTP_CORS_ORIGIN as string;
-const corsMethods = HTTP_CORS_METHODS as string;
-const corsAllowedHeaders = HTTP_CORS_ALLOWED_HEADERS as string;
-const corsExposedHeaders = HTTP_CORS_EXPOSED_HEADERS as string;
-const corsCredentials = HTTP_CORS_CREDENTIALS as boolean;
-const corsMaxAge = HTTP_CORS_MAX_AGE as number;
+const httpConfig = HTTP_CONFIG as {
+  port: number;
+  host: string;
+  bodySizeLimit: number;
+  endpoint: string;
+  debug: boolean;
+};
+const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 
-const debug = HTTP_DEBUG as boolean;
-const bodySizeLimit = HTTP_BODY_SIZE_LIMIT as string;
+// A fresh McpServer is built per request; no state survives between requests.
+// 2026-07-28 traffic is served natively, 2025-era traffic through the SDK's
+// stateless fallback.
+const mcpHandler = createMcpHandler(createServer, {
+  legacy: "stateless",
+  onerror: httpConfig.debug
+    ? (error) => console.error("[HTTP-server] MCP handler error:", error)
+    : undefined,
+});
+const nodeMcpHandler = toNodeHandler(mcpHandler, {
+  onerror: (error) =>
+    console.error("[HTTP-server] Error handling MCP request:", error),
+});
 
 export async function xmcpHandler(req: Request, res: Response) {
-  return new Promise((resolve) => {
-    const id = randomUUID();
-    const clientInfo = extractClientInfoFromMessages(req.body);
+  const id = randomUUID();
+  const clientInfo = extractClientInfoFromMessages(req.body);
 
-    httpRequestContextProvider(
-      { id, headers: req.headers, clientInfo },
-      async () => {
-        try {
-          setHeaders(
-            res,
-            {
-              origin: corsOrigin,
-              methods: corsMethods,
-              allowedHeaders: corsAllowedHeaders,
-              exposedHeaders: corsExposedHeaders,
-              credentials: corsCredentials,
-              maxAge: corsMaxAge,
-            },
-            req.headers.origin
-          );
+  await httpRequestContextProvider(
+    { id, headers: req.headers, clientInfo },
+    async () => {
+      setHeaders(res, corsConfig, req.headers.origin);
 
-          const server = await createServer();
-          const transport = new StatelessHttpServerTransport(
-            debug,
-            bodySizeLimit || "10mb"
-          );
-
-          // cleanup when request/connection closes
-          res.on("close", () => {
-            transport.close();
-            server.close();
-          });
-
-          await server.connect(transport);
-
-          await transport.handleRequest(req, res, req.body).then(() => {
-            resolve(res);
-          });
-        } catch (error) {
-          console.error("[HTTP-server] Error handling MCP request:", error);
-          if (!res.headersSent) {
-            res.status(500).json({
-              jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: "Internal server error",
-              },
-              id: null,
-            });
-          }
-        }
-      }
-    );
-  });
+      // express.json() already consumed the stream; pass the parsed body.
+      // req.auth (attached by auth middleware) is forwarded automatically.
+      await nodeMcpHandler(req, res, req.body);
+    }
+  );
 }

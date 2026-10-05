@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  useUiState,
-  useUiDispatch,
-} from "../../renderer/StateProvider.js";
+import { useUiState, useUiDispatch } from "../../renderer/StateProvider.js";
 import type { TabsProps, Action } from "../../schema/types.js";
 import {
   Tabs as BaseTabs,
@@ -26,7 +23,8 @@ export function Tabs({
   const value = useUiState(stateKey);
   const dispatch = useUiDispatch();
 
-  const currentValue = value != null ? String(value) : (defaultValue ?? tabs[0]?.value);
+  const currentValue =
+    value != null ? String(value) : (defaultValue ?? tabs[0]?.value);
 
   const handleChange = (nextValue: string) => {
     dispatch({ type: "SET_STATE", key: stateKey, value: nextValue });
@@ -36,7 +34,11 @@ export function Tabs({
   const childArray = React.Children.toArray(children);
 
   return (
-    <BaseTabs value={currentValue} onValueChange={handleChange} className={className}>
+    <BaseTabs
+      value={currentValue}
+      onValueChange={handleChange}
+      className={className}
+    >
       <TabsList>
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value}>

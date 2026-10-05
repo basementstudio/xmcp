@@ -109,8 +109,15 @@ const renderJsonTool = createRenderJsonTool({
 });
 ```
 
-Only HTTP(S) MCP URLs are accepted. Invalid, reserved, and unsafe model-provided
+Only HTTP(S) MCP URLs without embedded credentials are accepted. Redirects are rejected. Invalid, reserved, and unsafe model-provided
 headers are dropped before requests are sent.
+
+Direct HTTP uses the MCP SDK to negotiate modern or legacy servers and correlate
+JSON and SSE responses. Connections are shared within an app and closed when
+it unmounts or switches to the host. Stateless servers remain stateless; when a
+server issues a session, the client reuses it and requests its deletion during
+cleanup. If a session expires, the failed tool call is not replayed: the next
+user action opens a new connection.
 
 ## Custom React MCP Apps
 
@@ -199,7 +206,7 @@ files explicitly:
 npx @xmcp-dev/ui init
 ```
 
-The init command adds `src/globals.css`, `postcss.config.mjs`, a `renderJson`
+The init command adds `globals.css`, `postcss.config.mjs`, a `renderJson`
 tool, the `skill://xmcp-ui/schema-reference` resource, and a small handwritten
 React MCP App. It updates missing dependencies in `package.json`, but it does
 not run install for you.

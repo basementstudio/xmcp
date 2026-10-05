@@ -1,7 +1,7 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
-import { z } from "zod";
+import { McpServer } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
 import { ToolFile } from "./server";
+import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
 import { ToolMetadata } from "@/types/tool";
 import { transformToolHandler } from "./transformers/tool";
 import { isReactFile } from "./react";
@@ -9,6 +9,10 @@ import { uIResourceRegistry } from "./ext-apps-registry";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
 import { isPaidHandler, getX402Registry } from "@/plugins/x402";
+import type { McpMiddleware } from "@/types/mcp-middleware";
+import { wrapToolWithMiddleware } from "./mcp-middleware";
+import type { McpToolHandler } from "./transformers/tool";
+import { toMcpMetadata } from "./component-metadata";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -31,7 +35,9 @@ export function pathToName(path: string): string {
 }
 
 /** Ensures toolConfig has its own annotations object with a title */
-export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annotations">): void {
+export function ensureAnnotations(
+  toolConfig: Pick<ToolMetadata, "name" | "annotations">
+): void {
   toolConfig.annotations = { ...(toolConfig.annotations ?? {}) };
   if (toolConfig.annotations.title === undefined) {
     toolConfig.annotations.title = toolConfig.name;
@@ -41,7 +47,8 @@ export function ensureAnnotations(toolConfig: Pick<ToolMetadata, "name" | "annot
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
-  toolModules: Map<string, ToolFile>
+  toolModules: Map<string, ToolFile>,
+  middleware: readonly McpMiddleware[] = []
 ): McpServer {
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -56,6 +63,8 @@ export function addToolsToServer(
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
+
+    if (toolConfig.enabled === false) return;
 
     // Register paid tools in x402 registry if plugin is installed
     if (isPaidHandler(handler)) {
@@ -89,9 +98,7 @@ export function addToolsToServer(
     // Make sure tools has annotations with a title
     ensureAnnotations(toolConfig);
 
-    if (toolConfig._meta === undefined) {
-      toolConfig._meta = {};
-    }
+    toolConfig._meta = { ...toMcpMetadata(toolConfig)._meta };
 
     const isReact = isReactFile(path);
 
@@ -120,9 +127,7 @@ export function addToolsToServer(
         resourceSpecificMeta.ui.csp.resourceDomains || [];
 
       if (
-        !resourceSpecificMeta.ui.csp.resourceDomains.includes(
-          "https://esm.sh"
-        )
+        !resourceSpecificMeta.ui.csp.resourceDomains.includes("https://esm.sh")
       ) {
         resourceSpecificMeta.ui.csp.resourceDomains.push("https://esm.sh");
       }
@@ -161,21 +166,27 @@ export function addToolsToServer(
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
-      // Build the object schema using the project's Zod instance to avoid
-      // cross-instance v3 shape issues in tools/list JSON schema generation.
-      inputSchema: z.object(toolSchema),
+      // Assemble Standard Schemas per field so user schemas work regardless
+      // of which zod instance or major created them.
+      inputSchema: rawShapeToStandardSchema(toolSchema as unknown as RawShape),
       outputSchema: toolOutputSchema
-        ? z.object(toolOutputSchema).strict()
+        ? rawShapeToStandardSchema(toolOutputSchema as unknown as RawShape, {
+            strict: true,
+          })
         : undefined,
       annotations: toolConfig.annotations,
+      icons: toolConfig.icons,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
-    // server as any prevents infinite type recursion
-    (server as any).registerTool(
+    server.registerTool(
       toolConfig.name,
       toolConfigFormatted,
-      transformedHandler
+      wrapToolWithMiddleware(
+        transformedHandler as McpToolHandler,
+        toolConfig.name,
+        middleware
+      ) as never
     );
   });
 

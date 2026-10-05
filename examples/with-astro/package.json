@@ -1,0 +1,30 @@
+{
+  "name": "astro-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & astro dev)",
+    "build": "xmcp build && astro build && astro check",
+    "start": "node dist/server/entry.mjs",
+    "dev:cf": "xmcp build --cf && (xmcp dev --cf & cross-env XMCP_CLOUDFLARE=1 astro dev)",
+    "build:cf": "xmcp build --cf && cross-env XMCP_CLOUDFLARE=1 astro build && cross-env XMCP_CLOUDFLARE=1 astro check",
+    "preview:cf": "cross-env XMCP_CLOUDFLARE=1 astro preview",
+    "deploy:cf": "pnpm build:cf && wrangler deploy"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "astro": "^7.3.5",
+    "@astrojs/node": "^11.1.6",
+    "@astrojs/cloudflare": "^14.3.3"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.147.0",
+    "cross-env": "^7.0.3",
+    "@astrojs/check": "^0.9.10"
+  }
+}

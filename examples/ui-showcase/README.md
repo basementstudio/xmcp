@@ -31,7 +31,7 @@ resource/composer demo.
 - [schema-app-demo.tsx](./src/tools/schema-app-demo.tsx)
 - [render-json.tsx](./src/tools/render-json.tsx)
 - [mcp-app-playbook.ts](<./src/resources/(docs)/mcp-app-playbook.ts>)
-- [globals.css](./src/globals.css)
+- [globals.css](./globals.css)
 
 ## Start Here
 

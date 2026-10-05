@@ -48,6 +48,8 @@ export interface OAuthAuthorizationServerMetadata {
   readonly code_challenge_methods_supported?: readonly string[];
   readonly token_endpoint_auth_methods_supported?: readonly string[];
   readonly scopes_supported?: readonly string[];
+  readonly registration_endpoint?: string;
+  readonly client_id_metadata_document_supported?: boolean;
 }
 
 export interface ClientContext {

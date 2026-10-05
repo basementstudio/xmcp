@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import PreviewTexture from "@public/textures/text5.png";
 import { notFound } from "next/navigation";
 import {
-  fetchTemplateBySlug,
-  fetchTemplateReadme,
-  fetchTemplates,
-} from "@/app/templates/utils/github";
+  getTemplateBySlug,
+  getTemplateReadme,
+  getTemplates,
+} from "@/app/templates/utils/content";
 import {
   formatRepositoryLabel,
   humanizeMetadataName,
@@ -23,7 +24,10 @@ import { RelatedTemplates } from "@/components/templates/detail/related-items";
 import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
 import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
 import { SITE_URL } from "@/lib/base-url";
-import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
+import {
+  resolveTemplatePreviewImage,
+  shouldBypassImageOptimization,
+} from "@/lib/template-preview-image";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBreadcrumbSchema,
@@ -39,7 +43,7 @@ type TemplateDetailPageProps = {
 };
 
 export async function generateStaticParams() {
-  const items = await fetchTemplates();
+  const items = getTemplates();
   return items.map((item) => ({ slug: item.slug }));
 }
 
@@ -47,7 +51,7 @@ export async function generateMetadata(
   props: TemplateDetailPageProps
 ): Promise<Metadata> {
   const params = await props.params;
-  const template = await fetchTemplateBySlug(params.slug);
+  const template = getTemplateBySlug(params.slug);
 
   if (!template) {
     return {
@@ -110,14 +114,14 @@ export default async function TemplateDetailPage(
   props: TemplateDetailPageProps
 ) {
   const params = await props.params;
-  const items = await fetchTemplates();
+  const items = getTemplates();
   const template = items.find((item) => item.slug === params.slug) ?? null;
 
   if (!template) {
     notFound();
   }
 
-  const readmeContent = await fetchTemplateReadme(template);
+  const readmeContent = getTemplateReadme(template);
   const moreTemplates = rankRelatedItems(template, items);
   const deployOptions = buildDeployOptions(template);
   const pageUrl = `${SITE_URL}/templates/${template.slug}`;
@@ -187,35 +191,38 @@ Add a README.md to this template to show content here.`;
               <Image
                 src={previewImage.src}
                 alt={`${template.name} preview`}
+                unoptimized={shouldBypassImageOptimization(previewImage.src)}
                 fill
-                sizes="100vw"
+                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
                 className="object-cover"
-                priority
+                preload
               />
             ) : (
               <Image
                 src={previewImage.src}
                 alt={`${template.name} preview`}
                 fill
-                sizes="100vw"
+                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
                 unoptimized
                 className={
                   previewImage.isNextJsFallback
                     ? "object-contain [object-position:center_70%] scale-90"
                     : "object-contain [object-position:center_70%]"
                 }
-                priority
+                preload
               />
             )}
             <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
               <Image
-                src="/textures/text5.png"
+                src={PreviewTexture}
+                placeholder="blur"
                 alt=""
                 aria-hidden
                 fill
-                sizes="100vw"
+                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
                 className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
-                priority={false}
+                loading="eager"
+                fetchPriority="low"
               />
             </div>
           </div>

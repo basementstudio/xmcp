@@ -4,12 +4,17 @@ import path from "path";
 import { Compiler, Compilation, sources } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getRuntimeDirectoryPath } from "@/runtime-config";
-import { getXmcpConfig } from "@/compiler/compiler-context";
+import { compilerContext, getXmcpConfig } from "@/compiler/compiler-context";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 import {
   expressTypeDefinition,
   fastifyTypeDefinition,
   nestJsTypeDefinition,
   nextJsTypeDefinition,
+  fetchTypeDefinition,
 } from "./types";
 
 /**
@@ -65,23 +70,33 @@ export function getRuntimeFileNames(): string[] {
 }
 
 /**
- * Marks the output directory as ESM so the self-contained dist keeps running
- * when deployed away from the project's package.json.
+ * Pins the module format of the output directory with a nested package.json,
+ * so the emitted bundle is parsed the way it was written no matter what the
+ * surrounding project declares.
+ *
+ * ESM builds need `"type": "module"` so the self-contained dist keeps running
+ * when deployed away from the project's package.json. Fetch adapters also emit ESM for host bundlers. Other adapter builds
+ * emit CommonJS (the host framework re-bundles them), so they need
+ * `"type": "commonjs"`: inside an app whose package.json declares
+ * `"type": "module"`, `index.js` would otherwise be read as ESM and the
+ * bundle's `module.exports` assignment would produce a module with no exports.
  */
-export class EmitModulePackageJsonPlugin {
+export class EmitPackageJsonTypePlugin {
+  constructor(public readonly moduleType: "module" | "commonjs") {}
+
   apply(compiler: Compiler) {
     compiler.hooks.thisCompilation.tap(
-      "EmitModulePackageJsonPlugin",
+      "EmitPackageJsonTypePlugin",
       (compilation) => {
         compilation.hooks.processAssets.tap(
           {
-            name: "EmitModulePackageJsonPlugin",
+            name: "EmitPackageJsonTypePlugin",
             stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
           },
           () => {
             compilation.emitAsset(
               "package.json",
-              new sources.RawSource(`{"type":"module"}\n`)
+              new sources.RawSource(`{"type":"${this.moduleType}"}\n`)
             );
           }
         );
@@ -101,6 +116,20 @@ export function readRuntimeFile(fileName: string): string {
  */
 function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
   const neededFiles: string[] = [];
+  const { platforms } = compilerContext.getContext();
+
+  if (isFetchAdapter(xmcpConfig) && xmcpConfig.http) {
+    return [
+      "headers.js",
+      platforms.cloudflare ? "adapter-fetch-cloudflare.js" : "adapter-fetch.js",
+    ];
+  }
+
+  // Cloudflare Workers builds use the prebuilt worker runtime as their entry
+  if (platforms.cloudflare) {
+    neededFiles.push("headers.js", "cloudflare-worker.js");
+    return neededFiles;
+  }
 
   // headers included if http is configured
   if (xmcpConfig.http) {
@@ -120,6 +149,10 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
       neededFiles.push("adapter-nestjs.js");
     } else if (xmcpConfig.experimental?.adapter === "fastify") {
       neededFiles.push("adapter-fastify.js");
+    } else if (isVercelFunctionBuild(xmcpConfig)) {
+      // Vercel serves the build as a function, so it gets the runtime that
+      // exports a handler rather than the one that starts a server.
+      neededFiles.push("vercel.js");
     } else {
       neededFiles.push("http.js");
     }
@@ -165,7 +198,9 @@ export class CreateTypeDefinitionPlugin {
         // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
         if (xmcpConfig.experimental?.adapter) {
           let typeDefinitionContent = "";
-          if (xmcpConfig.experimental?.adapter === "nextjs") {
+          if (isFetchAdapter(xmcpConfig)) {
+            typeDefinitionContent = fetchTypeDefinition;
+          } else if (xmcpConfig.experimental?.adapter === "nextjs") {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter === "express") {
             typeDefinitionContent = expressTypeDefinition;

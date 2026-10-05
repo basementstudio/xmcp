@@ -2,6 +2,7 @@ import { Tag } from "@/components/ui/tag";
 import { BlogPost, getListedBlogPosts } from "@/utils/blog";
 import Link from "fumadocs-core/link";
 import Image from "next/image";
+import { getBlogImageProps } from "@/lib/blog-images";
 
 const TEXTURE_IMAGES = [
   "/textures/text1.png",
@@ -38,7 +39,15 @@ export const HomeBlog = () => {
   );
 };
 
-export const BlogCard = ({ post }: { post: BlogPost }) => {
+export const BlogCard = ({
+  post,
+  loading = "lazy",
+  sizes = "(min-width: 1200px) 376px, (min-width: 768px) calc((100vw - 72px) / 3), (min-width: 640px) calc((100vw - 52px) / 2), calc(100vw - 32px)",
+}: {
+  post: BlogPost;
+  loading?: "eager" | "lazy";
+  sizes?: string;
+}) => {
   const texture =
     post.previewImage ||
     post.textureImage ||
@@ -61,12 +70,12 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {texture ? (
             <Image
-              src={texture}
+              {...getBlogImageProps(texture)}
               alt={post.title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
-              quality={100}
+              sizes={sizes}
+              loading={loading}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">

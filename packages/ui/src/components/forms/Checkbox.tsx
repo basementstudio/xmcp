@@ -13,7 +13,12 @@ interface CheckboxComponentProps extends CheckboxProps {
   actions?: Record<string, Action>;
 }
 
-export function Checkbox({ label, stateKey, className, actions }: CheckboxComponentProps) {
+export function Checkbox({
+  label,
+  stateKey,
+  className,
+  actions,
+}: CheckboxComponentProps) {
   const id = useId();
   const checked = !!useUiState(stateKey);
   const dispatch = useUiDispatch();
@@ -31,7 +36,11 @@ export function Checkbox({ label, stateKey, className, actions }: CheckboxCompon
   };
 
   return (
-    <div className={["flex items-center gap-3", className].filter(Boolean).join(" ")}>
+    <div
+      className={["flex items-center gap-3", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <BaseCheckbox id={id} checked={checked} onCheckedChange={handleChange} />
       {label ? <Label htmlFor={id}>{label}</Label> : null}
     </div>

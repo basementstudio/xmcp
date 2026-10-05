@@ -13,7 +13,10 @@ async function buildVercelOutput() {
   fs.mkdirSync(functionsDir, { recursive: true });
 
   const distDir = path.join(rootDir, "dist");
-  const sourceFile = path.join(distDir, "http.js");
+  // The function entry: a request handler Vercel invokes per request, built
+  // from the vercel runtime rather than the server that http.js starts.
+  const entryFileName = "vercel.js";
+  const sourceFile = path.join(distDir, entryFileName);
   const targetFile = path.join(functionsDir, "index.js");
 
   if (!fs.existsSync(distDir)) {
@@ -24,11 +27,11 @@ async function buildVercelOutput() {
     fs.copyFileSync(sourceFile, targetFile);
   } else {
     throw new Error(
-      "❌ Application server file not found in dist/. Run build first."
+      "❌ Function handler file not found in dist/. Run build first."
     );
   }
 
-  // copy all other files from dist directory that http.js might depend on
+  // copy all other files from dist directory that the handler might depend on
   const distContents = fs.readdirSync(distDir);
 
   // to do add proper error handling for failed copy
@@ -36,7 +39,7 @@ async function buildVercelOutput() {
     const sourcePath = path.join(distDir, item);
     const targetPath = path.join(functionsDir, item);
 
-    if (item === "http.js" || item === "stdio.js" || item === "auth-ui")
+    if (item === entryFileName || item === "stdio.js" || item === "auth-ui")
       continue;
 
     const stat = fs.statSync(sourcePath);

@@ -56,11 +56,7 @@ const primaryDemos = [
     title: "Resource + Composer Demo",
     summary:
       "Reads a real resource, then uses messaging and model-context updates to show host-mediated content flows.",
-    capabilities: [
-      "resources/read",
-      "ui/message",
-      "ui/update-model-context",
-    ],
+    capabilities: ["resources/read", "ui/message", "ui/update-model-context"],
   },
   {
     tool: "schemaAppDemo",
@@ -72,7 +68,10 @@ const primaryDemos = [
 ];
 
 const secondaryDemos = [
-  { tool: "renderJson", purpose: "Raw schema renderer for copy-paste JSON experiments" },
+  {
+    tool: "renderJson",
+    purpose: "Raw schema renderer for copy-paste JSON experiments",
+  },
 ];
 
 export default function handler() {
@@ -82,17 +81,14 @@ export default function handler() {
         <PageEyebrow>MCP Apps Showcase</PageEyebrow>
         <PageTitle>Better Examples, Fewer Toys</PageTitle>
         <PageDescription>
-          The main ui showcase is now organized around complete MCP App
-          patterns instead of isolated methods. Start with the four primary
-          demos below, then use the secondary tools as focused references.
+          The main ui showcase is now organized around complete MCP App patterns
+          instead of isolated methods. Start with the four primary demos below,
+          then use the secondary tools as focused references.
         </PageDescription>
       </PageHeader>
 
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <Alert
-          variant="info"
-          className="border-cyan-900/70 bg-cyan-950/20"
-        >
+        <Alert variant="info" className="border-cyan-900/70 bg-cyan-950/20">
           <AlertTitle>How to use this showcase</AlertTitle>
           <AlertDescription>
             Open the tools named below from your MCP host. The primary examples
@@ -204,7 +200,9 @@ export default function handler() {
               <TableHeader>
                 <TableRow className="bg-fuchsia-950/20 hover:bg-fuchsia-950/20">
                   <TableHead className="text-fuchsia-300">Tool</TableHead>
-                  <TableHead className="text-fuchsia-300">Why it still exists</TableHead>
+                  <TableHead className="text-fuchsia-300">
+                    Why it still exists
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -231,11 +229,25 @@ export default function handler() {
               <CardTitle>What’s new in the examples</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <p>Tools and polling are shown inside a single operator workflow.</p>
-              <p>Host context is treated as layout and behavior data, not just a JSON dump.</p>
-              <p>Resources, messages, and model context now have a dedicated end-to-end demo.</p>
-              <p>Schema-driven apps finally prove host-backed execution, not only HTTP rendering.</p>
-              <p>The redundant component-gallery tools were removed to keep the package focused.</p>
+              <p>
+                Tools and polling are shown inside a single operator workflow.
+              </p>
+              <p>
+                Host context is treated as layout and behavior data, not just a
+                JSON dump.
+              </p>
+              <p>
+                Resources, messages, and model context now have a dedicated
+                end-to-end demo.
+              </p>
+              <p>
+                Schema-driven apps finally prove host-backed execution, not only
+                HTTP rendering.
+              </p>
+              <p>
+                The redundant component-gallery tools were removed to keep the
+                package focused.
+              </p>
             </CardContent>
           </Card>
           <Card className="border-slate-700 bg-slate-950/90">
@@ -243,10 +255,21 @@ export default function handler() {
               <CardTitle>What to build after this</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-[hsl(var(--muted-foreground))]">
-              <p>Use handwritten React when the interaction model is bespoke.</p>
-              <p>Use schema-driven UI when the app is mostly declarative and repeatable.</p>
-              <p>Keep the host bridge as the app runtime source of truth when running inside MCP hosts.</p>
-              <p>Use resources for durable seed content instead of hardcoded prompt strings.</p>
+              <p>
+                Use handwritten React when the interaction model is bespoke.
+              </p>
+              <p>
+                Use schema-driven UI when the app is mostly declarative and
+                repeatable.
+              </p>
+              <p>
+                Keep the host bridge as the app runtime source of truth when
+                running inside MCP hosts.
+              </p>
+              <p>
+                Use resources for durable seed content instead of hardcoded
+                prompt strings.
+              </p>
             </CardContent>
           </Card>
         </Grid>

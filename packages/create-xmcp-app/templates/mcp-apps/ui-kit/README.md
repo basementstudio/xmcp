@@ -19,4 +19,4 @@ This will start the development server with HTTP transport enabled.
 ## Styling
 
 This template includes Tailwind CSS v4, PostCSS, and
-`@xmcp-dev/ui/styles.css`. The global stylesheet lives in `src/globals.css`.
+`@xmcp-dev/ui/styles.css`. The global stylesheet lives in `globals.css`.

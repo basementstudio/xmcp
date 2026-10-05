@@ -13,7 +13,12 @@ interface SwitchComponentProps extends SwitchProps {
   actions?: Record<string, Action>;
 }
 
-export function Switch({ label, stateKey, className, actions }: SwitchComponentProps) {
+export function Switch({
+  label,
+  stateKey,
+  className,
+  actions,
+}: SwitchComponentProps) {
   const id = useId();
   const checked = !!useUiState(stateKey);
   const dispatch = useUiDispatch();
@@ -30,7 +35,11 @@ export function Switch({ label, stateKey, className, actions }: SwitchComponentP
   };
 
   return (
-    <div className={["flex items-center justify-between gap-3", className].filter(Boolean).join(" ")}>
+    <div
+      className={["flex items-center justify-between gap-3", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
       {label ? <Label htmlFor={id}>{label}</Label> : null}
       <BaseSwitch id={id} checked={checked} onCheckedChange={handleChange} />
     </div>

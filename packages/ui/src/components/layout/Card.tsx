@@ -27,7 +27,9 @@ export function Card({
       {(title || description) && (
         <CardHeader>
           {title ? <CardTitle>{title}</CardTitle> : null}
-          {description ? <CardDescription>{description}</CardDescription> : null}
+          {description ? (
+            <CardDescription>{description}</CardDescription>
+          ) : null}
         </CardHeader>
       )}
       <CardContent

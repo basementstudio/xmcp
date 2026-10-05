@@ -35,7 +35,11 @@ export function StatCard({
           </span>
           {trend ? (
             <span
-              className={trend === "up" ? "text-sm text-emerald-400" : "text-sm text-red-400"}
+              className={
+                trend === "up"
+                  ? "text-sm text-emerald-400"
+                  : "text-sm text-red-400"
+              }
               aria-label={trend === "up" ? "Trending up" : "Trending down"}
             >
               {trend === "up" ? "\u25B2" : "\u25BC"}

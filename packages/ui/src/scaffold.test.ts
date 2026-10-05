@@ -32,7 +32,7 @@ describe("initUi", () => {
     const changed = initUi({ cwd });
 
     expect(changed).toContain("package.json");
-    expect(changed).toContain("src/globals.css");
+    expect(changed).toContain("globals.css");
     expect(changed).toContain("src/tools/render-json.tsx");
     expect(changed).toContain("src/tools/ui-kit-demo.tsx");
     expect(changed).toContain(
@@ -53,10 +53,8 @@ describe("initUi", () => {
     const changed = initUi({ cwd, dryRun: true });
 
     expect(changed).toContain("package.json");
-    expect(changed).toContain("src/globals.css");
-    expect(() =>
-      readFileSync(path.join(cwd, "src/globals.css"), "utf8")
-    ).toThrow();
+    expect(changed).toContain("globals.css");
+    expect(() => readFileSync(path.join(cwd, "globals.css"), "utf8")).toThrow();
   });
 
   it("refuses to overwrite existing starter files without force", () => {

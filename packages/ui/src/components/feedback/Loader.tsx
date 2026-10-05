@@ -10,7 +10,10 @@ export function Loader({ loadingKey, label, className }: LoaderProps) {
 
   return (
     <div role="status" aria-live="polite">
-      <BaseLoader label={label} className={["justify-center py-8", className].filter(Boolean).join(" ")} />
+      <BaseLoader
+        label={label}
+        className={["justify-center py-8", className].filter(Boolean).join(" ")}
+      />
     </div>
   );
 }

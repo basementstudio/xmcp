@@ -1,6 +1,17 @@
 {
   "title": "Adapters",
-  "pages": ["nextjs", "nestjs", "express", "fastify"],
+  "pages": [
+    "nextjs",
+    "nestjs",
+    "express",
+    "fastify",
+    "tanstack",
+    "hono",
+    "sveltekit",
+    "nuxt",
+    "react-router",
+    "astro"
+  ],
   "defaultOpen": true,
   "root": true
 }

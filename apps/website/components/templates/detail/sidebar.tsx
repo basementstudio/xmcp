@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { TemplateShareActions } from "@/components/templates/share-actions";
 import { Tag } from "@/components/ui/tag";
@@ -69,11 +69,7 @@ export function TemplateDetailSidebar({
                 <Tag
                   key={tag}
                   text={tag}
-                  href={
-                    isValid
-                      ? `/templates/category/${slug}`
-                      : undefined
-                  }
+                  href={isValid ? `/templates/category/${slug}` : undefined}
                   interactive={isValid}
                   className="bg-brand-neutral-600"
                 />

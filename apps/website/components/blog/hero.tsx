@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { type BlogPost } from "../../utils/blog";
 import { Tag } from "../ui/tag";
+import { getBlogImageProps } from "@/lib/blog-images";
 
 interface BlogHeroProps {
   featuredPost: BlogPost;
@@ -17,10 +18,11 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
           <div className="w-full md:w-1/2 md:border-r border-brand-neutral-500 overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300 transition-colors duration-200 relative aspect-video">
             {image ? (
               <Image
-                src={image}
+                {...getBlogImageProps(image)}
                 alt={featuredPost.title}
                 fill
-                sizes="(max-width: 768px) 100vw, 50vw"
+                sizes="(min-width: 1200px) 584px, (min-width: 768px) calc((100vw - 32px) / 2), calc(100vw - 32px)"
+                preload
                 className="object-cover"
               />
             ) : (

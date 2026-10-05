@@ -52,7 +52,13 @@ export function Table({ dataKey, columns, className }: TableComponentProps) {
         </TableHeader>
         <TableBody>
           {data.map((row: Record<string, unknown>, rowIndex: number) => (
-            <TableRow key={row?.[columns[0]?.key] != null ? String(row[columns[0].key]) : rowIndex}>
+            <TableRow
+              key={
+                row?.[columns[0]?.key] != null
+                  ? String(row[columns[0].key])
+                  : rowIndex
+              }
+            >
               {columns.map((col) => (
                 <TableCell key={col.key}>
                   {row?.[col.key] != null ? String(row[col.key]) : ""}

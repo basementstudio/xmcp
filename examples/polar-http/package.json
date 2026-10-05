@@ -4,7 +4,7 @@
   "private": true,
   "description": "An xmcp server with tool paywalled by Polar",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "build": "xmcp build",

@@ -12,14 +12,18 @@ export function Image({
   className,
 }: ImageProps) {
   const stateValue = useUiState(srcKey ?? "");
-  const resolvedSrc = srcKey ? (stateValue != null ? String(stateValue) : undefined) : src;
+  const resolvedSrc = srcKey
+    ? stateValue != null
+      ? String(stateValue)
+      : undefined
+    : src;
 
   if (!resolvedSrc) {
     return (
       <div
         className={cn(
           "flex items-center justify-center rounded-[calc(var(--radius)-0.2rem)] border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-4 text-sm text-[hsl(var(--muted-foreground))]",
-          className,
+          className
         )}
         style={{ width, height }}
       >
@@ -36,11 +40,10 @@ export function Image({
       alt={alt ?? ""}
       width={width}
       height={height}
-      className={cn(
-        "rounded-[calc(var(--radius)-0.2rem)]",
-        className,
-      )}
-      {...(!hasAlt ? { role: "presentation" as const, "aria-hidden": true } : {})}
+      className={cn("rounded-[calc(var(--radius)-0.2rem)]", className)}
+      {...(!hasAlt
+        ? { role: "presentation" as const, "aria-hidden": true }
+        : {})}
     />
   );
 }

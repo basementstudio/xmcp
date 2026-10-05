@@ -4,6 +4,7 @@ export const LogoButton = () => {
   return (
     <Link
       href="/"
+      prefetch={false}
       className="absolute left-4 top-1/2 -translate-y-1/2 z-200 size-6 md:size-8 hover:opacity-80 transition-opacity"
       aria-label="Home"
     >

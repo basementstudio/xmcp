@@ -36,9 +36,13 @@ reference resource already wired up:
 npx create-xmcp-app@latest my-ui-server --ui-kit --yes
 ```
 
+You can also run the interactive command and select **MCP App with UI kit**.
+The starter puts `globals.css` at the project root, matching the Tailwind MCP
+App template. Import that stylesheet from your tool files.
+
 Import the package stylesheet once:
 
-```css title="src/app/globals.css"
+```css title="globals.css"
 @import "tailwindcss";
 @import "@xmcp-dev/ui/styles.css";
 
@@ -96,6 +100,13 @@ export default renderJsonTool.handler;
 Use `"http"` to require direct HTTP. The same option exists on `Rendered` and
 `App`.
 
+Direct HTTP uses the MCP SDK to negotiate modern or legacy servers and correlate
+JSON and SSE responses. Connections are shared within an app and closed when
+it unmounts or switches to the host. Stateless servers remain stateless; when a
+server issues a session, the client reuses it and requests its deletion during
+cleanup. If a session expires, the failed tool call is not replayed: the next
+user action opens a new connection.
+
 ## Constrain model-provided endpoints
 
 An AppSchema can include `mcpServerUrl` and `mcpHeaders`. When the schema comes
@@ -116,8 +127,8 @@ export default renderJsonTool.handler;
 
 `serverUrl` ignores the schema's `mcpServerUrl`. `allowedOrigins` renders a
 visible error if the effective origin is not allowed. The renderer always
-rejects non-HTTP(S) endpoints and drops invalid, transport-reserved, or unsafe
-header entries before calling `fetch`.
+rejects non-HTTP(S) endpoints, embedded credentials, and redirects. It drops
+invalid, transport-reserved, or unsafe header entries before calling `fetch`.
 
 ## What the packaged path does for you
 

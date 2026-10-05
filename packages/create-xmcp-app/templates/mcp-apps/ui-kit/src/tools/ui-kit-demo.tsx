@@ -18,7 +18,7 @@ import {
 } from "@xmcp-dev/ui";
 import { type ToolMetadata } from "xmcp";
 
-import "../globals.css";
+import "../../globals.css";
 
 export const metadata: ToolMetadata = {
   name: "uiKitDemo",

@@ -1,0 +1,106 @@
+---
+title: "Request Context"
+metadataTitle: "Request Context | xmcp Documentation"
+description: "Access request metadata, share local values, and report progress from MCP handlers, middleware, and their async helpers."
+---
+
+Use `getRequestContext()` inside a tool, prompt, resource, MCP middleware, or their async helpers to read the current request without passing extra arguments through each function.
+
+```typescript title="src/tools/request-context.ts"
+import { getRequestContext } from "xmcp";
+
+async function describeRequest() {
+  const context = getRequestContext();
+  await Promise.resolve();
+  context.signal.throwIfAborted();
+
+  return {
+    clientInfo: context.clientInfo ?? null,
+    httpRequestId: context.http?.id ?? null,
+    requestLabel: context.http?.headers["x-request-label"] ?? null,
+  };
+}
+
+export default async function requestContext() {
+  return { structuredContent: await describeRequest() };
+}
+```
+
+The context stays with the operation's async execution and is isolated from concurrent requests. [MCP middleware](/docs/core-concepts/middlewares#mcp-middleware) shares the same scope before and after `next()`. The scope also includes resource template listing callbacks and prompt or resource completion callbacks. This accessor is not available at module initialization or in Express middleware. Calling it outside an MCP operation throws a descriptive error.
+
+## Available fields
+
+The exported `RequestContext` type contains:
+
+| Field          | Meaning                                                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. For tools, uses the same identity as `extra.clientInfo`.     |
+| `http.id`      | xmcp's generated HTTP request ID. This is separate from the JSON-RPC message ID.                                                                 |
+| `http.headers` | A read-only copy of the current HTTP headers. Values can be strings, arrays of strings, or `undefined`. Standard HTTP header keys are lowercase. |
+| `signal`       | The original SDK `AbortSignal`, also supplied as `extra.signal` for tools.                                                                       |
+
+`http` is absent on STDIO. Check that it exists before using HTTP-specific data. Client information can be absent on either transport when the client does not supply it.
+
+The context object, client information, HTTP details, and header arrays are frozen. The methods below manage separate request-local values; they do not modify this metadata or change handler arguments. The cancellation signal remains live: pass it to operations such as `fetch(url, { signal })` or check `signal.throwIfAborted()` during work. Cancellation delivery follows the underlying transport's behavior.
+
+## Request-local values
+
+Use `context.set(key, value)` and `context.get<T>(key)` to share values between a handler, its middleware, and async helpers. Keys can be strings or symbols. Setting an existing key replaces its value; reading an unset key returns `undefined`.
+
+```typescript title="src/tools/request-count.ts"
+import { getRequestContext } from "xmcp";
+
+const countKey = Symbol("count");
+
+async function incrementCount() {
+  const context = getRequestContext();
+  const count = (context.get<number>(countKey) ?? 0) + 1;
+  context.set(countKey, count);
+  await context.progress(count, 2);
+}
+
+export default async function requestCount() {
+  const context = getRequestContext();
+  context.set(countKey, 0);
+  await incrementCount();
+  await incrementCount();
+  return { structuredContent: { count: context.get<number>(countKey) } };
+}
+```
+
+Values belong to one MCP operation. Concurrent calls, later requests on the same connection, and each retry of a multi-round tool start with an empty store. Local values are not a session or a substitute for the protocol's `requestState`. Values are stored by reference, and the generic type parameter on `get<T>()` is a TypeScript cast, not runtime validation.
+
+## Progress notifications
+
+`await context.progress(value, total?)` sends a `notifications/progress` notification associated with the current request's `_meta.progressToken`. If no token was supplied, it resolves without sending anything. A token of `0` or an empty string is valid; the optional total is included only when supplied.
+
+An SDK client can opt in through its `callTool` request options:
+
+```typescript
+const result = await client.callTool(
+  { name: "request-count", arguments: {} },
+  {
+    onprogress: ({ progress, total }) => {
+      console.log(`${progress}/${total ?? "unknown"}`);
+    },
+  }
+);
+```
+
+The SDK creates and routes the progress token for this callback. Await progress calls so their notifications are sent before the tool result. Progress works over HTTP and STDIO in both supported protocol modes without adding server-side sessions. Send increasing progress values, and keep them at or below the total when it is known.
+
+## Log notifications
+
+`await context.log(level, data)` delegates to the SDK's request-scoped MCP logger. Supported levels are `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, and `emergency`. Data can be any JSON-serializable value.
+
+The helper resolves without sending when the server has no logging capability, or when the SDK's level filter suppresses the message. xmcp's default server does not enable MCP logging, so `log()` is a no-op in the default setup. It does not change capabilities or write to the process console. When logging is enabled by the server integration, the SDK applies the legacy connection's logging level or the modern request's log-level metadata.
+
+For both notification helpers, actual transport failures still reject their promises.
+
+## Client identity on stateless HTTP
+
+Modern clients can supply identity in the protocol's per-request metadata. For legacy HTTP clients, repeat `x-mcp-client-name` and `x-mcp-client-version` on each request that needs identity. Optional headers are `x-mcp-client-title`, `x-mcp-client-website-url`, and `x-mcp-client-description`.
+
+The accessor does not retain metadata from an earlier `initialize` request. STDIO can use the identity negotiated for its connection. Client identity is supplied by the client; it is not authentication information.
+
+See the runnable [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport) for a tool and a curl request using the accessor.

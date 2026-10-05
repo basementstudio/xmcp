@@ -83,3 +83,18 @@ export function resolveTemplatePreviewImage({
     isNextJsFallback: fallbackSrc === NEXTJS_FALLBACK_SRC,
   };
 }
+
+/** Keep arbitrary template-hosted images working without broadening the optimizer allowlist. */
+export function shouldBypassImageOptimization(src: string): boolean {
+  if (/\.svg(?:[?#]|$)/i.test(src)) return true;
+  if (src.startsWith("/") && !src.startsWith("//")) return false;
+  try {
+    const url = new URL(src);
+    return ![
+      "raw.githubusercontent.com",
+      "avatars.githubusercontent.com",
+    ].includes(url.hostname);
+  } catch {
+    return true;
+  }
+}

@@ -1,13 +1,21 @@
 import type { ComponentType } from "../schema/types.js";
 import type { ComponentType as ReactComponentType } from "react";
 
-const registry = new Map<ComponentType, ReactComponentType<Record<string, unknown>>>();
+const registry = new Map<
+  ComponentType,
+  ReactComponentType<Record<string, unknown>>
+>();
 
-export function registerComponent(type: ComponentType, component: ReactComponentType<Record<string, unknown>>) {
+export function registerComponent(
+  type: ComponentType,
+  component: ReactComponentType<Record<string, unknown>>
+) {
   registry.set(type, component);
 }
 
-export function getComponent(type: ComponentType): ReactComponentType<Record<string, unknown>> | undefined {
+export function getComponent(
+  type: ComponentType
+): ReactComponentType<Record<string, unknown>> | undefined {
   return registry.get(type);
 }
 

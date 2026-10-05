@@ -17,7 +17,11 @@ const variantStyles: Record<string, string> = {
   caption: "text-sm",
 };
 
-export function Text({ content, variant = "body", className: overrideClassName }: TextComponentProps) {
+export function Text({
+  content,
+  variant = "body",
+  className: overrideClassName,
+}: TextComponentProps) {
   const ctx = useContext(UiStateContext);
   const stateValues = ctx?.state.values ?? {};
   const resolvedContent = resolveTemplate(content, stateValues);
@@ -25,7 +29,7 @@ export function Text({ content, variant = "body", className: overrideClassName }
   const className = cn(
     variantStyles[variant] ?? variantStyles.body,
     variant === "caption" ? "text-slate-400" : "text-slate-50",
-    overrideClassName,
+    overrideClassName
   );
 
   switch (variant) {

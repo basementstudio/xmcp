@@ -145,6 +145,47 @@ export const metadata: ToolMetadata = {
 - Defaults to placeholder if not provided
 - Critical for LLM tool discovery and selection
 
+### Icons, tags, and availability
+
+`ToolMetadata` accepts optional `icons`, `tags`, and `enabled` fields:
+
+```typescript
+import type { ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "An example tool",
+  icons: [
+    {
+      src: "https://example.com/icon.png",
+      mimeType: "image/png",
+      sizes: ["48x48"],
+      theme: "dark",
+    },
+  ],
+  tags: ["example"],
+  enabled: true,
+};
+```
+
+Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
+and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
+Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
+When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
+Tags alone do not change availability. Use
+[component visibility rules](/docs/configuration/components) to include or exclude
+components by name or tag in `xmcp.config.ts`.
+
+Tools are enabled by default. Set `enabled: false` to skip registration: the
+tool is absent from `tools/list`, and `tools/call` returns a not-found error.
+Its generated MCP Apps UI resource is also unavailable.
+
+Availability is evaluated during server setup; modules are still imported.
+Rebuild and restart the server after changing metadata in production.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+demonstrates icons, tags, and a disabled experimental tool.
+
 ### Annotations
 
 Behavioral hints that help LLMs and UIs understand how to use your tool:
@@ -311,6 +352,148 @@ export default async function previewElicitation(
 4. Call `preview-elicitation`.
 5. MCPJam opens a small form with an environment select. Accepting returns `action: "accept"` plus `content.environment`. Cancel or decline returns the matching `action`.
 
+<Callout type="info">
+  `extra.elicit()` uses server-initiated requests, which exist on 2025-era MCP
+  connections only. On protocol revision `2026-07-28` it throws with a message
+  pointing at `inputRequired()` below — the multi round-trip replacement that
+  works on both eras.
+</Callout>
+
+### Multi round-trip input (`inputRequired`)
+
+Protocol revision `2026-07-28` replaces server-initiated requests with
+[multi round-trip requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr):
+the tool returns an `input_required` result describing what it needs, the
+client collects it, and retries the same tool call with `inputResponses`
+attached. xmcp re-exports the SDK helpers, so a tool that needs user input
+before continuing looks like this:
+
+```typescript title="src/tools/preview-input-required.ts"
+import { z } from "zod";
+import {
+  acceptedContent,
+  inputRequired,
+  type InferSchema,
+  type ToolExtraArguments,
+} from "xmcp";
+
+export const schema = {
+  theme: z.string().describe("The theme to apply"),
+};
+
+export const metadata = {
+  name: "preview-input-required",
+  description: "Ask the user to confirm before applying a theme",
+};
+
+export default async function previewInputRequired(
+  { theme }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const answer = acceptedContent<{ confirmed: boolean }>(
+    extra.inputResponses,
+    "confirmation"
+  );
+
+  if (!answer) {
+    return inputRequired({
+      inputRequests: {
+        confirmation: inputRequired.elicit({
+          message: `Apply the "${theme}" theme?`,
+          requestedSchema: {
+            type: "object",
+            properties: {
+              confirmed: { type: "boolean", title: "Confirm" },
+            },
+            required: ["confirmed"],
+          },
+        }),
+      },
+    });
+  }
+
+  return answer.confirmed
+    ? `Theme "${theme}" applied.`
+    : `Theme change cancelled.`;
+}
+```
+
+The handler runs once per round: the first call returns the embedded
+elicitation, the retry finds the answer in `extra.inputResponses` and
+completes. On 2025-era connections the SDK's legacy shim converts the
+`inputRequired` return into a real elicitation request automatically, so the
+same tool serves both client generations. To carry server state across rounds
+(remember: it round-trips through the client), mint and verify it with
+`createRequestStateCodec`, also re-exported from `xmcp`.
+
+### Sampling
+
+Use `extra.sample()` when a tool needs an LLM completion from the connected client. The client keeps control of model access, selection, and permissions, so the server needs no model API key. Sampling only works when the connected client advertises the `sampling` capability; other clients reject the request.
+
+The request takes `messages` (text, image, or audio content), a required `maxTokens`, and optional `systemPrompt`, `modelPreferences` (model hints plus cost/speed/intelligence priorities), `temperature`, `stopSequences`, `includeContext`, and `metadata`. The result contains the `model` the client picked, the assistant `content`, and an optional `stopReason`.
+
+```typescript title="src/tools/preview-sampling.ts"
+import { z } from "zod";
+import {
+  type InferSchema,
+  type ToolExtraArguments,
+  type ToolMetadata,
+} from "xmcp";
+
+export const schema = {
+  text: z.string().describe("Text for the client's model to summarize"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "preview-sampling",
+  description: "Preview a basic extra.sample() flow in MCPJam",
+  annotations: {
+    title: "Preview sampling",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+export default async function previewSampling(
+  { text }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const result = await extra.sample({
+    messages: [
+      {
+        role: "user",
+        content: { type: "text", text: `Summarize in one sentence:\n${text}` },
+      },
+    ],
+    systemPrompt: "You summarize text concisely.",
+    modelPreferences: {
+      speedPriority: 0.8,
+    },
+    maxTokens: 200,
+  });
+
+  return JSON.stringify(result, null, 2);
+}
+```
+
+#### Quick check with MCPJam
+
+1. From the repo root, run `pnpm --dir examples/http-transport dev`.
+2. In another terminal, run `npx @mcpjam/inspector@latest`.
+3. Connect MCPJam to `http://127.0.0.1:3001/mcp`.
+4. Call `preview-sampling` with any text.
+5. MCPJam shows the incoming sampling request for approval. Approving runs the completion with its configured model and the tool returns the `model`, `content`, and `stopReason` from the result.
+
+<Callout type="info">
+  Like `extra.elicit()`, `extra.sample()` uses server-initiated requests, which
+  exist on 2025-era MCP connections only. On protocol revision `2026-07-28` it
+  throws with a message pointing at `inputRequired.createMessage()` — the multi
+  round-trip replacement described above. Sampling with `tools`/`toolChoice` and
+  task-augmented sampling are not wired through xmcp yet and are rejected with a
+  clear error.
+</Callout>
+
 ### 2. Template Literal Handlers
 
 Return HTML directly to create interactive widgets. xmcp automatically generates
@@ -461,6 +644,68 @@ export default async function getProfile() {
 - `image` - Base64-encoded images with mimeType
 - `audio` - Base64-encoded audio with mimeType
 - `resource_link` - Links to MCP resources
+- `resource` - Embedded text or binary resources
+
+### Media helpers
+
+Use `image`, `audio`, and `embeddedResource` to build content blocks from bytes
+or text. Put the returned blocks in a tool's `content` array; they also work as
+prompt message content.
+
+```typescript title="src/tools/media-preview.ts"
+import { image, embeddedResource } from "xmcp";
+
+export default function mediaPreview() {
+  const png = Uint8Array.from(
+    atob(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    ),
+    (character) => character.charCodeAt(0)
+  );
+  return {
+    content: [
+      { type: "text", text: "A one-pixel image" },
+      image(png, "image/png"),
+      embeddedResource("note://pixel", "A one-pixel PNG", "text/plain"),
+    ],
+  };
+}
+```
+
+| Helper                                      | Input                                         | Result                                        |
+| ------------------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| `image(bytes, mimeType)`                    | `Uint8Array`, Node `Buffer`, or `ArrayBuffer` | An image block with base64 `data`             |
+| `audio(bytes, mimeType)`                    | The same byte types                           | An audio block with base64 `data`             |
+| `embeddedResource(uri, content, mimeType?)` | A string or the same byte types               | A resource block with `text` or base64 `blob` |
+
+Pass raw bytes to `image` and `audio`, with an explicit MIME type. They encode
+the bytes without detecting or converting the media format. Byte views encode
+only their visible range. `embeddedResource` keeps strings as text and does not
+register the URI in the server's resource catalog.
+
+On Cloudflare Workers, import the same helpers from `xmcp/cloudflare`. They use
+Web APIs without depending on `Buffer` or the filesystem. See the runnable
+[Cloudflare Workers example](https://github.com/basementstudio/xmcp/tree/main/examples/cloudflare-workers).
+
+#### Files in Node
+
+The `xmcp/node` entry provides asynchronous file-reading helpers:
+
+```typescript title="src/tools/chart.ts"
+import { imageFromFile } from "xmcp/node";
+
+export default async function chart() {
+  return { content: [await imageFromFile("assets/chart.png", "image/png")] };
+}
+```
+
+Supply an existing file path (relative to the running process's working
+directory) or a `file:` URL. `audioFromFile(path, mimeType)` reads audio in the
+same way. `embeddedResourceFromFile(path, uri, mimeType?)` always returns a
+base64 resource blob, including for text files. For a text resource, pass the
+decoded text to `embeddedResource` instead. File-reading errors propagate to
+the caller. Include these files when deploying your application; xmcp does not
+copy them into the compiled output.
 
 ### Structured Outputs
 

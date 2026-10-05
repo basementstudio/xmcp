@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { SITE_URL } from "@/lib/base-url";
-import { fetchTemplates } from "@/app/templates/utils/github";
+import { getTemplates } from "@/app/templates/utils/content";
 import { TemplatesListing } from "@/components/templates/listing";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TemplatesPage() {
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
   const categories = collectUniqueCategories(templates);
 
   return (

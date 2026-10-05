@@ -1,6 +1,6 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import express from "express";
+import { createServer as createHttpServer } from "node:http";
+import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
+import { toNodeHandler } from "@modelcontextprotocol/node";
 import { z } from "zod";
 
 function createServer() {
@@ -9,30 +9,20 @@ function createServer() {
     "add",
     {
       description: "Add two numbers",
-      inputSchema: { a: z.number(), b: z.number() },
+      inputSchema: z.object({ a: z.number(), b: z.number() }),
     },
     async ({ a, b }) => ({ content: [{ type: "text", text: `${a + b}` }] })
   );
   server.registerTool(
     "echo",
-    { description: "Echo text", inputSchema: { value: z.string() } },
+    {
+      description: "Echo text",
+      inputSchema: z.object({ value: z.string() }),
+    },
     async ({ value }) => ({ content: [{ type: "text", text: value }] })
   );
   return server;
 }
 
-const app = express();
-app.use(express.json());
-app.post("/mcp", async (req, res) => {
-  const server = createServer();
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
-  res.on("close", () => {
-    void transport.close();
-    void server.close();
-  });
-  await server.connect(transport);
-  await transport.handleRequest(req, res, req.body);
-});
-app.listen(3015, "127.0.0.1");
+const handler = createMcpHandler(createServer, { legacy: "stateless" });
+createHttpServer(toNodeHandler(handler)).listen(3015, "127.0.0.1");

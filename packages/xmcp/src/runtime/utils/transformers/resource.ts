@@ -1,9 +1,7 @@
 import {
   ReadResourceResult,
-  ServerRequest,
-  ServerNotification,
-} from "@modelcontextprotocol/sdk/types";
-import { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/protocol";
+  ServerContext,
+} from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
 import {
   composeUriFromPath,
@@ -15,7 +13,7 @@ import {
  */
 export type UserResourceHandler = (
   args: ZodRawShape,
-  extra?: RequestHandlerExtra<ServerRequest, ServerNotification>
+  extra?: ServerContext
 ) => ReadResourceResult | string | Promise<ReadResourceResult | string>;
 
 /**
@@ -23,7 +21,7 @@ export type UserResourceHandler = (
  */
 export type McpResourceHandler = (
   uri: URL,
-  extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+  extra: ServerContext
 ) => ReadResourceResult | Promise<ReadResourceResult>;
 
 /**
@@ -55,7 +53,7 @@ export function transformResourceHandler(
 
   return async (
     uri: URL,
-    extra: RequestHandlerExtra<ServerRequest, ServerNotification>
+    extra: ServerContext
   ): Promise<ReadResourceResult> => {
     // extract and validate parameters from the actual URI using the template and schema
     const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);

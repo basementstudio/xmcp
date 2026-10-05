@@ -8,11 +8,12 @@ description: "Resources are application-driven, read-only data sources that prov
 
 `xmcp` automatically detects and registers files under the `/src/resources/` directory as resources. This path can be configured in your `xmcp.config.ts` file.
 
-Each resource file should export three elements:
+Resource files can export:
 
 - **Schema**: Input parameters defined using Zod schemas
 - **Metadata**: The resource's identity and behavior configuration
 - **Default**: The resource handler function
+- **Complete** (optional): Suggestions for dynamic URI parameters
 
 There are two types of resources: **static** and **dynamic**. When creating resources, it's important to understand how the folder structure determines the resource URI.
 
@@ -73,6 +74,64 @@ export default function handler({ userId }: InferSchema<typeof schema>) {
 }
 ```
 
+## Resource-template completion
+
+Export a `complete` object from a dynamic resource file to suggest values for
+its URI parameters. Each key matches a bracketed parameter in the file path.
+Callbacks receive the current input string and optional context containing
+other arguments the client has already entered. Return a string array, or a
+promise of one; the callback decides how to filter suggestions.
+
+```typescript title="src/resources/(teams)/[team]/[member]/index.ts"
+import type { ResourceCompletions } from "xmcp";
+
+export const complete: ResourceCompletions = {
+  team: (value) =>
+    ["engineering", "sales"].filter((team) => team.startsWith(value)),
+  member: async (value, context) => {
+    const names =
+      context?.arguments?.team === "engineering" ? ["ada", "alan"] : ["sam"];
+    return names.filter((name) => name.startsWith(value));
+  },
+};
+
+export default function member({
+  team,
+  member,
+}: {
+  team: string;
+  member: string;
+}) {
+  return `Profile for ${member} on ${team}`;
+}
+```
+
+Clients request `completion/complete` with the exact URI template returned by
+`resources/templates/list`, retaining `{parameter}` placeholders:
+
+```json
+{
+  "ref": { "type": "ref/resource", "uri": "teams://{team}/{member}" },
+  "argument": { "name": "member", "value": "a" },
+  "context": { "arguments": { "team": "engineering" } }
+}
+```
+
+This returns suggestions `ada` and `alan`. Context is supplied by the current
+request; it is not stored between calls. Unknown parameters and parameters
+without a callback return an empty list when completion is enabled. Callback
+keys outside the URI template are ignored, as is `complete` on static resources.
+Servers with no completion callbacks keep completion disabled.
+
+Responses contain at most 100 suggestions, preserving callback order. The SDK
+reports `total` and `hasMore` if the callback returns more. Completion does not
+restrict subsequent resource reads; keep validation in your schema or handler.
+Prompt argument completion through `completable()` continues to work alongside
+resource completion.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+includes user ID completion and a runnable request.
+
 ## References
 
 ### Schema (optional)
@@ -94,6 +153,48 @@ The metadata object provides:
 - **Description**: Brief explanation of what the resource does
 - **MimeType**: The MIME type of the resource
 - **Size**: The size of the resource
+
+### Icons, tags, and availability
+
+`ResourceMetadata` accepts optional `icons`, `tags`, and `enabled` fields:
+
+```typescript
+import type { ResourceMetadata } from "xmcp";
+
+export const metadata: ResourceMetadata = {
+  name: "app-config",
+  description: "An example resource",
+  icons: [
+    {
+      src: "https://example.com/icon.png",
+      mimeType: "image/png",
+      sizes: ["48x48"],
+      theme: "dark",
+    },
+  ],
+  tags: ["example"],
+  enabled: true,
+};
+```
+
+Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
+and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
+Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
+When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
+Tags alone do not change availability. Use
+[component visibility rules](/docs/configuration/components) to include or exclude
+components by name or tag in `xmcp.config.ts`.
+
+Static resources and resource templates are enabled by default. Set
+`enabled: false` to skip registration: the resource is absent from
+`resources/list` or `resources/templates/list`, and `resources/read` returns a
+not-found error for its URI. These options are identical for both resource types.
+
+Availability is evaluated during server setup; modules are still imported.
+Rebuild and restart the server after changing metadata in production.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+demonstrates icons, tags, and a disabled experimental tool.
 
 ### Implementation (required)
 

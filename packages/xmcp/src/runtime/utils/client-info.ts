@@ -1,7 +1,7 @@
 import type { JsonRpcMessage } from "@/runtime/transports/http/base-streamable-http";
 import type { HttpHeaders } from "@/runtime/contexts/http-request-context";
 import type { McpClientInfo } from "@/types/client-info";
-import type { Implementation } from "@modelcontextprotocol/sdk/types";
+import type { Implementation } from "@modelcontextprotocol/server";
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === "object" && value !== null && !Array.isArray(value);

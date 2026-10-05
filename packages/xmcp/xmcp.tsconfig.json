@@ -25,6 +25,8 @@
     "src/cloudflare.ts",
     "src/host-bridge.ts",
     "src/index.ts",
+    "src/node.ts",
+    "src/client.ts",
     "src/config/**/*.ts",
     "src/runtime/headers.ts"
   ]

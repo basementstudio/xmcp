@@ -18,7 +18,10 @@ export function Grid({
     <BaseGrid
       columns={columns}
       gap={gap}
-      className={["rounded-xl border border-slate-800/80 bg-slate-900/40 p-4", className]
+      className={[
+        "rounded-xl border border-slate-800/80 bg-slate-900/40 p-4",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
     >

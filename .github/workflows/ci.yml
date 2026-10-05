@@ -10,6 +10,31 @@ env:
   SKIP_CLI_TESTS: true
 
 jobs:
+  e2e-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @xmcp-dev/e2e typecheck
+      - run: pnpm --filter @xmcp-dev/e2e test:unit
+      - run: pnpm --filter @xmcp-dev/e2e test:fast
+      - name: Upload failed fixture logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-conformance-logs
+          path: packages/e2e/.work/**/*.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+
   changeset-check:
     # Flags a PR that edits a releasable package without adding a changeset.
     # Only packages/** counts — the website and examples are private, so
@@ -30,7 +55,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "pnpm"
 
       - name: Install dependencies
@@ -82,7 +107,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "pnpm"
 
       - name: Install dependencies
@@ -96,7 +121,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
 
     steps:
       - name: Checkout code
@@ -118,6 +143,13 @@ jobs:
 
       - name: Build main packages only
         run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui
+
+      - name: Test xmcp runtime and compiler behavior
+        run: |
+          pnpm --filter xmcp test:config
+          pnpm --filter xmcp test:adapters
+          pnpm --filter xmcp test:runtime
+          pnpm --filter @xmcp-dev/compiler typecheck
 
       - name: Lint packages (if available)
         run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui || echo "No lint script available, skipping..."
@@ -299,7 +331,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
           cache: "pnpm"
 
       - name: Verify lockfile and install dependencies

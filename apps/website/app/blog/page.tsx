@@ -85,8 +85,14 @@ export default function BlogPage() {
         {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 col-span-12">
-          {regularPosts.map((post: BlogPost) => (
-            <BlogCard key={post.slug} post={post} />
+          {regularPosts.map((post: BlogPost, index: number) => (
+            <BlogCard
+              key={post.slug}
+              post={post}
+              // The first desktop row is visible below the featured post.
+              loading={index < 3 ? "eager" : "lazy"}
+              sizes="(min-width: 1200px) 368px, (min-width: 1024px) calc((100vw - 96px) / 3), (min-width: 768px) calc((100vw - 64px) / 2), calc(100vw - 32px)"
+            />
           ))}
 
           {regularPosts.length === 0 && !featuredPost && (

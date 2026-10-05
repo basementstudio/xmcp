@@ -1,5 +1,9 @@
+import {
+  createMcpHandler,
+  preloadSchemas,
+  type AuthInfo,
+} from "@modelcontextprotocol/server";
 import { createServer } from "@/runtime/utils/server";
-import { WebStatelessHttpTransport } from "@/runtime/transports/http/web-stateless-http";
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 import homeTemplate from "../../templates/home";
@@ -7,7 +11,6 @@ import homeTemplate from "../../templates/home";
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
 import type { Env, ExecutionContext } from "./types";
 import type { WebMiddleware, WebMiddlewareContext } from "@/types/middleware";
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
 
 const httpConfig = HTTP_CONFIG as {
   port: number;
@@ -109,13 +112,25 @@ function log(message: string, ...args: unknown[]): void {
   }
 }
 
+// Warm up the SDK's schema validators at isolate start instead of on the
+// first request.
+preloadSchemas();
+
+// A fresh McpServer is built per request; no state survives between requests.
+// responseMode "json" preserves the Worker's JSON-only response semantics.
+const mcpHandler = createMcpHandler(createServer, {
+  legacy: "stateless",
+  responseMode: "json",
+  onerror: (error) => log("MCP handler error:", error),
+});
+
 /**
  * Handle MCP requests
  */
 async function handleMcpRequest(
   request: Request,
   requestOrigin: string | null,
-  ctx: ExecutionContext,
+  _ctx: ExecutionContext,
   authInfo?: AuthInfo
 ): Promise<Response> {
   const requestId = crypto.randomUUID();
@@ -125,55 +140,42 @@ async function handleMcpRequest(
     .catch(() => undefined);
   const clientInfo = extractClientInfoFromMessages(requestPayload);
 
-  // Use the http request context provider to maintain request isolation
-  return new Promise<Response>((resolve) => {
-    // Convert Web Request headers to a format compatible with httpRequestContext
-    const headers: Record<string, string | string[] | undefined> = {};
-    request.headers.forEach((value, key) => {
-      headers[key] = value;
-    });
-
-    httpRequestContextProvider(
-      { id: requestId, headers, clientInfo },
-      async () => {
-        let server: Awaited<ReturnType<typeof createServer>> | null = null;
-        let transport: WebStatelessHttpTransport | null = null;
-
-        try {
-          server = await createServer();
-          transport = new WebStatelessHttpTransport(httpConfig.debug);
-
-          await server.connect(transport);
-          const response = await transport.handleRequest(request, authInfo);
-
-          resolve(addCorsHeaders(response, requestOrigin));
-        } catch (error) {
-          console.error("[Cloudflare-MCP] Error handling MCP request:", error);
-          const errorResponse = new Response(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              error: {
-                code: -32603,
-                message: "Internal server error",
-              },
-              id: null,
-            }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-          resolve(addCorsHeaders(errorResponse, requestOrigin));
-        } finally {
-          if (server && transport) {
-            ctx.waitUntil(
-              Promise.allSettled([transport.close(), server.close()])
-            );
-          }
-        }
-      }
-    );
+  // Convert Web Request headers to a format compatible with httpRequestContext
+  const headers: Record<string, string | string[] | undefined> = {};
+  request.headers.forEach((value, key) => {
+    headers[key] = value;
   });
+
+  // Use the http request context provider to maintain request isolation
+  return httpRequestContextProvider(
+    { id: requestId, headers, clientInfo },
+    async () => {
+      try {
+        const response = await mcpHandler.fetch(request, {
+          authInfo,
+          parsedBody: requestPayload,
+        });
+        return addCorsHeaders(response, requestOrigin);
+      } catch (error) {
+        console.error("[Cloudflare-MCP] Error handling MCP request:", error);
+        const errorResponse = new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            error: {
+              code: -32603,
+              message: "Internal server error",
+            },
+            id: null,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        return addCorsHeaders(errorResponse, requestOrigin);
+      }
+    }
+  );
 }
 
 /**

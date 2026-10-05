@@ -17,6 +17,8 @@ export interface Context<T extends DefaultContext> {
 
 interface CreateContextOptions {
   name: string;
+  /** Allow reads outside the async scope to use the last provided value. */
+  fallback?: boolean;
 }
 
 const setGlobalContext = <T>(key: symbol, context: T) => {
@@ -46,6 +48,7 @@ const getGlobalContext = <T>(key: symbol): T => {
  */
 export function createContext<T extends Object>({
   name,
+  fallback = true,
 }: CreateContextOptions): Context<T> {
   const storageKey = Symbol.for(`xmcp-context-${name}`);
   const fallbackKey = Symbol.for(`xmcp-context-${name}-fallback-store`);
@@ -67,7 +70,7 @@ export function createContext<T extends Object>({
       return store;
     }
 
-    if (fallbackStoreWrapper.current) {
+    if (fallback && fallbackStoreWrapper.current) {
       return fallbackStoreWrapper.current;
     }
 
@@ -77,7 +80,8 @@ export function createContext<T extends Object>({
   };
 
   const setContext: SetContext<T> = (data) => {
-    const store = context.getStore() ?? fallbackStoreWrapper.current;
+    const store =
+      context.getStore() ?? (fallback ? fallbackStoreWrapper.current : null);
 
     if (!store) {
       throw new Error(
@@ -89,7 +93,7 @@ export function createContext<T extends Object>({
   };
 
   const provider = <R>(initialValue: T, callback: () => R): R => {
-    fallbackStoreWrapper.current = initialValue;
+    if (fallback) fallbackStoreWrapper.current = initialValue;
     return context.run(initialValue, callback);
   };
 

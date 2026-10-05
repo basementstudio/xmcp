@@ -2,12 +2,7 @@ import React from "react";
 import type { LinkProps } from "../../schema/types.js";
 import { Link as BaseLink } from "../../react/index.js";
 
-export function Link({
-  href,
-  label,
-  external = true,
-  className,
-}: LinkProps) {
+export function Link({ href, label, external = true, className }: LinkProps) {
   return (
     <BaseLink
       href={href}

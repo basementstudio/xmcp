@@ -41,6 +41,10 @@ export const corsConfigSchema = corsConfigBaseSchema
       const headers = new Set(result.allowedHeaders);
       headers.add("mcp-session-id");
       headers.add("mcp-protocol-version");
+      // Standard MCP request headers required on Streamable HTTP POSTs since
+      // protocol revision 2026-07-28 (SEP-2243).
+      headers.add("mcp-method");
+      headers.add("mcp-name");
       for (const clientInfoHeaderName of CLIENT_INFO_HEADER_NAMES) {
         headers.add(clientInfoHeaderName);
       }

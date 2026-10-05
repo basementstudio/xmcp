@@ -1,21 +1,24 @@
 import {
-  ElicitRequestFormParamsSchema,
-  ElicitRequestURLParamsSchema,
-  ElicitResultSchema,
-} from "@modelcontextprotocol/sdk/types";
+  SdkError,
+  SdkErrorCode,
+  ServerContext,
+  ElicitRequestFormParams,
+  ElicitRequestURLParams,
+} from "@modelcontextprotocol/server";
 import type {
   ElicitFormField,
   ElicitFormRequest,
   ElicitRequest,
   ElicitResult,
   ElicitUrlRequest,
-  ToolExtraArguments,
   ToolRequestOptions,
 } from "@/types/tool";
 
-type ElicitRequestSender = Pick<ToolExtraArguments, "sendRequest">;
-
-const ALLOWED_FORM_REQUEST_KEYS = new Set(["message", "mode", "requestedSchema"]);
+const ALLOWED_FORM_REQUEST_KEYS = new Set([
+  "message",
+  "mode",
+  "requestedSchema",
+]);
 const ALLOWED_URL_REQUEST_KEYS = new Set([
   "elicitationId",
   "message",
@@ -57,29 +60,43 @@ const ALLOWED_NUMBER_FIELD_KEYS = new Set([
 const ALLOWED_STRING_FORMATS = new Set(["date", "date-time", "email", "uri"]);
 
 export async function elicitFromTool(
-  extra: ElicitRequestSender,
+  ctx: ServerContext,
   request: ElicitRequest,
   options?: ToolRequestOptions
 ): Promise<ElicitResult> {
   const params = normalizeElicitationRequest(request);
-  const result = await extra.sendRequest(
-    { method: "elicitation/create", params },
-    ElicitResultSchema,
-    options
-  );
 
-  return {
-    ...result,
-    content: result.content ?? undefined,
-  };
+  try {
+    const result = await ctx.mcpReq.elicitInput(params, options);
+    return {
+      ...result,
+      content: result.content ?? undefined,
+    };
+  } catch (error) {
+    if (
+      error instanceof SdkError &&
+      error.code === SdkErrorCode.MethodNotSupportedByProtocolVersion
+    ) {
+      throw new Error(
+        "extra.elicit() is not available on protocol revision 2026-07-28: " +
+          "server-initiated elicitation was replaced by multi round-trip " +
+          "requests. Return inputRequired({ ... }) from the tool handler " +
+          "instead (re-exported from xmcp); the client fulfils the embedded " +
+          "requests and retries the tool call."
+      );
+    }
+    throw error;
+  }
 }
 
-function normalizeElicitationRequest(request: ElicitRequest) {
+function normalizeElicitationRequest(
+  request: ElicitRequest
+): ElicitRequestFormParams | ElicitRequestURLParams {
   const mode = request.mode ?? "form";
 
   if (mode === "url") {
     assertValidUrlRequest(request);
-    return ElicitRequestURLParamsSchema.parse(request);
+    return request as ElicitRequestURLParams;
   }
 
   if (mode !== "form") {
@@ -89,10 +106,7 @@ function normalizeElicitationRequest(request: ElicitRequest) {
   }
 
   assertValidFormRequest(request);
-  return ElicitRequestFormParamsSchema.parse({
-    ...request,
-    mode: "form",
-  });
+  return { ...request, mode: "form" } as ElicitRequestFormParams;
 }
 
 function assertValidFormRequest(
@@ -158,7 +172,10 @@ function assertValidUrlRequest(
     request.elicitationId,
     "URL elicitation requires a non-empty elicitationId."
   );
-  assertNonEmptyString(request.url, "URL elicitation requires a non-empty URL.");
+  assertNonEmptyString(
+    request.url,
+    "URL elicitation requires a non-empty URL."
+  );
 
   let parsedUrl: URL;
   try {
@@ -330,11 +347,7 @@ function assertPlainObject(
   value: unknown,
   errorMessage: string
 ): asserts value is Record<string, unknown> {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value)
-  ) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(errorMessage);
   }
 }

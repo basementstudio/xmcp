@@ -1,8 +1,5 @@
 import React from "react";
-import {
-  useUiState,
-  useUiDispatch,
-} from "../../renderer/StateProvider.js";
+import { useUiState, useUiDispatch } from "../../renderer/StateProvider.js";
 import type { AlertProps } from "../../schema/types.js";
 import {
   Alert as BaseAlert,
@@ -34,7 +31,11 @@ export function Alert({
   };
 
   return (
-    <BaseAlert variant={variant} className={className} aria-live={variant === "error" ? "assertive" : "polite"}>
+    <BaseAlert
+      variant={variant}
+      className={className}
+      aria-live={variant === "error" ? "assertive" : "polite"}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <AlertTitle>{titles[variant] ?? titles.info}</AlertTitle>

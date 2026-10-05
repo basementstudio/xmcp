@@ -32,6 +32,15 @@ function getConfig() {
     name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
+      client: {
+        import: path.join(srcPath, "client.ts"),
+        library: { type: "commonjs-static" },
+      },
+      node: {
+        import: path.join(srcPath, "node.ts"),
+        // Static CommonJS exports also support named imports in Node ESM.
+        library: { type: "commonjs-static" },
+      },
       "host-bridge": path.join(srcPath, "host-bridge.ts"),
       cloudflare: path.join(srcPath, "cloudflare.ts"),
       config: path.join(srcPath, "config", "index.ts"),
@@ -55,6 +64,9 @@ function getConfig() {
       },
     },
     module: {
+      // The SDK validator is shared by the root and client entries. Bundle its
+      // lazy import into each entry so consumers can rebundle either file alone.
+      parser: { javascript: { dynamicImportMode: "eager" } },
       rules: [
         {
           test: /\.ts$/,
@@ -101,6 +113,10 @@ function getConfig() {
     },
     plugins: [
       new TsCheckerRspackPlugin(),
+      // The MCP SDK lazy-loads its JSON Schema validator via dynamic import;
+      // keep every entry self-contained instead of emitting async chunks that
+      // break consumers bundling dist files.
+      new rspack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       // add shebang to CLI output
       new rspack.BannerPlugin({
         banner: "#!/usr/bin/env node",

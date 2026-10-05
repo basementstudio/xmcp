@@ -10,9 +10,13 @@ declare module "xmcp/plugins/x402" {
 }
 
 declare module "xmcp/cloudflare" {
+  export const image: typeof import("../runtime/utils/content").image;
+  export const audio: typeof import("../runtime/utils/content").audio;
+  export const embeddedResource: typeof import("../runtime/utils/content").embeddedResource;
   export const apiKeyAuthMiddleware: typeof import("../runtime/platforms/cloudflare/middlewares/api-key").cloudflareApiKeyAuthMiddleware;
   export const jwtAuthMiddleware: typeof import("../runtime/platforms/cloudflare/middlewares/jwt").cloudflareJwtAuthMiddleware;
-  export type JWTAuthMiddlewareConfig = import("../runtime/platforms/cloudflare/middlewares/jwt").CloudflareJWTAuthMiddlewareConfig;
+  export type JWTAuthMiddlewareConfig =
+    import("../runtime/platforms/cloudflare/middlewares/jwt").CloudflareJWTAuthMiddlewareConfig;
   export type WebMiddleware = import("./middleware").WebMiddleware;
 }
 

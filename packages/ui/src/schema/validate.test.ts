@@ -112,7 +112,7 @@ describe("validateSchema", () => {
           type: "stack",
           props: {},
         },
-      }),
+      })
     ).toThrow(/Invalid app schema/);
   });
 
@@ -131,7 +131,7 @@ describe("validateSchema", () => {
             },
           },
         },
-      }),
+      })
     ).toThrow(/javascript: URLs are not allowed/);
   });
 });

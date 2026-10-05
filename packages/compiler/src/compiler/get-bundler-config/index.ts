@@ -5,6 +5,7 @@ import {
   BannerPlugin,
   NormalModuleReplacementPlugin,
   IgnorePlugin,
+  optimize,
   type ResolveAlias,
 } from "@rspack/core";
 import path from "path";
@@ -12,17 +13,20 @@ import {
   distOutputPath,
   adapterOutputPath,
   cloudflareOutputPath,
-  resolveXmcpSrcPath,
   runtimeFolderPath,
 } from "@/utils/constants";
 import { compilerContext } from "@/compiler/compiler-context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getEntries } from "./get-entries";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 import { getInjectedVariables } from "./get-injected-variables";
 import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
-  EmitModulePackageJsonPlugin,
+  EmitPackageJsonTypePlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
@@ -50,13 +54,19 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
-  // ESM output only applies to the plain node server builds: Cloudflare is
-  // already ESM, and adapter output is consumed by the host framework's
-  // own module pipeline.
+  const isFetch = isFetchAdapter(xmcpConfig);
+  // Plain Node servers follow the application module type. Fetch adapters and
+  // Workers always emit ESM so their host bundlers can follow named exports.
+  const projectIsEsm = projectPrefersEsm(processFolder);
   const isEsmOutput =
-    !isCloudflare &&
-    !xmcpConfig.experimental?.adapter &&
-    projectPrefersEsm(processFolder);
+    !isCloudflare && !xmcpConfig.experimental?.adapter && projectIsEsm;
+  const emitModule = isCloudflare || isEsmOutput || isFetch;
+  // Existing Node runtimes are CommonJS, while the generated import registry
+  // uses ESM syntax. Parse both when the host app declares ESM. An
+  // application package.json with "type": "module" would otherwise put the
+  // whole folder under strict ESM parsing. Cloudflare is left alone: its
+  // prebuilt worker is genuinely ESM and is its own entry.
+  const relaxXmcpModuleType = projectIsEsm && !isCloudflare;
   const projectZodPath = path.join(processFolder, "node_modules", "zod");
   const zodAliases: ResolveAlias = fs.existsSync(projectZodPath)
     ? {
@@ -66,19 +76,20 @@ export function getRspackConfig(
       }
     : {};
 
-  const outputPath = isCloudflare
-    ? cloudflareOutputPath
-    : xmcpConfig.experimental?.adapter
-      ? adapterOutputPath
-      : distOutputPath;
+  const outputPath =
+    isCloudflare && !isFetch
+      ? cloudflareOutputPath
+      : xmcpConfig.experimental?.adapter
+        ? adapterOutputPath
+        : distOutputPath;
 
-  const outputFilename = isCloudflare
-    ? "worker.js"
-    : xmcpConfig.experimental?.adapter
-      ? "index.js"
-      : "[name].js";
+  const outputFilename =
+    isCloudflare && !isFetch
+      ? "worker.js"
+      : xmcpConfig.experimental?.adapter
+        ? "index.js"
+        : "[name].js";
 
-  const xmcpSrcPath = isCloudflare ? resolveXmcpSrcPath() : undefined;
   const nodeBuiltins = [
     "assert",
     "buffer",
@@ -138,20 +149,33 @@ export function getRspackConfig(
   const config: RspackOptions = {
     mode,
     watch: mode === "development",
-    devtool: mode === "development" ? "eval-cheap-module-source-map" : false,
+    // Workers reject eval(), and the host needs to process the adapter module.
+    devtool:
+      mode === "development"
+        ? isFetch
+          ? "source-map"
+          : "eval-cheap-module-source-map"
+        : false,
     output: {
       filename: outputFilename,
       path: outputPath,
       globalObject: "globalThis",
-      ...(isCloudflare || isEsmOutput
+      ...(emitModule
         ? {
             library: { type: "module" },
             chunkFormat: "module",
             module: true,
           }
-        : {
-            libraryTarget: "commonjs2",
-          }),
+        : isVercelFunctionBuild(xmcpConfig)
+          ? {
+              // The Vercel entry's default export is the request handler
+              // itself, and the platform reads `module.exports` as the
+              // handler rather than as the entry's module object.
+              library: { type: "commonjs2", export: "default" },
+            }
+          : {
+              libraryTarget: "commonjs2",
+            }),
       clean: {
         keep:
           xmcpConfig.experimental?.adapter || isCloudflare
@@ -160,20 +184,30 @@ export function getRspackConfig(
       },
     },
     target: isCloudflare ? "webworker" : "node",
-    externals: isCloudflare
-      ? { async_hooks: "async_hooks" }
-      : getExternals(isEsmOutput),
+    externals:
+      isCloudflare && !isFetch
+        ? { async_hooks: "async_hooks" }
+        : getExternals(isEsmOutput),
     // The node externals preset emits require() for builtins even in module
     // output; disable it for ESM so getExternals handles builtins through
-    // externalsType node-commonjs (createRequire) instead.
-    ...(isEsmOutput
+    // externalsType node-commonjs (createRequire) instead. Fetch adapters keep
+    // native imports for Vite to resolve on either deployment target.
+    ...(isFetch
       ? {
-          externalsType: "node-commonjs" as const,
-          externalsPresets: { node: false },
+          externalsType: "module" as const,
+          externalsPresets: { node: false, web: false },
         }
-      : {}),
-    experiments: isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
+      : isEsmOutput
+        ? {
+            externalsType: "node-commonjs" as const,
+            externalsPresets: { node: false },
+          }
+        : {}),
+    experiments: emitModule ? { outputModule: true } : undefined,
     resolve: {
+      // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
+      // validator through the "workerd" exports condition.
+      ...(isCloudflare ? { conditionNames: ["workerd", "..."] } : {}),
       fallback: {
         process: false,
         ...(isCloudflare ? nodeBuiltinFallbacks : {}),
@@ -182,15 +216,7 @@ export function getRspackConfig(
         ...nodeBuiltinAliases,
         "xmcp/headers": path.resolve(processFolder, ".xmcp/headers.js"),
         "xmcp/utils": path.resolve(processFolder, ".xmcp/utils.js"),
-        "xmcp/plugins/x402":
-          isCloudflare && xmcpSrcPath
-            ? path.join(xmcpSrcPath, "plugins/x402/index.ts")
-            : path.resolve(processFolder, ".xmcp/x402.js"),
-        ...(isCloudflare && xmcpSrcPath
-          ? {
-              "@": xmcpSrcPath,
-            }
-          : {}),
+        "xmcp/plugins/x402": path.resolve(processFolder, ".xmcp/x402.js"),
         ...zodAliases,
         ...resolveTsconfigPathsToAlias(),
       },
@@ -212,23 +238,34 @@ export function getRspackConfig(
             resource.request = resource.request.replace(/^node:/, "");
           })
         : null,
+      // The MCP SDK lazy-loads its JSON Schema validator via dynamic import;
+      // keep server bundles self-contained instead of emitting async chunks.
+      new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
-      isEsmOutput ? new EmitModulePackageJsonPlugin() : null,
+      isEsmOutput || isFetch ? new EmitPackageJsonTypePlugin("module") : null,
+      // Existing adapters emit CommonJS; pin them so host apps with
+      // "type": "module" don't parse index.js as ESM.
+      xmcpConfig.experimental?.adapter && !isFetch
+        ? new EmitPackageJsonTypePlugin("commonjs")
+        : null,
       new CreateTypeDefinitionPlugin(),
       xmcpConfig.typescript?.skipTypeCheck ? null : new TsCheckerRspackPlugin(),
     ],
     module: {
       rules: [
-        // The prebuilt runtime files copied into .xmcp are CommonJS; when the
-        // application package.json declares "type": "module" they would be
-        // parsed as strict ESM and their require() calls left unresolved.
-        ...(isEsmOutput
+        // Strict ESM parsing of .xmcp breaks the folder three ways: the
+        // prebuilt runtimes' require() calls are left unresolved, their
+        // module.exports assignment goes dead (which strips every export off
+        // the adapter bundle), and externalized user files get ESM default
+        // interop that the host bundler re-resolving them does not apply.
+        // "auto" keeps CommonJS semantics while still allowing the ESM syntax
+        // the generated files use.
+        ...(relaxXmcpModuleType
           ? [
               {
                 test: /\.js$/,
                 include: runtimeFolderPath,
-                exclude: /import-map\.js$/,
-                type: "javascript/dynamic" as const,
+                type: "javascript/auto" as const,
               },
             ]
           : []),

@@ -1,7 +1,11 @@
-import { runtimeFolderPath, resolveXmcpSrcPath } from "@/utils/constants";
+import { runtimeFolderPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import path from "path";
 import { compilerContext } from "@/compiler/compiler-context";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
@@ -9,10 +13,17 @@ export function getEntries(
 ): Record<string, string> {
   const { platforms } = compilerContext.getContext();
 
+  if (isFetchAdapter(xmcpConfig) && xmcpConfig.http) {
+    const runtime = platforms.cloudflare
+      ? "adapter-fetch-cloudflare.js"
+      : "adapter-fetch.js";
+    return { adapter: path.join(runtimeFolderPath, runtime) };
+  }
+
   if (platforms.cloudflare) {
-    const xmcpSrcPath = resolveXmcpSrcPath();
+    // Prebuilt worker runtime copied into .xmcp by InjectRuntimePlugin
     return {
-      worker: path.join(xmcpSrcPath, "runtime/platforms/cloudflare/worker.ts"),
+      worker: path.join(runtimeFolderPath, "cloudflare-worker.js"),
     };
   }
 
@@ -23,7 +34,11 @@ export function getEntries(
   if (xmcpConfig["http"]) {
     // non adapter mode
     if (!xmcpConfig.experimental?.adapter) {
-      entries["http"] = path.join(runtimeFolderPath, "http.js");
+      // Vercel serves the build as a function: it gets the runtime that
+      // exports a handler, where a standalone deployment gets the one that
+      // starts a server of its own.
+      const entryName = isVercelFunctionBuild(xmcpConfig) ? "vercel" : "http";
+      entries[entryName] = path.join(runtimeFolderPath, `${entryName}.js`);
     }
 
     // adapter mode enabled

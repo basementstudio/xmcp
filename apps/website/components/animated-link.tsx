@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 import { forwardRef } from "react";
 import { track } from "@vercel/analytics";
 
-interface AnimatedLinkProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+interface AnimatedLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   children: React.ReactNode;
   className?: string;
@@ -40,6 +39,8 @@ export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
     return (
       <Link
         href={href}
+        // The homepage preloads WebGL assets; do not fetch them on unrelated pages.
+        prefetch={href === "/" ? false : undefined}
         ref={ref}
         {...props}
         className={cn("relative group", className)}

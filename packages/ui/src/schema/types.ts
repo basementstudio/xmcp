@@ -46,7 +46,11 @@ export interface Component {
 
 // ── Actions ───────────────────────────────────────────────────────────
 
-export type Action = CallToolAction | SetStateAction | OpenLinkAction | SetStateBatchAction;
+export type Action =
+  | CallToolAction
+  | SetStateAction
+  | OpenLinkAction
+  | SetStateBatchAction;
 
 export interface CallToolAction {
   type: "call-tool";

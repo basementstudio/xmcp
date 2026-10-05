@@ -1,5 +1,5 @@
 import type { RequestHandler, Router } from "express";
-import type { AuthInfo } from "@modelcontextprotocol/sdk/server/auth/types";
+import type { AuthInfo } from "@modelcontextprotocol/server";
 
 export type RequestHandlerAndRouter = {
   middleware: RequestHandler;

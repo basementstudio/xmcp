@@ -19,8 +19,7 @@ function stripBrokenInternalLinks(source: string): string {
   );
   return inlineReplaced.replace(
     /^\s{0,3}\[([^\]]+)\]:\s+(.+)$/gm,
-    (match, _, url: string) =>
-      BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match
+    (match, _, url: string) => (BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match)
   );
 }
 
@@ -28,7 +27,9 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
       lang: lang as BundledLanguage,
-      theme: xmcpAyuDarkTheme,
+      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      // Match docs: shared code-block styles own the background.
+      defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
           <CodeBlock ref={ref} data-line-numbers {...props}>
@@ -42,7 +43,9 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   } catch {
     return await highlight(code, {
       lang: "plaintext",
-      theme: xmcpAyuDarkTheme,
+      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      // Match docs: shared code-block styles own the background.
+      defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
           <CodeBlock ref={ref} data-line-numbers {...props}>
@@ -91,6 +94,7 @@ function ReadmeImg(props: ComponentProps<"img">) {
       src={src}
       alt={props.alt ?? ""}
       loading="lazy"
+      decoding="async"
       referrerPolicy={isRemote ? "no-referrer" : undefined}
       className="inline-block max-w-full h-auto rounded-xs"
     />

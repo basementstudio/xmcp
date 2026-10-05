@@ -1,5 +1,5 @@
 import { TemplateCard } from "@/components/templates/card";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 
 export function RelatedTemplates({ items }: { items: TemplateItem[] }) {
   if (items.length === 0) {

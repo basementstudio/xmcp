@@ -8,6 +8,8 @@ export const DEFAULT_CORS_CONFIG = {
     "Authorization",
     "mcp-session-id",
     "mcp-protocol-version",
+    "mcp-method",
+    "mcp-name",
     ...CLIENT_INFO_HEADER_NAMES,
   ],
   exposedHeaders: ["Content-Type", "Authorization", "mcp-session-id"],

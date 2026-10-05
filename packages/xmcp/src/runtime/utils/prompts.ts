@@ -1,15 +1,11 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
+import { McpServer } from "@modelcontextprotocol/server";
 import { ZodOptional, ZodType, ZodTypeDef, ZodRawShape } from "zod/v3";
 import { PromptFile } from "./server";
 import { isZodRawShape, pathToName } from "./tools";
 import { transformPromptHandler } from "./transformers/prompt";
-
-interface PromptMetadata {
-  name: string;
-  title: string;
-  description: string;
-  role?: string;
-}
+import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
+import type { PromptMetadata } from "@/types/prompt";
+import { toMcpMetadata } from "./component-metadata";
 
 export type PromptArgsRawShape = {
   [k: string]:
@@ -38,6 +34,8 @@ export function addPromptsToServer(
       Object.assign(promptConfig, metadata);
     }
 
+    if (promptConfig.enabled === false) return;
+
     // Transform the user's handler into an MCP-compatible handler
     const transformedHandler = transformPromptHandler(
       handler,
@@ -53,15 +51,18 @@ export function addPromptsToServer(
       );
     }
 
-    // server as any prevents infinite type recursion
-    (server as any).registerPrompt(
+    server.registerPrompt(
       promptConfig.name,
       {
         title: promptConfig.title,
         description: promptConfig.description,
-        argsSchema: schema,
+        icons: promptConfig.icons,
+        _meta: toMcpMetadata(promptConfig)._meta,
+        argsSchema: rawShapeToStandardSchema(
+          promptSchema as unknown as RawShape
+        ),
       },
-      transformedHandler
+      transformedHandler as never
     );
   });
 

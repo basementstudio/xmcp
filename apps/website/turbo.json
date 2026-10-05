@@ -4,14 +4,16 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**"],
-      "env": ["OPENROUTER_API_KEY", "BASEHUB_TOKEN"]
+      "env": ["OPENROUTER_API_KEY", "GITHUB_TOKEN"],
+      "cache": false
     },
     "lint": {
       "outputs": [],
       "cache": false
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "env": ["GITHUB_TOKEN"]
     }
   },
   "extends": ["//"]

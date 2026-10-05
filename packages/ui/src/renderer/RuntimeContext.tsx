@@ -21,7 +21,9 @@ export interface McpClient {
     mode: McpUiDisplayMode
   ) => Promise<McpHostRequestDisplayModeResult>;
   readResource?: (uri: string) => Promise<McpHostReadResourceResult>;
-  sendMessage?: (params: McpHostSendMessageParams) => Promise<McpHostMessageResult>;
+  sendMessage?: (
+    params: McpHostSendMessageParams
+  ) => Promise<McpHostMessageResult>;
   updateModelContext?: (
     params: McpHostUpdateModelContextParams
   ) => Promise<McpHostModelContextResult>;
@@ -38,10 +40,7 @@ export interface RuntimeProviderProps {
   children: React.ReactNode;
 }
 
-export function RuntimeProvider({
-  client,
-  children,
-}: RuntimeProviderProps) {
+export function RuntimeProvider({ client, children }: RuntimeProviderProps) {
   return (
     <RuntimeClientContext.Provider value={client}>
       {children}
@@ -52,7 +51,9 @@ export function RuntimeProvider({
 export function useRendererClient(): McpClient {
   const client = useContext(RuntimeClientContext);
   if (!client) {
-    throw new Error("useRendererClient must be used within a <RuntimeProvider>");
+    throw new Error(
+      "useRendererClient must be used within a <RuntimeProvider>"
+    );
   }
   return client;
 }

@@ -24,8 +24,9 @@ export const Footer = () => {
       </div>
       <nav
         aria-label="Footer"
-        className="flex-1 flex gap-4 justify-center sm:justify-end"
+        className="flex-1 flex flex-wrap gap-4 justify-center sm:justify-end"
       >
+        <AnimatedLink href="/changelog">Changelog</AnimatedLink>
         <AnimatedLink
           href="https://npmjs.com/package/xmcp"
           target="_blank"

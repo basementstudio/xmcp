@@ -8,6 +8,8 @@ description: "Customize the transport types for your MCP server."
 
 ## HTTP transport
 
+xmcp servers speak both current MCP protocol generations over Streamable HTTP: requests carrying the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28) per-request `_meta` envelope (including `server/discover`) are served natively, and 2025-era clients that start with the classic `initialize` handshake are served through the stateless fallback. Both paths build a fresh server per request — no session state survives between requests.
+
 The `http` configuration customizes the HTTP server. Set it to `true` to use defaults, or provide an object to override specific options:
 
 ```typescript title="xmcp.config.ts"
@@ -41,6 +43,8 @@ const config: XmcpConfig = {
         "Authorization",
         "mcp-session-id",
         "mcp-protocol-version",
+        "mcp-method",
+        "mcp-name",
         "x-mcp-client-name",
         "x-mcp-client-version",
         "x-mcp-client-title",

@@ -2,7 +2,7 @@ import { getAllBlogPosts } from "../utils/blog";
 import type { MetadataRoute } from "next";
 import { source } from "@/lib/source";
 import { SITE_URL } from "@/lib/base-url";
-import { fetchTemplates } from "@/app/templates/utils/github";
+import { getTemplates } from "@/app/templates/utils/content";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 
@@ -46,6 +46,7 @@ export default async function sitemap() {
     "": 1,
     "/docs": 0.9,
     "/blog": 0.9,
+    "/changelog": 0.8,
     "/templates": 0.8,
     "/showcase": 0.7,
     "/faq": 0.7,
@@ -88,10 +89,10 @@ export default async function sitemap() {
     } as MetadataRoute.Sitemap[number];
   });
 
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
 
-  // No lastModified for templates and categories: the GitHub API gives us no
-  // content dates, and stamping "today" on every revalidation churns the value.
+  // Template content has no publication dates; omit lastModified instead of
+  // changing it on every rebuild.
   const templateRoutes: MetadataRoute.Sitemap[number][] = templates.map(
     (template) => ({
       url: url(`/templates/${template.slug}`),
@@ -109,6 +110,11 @@ export default async function sitemap() {
 
   return [
     ...routes,
+    {
+      url: url("/changelog"),
+      changeFrequency: "weekly",
+      priority: topLevelPriority["/changelog"],
+    } as MetadataRoute.Sitemap[number],
     ...blogRoutes,
     ...docRoutes,
     ...templateRoutes,

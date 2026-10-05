@@ -36,7 +36,8 @@ function getResourceText(resourceResult: unknown): string | null {
     return null;
   }
 
-  const contents = (resourceResult as { contents?: Array<{ text?: string }> }).contents;
+  const contents = (resourceResult as { contents?: Array<{ text?: string }> })
+    .contents;
   if (!Array.isArray(contents)) {
     return null;
   }
@@ -96,7 +97,9 @@ export default function handler() {
       setResourceResult(result);
     } catch (nextError) {
       setError(
-        nextError instanceof Error ? nextError.message : "Failed to read resource"
+        nextError instanceof Error
+          ? nextError.message
+          : "Failed to read resource"
       );
     }
   };
@@ -105,7 +108,9 @@ export default function handler() {
     setError(null);
 
     if (!resourceText) {
-      setError("Read the playbook resource first so the host has content to work with.");
+      setError(
+        "Read the playbook resource first so the host has content to work with."
+      );
       return;
     }
 
@@ -125,7 +130,9 @@ export default function handler() {
       setMessageResult(result);
     } catch (nextError) {
       setError(
-        nextError instanceof Error ? nextError.message : "Failed to send message"
+        nextError instanceof Error
+          ? nextError.message
+          : "Failed to send message"
       );
     }
   };
@@ -135,7 +142,9 @@ export default function handler() {
     setContextStatus(null);
 
     if (!resourceText) {
-      setError("Read the playbook resource first before updating model context.");
+      setError(
+        "Read the playbook resource first before updating model context."
+      );
       return;
     }
 
@@ -197,7 +206,9 @@ export default function handler() {
               <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
                 Resource URI
               </p>
-              <div className="font-mono text-sm text-cyan-300">{PLAYBOOK_URI}</div>
+              <div className="font-mono text-sm text-cyan-300">
+                {PLAYBOOK_URI}
+              </div>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">
                 First-class docs resource
               </p>
@@ -251,7 +262,10 @@ export default function handler() {
               <Button onClick={() => void loadResource()}>
                 Read {PLAYBOOK_URI}
               </Button>
-              <Badge variant="outline" className="border-cyan-800 text-cyan-300">
+              <Badge
+                variant="outline"
+                className="border-cyan-800 text-cyan-300"
+              >
                 {resourceText ? "Loaded" : "Not loaded"}
               </Badge>
               <pre className="max-h-[280px] overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
@@ -283,8 +297,9 @@ export default function handler() {
                 Send message payload
               </Button>
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                This sends your prompt plus the loaded <code>{PLAYBOOK_URI}</code>{" "}
-                contents, so the host can actually summarize the playbook.
+                This sends your prompt plus the loaded{" "}
+                <code>{PLAYBOOK_URI}</code> contents, so the host can actually
+                summarize the playbook.
               </p>
               <pre className="max-h-[220px] overflow-auto rounded-lg border border-slate-800 bg-slate-900/70 p-4 text-xs text-slate-300">
                 {messageResult
@@ -317,7 +332,10 @@ export default function handler() {
               <Button onClick={() => void handleUpdateModelContext()}>
                 Update model context
               </Button>
-              <Badge variant="outline" className="border-emerald-800 text-emerald-300">
+              <Badge
+                variant="outline"
+                className="border-emerald-800 text-emerald-300"
+              >
                 Keep these updates small and intentional
               </Badge>
             </div>

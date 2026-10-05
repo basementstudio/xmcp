@@ -45,12 +45,8 @@ const DEMO_VARIABLES = [
 ];
 
 export default function handler() {
-  const {
-    hostContext,
-    hostCapabilities,
-    requestDisplayMode,
-    isConnected,
-  } = useMcpApp();
+  const { hostContext, hostCapabilities, requestDisplayMode, isConnected } =
+    useMcpApp();
   const [expanded, setExpanded] = useState(false);
   const [modeError, setModeError] = useState<string | null>(null);
   const layoutRef = useRef<HTMLDivElement | null>(null);
@@ -58,11 +54,8 @@ export default function handler() {
 
   useAutoMcpAppSize(layoutRef);
 
-  const availableModes: McpUiDisplayMode[] = hostContext?.availableDisplayModes ?? [
-    "inline",
-    "fullscreen",
-    "pip",
-  ];
+  const availableModes: McpUiDisplayMode[] =
+    hostContext?.availableDisplayModes ?? ["inline", "fullscreen", "pip"];
   const cssValues = useMemo(() => {
     if (typeof window === "undefined") {
       return [];
@@ -118,7 +111,11 @@ export default function handler() {
           />
           <StatCard
             label="Container"
-            value={container ? `${container.width ?? "?"}×${container.height ?? "?"}` : "unknown"}
+            value={
+              container
+                ? `${container.width ?? "?"}×${container.height ?? "?"}`
+                : "unknown"
+            }
             detail="From host context"
             className="border-[color:color-mix(in_oklab,hsl(var(--border))_65%,rgb(6,182,212)_35%)] bg-[hsl(var(--card))]"
           />
@@ -156,7 +153,10 @@ export default function handler() {
                   Ask the host for inline, fullscreen, or picture-in-picture.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-violet-400/40 text-violet-500 dark:text-violet-300">
+              <Badge
+                variant="outline"
+                className="border-violet-400/40 text-violet-500 dark:text-violet-300"
+              >
                 current={String(currentMode)}
               </Badge>
             </div>
@@ -179,7 +179,8 @@ export default function handler() {
             <CardHeader>
               <CardTitle>Resize-Aware Panel</CardTitle>
               <CardDescription>
-                Toggle this panel to trigger <code>ui/notifications/size-changed</code>.
+                Toggle this panel to trigger{" "}
+                <code>ui/notifications/size-changed</code>.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -198,8 +199,9 @@ export default function handler() {
                       Host-aware layout panel
                     </p>
                     <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                      Safe area top={safeArea?.top ?? 0}, right={safeArea?.right ?? 0},
-                      bottom={safeArea?.bottom ?? 0}, left={safeArea?.left ?? 0}
+                      Safe area top={safeArea?.top ?? 0}, right=
+                      {safeArea?.right ?? 0}, bottom={safeArea?.bottom ?? 0},
+                      left={safeArea?.left ?? 0}
                     </p>
                   </div>
                   <Button

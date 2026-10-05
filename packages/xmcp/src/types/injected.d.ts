@@ -17,6 +17,9 @@ declare const INJECTED_RESOURCES: Record<
 
 declare const INJECTED_MIDDLEWARE:
   | (() => Promise<{
+      mcp?:
+        | import("./mcp-middleware").McpMiddleware
+        | import("./mcp-middleware").McpMiddleware[];
       default?:
         | import("./middleware").Middleware
         | import("./middleware").Middleware[]
@@ -36,20 +39,13 @@ declare const HTTP_CORS_CONFIG: import("../config").CorsConfig;
 
 declare const TEMPLATE_CONFIG: import("../config").TemplateConfig;
 
+declare const OBSERVABILITY_CONFIG: { enabled: boolean };
+
 declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
-declare const SERVER_INFO: import("@modelcontextprotocol/sdk/types").Implementation;
+declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation;
 
-// ─── DefinePlugin — individual CORS vars (legacy Express adapter) ──────────────
-
-declare const HTTP_CORS_ORIGIN: string;
-declare const HTTP_CORS_METHODS: string;
-declare const HTTP_CORS_ALLOWED_HEADERS: string;
-declare const HTTP_CORS_EXPOSED_HEADERS: string;
-declare const HTTP_CORS_CREDENTIALS: boolean;
-declare const HTTP_CORS_MAX_AGE: number;
-declare const HTTP_DEBUG: boolean;
-declare const HTTP_BODY_SIZE_LIMIT: string;
+declare const COMPONENTS_CONFIG: import("../config").ComponentsConfig;
 
 // ─── DefinePlugin — runtime flags ─────────────────────────────────────────────
 

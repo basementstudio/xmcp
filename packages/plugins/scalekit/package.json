@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/scalekit",
   "description": "Scalekit OAuth 2.1 integration for xmcp — purpose-built MCP server authentication",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -44,6 +44,6 @@
     "xmcp": "workspace:*"
   },
   "peerDependencies": {
-    "xmcp": ">=0.7.0 <1.0.0"
+    "xmcp": ">=1.0.0"
   }
 }

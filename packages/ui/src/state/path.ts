@@ -18,7 +18,7 @@ export function getByPath(source: unknown, path: string): unknown {
 export function setByPath<T extends Record<string, unknown>>(
   source: T,
   path: string,
-  value: unknown,
+  value: unknown
 ): T {
   if (!path) return source;
 
@@ -34,7 +34,9 @@ export function setByPath<T extends Record<string, unknown>>(
     const next =
       existing && typeof existing === "object"
         ? Array.isArray(existing)
-          ? /^\d+$/.test(parts[i + 1]) ? ([...existing] as unknown as Record<string, unknown>) : {}
+          ? /^\d+$/.test(parts[i + 1])
+            ? ([...existing] as unknown as Record<string, unknown>)
+            : {}
           : { ...(existing as Record<string, unknown>) }
         : {};
     cursor[part] = next;

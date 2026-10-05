@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import {
-  fetchTemplateBySlug,
-  fetchTemplateReadme,
-  fetchTemplates,
-} from "@/app/templates/utils/github";
+  getTemplateBySlug,
+  getTemplateReadme,
+  getTemplates,
+} from "@/app/templates/utils/content";
 import {
   normalizeDisplayLabel,
   stripLeadingHeading,
@@ -11,8 +11,7 @@ import {
 import { estimateTokens } from "@/lib/estimate-tokens";
 import { SITE_URL } from "@/lib/base-url";
 
-// Cached forever like the docs and blog twins; the underlying GitHub fetches
-// still revalidate on their own window, and new templates appear on redeploy.
+// Like the docs and blog twins, local template content updates on redeploy.
 export const revalidate = false;
 
 export async function GET(
@@ -20,10 +19,10 @@ export async function GET(
   { params }: RouteContext<"/llms-templates.mdx/[slug]">
 ) {
   const { slug } = await params;
-  const template = await fetchTemplateBySlug(slug);
+  const template = getTemplateBySlug(slug);
   if (!template) notFound();
 
-  const readme = await fetchTemplateReadme(template);
+  const readme = getTemplateReadme(template);
   const text = [
     `# ${normalizeDisplayLabel(template.name)}`,
     `> ${template.description}`,
@@ -48,6 +47,6 @@ export async function GET(
 }
 
 export async function generateStaticParams() {
-  const items = await fetchTemplates();
+  const items = getTemplates();
   return items.map((item) => ({ slug: item.slug }));
 }

@@ -117,7 +117,7 @@ function getThemePreset(mode: ThemeMode): ThemeTokens {
 
 export function createTheme(
   mode: ThemeMode = "dark",
-  tokenOverrides: Partial<ThemeTokens> = {},
+  tokenOverrides: Partial<ThemeTokens> = {}
 ): ThemeDefinition {
   const tokens: ThemeTokens = {
     ...getThemePreset(mode),
@@ -133,7 +133,7 @@ export function createTheme(
 
 export function getThemeStyle(
   mode: ThemeMode = "dark",
-  tokenOverrides: Partial<ThemeTokens> = {},
+  tokenOverrides: Partial<ThemeTokens> = {}
 ): CSSProperties {
   return createTheme(mode, tokenOverrides).style;
 }
@@ -151,7 +151,7 @@ export function ThemeProvider({
 }: ThemeProviderProps) {
   const value = React.useMemo(
     () => createTheme(mode, themeTokens),
-    [mode, themeTokens],
+    [mode, themeTokens]
   );
 
   return (

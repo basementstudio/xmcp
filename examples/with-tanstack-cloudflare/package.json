@@ -1,0 +1,32 @@
+{
+  "name": "tanstack-cloudflare-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TanStack MCP adapter on Cloudflare Workers",
+  "scripts": {
+    "dev": "xmcp build --cf && (xmcp dev --cf & vite dev)",
+    "build": "xmcp build --cf && vite build && tsc --noEmit",
+    "preview": "vite preview",
+    "deploy": "pnpm build && wrangler deploy"
+  },
+  "dependencies": {
+    "@tanstack/react-start": "^1.168.60",
+    "@tanstack/react-router": "^1.170.41",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.2",
+    "@cloudflare/vite-plugin": "^1.62.5",
+    "wrangler": "^4.147.0"
+  }
+}

@@ -2,8 +2,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "fastmcp": "4.16.4",
-    "zod": "4.1.13"
+    "fastmcp": "4.16.5",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

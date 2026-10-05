@@ -1,5 +1,37 @@
 # init-xmcp
 
+## 1.5.0
+
+### Patch Changes
+
+- 10b08e6: Use TanStack consistently in adapter help text and documentation.
+
+## 1.4.1
+
+## 1.4.0
+
+## 1.3.0
+
+### Minor Changes
+
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+
+## 1.2.0
+
+## 1.1.3
+
+## 1.1.2
+
+## 1.1.1
+
+## 1.1.0
+
+### Minor Changes
+
+- 86844f7: Require Node.js 22 or newer when creating or initializing xmcp projects, and generate projects with the same minimum Node.js version.
+
+## 1.0.0
+
 ## 0.8.0
 
 ### Minor Changes

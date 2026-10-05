@@ -11,7 +11,10 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { error: null };
@@ -51,7 +54,14 @@ export function ComponentRenderer({ node }: ComponentRendererProps) {
 
   if (!Component) {
     return (
-      <div style={{ color: "red", padding: 8, border: "1px solid red", borderRadius: 4 }}>
+      <div
+        style={{
+          color: "red",
+          padding: 8,
+          border: "1px solid red",
+          borderRadius: 4,
+        }}
+      >
         Unknown component type: {node.type}
       </div>
     );

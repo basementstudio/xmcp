@@ -8,9 +8,7 @@ import {
 import type { ButtonProps, Action } from "../../schema/types.js";
 import { executeAction } from "../../actions/executor.js";
 import { Button as BaseButton } from "../../react/index.js";
-import {
-  useRendererClient,
-} from "../../renderer/RuntimeContext.js";
+import { useRendererClient } from "../../renderer/RuntimeContext.js";
 
 // ── Spinner ──────────────────────────────────────────────────────────
 
@@ -71,7 +69,7 @@ export function Button({
 
   // Resolve disabled: boolean true, or a state key string
   const disabledStateValue = useUiState(
-    typeof disabled === "string" ? disabled : "",
+    typeof disabled === "string" ? disabled : ""
   );
   const isDisabled =
     disabled === true || (typeof disabled === "string" && !!disabledStateValue);

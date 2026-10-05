@@ -12,12 +12,13 @@ export function generateConfig(
   frameworkAdapter: string,
   toolsPath?: string,
   promptsPath?: string,
-  resourcesPath?: string
+  resourcesPath?: string,
+  endpoint?: string
 ): void {
   let configContent = `import { type XmcpConfig } from "xmcp";
 
 const config: XmcpConfig = {
-  http: true,
+  http: ${endpoint ? `{ endpoint: ${JSON.stringify(endpoint)} }` : "true"},
   experimental: {
     adapter: "${frameworkAdapter}",
   },`;
@@ -29,7 +30,17 @@ const config: XmcpConfig = {
     resources: ${resourcesPath ? `"${resourcesPath}"` : "false"},
   },`;
 
-  if (frameworkAdapter === "nextjs") {
+  if (
+    [
+      "nextjs",
+      "tanstack",
+      "hono",
+      "sveltekit",
+      "nuxt",
+      "react-router",
+      "astro",
+    ].includes(frameworkAdapter)
+  ) {
     configContent += `
   typescript: {
     skipTypeCheck: true,

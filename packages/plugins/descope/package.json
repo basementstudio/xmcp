@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/descope",
   "description": "Descope authentication provider for xmcp",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -42,7 +42,7 @@
     "express": "^4.22.1"
   },
   "peerDependencies": {
-    "xmcp": ">=0.7.0 <1.0.0"
+    "xmcp": ">=1.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

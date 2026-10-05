@@ -155,6 +155,7 @@ const program = new Command()
     let template = "typescript";
     let templateChoice = "default";
     let tailwind = false;
+    let uiKit = Boolean(options.uiKit);
 
     if (options.http || options.stdio) {
       transports = [];
@@ -162,7 +163,7 @@ const program = new Command()
       if (options.stdio) transports.push("stdio");
     }
 
-    if (options.uiKit) {
+    if (uiKit) {
       template = "mcp-apps";
       templateChoice = "mcp-app";
       transports = ["http"];
@@ -177,7 +178,7 @@ const program = new Command()
     }
 
     if (!options.yes) {
-      if (!options.ui && !options.uiKit) {
+      if (!options.ui && !uiKit) {
         const templateAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -192,16 +193,22 @@ const program = new Command()
                 name: "MCP App (React widgets for ext-apps)",
                 value: "mcp-app",
               },
+              {
+                name: "MCP App with UI kit (components and JSON renderer)",
+                value: "ui-kit",
+              },
             ],
             default: "default",
           },
         ]);
-        templateChoice = templateAnswers.template;
+        uiKit = templateAnswers.template === "ui-kit";
+        templateChoice = uiKit ? "mcp-app" : templateAnswers.template;
 
         if (templateChoice === "mcp-app") {
           template = "mcp-apps";
           transports = ["http"];
-          selectedPaths = ["tools"];
+          selectedPaths = uiKit ? ["tools", "resources"] : ["tools"];
+          tailwind = uiKit;
         }
       }
 
@@ -209,7 +216,7 @@ const program = new Command()
         templateChoice === "mcp-app" &&
         !options.tailwind &&
         !options.ui &&
-        !options.uiKit
+        !uiKit
       ) {
         const tailwindAnswers = await inquirer.prompt([
           {
@@ -330,7 +337,7 @@ const program = new Command()
       }
 
       // Default to Tailwind for MCP app template in non-interactive mode
-      if (templateChoice === "mcp-app" && !options.ui && !options.uiKit) {
+      if (templateChoice === "mcp-app" && !options.ui && !uiKit) {
         tailwind = true;
       }
     }
@@ -367,7 +374,7 @@ const program = new Command()
         paths: selectedPaths,
         template,
         tailwind,
-        uiKit: Boolean(options.uiKit),
+        uiKit,
         cloudflare: cloudflareFlag,
       });
 

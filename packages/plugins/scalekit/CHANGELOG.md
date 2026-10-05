@@ -1,5 +1,12 @@
 # @xmcp-dev/scalekit
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [10bdd57]
+  - xmcp@1.0.0
+
 ## 0.0.2
 
 ### Patch Changes

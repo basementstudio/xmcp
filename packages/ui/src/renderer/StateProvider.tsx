@@ -53,9 +53,7 @@ export interface UiStateContextValue {
   dispatch: Dispatch<UiAction>;
 }
 
-export const UiStateContext = createContext<UiStateContextValue | null>(
-  null,
-);
+export const UiStateContext = createContext<UiStateContextValue | null>(null);
 
 // ── Hooks ────────────────────────────────────────────────────────────
 

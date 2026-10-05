@@ -18,11 +18,9 @@ const setStateActionSchema = z.object({
 
 const openLinkActionSchema = z.object({
   type: z.literal("open-link"),
-  url: z
-    .string()
-    .refine((u) => !u.toLowerCase().startsWith("javascript:"), {
-      message: "javascript: URLs are not allowed",
-    }),
+  url: z.string().refine((u) => !u.toLowerCase().startsWith("javascript:"), {
+    message: "javascript: URLs are not allowed",
+  }),
 });
 
 const setStateBatchActionSchema = z.object({
