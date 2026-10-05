@@ -202,6 +202,14 @@ export function injectTypescriptVariables(userConfig: XmcpConfigOutputSchema) {
 
 export type TypescriptVariables = ReturnType<typeof injectTypescriptVariables>;
 
+export function injectComponentsVariables(userConfig: XmcpConfigOutputSchema) {
+  return {
+    COMPONENTS_CONFIG: JSON.stringify(userConfig.components ?? {}),
+  };
+}
+
+export type ComponentsVariables = ReturnType<typeof injectComponentsVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
@@ -210,4 +218,5 @@ export type InjectedVariables =
   | TemplateVariables
   | ServerInfoVariables
   | AdapterVariables
-  | TypescriptVariables;
+  | TypescriptVariables
+  | ComponentsVariables;

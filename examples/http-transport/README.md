@@ -76,6 +76,32 @@ Change `enabled` to `true`, rebuild, and restart to make the tool available.
 The same metadata options work for prompts, static resources, and resource
 templates. Disabling a UI tool also omits its generated UI resource.
 
+## Component visibility
+
+`xmcp.config.ts` excludes the `internal` tag. The `internal-dashboard` tool has
+that tag and declares a UI resource. Neither appears in `tools/list` or
+`resources/list`; direct requests also fail:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"internal-dashboard","arguments":{}}}'
+
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":8,"method":"resources/read","params":{"uri":"ui://app/internal-dashboard.html"}}'
+```
+
+Both responses contain a not-found error. Remove the exclusion, rebuild and
+restart to expose the tool and UI resource. You can also set
+`components.include: { names: ["greet"], tags: ["configuration"] }` to include
+only the greeting tool and tagged configuration resource. Names and tags match
+exactly; an exclusion always wins, and `enabled: false` stays disabled.
+
 ## Request context
 
 `src/tools/request-context.ts` reads `getRequestContext()` inside an async helper.

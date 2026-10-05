@@ -181,7 +181,9 @@ Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
 and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
 Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
 When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
-Tags alone do not change availability.
+Tags alone do not change availability. Use
+[component visibility rules](/docs/configuration/components) to include or exclude
+components by name or tag in `xmcp.config.ts`.
 
 Prompts are enabled by default. Set `enabled: false` to skip registration: the
 prompt is absent from `prompts/list`, and `prompts/get` returns a not-found error.

@@ -3,6 +3,7 @@ import type { Fixture, FixtureSpec } from "./fixture.js";
 import type { ProtocolMode } from "./client-options.js";
 
 export type Capability =
+  | "component-visibility"
   | "component-metadata"
   | "tools"
   | "prompts"
@@ -29,6 +30,7 @@ export interface Target {
   close(): Promise<void>;
 }
 export const BASE_CAPABILITIES: readonly Capability[] = [
+  "component-visibility",
   "component-metadata",
   "tools",
   "prompts",
