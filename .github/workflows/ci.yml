@@ -24,6 +24,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @xmcp-dev/e2e typecheck
+      - run: pnpm --filter @xmcp-dev/cli test
       - run: pnpm --filter @xmcp-dev/e2e test:unit
       - run: pnpm --filter @xmcp-dev/e2e test:fast
       - name: Upload failed fixture logs

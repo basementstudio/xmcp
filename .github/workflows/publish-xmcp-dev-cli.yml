@@ -25,10 +25,10 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --filter @xmcp-dev/cli --frozen-lockfile
+        run: pnpm install --filter @xmcp-dev/cli... --frozen-lockfile
 
       - name: Build @xmcp-dev/cli
-        run: pnpm --filter @xmcp-dev/cli build
+        run: pnpm exec turbo run build --filter=@xmcp-dev/cli
 
       - name: Test @xmcp-dev/cli
         run: pnpm --filter @xmcp-dev/cli test
