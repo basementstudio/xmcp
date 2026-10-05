@@ -1,26 +1,29 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+
 import {
+  getResolvedCorsConfig,
+  getResolvedExperimentalConfig,
   getResolvedHttpConfig,
-  getResolvedStdioConfig,
   getResolvedPathsConfig,
+  getResolvedStdioConfig,
   getResolvedTemplateConfig,
   getResolvedTypescriptConfig,
-  getResolvedExperimentalConfig,
-  getResolvedCorsConfig,
 } from "@/runtime-config";
+import { configSchema } from "@/runtime-config";
+
 import {
-  injectHttpVariables,
+  injectAdapterVariables,
   injectCorsVariables,
+  injectHttpVariables,
+  injectObservabilityVariables,
+  injectComponentsVariables,
   injectPathsVariables,
+  injectServerInfoVariables,
+  injectStdioVariables,
   injectTemplateVariables,
   injectTypescriptVariables,
-  injectAdapterVariables,
-  injectStdioVariables,
-  injectServerInfoVariables,
-  injectComponentsVariables,
 } from "../injection";
-import { configSchema } from "@/runtime-config";
 
 describe("Config System - Zod Defaults", () => {
   it("should apply defaults when parsing empty config", () => {
@@ -460,6 +463,35 @@ describe("Config System - Backward Compatibility", () => {
     const config = configSchema.parse({ paths: { tools: true } });
     const resolved = getResolvedPathsConfig(config);
     assert.equal(resolved.tools, "src/tools");
+  });
+});
+
+describe("Execution observability config", () => {
+  it("is disabled unless explicitly enabled and reaches the runtime injection", () => {
+    for (const input of [
+      {},
+      { observability: { enabled: false } },
+      { observability: { enabled: true } },
+    ]) {
+      const config = configSchema.parse(input);
+      assert.deepEqual(
+        JSON.parse(injectObservabilityVariables(config).OBSERVABILITY_CONFIG),
+        {
+          enabled: input.observability?.enabled ?? false,
+        }
+      );
+    }
+  });
+
+  it("rejects missing/non-boolean enabled values", () => {
+    for (const observability of [
+      true,
+      {},
+      { enabled: "true" },
+      { enabled: 1 },
+    ]) {
+      assert.equal(configSchema.safeParse({ observability }).success, false);
+    }
   });
 });
 
