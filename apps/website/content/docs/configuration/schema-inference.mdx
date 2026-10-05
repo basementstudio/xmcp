@@ -1,0 +1,101 @@
+---
+title: "Schema inference"
+metadataTitle: "TypeScript Schema Inference | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Generate tool input schemas and descriptions from TypeScript types and JSDoc."
+description: "Opt in to build-time tool schema inference while preserving runtime input validation."
+---
+
+Enable experimental schema inference to expose existing typed functions without declaring their input types again in Zod. This feature is disabled by default.
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  experimental: { inferToolSchemas: true },
+} satisfies XmcpConfig;
+```
+
+Enable `strict` or `strictNullChecks` in your `tsconfig.json` so nullable inputs retain their meaning.
+
+```typescript title="src/tools/greet.ts"
+/** Greet the user. */
+export default function greet({
+  name,
+}: {
+  /** The name of the person to greet. */
+  name: string;
+}) {
+  return `Hello, ${name}!`;
+}
+```
+
+The compiler generates a schema for the first handler parameter. MCP clients see a required string named `name`, with its property description. Runtime validation rejects missing or non-string names before calling the handler. The second parameter remains the request context and is not part of the input schema.
+
+## Reuse existing functions
+
+Imported types, interfaces, aliases, and re-exported handlers are resolved using your project's TypeScript configuration, including path aliases.
+
+```typescript title="src/lib/greet.ts"
+export interface GreetingInput {
+  /** The name of the person to greet. */
+  name: string;
+  /** Language of the greeting. */
+  language?: "en" | "es";
+}
+
+/** Greet a person in English or Spanish. */
+export function greet({ name, language = "en" }: GreetingInput) {
+  return `${language === "es" ? "Hola" : "Hello"}, ${name}!`;
+}
+```
+
+```typescript title="src/tools/greet.ts"
+export { greet as default } from "../lib/greet";
+```
+
+The function's JSDoc becomes the tool description. An explicit `metadata.description` takes precedence. Property JSDoc becomes each field's description; JSDoc tags do not add validation rules.
+
+## Supported inputs
+
+The first parameter must resolve to an object with named properties. Supported property types include:
+
+- Strings, numbers, booleans, and literal values.
+- Optional properties, nullable properties, and unions of supported types.
+- Arrays and readonly arrays.
+- Nested objects and imported interfaces/type aliases.
+- Concrete utility types, such as `Pick`, when they resolve to supported properties.
+
+Functions with no parameters retain an empty input schema. A handler accepting request context but no inputs should explicitly export `schema = {}`.
+
+Unbound generics, overloads, `any`, `unknown`, functions, classes, `Date`, `bigint`, symbols, tuples, index signatures, intersections, recursive types, and unsupported top-level inputs fail the build. The error identifies the tool, property, and source location. Use an explicit schema for these tools. A required property containing `undefined` is unsupported; use an optional property (`value?: string`) when omission is intended.
+
+## Explicit schemas take precedence
+
+Any explicit runtime `schema` export disables input inference for that tool, including re-exports and an empty schema. Metadata and output schemas keep their existing behavior. Tools with unsupported input types can therefore coexist with inferred tools.
+
+```typescript title="src/tools/validate-email.ts"
+import { z } from "zod";
+import type { InferSchema } from "xmcp";
+
+export const schema = {
+  email: z.string().email().describe("An email address to validate."),
+};
+
+export default function validateEmail({ email }: InferSchema<typeof schema>) {
+  return `Valid email: ${email}`;
+}
+```
+
+TypeScript's `string` does not express email validation, and `number` does not express a minimum or maximum. Keep explicit schemas for refinements, coercion, transforms, and schema defaults. Function defaults still execute normally; inference does not evaluate them or advertise them as schema defaults. Unknown object properties follow the existing Zod stripping behavior.
+
+## Builds and development
+
+Inference runs in the compiler and generates Zod schemas using the application's installed Zod version. Keep Zod installed; neither the TypeScript compiler nor source files are needed by the deployed server.
+
+Development builds reuse the TypeScript program and track imported type files and configuration dependencies. Editing those files regenerates the schemas. An unsupported edit reports an error until corrected. Inference still runs with `typescript.skipTypeCheck: true`, because extracting schemas requires type information even when general diagnostics are skipped.
+
+This feature covers tool inputs only. It does not infer output schemas, prompts, or resources. Without the opt-in, omitting `schema` continues to mean an empty tool input schema.
+
+See the runnable [inferred tool schemas example](https://github.com/basementstudio/xmcp/tree/main/examples/inferred-tool-schemas).

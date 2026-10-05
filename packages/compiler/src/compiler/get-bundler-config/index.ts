@@ -1,35 +1,38 @@
 import {
-  RspackOptions,
-  ProvidePlugin,
-  DefinePlugin,
   BannerPlugin,
-  NormalModuleReplacementPlugin,
+  DefinePlugin,
   IgnorePlugin,
+  NormalModuleReplacementPlugin,
   optimize,
+  ProvidePlugin,
   type ResolveAlias,
+  RspackOptions,
 } from "@rspack/core";
+import fs from "fs";
 import path from "path";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
+
+import { compilerContext } from "@/compiler/compiler-context";
+import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import { XmcpConfigOutputSchema } from "@/runtime-config";
 import {
-  distOutputPath,
   adapterOutputPath,
   cloudflareOutputPath,
+  distOutputPath,
   runtimeFolderPath,
 } from "@/utils/constants";
-import { compilerContext } from "@/compiler/compiler-context";
-import { XmcpConfigOutputSchema } from "@/runtime-config";
+
 import { getEntries } from "./get-entries";
-import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import { getExternals } from "./get-externals";
 import { getInjectedVariables } from "./get-injected-variables";
-import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
   EmitPackageJsonTypePlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
-import { getExternals } from "./get-externals";
-import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
-import fs from "fs";
+import { SchemaInferencePlugin } from "./plugins/schema-inference";
+import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 
 /** Reads the project's package.json "type" field to infer the output format */
 function projectPrefersEsm(projectFolder: string): boolean {
@@ -239,6 +242,13 @@ export function getRspackConfig(
       // keep server bundles self-contained instead of emitting async chunks.
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
+      xmcpConfig.experimental?.inferToolSchemas
+        ? new SchemaInferencePlugin(
+            processFolder,
+            runtimeFolderPath,
+            () => compilerContext.getContext().toolPaths
+          )
+        : null,
       isEsmOutput || isTanstack
         ? new EmitPackageJsonTypePlugin("module")
         : null,

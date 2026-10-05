@@ -1,14 +1,17 @@
-import { describe, it, afterEach } from "node:test";
 import assert from "node:assert";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, it } from "node:test";
+
 import type { RuleSetRule } from "@rspack/core";
+
+import { compilerContext } from "@/compiler/compiler-context";
+import { configSchema, XmcpConfigOutputSchema } from "@/runtime-config";
+import { runtimeFolderPath } from "@/utils/constants";
+
 import { getRspackConfig } from "..";
 import { EmitPackageJsonTypePlugin } from "../plugins";
-import { compilerContext } from "@/compiler/compiler-context";
-import { runtimeFolderPath } from "@/utils/constants";
-import { configSchema, XmcpConfigOutputSchema } from "@/runtime-config";
 
 const originalCwd = process.cwd();
 const tempDirs: string[] = [];
@@ -250,5 +253,27 @@ describe("TanStack adapter output", () => {
     assert.equal(config.output?.filename, "worker.js");
     assert.match(config.output?.path ?? "", /\.xmcp\/cloudflare$/);
     assert.deepEqual(Object.keys(config.entry as object), ["worker"]);
+  });
+});
+
+describe("schema inference plugin", () => {
+  it("is installed only when explicitly enabled, including with type checking skipped", () => {
+    for (const enabled of [undefined, false, true]) {
+      const config = buildConfig(
+        configSchema.parse({
+          experimental: { inferToolSchemas: enabled },
+          typescript: { skipTypeCheck: true },
+        })
+      );
+      assert.equal(
+        config.plugins?.some(
+          (plugin) =>
+            plugin &&
+            typeof plugin === "object" &&
+            plugin.constructor.name === "SchemaInferencePlugin"
+        ),
+        enabled === true
+      );
+    }
   });
 });

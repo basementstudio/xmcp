@@ -7,6 +7,7 @@
     "middlewares",
     "server-info",
     "bundler",
+    "schema-inference",
     "telemetry"
   ],
   "defaultOpen": true,

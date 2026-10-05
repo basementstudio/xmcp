@@ -1,25 +1,27 @@
-import { describe, it } from "node:test";
 import assert from "node:assert";
+import { describe, it } from "node:test";
+
 import {
+  getResolvedCorsConfig,
+  getResolvedExperimentalConfig,
   getResolvedHttpConfig,
-  getResolvedStdioConfig,
   getResolvedPathsConfig,
+  getResolvedStdioConfig,
   getResolvedTemplateConfig,
   getResolvedTypescriptConfig,
-  getResolvedExperimentalConfig,
-  getResolvedCorsConfig,
 } from "@/runtime-config";
+import { configSchema } from "@/runtime-config";
+
 import {
-  injectHttpVariables,
+  injectAdapterVariables,
   injectCorsVariables,
+  injectHttpVariables,
   injectPathsVariables,
+  injectServerInfoVariables,
+  injectStdioVariables,
   injectTemplateVariables,
   injectTypescriptVariables,
-  injectAdapterVariables,
-  injectStdioVariables,
-  injectServerInfoVariables,
 } from "../injection";
-import { configSchema } from "@/runtime-config";
 
 describe("Config System - Zod Defaults", () => {
   it("should apply defaults when parsing empty config", () => {
@@ -459,5 +461,26 @@ describe("Config System - Backward Compatibility", () => {
     const config = configSchema.parse({ paths: { tools: true } });
     const resolved = getResolvedPathsConfig(config);
     assert.equal(resolved.tools, "src/tools");
+  });
+});
+
+describe("experimental tool schema inference", () => {
+  it("requires an explicit boolean opt-in", () => {
+    assert.equal(
+      configSchema.parse({}).experimental?.inferToolSchemas,
+      undefined
+    );
+    for (const enabled of [true, false]) {
+      assert.equal(
+        configSchema.parse({ experimental: { inferToolSchemas: enabled } })
+          .experimental?.inferToolSchemas,
+        enabled
+      );
+    }
+    assert.equal(
+      configSchema.safeParse({ experimental: { inferToolSchemas: "true" } })
+        .success,
+      false
+    );
   });
 });
