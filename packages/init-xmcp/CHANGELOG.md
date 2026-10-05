@@ -1,5 +1,11 @@
 # init-xmcp
 
+## 1.5.0
+
+### Patch Changes
+
+- 10b08e6: Use TanStack consistently in adapter help text and documentation.
+
 ## 1.4.1
 
 ## 1.4.0
