@@ -39,8 +39,12 @@ jobs:
     # Flags a PR that edits a releasable package without adding a changeset.
     # Only packages/** counts — the website and examples are private, so
     # Changesets does not consider them releasable and they never trip this.
+    # The bot's release PR has already consumed its changesets into versions.
+    if: >-
+      ${{ github.head_ref != 'changeset-release/main' ||
+          github.event.pull_request.head.repo.full_name != github.repository ||
+          github.event.pull_request.user.login != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
