@@ -9,6 +9,99 @@ description: "Learn how to connect to external MCP servers via HTTP or STDIO and
 xmcp lets you connect to external MCP servers and generate fully typed clients. The CLI generates TypeScript clients with autocomplete for all tools exposed by HTTP or STDIO-based MCP servers.
 For production deployments, use the HTTP transport. STDIO is limited to local development because it cannot be deployed in production environments.
 
+## Managed connections
+
+Use the Node.js `xmcp/client` entry to connect directly without generating a typed client. `createClient` accepts a `ClientDefinition` and selects HTTP or STDIO from its `type`. It returns the connected SDK client, with methods such as `listTools`, `callTool`, `readResource`, and `getPrompt`.
+
+```typescript
+import { createClient } from "xmcp/client";
+
+const client = await createClient({
+  type: "http",
+  name: "local",
+  url: "http://localhost:3001/mcp",
+});
+try {
+  const { tools } = await client.listTools();
+  console.log(tools);
+} finally {
+  await client.close();
+}
+```
+
+`withClient(definition, operation, options?)` closes the connection after the callback resolves or throws and returns its result. Failed connections also clean up before rejecting. Closing a STDIO client waits for the spawned server process to exit.
+
+```typescript
+import { withClient } from "xmcp/client";
+
+const tools = await withClient(
+  {
+    type: "stdio",
+    name: "local",
+    command: "node",
+    args: ["./dist/stdio.js"],
+  },
+  async (client) => (await client.listTools()).tools
+);
+```
+
+These definitions use an explicit `name`, `type`, and, for STDIO, `command` and `args`. The shorthand `npm` and URL entries in `src/clients.ts` below are resolved by the generator; pass a resolved `ClientDefinition` to the managed API. HTTP headers support the same static values and environment references shown below. STDIO definitions support `env`, `cwd`, and `stderr`. Stderr is inherited by default; passing `onStderrData` in the options pipes it to your callback unless the definition explicitly selects another stderr strategy.
+
+### Client handlers
+
+Pass handlers in the options to support sampling, elicitation, or roots. They are registered before connecting, and only configured capabilities are advertised. Without handlers, none of these optional capabilities are advertised.
+
+```typescript
+import { withClient } from "xmcp/client";
+
+await withClient(
+  { type: "http", name: "local", url: "http://localhost:3001/mcp" },
+  (client) => client.callTool({ name: "confirm" }),
+  {
+    handlers: {
+      // A real application can display the request and collect the user's choice.
+      elicitation: (request) => {
+        console.log(request.params.message);
+        return { action: "cancel" };
+      },
+      roots: () => ({
+        roots: [{ uri: "file:///workspace", name: "Workspace" }],
+      }),
+    },
+  }
+);
+```
+
+`handlers.sampling` handles `sampling/createMessage`, `handlers.elicitation` handles `elicitation/create` (both form and URL modes), and `handlers.roots` handles `roots/list`. Each receives the SDK request and client context and may return a result or a promise. A sampling handler must return the SDK's sampling result, including `role`, `content`, and `model`; supplying one advertises basic sampling support. Roots handlers do not advertise automatic list-change notifications.
+
+Connections negotiate the protocol automatically. You can pass `versionNegotiation: { mode: "legacy" }` to force the older handshake. On modern connections, the SDK also routes embedded `input_required` requests through these handlers and retries the operation. Legacy stateless HTTP cannot deliver server-to-client input requests.
+
+### Cancellation and connection limits
+
+Pass SDK request options directly to client methods. The `connect` option applies to connection setup:
+
+```typescript
+import { withClient } from "xmcp/client";
+
+const controller = new AbortController();
+const CONNECTION_TIMEOUT_MS = 10_000; // Bound initial connection setup.
+await withClient(
+  { type: "http", name: "local", url: "http://localhost:3001/mcp" },
+  (client) =>
+    client.callTool(
+      { name: "long-running-task" },
+      { signal: controller.signal }
+    ),
+  { connect: { timeout: CONNECTION_TIMEOUT_MS, signal: controller.signal } }
+);
+```
+
+Call `controller.abort()` from your application's cancel action. Modern HTTP and STDIO propagate cancellation to the server handler. Legacy stateless HTTP cannot route cancellation notifications to an earlier request. The managed client preserves that transport limitation.
+
+With SDK 2.0.0 servers, cancellation of numeric request ID `0` is ignored. This can affect the first operation on a modern STDIO connection. Call `listTools()` before starting cancellable work on those servers; this is an underlying SDK limitation.
+
+The existing `createHTTPClient`, `createSTDIOClient`, and generated clients keep their current behavior. For a runnable managed-client script, see [the external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients).
+
 ## Creating the Clients File
 
 Create a `src/clients.ts` file and export a `ClientConnections` object. The object keys become the client names:

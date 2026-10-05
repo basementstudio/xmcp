@@ -64,7 +64,7 @@ export {
   listSTDIOClientTools,
   callSTDIOClientTool,
   disconnectSTDIOClient,
-} from "./client";
+} from "./client/index";
 export type {
   HttpClient,
   StdioClient,
@@ -75,7 +75,7 @@ export type {
   HttpClientConfig,
   StdioClientConfig,
 } from "./client/types";
-export type { StdioClientConnection, StdioClientOptions } from "./client";
+export type { StdioClientConnection, StdioClientOptions } from "./client/index";
 export type {
   CustomHeaders,
   CustomHeader,

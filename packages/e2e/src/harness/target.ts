@@ -3,6 +3,8 @@ import type { Fixture, FixtureSpec } from "./fixture.js";
 import type { ProtocolMode } from "./client-options.js";
 
 export type Capability =
+  | "managed-client"
+  | "managed-client-interactive"
   | "component-metadata"
   | "tools"
   | "prompts"
@@ -29,6 +31,8 @@ export interface Target {
   close(): Promise<void>;
 }
 export const BASE_CAPABILITIES: readonly Capability[] = [
+  "managed-client",
+  "managed-client-interactive",
   "component-metadata",
   "tools",
   "prompts",
@@ -58,9 +62,12 @@ export function getTargetCapabilities(
     if (spec.capabilities === undefined) capabilities.add("stateless-http");
     if (mode === "legacy") {
       capabilities.delete("input-required");
+      capabilities.delete("managed-client-interactive");
       capabilities.delete("middleware-input-required");
       unsupportedReasons["input-required"] =
         "Stateless legacy HTTP cannot receive server-to-client input requests";
+      unsupportedReasons["managed-client-interactive"] =
+        "Legacy stateless HTTP has no server-to-client input or cross-request cancellation";
       unsupportedReasons["middleware-input-required"] =
         unsupportedReasons["input-required"];
     }

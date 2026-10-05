@@ -309,6 +309,20 @@ EOF
 ) || fail "xmcp/node file helpers through packed CommonJS and ESM exports"
 pass "xmcp/node file helpers work via require and named ESM imports"
 
+# Managed clients are bundled and usable without installing the optional SDK peer.
+(cd "$BARE_APP" && node --input-type=module <<'EOF'
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { createClient, withClient } from "xmcp/client";
+const cjs = createRequire(import.meta.url)("xmcp/client");
+assert.equal(typeof createClient, "function");
+assert.equal(typeof withClient, "function");
+assert.equal(cjs.createClient, createClient);
+assert.equal(cjs.withClient, withClient);
+EOF
+) || fail "xmcp/client packed CommonJS and ESM exports"
+pass "xmcp/client resolves via require and named ESM imports without optional peers"
+
 # --- Stage 7: CommonJS projects still get CommonJS output --------------------
 # Strip "type": "module" from the HTTP consumer and rebuild.
 node -e '
