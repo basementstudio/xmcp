@@ -1,3 +1,4 @@
+import { isFetchAdapter } from "@/compiler/runtime-target";
 import { getXmcpConfig } from "../compiler-context";
 import { builtinModules } from "module";
 import { getRuntimeFileNames } from "./plugins";
@@ -23,9 +24,9 @@ export function getExternals(esmOutput = false): RspackOptions["externals"] {
         return callback();
       }
 
-      if (xmcpConfig.experimental?.adapter === "tanstack") {
-        // Preserve imports from the generated registry: Vite must compile user
-        // handlers and any TanStack server functions they import.
+      if (isFetchAdapter(xmcpConfig)) {
+        // Preserve imports from the generated registry: The host must compile user
+        // handlers and any framework modules they import.
         if (data.context === runtimeFolderPath && request.startsWith("../")) {
           const relative = path
             .relative(adapterOutputPath, path.resolve(data.context, request))

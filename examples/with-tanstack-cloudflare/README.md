@@ -1,6 +1,6 @@
-# TanStack Start with xmcp on Cloudflare Workers
+# TanStack with xmcp on Cloudflare Workers
 
-A React TanStack Start app with a stateless MCP endpoint at `/mcp`.
+A React TanStack app with a stateless MCP endpoint at `/mcp`.
 Requires Node 22.12+ and pnpm. From the repository root, run `pnpm install` and
 `pnpm build` first to build the local framework and compiler.
 

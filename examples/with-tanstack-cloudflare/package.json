@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "TanStack Start MCP adapter on Cloudflare Workers",
+  "description": "TanStack MCP adapter on Cloudflare Workers",
   "scripts": {
     "dev": "xmcp build --cf && (xmcp dev --cf & vite dev)",
     "build": "xmcp build --cf && vite build && tsc --noEmit",

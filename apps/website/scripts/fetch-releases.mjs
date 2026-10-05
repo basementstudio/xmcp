@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const RELEASES_URL =
   "https://api.github.com/repos/basementstudio/xmcp/releases";
+// GitHub also emits pagination links using this repository's immutable ID.
+const RELEASES_PATHS = new Set([
+  new URL(RELEASES_URL).pathname,
+  "/repositories/985096937/releases",
+]);
 const SNAPSHOT_PATH = fileURLToPath(
   new URL("../.generated/releases.json", import.meta.url)
 );
@@ -74,7 +79,7 @@ export async function fetchReleases({
       const nextUrl = new URL(url);
       if (
         nextUrl.origin !== "https://api.github.com" ||
-        nextUrl.pathname !== new URL(RELEASES_URL).pathname
+        !RELEASES_PATHS.has(nextUrl.pathname)
       ) {
         throw new Error("Unexpected GitHub pagination URL");
       }

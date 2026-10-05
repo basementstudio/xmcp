@@ -5,13 +5,16 @@ import { Compiler, Compilation, sources } from "@rspack/core";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import { getRuntimeDirectoryPath } from "@/runtime-config";
 import { compilerContext, getXmcpConfig } from "@/compiler/compiler-context";
-import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 import {
   expressTypeDefinition,
   fastifyTypeDefinition,
   nestJsTypeDefinition,
   nextJsTypeDefinition,
-  tanstackTypeDefinition,
+  fetchTypeDefinition,
 } from "./types";
 
 /**
@@ -72,7 +75,7 @@ export function getRuntimeFileNames(): string[] {
  * surrounding project declares.
  *
  * ESM builds need `"type": "module"` so the self-contained dist keeps running
- * when deployed away from the project's package.json. TanStack also emits ESM for Vite. Other adapter builds
+ * when deployed away from the project's package.json. Fetch adapters also emit ESM for host bundlers. Other adapter builds
  * emit CommonJS (the host framework re-bundles them), so they need
  * `"type": "commonjs"`: inside an app whose package.json declares
  * `"type": "module"`, `index.js` would otherwise be read as ESM and the
@@ -115,12 +118,10 @@ function getNeededRuntimeFiles(xmcpConfig: XmcpConfigOutputSchema): string[] {
   const neededFiles: string[] = [];
   const { platforms } = compilerContext.getContext();
 
-  if (xmcpConfig.experimental?.adapter === "tanstack" && xmcpConfig.http) {
+  if (isFetchAdapter(xmcpConfig) && xmcpConfig.http) {
     return [
       "headers.js",
-      platforms.cloudflare
-        ? "adapter-tanstack-cloudflare.js"
-        : "adapter-tanstack.js",
+      platforms.cloudflare ? "adapter-fetch-cloudflare.js" : "adapter-fetch.js",
     ];
   }
 
@@ -197,8 +198,8 @@ export class CreateTypeDefinitionPlugin {
         // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
         if (xmcpConfig.experimental?.adapter) {
           let typeDefinitionContent = "";
-          if (xmcpConfig.experimental?.adapter === "tanstack") {
-            typeDefinitionContent = tanstackTypeDefinition;
+          if (isFetchAdapter(xmcpConfig)) {
+            typeDefinitionContent = fetchTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter === "nextjs") {
             typeDefinitionContent = nextJsTypeDefinition;
           } else if (xmcpConfig.experimental?.adapter === "express") {

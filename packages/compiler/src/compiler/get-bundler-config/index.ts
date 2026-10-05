@@ -13,7 +13,10 @@ import path from "path";
 import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
 
 import { compilerContext } from "@/compiler/compiler-context";
-import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import {
   adapterOutputPath,
@@ -54,13 +57,13 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
-  const isTanstack = xmcpConfig.experimental?.adapter === "tanstack";
-  // Plain Node servers follow the application module type. TanStack and
+  const isFetch = isFetchAdapter(xmcpConfig);
+  // Plain Node servers follow the application module type. Fetch adapters and
   // Workers always emit ESM so their host bundlers can follow named exports.
   const projectIsEsm = projectPrefersEsm(processFolder);
   const isEsmOutput =
     !isCloudflare && !xmcpConfig.experimental?.adapter && projectIsEsm;
-  const emitModule = isCloudflare || isEsmOutput || isTanstack;
+  const emitModule = isCloudflare || isEsmOutput || isFetch;
   // Existing Node runtimes are CommonJS, while the generated import registry
   // uses ESM syntax. Parse both when the host app declares ESM. An
   // application package.json with "type": "module" would otherwise put the
@@ -77,14 +80,14 @@ export function getRspackConfig(
     : {};
 
   const outputPath =
-    isCloudflare && !isTanstack
+    isCloudflare && !isFetch
       ? cloudflareOutputPath
       : xmcpConfig.experimental?.adapter
         ? adapterOutputPath
         : distOutputPath;
 
   const outputFilename =
-    isCloudflare && !isTanstack
+    isCloudflare && !isFetch
       ? "worker.js"
       : xmcpConfig.experimental?.adapter
         ? "index.js"
@@ -149,10 +152,10 @@ export function getRspackConfig(
   const config: RspackOptions = {
     mode,
     watch: mode === "development",
-    // Workers reject eval(), and TanStack needs to process the adapter module.
+    // Workers reject eval(), and the host needs to process the adapter module.
     devtool:
       mode === "development"
-        ? isTanstack
+        ? isFetch
           ? "source-map"
           : "eval-cheap-module-source-map"
         : false,
@@ -185,14 +188,14 @@ export function getRspackConfig(
     },
     target: isCloudflare ? "webworker" : "node",
     externals:
-      isCloudflare && !isTanstack
+      isCloudflare && !isFetch
         ? { async_hooks: "async_hooks" }
         : getExternals(isEsmOutput),
     // The node externals preset emits require() for builtins even in module
     // output; disable it for ESM so getExternals handles builtins through
-    // externalsType node-commonjs (createRequire) instead. TanStack keeps
+    // externalsType node-commonjs (createRequire) instead. Fetch adapters keep
     // native imports for Vite to resolve on either deployment target.
-    ...(isTanstack
+    ...(isFetch
       ? {
           externalsType: "module" as const,
           externalsPresets: { node: false, web: false },
@@ -249,12 +252,10 @@ export function getRspackConfig(
             () => compilerContext.getContext().toolPaths
           )
         : null,
-      isEsmOutput || isTanstack
-        ? new EmitPackageJsonTypePlugin("module")
-        : null,
+      isEsmOutput || isFetch ? new EmitPackageJsonTypePlugin("module") : null,
       // Existing adapters emit CommonJS; pin them so host apps with
       // "type": "module" don't parse index.js as ESM.
-      xmcpConfig.experimental?.adapter && !isTanstack
+      xmcpConfig.experimental?.adapter && !isFetch
         ? new EmitPackageJsonTypePlugin("commonjs")
         : null,
       new CreateTypeDefinitionPlugin(),

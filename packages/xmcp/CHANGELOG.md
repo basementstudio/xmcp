@@ -1,5 +1,26 @@
 # xmcp
 
+## 1.6.0
+
+### Minor Changes
+
+- 5948dda: Add Hono and SvelteKit adapters for Node.js and Cloudflare Workers, sharing the stateless Fetch runtime with TanStack Start. Add framework detection, route generation, build ordering, and Workers setup to init-xmcp while preserving host TypeScript configuration.
+- 5948dda: Add Nuxt, React Router Framework Mode, and Astro adapters using the shared stateless Fetch runtime, with automatic route setup and Node.js/Cloudflare Workers support.
+
+## 1.5.0
+
+### Minor Changes
+
+- a4950f9: Add optional component include/exclude rules by name or tag in xmcp.config.ts. Apply them before registration across tools, prompts, static resources, and resource templates, with generated UI resources following their owning tool.
+- 73deb2e: Add opt-in structured execution logging for tools, prompts, and resource reads through `observability.enabled`, with execution correlation, timing, safe outcomes, and HTTP trace context.
+- 4f501f0: Add the Node.js `xmcp/client` entry with `createClient` and `withClient` for managed HTTP and STDIO connections. Register sampling, elicitation, and roots handlers before connecting, advertise only configured capabilities, and await cleanup after failed connections or scoped operations.
+
+## 1.4.1
+
+### Patch Changes
+
+- 5d3fe81: Refresh workspace dependencies to Fastify 5.12.5, js-yaml 4.3.2, and Next.js 16.3.6, including the js-yaml and Next.js overrides. This maintenance release does not change public APIs.
+
 ## 1.4.0
 
 ### Minor Changes
@@ -12,7 +33,7 @@
 
 - c844b6d: Add `image`, `audio`, and `embeddedResource` content helpers, available from `xmcp` and `xmcp/cloudflare`. Add Node-only file-reading variants under `xmcp/node`.
 - 1656cdc: Support a named `complete` export on resource template files for URI argument suggestions, including asynchronous and context-dependent completion callbacks. Export `ResourceCompletions` for typed callback maps.
-- a1f4d67: Add a TanStack Start adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
 
 ## 1.2.0
 

@@ -32,6 +32,10 @@ function getConfig() {
     name: "main",
     entry: {
       index: path.join(srcPath, "index.ts"),
+      client: {
+        import: path.join(srcPath, "client.ts"),
+        library: { type: "commonjs-static" },
+      },
       node: {
         import: path.join(srcPath, "node.ts"),
         // Static CommonJS exports also support named imports in Node ESM.
@@ -60,6 +64,9 @@ function getConfig() {
       },
     },
     module: {
+      // The SDK validator is shared by the root and client entries. Bundle its
+      // lazy import into each entry so consumers can rebundle either file alone.
+      parser: { javascript: { dynamicImportMode: "eager" } },
       rules: [
         {
           test: /\.ts$/,

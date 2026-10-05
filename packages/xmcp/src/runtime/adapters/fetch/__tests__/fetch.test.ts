@@ -5,7 +5,7 @@ import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 
 const globals = globalThis as Record<string, unknown>;
 Object.assign(globals, {
-  SERVER_INFO: { name: "tanstack-test", version: "1.0.0" },
+  SERVER_INFO: { name: "fetch-test", version: "1.0.0" },
   IS_CLOUDFLARE: false,
   INJECTED_CLIENT_BUNDLES: undefined,
   INJECTED_MIDDLEWARE: undefined,
@@ -75,7 +75,7 @@ async function body(response: Response) {
   return JSON.parse(text);
 }
 
-describe("TanStack Start adapter", () => {
+describe("Fetch adapter", () => {
   it("initializes without a session and does not carry client identity into later calls", async () => {
     const initialized = await xmcpHandler(
       request("initialize", {
@@ -88,7 +88,7 @@ describe("TanStack Start adapter", () => {
     assert.equal(initialized.headers.get("mcp-session-id"), null);
     assert.equal(
       (await body(initialized)).result.serverInfo.name,
-      "tanstack-test"
+      "fetch-test"
     );
     const called = await body(
       await xmcpHandler(

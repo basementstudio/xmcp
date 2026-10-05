@@ -1,7 +1,7 @@
 {
   "name": "xmcp",
   "description": "The MCP framework",
-  "version": "1.4.0",
+  "version": "1.6.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -71,7 +71,11 @@
       "require": "./dist/config.js",
       "default": "./dist/config.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "node": "./dist/client.js"
+    }
   },
   "typesVersions": {
     "*": {
@@ -89,6 +93,9 @@
       ],
       "config": [
         "dist/config/index.d.ts"
+      ],
+      "client": [
+        "dist/client.d.ts"
       ]
     }
   },
@@ -102,7 +109,8 @@
     "bench": "tsx bench/run.mts",
     "test:config": "pnpm --dir ../compiler test:config",
     "test:adapters": "node --import tsx --test src/runtime/adapters/*/__tests__/*.test.ts",
-    "test:runtime": "node --import tsx --test src/runtime/utils/__tests__/*.test.ts src/runtime/utils/ui/__tests__/*.test.ts"
+    "test:runtime": "node --import tsx --test src/runtime/utils/__tests__/*.test.ts src/runtime/utils/ui/__tests__/*.test.ts",
+    "test:client": "node --import tsx --test src/client/__tests__/*.test.ts"
   },
   "dependencies": {},
   "devDependencies": {
@@ -129,7 +137,7 @@
     "del": "^7.1.0",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "fastify": "^5.0.0",
+    "fastify": "^5.12.5",
     "fs-extra": "^11.3.2",
     "glob": "^11.1.0",
     "is-docker": "^4.0.0",

@@ -26,6 +26,11 @@ export enum AdapterType {
   NESTJS = "nestjs",
   FASTIFY = "fastify",
   TANSTACK = "tanstack",
+  HONO = "hono",
+  SVELTEKIT = "sveltekit",
+  NUXT = "nuxt",
+  REACT_ROUTER = "react-router",
+  ASTRO = "astro",
 }
 
 type EventPayload = {

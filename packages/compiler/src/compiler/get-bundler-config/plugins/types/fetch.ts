@@ -1,4 +1,4 @@
-export const tanstackTypeDefinition = `
+export const fetchTypeDefinition = `
 export interface AuthInfo {
   token: string;
   clientId: string;
