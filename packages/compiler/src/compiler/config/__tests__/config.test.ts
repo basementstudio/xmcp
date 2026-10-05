@@ -17,6 +17,7 @@ import {
   injectCorsVariables,
   injectHttpVariables,
   injectObservabilityVariables,
+  injectComponentsVariables,
   injectPathsVariables,
   injectServerInfoVariables,
   injectStdioVariables,
@@ -490,6 +491,60 @@ describe("Execution observability config", () => {
       { enabled: 1 },
     ]) {
       assert.equal(configSchema.safeParse({ observability }).success, false);
+    }
+  });
+});
+
+describe("Component visibility config", () => {
+  it("keeps rules optional and preserves explicit empty selectors", () => {
+    assert.equal(configSchema.parse({}).components, undefined);
+    for (const components of [
+      {},
+      { include: {} },
+      { include: { names: [] } },
+      { exclude: { tags: [] } },
+    ]) {
+      assert.deepEqual(
+        configSchema.parse({ components }).components,
+        components
+      );
+    }
+    assert.deepEqual(
+      JSON.parse(injectComponentsVariables({}).COMPONENTS_CONFIG),
+      {}
+    );
+  });
+
+  it("retains name/tag selectors through parsing and runtime injection", () => {
+    const components = {
+      include: { names: ["search"], tags: ["public"] },
+      exclude: { names: ["internal"], tags: ["experimental"] },
+    };
+    const parsed = configSchema.parse({ components });
+    assert.deepEqual(parsed.components, components);
+    assert.deepEqual(
+      JSON.parse(injectComponentsVariables(parsed).COMPONENTS_CONFIG),
+      components
+    );
+  });
+
+  it("rejects malformed rules and misspelled selectors instead of silently allowing components", () => {
+    for (const components of [
+      false,
+      null,
+      [],
+      { include: ["search"] },
+      { exclude: { names: "internal" } },
+      { include: { tags: [1] } },
+      { exclude: { tags: [""] } },
+      { exclude: { tag: ["internal"] } },
+      { includes: { names: ["search"] } },
+    ]) {
+      assert.equal(
+        configSchema.safeParse({ components }).success,
+        false,
+        JSON.stringify(components)
+      );
     }
   });
 });

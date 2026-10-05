@@ -8,6 +8,7 @@ import {
   InjectedVariables,
   injectHttpVariables,
   injectObservabilityVariables,
+  injectComponentsVariables,
   injectPathsVariables,
   injectServerInfoVariables,
   injectStdioVariables,
@@ -45,5 +46,6 @@ export function getInjectedVariables(
     ...adapterVariables,
     ...typescriptVariables,
     ...injectObservabilityVariables(xmcpConfig),
+    ...injectComponentsVariables(xmcpConfig),
   };
 }

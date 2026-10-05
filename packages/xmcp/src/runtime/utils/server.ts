@@ -5,6 +5,7 @@ import { PromptMetadata } from "@/types/prompt";
 import { ResourceCompletions, ResourceMetadata } from "@/types/resource";
 import { ToolMetadata } from "@/types/tool";
 
+import { filterComponents } from "./component-visibility";
 import { createExecutionLogger } from "./execution-logger";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import {
@@ -82,12 +83,20 @@ export async function configureServer(
   if (executionLogger) middleware.unshift(executionLogger.middleware);
   uIResourceRegistry.clear();
 
+  // Older compilers do not inject this optional configuration.
+  const components =
+    typeof COMPONENTS_CONFIG === "undefined" ? undefined : COMPONENTS_CONFIG;
+
   registerWithMcpMiddleware(server, middleware, () => {
-    addToolsToServer(server, toolModules, middleware);
-    addPromptsToServer(server, promptModules);
+    addToolsToServer(
+      server,
+      filterComponents(toolModules, components),
+      middleware
+    );
+    addPromptsToServer(server, filterComponents(promptModules, components));
     addResourcesToServer(
       server,
-      resourceModules,
+      filterComponents(resourceModules, components),
       executionLogger?.registerResource
     );
   });

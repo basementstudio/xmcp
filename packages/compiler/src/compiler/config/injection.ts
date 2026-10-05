@@ -213,6 +213,14 @@ export function injectObservabilityVariables(
   };
 }
 
+export function injectComponentsVariables(userConfig: XmcpConfigOutputSchema) {
+  return {
+    COMPONENTS_CONFIG: JSON.stringify(userConfig.components ?? {}),
+  };
+}
+
+export type ComponentsVariables = ReturnType<typeof injectComponentsVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
@@ -222,4 +230,5 @@ export type InjectedVariables =
   | ServerInfoVariables
   | AdapterVariables
   | TypescriptVariables
+  | ComponentsVariables
   | ReturnType<typeof injectObservabilityVariables>;

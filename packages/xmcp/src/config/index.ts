@@ -3,6 +3,7 @@ import { z } from "zod/v3";
 
 import {
   bundlerConfigSchema,
+  componentsConfigSchema,
   experimentalConfigSchema,
   httpTransportConfigSchema,
   pathsConfigSchema,
@@ -23,6 +24,7 @@ export const configSchema = z.object({
   template: templateConfigSchema.optional(),
   typescript: typescriptConfigSchema.optional(),
   observability: z.object({ enabled: z.boolean() }).optional(),
+  components: componentsConfigSchema.optional(),
 });
 
 type BundlerConfigType = { bundler?: (config: RspackOptions) => RspackOptions };
@@ -54,6 +56,8 @@ export type {
 // Re-export all types from schemas
 export type {
   BundlerConfig,
+  ComponentsConfig,
+  ComponentSelector,
   CorsConfig,
   ExperimentalConfig,
   HttpTransportConfig,

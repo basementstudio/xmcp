@@ -45,6 +45,8 @@ declare const STDIO_CONFIG: { debug: boolean; silent: boolean };
 
 declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation;
 
+declare const COMPONENTS_CONFIG: import("../config").ComponentsConfig;
+
 // ─── DefinePlugin — runtime flags ─────────────────────────────────────────────
 
 declare const IS_CLOUDFLARE: boolean;
