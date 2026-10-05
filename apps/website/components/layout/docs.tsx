@@ -206,6 +206,8 @@ const sidebarIcons: Partial<
   "/docs/deployment/cloudflare": Icons.cloudflare,
   "/docs/deployment/alpic": Icons.alpic,
   "/docs/deployment/replit": Icons.replit,
+  "/docs/deployment/railway": Icons.railway,
+  "/docs/deployment/render": Icons.render,
   "/docs/integrations/auth0": Icons.auth0,
   "/docs/integrations/better-auth": Icons.betterAuth,
   "/docs/integrations/clerk": Icons.clerk,
