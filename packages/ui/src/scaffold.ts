@@ -46,10 +46,10 @@ const files: ScaffoldFile[] = [
   },
   {
     path: "postcss.config.mjs",
-    content: `export default {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
+    content: `import tailwindcss from "@tailwindcss/postcss";
+
+export default {
+  plugins: [tailwindcss()],
 };
 `,
   },

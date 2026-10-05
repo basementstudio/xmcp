@@ -49,7 +49,9 @@ Use `--ui-kit` when you want the MCP App template to start with
 `@xmcp-dev/ui`, Tailwind, a schema-driven `renderJson` tool, and a small
 handwritten React MCP App. The generated config enables tools and resources,
 including the `skill://xmcp-ui/schema-reference` resource used by the renderer
-tool description.
+tool description. You can also select **MCP App with UI kit** in the
+interactive template prompt. The starter places `globals.css` at the project
+root, matching the Tailwind MCP App template.
 
 ## Getting Started
 
