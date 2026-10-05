@@ -1,7 +1,7 @@
 {
   "name": "xmcp",
   "description": "The MCP framework",
-  "version": "1.3.0",
+  "version": "1.4.1",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -129,7 +129,7 @@
     "del": "^7.1.0",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "fastify": "^5.0.0",
+    "fastify": "^5.12.5",
     "fs-extra": "^11.3.2",
     "glob": "^11.1.0",
     "is-docker": "^4.0.0",

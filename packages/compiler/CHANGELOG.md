@@ -1,10 +1,14 @@
 # @xmcp-dev/compiler
 
+## 1.4.1
+
+## 1.4.0
+
 ## 1.3.0
 
 ### Minor Changes
 
-- a1f4d67: Add a TanStack Start adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
 
 ## 1.2.0
 

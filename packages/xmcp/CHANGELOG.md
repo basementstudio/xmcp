@@ -1,12 +1,24 @@
 # xmcp
 
+## 1.4.1
+
+### Patch Changes
+
+- 5d3fe81: Refresh workspace dependencies to Fastify 5.12.5, js-yaml 4.3.2, and Next.js 16.3.6, including the js-yaml and Next.js overrides. This maintenance release does not change public APIs.
+
+## 1.4.0
+
+### Minor Changes
+
+- 7a3097c: Add optional icons, tags, and enabled metadata for tools, prompts, resources, and resource templates. Expose tags under `_meta["xmcp/tags"]` and omit disabled components and their generated UI resources from registration, listings, and direct requests.
+
 ## 1.3.0
 
 ### Minor Changes
 
 - c844b6d: Add `image`, `audio`, and `embeddedResource` content helpers, available from `xmcp` and `xmcp/cloudflare`. Add Node-only file-reading variants under `xmcp/node`.
 - 1656cdc: Support a named `complete` export on resource template files for URI argument suggestions, including asynchronous and context-dependent completion callbacks. Export `ResourceCompletions` for typed callback maps.
-- a1f4d67: Add a TanStack Start adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
 
 ## 1.2.0
 

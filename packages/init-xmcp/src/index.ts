@@ -46,11 +46,7 @@ const program = new Command()
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-prompts", "Skip prompt creation", false)
   .option("--skip-resources", "Skip resource creation", false)
-  .option(
-    "--cf",
-    "Build the TanStack Start adapter for Cloudflare Workers",
-    false
-  )
+  .option("--cf", "Build the TanStack adapter for Cloudflare Workers", false)
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
