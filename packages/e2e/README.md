@@ -227,5 +227,12 @@ with `createRequire` because its bundled CommonJS entry does not expose syntheti
 ESM named exports. Typechecking builds first so the public declarations exist in
 a fresh checkout.
 
+The same client targets exercise `withClient` from `xmcp/client` and its
+elicitation handler with default negotiation. The `managed-client` conformance
+group also covers both protocol modes and every adapter, using the existing
+`add`, `confirm`, and cancellation fixtures. Legacy stateless HTTP skips the
+interactive checks because it cannot route server-to-client input requests or
+cancellation notifications to a previous request.
+
 This package changes no public APIs. The generated applications are its runnable
 examples, so separate website docs and public examples are not needed.

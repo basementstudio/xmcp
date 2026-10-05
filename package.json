@@ -45,7 +45,7 @@
     "test:build": "scripts/test-build.sh",
     "test:cli": "scripts/test-cli.sh",
     "test:cli:skip": "scripts/test-cli.sh --skip",
-    "test:unit": "pnpm --filter xmcp test:config && pnpm --filter xmcp test:adapters && pnpm --filter xmcp test:runtime && pnpm --filter @xmcp-dev/e2e test:unit",
+    "test:unit": "pnpm --filter xmcp test:config && pnpm --filter xmcp test:adapters && pnpm --filter xmcp test:runtime && pnpm --filter xmcp test:client && pnpm --filter @xmcp-dev/e2e test:unit",
     "test:e2e": "pnpm --filter @xmcp-dev/e2e test",
     "test:e2e:fast": "pnpm --filter @xmcp-dev/e2e test:fast",
     "version-packages": "changeset version && pnpm install --lockfile-only",
