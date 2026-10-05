@@ -5,6 +5,7 @@ import type { ProtocolMode } from "./client-options.js";
 export type Capability =
   | "managed-client"
   | "managed-client-interactive"
+  | "component-visibility"
   | "component-metadata"
   | "tools"
   | "prompts"
@@ -33,6 +34,7 @@ export interface Target {
 export const BASE_CAPABILITIES: readonly Capability[] = [
   "managed-client",
   "managed-client-interactive",
+  "component-visibility",
   "component-metadata",
   "tools",
   "prompts",

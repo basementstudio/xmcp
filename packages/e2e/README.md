@@ -22,7 +22,8 @@ required. The root aliases are `test:e2e:fast` and `test:e2e`.
 | `test:fast` | Standalone HTTP, STDIO                              | CommonJS, ESM  | `auto`, `legacy` |
 | `test`      | Fast targets plus Express, Fastify, NestJS, Next.js | CommonJS, ESM  | `auto`, `legacy` |
 
-The shared checks cover component icons and tags, disabled component discovery
+The shared checks cover component include/exclude rules by name and tag (including
+tool-owned UI resources), component icons and tags, disabled component discovery
 and direct-request rejection (including generated UI resources), tool discovery,
 input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
