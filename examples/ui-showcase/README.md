@@ -10,6 +10,7 @@ The example app is organized around a small set of realistic MCP App patterns:
 - `resourceComposerDemo` for `resources/read`, `ui/message`, and `ui/update-model-context`
 - `schemaAppDemo` for schema-driven UI running with host-backed transport
 - `renderJson` as the small raw schema reference tool
+- `shadcnDemo` for a local shadcn Card sharing light and dark themes with the kit
 
 The showcase includes a focused set of tools and one MCP resource used by the
 resource/composer demo.
@@ -31,6 +32,7 @@ resource/composer demo.
 - [schema-app-demo.tsx](./src/tools/schema-app-demo.tsx)
 - [render-json.tsx](./src/tools/render-json.tsx)
 - [mcp-app-playbook.ts](<./src/resources/(docs)/mcp-app-playbook.ts>)
+- [shadcn-demo.tsx](./src/tools/shadcn-demo.tsx)
 - [globals.css](./globals.css)
 
 ## Start Here
@@ -49,3 +51,10 @@ Use `renderJson` afterward when you want a smaller schema-driven reference.
 
 - [packages/ui/README.md](../../packages/ui/README.md)
 - [UI rendering](https://xmcp.dev/docs/guides/ui-rendering)
+
+## shadcn
+
+The example includes `components.json`, native package imports, a `cn` helper,
+and the optional `@xmcp-dev/ui/shadcn.css` theme bridge. Add more local components
+with `pnpm dlx shadcn@latest add button dialog`. The existing Card uses the kit's
+`cn` helper and is editable source in `src/components/ui`.

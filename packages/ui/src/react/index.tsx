@@ -49,7 +49,12 @@ export function AppShell({
   return (
     <div
       ref={ref}
-      className={cn(uiShellClassName, "px-6 py-10", className)}
+      className={cn(
+        uiShellClassName,
+        "px-6 py-10",
+        resolvedTheme.mode === "dark" && "dark",
+        className
+      )}
       style={{ ...resolvedTheme.style, ...style }}
       {...props}
     >

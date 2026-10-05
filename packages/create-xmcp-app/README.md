@@ -51,7 +51,9 @@ handwritten React MCP App. The generated config enables tools and resources,
 including the `skill://xmcp-ui/schema-reference` resource used by the renderer
 tool description. You can also select **MCP App with UI kit** in the
 interactive template prompt. The starter places `globals.css` at the project
-root, matching the Tailwind MCP App template.
+root, matching the Tailwind MCP App template. It includes shadcn CLI configuration,
+package imports, and shared theme styles, so you can run
+`pnpm dlx shadcn@latest add button card dialog` from the generated project.
 
 ## Getting Started
 

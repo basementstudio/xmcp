@@ -878,12 +878,21 @@ importers:
       '@xmcp-dev/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      lucide-react:
+        specifier: ^0.544.0
+        version: 0.544.0(react@19.2.4)
       react:
         specifier: ^19.2.3
         version: 19.2.4
       react-dom:
         specifier: ^19.2.3
         version: 19.2.4(react@19.2.4)
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
       xmcp:
         specifier: workspace:*
         version: link:../../packages/xmcp

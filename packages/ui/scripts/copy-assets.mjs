@@ -6,7 +6,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageRoot = join(__dirname, "..");
 
 mkdirSync(join(packageRoot, "dist"), { recursive: true });
-copyFileSync(
-  join(packageRoot, "src", "styles.css"),
-  join(packageRoot, "dist", "styles.css")
-);
+for (const file of ["styles.css", "shadcn.css"]) {
+  copyFileSync(join(packageRoot, "src", file), join(packageRoot, "dist", file));
+}

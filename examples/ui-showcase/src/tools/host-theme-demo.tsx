@@ -166,7 +166,7 @@ export default function handler() {
               <Button
                 key={mode}
                 onClick={() => void requestMode(mode)}
-                variant={mode === currentMode ? "primary" : "secondary"}
+                variant={mode === currentMode ? "default" : "secondary"}
               >
                 Request {mode}
               </Button>

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "@xmcp-dev/ui/styles.css";
+@import "@xmcp-dev/ui/shadcn.css";
+@import "tw-animate-css";
 
 @theme {
   --font-mono:
