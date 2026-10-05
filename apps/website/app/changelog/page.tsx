@@ -57,7 +57,7 @@ export default function ChangelogPage() {
             aria-labelledby={`release-${release.version}`}
             className="grid md:grid-cols-[180px_minmax(0,1fr)] gap-6 md:gap-12 border-t border-brand-neutral-500 py-8 md:py-12"
           >
-            <div>
+            <div className="md:sticky md:top-[104px] md:self-start">
               <h2
                 id={`release-${release.version}`}
                 className="text-xl font-mono text-brand-white"

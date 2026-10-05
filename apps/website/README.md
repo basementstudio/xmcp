@@ -273,3 +273,20 @@ pnpm --filter website build
 Check `/` and `/showcase` locally for text, images, ordering, carousel behavior,
 connection copy buttons, and links. The website itself is the runnable example
 for content changes; no framework example is needed.
+
+## Docs navigation
+
+Docs sections and nested folders open by default. Readers can collapse them;
+navigating to a page reopens its ancestors while preserving other section choices.
+On small screens, **Browse docs** opens the keyboard-accessible navigation drawer.
+
+Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
+a docs page; unmapped pages use a document icon and explicit page icons take
+precedence. Check `/docs`, a deep link, and mobile navigation after changes.
+
+Run the sidebar tree regression checks with Node 22:
+
+```bash
+pnpm --filter website exec node --experimental-strip-types --test scripts/docs-sidebar.test.mjs
+pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
+```

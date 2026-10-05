@@ -92,6 +92,43 @@ test("rejects unsuccessful responses, malformed data, and an empty history", asy
   );
 });
 
+test("accepts GitHub's numeric repository pagination URL", async () => {
+  const next = "https://api.github.com/repositories/985096937/releases?page=2";
+  const requests = [];
+  const releases = await fetchReleases({
+    fetchImpl: async (url) => {
+      requests.push(url);
+      return Response.json([release(`xmcp@1.1.${requests.length}`)], {
+        headers: requests.length === 1 ? { link: `<${next}>; rel="next"` } : {},
+      });
+    },
+  });
+  assert.equal(requests[1], next);
+  assert.equal(releases.length, 2);
+});
+
+test("rejects pagination for other repositories and repeated URLs", async () => {
+  for (const url of [
+    "https://api.github.com/repositories/123/releases?page=2",
+    "https://api.github.com/repos/other/repository/releases?page=2",
+    "https://api.github.com/repos/basementstudio/xmcp/releases?per_page=100",
+  ]) {
+    let requests = 0;
+    await assert.rejects(
+      fetchReleases({
+        fetchImpl: async () => {
+          requests++;
+          return Response.json([release("xmcp@1.1.3")], {
+            headers: { link: `<${url}>; rel="next"` },
+          });
+        },
+      }),
+      /(?:Unexpected|Repeated) GitHub pagination URL/
+    );
+    assert.equal(requests, 1);
+  }
+});
+
 test("rejects external pagination before forwarding credentials", async () => {
   let requests = 0;
   await assert.rejects(
