@@ -1,0 +1,111 @@
+---
+title: "Astro"
+metadataTitle: "Usage with Astro | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Serve MCP tools, prompts, and resources from Astro on Node.js or Cloudflare Workers."
+description: "Integrate xmcp’s stateless Fetch handler with Astro, including automatic setup and deployment."
+---
+
+The Astro adapter serves MCP inside your existing application. It generates `.xmcp/adapter/index.js`, an ESM module exporting `xmcpHandler(request, options?)`, which returns a standard `Response`.
+
+## Automatic setup
+
+Inside your existing TypeScript Astro app:
+
+```bash
+npx init-xmcp@latest --yes
+```
+
+Initialization creates `xmcp.config.ts`, sample tools, prompts, and resources, and `src/pages/mcp.ts`. It prepends adapter builds to existing host scripts and preserves your TypeScript and hosting configuration. Use `--route-path src/pages/api` to choose a different route directory, or `--skip-route` to integrate the handler yourself. Existing route files are preserved and reported as conflicts before configuration changes. The component flags `--skip-tools`, `--skip-prompts`, and `--skip-resources` work independently.
+
+The default endpoint is `/mcp`; `--route-path src/pages/api` creates `/api/mcp`. MCP needs a server adapter and cannot run as a static file. The generated endpoint sets `prerender = false`; configure your Astro server adapter separately.
+
+Workers mode is inferred from `@astrojs/cloudflare` or `@cloudflare/vite-plugin`. You can select it explicitly with `npx init-xmcp@latest --cf`. If multiple hosting targets are installed, check the generated scripts and remove `--cf` for Node builds. Initialization configures xmcp’s build only; retain your framework’s deployment setup.
+
+## Manual setup
+
+```bash
+pnpm add xmcp zod
+pnpm add -D @xmcp-dev/compiler
+```
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: { endpoint: "/mcp" },
+  experimental: { adapter: "astro" },
+  paths: { tools: "./src/tools", prompts: false, resources: false },
+  // The host build checks application types after the adapter exists.
+  typescript: { skipTypeCheck: true },
+};
+export default config;
+```
+
+Set discovery paths for prompts and resources to directories when you need them. Add a tool like the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-astro), then run `pnpm exec xmcp build` before importing the adapter.
+
+```typescript title="src/pages/mcp.ts"
+import type { APIRoute } from "astro";
+import { xmcpHandler } from "../../.xmcp/adapter/index.js";
+
+export const prerender = false;
+export const ALL: APIRoute = ({ request }) => xmcpHandler(request);
+```
+
+The relative import preserves your existing aliases. Adjust it if you move the route. Import the adapter only in server modules. See [Astro's routing documentation](https://docs.astro.build/en/guides/endpoints/) for the host route conventions.
+
+## Development and Node builds
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & astro dev)",
+    "build": "xmcp build && astro build"
+  }
+}
+```
+
+The initial adapter build must finish before the host loads your routes. During development, xmcp updates discovery when handler files are added or removed, while the host processes their application imports. Keep `.xmcp/` ignored by Git and retain your host’s type-check command in CI. `skipTypeCheck` only disables xmcp’s separate check.
+
+The example uses `@astrojs/node` in standalone mode with `output: "server"`. Start its production bundle with `node dist/server/entry.mjs`. It runs `astro check` after the build.
+
+## Cloudflare Workers
+
+Configure `@astrojs/cloudflare` and enable `nodejs_compat`. With the current Cloudflare adapter, Wrangler’s `main` is `@astrojs/cloudflare/entrypoints/server`. The host builds the actual Worker and supports local workerd development and preview. See [Astro’s Cloudflare guide](https://docs.astro.build/en/guides/integrations-guide/cloudflare/).
+
+The [example](https://github.com/basementstudio/xmcp/tree/main/examples/with-astro) uses `XMCP_CLOUDFLARE=1` to select that adapter:
+
+```bash
+pnpm dev:cf
+# Or build and preview the production Worker:
+pnpm build:cf
+pnpm preview:cf
+```
+
+Keep the MCP endpoint out of prerendering and caching rules. Deploy using the host’s generated Wrangler configuration with `pnpm deploy:cf`.
+
+In adapter mode, `xmcp build --cf` emits an importable Workers runtime in `.xmcp/adapter`. It does not generate a standalone Worker or overwrite your Wrangler configuration. Your tools and their dependencies must also support Workers. Stop development processes before changing targets because both targets share the adapter output directory.
+
+## Authentication and CORS
+
+Verify credentials in Astro middleware or your endpoint. Once verified, pass MCP authentication information to the adapter:
+
+```typescript
+return xmcpHandler(request, {
+  authInfo: {
+    token: verifiedToken,
+    clientId: verifiedClientId,
+    scopes: verifiedScopes,
+  },
+});
+```
+
+These variables come from your application’s authentication step. The option forwards verified data to MCP handlers as `extra.authInfo`; it does not validate tokens. Reject unauthorized requests before invoking xmcp.
+
+Handle browser CORS and `OPTIONS` in the host, including the MCP headers required by your clients. Return the adapter’s `Response` directly to preserve streaming. Do not consume the original request body in earlier middleware.
+
+## Stateless requests
+
+Every request receives a fresh MCP server and isolated request context. No initialization state or identity is cached across requests. Clients must repeat authentication and client metadata on each request, using modern protocol metadata or the legacy `x-mcp-client-name` and `x-mcp-client-version` headers.
+
+Protocol validation and method handling remain with the SDK. Forwarding GET and DELETE does not enable persistent sessions.
