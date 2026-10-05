@@ -1,5 +1,12 @@
 # xmcp
 
+## 1.6.0
+
+### Minor Changes
+
+- 5948dda: Add Hono and SvelteKit adapters for Node.js and Cloudflare Workers, sharing the stateless Fetch runtime with TanStack Start. Add framework detection, route generation, build ordering, and Workers setup to init-xmcp while preserving host TypeScript configuration.
+- 5948dda: Add Nuxt, React Router Framework Mode, and Astro adapters using the shared stateless Fetch runtime, with automatic route setup and Node.js/Cloudflare Workers support.
+
 ## 1.5.0
 
 ### Minor Changes
