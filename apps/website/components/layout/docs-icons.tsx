@@ -77,6 +77,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/sentry": BarChartIcon,
   "/docs/integrations/supabase": TokensIcon,
   "/docs/integrations/billing": CardStackPlusIcon,
+  "/docs/integrations/coinbase": TokensIcon,
   "/docs/integrations/workos": Icons.workos,
   "/docs/integrations/x402": Icons.x402,
   "/docs/discoverability/smithery": MagnifyingGlassIcon,
