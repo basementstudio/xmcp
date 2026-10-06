@@ -33,9 +33,9 @@
   "scripts": {
     "website": "turbo run dev --filter=website",
     "xmcp": "turbo run dev --filter=xmcp",
-    "build": "turbo run build --filter=xmcp --filter=@xmcp-dev/compiler --filter=create-xmcp-app",
+    "build": "turbo run build --filter=xmcp --filter=@xmcp-dev/compiler --filter=create-xmcp-app --filter=@xmcp-dev/ui",
     "build:all": "turbo run build",
-    "lint": "turbo run lint --filter=xmcp --filter=create-xmcp-app",
+    "lint": "turbo run lint --filter=xmcp --filter=create-xmcp-app --filter=@xmcp-dev/ui",
     "lint:all": "turbo run lint",
     "ci": "pnpm run build && pnpm run lint && pnpm run test:ci",
     "ci:build-only": "pnpm run build && pnpm run lint && pnpm run test:build",
