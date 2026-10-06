@@ -102,6 +102,48 @@ With SDK 2.0.0 servers, cancellation of numeric request ID `0` is ignored. This 
 
 The existing `createHTTPClient`, `createSTDIOClient`, and generated clients keep their current behavior. For a runnable managed-client script, see [the external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients).
 
+## Inspecting servers from the CLI
+
+Use `inspect` to see a server's identity, negotiated protocol version,
+capabilities, and instructions. Use `list` to discover its tools, prompts,
+resources, and resource templates:
+
+```bash
+npx @xmcp-dev/cli inspect http://localhost:3001/mcp
+npx @xmcp-dev/cli list http://localhost:3001/mcp --json
+```
+
+Both commands also accept a client name from `src/clients.ts` (falling back to
+`clients.ts`). Named clients preserve configured headers, environment variables,
+and STDIO settings. Override the file with `-c, --clients`:
+
+```bash
+npx @xmcp-dev/cli inspect context --json
+npx @xmcp-dev/cli list context --clients config/clients.ts --json
+```
+
+To launch a local server directly, use `--stdio`. Put the CLI's options before
+`--stdio`; all arguments after the executable are passed to the server unchanged:
+
+```bash
+npx @xmcp-dev/cli inspect --json --stdio node ./dist/stdio.js
+npx @xmcp-dev/cli list --json --stdio node ./dist/stdio.js
+```
+
+`inspect --json` returns `serverInfo`, `protocolVersion`, `capabilities`, and
+`instructions`. `list --json` returns `tools`, `prompts`, `resources`, and
+`resourceTemplates`, preserving metadata and schemas and following pagination.
+Capabilities the server does not advertise produce empty arrays.
+
+Stdout contains the result only; logs and errors go to stderr. Configuration,
+connection, and listing failures exit nonzero without printing a partial result.
+Connections close before output is printed, including subprocess cleanup for
+STDIO. These commands negotiate modern or legacy MCP automatically and discover
+metadata without calling tools or fetching resource contents.
+
+The [external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients)
+includes `pnpm inspect` and `pnpm list:server` scripts for a local server.
+
 ## Creating the Clients File
 
 Create a `src/clients.ts` file and export a `ClientConnections` object. The object keys become the client names:
