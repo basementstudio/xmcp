@@ -320,3 +320,18 @@ Use `rounded-lg` (8px) for bordered cards, panels, dialogs, and media, and
 their card’s rounded edges; connected terminal tabs share rounded outer corners.
 Keep divider lines straight and circular controls circular. Preview the docs,
 showcase, templates, blog, and FAQ on desktop and mobile when changing these styles.
+
+## Dialog motion
+
+Search docs and Ask AI share a 200ms ease-in-out fade with a small vertical
+movement and desktop scale animation. The backdrop fades at the same pace.
+Reduced-motion preferences disable these animations. Keep panel and backdrop
+classes paired, and verify opening, dismissal, and keyboard focus on desktop
+and mobile when changing dialog motion.
+
+## Link hover
+
+Text links share the navbar’s underline animation: it draws from the left on
+hover or keyboard focus and retracts to the right. Use `link-underline` for text
+links, or `link-underline-group` with a `link-underline-label` span when a link
+also includes icons. Reduced-motion preferences make the state change immediate.

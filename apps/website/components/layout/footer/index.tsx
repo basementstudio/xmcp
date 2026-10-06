@@ -55,7 +55,7 @@ const linkGroups = [
 ] as const;
 
 const linkClassName =
-  "inline-flex min-h-11 items-center gap-2 py-2 text-brand-neutral-100 underline-offset-4 hover:text-brand-white hover:underline focus-visible:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white rounded-xs";
+  "link-underline-group inline-flex min-h-11 items-center gap-2 py-2 text-brand-neutral-100 hover:text-brand-white focus-visible:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white rounded-xs";
 
 export const Footer = () => {
   const year = new Date().getFullYear();
@@ -69,9 +69,11 @@ export const Footer = () => {
               href="/"
               prefetch={false}
               aria-label="xmcp home"
-              className="inline-flex min-h-11 items-center rounded-xs font-mono text-3xl font-medium tracking-tight hover:text-brand-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="link-underline-group inline-flex min-h-11 items-center rounded-xs font-mono text-3xl font-medium tracking-tight hover:text-brand-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
             >
-              <span translate="no">xmcp</span>
+              <span translate="no" className="link-underline-label">
+                xmcp
+              </span>
             </Link>
             <p className="mt-4 text-xl leading-snug text-pretty">
               The TypeScript MCP framework.
@@ -110,7 +112,9 @@ export const Footer = () => {
                               className="size-4 shrink-0"
                             />
                           )}
-                          <span>{link.label}</span>
+                          <span className="link-underline-label">
+                            {link.label}
+                          </span>
                           {external && (
                             <>
                               <ArrowUpRight
@@ -141,7 +145,9 @@ export const Footer = () => {
             className={linkClassName}
           >
             <Icons.vercel aria-hidden="true" className="size-3.5 shrink-0" />
-            <span>Vercel Open Source Program</span>
+            <span className="link-underline-label">
+              Vercel Open Source Program
+            </span>
             <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
             <span className="sr-only"> (opens in a new tab)</span>
           </a>

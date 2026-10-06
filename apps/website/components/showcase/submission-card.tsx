@@ -58,9 +58,9 @@ export function ShowcaseSubmissionCard() {
               href="https://github.com/basementstudio/xmcp/blob/main/apps/website/README.md#showcase-submissions"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md text-sm text-brand-neutral-50 underline underline-offset-4 transition-colors hover:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="link-underline-group inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md text-sm text-brand-neutral-50 transition-colors hover:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
             >
-              Submission guide
+              <span className="link-underline-label">Submission guide</span>
               <ArrowUpRight aria-hidden="true" className="size-4 shrink-0" />
               <span className="sr-only"> (opens in a new tab)</span>
             </a>

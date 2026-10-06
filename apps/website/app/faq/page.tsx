@@ -72,10 +72,7 @@ export default function FaqPage() {
           <p className="text-brand-neutral-100 text-base max-w-[650px] text-center">
             Everything you need to know about building and shipping MCP servers
             with xmcp. For the full reference, head to the{" "}
-            <Link
-              href="/docs"
-              className="text-brand-white underline underline-offset-4"
-            >
+            <Link href="/docs" className="text-brand-white link-underline">
               documentation
             </Link>
             .
