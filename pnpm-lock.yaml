@@ -1548,8 +1548,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(esbuild@0.28.1)
       xmcp:
-        specifier: latest
-        version: 1.0.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        specifier: workspace:^
+        version: link:../xmcp
       zod:
         specifier: ^4.0.10
         version: 4.1.13
@@ -1700,6 +1700,9 @@ importers:
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
+      '@xmcp-dev/cli':
+        specifier: workspace:*
+        version: link:../cli
       '@xmcp-dev/compiler':
         specifier: workspace:*
         version: link:../compiler

@@ -188,6 +188,16 @@ otherwise they print `<fixture label> does not support <capability>`.
 
 ## Client tests
 
+The `cli-discovery` conformance capability runs the built developer CLI against
+the compiled fixtures, including every adapter and both module formats. It
+checks inspection, complete catalog shapes, named configs, and separation of
+stdout results from config logs. CLI connections use automatic negotiation,
+independently of the conformance harness client's selected protocol mode.
+`src/tests/cli.test.ts` additionally runs against legacy-only HTTP and STDIO
+peers to verify fallback, pagination, empty capabilities, argument forwarding,
+failure exit codes, and subprocess cleanup. `prepare:fixtures` builds the CLI
+and its workspace runtime dependency before these checks.
+
 `prepareClientTarget(fixture)` prepares an already compiled fixture for a client
 under test without connecting the harness's own client. HTTP fixtures (including
 adapter hosts) return `{ type: "http", url, close }` once the server listens.
