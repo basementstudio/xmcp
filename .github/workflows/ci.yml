@@ -11,9 +11,9 @@ env:
 
 jobs:
   schema-inference-windows:
-    # Guard the TypeScript/native path separator assertions reported in #690.
+    # Run the compiler suite on Windows to guard native path separators (#690).
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -24,7 +24,7 @@ jobs:
           node-version: 22.x
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @xmcp-dev/compiler exec node --import tsx --test src/compiler/schema-inference/__tests__/inference.test.ts
+      - run: pnpm --filter @xmcp-dev/compiler test:config
 
   e2e-conformance:
     runs-on: ubuntu-latest
