@@ -33,7 +33,7 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
     <TreeContextProvider tree={tree}>
       <main
         id="nd-docs-layout"
-        className="flex flex-1 flex-col md:flex-row mt-4 w-full"
+        className="flex flex-1 flex-col md:flex-row mt-4 md:pt-4 w-full"
       >
         <Sidebar />
         {children}
@@ -72,7 +72,7 @@ function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:block sticky self-start top-20 shrink-0 px-4 h-[calc(100dvh-80px)] w-[300px] min-h-0">
+      <aside className="hidden md:block sticky self-start top-20 shrink-0 px-4 h-[calc(100dvh-96px)] w-[300px] min-h-0">
         {navigation}
       </aside>
       <div className="md:hidden px-4">
