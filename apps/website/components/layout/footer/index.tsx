@@ -46,7 +46,7 @@ export const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative w-full border-t border-brand-neutral-500 bg-brand-black px-4 text-sm text-brand-white">
+    <footer className="relative w-full bg-brand-black px-4 text-sm text-brand-white">
       <div className="mx-auto max-w-[1408px]">
         <div className="grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:py-16">
           <div className="max-w-sm">
