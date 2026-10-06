@@ -33,7 +33,7 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
     <TreeContextProvider tree={tree}>
       <main
         id="nd-docs-layout"
-        className="flex flex-1 flex-col md:flex-row max-w-[1440px] mx-auto mt-4 pb-20 w-full"
+        className="flex flex-1 flex-col md:flex-row mt-4 pb-20 w-full"
       >
         <Sidebar />
         {children}
