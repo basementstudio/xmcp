@@ -55,6 +55,8 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
+To reuse existing typed functions, opt in to [TypeScript schema inference](/docs/configuration/schema-inference). The compiler can generate runtime input validation and descriptions from TypeScript and JSDoc. Explicit schemas always take precedence.
+
 ## Schema Definition
 
 The schema defines your tool's input parameters using [Zod](https://zod.dev). Use `.describe()` on each parameter to help LLMs understand how to use your tool correctly.

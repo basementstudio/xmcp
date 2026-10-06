@@ -725,6 +725,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/inferred-tool-schemas:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/mcp-app-css-modules:
     dependencies:
       react:
