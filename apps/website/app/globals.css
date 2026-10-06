@@ -172,23 +172,19 @@ html:has(#nd-blog-layout) {
   margin-top: 0;
 }
 
-.prose p code:not(pre code),
-.prose li code:not(pre code) {
+.prose code:not(pre code, :has(pre)) {
   @apply border border-brand-neutral-400 bg-brand-black text-[#EC9D00] text-[0.75rem] px-1.5 py-0.5 rounded-md font-mono leading-none inline-block max-w-full overflow-x-auto whitespace-nowrap align-middle;
   letter-spacing: 0;
   color: #ec9d00 !important;
   background-color: var(--color-brand-black) !important;
 }
 
-.prose p code *,
-.prose li code * {
+.prose code:not(pre code, :has(pre)) * {
   color: inherit !important;
 }
 
-.prose p code::before,
-.prose p code::after,
-.prose li code::before,
-.prose li code::after {
+.prose code:not(pre code, :has(pre))::before,
+.prose code:not(pre code, :has(pre))::after {
   content: none;
 }
 
