@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare:fixtures": "pnpm --dir ../.. exec turbo run build --filter=xmcp --filter=@xmcp-dev/compiler",
-    "test:fast": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts src/tests/observability.test.ts src/tests/schema-inference.test.ts",
-    "test": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/adapters.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts src/tests/observability.test.ts src/tests/schema-inference.test.ts",
+    "prepare:fixtures": "pnpm --dir ../.. exec turbo run build --filter=xmcp --filter=@xmcp-dev/compiler --filter=@xmcp-dev/cli",
+    "test:fast": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts src/tests/observability.test.ts src/tests/cli.test.ts src/tests/schema-inference.test.ts",
+    "test": "pnpm prepare:fixtures && node --import tsx --test --test-concurrency=1 src/tests/fast.test.ts src/tests/adapters.test.ts src/tests/fixtures.test.ts src/tests/client.test.ts src/tests/observability.test.ts src/tests/cli.test.ts src/tests/schema-inference.test.ts",
+
     "test:unit": "node --import tsx --test src/harness/__tests__/*.test.ts",
     "typecheck": "pnpm prepare:fixtures && tsc --noEmit"
   },
@@ -28,6 +29,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.0.10",
+    "@xmcp-dev/cli": "workspace:*"
   }
 }

@@ -40,11 +40,11 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist",
     "pretest": "pnpm run build",
-    "test": "tsx --test __tests__/*.test.ts"
+    "test": "node --import tsx --test __tests__/*.test.ts src/utils/__tests__/*.test.ts"
   },
   "dependencies": {
     "bundle-require": "^5.1.0",
-    "xmcp": "latest",
+    "xmcp": "workspace:^",
     "zod": "^4.0.10"
   },
   "devDependencies": {

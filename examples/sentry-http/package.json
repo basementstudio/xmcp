@@ -1,0 +1,20 @@
+{
+  "name": "sentry-http",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node --env-file=.env dist/http.js"
+  },
+  "dependencies": {
+    "@sentry/node": "^11.4.0",
+    "@xmcp-dev/sentry": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3"
+  }
+}
