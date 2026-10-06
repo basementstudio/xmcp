@@ -25,7 +25,7 @@ overrides:
   cookie@<1.1.1: 1.1.1
   lodash@<4.18.1: 4.18.1
   file-type@>=13.0.0 <21.3.2: 21.3.2
-  '@modelcontextprotocol/sdk@<1.26.0': 1.26.0
+  '@modelcontextprotocol/sdk@<1.31.0': 1.31.0
   flatted@<3.4.2: 3.4.2
   undici@>=7.0.0 <7.29.0: 7.29.0
   kysely@>=0.26.0 <0.30.0: 0.28.17
@@ -3987,8 +3987,8 @@ packages:
       hono:
         optional: true
 
-  '@modelcontextprotocol/sdk@1.26.0':
-    resolution: {integrity: sha512-Y5RmPncpiDtTXDbLKswIJzTqu2hyBKxTNsgKqKclDbhIgg1wgtf1fRuvxgTnRfcnxtvvgbIEcqUOzZrJ6iSReg==}
+  '@modelcontextprotocol/sdk@1.31.0':
+    resolution: {integrity: sha512-UvTMgnNlnIBO/22ob2RcVGDlcvOslQs8T59+FTGdA0L27a39fdGF/EDETNtDVK4DZGpwomlsYpRdA8UXcVL/pw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -16034,7 +16034,7 @@ snapshots:
 
   '@mcp-ui/server@5.16.2(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
+      '@modelcontextprotocol/sdk': 1.31.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -16108,7 +16108,7 @@ snapshots:
     optionalDependencies:
       hono: 4.12.34
 
-  '@modelcontextprotocol/sdk@1.26.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
+  '@modelcontextprotocol/sdk@1.31.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
     dependencies:
       '@hono/node-server': 1.19.15(hono@4.12.34)
       ajv: 8.18.0
