@@ -93,43 +93,8 @@ export const Footer = () => {
             ))}
           </div>
         </div>
-        <section
-          aria-labelledby="footer-agent-docs"
-          className="flex flex-col gap-4 border-y border-brand-neutral-500 py-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8"
-        >
-          <div>
-            <h2 id="footer-agent-docs" className="font-medium">
-              Docs for AI agents
-            </h2>
-            <p className="mt-1 leading-relaxed text-brand-neutral-100">
-              Give your assistant the documentation index or the complete
-              reference.
-            </p>
-          </div>
-          <ul className="flex flex-col gap-x-8 sm:flex-row">
-            <li>
-              <a href="/llms.txt" type="text/plain" className={linkClassName}>
-                Documentation index{" "}
-                <span className="ml-2 font-mono text-xs">.txt</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="/llms-full.txt"
-                type="text/plain"
-                className={linkClassName}
-              >
-                Full documentation{" "}
-                <span className="ml-2 font-mono text-xs">.txt</span>
-              </a>
-            </li>
-          </ul>
-        </section>
-        <div className="flex flex-col gap-3 pt-6 pb-[max(5rem,env(safe-area-inset-bottom))] text-brand-neutral-100 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8 sm:pb-8">
+        <div className="flex flex-col gap-3 border-t border-brand-neutral-500 pt-6 pb-[max(5rem,env(safe-area-inset-bottom))] text-brand-neutral-100 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8 sm:pb-8">
           <p>© {year} xmcp. All rights reserved.</p>
-          <Link href="/telemetry" prefetch={false} className={linkClassName}>
-            Telemetry
-          </Link>
           <a href="https://vercel.com/oss" className={`${linkClassName} gap-2`}>
             <Icons.vercel aria-hidden="true" className="size-3.5 shrink-0" />
             Vercel Open Source Program

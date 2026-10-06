@@ -296,9 +296,9 @@ pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
 
 ## Footer navigation
 
-The shared footer includes a short framework description, labeled navigation
-groups, and links to the existing `/llms.txt` and `/llms-full.txt` references.
-Keep labels descriptive and use crawlable links rendered in the initial HTML.
+The shared footer includes a short framework description and labeled navigation
+groups. Keep labels descriptive and use crawlable links rendered in the initial
+HTML.
 The existing site-wide Organization and WebSite structured data remains the
 source of entity metadata; the footer does not add duplicate schema.
 
