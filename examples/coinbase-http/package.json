@@ -1,0 +1,27 @@
+{
+  "name": "coinbase-http",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node --env-file=.env dist/http.js",
+    "buyer": "node --env-file=.env --import tsx buyer.ts"
+  },
+  "dependencies": {
+    "@xmcp-dev/coinbase": "workspace:*",
+    "xmcp": "workspace:*",
+    "@coinbase/cdp-sdk": "^1.57.1",
+    "@x402/core": "^2.28.0",
+    "@x402/express": "^2.28.0",
+    "@x402/evm": "^2.28.0",
+    "zod": "^4.0.10",
+    "@x402/fetch": "^2.28.0",
+    "@modelcontextprotocol/client": "^2.0.0"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "tsx": "^4.21.0"
+  }
+}

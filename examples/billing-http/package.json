@@ -1,0 +1,25 @@
+{
+  "name": "billing-http",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node --env-file=.env dist/http.js",
+    "worker": "node --env-file=.env --import tsx worker.ts",
+    "grant": "node --env-file=.env --import tsx grant.ts"
+  },
+  "dependencies": {
+    "@xmcp-dev/billing": "workspace:*",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "tsx": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

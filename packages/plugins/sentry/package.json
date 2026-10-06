@@ -1,0 +1,39 @@
+{
+  "name": "@xmcp-dev/sentry",
+  "version": "0.0.0",
+  "description": "Sentry integration for xmcp",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "peerDependencies": {
+    "@sentry/node": "^11.4.0",
+    "xmcp": "^1.6.0"
+  },
+  "devDependencies": {
+    "@sentry/node": "^11.4.0",
+    "xmcp": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "tsx": "^4.21.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/sentry"
+  }
+}
