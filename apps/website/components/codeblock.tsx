@@ -81,51 +81,6 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const inTab = useContext(TabsContext) !== null;
   const areaRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-  const syncLockRef = useRef(false);
-  const [railWidth, setRailWidth] = useState(0);
-
-  useEffect(() => {
-    const area = areaRef.current;
-    const rail = railRef.current;
-    if (!area || !rail) return;
-
-    const syncFromArea = () => {
-      if (syncLockRef.current) return;
-      syncLockRef.current = true;
-      rail.scrollLeft = area.scrollLeft;
-      syncLockRef.current = false;
-    };
-
-    const syncFromRail = () => {
-      if (syncLockRef.current) return;
-      syncLockRef.current = true;
-      area.scrollLeft = rail.scrollLeft;
-      syncLockRef.current = false;
-    };
-
-    const updateMetrics = () => {
-      setRailWidth(area.scrollWidth);
-      rail.scrollLeft = area.scrollLeft;
-    };
-
-    updateMetrics();
-    area.addEventListener("scroll", syncFromArea, { passive: true });
-    rail.addEventListener("scroll", syncFromRail, { passive: true });
-    window.addEventListener("resize", updateMetrics);
-
-    const observer = new ResizeObserver(updateMetrics);
-    observer.observe(area);
-    const pre = area.querySelector("pre");
-    if (pre) observer.observe(pre);
-
-    return () => {
-      area.removeEventListener("scroll", syncFromArea);
-      rail.removeEventListener("scroll", syncFromRail);
-      window.removeEventListener("resize", updateMetrics);
-      observer.disconnect();
-    };
-  }, [children, title]);
 
   return (
     <figure
@@ -175,41 +130,25 @@ export function CodeBlock({
           ),
         })
       )}
-      <div className="flex flex-col">
-        <div
-          ref={areaRef}
-          {...viewportProps}
-          className={cn(
-            "text-[13px] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
-            viewportProps.className
-          )}
-          style={
-            {
-              // space for toolbar
-              "--padding-right": !title
-                ? "calc(var(--spacing) * 8)"
-                : undefined,
-              counterSet: props["data-line-numbers"]
-                ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
-                : undefined,
-              ...viewportProps.style,
-            } as object
-          }
-        >
-          {children}
-        </div>
-        <div
-          ref={railRef}
-          className="codeblock-scroll-rail h-4 overflow-x-auto overflow-y-hidden border-t border-brand-neutral-500 bg-brand-neutral-600/60"
-        >
-          <div
-            className="h-px"
-            style={{
-              width: `${railWidth}px`,
-              minWidth: "100%",
-            }}
-          />
-        </div>
+      <div
+        ref={areaRef}
+        {...viewportProps}
+        className={cn(
+          "text-xs [&_code]:text-[0.75rem] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
+          viewportProps.className
+        )}
+        style={
+          {
+            // space for toolbar
+            "--padding-right": !title ? "calc(var(--spacing) * 8)" : undefined,
+            counterSet: props["data-line-numbers"]
+              ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
+              : undefined,
+            ...viewportProps.style,
+          } as object
+        }
+      >
+        {children}
       </div>
     </figure>
   );
