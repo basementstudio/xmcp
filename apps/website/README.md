@@ -302,7 +302,9 @@ HTML.
 The existing site-wide Organization and WebSite structured data remains the
 source of entity metadata; the footer does not add duplicate schema.
 
-Links stay in the same tab, have visible keyboard focus, and provide at least
-44px of target height. Check keyboard navigation, text contrast, narrow screens,
+Internal links stay in the same tab. External links open in a new tab with
+`noopener noreferrer`, a visual indicator, and a screen-reader notice. Community
+links pair their text labels with decorative SVG icons. All links have visible
+keyboard focus and provide at least 44px of target height. Check keyboard navigation, text contrast, narrow screens,
 and the mobile assistant button when editing the footer. The website is the
 runnable example; no framework API or example package changes are needed.
