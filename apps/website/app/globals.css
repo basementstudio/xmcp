@@ -174,7 +174,7 @@ html:has(#nd-blog-layout) {
 
 .prose p code,
 .prose li code {
-  @apply border border-brand-neutral-400 bg-brand-neutral-600 text-brand-neutral-100 text-[0.9rem] px-1.5 py-0.5 rounded-[2px] font-mono leading-none align-baseline;
+  @apply border border-brand-neutral-400 bg-brand-neutral-600 text-brand-neutral-100 text-[0.75rem] px-1.5 py-0.5 rounded-[2px] font-mono leading-none align-baseline;
   letter-spacing: 0;
   color: var(--color-brand-neutral-100) !important;
   background-color: var(--color-brand-neutral-600) !important;
