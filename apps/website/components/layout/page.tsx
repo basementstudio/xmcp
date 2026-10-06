@@ -23,7 +23,7 @@ export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
   return (
     <AnchorProvider toc={toc}>
       <article className="flex w-full min-w-0 flex-1 flex-col h-full mt-8">
-        <div className="flex flex-1 flex-col w-full min-w-0 gap-6 px-4 py-8 pt-0 md:px-8">
+        <div className="flex flex-1 flex-col w-full min-w-0 max-w-[700px] mx-auto gap-6 px-4 md:px-8">
           {props.children}
           <Footer />
         </div>

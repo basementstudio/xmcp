@@ -276,8 +276,9 @@ for content changes; no framework example is needed.
 
 ## Docs navigation
 
-The docs layout spans the viewport. The article fills the space between the
-fixed-width navigation and table of contents, with responsive padding.
+The docs layout spans the viewport. The article is centered in a 700px column
+between the fixed-width navigation and table of contents, shrinking to fit
+smaller screens with responsive padding.
 
 Docs sections and nested folders open by default. Readers can collapse them;
 navigating to a page reopens its ancestors while preserving other section choices.
