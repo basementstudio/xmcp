@@ -4,27 +4,28 @@ import { cn } from "../../utils/cn";
 import { Icons } from "./icons";
 
 const calloutVariants = cva(
-  "relative flex flex-col gap-4 my-4 border-l pl-4",
+  "relative flex flex-col gap-4 my-4 rounded-lg border p-4",
   {
     variants: {
       variant: {
         default: "border-[#D4943D]",
         destructive: "border-[#E8737A]",
         warning: "border-[#E8737A]",
-        info: "border-[#5BB8B0]",
+        info: "border-brand-neutral-400",
         success: "border-green-400",
       },
     },
-  defaultVariants: {
-    variant: "default",
-  },
-});
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
 const titleColorMap: Record<string, string> = {
   default: "text-[#D4943D]",
   destructive: "text-[#E8737A]",
   warning: "text-[#E8737A]",
-  info: "text-[#5BB8B0]",
+  info: "text-[#59C2FF]",
   success: "text-green-400",
 };
 
@@ -37,7 +38,8 @@ const defaultTitleMap: Record<string, string> = {
 };
 
 export interface CalloutProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof calloutVariants> {
   title?: string;
   icon?: string;
@@ -56,8 +58,7 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
       IconComponent = Icons.callout;
     }
 
-    const displayTitle =
-      title ?? defaultTitleMap[resolvedVariant] ?? "Callout";
+    const displayTitle = title ?? defaultTitleMap[resolvedVariant] ?? "Callout";
     const titleColor = titleColorMap[resolvedVariant] ?? "";
 
     return (

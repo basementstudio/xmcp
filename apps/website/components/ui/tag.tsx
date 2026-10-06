@@ -17,7 +17,7 @@ export function tagClassName({
   selected?: boolean;
 }) {
   const base =
-    "py-1 px-2 text-[0.625rem] uppercase border tracking-wide transition-colors duration-200";
+    "py-1 px-2 text-[0.625rem] uppercase rounded-md border tracking-wide transition-colors duration-200";
 
   if (!interactive) {
     return cn(
@@ -48,7 +48,8 @@ export const Tag = ({
 }: TagProps) => {
   const classes = cn(
     tagClassName({ interactive, selected }),
-    interactive && "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-white/70",
+    interactive &&
+      "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-white/70",
     className
   );
 
@@ -60,9 +61,5 @@ export const Tag = ({
     );
   }
 
-  return (
-    <div className={classes}>
-      {text}
-    </div>
-  );
+  return <div className={classes}>{text}</div>;
 };

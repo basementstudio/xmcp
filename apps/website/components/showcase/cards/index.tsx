@@ -30,9 +30,9 @@ export async function ShowcaseCard({
         className
       )}
     >
-      <div className="relative border border-muted p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="relative rounded-lg border border-muted p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded overflow-hidden">
+          <div className="w-10 h-10 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded-md overflow-hidden">
             <Image
               src={logo}
               alt={`${name} logo`}
@@ -53,7 +53,7 @@ export async function ShowcaseCard({
             <p className="text-sm text-[#BABABA] leading-relaxed">{tagline}</p>
 
             <div className="space-y-2">
-              <div className="bg-black/20 border border-white/10 rounded px-2 py-1 relative group/copy overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="bg-black/20 border border-white/10 rounded-md px-2 py-1 relative group/copy overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <code className="text-xs text-[#BABABA] font-mono whitespace-nowrap pr-8">
                   {connection}
                 </code>

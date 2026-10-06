@@ -72,10 +72,7 @@ export default function FaqPage() {
           <p className="text-brand-neutral-100 text-base max-w-[650px] text-center">
             Everything you need to know about building and shipping MCP servers
             with xmcp. For the full reference, head to the{" "}
-            <Link
-              href="/docs"
-              className="text-brand-white underline underline-offset-4"
-            >
+            <Link href="/docs" className="text-brand-white link-underline">
               documentation
             </Link>
             .
@@ -96,7 +93,7 @@ export default function FaqPage() {
               // First entry starts open so the page reads as answers rather
               // than a stack of closed labels.
               open={index === 0}
-              className="faq-item group p-4 rounded-xs border border-brand-neutral-500 scroll-mt-24"
+              className="faq-item group p-4 rounded-lg border border-brand-neutral-500 scroll-mt-24"
             >
               <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <h2 className="text-brand-white text-lg text-balance">

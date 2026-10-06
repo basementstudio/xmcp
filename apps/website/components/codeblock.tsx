@@ -81,51 +81,6 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const inTab = useContext(TabsContext) !== null;
   const areaRef = useRef<HTMLDivElement>(null);
-  const railRef = useRef<HTMLDivElement>(null);
-  const syncLockRef = useRef(false);
-  const [railWidth, setRailWidth] = useState(0);
-
-  useEffect(() => {
-    const area = areaRef.current;
-    const rail = railRef.current;
-    if (!area || !rail) return;
-
-    const syncFromArea = () => {
-      if (syncLockRef.current) return;
-      syncLockRef.current = true;
-      rail.scrollLeft = area.scrollLeft;
-      syncLockRef.current = false;
-    };
-
-    const syncFromRail = () => {
-      if (syncLockRef.current) return;
-      syncLockRef.current = true;
-      area.scrollLeft = rail.scrollLeft;
-      syncLockRef.current = false;
-    };
-
-    const updateMetrics = () => {
-      setRailWidth(area.scrollWidth);
-      rail.scrollLeft = area.scrollLeft;
-    };
-
-    updateMetrics();
-    area.addEventListener("scroll", syncFromArea, { passive: true });
-    rail.addEventListener("scroll", syncFromRail, { passive: true });
-    window.addEventListener("resize", updateMetrics);
-
-    const observer = new ResizeObserver(updateMetrics);
-    observer.observe(area);
-    const pre = area.querySelector("pre");
-    if (pre) observer.observe(pre);
-
-    return () => {
-      area.removeEventListener("scroll", syncFromArea);
-      rail.removeEventListener("scroll", syncFromRail);
-      window.removeEventListener("resize", updateMetrics);
-      observer.disconnect();
-    };
-  }, [children, title]);
 
   return (
     <figure
@@ -135,7 +90,7 @@ export function CodeBlock({
       className={cn(
         inTab ? "bg-fd-secondary -mx-px -mb-px" : "my-2 bg-fd-card",
         keepBackground && "bg-(--shiki-light-bg) dark:bg-(--shiki-dark-bg)",
-        "group shiki relative border border-brand-neutral-500 bg-brand-black/60 outline-none not-prose overflow-hidden text-sm rounded-sm",
+        "group shiki relative border border-brand-neutral-500 bg-brand-black/60 outline-none not-prose overflow-hidden text-sm rounded-lg",
         props.className
       )}
     >
@@ -158,7 +113,7 @@ export function CodeBlock({
             children: allowCopy && (
               <CopyButton
                 containerRef={areaRef}
-                className="top-0 right-0.5 [&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+                className="top-0 right-0.5 [&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
               />
             ),
           })}
@@ -170,46 +125,30 @@ export function CodeBlock({
           children: allowCopy && (
             <CopyButton
               containerRef={areaRef}
-              className="[&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+              className="[&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
             />
           ),
         })
       )}
-      <div className="flex flex-col">
-        <div
-          ref={areaRef}
-          {...viewportProps}
-          className={cn(
-            "text-[13px] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
-            viewportProps.className
-          )}
-          style={
-            {
-              // space for toolbar
-              "--padding-right": !title
-                ? "calc(var(--spacing) * 8)"
-                : undefined,
-              counterSet: props["data-line-numbers"]
-                ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
-                : undefined,
-              ...viewportProps.style,
-            } as object
-          }
-        >
-          {children}
-        </div>
-        <div
-          ref={railRef}
-          className="codeblock-scroll-rail h-4 overflow-x-auto overflow-y-hidden border-t border-brand-neutral-500 bg-brand-neutral-600/60"
-        >
-          <div
-            className="h-px"
-            style={{
-              width: `${railWidth}px`,
-              minWidth: "100%",
-            }}
-          />
-        </div>
+      <div
+        ref={areaRef}
+        {...viewportProps}
+        className={cn(
+          "text-[13px] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
+          viewportProps.className
+        )}
+        style={
+          {
+            // space for toolbar
+            "--padding-right": !title ? "calc(var(--spacing) * 8)" : undefined,
+            counterSet: props["data-line-numbers"]
+              ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
+              : undefined,
+            ...viewportProps.style,
+          } as object
+        }
+      >
+        {children}
       </div>
     </figure>
   );

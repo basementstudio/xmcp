@@ -27,7 +27,7 @@ export function TemplateDetailSidebar({
           href={template.repositoryUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
+          className="text-brand-neutral-50 link-underline hover:text-brand-white"
         >
           {repositoryLabel}
         </Link>
@@ -39,7 +39,7 @@ export function TemplateDetailSidebar({
             href={template.demoUrl || template.websiteUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-brand-white text-brand-neutral-50 underline underline-offset-2"
+            className="hover:text-brand-white text-brand-neutral-50 link-underline"
           >
             {template.demoUrl || template.websiteUrl}
           </Link>
@@ -52,7 +52,7 @@ export function TemplateDetailSidebar({
             href={template.replitUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
+            className="text-brand-neutral-50 link-underline hover:text-brand-white"
           >
             {template.replitUrl}
           </Link>

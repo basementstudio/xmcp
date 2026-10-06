@@ -38,14 +38,14 @@ export function MonetizationPlugins() {
               href={plugin.href}
               className={cn(
                 "relative flex flex-col gap-2 p-4",
-                "border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
+                "rounded-lg border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
                 "hover:border-brand-neutral-400 hover:bg-[rgba(15,15,15,0.85)]",
                 "transition-all duration-200 cursor-pointer overflow-hidden",
                 "no-underline hover:no-underline !decoration-transparent hover:!decoration-transparent"
               )}
             >
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
+                <span className="w-8 h-8 rounded-md border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
                   <IconComponent className="w-4 h-4 text-brand-w1" />
                 </span>
                 <span className="text-brand-w1 font-medium text-sm">

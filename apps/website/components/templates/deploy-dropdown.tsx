@@ -46,7 +46,7 @@ export function DeployDropdown({
         <Button
           variant={variant}
           size="sm"
-          className="group h-10 md:h-8 w-auto md:w-[90px] min-w-0 rounded-[2px] pl-3.5 md:pl-3 pr-2.5 md:pr-2 pt-1.5 pb-1.5 gap-2 text-[15px] leading-5 md:text-sm"
+          className="group h-10 md:h-8 w-auto md:w-[90px] min-w-0 rounded-md pl-3.5 md:pl-3 pr-2.5 md:pr-2 pt-1.5 pb-1.5 gap-2 text-[15px] leading-5 md:text-sm"
         >
           <span>Deploy</span>
           <ArrowDownIcon className="h-[5px] w-[10px] transition-transform duration-200 group-data-[state=open]:rotate-180" />
@@ -54,7 +54,7 @@ export function DeployDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="z-50 !bg-brand-neutral-600 opacity-100 border border-brand-neutral-400 text-brand-neutral-50 p-1 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 shadow-lg backdrop-blur-none overflow-hidden [&_*:focus-visible]:outline-none [&_*:focus-visible]:ring-0 [&_*:focus-visible]:outline-offset-0"
+        className="z-50 rounded-lg !bg-brand-neutral-600 opacity-100 border border-brand-neutral-400 text-brand-neutral-50 p-1 w-[var(--radix-dropdown-menu-trigger-width)] min-w-0 shadow-lg backdrop-blur-none overflow-hidden [&_*:focus-visible]:outline-none [&_*:focus-visible]:ring-0 [&_*:focus-visible]:outline-offset-0"
       >
         {options.map((option) =>
           option.disabled ? (
