@@ -91,7 +91,7 @@ export function TemplateCard({
         className
       )}
     >
-      <div className="relative border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
+      <div className="relative rounded-lg border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
         <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
           <h3 className="text-brand-white font-medium mt-0 text-[1.125rem]">
             {displayName}
@@ -109,7 +109,7 @@ export function TemplateCard({
             <div className="flex items-center justify-between mt-4 px-4 pb-4 gap-3">
               {category && <Tag text={category} />}
               {ctaLabel && (
-                <span className="text-[0.625rem] uppercase tracking-wide border border-brand-neutral-400 px-2 py-1 text-brand-neutral-50">
+                <span className="text-[0.625rem] uppercase tracking-wide rounded-md border border-brand-neutral-400 px-2 py-1 text-brand-neutral-50">
                   {ctaLabel}
                 </span>
               )}

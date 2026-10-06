@@ -53,7 +53,7 @@ export function Video({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-sm border border-brand-neutral-500"
+      className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500"
       style={{ aspectRatio }}
     >
       {!isPlaying && (

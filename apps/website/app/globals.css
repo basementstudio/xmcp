@@ -68,7 +68,7 @@ html:has(#nd-blog-layout) {
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-brand-neutral-300);
-  border-radius: 0;
+  border-radius: 9999px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -156,7 +156,7 @@ html:has(#nd-blog-layout) {
 
 .prose img {
   /* Don't apply styles to next/image */
-  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-sm;
+  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-lg;
 }
 
 .prose p {

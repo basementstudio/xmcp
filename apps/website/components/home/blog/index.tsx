@@ -66,7 +66,7 @@ export const BlogCard = ({
       href={`/blog/${post.slug}`}
       className="text-left group relative overflow-visible h-full block"
     >
-      <div className="relative border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="relative rounded-lg overflow-hidden border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {texture ? (
             <Image

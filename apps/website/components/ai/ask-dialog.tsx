@@ -308,7 +308,7 @@ function Message({
     >
       <div
         className={cn(
-          "rounded-xs px-1 transition-all duration-200",
+          "rounded-md px-1 transition-all duration-200",
           isUser &&
             "bg-white/10 text-end max-w-fit ml-auto leading-none px-4 py-2"
         )}
@@ -328,7 +328,7 @@ function Message({
             <Link
               key={i}
               href={item.url}
-              className="group block text-xs rounded-xs border border-brand-neutral-400 bg-brand-black p-2 transition-all duration-200 hover:bg-white/10 hover:border-brand-neutral-100"
+              className="group block text-xs rounded-md border border-brand-neutral-400 bg-brand-black p-2 transition-all duration-200 hover:bg-white/10 hover:border-brand-neutral-100"
             >
               <p className="font-semibold text-brand-neutral-50 group-hover:text-brand-white transition-colors">
                 {item.title}
@@ -480,7 +480,7 @@ function DesktopDialog({
       <DialogOverlay className="fixed inset-0 z-50 bg-brand-black/70" />
       <DialogContent
         aria-describedby={undefined}
-        className="fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-xs border border-brand-neutral-400 duration-200 overflow-hidden"
+        className="fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-lg border border-brand-neutral-400 duration-200 overflow-hidden"
       >
         <DialogTitle className="hidden">Ask AI</DialogTitle>
 

@@ -21,7 +21,7 @@ export function ShowcaseSubmissionCard() {
   return (
     <section
       aria-labelledby="showcase-submission-title"
-      className="col-span-12 mt-8 overflow-hidden rounded-sm border border-brand-neutral-500 bg-brand-neutral-600/40 md:mt-16"
+      className="col-span-12 mt-8 overflow-hidden rounded-lg border border-brand-neutral-500 bg-brand-neutral-600/40 md:mt-16"
     >
       <div className="grid md:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col items-start p-6 md:p-8 lg:p-10">
@@ -47,7 +47,7 @@ export function ShowcaseSubmissionCard() {
               href="https://github.com/basementstudio/xmcp/tree/main/apps/website/content/showcase"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xs border border-brand-white bg-brand-white px-4 py-2 text-sm font-medium text-brand-black transition-colors hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-brand-white bg-brand-white px-4 py-2 text-sm font-medium text-brand-black transition-colors hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
             >
               <GitHubLogoIcon aria-hidden="true" className="size-4 shrink-0" />
               Contribute on GitHub
@@ -58,7 +58,7 @@ export function ShowcaseSubmissionCard() {
               href="https://github.com/basementstudio/xmcp/blob/main/apps/website/README.md#showcase-submissions"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xs text-sm text-brand-neutral-50 underline underline-offset-4 transition-colors hover:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-md text-sm text-brand-neutral-50 underline underline-offset-4 transition-colors hover:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
             >
               Submission guide
               <ArrowUpRight aria-hidden="true" className="size-4 shrink-0" />

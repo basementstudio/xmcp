@@ -312,3 +312,11 @@ links pair their text labels with decorative SVG icons. All links have visible
 keyboard focus and provide at least 44px of target height. Check keyboard navigation, text contrast, narrow screens,
 and the mobile assistant button when editing the footer. The website is the
 runnable example; no framework API or example package changes are needed.
+
+## Corner radii
+
+Use `rounded-lg` (8px) for bordered cards, panels, dialogs, and media, and
+`rounded-md` (6px) for buttons, inputs, tags, and inline code. Clip images to
+their card’s rounded edges; connected terminal tabs share rounded outer corners.
+Keep divider lines straight and circular controls circular. Preview the docs,
+showcase, templates, blog, and FAQ on desktop and mobile when changing these styles.

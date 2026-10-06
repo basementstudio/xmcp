@@ -90,7 +90,7 @@ export function CodeBlock({
       className={cn(
         inTab ? "bg-fd-secondary -mx-px -mb-px" : "my-2 bg-fd-card",
         keepBackground && "bg-(--shiki-light-bg) dark:bg-(--shiki-dark-bg)",
-        "group shiki relative border border-brand-neutral-500 bg-brand-black/60 outline-none not-prose overflow-hidden text-sm rounded-sm",
+        "group shiki relative border border-brand-neutral-500 bg-brand-black/60 outline-none not-prose overflow-hidden text-sm rounded-lg",
         props.className
       )}
     >
@@ -113,7 +113,7 @@ export function CodeBlock({
             children: allowCopy && (
               <CopyButton
                 containerRef={areaRef}
-                className="top-0 right-0.5 [&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+                className="top-0 right-0.5 [&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
               />
             ),
           })}
@@ -125,7 +125,7 @@ export function CodeBlock({
           children: allowCopy && (
             <CopyButton
               containerRef={areaRef}
-              className="[&_button]:rounded-xs [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
+              className="[&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
             />
           ),
         })

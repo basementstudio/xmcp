@@ -200,7 +200,7 @@ export function SearchDialogContent({
         <SheetContent
           side="bottom"
           style={{ height: "60vh", maxHeight: "60vh" }}
-          className="!top-16 !bottom-auto w-full md:max-w-[calc(100%-2rem)] mx-auto md:!left-4 md:!right-4 p-0 bg-brand-black border border-brand-neutral-200 flex flex-col [&>button]:hidden data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 rounded-xs z-[200]"
+          className="!top-16 !bottom-auto w-full md:max-w-[calc(100%-2rem)] mx-auto md:!left-4 md:!right-4 p-0 bg-brand-black border border-brand-neutral-200 flex flex-col [&>button]:hidden data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 rounded-lg z-[200]"
         >
           <SheetTitle className="sr-only">{text.search}</SheetTitle>
           <div className="flex flex-col gap-4 p-4 py-3.5 h-full overflow-hidden">
@@ -216,7 +216,7 @@ export function SearchDialogContent({
       aria-describedby={undefined}
       {...props}
       className={cn(
-        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-[200] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-xs border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-400",
+        "fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-4 md:top-[calc(50%-250px)] left-1/2 z-[200] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-lg border p-4 py-3.5 duration-200 sm:max-w-lg border-brand-neutral-400",
         props.className
       )}
     >
@@ -416,7 +416,7 @@ export function SearchDialogListItem({
       )}
       aria-selected={active}
       className={cn(
-        "relative select-none px-2.5 py-2 text-start text-sm rounded-xs",
+        "relative select-none px-2.5 py-2 text-start text-sm rounded-md",
         active && "text-brand-neutral-50 bg-white/10",
         className
       )}

@@ -66,7 +66,7 @@ function EditableTerminal({
     <div id="terminal-output" className="mb-4">
       <div
         className={cn(
-          "border relative bg-black min-w-[600px] overflow-hidden",
+          "border rounded-lg relative bg-black min-w-[600px] overflow-hidden",
           className
         )}
         style={{ borderColor: "#333" }}

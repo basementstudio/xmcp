@@ -36,7 +36,7 @@ const TestimonialCard = ({
   logo,
 }: Testimonial) => {
   return (
-    <div className="flex h-full min-h-[220px] flex-col rounded-xs border border-brand-neutral-500 p-4 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
+    <div className="flex h-full min-h-[220px] flex-col rounded-lg border border-brand-neutral-500 p-4 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
         &ldquo;{tagline}&rdquo;
       </p>

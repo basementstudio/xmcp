@@ -96,7 +96,7 @@ export default function FaqPage() {
               // First entry starts open so the page reads as answers rather
               // than a stack of closed labels.
               open={index === 0}
-              className="faq-item group p-4 rounded-xs border border-brand-neutral-500 scroll-mt-24"
+              className="faq-item group p-4 rounded-lg border border-brand-neutral-500 scroll-mt-24"
             >
               <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                 <h2 className="text-brand-white text-lg text-balance">

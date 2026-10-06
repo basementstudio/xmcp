@@ -16,7 +16,7 @@ export function NavigationLink({
     <Link
       href={item.url}
       className={cn(
-        "flex flex-col gap-2 p-4 border border-brand-neutral-400 hover:border-brand-neutral-200 transition-colors group flex-1 rounded-xs",
+        "flex flex-col gap-2 p-4 border border-brand-neutral-400 hover:border-brand-neutral-200 transition-colors group flex-1 rounded-lg",
         !isPrevious && "items-end text-right"
       )}
     >
