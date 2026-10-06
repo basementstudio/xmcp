@@ -37,10 +37,25 @@ for (const kind of ["http", "stdio", "nextjs"] as const) {
 /** Greet from an existing function */
 export function greet({ name, count = 1 }: Input) { return name.repeat(count); }`,
           "src/lib/input.ts": `export interface Input {
-/** The name to greet */
+/** The name to greet
+ * @minLength 2
+ * @maxLength 8
+ * @pattern ^[A-Z][a-z]+$
+ */
 name: string;
-/** Repetitions */
+/** Repetitions
+ * @minimum 1
+ * @maximum 3
+ */
 count?: number;
+language?: "en" | "es";
+active?: boolean;
+/** @format email */
+email?: string;
+/** @format uri */
+website?: string;
+/** @format uuid */
+id?: string;
 }`,
           "src/tools/overridden.ts": `import { z } from "zod";
 export const schema = { name: z.string().min(3) };
@@ -71,12 +86,39 @@ export default function tool(input: { name: string }) { return input.name; }`,
           .description,
         "The name to greet"
       );
+      const properties = inferred.inputSchema.properties as Record<
+        string,
+        Record<string, unknown>
+      >;
+      assert.equal(properties.name.minLength, 2);
+      assert.equal(properties.name.maxLength, 8);
+      assert.equal(properties.name.pattern, "^[A-Z][a-z]+$");
+      assert.equal(properties.count.minimum, 1);
+      assert.equal(properties.count.maximum, 3);
+      assert.deepEqual(properties.language.enum, ["en", "es"]);
+      assert.equal(properties.active.type, "boolean");
+      assert.equal(properties.email.format, "email");
+      assert.equal(properties.website.format, "uri");
+      assert.equal(properties.id.format, "uuid");
       const result = await target.client.callTool(
         { name: "inferred", arguments: { name: "Ada", count: 2 } },
         REQUEST_OPTIONS
       );
       assert.deepEqual(result.content, [{ type: "text", text: "AdaAda" }]);
-      for (const args of [{}, { name: 123 }, { name: "Ada", count: "2" }]) {
+      for (const args of [
+        {},
+        { name: 123 },
+        { name: "Ada", count: "2" },
+        { name: "Ada", count: 99 },
+        { name: "Ada", count: 0 },
+        { name: "A" },
+        { name: "Adalovelace" },
+        { name: "ada" },
+        { name: "Ada", active: "yes" },
+        { name: "Ada", email: "invalid" },
+        { name: "Ada", website: "invalid" },
+        { name: "Ada", id: "invalid" },
+      ]) {
         const invalid = await target.client.callTool(
           { name: "inferred", arguments: args },
           REQUEST_OPTIONS
@@ -84,6 +126,12 @@ export default function tool(input: { name: string }) { return input.name; }`,
         assert.equal(invalid.isError, true);
         assert.match(JSON.stringify(invalid.content), /validation|invalid/i);
       }
+      const invalidLanguage = await target.client.callTool(
+        { name: "inferred", arguments: { name: "Ada", language: "fr" } },
+        REQUEST_OPTIONS
+      );
+      assert.equal(invalidLanguage.isError, true);
+      assert.match(JSON.stringify(invalidLanguage.content), /en[\s\S]*es/);
       const explicit = tools.find((tool) => tool.name === "overridden");
       assert.equal(explicit?.description, "Explicit description");
       const invalid = await target.client.callTool(

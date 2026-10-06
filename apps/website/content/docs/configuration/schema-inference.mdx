@@ -55,7 +55,44 @@ export function greet({ name, language = "en" }: GreetingInput) {
 export { greet as default } from "../lib/greet";
 ```
 
-The function's JSDoc becomes the tool description. An explicit `metadata.description` takes precedence. Property JSDoc becomes each field's description; JSDoc tags do not add validation rules.
+The function's JSDoc becomes the tool description. An explicit `metadata.description` takes precedence. Property JSDoc becomes each field's description. Supported JSDoc constraint tags also add runtime validation.
+
+## JSDoc validation constraints
+
+Add these tags to the JSDoc immediately above an input property. The compiler emits Zod validation, and MCP clients see the corresponding JSON Schema constraints:
+
+| Tag                         | Property type | Generated validation            |
+| --------------------------- | ------------- | ------------------------------- |
+| `@minimum` / `@maximum`     | `number`      | `.min()` / `.max()` (inclusive) |
+| `@minLength` / `@maxLength` | `string`      | `.min()` / `.max()`             |
+| `@pattern`                  | `string`      | `.regex(new RegExp(...))`       |
+| `@format email`             | `string`      | `.email()`                      |
+| `@format uri`               | `string`      | `.url()`                        |
+| `@format uuid`              | `string`      | `.uuid()`                       |
+
+```typescript
+export interface BookingInput {
+  /** Day of the month.
+   * @minimum 1
+   * @maximum 31
+   */
+  day: number;
+  /** Contact address.
+   * @format email
+   */
+  email: string;
+  /** Booking reference.
+   * @minLength 2
+   * @maxLength 8
+   * @pattern ^[A-Z]+$
+   */
+  reference?: string;
+}
+```
+
+A `day` of `99` or an invalid email is rejected before the handler runs. Bounds do not imply integer validation. Tags also work on imported interfaces, nested properties, and optional or nullable strings/numbers; `null` and omitted optional fields retain their normal behavior.
+
+Numeric bounds must be finite. Lengths must be nonnegative safe integers. Patterns use raw JavaScript regular expression source, without `/.../` delimiters or flags. Duplicate tags, malformed values, reversed bounds, unsupported formats, and tags on incompatible types fail the build with the property's source location. Constraint tags belong on input properties, not handlers. Literal types, arrays, and mixed unions need explicit schemas for these constraints. Unrecognized JSDoc tags are ignored.
 
 ## Supported inputs
 
@@ -66,6 +103,8 @@ The first parameter must resolve to an object with named properties. Supported p
 - Arrays and readonly arrays.
 - Nested objects and imported interfaces/type aliases.
 - Concrete utility types, such as `Pick`, when they resolve to supported properties.
+
+String literal unions generate `z.enum`, so clients see the allowed values and validation errors identify valid options. Booleans generate `z.boolean()` rather than a union of `true` and `false`.
 
 Functions with no parameters retain an empty input schema. A handler accepting request context but no inputs should explicitly export `schema = {}`.
 
@@ -88,7 +127,7 @@ export default function validateEmail({ email }: InferSchema<typeof schema>) {
 }
 ```
 
-TypeScript's `string` does not express email validation, and `number` does not express a minimum or maximum. Keep explicit schemas for refinements, coercion, transforms, and schema defaults. Function defaults still execute normally; inference does not evaluate them or advertise them as schema defaults. Unknown object properties follow the existing Zod stripping behavior.
+JSDoc tags cover the constraints above. Keep explicit schemas for custom refinements, coercion, transforms, and schema defaults. Function defaults still execute normally; inference does not evaluate them or advertise them as schema defaults. Unknown object properties follow the existing Zod stripping behavior.
 
 ## Builds and development
 

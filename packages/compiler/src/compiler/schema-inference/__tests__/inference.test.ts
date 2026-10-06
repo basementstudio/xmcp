@@ -121,7 +121,11 @@ test("reuses the project while refreshing imported types, docs and configuration
     "types.ts": "export interface Input { value: string }",
   });
   const before = project.generate(["tool.ts"]);
-  assert.ok(project.dependencies.has(path.join(directory, "types.ts")));
+  assert.ok(
+    project.dependencies.has(
+      path.join(directory, "types.ts").replaceAll("\\", "/")
+    )
+  );
   write(
     "types.ts",
     "export interface Input { /** Updated value */\n value: number }"
@@ -148,7 +152,11 @@ test("honors tsconfig aliases and inherited config dependencies", () => {
   });
   const tool = load(project.generate(["tool.ts"]))({}, "tool.ts");
   assert.equal(z.object(tool.schema).safeParse({ value: 1 }).success, true);
-  assert.ok(project.dependencies.has(path.join(directory, "base.json")));
+  assert.ok(
+    project.dependencies.has(
+      path.join(directory, "base.json").replaceAll("\\", "/")
+    )
+  );
 });
 
 for (const type of [
@@ -217,4 +225,224 @@ test("generated schemas also validate with Zod 3", () => {
     flag: null,
   });
   assert.equal(schema.safeParse({ value: 3, flag: true }).success, false);
+});
+
+for (const library of [z, z3]) {
+  test(`emits enums and booleans with Zod ${library === z ? 4 : 3}`, () => {
+    const { project } = fixture({
+      "tool.ts": `export default (input: {
+        language?: "en" | "es";
+        nullableLanguage: "en" | "es" | null;
+        active: boolean;
+        optionalActive?: boolean;
+        nullableActive: boolean | null;
+        literal: true;
+        mixed: "yes" | 1;
+      }) => input;`,
+    });
+    const code = project.generate(["tool.ts"]);
+    assert.match(code, /z\.enum\(/);
+    const tool = load(code, library)({}, "tool.ts");
+    assert.deepEqual(tool.schema.language.unwrap().options.sort(), [
+      "en",
+      "es",
+    ]);
+    assert.equal(tool.schema.active.constructor.name, "ZodBoolean");
+    assert.equal(
+      tool.schema.optionalActive.unwrap().constructor.name,
+      "ZodBoolean"
+    );
+    const input = {
+      active: false,
+      nullableActive: null,
+      nullableLanguage: null,
+      literal: true,
+      mixed: 1,
+    };
+    const schema =
+      library === z ? z.object(tool.schema) : z3.object(tool.schema);
+    assert.deepEqual(schema.parse(input), input);
+    for (const changes of [
+      { active: "false" },
+      { literal: false },
+      { mixed: 2 },
+    ])
+      assert.equal(schema.safeParse({ ...input, ...changes }).success, false);
+    const invalid = schema.safeParse({ ...input, language: "fr" });
+    assert.equal(invalid.success, false);
+    if (!invalid.success) assert.match(invalid.error.message, /en[\s\S]*es/);
+    if (library === z) {
+      const properties = z.toJSONSchema(z.object(tool.schema))
+        .properties as Record<string, Record<string, unknown>>;
+      assert.equal(properties.active.type, "boolean");
+      assert.deepEqual(properties.language.enum, ["en", "es"]);
+    }
+  });
+
+  test(`validates JSDoc bounds, patterns and formats with Zod ${library === z ? 4 : 3}`, () => {
+    const { project } = fixture({
+      "tool.ts": 'export { default } from "./lib/tool";',
+      "lib/tool.ts": `import type { Input } from "./input";
+export default (input: Input) => input;`,
+      "lib/input.ts": `export interface Input {
+/** Day of month.
+ * @minimum 1
+ * @maximum 31
+ */
+day?: number | null;
+/** Account code.
+ * @minLength 2
+ * @maxLength 5
+ * @pattern ^[A-Z]+$
+ */
+code: string | null;
+/** @format email */
+email: string;
+/** @format uri */
+website?: string;
+/** @format uuid */
+id: string;
+nested: {
+/** @minimum -1.5 */
+value: number };
+}`,
+    });
+    const tool = load(project.generate(["tool.ts"]), library)({}, "tool.ts");
+    assert.equal(tool.schema.day.description, "Day of month.");
+    const schema =
+      library === z ? z.object(tool.schema) : z3.object(tool.schema);
+    const input = {
+      day: 31,
+      code: "ABC",
+      email: "ada@example.com",
+      website: "https://example.com",
+      id: "123e4567-e89b-42d3-a456-426614174000",
+      nested: { value: -1.5 },
+    };
+    assert.deepEqual(schema.parse(input), input);
+    assert.equal(
+      schema.safeParse({ ...input, day: null, code: null, website: undefined })
+        .success,
+      true
+    );
+    assert.equal(schema.safeParse({ ...input, day: undefined }).success, true);
+    for (const changes of [
+      { day: 0 },
+      { day: 99 },
+      { code: "A" },
+      { code: "ABCDEF" },
+      { code: "ab" },
+      { email: "invalid" },
+      { website: "invalid" },
+      { id: "invalid" },
+      { nested: { value: -2 } },
+    ])
+      assert.equal(
+        schema.safeParse({ ...input, ...changes }).success,
+        false,
+        JSON.stringify(changes)
+      );
+    if (library === z) {
+      const properties = z.toJSONSchema(z.object(tool.schema))
+        .properties as Record<string, Record<string, unknown>>;
+      assert.equal(properties.email.format, "email");
+      assert.equal(properties.website.format, "uri");
+      assert.equal(properties.id.format, "uuid");
+    }
+  });
+}
+
+for (const [type, tags, error] of [
+  ["number", "@minimum NaN", /finite number/],
+  ["number", "@maximum Infinity", /finite number/],
+  ["number", "@minimum 1e999", /finite number/],
+  ["number", "@minimum 0x10", /finite number/],
+  ["number", "@minimum 1oops", /finite number/],
+  ["number", "@minimum", /requires a value/],
+  ["number", "@minimum 5\n * @maximum 1", /must not exceed/],
+  ["number", "@minimum 1\n * @minimum 2", /duplicate/],
+  ["string", "@minLength -1", /nonnegative safe integer/],
+  ["string", "@maxLength 1.5", /nonnegative safe integer/],
+  ["string", "@maxLength 9007199254740992", /nonnegative safe integer/],
+  ["string", "@minLength 4\n * @maxLength 2", /must not exceed/],
+  ["string", "@pattern [", /valid regular expression/],
+  ["string", "@format date", /email, uri, or uuid/],
+  ["string", "@minimum 1", /number property/],
+  ["number", "@minLength 1", /string property/],
+  ["boolean", "@format email", /string property/],
+  ["string[]", "@pattern a", /string property/],
+  ["string | number", "@maxLength 3", /string property/],
+  ['"yes" | "no"', "@pattern a", /string property/],
+  ["null", "@format email", /string property/],
+] as const) {
+  test(`rejects ${tags.replaceAll("\n", " ")} on ${type} at the property location`, () => {
+    const { project } = fixture({
+      "tool.ts": `export default (input: {\n/** ${tags} */\nvalue: ${type}\n}) => input;`,
+    });
+    assert.throws(
+      () => project.generate(["tool.ts"]),
+      (errorValue: unknown) => {
+        assert.ok(errorValue instanceof Error);
+        assert.match(
+          errorValue.message,
+          /tool\.ts:\d+:\d+: Cannot infer tool .*\(input.value\)/
+        );
+        assert.match(errorValue.message, error);
+        return true;
+      }
+    );
+  });
+}
+
+test("rejects constraint tags on handlers and preserves explicit schema overrides", () => {
+  const { project, write } = fixture({
+    "tool.ts":
+      "/** @minimum 1 */\nexport default (input: { value: number }) => input;",
+  });
+  assert.throws(
+    () => project.generate(["tool.ts"]),
+    /belongs on an input property/
+  );
+  write(
+    "tool.ts",
+    "/** @format invalid */\nexport default (input: { /** @minimum invalid */\nvalue: number }) => input;\nexport const schema = {};"
+  );
+  assert.deepEqual(
+    load(project.generate(["tool.ts"]))({ schema: {} }, "tool.ts").schema,
+    {}
+  );
+});
+
+test("constraint-only edits regenerate schemas and invalid edits recover", () => {
+  const { project, write } = fixture({
+    "tool.ts":
+      'import type { Input } from "./input"; export default (input: Input) => input;',
+    "input.ts": "export interface Input {\n/** @maximum 31 */\nday: number }",
+  });
+  const before = project.generate(["tool.ts"]);
+  write(
+    "input.ts",
+    "export interface Input {\n/** @maximum 10 */\nday: number }"
+  );
+  const after = project.generate(["tool.ts"]);
+  assert.notEqual(after, before);
+  assert.equal(
+    z.object(load(after)({}, "tool.ts").schema).safeParse({ day: 11 }).success,
+    false
+  );
+  write(
+    "input.ts",
+    "export interface Input {\n/** @maximum invalid */\nday: number }"
+  );
+  assert.throws(() => project.generate(["tool.ts"]), /finite number/);
+  write(
+    "input.ts",
+    "export interface Input {\n/** @maximum 31 */\nday: number }"
+  );
+  assert.equal(
+    z
+      .object(load(project.generate(["tool.ts"]))({}, "tool.ts").schema)
+      .safeParse({ day: 11 }).success,
+    true
+  );
 });
