@@ -74,6 +74,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/descope": Icons.descope,
   "/docs/integrations/polar": Icons.polar,
   "/docs/integrations/scalekit": Icons.scalekit,
+  "/docs/integrations/sentry": BarChartIcon,
   "/docs/integrations/supabase": TokensIcon,
   "/docs/integrations/workos": Icons.workos,
   "/docs/integrations/x402": Icons.x402,
