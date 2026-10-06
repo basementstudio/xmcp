@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { XmcpLogo } from "@/components/xmcp-logo";
 import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 import { ArrowUpRight, CircleDot } from "lucide-react";
 import { Icons } from "@/components/icons";
@@ -69,11 +70,9 @@ export const Footer = () => {
               href="/"
               prefetch={false}
               aria-label="xmcp home"
-              className="link-underline-group inline-flex min-h-11 items-center rounded-xs font-mono text-3xl font-medium tracking-tight hover:text-brand-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="inline-flex min-h-11 items-center rounded-md transition-opacity duration-200 hover:opacity-80 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
             >
-              <span translate="no" className="link-underline-label">
-                xmcp
-              </span>
+              <XmcpLogo className="h-8 w-auto" />
             </Link>
             <p className="mt-4 text-xl leading-snug text-pretty">
               The TypeScript MCP framework.
