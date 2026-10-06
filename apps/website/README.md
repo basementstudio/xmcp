@@ -279,6 +279,9 @@ for content changes; no framework example is needed.
 Docs sections and nested folders open by default. Readers can collapse them;
 navigating to a page reopens its ancestors while preserving other section choices.
 On small screens, **Browse docs** opens the keyboard-accessible navigation drawer.
+The navigation fills the available viewport below the header. Scroll-edge fades
+appear only where more content remains; padding keeps the first and last links
+fully visible, including in the mobile drawer.
 
 Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
 a docs page; unmapped pages use a document icon and explicit page icons take
@@ -290,3 +293,16 @@ Run the sidebar tree regression checks with Node 22:
 pnpm --filter website exec node --experimental-strip-types --test scripts/docs-sidebar.test.mjs
 pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
 ```
+
+## Footer navigation
+
+The shared footer includes a short framework description, labeled navigation
+groups, and links to the existing `/llms.txt` and `/llms-full.txt` references.
+Keep labels descriptive and use crawlable links rendered in the initial HTML.
+The existing site-wide Organization and WebSite structured data remains the
+source of entity metadata; the footer does not add duplicate schema.
+
+Links stay in the same tab, have visible keyboard focus, and provide at least
+44px of target height. Check keyboard navigation, text contrast, narrow screens,
+and the mobile assistant button when editing the footer. The website is the
+runnable example; no framework API or example package changes are needed.
