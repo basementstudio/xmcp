@@ -1,0 +1,61 @@
+---
+title: "Stripe and Metronome"
+metadataTitle: "Stripe and Metronome | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Stripe and Metronome integration for xmcp servers."
+description: "Configure Stripe and Metronome with xmcp middleware and runnable examples."
+---
+
+Meter tool admissions with `@xmcp-dev/billing`, then deliver durable usage events to Metronome or Stripe Billing Meters. One middleware covers filesystem tools. The application owns customer authentication, persistence, pricing, and credit policy.
+
+```sh
+pnpm add @xmcp-dev/billing
+```
+
+## Record before executing
+
+```ts
+import { usageBilling } from "@xmcp-dev/billing";
+
+export const mcp = usageBilling({
+  customer: (context) => context.get<string>("billingCustomerId"),
+  units: (context) => (context.params.name === "report" ? 3 : 1),
+  admit: async (event) => {
+    // In one database transaction: check/debit credits and INSERT this event
+    // into a durable outbox. Resolve true only after COMMIT; false denies.
+    return yourBillingStore.admit(event);
+  },
+});
+```
+
+`yourBillingStore` represents your application's transactional persistence, not an exported xmcp API. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/billing-http) supplies a concrete SQLite implementation and delivery worker. An earlier authenticated middleware must set the billing customer ID, or verify the current request inside `customer`. Never accept a billing customer ID or price directly from untrusted tool arguments.
+
+`admit` receives an immutable event containing `id`, `customerId`, `tool`, positive integer `units`, and an ISO `timestamp`. The ID identifies one execution round. Returning false denies execution; throwing returns a generic tool error and does not run the handler. Listings, prompts, and resources bypass billing.
+
+This meters **admitted attempts**. Once admission commits, subsequent failure, cancellation, or a crash does not refund credits. Each input-required execution round is another admission. If your product bills only completed work, its business transaction must record that completion and usage together; this admission middleware is not that billing model. Tool retries are new attempts; delivery retries reuse the stored event ID.
+
+## Deliver from a worker
+
+```ts
+import { metronomeEvents, stripeMeterEvents } from "@xmcp-dev/billing";
+
+const deliver = metronomeEvents({
+  secretKey: process.env.METRONOME_API_KEY!,
+  eventName: "xmcp_tool_attempt",
+});
+// Existing Stripe Billing Meters users can choose:
+const deliverToStripe = stripeMeterEvents({
+  secretKey: process.env.STRIPE_SECRET_KEY!,
+  eventName: "xmcp_tool_attempt",
+});
+```
+
+Read pending events from your outbox, await `deliver(event)`, then mark the row delivered. Retain failures for retry and alert on persistent errors. A crash after provider acceptance may cause redelivery: Stripe receives the same event identifier and idempotency key; Metronome receives the same `transaction_id`. Providers' deduplication windows are finite. The example stops automatic delivery for events older than 23 hours so an operator can reconcile ambiguous records before replaying them. API acceptance does not prove successful invoicing; monitor provider ingestion errors and reconcile your outbox.
+
+[Stripe recommends Metronome for new usage-based integrations](https://docs.stripe.com/billing/subscriptions/usage-based/recording-usage). Configure a Metronome billable metric for `xmcp_tool_attempt` that sums `properties.units`, plus the customer's product/contract. For existing Stripe Billing Meters, configure the matching meter event name, `stripe_customer_id` customer field, `value` sum field, and a subscribed metered price. These adapters do not create subscriptions, contracts, invoices, or checkout sessions.
+
+## Prepaid credits
+
+The example atomically debits local integer usage credits and inserts an outbox event before allowing a tool call. It never checks an eventually consistent invoice total as a real-time spending gate. Grants are explicit demo administrative commands. A production grant must come from a verified, idempotently handled purchase or entitlement event. Do not add credits from an unsigned webhook or a client assertion.
+
+SQLite demonstrates durability on one host. Deployments across hosts need a shared transactional store with equivalent atomic behavior. Keep each outbox bound to one provider configuration; changing providers requires reconciling outstanding records. No Redis, payment SDK, or job-queue service is required by the plugin itself.

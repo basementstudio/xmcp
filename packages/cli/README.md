@@ -1,13 +1,50 @@
 # @xmcp-dev/cli
 
-CLI tool for generating typed clients and scaffolding xmcp primitives.
+CLI tool for inspecting MCP servers, generating typed clients, and scaffolding xmcp primitives.
 
 ## Usage
 
 ```bash
 npx @xmcp-dev/cli generate [options]
 npx @xmcp-dev/cli create <tool|resource|prompt> [name] [options]
+npx @xmcp-dev/cli inspect <url|client-name> [--json]
+npx @xmcp-dev/cli list <url|client-name> [--json]
+npx @xmcp-dev/cli list --json --stdio <command> [args...]
 ```
+
+## Inspecting servers
+
+`inspect` reports server identity, the negotiated protocol version, capabilities,
+and instructions. `list` retrieves tools, prompts, resources, and resource
+templates, including their metadata and schemas in JSON mode. List methods follow
+the server's pagination; unadvertised capabilities appear as empty arrays.
+
+```bash
+npx @xmcp-dev/cli inspect http://localhost:3001/mcp
+npx @xmcp-dev/cli list http://localhost:3001/mcp --json
+npx @xmcp-dev/cli inspect context7 --clients src/clients.ts --json
+npx @xmcp-dev/cli list --json --stdio node ./dist/stdio.js
+```
+
+Client names use the same configuration loader as `generate`: by default it
+searches `src/clients.ts`, then `clients.ts`. Use `-c, --clients <path>` for a
+different file. Configured HTTP headers and STDIO command, args, environment,
+working directory, and stderr settings are preserved.
+
+Put CLI options **before `--stdio`**. Everything after its executable is passed
+unchanged to that subprocess, including `--help`, `--json`, and quoted arguments.
+Direct STDIO commands run from the current directory.
+
+`--json` writes one JSON object plus a newline. Inspection uses the keys
+`serverInfo`, `protocolVersion`, `capabilities`, and `instructions`; listing uses
+`tools`, `prompts`, `resources`, and `resourceTemplates`. Normal output is a
+readable summary. Stdout contains results only; config/dependency logs and errors
+go to stderr. A configuration, connection, or listing failure exits nonzero and
+writes no partial result. Both commands close the managed connection before
+printing, including on failure, and STDIO cleanup stops the spawned server.
+
+The commands automatically negotiate modern or legacy MCP. They query metadata
+without invoking tools, reading resource contents, or rendering prompts.
 
 ## Scaffolding
 

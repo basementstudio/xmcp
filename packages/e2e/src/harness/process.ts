@@ -26,6 +26,8 @@ export function startProcess(
     detached: process.platform !== "win32",
   });
   let output = "";
+  let stdout = "";
+  let stderr = "";
   let failure: Error | undefined;
   let closed = false;
   const events = new EventEmitter();
@@ -34,8 +36,14 @@ export function startProcess(
     output = (output + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
     events.emit("output");
   };
-  child.stdout.on("data", capture);
-  child.stderr.on("data", capture);
+  child.stdout.on("data", (chunk: Buffer) => {
+    stdout = (stdout + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
+    capture(chunk);
+  });
+  child.stderr.on("data", (chunk: Buffer) => {
+    stderr = (stderr + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
+    capture(chunk);
+  });
   // Resolve even on failure; callers decide whether an exit was expected.
   const completion = new Promise<number | null>((resolve) => {
     child.once("error", (error) => {
@@ -101,6 +109,8 @@ export function startProcess(
     stop,
     waitForOutput,
     output: () => output,
+    stdout: () => stdout,
+    stderr: () => stderr,
     error: () => failure,
   };
 }
