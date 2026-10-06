@@ -232,7 +232,7 @@ for (const adapter of [
           });
           assert.deepEqual(config.output?.library, { type: "module" });
           assert.equal(config.output?.filename, "index.js");
-          assert.match(config.output?.path ?? "", /\.xmcp\/adapter$/);
+          assert.match(config.output?.path ?? "", /\.xmcp[\\/]adapter$/);
           assert.deepEqual(
             emittedPackageJsonTypes(config.plugins as unknown[]),
             ["module"]
@@ -260,7 +260,7 @@ for (const adapter of [
         platforms: { cloudflare: true },
       });
       assert.equal(config.output?.filename, "worker.js");
-      assert.match(config.output?.path ?? "", /\.xmcp\/cloudflare$/);
+      assert.match(config.output?.path ?? "", /\.xmcp[\\/]cloudflare$/);
       assert.deepEqual(Object.keys(config.entry as object), ["worker"]);
     });
   });
