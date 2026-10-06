@@ -24,6 +24,8 @@ jobs:
           node-version: 22.x
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
+      - name: Build xmcp config dependency
+        run: pnpm --filter xmcp build
       - run: pnpm --filter @xmcp-dev/compiler test:config
 
   e2e-conformance:
