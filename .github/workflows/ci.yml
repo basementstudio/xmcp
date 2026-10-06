@@ -24,7 +24,26 @@ jobs:
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @xmcp-dev/e2e typecheck
+      - run: pnpm --filter @xmcp-dev/cli test
+      - run: pnpm --filter @xmcp-dev/sentry build
+      - run: pnpm --filter @xmcp-dev/sentry test
+      - run: pnpm --filter sentry-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter sentry-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/supabase build
+      - run: pnpm --filter @xmcp-dev/supabase test
+      - run: pnpm --filter supabase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter supabase-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/billing build
+      - run: pnpm --filter @xmcp-dev/billing test
+      - run: pnpm --filter billing-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter billing-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/coinbase build
+      - run: pnpm --filter @xmcp-dev/coinbase test
+      - run: pnpm --filter coinbase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter coinbase-http exec tsc --noEmit
       - run: pnpm --filter @xmcp-dev/upstash test
+      - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter upstash-http exec tsc --noEmit
       - run: pnpm --filter @xmcp-dev/e2e test:unit
       - run: pnpm --filter @xmcp-dev/e2e test:fast
       - name: Upload failed fixture logs
