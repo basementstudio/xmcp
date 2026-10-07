@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/ui",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Component library for building UIs on top of xmcp MCP servers",
   "type": "module",
   "main": "./dist/index.js",
@@ -67,5 +67,10 @@
   "license": "MIT",
   "engines": {
     "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/basementstudio/xmcp.git",
+    "directory": "packages/ui"
   }
 }
