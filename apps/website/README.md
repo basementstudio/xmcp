@@ -28,6 +28,10 @@ Markdown without contacting GitHub. New releases and edits appear on the next
 deployment. The website Turbo build cache is disabled to refresh even on an
 unchanged redeploy; dependency builds retain their caches.
 
+Production builds also remove the previous `.next` output before compiling.
+This prevents restored deployment artifacts from serving an older stylesheet
+after a successful build. Package-manager and dependency build caches are kept.
+
 Public releases need no credentials. Optionally set `GITHUB_TOKEN` in the build
 or shell environment for authenticated API limits. This script reads the process
 environment, not Next.js `.env` files; never use a `NEXT_PUBLIC_` token. Network,
