@@ -71,6 +71,8 @@ jobs:
           if-no-files-found: ignore
 
   changeset-check:
+    # The generated release PR consumes changesets instead of adding one.
+    if: github.head_ref != 'changeset-release/main'
     # Flags a PR that edits a releasable package without adding a changeset.
     # Only packages/** counts — the website and examples are private, so
     # Changesets does not consider them releasable and they never trip this.
@@ -372,7 +374,11 @@ jobs:
       - name: Verify lockfile and install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Check main packages integrity
+      - name: Test stable release decision
+        # Exercise the release decision without publishing or touching real changesets.
+        run: node --test scripts/prepare-stable-release.test.cjs
+
+      - name: Check main package metadata
         run: |
           echo "Checking main package.json files..."
 
