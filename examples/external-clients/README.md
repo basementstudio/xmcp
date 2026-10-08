@@ -1,6 +1,32 @@
 # External clients
 
-This example includes CLI discovery, generated clients, and a direct managed-client script.
+This example includes CLI discovery and installation, generated clients, and a direct managed-client script.
+
+## Client installation
+
+Preview a Cursor project config without starting a server or writing a file:
+
+```sh
+pnpm install:preview
+```
+
+This reads `local` from `discovery.clients.ts` and prints the proposed
+`.cursor/mcp.json`. Set `MCP_URL` to select another server. To write the config:
+
+```sh
+pnpm exec xmcp-dev-cli install local --clients discovery.clients.ts --client cursor --config .cursor/mcp.json
+```
+
+Existing settings and other servers are preserved. A conflicting `local` entry
+requires `--replace`; running the same command again leaves the file untouched.
+Restart or refresh the client after installation. Start your server before using
+it from the client.
+
+Omit the destination options to print generic MCP JSON only:
+
+```sh
+pnpm exec xmcp-dev-cli install local --clients discovery.clients.ts
+```
 
 ## CLI discovery
 

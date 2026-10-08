@@ -14,7 +14,8 @@
     "generate": "xmcp-dev-cli generate",
     "managed": "node managed-client.mjs",
     "inspect": "xmcp-dev-cli inspect local --clients discovery.clients.ts",
-    "list:server": "xmcp-dev-cli list local --clients discovery.clients.ts"
+    "list:server": "xmcp-dev-cli list local --clients discovery.clients.ts",
+    "install:preview": "xmcp-dev-cli install local --clients discovery.clients.ts --client cursor --config .cursor/mcp.json --dry-run"
   },
   "dependencies": {
     "@xmcp-dev/cli": "workspace:*",
