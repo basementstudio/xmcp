@@ -18,12 +18,18 @@ Commands:
   create <type> [name]         Scaffold a new tool, resource, or prompt
   inspect <target>             Show MCP server details and capabilities
   list <target>                List tools, prompts, resources, and templates
+  import-openapi <file>         Generate GET tools from an OpenAPI JSON file
 
 Inspect / list options:
   <target>                    HTTP(S) URL or client name from src/clients.ts
   -c, --clients <path>         Path to a named-client config
   --json                      Print a JSON result
   --stdio <cmd> [args]         Spawn a server; put all CLI options before --stdio
+
+Import OpenAPI options:
+  --operations <ids>           Comma-separated operation IDs (default: all GETs)
+  --base-url <url>             Override the API server URL
+  -o, --out <path>             Tool output directory (default: src/tools)
 
 Generate options:
   -o, --out <path>             Output directory (default: src/generated)
@@ -96,6 +102,15 @@ function printHelp() {
 }
 
 async function main() {
+  if (process.argv[2] === "import-openapi") {
+    const { parseImportOpenApiOptions, runImportOpenApi } =
+      await import("./commands/import-openapi.js");
+    const options = parseImportOpenApiOptions(process.argv.slice(3));
+    if (options.help) return printHelp();
+    const paths = await runImportOpenApi(options);
+    for (const path of paths) console.log(`Created ${path}`);
+    return;
+  }
   if (process.argv[2] === "inspect" || process.argv[2] === "list") {
     const { parseDiscoveryOptions } =
       await import("./utils/discovery-options.js");

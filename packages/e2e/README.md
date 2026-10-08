@@ -188,6 +188,13 @@ otherwise they print `<fixture label> does not support <capability>`.
 
 ## Client tests
 
+The `openapi-import` capability runs the built importer on a small spec, supplies
+the generated tools through fixture `files`, and calls a local API through those
+compiled tools. The matrix covers HTTP/STDIO, both module formats, all adapters,
+and both protocol modes. Checks include URL encoding, omitted values, query
+arrays, upstream errors, and dot-segment rejection. Each fixture owns its API
+server and closes it during teardown.
+
 The `cli-discovery` conformance capability runs the built developer CLI against
 the compiled fixtures, including every adapter and both module formats. It
 checks inspection, complete catalog shapes, named configs, and separation of

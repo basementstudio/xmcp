@@ -4,6 +4,7 @@ import type { ProtocolMode } from "./client-options.js";
 
 export type Capability =
   | "cli-discovery"
+  | "openapi-import"
   | "managed-client"
   | "managed-client-interactive"
   | "component-visibility"

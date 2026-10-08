@@ -896,6 +896,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/openapi-import:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.1.13
+    devDependencies:
+      '@xmcp-dev/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/polar-http:
     dependencies:
       '@xmcp-dev/polar':

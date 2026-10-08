@@ -1,0 +1,26 @@
+{
+  "name": "OpenAPI Import",
+  "private": true,
+  "type": "module",
+  "description": "Generate xmcp GET tools from an OpenAPI document",
+  "keywords": [
+    "openapi",
+    "tools",
+    "integrations"
+  ],
+  "scripts": {
+    "api": "node api.mjs",
+    "generate": "xmcp-dev-cli import-openapi openapi.json --out generated-preview",
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/cli": "workspace:*",
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}
