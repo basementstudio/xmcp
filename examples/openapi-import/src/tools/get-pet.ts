@@ -38,8 +38,18 @@ export default async function handler(args: InferSchema<typeof schema>) {
     query.push("verbose=" + encode(args["verbose"]));
   }
   url.search = query.join("&");
+  const headers = new Headers();
+  function setHeader(name: string, value: string) {
+    try {
+      headers.set(name, value);
+    } catch {
+      throw new Error("Invalid value for header " + name + ".");
+    }
+  }
+
   const response = await fetch(url, {
     method: "GET",
+    headers,
     signal: getRequestContext().signal,
   });
   if (!response.ok)
