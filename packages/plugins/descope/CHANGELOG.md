@@ -1,5 +1,13 @@
 # @xmcp-dev/descope
 
+## 1.0.1
+
+### Patch Changes
+
+- 008f50c: Use the configured issuer's origin for Descope SDK token verification and the
+  fallback discovery JWKS URL, so alternate environments and custom domains do not
+  fetch signing keys from the default Descope host.
+
 ## 1.0.0
 
 ### Patch Changes
