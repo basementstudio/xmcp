@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import {
+  CliInputError,
+  parseExecutionOptions,
+} from "./utils/execution-options.js";
+
 interface ParsedArgs {
   command?: string;
   subcommand?: string;
@@ -18,12 +23,24 @@ Commands:
   create <type> [name]         Scaffold a new tool, resource, or prompt
   inspect <target>             Show MCP server details and capabilities
   list <target>                List tools, prompts, resources, and templates
+  call <target> <tool>         Call a tool and print its complete JSON result
+  read-resource <target> <uri> Read a resource and print its JSON result
+  get-prompt <target> <name>   Render a prompt and print its JSON result
 
 Inspect / list options:
   <target>                    HTTP(S) URL or client name from src/clients.ts
   -c, --clients <path>         Path to a named-client config
   --json                      Print a JSON result
   --stdio <cmd> [args]         Spawn a server; put all CLI options before --stdio
+
+Call / read-resource / get-prompt:
+  Reuse the connection options above; with --stdio, omit <target>.
+  --arg <key=value>            Repeat for tool/prompt arguments
+  --args-file <path|->         Read a JSON argument object from a file or stdin
+  --stdin                     Read a JSON argument object from stdin
+  Piped stdin is read when no argument option is given. Do not mix sources.
+  read-resource takes a complete URI and no argument options.
+  Results are JSON. Exit codes: 0 success, 1 tool/server error, 2 invalid input.
 
 Generate options:
   -o, --out <path>             Output directory (default: src/generated)
@@ -96,10 +113,20 @@ function printHelp() {
 }
 
 async function main() {
-  if (process.argv[2] === "inspect" || process.argv[2] === "list") {
+  const commandName = process.argv[2];
+  const executionCommand =
+    commandName === "call" ||
+    commandName === "read-resource" ||
+    commandName === "get-prompt"
+      ? commandName
+      : undefined;
+  if (commandName === "inspect" || commandName === "list" || executionCommand) {
     const { parseDiscoveryOptions } =
       await import("./utils/discovery-options.js");
-    const discovery = parseDiscoveryOptions(process.argv.slice(3));
+    const execution = executionCommand
+      ? parseExecutionOptions(executionCommand, process.argv.slice(3))
+      : undefined;
+    const discovery = execution ?? parseDiscoveryOptions(process.argv.slice(3));
     if (discovery.help) return printHelp();
     // Config files and dependencies may log while loading. Reserve stdout for
     // the final result so --json stays parseable, including on failure.
@@ -107,7 +134,12 @@ async function main() {
     let output: string;
     process.stdout.write = process.stderr.write.bind(process.stderr);
     try {
-      if (process.argv[2] === "inspect") {
+      if (execution) {
+        const { runExecution } = await import("./commands/execute.js");
+        const { result, exitCode } = await runExecution(execution);
+        output = JSON.stringify(result, null, 2);
+        process.exitCode = exitCode;
+      } else if (commandName === "inspect") {
         const { runInspect, formatInspection } =
           await import("./commands/inspect.js");
         const result = await runInspect(discovery);
@@ -184,5 +216,5 @@ async function main() {
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+  process.exit(error instanceof CliInputError ? 2 : 1);
 });
