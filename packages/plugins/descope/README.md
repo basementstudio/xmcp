@@ -144,6 +144,11 @@ const accessToken = await fetchConnectionToken("github");
 
 ## OAuth Endpoints
 
+Use the exact `issuerURL` from Descope, including its regional or custom host.
+The SDK uses that URL's origin for token verification, and fallback discovery
+metadata uses the same origin for its JWKS URL. `baseURL` is your MCP server's
+URL; it does not select the Descope API host.
+
 The plugin serves two OAuth metadata endpoints used by MCP clients during the authorization flow:
 
 - `GET /.well-known/oauth-protected-resource` — Resource server metadata. `scopes_supported` is synced from Descope's discovery document unless `scopesSupported` is set explicitly.

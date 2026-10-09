@@ -188,6 +188,14 @@ otherwise they print `<fixture label> does not support <capability>`.
 
 ## Client tests
 
+The `cli-execution` capability runs built CLI tool calls, resource reads (including
+concrete template URIs), and prompt rendering across the fixture matrix. It checks
+argument flags, files, stdin, and distinct tool-error/invalid-input exit codes.
+Like CLI discovery, it uses automatic protocol negotiation independently of the
+harness client's mode. Legacy-only peers in `src/tests/cli.test.ts` additionally
+check complete mixed-content results, pagination, validation before invocation,
+and subprocess cleanup on success, tool errors, and protocol errors.
+
 The `cli-discovery` conformance capability runs the built developer CLI against
 the compiled fixtures, including every adapter and both module formats. It
 checks inspection, complete catalog shapes, named configs, and separation of

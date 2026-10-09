@@ -18,10 +18,19 @@ function reply(request) {
   const page = request.params?.cursor === "second" ? 2 : 1;
   const cursor = page === 1 ? { nextCursor: "second" } : {};
   switch (request.method) {
-    case "tools/list": return result({ tools: [{ name: "tool-" + page, inputSchema: { type: "object", properties: {} } }], ...cursor });
-    case "prompts/list": return result({ prompts: [{ name: "prompt-" + page }], ...cursor });
+    case "tools/list": return result({ tools: [{ name: "tool-" + page, inputSchema: page === 1 ? { type: "object", properties: {} } : { type: "object", properties: { count: { type: "integer", minimum: 1 } }, required: ["count"] } }], ...cursor });
+    case "prompts/list": return result({ prompts: [{ name: "prompt-" + page, arguments: [{ name: "name", required: true }] }], ...cursor });
     case "resources/list": return result({ resources: [{ name: "resource-" + page, uri: "fixture://" + page }], ...cursor });
     case "resources/templates/list": return result({ resourceTemplates: [{ name: "template-" + page, uriTemplate: "fixture://" + page + "/{id}" }], ...cursor });
+    case "tools/call":
+      require("node:fs").appendFileSync("calls.log", JSON.stringify(request.params) + "\\n");
+      if (request.params.name === "tool-1") return result({ isError: true, content: [{ type: "text", text: "Application failure" }], _meta: { fixture: true } });
+      if (request.params.arguments.remoteFailure) return error(-32603, "Remote execution failed");
+      return result({ content: [{ type: "text", text: "done" }, { type: "image", data: "aGk=", mimeType: "image/png" }], structuredContent: request.params.arguments, _meta: { fixture: true } });
+    case "prompts/get": return result({ description: "Fixture prompt", messages: [{ role: "user", content: { type: "text", text: request.params.arguments.name } }, { role: "assistant", content: { type: "text", text: "response" } }], _meta: { fixture: true } });
+    case "resources/read":
+      if (request.params.uri === "fixture://missing") return error(-32002, "Resource not found");
+      return result({ contents: [{ uri: request.params.uri, text: "text", mimeType: "text/plain" }, { uri: "fixture://blob", blob: "aGk=", mimeType: "application/octet-stream" }], _meta: { fixture: true } });
     default: return error(-32601, "Unknown method");
   }
 }
