@@ -1,6 +1,6 @@
 # External clients
 
-This example includes CLI discovery, generated clients, and a direct managed-client script.
+This example includes CLI discovery and execution, generated clients, and a direct managed-client script.
 
 ## CLI discovery
 
@@ -23,6 +23,28 @@ You can also connect directly to a local STDIO build:
 ```sh
 pnpm exec xmcp-dev-cli list --json --stdio node /path/to/server/dist/stdio.js
 ```
+
+## CLI execution
+
+With the same `examples/http-transport` server running, execute tools, read
+resources, or render prompts from this directory:
+
+```sh
+pnpm call:server greet --arg name=Ada
+pnpm call:server greet --args-file greet.args.json
+printf '{"name":"Ada"}\n' | pnpm call:server greet --stdin
+pnpm read:server 'config://app'
+pnpm prompt:server team-greeting --arg department=engineering --arg name=Ada
+```
+
+These scripts also use `discovery.clients.ts` and `MCP_URL`. Results are complete
+JSON objects; use `pnpm --silent run call:server ...` to suppress pnpm's own
+script banner in pipelines. Tool `--arg` values parse as JSON when possible;
+prompt `--arg` values stay strings. Choose one input source per invocation.
+
+Exit `0` means success, `1` means a tool/server/connection failure, and `2` means
+invalid input. A tool's `isError: true` response is still printed as JSON; errors
+without a result are reported on stderr. Connections close after each command.
 
 ## Managed client
 
