@@ -29,6 +29,16 @@ BASE_URL=http://127.0.0.1:3001
 
 `DESCOPE_PROJECT_ID` is optional — if omitted, the plugin parses the project ID out of `DESCOPE_ISSUER_URL` instead. Your project ID is also visible in **Descope Console** → **Project Settings**.
 
+Keep the exact host from your Descope issuer URL. For example, a project hosted
+on `api.descope.org` uses:
+
+```bash
+DESCOPE_ISSUER_URL=https://api.descope.org/v1/apps/agentic/your-project-id/your-mcp-server-id
+```
+
+Token verification and fallback JWKS discovery use that origin automatically.
+`BASE_URL` remains the URL of this MCP server.
+
 ### 3. Run
 
 ```bash

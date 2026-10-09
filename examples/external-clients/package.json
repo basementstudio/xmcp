@@ -14,7 +14,10 @@
     "generate": "xmcp-dev-cli generate",
     "managed": "node managed-client.mjs",
     "inspect": "xmcp-dev-cli inspect local --clients discovery.clients.ts",
-    "list:server": "xmcp-dev-cli list local --clients discovery.clients.ts"
+    "list:server": "xmcp-dev-cli list local --clients discovery.clients.ts",
+    "call:server": "xmcp-dev-cli call local --clients discovery.clients.ts",
+    "read:server": "xmcp-dev-cli read-resource local --clients discovery.clients.ts",
+    "prompt:server": "xmcp-dev-cli get-prompt local --clients discovery.clients.ts"
   },
   "dependencies": {
     "@xmcp-dev/cli": "workspace:*",

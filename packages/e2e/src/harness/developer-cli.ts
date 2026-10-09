@@ -8,13 +8,15 @@ const CLI_TIMEOUT_MS = 15_000;
 export async function runDeveloperCli(
   args: string[],
   cwd: string,
-  logName: string
+  logName: string,
+  input?: string
 ) {
   const running = startProcess(
     process.execPath,
     [join(E2E_ROOT, "../cli/dist/index.js"), ...args],
     cwd,
-    join(cwd, `${logName}.log`)
+    join(cwd, `${logName}.log`),
+    input
   );
   let timedOut = false;
   const timer = setTimeout(() => {
