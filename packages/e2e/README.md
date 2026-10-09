@@ -193,7 +193,11 @@ the generated tools through fixture `files`, and calls a local API through those
 compiled tools. The matrix covers HTTP/STDIO, both module formats, all adapters,
 and both protocol modes. Checks include URL encoding, omitted values, query
 arrays, upstream errors, and dot-segment rejection. Each fixture owns its API
-server and closes it during teardown.
+server and closes it during teardown. The `openapi-request` capability adds JSON
+body and raw header serialization, credentials set and rotated at runtime,
+validation failures, optional bodies, and explicit overwrite/refusal checks using
+the built CLI. Its test-only setup tool changes the fixture process environment
+after compilation; generated tools are used without modifications.
 
 The `cli-discovery` conformance capability runs the built developer CLI against
 the compiled fixtures, including every adapter and both module formats. It

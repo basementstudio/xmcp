@@ -1,41 +1,50 @@
 # OpenAPI import
 
-`src/tools/get-pet.ts` was generated from `openapi.json`. It is an ordinary xmcp
-tool with a Zod input schema and a GET request to the local example API.
+`src/tools/get-pet.ts` and `update-pet.ts` are generated from `openapi.json`.
+They are ordinary xmcp tools with Zod input schemas and fetch handlers.
 
-From this directory, start the API in one terminal:
+From this directory, start the local API in one terminal:
 
 ```sh
-pnpm api
+PET_API_AUTH='Bearer local-example-token' pnpm api
 ```
 
-Build and start xmcp in another:
+Build and start xmcp in another, supplying the same example credential:
 
 ```sh
 pnpm build
-pnpm start
+PET_API_AUTH='Bearer local-example-token' pnpm start
 ```
 
-Connect an MCP client to `http://localhost:3001/mcp` and call `get-pet` with
-`{"id":"42","verbose":true}`. The result is JSON text with the pet's id, name,
-and species. The API needs no credentials.
+Connect an MCP client to `http://localhost:3001/mcp`:
 
-To try generation, run:
+- Call `get-pet` with `{"id":"42","verbose":true}` to read the pet. This route is public.
+- Call `update-pet` with `{"id":"42","X-Request-Label":"demo/run","body":{"name":"Mochi","active":false}}` to send a JSON body, a raw header, and runtime Authorization. The API echoes the update without persisting it.
+
+The credential is read from `PET_API_AUTH` on each tool call, never at generation
+or build time. It is not a tool argument. Generated handlers forward MCP
+cancellation to fetch, return response text, and report non-success statuses as
+tool errors.
+
+To generate both tools into `generated-preview/` for comparison, run:
 
 ```sh
 pnpm generate
 ```
 
-This writes a fresh copy into `generated-preview/` for comparison with the
-checked-in tool. That directory is outside xmcp's tool discovery path. Existing
-files are never overwritten; remove the preview directory or choose another
-`--out` destination before repeating. To select one operation or another API URL:
+The preview directory is outside tool discovery. Repeating the command refuses
+to overwrite files. To explicitly replace them:
 
 ```sh
-pnpm exec xmcp-dev-cli import-openapi openapi.json --operations get-pet --base-url http://127.0.0.1:3002/api --out another-preview
+pnpm exec xmcp-dev-cli import-openapi openapi.json --operations get-pet --out generated-preview --overwrite
+pnpm exec xmcp-dev-cli import-openapi openapi.json --operations update-pet --auth-env PET_API_AUTH --out generated-preview --overwrite
 ```
 
-The first importer supports OpenAPI 3.0/3.1 JSON, GET operations, scalar path/query
-parameters, and scalar query arrays. Unsupported request shapes fail before
-writing files. Generated tools forward MCP cancellation to `fetch`, return
-response text, and report non-success HTTP statuses as tool errors.
+Import public and authenticated operations separately: `--auth-env` applies to
+all operations selected in that invocation. Use `--out src/tools --overwrite`
+instead to regenerate the checked-in files, replacing any manual edits.
+
+The importer supports OpenAPI 3.0/3.1 JSON, GET/POST/PUT/PATCH/DELETE, scalar
+path/query/header parameters, query/header arrays, and nested JSON request bodies.
+Write operations require `--operations`; the default imports GET only.
+Unsupported schemas, encodings, and authentication schemes fail before writing.

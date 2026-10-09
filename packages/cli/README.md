@@ -49,33 +49,45 @@ without invoking tools, reading resource contents, or rendering prompts.
 
 ## Importing OpenAPI
 
-Generate ordinary xmcp GET tools from a local OpenAPI 3.0/3.1 JSON document:
+Generate ordinary xmcp tools from a local OpenAPI 3.0/3.1 JSON document:
 
 ```sh
 npx @xmcp-dev/cli import-openapi ./openapi.json
-npx @xmcp-dev/cli import-openapi ./openapi.json --operations getPet,listPets --out src/tools/api
-npx @xmcp-dev/cli import-openapi ./openapi.json --base-url https://api.example.com/v1
+npx @xmcp-dev/cli import-openapi ./openapi.json --operations updatePet --auth-env PET_API_AUTH --out src/tools/api
+npx @xmcp-dev/cli import-openapi ./openapi.json --base-url https://api.example.com/v1 --overwrite
 ```
 
 All GET operations are selected by default. `--operations` selects exact
-`operationId` values, or `GET /path/{parameter}` when an ID is absent. Tool names
-use filename normalization; colliding names fail. `--out` defaults to `src/tools`.
-Existing `.ts`/`.tsx` files are never overwritten, and all selected inputs are
-validated before writing. The command does not connect to the API.
+`operationId` values, or `METHOD /path/{parameter}` when an ID is absent. POST,
+PUT, PATCH, and DELETE require explicit selection. Tool names use filename
+normalization; colliding names fail. `--out` defaults to `src/tools`.
 
-Supported inputs include scalar path/query parameters, scalar query arrays with
-form/explode serialization, local parameter/schema references, and common scalar
-constraints. Generated handlers preserve the server's base path, encode inputs,
-forward MCP cancellation to fetch, return response text, and surface unsuccessful
-HTTP statuses as tool errors. Response schemas are not converted or validated.
+Existing files cause an error unless `--overwrite` explicitly replaces regular
+`.ts` files. `.tsx` collisions, symlinks and directories are always rejected. All
+selected inputs and destinations are validated before writing. File replacements
+are atomic individually. The command does not connect to the API.
 
-Unsupported constructs fail clearly: request bodies, headers/cookies, credentials,
-object/nullable/composed schemas, unsupported schema keywords/formats, external or
+Supported inputs include scalar path/query/header parameters, scalar query/header
+arrays, local references, common scalar constraints, and nested JSON bodies for
+POST/PUT/PATCH. Bodies become a `body` argument; optional bodies are omitted when
+absent. Headers use raw text; path/query values are percent-encoded independently.
+
+`--auth-env` names the environment variable holding the complete Authorization
+value (for example `Bearer ...`). Generated handlers read it on every call;
+credentials never become tool inputs or generated literals. The flag applies to
+all selected operations. HTTP basic/bearer and Authorization API-key security are
+supported; OAuth flows and other API-key locations are not.
+
+Unsupported constructs fail clearly: non-JSON bodies, cookies, object parameters,
+nullable/composed schemas, unsupported schema keywords/formats, external or
 recursive references, and non-default serialization styles. Server variables and
 relative URLs require an explicit `--base-url`. Generation supports JSON only.
+Generated handlers forward MCP cancellation to fetch, return response text, and
+surface unsuccessful HTTP statuses as tool errors. Response schemas are not
+converted or validated.
 
 See [the import guide](https://xmcp.dev/docs/guides/import-openapi) for the exact
-subset and `examples/openapi-import` for a runnable local API and generated tool.
+subset and `examples/openapi-import` for a runnable local API and generated tools.
 
 ## Scaffolding
 

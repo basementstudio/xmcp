@@ -4,14 +4,17 @@ import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 
 export const schema = {
   id: z.string().min(1),
-  verbose: z.boolean().optional(),
+  "X-Request-Label": z.string().optional(),
+  body: z
+    .object({ name: z.string().min(1), active: z.boolean().optional() })
+    .strict(),
 };
 
 export const metadata: ToolMetadata = {
-  name: "get-pet",
-  description: "Read a pet from the local example API",
+  name: "update-pet",
+  description: "Update a pet using JSON, a header and runtime credentials",
   annotations: {
-    readOnlyHint: true,
+    readOnlyHint: false,
   },
 };
 
@@ -34,9 +37,7 @@ export default async function handler(args: InferSchema<typeof schema>) {
     "http://127.0.0.1:3002/api" + ("/pets/" + pathValue(args["id"]))
   );
   const query: string[] = [];
-  if (args["verbose"] !== undefined) {
-    query.push("verbose=" + encode(args["verbose"]));
-  }
+
   url.search = query.join("&");
   const headers = new Headers();
   function setHeader(name: string, value: string) {
@@ -46,13 +47,20 @@ export default async function handler(args: InferSchema<typeof schema>) {
       throw new Error("Invalid value for header " + name + ".");
     }
   }
-
+  if (args["X-Request-Label"] !== undefined)
+    setHeader("X-Request-Label", String(args["X-Request-Label"]));
+  const authorization = process.env["PET_API_AUTH"];
+  if (!authorization?.trim())
+    throw new Error("Missing Authorization environment variable PET_API_AUTH.");
+  setHeader("Authorization", authorization);
+  if (args.body !== undefined) setHeader("Content-Type", "application/json");
   const response = await fetch(url, {
-    method: "GET",
+    method: "PUT",
     headers,
+    body: args.body === undefined ? undefined : JSON.stringify(args.body),
     signal: getRequestContext().signal,
   });
   if (!response.ok)
-    throw new Error("GET /pets/{id} failed: HTTP " + response.status);
+    throw new Error("PUT /pets/{id} failed: HTTP " + response.status);
   return response.text();
 }

@@ -18,7 +18,7 @@ Commands:
   create <type> [name]         Scaffold a new tool, resource, or prompt
   inspect <target>             Show MCP server details and capabilities
   list <target>                List tools, prompts, resources, and templates
-  import-openapi <file>         Generate GET tools from an OpenAPI JSON file
+  import-openapi <file>         Generate tools from an OpenAPI JSON file
 
 Inspect / list options:
   <target>                    HTTP(S) URL or client name from src/clients.ts
@@ -29,6 +29,8 @@ Inspect / list options:
 Import OpenAPI options:
   --operations <ids>           Comma-separated operation IDs (default: all GETs)
   --base-url <url>             Override the API server URL
+  --auth-env <name>            Runtime env var holding the full Authorization value
+  --overwrite                  Replace existing generated .ts files
   -o, --out <path>             Tool output directory (default: src/tools)
 
 Generate options:

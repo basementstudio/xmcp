@@ -1,7 +1,14 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Local pet API", "version": "1.0.0" },
-  "servers": [{ "url": "http://127.0.0.1:3002/api" }],
+  "info": {
+    "title": "Local pet API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3002/api"
+    }
+  ],
   "paths": {
     "/pets/{id}": {
       "get": {
@@ -12,11 +19,85 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "minLength": 1 }
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
           },
-          { "name": "verbose", "in": "query", "schema": { "type": "boolean" } }
+          {
+            "name": "verbose",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
         ],
-        "responses": { "200": { "description": "Pet information as JSON" } }
+        "responses": {
+          "200": {
+            "description": "Pet information as JSON"
+          }
+        }
+      },
+      "put": {
+        "operationId": "update-pet",
+        "summary": "Update a pet using JSON, a header and runtime credentials",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
+            "name": "X-Request-Label",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated pet as JSON"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }
