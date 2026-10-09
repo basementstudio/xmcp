@@ -44,7 +44,7 @@ export default function ChangelogPage() {
         <p className="text-brand-neutral-100 text-base mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
-          className="inline-block text-sm text-brand-neutral-100 underline underline-offset-4 hover:text-brand-white mt-4"
+          className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
         >
           All releases on GitHub ↗
         </a>
@@ -57,14 +57,14 @@ export default function ChangelogPage() {
             aria-labelledby={`release-${release.version}`}
             className="grid md:grid-cols-[180px_minmax(0,1fr)] gap-6 md:gap-12 border-t border-brand-neutral-500 py-8 md:py-12"
           >
-            <div>
+            <div className="md:sticky md:top-[104px] md:self-start">
               <h2
                 id={`release-${release.version}`}
                 className="text-xl font-mono text-brand-white"
               >
                 <a
                   href={`#${releaseAnchor(release.version)}`}
-                  className="hover:underline underline-offset-4"
+                  className="link-underline"
                 >
                   v{release.version}
                 </a>
@@ -77,7 +77,7 @@ export default function ChangelogPage() {
               </time>
               <a
                 href={release.url}
-                className="inline-block text-sm text-brand-neutral-100 underline underline-offset-4 hover:text-brand-white mt-4"
+                className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
               >
                 View on GitHub ↗
               </a>

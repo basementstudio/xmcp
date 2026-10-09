@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/compiler",
   "description": "Development compiler for xmcp",
-  "version": "1.4.0",
+  "version": "1.7.0",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts src/compiler/get-bundler-config/__tests__/*.test.ts",
+    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts src/compiler/get-bundler-config/__tests__/*.test.ts src/compiler/schema-inference/__tests__/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -51,7 +51,7 @@ export function TemplateShareActions({
         href={xShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 hover:text-brand-white"
+        className="link-underline hover:text-brand-white"
       >
         Twitter
       </Link>
@@ -59,7 +59,7 @@ export function TemplateShareActions({
       <button
         type="button"
         onClick={() => copyToClipboard("github", repositoryUrl)}
-        className="underline underline-offset-2 hover:text-brand-white cursor-pointer"
+        className="link-underline hover:text-brand-white cursor-pointer"
       >
         <span>GitHub</span>
         <span
@@ -77,7 +77,7 @@ export function TemplateShareActions({
       <button
         type="button"
         onClick={() => copyToClipboard("page", pageUrl)}
-        className="underline underline-offset-2 hover:text-brand-white cursor-pointer"
+        className="link-underline hover:text-brand-white cursor-pointer"
       >
         <span>Link</span>
         <span

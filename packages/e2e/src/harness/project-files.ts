@@ -1,3 +1,4 @@
+import { COMPONENT_VISIBILITY_FILES } from "../fixtures/component-visibility.js";
 import { COMPONENT_METADATA_FILES } from "../fixtures/component-metadata.js";
 import { REQUEST_CONTEXT_FILES } from "../fixtures/request-context.js";
 import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
@@ -17,6 +18,7 @@ export default function add({ a, b }: { a: number; b: number }) { return { sum: 
 `;
 
 export const DEFAULT_FILES: Record<string, string> = {
+  ...COMPONENT_VISIBILITY_FILES,
   ...COMPONENT_METADATA_FILES,
   ...REQUEST_CONTEXT_FILES,
   ...REQUEST_HELPERS_FILES,

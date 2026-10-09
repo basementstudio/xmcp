@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { test } from "node:test";
 import type { StdioClientConnection } from "xmcp";
+import { withClient, type ClientDefinition } from "xmcp/client";
 import {
   prepareClientTarget,
   type ClientTarget,
@@ -59,6 +60,36 @@ for (const kind of ["http", "stdio"] as const) {
         );
         assert.notEqual(result.isError, true);
         assert.deepEqual(result.structuredContent, { sum: 5 });
+        const definition: ClientDefinition =
+          target.type === "http"
+            ? { type: "http", name: "managed", url: target.url }
+            : {
+                ...target.parameters,
+                type: "stdio",
+                name: "managed",
+                args: target.parameters.args ?? [],
+                stderr: "pipe",
+              };
+        let elicited = false;
+        const confirmed = await withClient(
+          definition,
+          (managed) => managed.callTool({ name: "confirm" }, REQUEST_OPTIONS),
+          {
+            connect: REQUEST_OPTIONS,
+            onStderrData:
+              target.type === "stdio" ? target.onStderrData : undefined,
+            handlers: {
+              elicitation: () => {
+                elicited = true;
+                return { action: "accept", content: { confirmed: true } };
+              },
+            },
+          }
+        );
+        assert.equal(elicited, true);
+        assert.deepEqual(confirmed.content, [
+          { type: "text", text: "confirmed" },
+        ]);
         passed = true;
       }
     );

@@ -185,7 +185,7 @@ Add a README.md to this template to show content here.`;
           deployOptions={deployOptions}
         />
 
-        <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500">
+        <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500">
           <div className="aspect-[16/8] relative">
             {!previewImage.isFallback ? (
               <Image

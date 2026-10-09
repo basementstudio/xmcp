@@ -2,6 +2,7 @@
   "title": "Guides",
   "pages": [
     "xmcp-mcp-server",
+    "ui-rendering",
     "authentication",
     "roll-out-to-a-team",
     "monetization"

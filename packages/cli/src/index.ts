@@ -16,6 +16,14 @@ Usage:
 Commands:
   generate                     Generate typed remote tool client files
   create <type> [name]         Scaffold a new tool, resource, or prompt
+  inspect <target>             Show MCP server details and capabilities
+  list <target>                List tools, prompts, resources, and templates
+
+Inspect / list options:
+  <target>                    HTTP(S) URL or client name from src/clients.ts
+  -c, --clients <path>         Path to a named-client config
+  --json                      Print a JSON result
+  --stdio <cmd> [args]         Spawn a server; put all CLI options before --stdio
 
 Generate options:
   -o, --out <path>             Output directory (default: src/generated)
@@ -88,6 +96,37 @@ function printHelp() {
 }
 
 async function main() {
+  if (process.argv[2] === "inspect" || process.argv[2] === "list") {
+    const { parseDiscoveryOptions } =
+      await import("./utils/discovery-options.js");
+    const discovery = parseDiscoveryOptions(process.argv.slice(3));
+    if (discovery.help) return printHelp();
+    // Config files and dependencies may log while loading. Reserve stdout for
+    // the final result so --json stays parseable, including on failure.
+    const stdoutWrite = process.stdout.write;
+    let output: string;
+    process.stdout.write = process.stderr.write.bind(process.stderr);
+    try {
+      if (process.argv[2] === "inspect") {
+        const { runInspect, formatInspection } =
+          await import("./commands/inspect.js");
+        const result = await runInspect(discovery);
+        output = discovery.json
+          ? JSON.stringify(result, null, 2)
+          : formatInspection(result);
+      } else {
+        const { runList, formatCatalog } = await import("./commands/list.js");
+        const result = await runList(discovery);
+        output = discovery.json
+          ? JSON.stringify(result, null, 2)
+          : formatCatalog(result);
+      }
+    } finally {
+      process.stdout.write = stdoutWrite;
+    }
+    process.stdout.write(`${output}\n`);
+    return;
+  }
   const { command, subcommand, positional, options, helpRequested } = parseArgs(
     process.argv
   );
@@ -128,7 +167,9 @@ async function main() {
     });
 
     if (result.status === "skipped") {
-      console.log(`Skipped ${subcommand} -> ${result.outputPath} (already exists)`);
+      console.log(
+        `Skipped ${subcommand} -> ${result.outputPath} (already exists)`
+      );
       return;
     }
 

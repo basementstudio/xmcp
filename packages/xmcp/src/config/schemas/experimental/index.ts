@@ -9,6 +9,11 @@ export const adapterConfigSchema = z.enum([
   "nestjs",
   "fastify",
   "tanstack",
+  "hono",
+  "sveltekit",
+  "nuxt",
+  "react-router",
+  "astro",
 ]);
 
 export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
@@ -18,6 +23,8 @@ export type AdapterConfig = z.infer<typeof adapterConfigSchema>;
 // ------------------------------------------------------------
 export const experimentalConfigSchema = z.object({
   adapter: adapterConfigSchema.optional(),
+  /** Infer tool input schemas and descriptions from TypeScript and JSDoc. */
+  inferToolSchemas: z.boolean().optional(),
 });
 
 export type ExperimentalConfig = z.infer<typeof experimentalConfigSchema>;

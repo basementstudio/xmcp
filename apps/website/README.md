@@ -28,6 +28,10 @@ Markdown without contacting GitHub. New releases and edits appear on the next
 deployment. The website Turbo build cache is disabled to refresh even on an
 unchanged redeploy; dependency builds retain their caches.
 
+Production builds also remove the previous `.next` output before compiling.
+This prevents restored deployment artifacts from serving an older stylesheet
+after a successful build. Package-manager and dependency build caches are kept.
+
 Public releases need no credentials. Optionally set `GITHUB_TOKEN` in the build
 or shell environment for authenticated API limits. This script reads the process
 environment, not Next.js `.env` files; never use a `NEXT_PUBLIC_` token. Network,
@@ -273,3 +277,65 @@ pnpm --filter website build
 Check `/` and `/showcase` locally for text, images, ordering, carousel behavior,
 connection copy buttons, and links. The website itself is the runnable example
 for content changes; no framework example is needed.
+
+## Docs navigation
+
+The docs layout spans the viewport. The article is centered in a 700px column
+between the fixed-width navigation and table of contents, shrinking to fit
+smaller screens with responsive padding.
+
+Docs sections and nested folders open by default. Readers can collapse them;
+navigating to a page reopens its ancestors while preserving other section choices.
+On small screens, **Browse docs** opens the keyboard-accessible navigation drawer.
+The navigation fills the available viewport below the header. Scroll-edge fades
+appear only where more content remains; padding keeps the first and last links
+fully visible, including in the mobile drawer.
+
+Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
+a docs page; unmapped pages use a document icon and explicit page icons take
+precedence. Check `/docs`, a deep link, and mobile navigation after changes.
+
+Run the sidebar tree regression checks with Node 22:
+
+```bash
+pnpm --filter website exec node --experimental-strip-types --test scripts/docs-sidebar.test.mjs
+pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
+```
+
+## Footer navigation
+
+The shared footer includes a short framework description and labeled navigation
+groups. Keep labels descriptive and use crawlable links rendered in the initial
+HTML.
+The existing site-wide Organization and WebSite structured data remains the
+source of entity metadata; the footer does not add duplicate schema.
+
+Internal links stay in the same tab. External links open in a new tab with
+`noopener noreferrer`, a visual indicator, and a screen-reader notice. Community
+links pair their text labels with decorative SVG icons. All links have visible
+keyboard focus and provide at least 44px of target height. Check keyboard navigation, text contrast, narrow screens,
+and the mobile assistant button when editing the footer. The website is the
+runnable example; no framework API or example package changes are needed.
+
+## Corner radii
+
+Use `rounded-lg` (8px) for bordered cards, panels, dialogs, and media, and
+`rounded-md` (6px) for buttons, inputs, tags, and inline code. Clip images to
+their card’s rounded edges; connected terminal tabs share rounded outer corners.
+Keep divider lines straight and circular controls circular. Preview the docs,
+showcase, templates, blog, and FAQ on desktop and mobile when changing these styles.
+
+## Dialog motion
+
+Search docs and Ask AI share a 200ms ease-in-out fade with a small vertical
+movement and desktop scale animation. The backdrop fades at the same pace.
+Reduced-motion preferences disable these animations. Keep panel and backdrop
+classes paired, and verify opening, dismissal, and keyboard focus on desktop
+and mobile when changing dialog motion.
+
+## Link hover
+
+Text links share the navbar’s underline animation: it draws from the left on
+hover or keyboard focus and retracts to the right. Use `link-underline` for text
+links, or `link-underline-group` with a `link-underline-label` span when a link
+also includes icons. Reduced-motion preferences make the state change immediate.

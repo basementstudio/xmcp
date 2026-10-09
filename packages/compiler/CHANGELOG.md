@@ -1,12 +1,36 @@
 # @xmcp-dev/compiler
 
+## 1.7.0
+
+### Minor Changes
+
+- 318cc48: Add opt-in `experimental.inferToolSchemas` to generate tool input validation and descriptions from TypeScript types and JSDoc. Resolve imported types and re-exported handlers, refresh schemas during development, and preserve explicit schema overrides. Unsupported inputs fail compilation with actionable diagnostics.
+
+  Support property JSDoc constraints for numeric bounds, string lengths, regular expressions, and email/URI/UUID formats, with source-located errors for invalid tags. Emit compact string enums with actionable validation errors and native boolean schemas.
+
+## 1.6.0
+
+### Minor Changes
+
+- 5948dda: Add Hono and SvelteKit adapters for Node.js and Cloudflare Workers, sharing the stateless Fetch runtime with TanStack Start. Add framework detection, route generation, build ordering, and Workers setup to init-xmcp while preserving host TypeScript configuration.
+- 5948dda: Add Nuxt, React Router Framework Mode, and Astro adapters using the shared stateless Fetch runtime, with automatic route setup and Node.js/Cloudflare Workers support.
+
+## 1.5.0
+
+### Minor Changes
+
+- a4950f9: Add optional component include/exclude rules by name or tag in xmcp.config.ts. Apply them before registration across tools, prompts, static resources, and resource templates, with generated UI resources following their owning tool.
+- 73deb2e: Add opt-in structured execution logging for tools, prompts, and resource reads through `observability.enabled`, with execution correlation, timing, safe outcomes, and HTTP trace context.
+
+## 1.4.1
+
 ## 1.4.0
 
 ## 1.3.0
 
 ### Minor Changes
 
-- a1f4d67: Add a TanStack Start adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
 
 ## 1.2.0
 

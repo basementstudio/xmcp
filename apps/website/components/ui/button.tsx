@@ -14,7 +14,7 @@ const variants = {
 } as const;
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center p-2 text-sm transition-colors duration-200 disabled:pointer-events-none focus-visible:outline-none rounded-xs cursor-pointer font-medium min-w-[120px]",
+  "inline-flex items-center justify-center p-2 text-sm transition-colors duration-200 disabled:pointer-events-none focus-visible:outline-none rounded-md cursor-pointer font-medium min-w-[120px]",
   {
     variants: {
       variant: variants,
@@ -31,7 +31,8 @@ export const buttonVariants = cva(
 );
 
 interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color">,
+  extends
+    Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "color">,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   trackIntent?: string;

@@ -1,14 +1,17 @@
-import { describe, it, afterEach } from "node:test";
 import assert from "node:assert";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, it } from "node:test";
+
 import type { RuleSetRule } from "@rspack/core";
+
+import { compilerContext } from "@/compiler/compiler-context";
+import { configSchema, XmcpConfigOutputSchema } from "@/runtime-config";
+import { runtimeFolderPath } from "@/utils/constants";
+
 import { getRspackConfig } from "..";
 import { EmitPackageJsonTypePlugin } from "../plugins";
-import { compilerContext } from "@/compiler/compiler-context";
-import { runtimeFolderPath } from "@/utils/constants";
-import { configSchema, XmcpConfigOutputSchema } from "@/runtime-config";
 
 const originalCwd = process.cwd();
 const tempDirs: string[] = [];
@@ -206,49 +209,81 @@ describe("vercel function output", () => {
   });
 });
 
-describe("TanStack adapter output", () => {
-  const tanstack = configSchema.parse({
-    http: true,
-    experimental: { adapter: "tanstack" },
-  });
-
-  it("emits an ESM adapter for Node and Workers, independent of package type", () => {
-    for (const cloudflare of [false, true]) {
-      for (const projectType of ["module", "commonjs", undefined] as const) {
-        const config = buildConfig(tanstack, {
-          projectType,
-          platforms: { cloudflare },
-        });
-        assert.deepEqual(config.output?.library, { type: "module" });
-        assert.equal(config.output?.filename, "index.js");
-        assert.match(config.output?.path ?? "", /\.xmcp\/adapter$/);
-        assert.deepEqual(emittedPackageJsonTypes(config.plugins as unknown[]), [
-          "module",
-        ]);
-        assert.deepEqual(Object.keys(config.entry as object), ["adapter"]);
-        assert.match(
-          (config.entry as Record<string, string>).adapter,
-          cloudflare
-            ? /adapter-tanstack-cloudflare\.js$/
-            : /adapter-tanstack\.js$/
-        );
-        assert.equal(config.target, cloudflare ? "webworker" : "node");
-      }
-    }
-  });
-
-  it("uses source maps without eval in development on Workers", () => {
-    const config = buildConfig(tanstack, {
-      mode: "development",
-      platforms: { cloudflare: true },
+for (const adapter of [
+  "tanstack",
+  "hono",
+  "sveltekit",
+  "nuxt",
+  "react-router",
+  "astro",
+]) {
+  describe(`${adapter} adapter output`, () => {
+    const fetchAdapter = configSchema.parse({
+      http: true,
+      experimental: { adapter },
     });
-    assert.equal(config.devtool, "source-map");
-  });
 
-  it("keeps standalone Workers output separate", () => {
-    const config = buildConfig(httpConfig, { platforms: { cloudflare: true } });
-    assert.equal(config.output?.filename, "worker.js");
-    assert.match(config.output?.path ?? "", /\.xmcp\/cloudflare$/);
-    assert.deepEqual(Object.keys(config.entry as object), ["worker"]);
+    it("emits an ESM adapter for Node and Workers, independent of package type", () => {
+      for (const cloudflare of [false, true]) {
+        for (const projectType of ["module", "commonjs", undefined] as const) {
+          const config = buildConfig(fetchAdapter, {
+            projectType,
+            platforms: { cloudflare },
+          });
+          assert.deepEqual(config.output?.library, { type: "module" });
+          assert.equal(config.output?.filename, "index.js");
+          assert.match(config.output?.path ?? "", /\.xmcp[\\/]adapter$/);
+          assert.deepEqual(
+            emittedPackageJsonTypes(config.plugins as unknown[]),
+            ["module"]
+          );
+          assert.deepEqual(Object.keys(config.entry as object), ["adapter"]);
+          assert.match(
+            (config.entry as Record<string, string>).adapter,
+            cloudflare ? /adapter-fetch-cloudflare\.js$/ : /adapter-fetch\.js$/
+          );
+          assert.equal(config.target, cloudflare ? "webworker" : "node");
+        }
+      }
+    });
+
+    it("uses source maps without eval in development on Workers", () => {
+      const config = buildConfig(fetchAdapter, {
+        mode: "development",
+        platforms: { cloudflare: true },
+      });
+      assert.equal(config.devtool, "source-map");
+    });
+
+    it("keeps standalone Workers output separate", () => {
+      const config = buildConfig(httpConfig, {
+        platforms: { cloudflare: true },
+      });
+      assert.equal(config.output?.filename, "worker.js");
+      assert.match(config.output?.path ?? "", /\.xmcp[\\/]cloudflare$/);
+      assert.deepEqual(Object.keys(config.entry as object), ["worker"]);
+    });
+  });
+}
+
+describe("schema inference plugin", () => {
+  it("is installed only when explicitly enabled, including with type checking skipped", () => {
+    for (const enabled of [undefined, false, true]) {
+      const config = buildConfig(
+        configSchema.parse({
+          experimental: { inferToolSchemas: enabled },
+          typescript: { skipTypeCheck: true },
+        })
+      );
+      assert.equal(
+        config.plugins?.some(
+          (plugin) =>
+            plugin &&
+            typeof plugin === "object" &&
+            plugin.constructor.name === "SchemaInferencePlugin"
+        ),
+        enabled === true
+      );
+    }
   });
 });

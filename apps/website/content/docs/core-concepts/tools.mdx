@@ -55,6 +55,8 @@ export default async function greet({ name }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
+To reuse existing typed functions, opt in to [TypeScript schema inference](/docs/configuration/schema-inference). The compiler can generate runtime input validation and descriptions from TypeScript and JSDoc. Explicit schemas always take precedence.
+
 ## Schema Definition
 
 The schema defines your tool's input parameters using [Zod](https://zod.dev). Use `.describe()` on each parameter to help LLMs understand how to use your tool correctly.
@@ -172,7 +174,9 @@ Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
 and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
 Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
 When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
-Tags alone do not change availability.
+Tags alone do not change availability. Use
+[component visibility rules](/docs/configuration/components) to include or exclude
+components by name or tag in `xmcp.config.ts`.
 
 Tools are enabled by default. Set `enabled: false` to skip registration: the
 tool is absent from `tools/list`, and `tools/call` returns a not-found error.
@@ -588,6 +592,12 @@ export default function InteractiveTodo() {
   }
 }
 ```
+
+<Callout variant="info">
+  If you're building schema-driven MCP app UIs with `@xmcp-dev/ui`, use [UI
+  rendering](/docs/guides/ui-rendering). It covers both the packaged path and
+  the deeper custom-renderer escape hatches.
+</Callout>
 
 ## Return Values
 

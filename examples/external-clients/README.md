@@ -1,0 +1,49 @@
+# External clients
+
+This example includes CLI discovery, generated clients, and a direct managed-client script.
+
+## CLI discovery
+
+Start `pnpm --dir examples/http-transport dev` from the repository root, then
+run these commands from this directory:
+
+```sh
+pnpm inspect
+pnpm list:server --json
+```
+
+The scripts read the `local` client in `discovery.clients.ts`, which defaults to
+`http://localhost:3001/mcp`. Set `MCP_URL` to select another server. They require
+no credentials for Context7 or Playwright. Inspection prints server details;
+listing returns the catalog of tools, prompts, resources, and templates without
+invoking them.
+
+You can also connect directly to a local STDIO build:
+
+```sh
+pnpm exec xmcp-dev-cli list --json --stdio node /path/to/server/dist/stdio.js
+```
+
+## Managed client
+
+Start a local server, for example `pnpm --dir examples/http-transport dev` from
+the repository root. Then run from this directory:
+
+```sh
+pnpm managed
+```
+
+The script lists tools at `http://localhost:3001/mcp` and closes its connection.
+Set `MCP_URL` to connect to another server:
+
+```sh
+MCP_URL=https://your-server.example/mcp pnpm managed
+```
+
+The managed script does not need credentials for the generated clients below.
+
+## Generated clients
+
+`src/clients.ts` configures Context7 and Playwright. Set `CONTEXT7_API_KEY` in
+your environment, then run `pnpm generate` to regenerate their typed clients.
+Run `pnpm build` and `pnpm start` to serve the tools that use these integrations.

@@ -22,7 +22,8 @@ required. The root aliases are `test:e2e:fast` and `test:e2e`.
 | `test:fast` | Standalone HTTP, STDIO                              | CommonJS, ESM  | `auto`, `legacy` |
 | `test`      | Fast targets plus Express, Fastify, NestJS, Next.js | CommonJS, ESM  | `auto`, `legacy` |
 
-The shared checks cover component icons and tags, disabled component discovery
+The shared checks cover component include/exclude rules by name and tag (including
+tool-owned UI resources), component icons and tags, disabled component discovery
 and direct-request rejection (including generated UI resources), tool discovery,
 input/output schemas, annotations,
 structured results, invalid arguments, application errors, client identity,
@@ -187,6 +188,16 @@ otherwise they print `<fixture label> does not support <capability>`.
 
 ## Client tests
 
+The `cli-discovery` conformance capability runs the built developer CLI against
+the compiled fixtures, including every adapter and both module formats. It
+checks inspection, complete catalog shapes, named configs, and separation of
+stdout results from config logs. CLI connections use automatic negotiation,
+independently of the conformance harness client's selected protocol mode.
+`src/tests/cli.test.ts` additionally runs against legacy-only HTTP and STDIO
+peers to verify fallback, pagination, empty capabilities, argument forwarding,
+failure exit codes, and subprocess cleanup. `prepare:fixtures` builds the CLI
+and its workspace runtime dependency before these checks.
+
 `prepareClientTarget(fixture)` prepares an already compiled fixture for a client
 under test without connecting the harness's own client. HTTP fixtures (including
 adapter hosts) return `{ type: "http", url, close }` once the server listens.
@@ -225,6 +236,13 @@ conformance matrix continues to cover both protocol modes. The tests load xmcp
 with `createRequire` because its bundled CommonJS entry does not expose synthetic
 ESM named exports. Typechecking builds first so the public declarations exist in
 a fresh checkout.
+
+The same client targets exercise `withClient` from `xmcp/client` and its
+elicitation handler with default negotiation. The `managed-client` conformance
+group also covers both protocol modes and every adapter, using the existing
+`add`, `confirm`, and cancellation fixtures. Legacy stateless HTTP skips the
+interactive checks because it cannot route server-to-client input requests or
+cancellation notifications to a previous request.
 
 This package changes no public APIs. The generated applications are its runnable
 examples, so separate website docs and public examples are not needed.

@@ -32,7 +32,7 @@ export type {
 export type { ResourceMetadata, ResourceCompletions } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 
-export type { XmcpConfigInputSchema as XmcpConfig } from "./config";
+export type { XmcpConfigInputSchema as XmcpConfig } from "./config/index";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
@@ -64,7 +64,7 @@ export {
   listSTDIOClientTools,
   callSTDIOClientTool,
   disconnectSTDIOClient,
-} from "./client";
+} from "./client/index";
 export type {
   HttpClient,
   StdioClient,
@@ -75,7 +75,7 @@ export type {
   HttpClientConfig,
   StdioClientConfig,
 } from "./client/types";
-export type { StdioClientConnection, StdioClientOptions } from "./client";
+export type { StdioClientConnection, StdioClientOptions } from "./client/index";
 export type {
   CustomHeaders,
   CustomHeader,

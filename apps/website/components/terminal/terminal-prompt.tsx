@@ -159,7 +159,7 @@ export function TerminalPrompt({ children, className }: TerminalPromptProps) {
 
   return (
     <div className={cn("relative group", className)}>
-      <div className="p-3 px-4 bg-black border border-white/20">
+      <div className="p-3 px-4 rounded-lg bg-black border border-white/20">
         <pre className="font-mono text-sm">
           <code>
             {segments.map((segment, idx) => (

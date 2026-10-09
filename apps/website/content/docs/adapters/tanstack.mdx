@@ -1,16 +1,16 @@
 ---
-title: "TanStack Start"
-metadataTitle: "Usage with TanStack Start | xmcp Documentation"
+title: "TanStack"
+metadataTitle: "Usage with TanStack | xmcp Documentation"
 publishedAt: "2026-10-02"
-summary: "Add an MCP endpoint to a React TanStack Start app on Node.js or Cloudflare Workers."
-description: "Integrate xmcp tools, prompts, and resources into TanStack Start server routes."
+summary: "Add an MCP endpoint to a React TanStack app on Node.js or Cloudflare Workers."
+description: "Integrate xmcp tools, prompts, and resources into TanStack server routes."
 ---
 
-The TanStack Start adapter serves MCP requests through your React Start application's server routes. It supports Node.js and Cloudflare Workers and uses the same file-based tools, prompts, and resources as other xmcp transports.
+The TanStack adapter serves MCP requests through your React Start application's server routes. It supports Node.js and Cloudflare Workers and uses the same file-based tools, prompts, and resources as other xmcp transports.
 
 ## Automatic setup
 
-From an existing React TanStack Start project, run:
+From an existing React TanStack project, run:
 
 ```bash
 npx init-xmcp@latest
@@ -81,7 +81,7 @@ import type { InferSchema, ToolMetadata } from "xmcp";
 export const schema = { name: z.string().describe("Name to greet") };
 export const metadata: ToolMetadata = {
   name: "greet",
-  description: "Greet someone from TanStack Start",
+  description: "Greet someone from TanStack",
 };
 
 export default function greet({ name }: InferSchema<typeof schema>) {

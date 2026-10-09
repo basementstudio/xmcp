@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/fetch-releases.mjs && (xmcp dev & next dev)",
-    "build": "node scripts/fetch-releases.mjs && xmcp build && next build",
+    "build": "node scripts/clean-build.mjs && node scripts/fetch-releases.mjs && xmcp build && next build",
     "start": "next start",
     "lint": "eslint .",
     "changelog:refresh": "node scripts/fetch-releases.mjs",
