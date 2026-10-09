@@ -25,6 +25,8 @@ Commands:
   list <target>                List tools, prompts, resources, and templates
   import-openapi <file>         Generate GET tools from an OpenAPI JSON file
 
+  install <target>             Print MCP JSON or install a client config entry
+
   call <target> <tool>         Call a tool and print its complete JSON result
   read-resource <target> <uri> Read a resource and print its JSON result
   get-prompt <target> <name>   Render a prompt and print its JSON result
@@ -39,6 +41,14 @@ Import OpenAPI options:
   --operations <ids>           Comma-separated operation IDs (default: all GETs)
   --base-url <url>             Override the API server URL
   -o, --out <path>             Tool output directory (default: src/tools)
+
+Install options (also accepts the connection options above):
+  --name <name>               Override the config entry name
+  --client <client>           Write claude-desktop or cursor's user config
+  --config <path>             Write this config file instead
+  --dry-run                   Print the proposed JSON without writing
+  --replace                   Replace a conflicting entry with the same name
+  Without --client/--config, print JSON only. STDIO commands are not launched.
 
 Call / read-resource / get-prompt:
   Reuse the connection options above; with --stdio, omit <target>.
@@ -127,6 +137,29 @@ async function main() {
     if (options.help) return printHelp();
     const paths = await runImportOpenApi(options);
     for (const path of paths) console.log(`Created ${path}`);
+    return;
+  }
+
+  if (process.argv[2] === "install") {
+    const { parseInstallOptions } = await import("./utils/install-options.js");
+    const options = parseInstallOptions(process.argv.slice(3));
+    if (options.help) return printHelp();
+    const stdoutWrite = process.stdout.write;
+    let output: string;
+    // As with discovery, config-module diagnostics must not corrupt JSON output.
+    process.stdout.write = process.stderr.write.bind(process.stderr);
+    try {
+      const { runInstall } = await import("./commands/install.js");
+      const result = await runInstall(options);
+      output = JSON.stringify(result.config, null, 2);
+      if (result.path)
+        console.error(
+          `${!result.changed ? "Unchanged" : options.dryRun ? "Would update" : "Updated"} ${result.path}`
+        );
+    } finally {
+      process.stdout.write = stdoutWrite;
+    }
+    process.stdout.write(`${output}\n`);
     return;
   }
 

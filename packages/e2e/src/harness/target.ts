@@ -6,6 +6,7 @@ export type Capability =
   | "cli-execution"
   | "cli-discovery"
   | "openapi-import"
+  | "cli-install"
   | "managed-client"
   | "managed-client-interactive"
   | "component-visibility"
@@ -37,6 +38,7 @@ export interface Target {
 export const BASE_CAPABILITIES: readonly Capability[] = [
   "cli-execution",
   "cli-discovery",
+  "cli-install",
   "managed-client",
   "managed-client-interactive",
   "component-visibility",

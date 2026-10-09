@@ -340,3 +340,80 @@ test("CLI loads the default config, reports empty catalogs, and cleans up failur
   }
   markPassed();
 });
+
+test("CLI install exports named clients without resolving environment references or launching servers", async (context) => {
+  const { directory, markPassed } = await fixture(context);
+  const source = join(directory, "clients.ts");
+  await writeFile(
+    source,
+    `console.log("install config diagnostic");\nexport const clients = ${JSON.stringify(
+      {
+        remote: {
+          url: "https://example.test/mcp/${PATH}",
+          headers: [{ name: "Authorization", env: "PATH" }],
+        },
+        local: {
+          command: "xmcp-install-must-not-spawn",
+          args: ["--help", "a b", "${PATH}"],
+          env: { TOKEN: "${PATH}" },
+        },
+      }
+    )};\n`
+  );
+  const remote = await runDeveloperCli(
+    ["install", "remote", "--clients", source],
+    directory,
+    "install-generic"
+  );
+  assert.equal(remote.code, 0, remote.stderr);
+  assert.match(remote.stderr, /install config diagnostic/);
+  assert.deepEqual(JSON.parse(remote.stdout), {
+    mcpServers: {
+      remote: {
+        url: "https://example.test/mcp/${PATH}",
+        headers: { Authorization: "${PATH}" },
+      },
+    },
+  });
+
+  const destination = join(directory, "mcp.json");
+  const args = [
+    "install",
+    "local",
+    "--clients",
+    source,
+    "--client",
+    "claude-desktop",
+    "--config",
+    destination,
+  ];
+  const local = await runDeveloperCli(args, directory, "install-stdio");
+  assert.equal(local.code, 0, local.stderr);
+  const written = await readFile(destination, "utf8");
+  assert.deepEqual(JSON.parse(written).mcpServers.local, {
+    command: "xmcp-install-must-not-spawn",
+    args: ["--help", "a b", "${PATH}"],
+    env: { TOKEN: "${PATH}" },
+  });
+  const repeated = await runDeveloperCli(args, directory, "install-repeat");
+  assert.equal(repeated.code, 0, repeated.stderr);
+  assert.match(repeated.stderr, /Unchanged/);
+  assert.equal(await readFile(destination, "utf8"), written);
+  const conflict = await runDeveloperCli(
+    [
+      "install",
+      "https://example.test/mcp",
+      "--name",
+      "local",
+      "--config",
+      destination,
+    ],
+    directory,
+    "install-conflict"
+  );
+  assert.notEqual(conflict.code, 0);
+  assert.equal(conflict.stdout, "");
+  assert.match(conflict.stderr, /--replace/);
+  assert.equal(await readFile(destination, "utf8"), written);
+  markPassed();
+});

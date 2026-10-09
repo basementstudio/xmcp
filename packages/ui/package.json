@@ -60,7 +60,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "typescript": "^5.8.3",
-    "vitest": "^3.1.1",
+    "vitest": "^4.1.11",
     "xmcp": "workspace:*",
     "zod": "catalog:"
   },

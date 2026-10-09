@@ -9,6 +9,99 @@ description: "Configure HTTP and STDIO transport connections for local developme
 At this point, you can configure to connect to your MCP server on clients like `Cursor` or `Claude Desktop`.
 Notice that, unless you start the development server, or have built your project for production, your server will not be shown available.
 
+## Install a client configuration
+
+Use the developer CLI to generate MCP JSON without connecting to your server:
+
+```sh
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project
+```
+
+Without `--client` or `--config`, this prints JSON only. To preview and then write
+your Cursor configuration:
+
+```sh
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project --client cursor --dry-run
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project --client cursor
+```
+
+`--dry-run` prints the full proposed JSON without writing files or directories.
+Existing settings and other servers are preserved. An identical entry leaves the
+file untouched. A different entry with the same name fails unless you add
+`--replace`, including during a dry run. Invalid JSON is never overwritten.
+Updates use a temporary file followed by a rename.
+
+### Choose the destination
+
+| Client                         | Default config path                                               |
+| ------------------------------ | ----------------------------------------------------------------- |
+| Cursor (macOS, Linux, Windows) | `~/.cursor/mcp.json`                                              |
+| Claude Desktop (macOS)         | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Claude Desktop (Windows)       | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+
+These locations follow the [Cursor documentation](https://cursor.com/docs/mcp)
+and the [MCP Claude Desktop guide](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
+Use `--config <path>` to override the destination. Claude Desktop requires an
+explicit path on other systems or when its default cannot be determined.
+For a Cursor project config:
+
+```sh
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project --client cursor --config .cursor/mcp.json
+```
+
+Using `--config` without `--client` writes generic MCP JSON. Successful commands
+print the resulting config to stdout; status and errors go to stderr.
+Restart or refresh your client to load the config.
+
+### Install a STDIO server
+
+Build your server first, then use absolute paths so the desktop client can launch
+it from any working directory:
+
+```sh
+npx @xmcp-dev/cli install --name my-project --client claude-desktop --stdio node /ABSOLUTE/PATH/TO/my-project/dist/stdio.js
+```
+
+Put all CLI options before `--stdio`. Everything after the executable becomes a
+server argument. The installer records the command without launching it or
+installing npm packages.
+
+Claude Desktop's local config uses STDIO. To connect it to an HTTP server using
+the bridge shown below, supply the launch command explicitly:
+
+```sh
+npx @xmcp-dev/cli install --name my-project --client claude-desktop --stdio npx -y mcp-remote http://localhost:3001/mcp
+```
+
+Direct HTTP targets with `--client claude-desktop` are rejected. Configured `cwd`
+is also rejected for this client; use absolute paths or a launch script instead.
+Cursor and generic STDIO entries preserve `cwd` when supplied.
+
+### Reuse named clients and environment references
+
+You can install an existing named client from `src/clients.ts`, or select a source
+file with `--clients`:
+
+```sh
+npx @xmcp-dev/cli install local --clients discovery.clients.ts --client cursor --dry-run
+```
+
+`--clients` selects the input definitions; `--config` selects the destination JSON.
+`--name` overrides the output entry name. Otherwise it uses the client name, URL
+hostname, or `stdio` for a direct command. A placeholder in a hostname becomes
+`server` in the inferred name only.
+
+Literal `${ENV}` references in URLs, arguments, environment values, and headers
+remain unchanged. A header definition such as `{ name: "Authorization", env: "TOKEN" }`
+becomes `"Authorization": "${TOKEN}"` in generic JSON or `"Authorization": "${env:TOKEN}"`
+for Cursor. The installer does not read those environment values; interpolation
+depends on your client. TypeScript config files execute when loaded, so write a
+literal string instead of `process.env.TOKEN` when you want to preserve a reference.
+
+The [external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients)
+includes `pnpm install:preview`, which previews a Cursor project config without
+starting a server or changing a file.
+
 ## HTTP transport
 
 By default, xmcp will use the port `3001`. If you're using a different port, you can change it in your `xmcp.config.ts` file. Read more about configuring transports [here](../configuration/transports).
