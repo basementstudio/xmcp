@@ -1,0 +1,40 @@
+{
+  "name": "@xmcp-dev/upstash",
+  "version": "0.0.0",
+  "description": "Upstash rate limiting middleware for xmcp tools",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/basementstudio/xmcp",
+    "directory": "packages/plugins/upstash"
+  },
+  "homepage": "https://xmcp.dev",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "test": "node --import tsx --test test/*.test.ts"
+  },
+  "peerDependencies": {
+    "@upstash/ratelimit": "^2.2.0",
+    "xmcp": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.2",
+    "@upstash/ratelimit": "^2.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "xmcp": "workspace:*"
+  }
+}
