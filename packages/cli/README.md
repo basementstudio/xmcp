@@ -1,6 +1,6 @@
 # @xmcp-dev/cli
 
-CLI tool for inspecting MCP servers, generating typed clients, and scaffolding xmcp primitives.
+CLI tool for inspecting MCP servers, installing client configs, generating typed clients, and scaffolding xmcp primitives.
 
 ## Usage
 
@@ -10,6 +10,8 @@ npx @xmcp-dev/cli create <tool|resource|prompt> [name] [options]
 npx @xmcp-dev/cli inspect <url|client-name> [--json]
 npx @xmcp-dev/cli list <url|client-name> [--json]
 npx @xmcp-dev/cli list --json --stdio <command> [args...]
+npx @xmcp-dev/cli install <url|client-name> [--client cursor|claude-desktop] [--config <path>]
+
 npx @xmcp-dev/cli call <url|client-name> <tool> [--arg key=value]
 npx @xmcp-dev/cli read-resource <url|client-name> <uri>
 npx @xmcp-dev/cli get-prompt <url|client-name> <prompt> [--arg key=value]
@@ -48,6 +50,52 @@ printing, including on failure, and STDIO cleanup stops the spawned server.
 
 The commands automatically negotiate modern or legacy MCP. They query metadata
 without invoking tools, reading resource contents, or rendering prompts.
+
+## Installing client configs
+
+`install` prints one `mcpServers` JSON document to stdout. It never connects to
+the server or launches the STDIO command. Without `--client` or `--config`, it
+only prints JSON. Named clients use the same `--clients` source file as discovery.
+
+```sh
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project --client cursor --dry-run
+npx @xmcp-dev/cli install local --clients src/clients.ts --client cursor --config .cursor/mcp.json
+npx @xmcp-dev/cli install --name my-project --client claude-desktop --stdio node /absolute/path/dist/stdio.js
+```
+
+- `--client cursor` writes `~/.cursor/mcp.json` on macOS, Linux, and Windows.
+- `--client claude-desktop` writes `~/Library/Application Support/Claude/claude_desktop_config.json`
+  on macOS or `%APPDATA%\Claude\claude_desktop_config.json` on Windows. Use `--config`
+  on other systems or when the default path cannot be determined.
+- `--config <path>` overrides the destination; without `--client`, it uses the
+  generic format. `--clients` selects the input definitions, `--config` the output.
+- `--name` overrides the entry name; defaults are the named client, URL hostname,
+  or `stdio` for a direct command. Hostname placeholders use `server` for naming.
+- `--dry-run` prints the proposed merged JSON without writing files or directories.
+- `--replace` permits replacing a conflicting entry of the same name. It is also
+  required when previewing a replacement. Identical entries leave the file untouched.
+
+Writes preserve unrelated keys and replace the file via a temporary file and
+rename. Invalid JSON or an invalid `mcpServers` object is rejected, even with
+`--replace`. Status messages and config-module diagnostics go to stderr; failures
+exit nonzero without a JSON result. New files use owner-only permissions on POSIX;
+existing file permissions and symlinks are preserved.
+
+HTTP entries contain `url` and optional `headers`. STDIO entries contain `command`,
+`args`, and optional `env`/`cwd`. Claude Desktop's local config accepts STDIO entries;
+for HTTP, explicitly supply a bridge such as `--stdio npx -y mcp-remote <url>`.
+Claude Desktop entries with `cwd` are rejected: use absolute paths or a launch script.
+Put all install options before `--stdio`.
+
+Literal `${ENV}` strings are copied unchanged. Header definitions using `env: "TOKEN"`
+become `${TOKEN}` in generic output and `${env:TOKEN}` for Cursor; environment values
+are never read by the installer. Interpolation support depends on the receiving
+client. A TypeScript config still executes when loaded, so a `process.env.TOKEN`
+expression in that file supplies its evaluated value; use literal strings to
+retain references. Installation does not install npm packages or start servers.
+
+See `examples/external-clients` for a runnable preview.
 
 ## Calling tools, reading resources, and rendering prompts
 

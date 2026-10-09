@@ -206,6 +206,12 @@ peers to verify fallback, pagination, empty capabilities, argument forwarding,
 failure exit codes, and subprocess cleanup. `prepare:fixtures` builds the CLI
 and its workspace runtime dependency before these checks.
 
+The `cli-install` capability writes fixture-owned client configs through the
+built CLI, verifies dry runs and preservation of unrelated settings, then uses
+the emitted entry to connect and call a tool in each protocol mode. CLI tests
+also cover named inputs, literal environment references, idempotence, conflicts,
+and installation without launching a server. Tests never modify user configs.
+
 `prepareClientTarget(fixture)` prepares an already compiled fixture for a client
 under test without connecting the harness's own client. HTTP fixtures (including
 adapter hosts) return `{ type: "http", url, close }` once the server listens.

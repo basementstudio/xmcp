@@ -5,6 +5,7 @@ import type { ProtocolMode } from "./client-options.js";
 export type Capability =
   | "cli-execution"
   | "cli-discovery"
+  | "cli-install"
   | "managed-client"
   | "managed-client-interactive"
   | "component-visibility"
@@ -36,6 +37,7 @@ export interface Target {
 export const BASE_CAPABILITIES: readonly Capability[] = [
   "cli-execution",
   "cli-discovery",
+  "cli-install",
   "managed-client",
   "managed-client-interactive",
   "component-visibility",
