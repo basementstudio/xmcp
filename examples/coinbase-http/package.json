@@ -16,7 +16,7 @@
     "@x402/evm": "^2.28.0",
     "zod": "^4.0.10",
     "@x402/fetch": "^2.28.0",
-    "@modelcontextprotocol/client": "^2.0.0"
+    "@modelcontextprotocol/client": "^2.2.0"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*",
