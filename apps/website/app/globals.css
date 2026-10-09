@@ -68,7 +68,7 @@ html:has(#nd-blog-layout) {
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-brand-neutral-300);
-  border-radius: 0;
+  border-radius: 9999px;
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -93,7 +93,7 @@ html:has(#nd-blog-layout) {
 }
 
 .prose a {
-  @apply underline transition-all decoration-white/40 underline-offset-2 decoration-[0.1em] hover:text-white font-sans;
+  @apply transition-colors hover:text-white font-sans;
 }
 
 .prose h1 {
@@ -156,7 +156,7 @@ html:has(#nd-blog-layout) {
 
 .prose img {
   /* Don't apply styles to next/image */
-  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-sm;
+  @apply m-0 max-w-full w-full h-auto border border-brand-neutral-500 rounded-lg;
 }
 
 .prose p {
@@ -172,23 +172,19 @@ html:has(#nd-blog-layout) {
   margin-top: 0;
 }
 
-.prose p code,
-.prose li code {
-  @apply border border-brand-neutral-400 bg-brand-neutral-600 text-brand-neutral-100 text-[0.9rem] px-1.5 py-0.5 rounded-[2px] font-mono leading-none align-baseline;
+.prose code:not(pre code, :has(pre)) {
+  @apply border border-brand-neutral-400 bg-brand-black text-[#EC9D00] text-[0.75rem] px-1.5 py-0.5 rounded-md font-mono leading-none inline-block max-w-full overflow-x-auto whitespace-nowrap align-middle;
   letter-spacing: 0;
-  color: var(--color-brand-neutral-100) !important;
-  background-color: var(--color-brand-neutral-600) !important;
+  color: #ec9d00 !important;
+  background-color: var(--color-brand-black) !important;
 }
 
-.prose p code *,
-.prose li code * {
+.prose code:not(pre code, :has(pre)) * {
   color: inherit !important;
 }
 
-.prose p code::before,
-.prose p code::after,
-.prose li code::before,
-.prose li code::after {
+.prose code:not(pre code, :has(pre))::before,
+.prose code:not(pre code, :has(pre))::after {
   content: none;
 }
 
@@ -267,10 +263,6 @@ html:has(#nd-blog-layout) {
   text-underline-offset: 2px;
 }
 
-.prose a:hover {
-  opacity: 0.8;
-}
-
 .prose strong {
   font-weight: 600;
 }
@@ -281,24 +273,6 @@ html:has(#nd-blog-layout) {
 
 pre::-webkit-scrollbar {
   display: none;
-}
-
-.codeblock-scroll-rail {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-brand-neutral-300) transparent;
-}
-
-.codeblock-scroll-rail::-webkit-scrollbar {
-  height: 10px;
-}
-
-.codeblock-scroll-rail::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.codeblock-scroll-rail::-webkit-scrollbar-thumb {
-  background: var(--color-brand-neutral-300);
-  border-radius: 0;
 }
 
 pre {
@@ -469,4 +443,114 @@ input[type="email"] {
   to {
     --fade-right: 0px;
   }
+}
+
+/* Keep panel and backdrop motion in sync; Radix waits for exit animations. */
+.dialog-motion,
+.dialog-overlay-motion {
+  --dialog-enter-scale: 0.98;
+  --dialog-enter-offset: 6px;
+  animation-duration: 200ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+}
+
+.dialog-overlay-motion {
+  --dialog-enter-scale: 1;
+  --dialog-enter-offset: 0px;
+}
+
+.dialog-motion[data-state="open"],
+.dialog-overlay-motion[data-state="open"] {
+  animation-name: dialog-enter;
+}
+
+.dialog-motion[data-state="closed"],
+.dialog-overlay-motion[data-state="closed"] {
+  animation-name: dialog-exit;
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--dialog-enter-offset))
+      scale(var(--dialog-enter-scale));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialog-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(var(--dialog-enter-offset))
+      scale(var(--dialog-enter-scale));
+  }
+}
+
+@media (width < 48rem) {
+  .dialog-motion {
+    --dialog-enter-scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-motion[data-state],
+  .dialog-overlay-motion[data-state] {
+    animation: none;
+  }
+}
+
+/* Draw from the left on hover/focus, then retract toward the right. */
+.link-underline,
+.link-underline-label,
+.prose :is(p, li, td) a:not(:has(img)) {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: right bottom;
+  background-size: 0% 1px;
+  text-decoration: none;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    background-size 200ms ease-out,
+    color 200ms ease-out;
+}
+
+.link-underline:is(:hover, :focus-visible),
+.link-underline-group:is(:hover, :focus-visible, [data-active="true"])
+  .link-underline-label,
+.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
+  background-position: left bottom;
+  background-size: 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-underline,
+  .link-underline-label,
+  .prose :is(p, li, td) a:not(:has(img)) {
+    transition: none;
+  }
+}
+
+/* Keep links identifiable within prose before they are hovered. */
+.prose :is(p, li, td) a:not(:has(img)) {
+  background-image:
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(rgb(255 255 255 / 0.4), rgb(255 255 255 / 0.4));
+  background-size:
+    0% 1px,
+    100% 1px;
+}
+
+.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
+  background-size:
+    100% 1px,
+    100% 1px;
 }

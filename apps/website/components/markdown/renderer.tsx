@@ -35,7 +35,7 @@ function RoundedImage(props: {
       sizes="(min-width: 860px) 796px, calc(100vw - 64px)"
       {...props}
       alt={props.alt ?? ""}
-      className="rounded-sm"
+      className="rounded-lg"
     />
   );
 }

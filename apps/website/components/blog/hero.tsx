@@ -14,7 +14,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
   return (
     <Link href={`/blog/${featuredPost.slug}`} className="block col-span-12">
       <section className="relative group overflow-visible mb-2">
-        <div className="relative border border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 w-full flex flex-col md:flex-row">
+        <div className="relative rounded-lg overflow-hidden border border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 w-full flex flex-col md:flex-row">
           <div className="w-full md:w-1/2 md:border-r border-brand-neutral-500 overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300 transition-colors duration-200 relative aspect-video">
             {image ? (
               <Image

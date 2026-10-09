@@ -39,7 +39,7 @@ interface CardProps {
 
 const Card = ({ asset, title, description }: CardProps) => {
   return (
-    <div className="flex flex-col items-start justify-center p-4 rounded-xs border border-brand-neutral-500 max-h-[360px] h-full">
+    <div className="flex flex-col items-start justify-center p-4 rounded-lg border border-brand-neutral-500 max-h-[360px] h-full">
       <div className="flex items-center justify-center w-full gap-2 mb-4">
         <Image
           src={asset}

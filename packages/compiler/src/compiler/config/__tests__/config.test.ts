@@ -14,10 +14,10 @@ import { configSchema } from "@/runtime-config";
 
 import {
   injectAdapterVariables,
+  injectComponentsVariables,
   injectCorsVariables,
   injectHttpVariables,
   injectObservabilityVariables,
-  injectComponentsVariables,
   injectPathsVariables,
   injectServerInfoVariables,
   injectStdioVariables,
@@ -546,5 +546,26 @@ describe("Component visibility config", () => {
         JSON.stringify(components)
       );
     }
+  });
+});
+
+describe("experimental tool schema inference", () => {
+  it("requires an explicit boolean opt-in", () => {
+    assert.equal(
+      configSchema.parse({}).experimental?.inferToolSchemas,
+      undefined
+    );
+    for (const enabled of [true, false]) {
+      assert.equal(
+        configSchema.parse({ experimental: { inferToolSchemas: enabled } })
+          .experimental?.inferToolSchemas,
+        enabled
+      );
+    }
+    assert.equal(
+      configSchema.safeParse({ experimental: { inferToolSchemas: "true" } })
+        .success,
+      false
+    );
   });
 });

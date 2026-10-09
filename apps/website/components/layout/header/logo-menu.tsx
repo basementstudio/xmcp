@@ -50,9 +50,9 @@ export function LogoContextMenu({ children }: { children: React.ReactNode }) {
         <DropdownMenuTrigger asChild disabled>
           <div onContextMenu={handleContextMenu}>{children}</div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-brand-neutral-600 text-[0.625rem] uppercase border border-brand-neutral-400 text-brand-neutral-100 fixed -top-3 left-2">
+        <DropdownMenuContent className="rounded-lg p-1 bg-brand-neutral-600 text-[0.625rem] uppercase border border-brand-neutral-400 text-brand-neutral-100 fixed -top-3 left-2">
           <DropdownMenuItem
-            className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
+            className="w-full rounded-md text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
             onClick={(e) => {
               e.preventDefault();
               handleCopyLogo();
@@ -62,7 +62,7 @@ export function LogoContextMenu({ children }: { children: React.ReactNode }) {
           </DropdownMenuItem>
           <DropdownMenuSeparator className="border-brand-neutral-400 border-t border-dashed" />
           <DropdownMenuItem
-            className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
+            className="w-full rounded-md text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
             onClick={(e) => {
               e.preventDefault();
               handleDownloadLogo();

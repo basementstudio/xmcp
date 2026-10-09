@@ -33,7 +33,7 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
     <TreeContextProvider tree={tree}>
       <main
         id="nd-docs-layout"
-        className="flex flex-1 flex-col md:flex-row max-w-[1440px] mx-auto mt-4 pb-20 w-full"
+        className="flex flex-1 flex-col md:flex-row mt-4 md:pt-4 w-full"
       >
         <Sidebar />
         {children}
@@ -72,7 +72,7 @@ function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:block sticky self-start top-28 shrink-0 p-4 pt-0 h-[calc(100dvh-156px)] w-[300px] min-h-0">
+      <aside className="hidden md:block sticky self-start top-20 shrink-0 px-4 h-[calc(100dvh-96px)] w-[300px] min-h-0">
         {navigation}
       </aside>
       <div className="md:hidden px-4">
@@ -93,7 +93,7 @@ function Sidebar() {
             side="left"
             aria-labelledby="docs-navigation-title"
             aria-describedby={undefined}
-            className="z-[110] w-full max-w-sm bg-brand-black p-4 pb-[max(1rem,env(safe-area-inset-bottom))] motion-reduce:animate-none motion-reduce:transition-none"
+            className="z-[110] h-dvh w-full max-w-sm bg-brand-black p-4 pb-[max(1rem,env(safe-area-inset-bottom))] motion-reduce:animate-none motion-reduce:transition-none"
           >
             <div className="flex shrink-0 items-center justify-between gap-4">
               <p id="docs-navigation-title" className="font-medium">
@@ -132,12 +132,36 @@ function SidebarNavigation({
 
   useEffect(() => {
     const nav = ref.current;
+    const content = nav?.firstElementChild;
+    if (!nav || !content) return;
+
+    // Only fade edges with more content beyond them. Observe the content too,
+    // since opening or closing a section changes the scrollable height.
+    const updateEdges = () => {
+      nav.dataset.scrollTop = String(nav.scrollTop > 0);
+      nav.dataset.scrollBottom = String(
+        Math.ceil(nav.scrollTop + nav.clientHeight) < nav.scrollHeight
+      );
+    };
+    const observer = new ResizeObserver(updateEdges);
+    observer.observe(nav);
+    observer.observe(content);
+    nav.addEventListener("scroll", updateEdges, { passive: true });
+    updateEdges();
+    return () => {
+      observer.disconnect();
+      nav.removeEventListener("scroll", updateEdges);
+    };
+  }, []);
+
+  useEffect(() => {
+    const nav = ref.current;
     const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
     if (nav && active) {
       // Scroll only this navigation pane, never the document behind it.
       scrollIntoView(active, {
         scrollMode: "if-needed",
-        block: "nearest",
+        block: "center",
         boundary: nav,
       });
     }
@@ -220,13 +244,23 @@ function SidebarNavigation({
   }
 
   return (
-    <nav
-      ref={ref}
-      aria-label="Docs"
-      className="sidebar-scrollbar min-h-0 h-full overflow-y-auto overscroll-contain p-1 text-sm"
-    >
-      {renderItems(nodes)}
-    </nav>
+    <div className="relative min-h-0 h-full flex-1">
+      <nav
+        ref={ref}
+        aria-label="Docs"
+        className="peer sidebar-scrollbar h-full overflow-y-auto overscroll-contain scroll-py-4 px-1 text-sm"
+      >
+        <div className="py-4">{renderItems(nodes)}</div>
+      </nav>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-brand-black to-transparent opacity-0 peer-data-[scroll-top=true]:opacity-100"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-brand-black to-transparent opacity-0 peer-data-[scroll-bottom=true]:opacity-100"
+      />
+    </div>
   );
 }
 

@@ -308,7 +308,7 @@ function Message({
     >
       <div
         className={cn(
-          "rounded-xs px-1 transition-all duration-200",
+          "rounded-md px-1 transition-all duration-200",
           isUser &&
             "bg-white/10 text-end max-w-fit ml-auto leading-none px-4 py-2"
         )}
@@ -328,7 +328,7 @@ function Message({
             <Link
               key={i}
               href={item.url}
-              className="group block text-xs rounded-xs border border-brand-neutral-400 bg-brand-black p-2 transition-all duration-200 hover:bg-white/10 hover:border-brand-neutral-100"
+              className="group block text-xs rounded-md border border-brand-neutral-400 bg-brand-black p-2 transition-all duration-200 hover:bg-white/10 hover:border-brand-neutral-100"
             >
               <p className="font-semibold text-brand-neutral-50 group-hover:text-brand-white transition-colors">
                 {item.title}
@@ -396,23 +396,13 @@ function MobilePanel({
   chat: UseChatHelpers<UIMessage>;
 }) {
   const hasMessages = chat.messages.length > 0;
-  const [showInput, setShowInput] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      // Delay input animation slightly for better visual effect
-      const timer = setTimeout(() => setShowInput(true), 100);
-      return () => clearTimeout(timer);
-    } else {
-      setShowInput(false);
-    }
-  }, [open]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="h-full w-full p-0 bg-brand-black border-none flex flex-col [&>button]:hidden data-[state=closed]:!slide-out-to-bottom-0 data-[state=open]:!slide-in-from-bottom-0 data-[state=closed]:!fade-out-0 data-[state=open]:!fade-in-0 z-[100]"
+        overlayClassName="dialog-overlay-motion"
+        className="h-full w-full p-0 bg-brand-black border-none flex flex-col [&>button]:hidden dialog-motion z-[100]"
       >
         <SheetTitle className="sr-only">Ask AI</SheetTitle>
 
@@ -444,12 +434,11 @@ function MobilePanel({
           <div className="flex-1" />
         )}
 
-        {/* Input - slides up from bottom */}
+        {/* Input moves with the panel. */}
         <div
           className={cn(
-            "border-t border-brand-neutral-400 bg-brand-black transition-transform duration-300 ease-out p-4",
-            hasMessages ? "" : "mt-auto",
-            showInput ? "translate-y-0" : "translate-y-full"
+            "border-t border-brand-neutral-400 bg-brand-black p-4",
+            hasMessages ? "" : "mt-auto"
           )}
         >
           <AskAIInput
@@ -477,10 +466,10 @@ function DesktopDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay className="fixed inset-0 z-50 bg-brand-black/70" />
+      <DialogOverlay className="dialog-overlay-motion fixed inset-0 z-50 bg-brand-black/70" />
       <DialogContent
         aria-describedby={undefined}
-        className="fixed bg-brand-black data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-xs border border-brand-neutral-400 duration-200 overflow-hidden"
+        className="fixed bg-brand-black dialog-motion top-[calc(50%-250px)] left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 rounded-lg border border-brand-neutral-400 overflow-hidden"
       >
         <DialogTitle className="hidden">Ask AI</DialogTitle>
 

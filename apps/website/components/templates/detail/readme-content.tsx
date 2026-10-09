@@ -96,7 +96,7 @@ function ReadmeImg(props: ComponentProps<"img">) {
       loading="lazy"
       decoding="async"
       referrerPolicy={isRemote ? "no-referrer" : undefined}
-      className="inline-block max-w-full h-auto rounded-xs"
+      className="inline-block max-w-full h-auto rounded-lg"
     />
   );
 }
