@@ -16,9 +16,11 @@ export function generateImportCode(): string {
     hasMiddleware,
     clientBundles,
     platforms,
+    xmcpConfig,
   } = compilerContext.getContext();
 
   const isCloudflare = platforms?.cloudflare;
+  const inferSchemas = !!xmcpConfig?.experimental?.inferToolSchemas;
 
   // For Cloudflare, use static imports to avoid code splitting.
   // For Node.js, use dynamic imports for lazy loading.
@@ -28,7 +30,8 @@ export function generateImportCode(): string {
       promptPaths,
       resourcePaths,
       hasMiddleware,
-      clientBundles
+      clientBundles,
+      inferSchemas
     );
   }
 
@@ -37,7 +40,8 @@ export function generateImportCode(): string {
     promptPaths,
     resourcePaths,
     hasMiddleware,
-    clientBundles
+    clientBundles,
+    inferSchemas
   );
 }
 
@@ -50,10 +54,13 @@ function generateStaticImportCode(
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
   hasMiddleware: boolean,
-  clientBundles?: Map<string, string>
+  clientBundles?: Map<string, string>,
+  inferSchemas = false
 ): string {
   // Generate static import statements at the top
-  const staticImports: string[] = [];
+  const staticImports: string[] = inferSchemas
+    ? ['import { withInferredSchema } from "./inferred-tools.js";']
+    : [];
   const toolsEntries: string[] = [];
   const promptsEntries: string[] = [];
   const resourcesEntries: string[] = [];
@@ -63,7 +70,9 @@ function generateStaticImportCode(
     const relativePath = `../${path}`;
     const identifier = pathToIdentifier(path);
     staticImports.push(`import * as ${identifier} from "${relativePath}";`);
-    toolsEntries.push(`"${path}": () => Promise.resolve(${identifier}),`);
+    toolsEntries.push(
+      `"${path}": () => Promise.resolve(${inferSchemas ? `withInferredSchema(${identifier}, ${JSON.stringify(path)})` : identifier}),`
+    );
   });
 
   Array.from(promptPaths).forEach((p) => {
@@ -127,13 +136,14 @@ function generateDynamicImportCode(
   promptPaths: Set<string>,
   resourcePaths: Set<string>,
   hasMiddleware: boolean,
-  clientBundles?: Map<string, string>
+  clientBundles?: Map<string, string>,
+  inferSchemas = false
 ): string {
   const importToolsCode = Array.from(toolPaths)
     .map((p) => {
       const path = p.replace(/\\/g, "/");
       const relativePath = `../${path}`;
-      return `"${path}": () => import("${relativePath}"),`;
+      return `"${path}": () => import("${relativePath}")${inferSchemas ? `.then(tool => withInferredSchema(tool, ${JSON.stringify(path)}))` : ""},`;
     })
     .join("\n");
 
@@ -165,7 +175,7 @@ function generateDynamicImportCode(
           .join("\n")
       : "";
 
-  return `
+  return `${inferSchemas ? 'import { withInferredSchema } from "./inferred-tools.js";' : ""}
 export const tools = {
 ${importToolsCode}
 };

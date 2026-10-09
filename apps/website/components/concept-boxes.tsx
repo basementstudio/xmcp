@@ -14,7 +14,7 @@ export function ConceptBox({ title, description, href }: ConceptBoxProps) {
       href={href}
       className={cn(
         "flex flex-col gap-2 p-4 !no-underline",
-        "border border-white/20 rounded-xs",
+        "border border-white/20 rounded-lg",
         "transition-colors duration-200 hover:!opacity-100 hover:border-white/40"
       )}
     >

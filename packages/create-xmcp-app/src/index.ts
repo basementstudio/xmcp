@@ -45,6 +45,7 @@ const program = new Command()
   .option("--stdio", "Enable STDIO transport", false)
   .option("--cloudflare, --cf", "Initialize for Cloudflare Workers", false)
   .option("--ui", "Initialize with MCP App template (non-tailwind)", false)
+  .option("--ui-kit", "Initialize with @xmcp-dev/ui starter files", false)
   .option("--tailwind, --tw", "Use Tailwind CSS (only with MCP App)", false)
   .action(async (projectDir, options) => {
     const cloudflareFlag =
@@ -154,6 +155,7 @@ const program = new Command()
     let template = "typescript";
     let templateChoice = "default";
     let tailwind = false;
+    let uiKit = Boolean(options.uiKit);
 
     if (options.http || options.stdio) {
       transports = [];
@@ -161,7 +163,13 @@ const program = new Command()
       if (options.stdio) transports.push("stdio");
     }
 
-    if (options.ui) {
+    if (uiKit) {
+      template = "mcp-apps";
+      templateChoice = "mcp-app";
+      transports = ["http"];
+      selectedPaths = ["tools", "resources"];
+      tailwind = true;
+    } else if (options.ui) {
       template = "mcp-apps";
       templateChoice = "mcp-app";
       transports = ["http"];
@@ -170,7 +178,7 @@ const program = new Command()
     }
 
     if (!options.yes) {
-      if (!options.ui) {
+      if (!options.ui && !uiKit) {
         const templateAnswers = await inquirer.prompt([
           {
             type: "list",
@@ -185,20 +193,31 @@ const program = new Command()
                 name: "MCP App (React widgets for ext-apps)",
                 value: "mcp-app",
               },
+              {
+                name: "MCP App with UI kit (components and JSON renderer)",
+                value: "ui-kit",
+              },
             ],
             default: "default",
           },
         ]);
-        templateChoice = templateAnswers.template;
+        uiKit = templateAnswers.template === "ui-kit";
+        templateChoice = uiKit ? "mcp-app" : templateAnswers.template;
 
         if (templateChoice === "mcp-app") {
           template = "mcp-apps";
           transports = ["http"];
-          selectedPaths = ["tools"];
+          selectedPaths = uiKit ? ["tools", "resources"] : ["tools"];
+          tailwind = uiKit;
         }
       }
 
-      if (templateChoice === "mcp-app" && !options.tailwind && !options.ui) {
+      if (
+        templateChoice === "mcp-app" &&
+        !options.tailwind &&
+        !options.ui &&
+        !uiKit
+      ) {
         const tailwindAnswers = await inquirer.prompt([
           {
             type: "confirm",
@@ -318,12 +337,18 @@ const program = new Command()
       }
 
       // Default to Tailwind for MCP app template in non-interactive mode
-      if (templateChoice === "mcp-app" && !options.ui) {
+      if (templateChoice === "mcp-app" && !options.ui && !uiKit) {
         tailwind = true;
       }
     }
 
-    if (options.ui && options.tailwind) {
+    if (options.uiKit && options.ui) {
+      console.log(
+        chalk.yellow(
+          "Using --ui-kit starter and ignoring --ui because --ui-kit already scaffolds an MCP App."
+        )
+      );
+    } else if (options.ui && options.tailwind) {
       console.log(
         chalk.yellow(
           "Ignoring --tailwind because --ui scaffolds the non-tailwind MCP App template."
@@ -339,18 +364,19 @@ const program = new Command()
 
     const spinner = ora("Creating your xmcp app...").start();
     try {
-        createProject({
-          projectPath: resolvedProjectPath,
-          projectName,
-          packageManager,
-          transports: transports,
-          packageVersion: packageJson.version,
-          skipInstall,
-          paths: selectedPaths,
-          template,
-          tailwind,
-          cloudflare: cloudflareFlag,
-        });
+      createProject({
+        projectPath: resolvedProjectPath,
+        projectName,
+        packageManager,
+        transports: transports,
+        packageVersion: packageJson.version,
+        skipInstall,
+        paths: selectedPaths,
+        template,
+        tailwind,
+        uiKit,
+        cloudflare: cloudflareFlag,
+      });
 
       spinner.succeed(chalk.green("Your xmcp app is ready"));
 

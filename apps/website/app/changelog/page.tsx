@@ -44,7 +44,7 @@ export default function ChangelogPage() {
         <p className="text-brand-neutral-100 text-base mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
-          className="inline-block text-sm text-brand-neutral-100 underline underline-offset-4 hover:text-brand-white mt-4"
+          className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
         >
           All releases on GitHub ↗
         </a>
@@ -64,7 +64,7 @@ export default function ChangelogPage() {
               >
                 <a
                   href={`#${releaseAnchor(release.version)}`}
-                  className="hover:underline underline-offset-4"
+                  className="link-underline"
                 >
                   v{release.version}
                 </a>
@@ -77,7 +77,7 @@ export default function ChangelogPage() {
               </time>
               <a
                 href={release.url}
-                className="inline-block text-sm text-brand-neutral-100 underline underline-offset-4 hover:text-brand-white mt-4"
+                className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
               >
                 View on GitHub ↗
               </a>

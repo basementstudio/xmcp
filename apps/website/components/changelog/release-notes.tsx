@@ -55,7 +55,7 @@ export async function ReleaseNotes({
   url: string;
 }) {
   return (
-    <div className="prose max-w-none min-w-0 [&>:first-child]:mt-0 [&_pre]:border [&_pre]:border-brand-neutral-500 [&_pre]:p-4 [&_table]:block [&_table]:overflow-x-auto">
+    <div className="prose max-w-none min-w-0 [&>:first-child]:mt-0 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-brand-neutral-500 [&_pre]:p-4 [&_table]:block [&_table]:overflow-x-auto">
       {await renderReleaseNotes(source, url)}
     </div>
   );

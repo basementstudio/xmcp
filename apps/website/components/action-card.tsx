@@ -18,7 +18,7 @@ export function ActionCard({ label, icon, onClick, href }: ActionCardProps) {
 
   const content = (
     <>
-      <span className="w-8 h-8 border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
+      <span className="w-8 h-8 rounded-md border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
         <IconComponent className="w-4 h-4 text-brand-w1" />
       </span>
       <span className="text-brand-w1 font-medium text-sm relative z-10">
@@ -32,7 +32,7 @@ export function ActionCard({ label, icon, onClick, href }: ActionCardProps) {
 
   const className = cn(
     "relative flex items-center gap-3 px-3 py-2.5",
-    "border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
+    "rounded-lg border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
     "hover:border-brand-neutral-400",
     "cursor-pointer text-left overflow-hidden",
     "no-underline hover:no-underline !decoration-transparent hover:!decoration-transparent",

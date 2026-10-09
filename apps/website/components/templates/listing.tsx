@@ -112,7 +112,7 @@ export function TemplatesListing({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search templates"
-              className="h-auto rounded-xs border-brand-neutral-400 bg-brand-black p-2 pl-10 text-sm text-brand-neutral-200 shadow-none placeholder:text-brand-neutral-200 transition-colors duration-200 ease-in-out hover:bg-white/10 focus-visible:ring-0"
+              className="h-auto rounded-md border-brand-neutral-400 bg-brand-black p-2 pl-10 text-sm text-brand-neutral-200 shadow-none placeholder:text-brand-neutral-200 transition-colors duration-200 ease-in-out hover:bg-white/10 focus-visible:ring-0"
             />
           </div>
         </div>
@@ -187,7 +187,7 @@ export function TemplatesListing({
                     href={pageHref(effectivePage - 1)}
                     aria-label="Go to previous page"
                     scroll={false}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                    className="px-3 py-1.5 text-xs uppercase tracking-wide rounded-md border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                   >
                     Previous
                   </Link>
@@ -213,7 +213,7 @@ export function TemplatesListing({
                     href={pageHref(effectivePage + 1)}
                     aria-label="Go to next page"
                     scroll={false}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                    className="px-3 py-1.5 text-xs uppercase tracking-wide rounded-md border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                   >
                     Next
                   </Link>

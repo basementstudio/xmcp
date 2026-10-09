@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import { ShowcaseCards } from "@/components/showcase/cards";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
+import { ShowcaseSubmissionCard } from "@/components/showcase/submission-card";
 import { getShowcaseItems } from "@/utils/content";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -73,47 +72,7 @@ export default function ShowcasePage() {
 
         <ShowcaseCards mcps={mcps} />
 
-        <div className="col-span-12 py-8 md:py-16">
-          <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-            <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-              <Tag text="Submissions are open" />
-              <div className="grid grid-cols-12 lg:grid-cols-9 gap-4 md:gap-8 w-full">
-                <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient">
-                  Showcase your MCP server
-                </h2>
-                <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
-                  Built something amazing with xmcp? Share it with the community
-                  and get featured in our showcase.
-                </p>
-              </div>
-            </div>
-
-            <div className="col-span-12 lg:col-span-9 lg:col-start-2 flex flex-col items-start gap-4">
-              <p className="text-brand-neutral-100 text-base max-w-[650px]">
-                Add your server’s Markdown entry and logo to the repository,
-                then open a pull request for review. See the{" "}
-                <a
-                  href="https://github.com/basementstudio/xmcp/blob/main/apps/website/README.md#showcase-submissions"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline underline-offset-4 hover:text-brand-white"
-                >
-                  submission guide
-                </a>{" "}
-                for the entry format and steps.
-              </p>
-              <Button asChild variant="primary">
-                <a
-                  href="https://github.com/basementstudio/xmcp/tree/main/apps/website/content/showcase"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Submit a pull request
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ShowcaseSubmissionCard />
       </div>
     </main>
   );
