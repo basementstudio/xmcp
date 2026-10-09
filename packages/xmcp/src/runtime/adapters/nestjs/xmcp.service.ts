@@ -21,6 +21,7 @@ const httpConfig = HTTP_CONFIG as {
   host: string;
   bodySizeLimit: number;
   endpoint: string;
+  maxSubscriptions?: number;
   debug: boolean;
 };
 
@@ -29,6 +30,7 @@ const httpConfig = HTTP_CONFIG as {
 // stateless fallback.
 const mcpHandler = createMcpHandler(createServer, {
   legacy: "stateless",
+  maxSubscriptions: httpConfig.maxSubscriptions,
 });
 const nodeMcpHandler = toNodeHandler(mcpHandler);
 

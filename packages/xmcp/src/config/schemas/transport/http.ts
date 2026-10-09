@@ -71,6 +71,12 @@ const httpTransportObjectBaseSchema = z.object({
   bodySizeLimit: z.number().default(1024 * 1024 * 10), // 10MB
   debug: z.boolean().default(false),
   endpoint: z.string().default("/mcp"),
+  // Left without a default so the SDK's own default applies when unset, rather
+  // than pinning a second copy of it here. `0` refuses every
+  // `subscriptions/listen` in band, which is what a deployment on a platform
+  // with a hard invocation ceiling wants: the stream would otherwise be held
+  // open until the platform kills the invocation.
+  maxSubscriptions: z.number().int().min(0).optional(),
   cors: corsConfigSchema,
 });
 
