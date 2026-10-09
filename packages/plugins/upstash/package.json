@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/upstash",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Upstash rate limiting middleware for xmcp tools",
   "license": "MIT",
   "repository": {

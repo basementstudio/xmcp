@@ -1,5 +1,11 @@
 # xmcp
 
+## 1.7.1
+
+### Patch Changes
+
+- 92163c9: Update the bundled MCP client SDK to 2.2.0 and its optional peer requirement. This includes upstream OAuth issuer binding, input-required result metadata preservation, and pagination fixes.
+
 ## 1.7.0
 
 ### Minor Changes
