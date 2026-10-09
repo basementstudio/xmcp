@@ -24,6 +24,9 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache: "pnpm"
 
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@^11.5.1
+
       - name: Install dependencies
         run: pnpm install --filter @xmcp-dev/cli... --frozen-lockfile
 
