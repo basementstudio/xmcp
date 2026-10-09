@@ -1,0 +1,22 @@
+{
+  "name": "upstash-http",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node --env-file=.env dist/http.js"
+  },
+  "dependencies": {
+    "@xmcp-dev/upstash": "workspace:*",
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.39.0",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3"
+  }
+}

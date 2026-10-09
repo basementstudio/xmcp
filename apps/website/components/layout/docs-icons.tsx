@@ -25,6 +25,7 @@ import {
   PaperPlaneIcon,
   PersonIcon,
   TokensIcon,
+  TimerIcon,
 } from "@radix-ui/react-icons";
 
 export const sidebarIcons: Partial<
@@ -79,6 +80,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/supabase": Icons.supabase,
   "/docs/integrations/billing": Icons.stripe,
   "/docs/integrations/coinbase": Icons.coinbase,
+  "/docs/integrations/upstash": TimerIcon,
   "/docs/integrations/workos": Icons.workos,
   "/docs/integrations/x402": Icons.x402,
   "/docs/discoverability/smithery": MagnifyingGlassIcon,

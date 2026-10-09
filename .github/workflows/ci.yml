@@ -62,6 +62,9 @@ jobs:
       - run: pnpm --filter @xmcp-dev/coinbase test
       - run: pnpm --filter coinbase-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter coinbase-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/upstash test
+      - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter upstash-http exec tsc --noEmit
       - run: pnpm --filter @xmcp-dev/e2e test:unit
       - run: pnpm --filter @xmcp-dev/e2e test:fast
       - name: Upload failed fixture logs
