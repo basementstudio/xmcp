@@ -1,0 +1,23 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Local pet API", "version": "1.0.0" },
+  "servers": [{ "url": "http://127.0.0.1:3002/api" }],
+  "paths": {
+    "/pets/{id}": {
+      "get": {
+        "operationId": "get-pet",
+        "summary": "Read a pet from the local example API",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "minLength": 1 }
+          },
+          { "name": "verbose", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": { "200": { "description": "Pet information as JSON" } }
+      }
+    }
+  }
+}

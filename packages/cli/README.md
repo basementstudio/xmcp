@@ -10,6 +10,8 @@ npx @xmcp-dev/cli create <tool|resource|prompt> [name] [options]
 npx @xmcp-dev/cli inspect <url|client-name> [--json]
 npx @xmcp-dev/cli list <url|client-name> [--json]
 npx @xmcp-dev/cli list --json --stdio <command> [args...]
+npx @xmcp-dev/cli import-openapi ./openapi.json [--operations getPet,listPets]
+
 npx @xmcp-dev/cli install <url|client-name> [--client cursor|claude-desktop] [--config <path>]
 
 npx @xmcp-dev/cli call <url|client-name> <tool> [--arg key=value]
@@ -50,6 +52,36 @@ printing, including on failure, and STDIO cleanup stops the spawned server.
 
 The commands automatically negotiate modern or legacy MCP. They query metadata
 without invoking tools, reading resource contents, or rendering prompts.
+
+## Importing OpenAPI
+
+Generate ordinary xmcp GET tools from a local OpenAPI 3.0/3.1 JSON document:
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json
+npx @xmcp-dev/cli import-openapi ./openapi.json --operations getPet,listPets --out src/tools/api
+npx @xmcp-dev/cli import-openapi ./openapi.json --base-url https://api.example.com/v1
+```
+
+All GET operations are selected by default. `--operations` selects exact
+`operationId` values, or `GET /path/{parameter}` when an ID is absent. Tool names
+use filename normalization; colliding names fail. `--out` defaults to `src/tools`.
+Existing `.ts`/`.tsx` files are never overwritten, and all selected inputs are
+validated before writing. The command does not connect to the API.
+
+Supported inputs include scalar path/query parameters, scalar query arrays with
+form/explode serialization, local parameter/schema references, and common scalar
+constraints. Generated handlers preserve the server's base path, encode inputs,
+forward MCP cancellation to fetch, return response text, and surface unsuccessful
+HTTP statuses as tool errors. Response schemas are not converted or validated.
+
+Unsupported constructs fail clearly: request bodies, headers/cookies, credentials,
+object/nullable/composed schemas, unsupported schema keywords/formats, external or
+recursive references, and non-default serialization styles. Server variables and
+relative URLs require an explicit `--base-url`. Generation supports JSON only.
+
+See [the import guide](https://xmcp.dev/docs/guides/import-openapi) for the exact
+subset and `examples/openapi-import` for a runnable local API and generated tool.
 
 ## Installing client configs
 
