@@ -3,6 +3,7 @@ import type { Fixture, FixtureSpec } from "./fixture.js";
 import type { ProtocolMode } from "./client-options.js";
 
 export type Capability =
+  | "cli-execution"
   | "cli-discovery"
   | "openapi-import"
   | "managed-client"
@@ -34,6 +35,7 @@ export interface Target {
   close(): Promise<void>;
 }
 export const BASE_CAPABILITIES: readonly Capability[] = [
+  "cli-execution",
   "cli-discovery",
   "managed-client",
   "managed-client-interactive",

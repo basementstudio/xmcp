@@ -35,7 +35,8 @@
   ],
   "scripts": {
     "dev": "tsc --watch",
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsc",
+    "test": "node --import tsx --test test/*.test.cts"
   },
   "dependencies": {
     "@descope/node-sdk": "^2.6.0",
@@ -48,6 +49,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "typescript": "^5.5.0",
+    "tsx": "^4.21.0",
     "xmcp": "workspace:*"
   }
 }

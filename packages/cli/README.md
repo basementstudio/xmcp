@@ -11,6 +11,10 @@ npx @xmcp-dev/cli inspect <url|client-name> [--json]
 npx @xmcp-dev/cli list <url|client-name> [--json]
 npx @xmcp-dev/cli list --json --stdio <command> [args...]
 npx @xmcp-dev/cli import-openapi ./openapi.json [--operations getPet,listPets]
+
+npx @xmcp-dev/cli call <url|client-name> <tool> [--arg key=value]
+npx @xmcp-dev/cli read-resource <url|client-name> <uri>
+npx @xmcp-dev/cli get-prompt <url|client-name> <prompt> [--arg key=value]
 ```
 
 ## Inspecting servers
@@ -76,6 +80,55 @@ relative URLs require an explicit `--base-url`. Generation supports JSON only.
 
 See [the import guide](https://xmcp.dev/docs/guides/import-openapi) for the exact
 subset and `examples/openapi-import` for a runnable local API and generated tool.
+
+## Calling tools, reading resources, and rendering prompts
+
+The execution commands share the connection and config options above. They
+always print the complete MCP result as JSON, preserving content blocks,
+structured content, prompt messages, resource contents, and metadata. `--json`
+is accepted for consistency but is optional.
+
+```sh
+npx @xmcp-dev/cli call http://localhost:3001/mcp greet --arg name=Ada
+npx @xmcp-dev/cli call local add --arg a=2 --arg b=3
+npx @xmcp-dev/cli call local add --args-file args.json
+printf '{"a":2,"b":3}\n' | npx @xmcp-dev/cli call local add --stdin
+npx @xmcp-dev/cli read-resource local 'config://app'
+npx @xmcp-dev/cli get-prompt local team-greeting --arg department=engineering --arg name=Ada
+npx @xmcp-dev/cli call add --arg a=2 --arg b=3 --stdio node ./dist/stdio.js
+```
+
+For STDIO, omit the connection target and put the tool/prompt name or resource
+URI before `--stdio`; everything after the executable belongs to the server.
+`read-resource` takes a complete URI, including resolved template parameters,
+and does not accept argument options.
+
+For `call` and `get-prompt`, choose one input source:
+
+- Repeat `--arg key=value`. Tool values parse as JSON when possible, otherwise
+  as literal strings. Quote a JSON string to preserve a numeric-looking string:
+  `--arg 'id="123"'`. Prompt `--arg` values always remain literal strings.
+- `--args-file path` reads a JSON object. Nested objects and arrays are preserved.
+- `--stdin` or `--args-file -` reads a JSON object from stdin. Piped stdin is also
+  read automatically when no argument option is present; empty automatic stdin
+  means no arguments. Explicit stdin requires a nonempty JSON object.
+
+Input sources cannot be mixed, and duplicate `--arg` keys are rejected. Prompt
+JSON values must be strings. Tools are validated against their advertised JSON
+Schema before invocation; prompts validate required names and string values.
+Both catalogs follow pagination when resolving the selected component.
+
+| Exit code | Meaning                                                | Stdout                     |
+| --------- | ------------------------------------------------------ | -------------------------- |
+| `0`       | Successful operation                                   | Complete JSON result       |
+| `1`       | Tool returned `isError: true`                          | Complete JSON error result |
+| `1`       | Config, connection, server, or unknown-component error | Empty                      |
+| `2`       | Invalid CLI options, JSON, argument file, or arguments | Empty                      |
+
+Diagnostics go to stderr. Connections and STDIO subprocesses close on success,
+tool errors, validation errors, and protocol errors. Tools that request client
+interaction still require a client with the appropriate handlers; these commands
+do not configure sampling or elicitation handlers.
 
 ## Scaffolding
 

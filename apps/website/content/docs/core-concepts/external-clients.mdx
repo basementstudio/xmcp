@@ -144,6 +144,58 @@ metadata without calling tools or fetching resource contents.
 The [external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients)
 includes `pnpm inspect` and `pnpm list:server` scripts for a local server.
 
+## Executing operations from the CLI
+
+`call`, `read-resource`, and `get-prompt` use the same URL, named-client, and
+STDIO connections as `inspect` and `list`. Each prints the complete MCP result
+as JSON, including content blocks, structured content, messages, and metadata:
+
+```sh
+npx @xmcp-dev/cli call http://localhost:3001/mcp greet --arg name=Ada
+npx @xmcp-dev/cli call local add --arg a=2 --arg b=3
+npx @xmcp-dev/cli call local add --args-file args.json
+printf '{"a":2,"b":3}\n' | npx @xmcp-dev/cli call local add --stdin
+npx @xmcp-dev/cli read-resource local 'config://app'
+npx @xmcp-dev/cli get-prompt local team-greeting --arg department=engineering --arg name=Ada
+```
+
+Define `local` in your client config, or replace it with a server URL. For a
+direct STDIO server, omit the target and put all CLI options before `--stdio`:
+
+```sh
+npx @xmcp-dev/cli call add --arg a=2 --arg b=3 --stdio node ./dist/stdio.js
+```
+
+Tool `--arg key=value` values parse as JSON when possible, otherwise as strings.
+Use `--arg 'id="123"'` to send a numeric-looking string. Prompt `--arg` values
+stay strings; prompt JSON objects must also contain string values.
+
+Use one argument source per command: repeated `--arg`, `--args-file`, or stdin.
+`--stdin` and `--args-file -` explicitly read stdin. Without argument options,
+piped stdin is read automatically; empty automatic stdin means no arguments.
+Files and nonempty stdin must contain a JSON object. Duplicate keys in repeated
+`--arg` options are rejected. `read-resource` takes a complete URI, including
+resolved resource-template parameters, and accepts no argument options.
+
+Tool arguments are checked against the advertised JSON Schema before invocation.
+Prompts validate required argument names and string values. `--json` is optional
+because execution results are always JSON.
+
+| Exit code | Meaning                                                                                                    |
+| --------- | ---------------------------------------------------------------------------------------------------------- |
+| `0`       | Success; the full result is on stdout                                                                      |
+| `1`       | A tool returned `isError: true`; its full result is on stdout                                              |
+| `1`       | Configuration, connection, server, or unknown-component error; stdout is empty                             |
+| `2`       | Invalid CLI options or arguments, including malformed JSON or an unreadable argument file; stdout is empty |
+
+Logs and diagnostics go to stderr. Connections close before printing, including
+on errors; STDIO subprocesses are terminated. These commands do not install
+sampling or elicitation handlers. Use the managed-client API when your server
+needs those interactions.
+
+The [external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients)
+includes runnable `call:server`, `read:server`, and `prompt:server` scripts.
+
 ## Creating the Clients File
 
 Create a `src/clients.ts` file and export a `ClientConnections` object. The object keys become the client names:
