@@ -270,7 +270,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-        version: 1.7.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        version: 1.7.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -547,8 +547,8 @@ importers:
         specifier: ^1.57.1
         version: 1.57.1(@x402/core@2.28.0)(@x402/evm@2.28.0(typescript@5.9.3))(@x402/extensions@2.28.0(typescript@5.9.3))(typescript@5.9.3)
       '@modelcontextprotocol/client':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.2.0
+        version: 2.3.1
       '@x402/core':
         specifier: ^2.28.0
         version: 2.28.0
@@ -1789,8 +1789,8 @@ importers:
   packages/e2e:
     devDependencies:
       '@modelcontextprotocol/client':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.2.0
+        version: 2.3.1
       '@nestjs/common':
         specifier: ^11.1.18
         version: 11.1.18(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -2350,8 +2350,8 @@ importers:
         version: 4.6.5
     devDependencies:
       '@modelcontextprotocol/client':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.2.0
+        version: 2.3.1
       '@modelcontextprotocol/node':
         specifier: ^2.0.0
         version: 2.0.0(@modelcontextprotocol/server@2.0.0)(hono@4.12.34)
@@ -4218,8 +4218,16 @@ packages:
     resolution: {integrity: sha512-8f1OghQ2rjzIOfqgUCP+8GiUWqRs89njoWLNqAe8kWmDePv3s1fZXseej+QXemssEuuOvLLmLO/kqM3IQHtISw==}
     engines: {node: '>=20'}
 
+  '@modelcontextprotocol/client@2.3.1':
+    resolution: {integrity: sha512-mIGZXpHsjnZ6lD+gD/WCMpR5k8yVQQ8nNFH1N0Srf7AvnwTUMYD6pvTY8ng2+He5FfV7YMZLmrjL7cLa/cc3dQ==}
+    engines: {node: '>=20'}
+
   '@modelcontextprotocol/core@2.0.0':
     resolution: {integrity: sha512-pJCEwGG7Lfr/+PQp9ZTwKXNeO5wzbfKL7H3MYpCorM4oFBoQrdjnBgEoqG+RjhsvS1FKrDbKux+M1HhlnGWqcA==}
+    engines: {node: '>=20'}
+
+  '@modelcontextprotocol/core@2.3.1':
+    resolution: {integrity: sha512-laVmIhPGpWi7rG9q+0UigblRN0Hws/Yjlb6qLFtVqryXVLkc4h+yN8z731POD2LnAGQlFe7/tXhUm7Bi0YB91g==}
     engines: {node: '>=20'}
 
   '@modelcontextprotocol/node@2.0.0':
@@ -16718,7 +16726,21 @@ snapshots:
       pkce-challenge: 5.0.1
       zod: 4.6.5
 
+  '@modelcontextprotocol/client@2.3.1':
+    dependencies:
+      '@modelcontextprotocol/core': 2.3.1
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.1.0
+      jose: 6.2.3
+      pkce-challenge: 5.0.1
+      zod: 4.6.5
+
   '@modelcontextprotocol/core@2.0.0':
+    dependencies:
+      zod: 4.6.5
+
+  '@modelcontextprotocol/core@2.3.1':
     dependencies:
       zod: 4.6.5
 
@@ -30304,11 +30326,11 @@ snapshots:
       is-wsl: 3.1.0
       powershell-utils: 0.2.1
 
-  xmcp@1.7.0(@modelcontextprotocol/client@2.0.0)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
+  xmcp@1.7.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
     dependencies:
       zod: 4.1.13
     optionalDependencies:
-      '@modelcontextprotocol/client': 2.0.0
+      '@modelcontextprotocol/client': 2.3.1
       '@modelcontextprotocol/server': 2.0.0
       jose: 6.2.3
       react: 19.2.4
