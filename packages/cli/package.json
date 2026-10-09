@@ -43,6 +43,7 @@
     "test": "node --import tsx --test __tests__/*.test.ts src/utils/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "bundle-require": "^5.1.0",
     "xmcp": "workspace:^",
     "zod": "^4.0.10"

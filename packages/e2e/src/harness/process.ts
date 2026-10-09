@@ -12,7 +12,8 @@ export function startProcess(
   command: string,
   args: string[],
   cwd: string,
-  logPath: string
+  logPath: string,
+  input?: string
 ) {
   const child = spawn(command, args, {
     cwd,
@@ -21,7 +22,7 @@ export function startProcess(
       XMCP_TELEMETRY_DISABLED: "true",
       NEXT_TELEMETRY_DISABLED: "1",
     },
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: [input === undefined ? "ignore" : "pipe", "pipe", "pipe"],
     // A fixture owns its process group, including framework worker processes.
     detached: process.platform !== "win32",
   });
@@ -31,16 +32,24 @@ export function startProcess(
   let failure: Error | undefined;
   let closed = false;
   const events = new EventEmitter();
+  child.stdin?.on("error", (error: NodeJS.ErrnoException) => {
+    // A CLI can reject its flags before consuming piped input.
+    if (error.code !== "EPIPE") {
+      failure = error;
+      events.emit("output");
+    }
+  });
+  child.stdin?.end(input);
   const capture = (chunk: Buffer) => {
     appendFileSync(logPath, chunk);
     output = (output + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
     events.emit("output");
   };
-  child.stdout.on("data", (chunk: Buffer) => {
+  child.stdout!.on("data", (chunk: Buffer) => {
     stdout = (stdout + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
     capture(chunk);
   });
-  child.stderr.on("data", (chunk: Buffer) => {
+  child.stderr!.on("data", (chunk: Buffer) => {
     stderr = (stderr + chunk.toString()).slice(-MAX_CAPTURE_CHARS);
     capture(chunk);
   });
