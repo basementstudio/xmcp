@@ -286,8 +286,9 @@ for content changes; no framework example is needed.
 ## Docs navigation
 
 Docs use the same centered 700px maximum content column and left site navigation
-as every other page. On docs routes, the collapsible docs tree appears directly
-under the Documentation link. Site links and docs share one scrollable navigation
+as every other page. Documentation and its arrow form one toggle on every page. The docs tree opens
+directly beneath it, starts expanded on docs routes, and keeps its toggle pinned
+while the list scrolls. Site links and docs share one scrollable navigation
 area, with search and theme controls outside it at the foot of the rail. Focus
 indicators are inset so keyboard navigation stays visible at the scroll edges.
 Both rails use rounded hover pills and single-line labels with ellipses; page

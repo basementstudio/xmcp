@@ -462,10 +462,11 @@ body #nd-blog-layout article > div > p {
     display: flex;
     flex-direction: column;
     top: 56px;
-    left: calc(50% + var(--site-column) / 2 + var(--site-gap));
-    width: var(--site-rail);
+    /* Reserve the column gap for hanging Roman numerals inside the scroll pane. */
+    left: calc(50% + var(--site-column) / 2);
+    width: calc(var(--site-rail) + var(--site-gap));
     height: calc(100dvh - 112px);
-    padding: 0;
+    padding: 0 0 0 var(--site-gap);
   }
 }
 
@@ -477,10 +478,11 @@ body #nd-blog-layout article > div > p {
     display: block;
     position: fixed;
     top: 56px;
-    left: calc(50% + var(--site-column) / 2 + var(--site-gap));
-    width: var(--site-rail);
+    /* Reserve the column gap for hanging Roman numerals inside the scroll pane. */
+    left: calc(50% + var(--site-column) / 2);
+    width: calc(var(--site-rail) + var(--site-gap));
     height: calc(100dvh - 112px);
-    padding: 0;
+    padding: 0 0 0 var(--site-gap);
   }
   body #nd-docs-layout > article {
     margin-top: 0;
@@ -586,23 +588,30 @@ body::before {
 
 /* One scroll owner; inset rows keep pills and focus rings inside its edges. */
 .site-documentation-heading {
+  position: sticky;
+  top: 8px;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 2px;
-}
-.site-documentation-heading > a {
-  flex: 1;
-  min-width: 0;
-}
-.site-documentation-toggle {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  color: var(--site-muted);
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 11px;
+  background: var(--site-ground);
+  color: var(--site-ink);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
   cursor: pointer;
+}
+.site-navigation .site-documentation-heading:hover {
+  background: color-mix(in srgb, var(--site-ground) 94%, var(--site-ink));
+}
+.site-documentation-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .docs-navigation-embedded {
   padding: 2px 0 10px;
@@ -616,7 +625,6 @@ body::before {
     background var(--site-control-quick) var(--site-control-ease);
 }
 .site-navigation > a,
-.site-documentation-heading > a,
 .docs-tree a,
 .docs-tree button {
   padding: 4px 11px;
@@ -652,7 +660,7 @@ body::before {
     padding: 8px 4px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scroll-padding-block: 12px;
+    scroll-padding: 48px 0 12px;
     scrollbar-width: thin;
     mask-image: linear-gradient(
       transparent,

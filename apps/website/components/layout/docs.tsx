@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/sheet";
 import { DocsPageIcon } from "./docs-icons";
 import { Icons } from "../icons";
-import { AnimatedLink } from "@/components/animated-link";
 
 export interface DocsLayoutProps {
   tree: PageTree.Root;
@@ -53,32 +52,24 @@ export function DocumentationNavigation({ tree }: { tree: PageTree.Root }) {
   const isDocs = pathname === "/docs" || pathname.startsWith("/docs/");
   const nodes = useMemo(() => buildSidebarTree(tree.children), [tree]);
   const { openState, toggle } = useSidebarOpenState(nodes);
-  const [section, setSection] = useState({ pathname, open: true });
+  const [section, setSection] = useState({ pathname, open: isDocs });
   if (section.pathname !== pathname) {
-    setSection({ pathname, open: true });
+    setSection({ pathname, open: isDocs });
   }
 
   return (
     <Collapsible
-      open={isDocs && section.open}
+      open={section.open}
       onOpenChange={(open) => setSection({ pathname, open })}
       className="site-documentation"
     >
-      <div className="site-documentation-heading">
-        <AnimatedLink href="/docs">Documentation</AnimatedLink>
-        {isDocs && (
-          <CollapsibleTrigger
-            aria-label={
-              section.open ? "Collapse documentation" : "Expand documentation"
-            }
-            className="site-documentation-toggle"
-          >
-            <Icons.arrowDown
-              className={cn("size-3.5", !section.open && "-rotate-90")}
-            />
-          </CollapsibleTrigger>
-        )}
-      </div>
+      <CollapsibleTrigger className="site-documentation-heading">
+        <span className="site-documentation-label">Documentation</span>
+        <Icons.arrowDown
+          aria-hidden="true"
+          className={cn("size-3.5 shrink-0", !section.open && "-rotate-90")}
+        />
+      </CollapsibleTrigger>
       <CollapsibleContent>
         <SidebarNavigation
           nodes={nodes}
