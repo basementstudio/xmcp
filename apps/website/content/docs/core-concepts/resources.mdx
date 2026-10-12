@@ -132,6 +132,21 @@ resource completion.
 The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
 includes user ID completion and a runnable request.
 
+## Requesting client input
+
+Static resources and resource templates can return `inputRequired(...)` when
+they need client input before producing their contents, such as the client's
+workspace roots via `inputRequired.listRoots()`.
+
+Read the response with `inputResponse(extra.mcpReq.inputResponses, requestId)`
+from the handler's second argument. If the response is missing, return the input
+request; on retry, use the supplied response to return the resource contents.
+The SDK handles negotiation and retries. Keep request data in the current
+request rather than saving it on the server.
+
+See [multi round-trip input](/docs/core-concepts/tools#multi-round-trip-input-inputrequired)
+for the input request helpers.
+
 ## References
 
 ### Schema (optional)
