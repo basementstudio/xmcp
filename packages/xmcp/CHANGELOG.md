@@ -110,8 +110,10 @@
 
 - Split the development compiler into `@xmcp-dev/compiler`. Existing `xmcp dev`,
   `xmcp build`, and `xmcp create` scripts continue to work through a small shim,
-  but projects must install the matching compiler version as a development
-  dependency: `npm i -D @xmcp-dev/compiler@0.8.0`.
+  but projects need a matching compiler as a development dependency.
+  `@xmcp-dev/compiler@0.8.0` is unavailable on npm. Follow the
+  [current installation guide](https://xmcp.dev/docs/getting-started/installation)
+  to upgrade to a supported runtime/compiler pair.
 - Production installs no longer include Rspack or TypeScript. Built HTTP and
   stdio artifacts remain self-contained and can run without `node_modules`.
 - Added the `xmcp/config` export so compiler validation uses the config schema
