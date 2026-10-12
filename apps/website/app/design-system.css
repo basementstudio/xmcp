@@ -1,5 +1,4 @@
-/* Website-level primitives measured from numbers.sfinterface.com.
-   Figure material tokens remain separate in components/anatomy/workbench.css. */
+/* Website-level primitives measured from numbers.sfinterface.com. */
 :root {
   --site-ground: #fdfdfc;
   --site-ink: #1c1c21;
@@ -51,7 +50,7 @@ body .home-hero {
 }
 .editorial-masthead h1 {
   margin: 0 0 12px;
-  font-family: var(--font-editorial-serif), Georgia, serif;
+  font-family: var(--font-display), Georgia, serif;
   font-size: 40px;
   line-height: 1.08;
   font-weight: 500;
@@ -213,28 +212,6 @@ body .site-cta {
   margin: 72px auto 48px;
   padding: 0;
 }
-body .site-footer {
-  max-width: var(--site-column);
-  margin-inline: auto;
-  padding-inline: 0;
-  background: transparent;
-  border-color: var(--site-rule);
-  font-size: 12px;
-}
-body .site-footer > div > div:first-child {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  padding-block: 32px;
-}
-body .site-footer p {
-  font-size: 13px;
-  line-height: 20px;
-}
-body .site-footer h2 {
-  font-size: 12px;
-  font-weight: 540;
-}
 body .eyebrow {
   font-family: inherit;
   font-size: 12px;
@@ -370,107 +347,6 @@ body .docs-navigation-embedded button {
 body #nd-docs-layout .docs-toc {
   display: none;
 }
-/* The figure lives in the reading column; controls and source sit beneath it. */
-body .mcp-workbench {
-  margin-top: 28px;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-}
-body .workbench-tabs {
-  padding: 0;
-  border-color: var(--site-rule);
-  gap: 20px;
-}
-body .workbench-tabs button {
-  padding-block: 12px;
-  font-size: 12px;
-}
-body .workbench-tab-note {
-  display: none;
-}
-body .workbench-panel,
-body .workbench-compact .workbench-panel {
-  display: block;
-}
-body .workbench-art {
-  height: auto;
-  max-height: 340px;
-  margin-block: 44px 12px;
-}
-body .workbench-figure-label {
-  inset-inline: 0;
-  top: 18px;
-}
-body .workbench-transport {
-  padding: 0 0 12px;
-}
-body .workbench-caption {
-  padding: 0;
-  min-height: 0;
-  font-size: 12px;
-  line-height: 18px;
-}
-body .workbench-inspector,
-body .workbench-compact .workbench-inspector {
-  padding: 24px 0 0;
-  border: 0;
-}
-body .workbench-inspector h3 {
-  font-size: 14px;
-  line-height: 1.55;
-  font-weight: 540;
-  margin-block: 8px;
-}
-body .workbench-description {
-  font-size: 14px;
-  line-height: 1.55;
-  min-height: 0;
-}
-body .workbench-code {
-  border: 0;
-  border-radius: var(--site-radius);
-  box-shadow: var(--site-shadow);
-  background: var(--site-card);
-  margin-top: 20px;
-}
-body .workbench-code > summary {
-  padding: 14px 16px;
-  border: 0;
-  color: var(--site-muted);
-  font-family: var(--font-inter), sans-serif;
-  font-size: 12px;
-}
-body .workbench-code pre {
-  padding: 0 16px 14px;
-  font-size: 12px;
-  line-height: 19px;
-  min-height: 0;
-}
-body .workbench-input input {
-  border: 0;
-  border-radius: var(--site-radius);
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-  font-size: 12px;
-}
-body .workbench-run {
-  font-size: 12px;
-  border: 0;
-  border-radius: 8px;
-  background: var(--site-well);
-  padding-inline: 14px;
-}
-body .workbench-actions a {
-  font-size: 12px;
-}
-body .workbench-result {
-  border-color: var(--site-rule);
-}
-body .workbench-result code {
-  font-size: 12px;
-}
 @media (min-width: 768px) {
   body main .md\:grid-cols-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -512,14 +388,8 @@ body .workbench-result code {
     margin: 0;
     width: 100%;
   }
-  body .site-controls > button:first-child {
-    width: 100%;
-  }
   body .site-controls > .xl\:hidden {
     display: none;
-  }
-  body .site-controls > a {
-    display: block;
   }
   body .site-ask {
     display: none;
@@ -562,24 +432,6 @@ body .workbench-result code {
 body main > div:has(> .listing-intro) {
   padding-top: 0;
 }
-body .site-controls > button:first-child {
-  font-size: 12px;
-}
-body .site-controls > button:first-child > span {
-  white-space: nowrap;
-}
-body .site-controls > button:first-child > span:last-child {
-  width: auto;
-}
-@media (min-width: 1200px) {
-  body .site-controls > button:first-child {
-    border: 0;
-    background: var(--site-card);
-    box-shadow: var(--site-shadow);
-    border-radius: var(--site-radius);
-  }
-}
-
 /* Blog articles share the reading column, with a TOC in the outer margin. */
 body #nd-blog-layout > div {
   display: block;
@@ -682,7 +534,7 @@ body .heading-1,
 body .listing-intro .display,
 body #nd-docs-layout > article h1,
 body #nd-blog-layout article h1 {
-  font-family: var(--font-editorial-serif), Georgia, serif;
+  font-family: var(--font-display), Georgia, serif;
   font-size: 40px;
   font-weight: 500;
   line-height: 1.12;
@@ -699,27 +551,6 @@ body .not-fumadocs-codeblock pre,
 }
 body .prose code:not(pre code, :has(pre)) {
   border-radius: 6px;
-}
-body .workbench-tabs {
-  gap: 4px;
-  border: 0;
-  background: var(--site-well);
-  border-radius: 999px;
-  padding: 3px;
-  width: fit-content;
-  max-width: 100%;
-}
-body .workbench-tabs button {
-  border: 0;
-  border-radius: 999px;
-  padding: 6px 12px;
-}
-body .workbench-tabs button[aria-selected="true"] {
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-}
-body .workbench-run {
-  border-radius: 999px;
 }
 @media (max-width: 640px) {
   .concept-cards {
@@ -751,10 +582,6 @@ body::before {
 }
 .dark body::before {
   display: none;
-}
-
-body .workbench-tabs button[aria-selected="true"]::after {
-  content: none;
 }
 
 /* One scroll owner; inset rows keep pills and focus rings inside its edges. */

@@ -23,7 +23,7 @@ const linkGroups = [
       { label: "Blog", href: "/blog" },
       { label: "Showcase", href: "/showcase" },
       { label: "Changelog", href: "/changelog" },
-      { label: "Frequently asked questions", href: "/faq" },
+      { label: "FAQ", href: "/faq" },
     ],
   },
   {
@@ -55,41 +55,33 @@ const linkGroups = [
   },
 ] as const;
 
-const linkClassName =
-  "link-underline-group inline-flex min-h-11 items-center gap-2 py-2 text-brand-neutral-100 hover:text-brand-white focus-visible:text-brand-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white rounded-xs";
+const linkClassName = "site-footer-link";
 
 export const Footer = () => {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="site-footer relative w-full bg-surface px-4 text-sm text-brand-white">
-      <div className="mx-auto max-w-[1408px]">
-        <div className="grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:py-16">
-          <div className="max-w-sm">
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <div className="site-footer-main">
+          <div className="site-footer-brand">
             <Link
               href="/"
               prefetch={false}
               aria-label="xmcp home"
-              className="inline-flex min-h-11 items-center rounded-md transition-opacity duration-200 hover:opacity-80 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-white"
+              className="site-footer-home"
             >
-              <XmcpLogo className="h-8 w-auto" />
+              <XmcpLogo className="h-7 w-auto" />
             </Link>
-            <p className="mt-4 text-xl leading-snug text-pretty">
+            <p>
               The TypeScript MCP framework.
-            </p>
-            <p className="mt-3 leading-relaxed text-brand-neutral-100 text-pretty">
-              Build and deploy Model Context Protocol (MCP) servers with
-              TypeScript. Give AI applications access to your tools, prompts,
-              and resources.
+              <span>Tools, prompts, and resources for AI applications.</span>
             </p>
           </div>
-          <div className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
+          <div className="site-footer-groups">
             {linkGroups.map(({ title, id, links }) => (
               <nav key={id} aria-labelledby={id} className="min-w-0">
-                <h2
-                  id={id}
-                  className="mb-3 font-mono text-xs uppercase tracking-wider"
-                >
+                <h2 id={id} className="site-footer-label">
                   {title}
                 </h2>
                 <ul>
@@ -111,7 +103,7 @@ export const Footer = () => {
                               className="size-4 shrink-0"
                             />
                           )}
-                          <span className="link-underline-label">
+                          <span className="site-footer-link-label">
                             {link.label}
                           </span>
                           {external && (
@@ -135,8 +127,8 @@ export const Footer = () => {
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-3 border-t border-brand-neutral-500 pt-6 pb-[max(5rem,env(safe-area-inset-bottom))] text-brand-neutral-100 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-8 sm:pb-8">
-          <p>© {year} xmcp. All rights reserved.</p>
+        <div className="site-footer-bottom">
+          <p>© {year} xmcp</p>
           <a
             href="https://vercel.com/oss"
             target="_blank"
@@ -144,9 +136,7 @@ export const Footer = () => {
             className={linkClassName}
           >
             <Icons.vercel aria-hidden="true" className="size-3.5 shrink-0" />
-            <span className="link-underline-label">
-              Vercel Open Source Program
-            </span>
+            <span className="site-footer-link-label">Supported by Vercel</span>
             <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
             <span className="sr-only"> (opens in a new tab)</span>
           </a>

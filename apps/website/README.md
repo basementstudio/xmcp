@@ -66,9 +66,9 @@ animation, not the site's component library, so no package was added.
 
 `app/design-system.css` owns the shared `--site-*` tokens: a 700px maximum reading
 column, 168px navigation rail, 48px gap between columns, 56px section spacing,
-12px cards, and Inter body text at 14px/1.55. Adhesion supplies titles and section
-indexes from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
-with font swapping.
+12px cards, and Inter body text at 14px/1.55. Adhesion supplies page titles from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
+with font swapping and -2px title letter spacing. EB Garamond supplies the Roman
+numerals in section labels and the table of contents.
 Docs, navigation, listings and controls share these styles in both themes. The
 xmcp wordmark and content remain; dark mode uses pure black.
 
@@ -91,57 +91,17 @@ post and `/templates` in light/dark themes and at 320px. Verify Copy and Copied
 feedback, search with Cmd/Ctrl+K, Arrow/Enter/Escape, empty search results,
 terminal-tab keyboard navigation, long code chips, mobile tables, and TOC links.
 
-## Themes and interactive concepts
+## Themes and homepage illustration
 
-The website follows the system theme on first visit. The header toggle selects
-light or dark and persists that preference across navigation and reloads. Keep
+The website follows the system theme on first visit. The header uses a single visible sun/moon icon to switch between light and dark,
+then persists that preference across navigation and reloads. Until a choice is
+made, changes to the system appearance also update the site. The search trigger
+uses a compact field with a platform-specific keyboard shortcut; it opens the
+existing search dialog. Keep
 both themes equally legible: shared surfaces, text, borders and focus states use
 tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
-uses paper white (`#fdfdfc`). The site uses Inter for interface/body text and Adhesion for titles and section indexes.
+uses paper white (`#fdfdfc`). The site uses Inter for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
 Shiki uses separate light and dark palettes.
-
-The tools, resources and prompts docs include an interactive
-MCP workbench. A press illustrates executing a tool, a cabinet illustrates reading
-a resource, and a printer illustrates preparing a prompt. These are local,
-illustrative demos; pressing a button does not contact a server or run a model.
-The snippets follow the existing core-concept APIs.
-
-`components/anatomy/geometry.ts` generates the SVG on the server; only finished
-paths and the small tab/demo controller reach the browser. `workbench.css` defines
-separate four-tone material palettes. The geometry helpers are adapted from
-[Anatomy](https://github.com/wheresryan22/anatomy); their MIT license is preserved
-alongside `iso-kit.ts`. Use solid parts and actual attachment points when editing
-the drawing, and check occlusion in both themes.
-
-Tabs support arrow keys, Home and End. Click a machine (or focus it and press
-Enter/Space) to select its concept. Edit the tool's name or the prompt's code,
-then run the local demo. The resource URI is read-only. The result uses the input
-you entered; no network call is made. Drag the motion slider or use its arrow
-keys to inspect the advance, dwell, and return. At 100% the result is shown.
-Each playback runs once, with a signal traveling along the physical bus contacts;
-CSS animation completion updates the live result. Reduced motion completes
-playback immediately and leaves manual scrubbing available.
-
-The custom figure accepts figure-scoped Anatomy CSS tokens. Inline overrides
-win over the light and dark palettes, without changing other figures or the site.
-For example, in a server-rendered `page.tsx`:
-
-```tsx
-import { McpWorkbench } from "@/components/anatomy/figure";
-
-<McpWorkbench
-  tokens={{
-    "--anatomy-card": "#fafafa",
-    "--anatomy-lit": "#e5484d",
-    "--anatomy-weight": "0.8px",
-  }}
-/>;
-```
-
-Omit `tokens` to follow the site's theme. The defaults and available material
-tokens (`face`, `top`, `shade-0` through `shade-3`, `hi`, `mid`, `lo`, `faint`,
-`lit-top`, `lit-shade`, `lit`, `halo`, `card`, `weight`, `shadow`, each prefixed
-with `--anatomy-`) live together in `components/anatomy/workbench.css`.
 
 To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
 original cursor-responsive particle hero, displayed without a frame or control footer. WebGPU retains the WebGL fallback. Light mode inverts the finished
@@ -150,9 +110,8 @@ without rebuilding GPU resources on theme changes. Reduced motion uses the stati
 artwork, and offscreen or hidden pages suspend animation. Check both renderers,
 GPU-unavailable fallback, theme changes, and narrow viewports.
 
-Open `/docs/core-concepts/tools`, resources and prompts to run the Anatomy demos;
-check keyboard navigation and the theme toggle there too. No framework
-API changes or separate example package are needed.
+The website is the runnable example. No framework API changes or separate
+example package are needed.
 
 ## Image performance
 
@@ -357,8 +316,9 @@ pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
 
 ## Footer navigation
 
-The shared footer includes a short framework description and labeled navigation
-groups. Keep labels descriptive and use crawlable links rendered in the initial
+The shared footer pairs the wordmark with a short framework description, then
+shows three labeled navigation groups. On phones, the community links span two
+columns below Build and Explore. Keep labels descriptive and use crawlable links rendered in the initial
 HTML.
 The existing site-wide Organization and WebSite structured data remains the
 source of entity metadata; the footer does not add duplicate schema.
@@ -366,7 +326,7 @@ source of entity metadata; the footer does not add duplicate schema.
 Internal links stay in the same tab. External links open in a new tab with
 `noopener noreferrer`, a visual indicator, and a screen-reader notice. Community
 links pair their text labels with decorative SVG icons. All links have visible
-keyboard focus and provide at least 44px of target height. Check keyboard navigation, text contrast, narrow screens,
+keyboard focus and compact 32px link rows. Check keyboard navigation, text contrast, narrow screens,
 and the mobile assistant button when editing the footer. The website is the
 runnable example; no framework API or example package changes are needed.
 

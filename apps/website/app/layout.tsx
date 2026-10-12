@@ -5,7 +5,7 @@ import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono, EB_Garamond } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
@@ -21,12 +21,18 @@ const siteSans = Inter({
   subsets: ["latin"],
 });
 
-const siteSerif = localFont({
+const siteDisplay = localFont({
   src: "./fonts/Adhesion-Regular.woff2",
-  variable: "--font-editorial-serif",
+  variable: "--font-display",
   weight: "400",
   style: "normal",
   display: "swap",
+});
+
+const siteSerif = EB_Garamond({
+  variable: "--font-editorial-serif",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -123,7 +129,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${siteSans.variable} ${siteSerif.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
+        className={`${siteSans.variable} ${siteDisplay.variable} ${siteSerif.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <a
           href="#main-content"

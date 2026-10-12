@@ -49,6 +49,8 @@ export const Header = () => (
         </div>
         <ThemeToggle
           mode="light-dark"
+          className="site-theme-toggle"
+          title="Switch between light and dark theme"
           aria-label="Switch between light and dark theme"
         />
         <GithubButton />
@@ -62,7 +64,7 @@ const GithubButton = () => {
   return (
     <Link
       href="https://github.com/basementstudio/xmcp"
-      className="text-brand-white hover:text-brand-white/80 transition-colors hidden xl:block"
+      className="site-github-link text-brand-white hover:text-brand-white/80 transition-colors hidden xl:block"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="GitHub"
