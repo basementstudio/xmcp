@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import PreviewTexture from "@public/textures/text5.png";
 import { notFound } from "next/navigation";
 import {
   getTemplateBySlug,
@@ -185,46 +184,27 @@ Add a README.md to this template to show content here.`;
           deployOptions={deployOptions}
         />
 
-        <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500">
-          <div className="aspect-[16/8] relative">
-            {!previewImage.isFallback ? (
-              <Image
-                src={previewImage.src}
-                alt={`${template.name} preview`}
-                unoptimized={shouldBypassImageOptimization(previewImage.src)}
-                fill
-                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
-                className="object-cover"
-                preload
-              />
-            ) : (
-              <Image
-                src={previewImage.src}
-                alt={`${template.name} preview`}
-                fill
-                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
-                unoptimized
-                className={
-                  previewImage.isNextJsFallback
-                    ? "object-contain [object-position:center_70%] scale-90"
-                    : "object-contain [object-position:center_70%]"
-                }
-                preload
-              />
-            )}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
-              <Image
-                src={PreviewTexture}
-                placeholder="blur"
-                alt=""
-                aria-hidden
-                fill
-                sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
-                className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
-                loading="eager"
-                fetchPriority="low"
-              />
-            </div>
+        <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500 bg-surface-raised">
+          <div
+            className={
+              previewImage.isFallback
+                ? "relative h-[240px] md:h-[340px]"
+                : "relative aspect-[16/8]"
+            }
+          >
+            <Image
+              src={previewImage.src}
+              alt={`${template.name} preview`}
+              unoptimized={shouldBypassImageOptimization(previewImage.src)}
+              fill
+              sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
+              className={
+                previewImage.isFallback
+                  ? `object-contain p-10 ${previewImage.src !== "/templates/fallback.svg" ? "template-provider-art" : ""}`
+                  : "object-cover"
+              }
+              preload
+            />
           </div>
         </div>
       </div>
@@ -239,7 +219,7 @@ Add a README.md to this template to show content here.`;
           xShareUrl={xShareUrl}
         />
 
-        <section className="lg:col-span-9 space-y-6 pl-8 border-l border-brand-neutral-500">
+        <section className="lg:col-span-9 space-y-6 lg:pl-8 lg:border-l border-brand-neutral-500">
           <TemplateReadmeContent source={bodyContent} />
         </section>
       </div>

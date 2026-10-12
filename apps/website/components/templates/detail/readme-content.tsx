@@ -4,7 +4,7 @@ import { highlight } from "fumadocs-core/highlight";
 import type { BundledLanguage } from "shiki";
 import { getMDXComponents } from "@/components/mdx-components";
 import { CodeBlock } from "@/components/codeblock";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 const BROKEN_INTERNAL_LINK_RE = /\/docs\/integrations\/chatgpt\b/;
 
@@ -27,7 +27,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
       lang: lang as BundledLanguage,
-      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
       // Match docs: shared code-block styles own the background.
       defaultColor: false,
       components: {
@@ -43,7 +43,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   } catch {
     return await highlight(code, {
       lang: "plaintext",
-      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
       // Match docs: shared code-block styles own the background.
       defaultColor: false,
       components: {

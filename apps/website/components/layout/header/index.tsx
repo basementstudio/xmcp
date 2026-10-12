@@ -5,51 +5,53 @@ import { AskAIButton } from "@/components/ai/ask";
 import { SearchToggle } from "../search-toggle";
 import { AnimatedLink } from "@/components/animated-link";
 import { LogoContextMenu } from "./logo-menu";
-import { ProgressiveBlurBackground } from "./progressive-blur-bg";
+import { ThemeToggle } from "fumadocs-ui/components/layout/theme-toggle";
 
-export const Header = () => {
-  return (
-    <header className="sticky top-0 right-0 left-0 w-full mx-auto bg-transparent z-100 flex justify-center items-center">
-      <div
-        className={
-          "w-full flex justify-center items-center z-100 px-4 py-2 gap-8 relative"
-        }
+export const Header = () => (
+  <header className="site-header sticky top-0 z-100 w-full">
+    <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-6 px-4 md:px-8">
+      <Link
+        href="/"
+        prefetch={false}
+        aria-label="xmcp home"
+        className="shrink-0 text-brand-white"
       >
-        <nav
-          aria-label="Main"
-          className="relative flex justify-center items-center text-sm text-brand-white gap-8"
-        >
-          <div className="hidden xl:flex gap-4">
-            <AnimatedLink href="/">Home</AnimatedLink>
-            <AnimatedLink href="/docs">Docs</AnimatedLink>
-            <AnimatedLink href="/templates">Templates</AnimatedLink>
-            <AnimatedLink href="/blog">Blog</AnimatedLink>
-            <AnimatedLink href="/changelog">Changelog</AnimatedLink>
-            <AnimatedLink href="/showcase">Showcase</AnimatedLink>
-            <AnimatedLink href="/faq">FAQ</AnimatedLink>
-          </div>
-        </nav>
-        <div className="flex gap-2 ml-auto items-center">
-          <SearchToggle />
+        <LogoContextMenu>
+          <XmcpLogo className="h-7 w-auto" />
+        </LogoContextMenu>
+      </Link>
+      <span className="hidden 2xl:block border-l border-brand-neutral-500 pl-5 font-mono text-[10px] uppercase tracking-[.12em] text-brand-neutral-100">
+        The MCP framework
+      </span>
+      <nav
+        aria-label="Main"
+        className="hidden xl:flex items-center gap-5 ml-auto text-[13px]"
+      >
+        <AnimatedLink href="/docs">Docs</AnimatedLink>
+        <AnimatedLink href="/templates">Templates</AnimatedLink>
+        <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+        <AnimatedLink href="/blog">Blog</AnimatedLink>
+        <AnimatedLink href="/changelog">Changelog</AnimatedLink>
+        <AnimatedLink href="/faq">FAQ</AnimatedLink>
+      </nav>
+      <div className="ml-auto xl:ml-0 flex items-center gap-2 md:gap-3">
+        <SearchToggle
+          aria-label="Search documentation"
+          className="min-h-11 min-w-11"
+        />
+        <div className="hidden sm:block">
           <AskAIButton />
-          <GithubButton />
-          <MobileMenu />
         </div>
-        <Link
-          href="/"
-          prefetch={false}
-          className="absolute xl:left-1/2 xl:top-1/2 xl:-translate-x-1/2 xl:-translate-y-1/2 left-4 top-1/2 -translate-y-1/2"
-          aria-label="Home"
-        >
-          <LogoContextMenu>
-            <XmcpLogo className="hover:opacity-80 transition-opacity cursor-pointer" />
-          </LogoContextMenu>
-        </Link>
+        <ThemeToggle
+          mode="light-dark"
+          aria-label="Switch between light and dark theme"
+        />
+        <GithubButton />
+        <MobileMenu />
       </div>
-      <ProgressiveBlurBackground />
-    </header>
-  );
-};
+    </div>
+  </header>
+);
 
 const GithubButton = () => {
   return (

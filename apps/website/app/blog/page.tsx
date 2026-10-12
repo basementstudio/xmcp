@@ -73,11 +73,10 @@ export default function BlogPage() {
         ]}
       />
       <div className="col-span-full grid grid-cols-12 gap-y-8 py-8 md:py-16">
-        <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
-          <h1 className="display text-center text-balance z-10 text-gradient">
-            Blog
-          </h1>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto text-center">
+        <div className="listing-intro">
+          <p className="eyebrow">The field notes / Blog</p>
+          <h1 className="display">Blog</h1>
+          <p className="listing-description">
             Read the latest updates, guides, and insights about xmcp.
           </p>
         </div>

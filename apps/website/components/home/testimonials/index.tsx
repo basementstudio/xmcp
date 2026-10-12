@@ -1,4 +1,3 @@
-import { Tag } from "@/components/ui/tag";
 import { getTestimonials, type Testimonial } from "@/utils/content";
 import { TestimonialsCarousel } from "./carousel";
 import Image from "next/image";
@@ -9,14 +8,14 @@ export function HomeTestimonials() {
 
   return (
     <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
-            <Tag text="Testimonials" className="w-fit" />
-            <h2 className="heading-2 text-balance mt-auto text-gradient">
-              Loved by developers
-            </h2>
-          </div>
+      <div className="home-section-heading">
+        <div>
+          <p className="eyebrow">03 / In good company</p>
+          <h2 className="heading-2">
+            Built by developers.
+            <br />
+            Backed by their experience.
+          </h2>
         </div>
       </div>
       <TestimonialsCarousel>
@@ -36,7 +35,7 @@ const TestimonialCard = ({
   logo,
 }: Testimonial) => {
   return (
-    <div className="flex h-full min-h-[220px] flex-col rounded-lg border border-brand-neutral-500 p-4 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
+    <div className="flex h-full min-h-[220px] flex-col rounded-lg border border-brand-neutral-500 bg-surface p-6 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
         &ldquo;{tagline}&rdquo;
       </p>

@@ -30,7 +30,7 @@ export function TemplateDetailHeader({
             </div>
           )}
         </div>
-        <p className="text-brand-neutral-100 text-base max-w-2xl capitalize">
+        <p className="text-brand-neutral-100 text-base max-w-2xl">
           {description}
         </p>
       </div>

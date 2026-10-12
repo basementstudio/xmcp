@@ -7,39 +7,6 @@ import {
   resolveTemplatePreviewImage,
   shouldBypassImageOptimization,
 } from "@/lib/template-preview-image";
-import Shadow from "./shadow.png";
-import Texture from "@public/textures/text5.png";
-
-function getFallbackImageClass(src: string) {
-  switch (src) {
-    case "/templates/auth0.svg":
-      return "bottom-6 left-[54%] -translate-x-1/2 w-[60%]";
-    case "/templates/clerk.svg":
-      return "bottom-8 left-[52%] -translate-x-1/2 w-[68%]";
-    case "/templates/nestjs.svg":
-      return "bottom-8 left-[54%] -translate-x-1/2 w-[74%]";
-    case "/templates/workos.svg":
-      return "bottom-8 left-[56%] -translate-x-1/2 w-[72%]";
-    case "/templates/cloudflare.svg":
-      return "bottom-4 left-[59%] -translate-x-1/2 w-[86%]";
-    case "/templates/express.svg":
-      return "bottom-4 left-[54%] -translate-x-1/2 w-[84%]";
-    case "/templates/fastify.svg":
-      return "bottom-12 left-[55%] -translate-x-1/2 w-[92%]";
-    case "/templates/betterauth.svg":
-      return "bottom-4 left-[55%] -translate-x-1/2 w-[76%]";
-    case "/templates/polar.svg":
-      return "bottom-2 left-[55%] -translate-x-1/2 w-[88%]";
-    case "/templates/react.svg":
-      return "bottom-0 left-[56%] -translate-x-1/2 w-[96%]";
-    case "/templates/scalekit.svg":
-      return "bottom-10 left-[54%] -translate-x-1/2 w-[92%]";
-    case "/templates/tailwind.svg":
-      return "bottom-0 left-[54%] -translate-x-1/2 w-full";
-    default:
-      return "-bottom-7 left-0 w-full";
-  }
-}
 
 function isGenericLabel(value?: string) {
   if (!value) return true;
@@ -86,87 +53,42 @@ export function TemplateCard({
       target={linkTarget}
       rel={isExternal ? "noopener noreferrer" : undefined}
       className={cn(
-        "text-left group relative overflow-hidden h-full min-w-[280px] block",
+        "text-left group relative overflow-hidden h-full min-w-0 block",
         isExternal ? "cursor-alias" : "cursor-pointer",
         className
       )}
     >
-      <div className="relative rounded-lg border group-hover:bg-black h-full min-h-72 w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden gap-1">
-        <div className="p-4 pb-0 flex flex-col gap-2 relative z-10">
-          <h3 className="text-brand-white font-medium mt-0 text-[1.125rem]">
-            {displayName}
-          </h3>
-        </div>
-
-        <div className="flex-1 flex flex-col justify-between relative z-10">
-          <div className="space-y-3 flex flex-col justify-between h-full px-4">
-            <p className="text-sm text-brand-neutral-100 leading-relaxed">
-              {description}
-            </p>
-          </div>
-
-          {(category || ctaLabel) && (
-            <div className="flex items-center justify-between mt-4 px-4 pb-4 gap-3">
-              {category && <Tag text={category} />}
-              {ctaLabel && (
-                <span className="text-[0.625rem] uppercase tracking-wide rounded-md border border-brand-neutral-400 px-2 py-1 text-brand-neutral-50">
-                  {ctaLabel}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 overflow-hidden opacity-60 group-hover:opacity-75 transition-opacity duration-200">
-            <div className="absolute inset-0 overflow-hidden">
-              <Image
-                src={previewImage.src}
-                alt={`${displayName} preview`}
-                width={1200}
-                height={630}
-                sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
-                unoptimized={shouldBypassImageOptimization(previewImage.src)}
-                className={cn(
-                  "absolute opacity-70 [mask-image:linear-gradient(to_top,black_0%,black_62%,transparent_100%)]",
-                  previewImage.isFallback && previewImage.isNextJsFallback
-                    ? "bottom-7 left-1/2 -translate-x-1/2 w-[78%]"
-                    : previewImage.isFallback
-                      ? getFallbackImageClass(previewImage.src)
-                      : "-bottom-7 left-0 w-full"
-                )}
-                loading={loading}
-              />
-            </div>
-            <Image
-              src={Texture}
-              placeholder="blur"
-              alt=""
-              aria-hidden
-              fill
-              sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
-              className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-screen opacity-10 group-hover:opacity-55 transition-opacity duration-300"
-              loading={loading}
-              fetchPriority="low"
-            />
-            <Image
-              src={Shadow}
-              placeholder="blur"
-              alt=""
-              aria-hidden
-              fill
-              sizes="(min-width: 1200px) 378px, (min-width: 1024px) calc((100vw - 64px) / 3), (min-width: 768px) calc((100vw - 48px) / 2), calc(100vw - 32px)"
-              className="absolute inset-x-0 bottom-0 h-[140px] object-cover opacity-10 group-hover:opacity-15 transition-opacity duration-200"
-              loading={loading}
-              fetchPriority="low"
-            />
-          </div>
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none opacity-100 transition-opacity duration-300 group-hover:opacity-66 [box-shadow:inset_0_38px_58px_rgba(0,0,0,0.28),inset_0_-50px_68px_rgba(0,0,0,0.38),inset_30px_0_42px_rgba(0,0,0,0.3),inset_-30px_0_42px_rgba(0,0,0,0.3)]"
+      <article className="template-card">
+        <div className="template-preview">
+          <Image
+            src={previewImage.src}
+            alt={`${displayName} preview`}
+            width={1200}
+            height={630}
+            sizes="(min-width: 1200px) 378px, (min-width: 768px) 50vw, 100vw"
+            unoptimized={shouldBypassImageOptimization(previewImage.src)}
+            className={cn(
+              "h-full w-full object-contain p-5",
+              previewImage.isFallback &&
+                previewImage.src !== "/templates/fallback.svg" &&
+                "template-provider-art"
+            )}
+            loading={loading}
           />
         </div>
-      </div>
+        <div className="p-6 flex flex-col gap-3 flex-1">
+          <h3 className="text-brand-white text-lg">{displayName}</h3>
+          <p className="text-sm leading-relaxed text-brand-neutral-100">
+            {description}
+          </p>
+          <div className="mt-auto pt-5 flex justify-between items-center gap-3">
+            {category && <Tag text={category} />}
+            <span className="font-mono text-[10px] text-accent">
+              {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}
+            </span>
+          </div>
+        </div>
+      </article>
     </Link>
   );
 }

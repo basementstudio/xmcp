@@ -7,7 +7,7 @@ import type { ShowcaseItem } from "@/utils/content";
 
 export function ShowcaseCards({ mcps }: { mcps: readonly ShowcaseItem[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px] col-span-12">
       {mcps.map((mcp, index) => (
         <ShowcaseCard key={index} {...mcp} />
       ))}
@@ -26,13 +26,13 @@ export async function ShowcaseCard({
   return (
     <div
       className={cn(
-        "text-left group relative overflow-visible h-full min-w-[280px]",
+        "text-left group relative overflow-visible h-full min-w-0",
         className
       )}
     >
-      <div className="relative rounded-lg border border-muted p-4 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="relative rounded-lg border border-muted bg-surface p-6 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded-md overflow-hidden">
+          <div className="w-10 h-10 shrink-0 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded-md overflow-hidden">
             <Image
               src={logo}
               alt={`${name} logo`}
@@ -41,25 +41,27 @@ export async function ShowcaseCard({
               className="object-cover"
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
-              <h2 className="text-white font-medium uppercase">{name}</h2>
+              <h2 className="text-white font-medium break-words">{name}</h2>
             </div>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-3 flex flex-col justify-between h-full">
-            <p className="text-sm text-[#BABABA] leading-relaxed">{tagline}</p>
+            <p className="text-sm text-brand-neutral-100 leading-relaxed">
+              {tagline}
+            </p>
 
             <div className="space-y-2">
               <div className="bg-black/20 border border-white/10 rounded-md px-2 py-1 relative group/copy overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <code className="text-xs text-[#BABABA] font-mono whitespace-nowrap pr-8">
+                <code className="text-xs text-brand-neutral-100 font-mono whitespace-nowrap pr-8">
                   {connection}
                 </code>
                 <CopyButton
                   text={connection}
-                  className="absolute top-1 right-3 opacity-0 group-hover/copy:opacity-100 transition-opacity duration-200"
+                  className="absolute top-1 right-3 opacity-100 transition-opacity duration-200"
                 />
               </div>
             </div>
@@ -79,7 +81,7 @@ export async function ShowcaseCard({
                   aria-label="View on GitHub"
                 >
                   <svg
-                    className="w-4 h-4 text-[#BABABA]"
+                    className="w-4 h-4 text-brand-neutral-100"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >

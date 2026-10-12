@@ -5,7 +5,7 @@ import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +14,11 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
 import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
+
+const displayFont = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -102,10 +107,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#000000" />
+        <meta
+          name="theme-color"
+          content="#f5f6f8"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#111418"
+          media="(prefers-color-scheme: dark)"
+        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} ${displayFont.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <a
           href="#main-content"
@@ -117,6 +131,7 @@ export default function RootLayout({
           data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />
         <RootProvider
+          theme={{ defaultTheme: "system", enableSystem: true }}
           search={{
             SearchDialog: DefaultSearchDialog,
             options: {

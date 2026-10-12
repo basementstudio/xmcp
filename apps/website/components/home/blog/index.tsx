@@ -16,19 +16,18 @@ export const HomeBlog = () => {
 
   return (
     <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
-            <Tag text="Blog" className="w-fit" />
-            <h2 className="heading-2 text-balance mt-auto text-gradient">
-              Guides & changelogs
-            </h2>
-          </div>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
-            Learn, build, and stay up to date with the latest guides,
-            changelogs, and insights to make the most of your MCP server.
-          </p>
+      <div className="home-section-heading">
+        <div>
+          <p className="eyebrow">04 / From the field</p>
+          <h2 className="heading-2">
+            Notes on building
+            <br />
+            with MCP.
+          </h2>
         </div>
+        <p>
+          Guides, releases, and ideas from the people building the framework.
+        </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
         {posts.map((post) => (
@@ -66,7 +65,7 @@ export const BlogCard = ({
       href={`/blog/${post.slug}`}
       className="text-left group relative overflow-visible h-full block"
     >
-      <div className="relative rounded-lg overflow-hidden border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="relative rounded-lg overflow-hidden border bg-surface group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {texture ? (
             <Image

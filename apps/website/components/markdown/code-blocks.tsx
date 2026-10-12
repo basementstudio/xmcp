@@ -20,11 +20,15 @@ import {
   useState,
 } from "react";
 import { cn } from "../../utils/cn";
-import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import {
+  XMCP_SHIKI_THEME_NAME,
+  xmcpAyuDarkTheme,
+  xmcpLightTheme,
+} from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [js, ts, bash, json, tsx, sql],
-  themes: [xmcpAyuDarkTheme],
+  themes: [xmcpAyuDarkTheme, xmcpLightTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -49,14 +53,9 @@ export function Code({
 
   const lang = className?.split("-")[1];
 
-  let theme = "none";
-
-  if (lang && lang !== "bash") {
-    theme = XMCP_SHIKI_THEME_NAME;
-  }
-
   const codeHTML = highlighter.codeToHtml(children, {
-    theme,
+    themes: { light: xmcpLightTheme.name!, dark: XMCP_SHIKI_THEME_NAME },
+    defaultColor: false,
     lang: lang || "typescript",
   });
   return (
@@ -101,7 +100,7 @@ export function Pre({
         "my-8 rounded-lg border relative w-full max-w-full overflow-x-auto bg-black p-4 [&_span]:!font-mono",
         className
       )}
-      style={{ borderColor: "#333" }}
+      style={{ borderColor: "var(--brand-neutral-500)" }}
     >
       <preContext.Provider value={{ editor: true }}>
         {children}

@@ -8,9 +8,9 @@ const calloutVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-[#D4943D]",
-        destructive: "border-[#E8737A]",
-        warning: "border-[#E8737A]",
+        default: "border-amber-700 dark:border-amber-400",
+        destructive: "border-red-700 dark:border-red-400",
+        warning: "border-red-700 dark:border-red-400",
         info: "border-brand-neutral-400",
         success: "border-green-400",
       },
@@ -22,11 +22,11 @@ const calloutVariants = cva(
 );
 
 const titleColorMap: Record<string, string> = {
-  default: "text-[#D4943D]",
-  destructive: "text-[#E8737A]",
-  warning: "text-[#E8737A]",
-  info: "text-[#59C2FF]",
-  success: "text-green-400",
+  default: "text-amber-800 dark:text-amber-400",
+  destructive: "text-red-700 dark:text-red-400",
+  warning: "text-red-700 dark:text-red-400",
+  info: "text-accent",
+  success: "text-green-700 dark:text-green-400",
 };
 
 const defaultTitleMap: Record<string, string> = {
@@ -69,7 +69,9 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
       >
         <div className="flex items-center gap-2">
           {IconComponent && (
-            <span className="flex-shrink-0">
+            <span
+              className={cn("flex-shrink-0 [&_path]:fill-current", titleColor)}
+            >
               <IconComponent className="size-5" />
             </span>
           )}

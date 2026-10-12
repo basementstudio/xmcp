@@ -39,8 +39,9 @@ export default function ChangelogPage() {
       id="main-content"
       className="max-w-[1200px] w-full mx-auto px-4 py-8 md:py-16"
     >
-      <div className="max-w-[720px] mx-auto text-center mb-12 md:mb-20">
-        <h1 className="display text-gradient">Changelog</h1>
+      <div className="listing-intro">
+        <p className="eyebrow">The release log / Changelog</p>
+        <h1 className="display">Changelog</h1>
         <p className="text-brand-neutral-100 text-base mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
@@ -49,7 +50,7 @@ export default function ChangelogPage() {
           All releases on GitHub ↗
         </a>
       </div>
-      <div className="max-w-[960px] mx-auto">
+      <div className="max-w-[960px]">
         {releases.map((release) => (
           <article
             key={release.version}

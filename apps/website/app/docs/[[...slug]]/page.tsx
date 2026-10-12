@@ -1,3 +1,5 @@
+import { McpWorkbench } from "@/components/anatomy/figure";
+import { conceptKeys } from "@/components/anatomy/model";
 import { source } from "../../../lib/source";
 import {
   DocsBody,
@@ -31,6 +33,10 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
+  const concept =
+    params.slug?.[0] === "core-concepts" && params.slug.length === 2
+      ? conceptKeys.find((key) => key === params.slug?.[1])
+      : undefined;
   const MDX = page.data.body;
   const displayTitle =
     (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
@@ -61,6 +67,9 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       <JsonLd data={structuredData} />
       <DocsTitle>{displayTitle}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      {concept && (
+        <McpWorkbench key={concept} initialConcept={concept} compact />
+      )}
       <DocsBody className="border-t border-white/20 pt-4">
         <blockquote className="sr-only">
           For the complete documentation index, see{" "}
