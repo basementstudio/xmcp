@@ -19,7 +19,8 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { visit } from "unist-util-visit";
 import type { ElementContent, Root, RootContent } from "hast";
 import { CodeBlock } from "./codeblock";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { ContentTable } from "./markdown/table";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 export interface Processor {
   process: (content: string) => Promise<ReactNode>;
@@ -77,6 +78,7 @@ function createProcessor(): Processor {
         components: {
           ...defaultMdxComponents,
           pre: Pre,
+          table: ContentTable,
           img: undefined, // use JSX
         },
       });
@@ -103,7 +105,8 @@ function Pre(props: ComponentProps<"pre">) {
       lang={lang}
       code={content.trimEnd()}
       options={{
-        theme: xmcpAyuDarkTheme,
+        themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
+        defaultColor: false,
         components: {
           pre: ({ ref, ...props }) => (
             <CodeBlock ref={ref} {...props}>

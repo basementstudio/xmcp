@@ -158,8 +158,8 @@ export function TerminalPrompt({ children, className }: TerminalPromptProps) {
   const segments = parsePrompt(children);
 
   return (
-    <div className={cn("relative group", className)}>
-      <div className="p-3 px-4 rounded-lg bg-black border border-white/20">
+    <div className={cn("site-terminal relative", className)}>
+      <div className="site-terminal-panel">
         <pre className="font-mono text-sm">
           <code>
             {segments.map((segment, idx) => (
@@ -170,10 +170,7 @@ export function TerminalPrompt({ children, className }: TerminalPromptProps) {
           </code>
         </pre>
       </div>
-      <CopyButton
-        text={children}
-        className="absolute top-4 right-6 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-      />
+      <CopyButton text={children} label className="absolute top-2 right-2" />
     </div>
   );
 }

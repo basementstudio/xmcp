@@ -1,50 +1,94 @@
 "use client";
 
-import { useEffect, useId, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { ArrowRight, Play, RotateCcw } from "lucide-react";
 import { concepts, conceptKeys, type Concept } from "./model";
 
 export function Workbench({
-  children,
+  art,
+  style,
   initialConcept,
   compact,
 }: {
-  children: ReactNode;
+  art: Record<Concept | "base", ReactNode>;
+  style: CSSProperties;
   initialConcept: Concept;
   compact: boolean;
 }) {
   const id = useId();
   const [selected, setSelected] = useState<Concept>(initialConcept);
   const [phase, setPhase] = useState<"idle" | "running" | "complete">("idle");
+  const [progress, setProgress] = useState(0);
+  const [name, setName] = useState("Ada");
+  const [code, setCode] = useState("const sum = (a, b) => a + b;");
   const concept = concepts[selected];
+  const result =
+    selected === "tools"
+      ? `Hello, ${name}!`
+      : selected === "prompts"
+        ? `Review this code for clarity: ${code}`
+        : concept.result;
+  const input =
+    selected === "tools"
+      ? JSON.stringify({ name })
+      : selected === "prompts"
+        ? JSON.stringify({ code })
+        : concept.input;
+  // Match the keyframe's physical stroke: advance, dwell, return to the mount.
+  const stroke =
+    progress < 40 ? progress / 40 : progress <= 65 ? 1 : (100 - progress) / 35;
+  const position =
+    progress === 100
+      ? "Complete"
+      : progress === 0
+        ? "Ready"
+        : progress < 40
+          ? "Advancing"
+          : progress <= 65
+            ? "Engaged"
+            : "Returning";
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const settle = () => {
-      if (media.matches)
-        setPhase((phase) => (phase === "running" ? "complete" : phase));
+      if (media.matches && phase === "running") {
+        setPhase("complete");
+        setProgress(100);
+      }
     };
     media.addEventListener("change", settle);
     return () => media.removeEventListener("change", settle);
-  }, []);
+  }, [phase]);
 
   function select(key: Concept) {
     setSelected(key);
     setPhase("idle");
+    setProgress(0);
   }
   function run() {
-    setPhase(
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "complete"
-        : "running"
-    );
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    setProgress(reduced ? 100 : 0);
+    setPhase(reduced ? "complete" : "running");
+  }
+  function resetInput() {
+    setProgress(0);
+    setPhase("idle");
   }
 
   return (
     <section
       className={`mcp-workbench ${compact ? "workbench-compact" : ""}`}
       aria-label="Explore MCP core concepts"
+      style={{ ...style, "--wb-stroke": stroke } as CSSProperties}
     >
       <div className="workbench-tabs" role="tablist" aria-label="MCP concepts">
         {conceptKeys.map((key, index) => (
@@ -90,14 +134,70 @@ export function Workbench({
           className={`workbench-stage iso-plate ${phase === "running" ? "is-running" : ""}`}
           data-concept={selected}
           onAnimationEnd={(event) => {
-            if (event.animationName.startsWith("wb-")) setPhase("complete");
+            if (
+              ["wb-press", "wb-drawer", "wb-paper"].includes(
+                event.animationName
+              )
+            ) {
+              setPhase("complete");
+              setProgress(100);
+            }
           }}
         >
           <div className="workbench-figure-label">
             <span>Fig. 01 / MCP workbench</span>
             <span>{concept.method}</span>
           </div>
-          {children}
+          <svg
+            viewBox="0 0 820 470"
+            className="workbench-art"
+            role="group"
+            aria-label="Interactive MCP machinery"
+          >
+            <g aria-hidden="true">{art.base}</g>
+            {conceptKeys.map((key) => (
+              <g
+                key={key}
+                data-instrument={key}
+                role="button"
+                tabIndex={0}
+                aria-label={`Explore ${concepts[key].label}`}
+                aria-pressed={key === selected}
+                onClick={() => select(key)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    select(key);
+                  }
+                }}
+              >
+                <title>{`${concepts[key].label} — click to explore`}</title>
+                {art[key]}
+              </g>
+            ))}
+          </svg>
+          <div className="workbench-transport">
+            <div>
+              <label htmlFor={`${id}-motion`}>Scrub the mechanism</label>
+              <span>
+                {phase === "running" ? "Running" : `${position} / ${progress}%`}
+              </span>
+            </div>
+            <input
+              id={`${id}-motion`}
+              type="range"
+              min="0"
+              max="100"
+              value={progress}
+              disabled={phase === "running"}
+              aria-valuetext={`${position}, ${progress} percent`}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                setProgress(next);
+                setPhase(next === 100 ? "complete" : "idle");
+              }}
+            />
+          </div>
           <div className="workbench-caption">
             <span className="status-dot" />
             <span>{concept.mechanism}</span>
@@ -107,11 +207,40 @@ export function Workbench({
           <p className="eyebrow">{concept.label}</p>
           <h3>{concept.verb}</h3>
           <p className="workbench-description">{concept.description}</p>
-          <div className="workbench-code">
-            <div>{concept.file}</div>
+          <details className="workbench-code">
+            <summary>{concept.file}</summary>
             <pre>
               <code>{concept.code}</code>
             </pre>
+          </details>
+          <div className="workbench-input">
+            <label htmlFor={`${id}-input`}>
+              {selected === "tools"
+                ? "Name"
+                : selected === "prompts"
+                  ? "Code to review"
+                  : "Resource URI"}
+            </label>
+            <input
+              id={`${id}-input`}
+              type="text"
+              spellCheck={false}
+              maxLength={180}
+              readOnly={selected === "resources"}
+              disabled={phase === "running"}
+              value={
+                selected === "tools"
+                  ? name
+                  : selected === "prompts"
+                    ? code
+                    : concept.input
+              }
+              onChange={(event) => {
+                if (selected === "tools") setName(event.target.value);
+                else if (selected === "prompts") setCode(event.target.value);
+                resetInput();
+              }}
+            />
           </div>
           <div className="workbench-actions">
             <button
@@ -139,7 +268,7 @@ export function Workbench({
             <span>
               {phase === "complete" ? "RESULT" : "LOCAL DEMO / INPUT"}
             </span>
-            <code>{phase === "complete" ? concept.result : concept.input}</code>
+            <code>{phase === "complete" ? result : input}</code>
           </div>
         </div>
       </div>

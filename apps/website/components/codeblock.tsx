@@ -7,8 +7,6 @@ import {
   type RefObject,
   useContext,
   useRef,
-  useEffect,
-  useState,
 } from "react";
 import { cn } from "@/lib/cn";
 import { CopyButton as CustomCopyButton } from "./ui/copy-button";
@@ -108,39 +106,27 @@ export function CodeBlock({
           )}
           <figcaption className="flex-1 truncate">{title}</figcaption>
           {Actions({
-            className:
-              "-me-2 opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
-            children: allowCopy && (
-              <CopyButton
-                containerRef={areaRef}
-                className="top-0 right-0.5 [&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
-              />
-            ),
+            className: "site-code-actions",
+            children: allowCopy && <CopyButton containerRef={areaRef} />,
           })}
         </div>
       ) : (
         Actions({
-          className:
-            "absolute top-2 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto",
-          children: allowCopy && (
-            <CopyButton
-              containerRef={areaRef}
-              className="[&_button]:rounded-md [&_button]:border [&_button]:border-brand-neutral-300 [&_button]:bg-brand-neutral-600 [&_button]:shadow-sm"
-            />
-          ),
+          className: "site-code-actions absolute top-2.5 right-2.5 z-2",
+          children: allowCopy && <CopyButton containerRef={areaRef} />,
         })
       )}
       <div
         ref={areaRef}
         {...viewportProps}
         className={cn(
-          "text-[13px] py-3 overflow-auto max-h-[600px] sidebar-scrollbar",
+          "site-code-viewport text-[13px] overflow-auto max-h-[600px] sidebar-scrollbar",
           viewportProps.className
         )}
         style={
           {
             // space for toolbar
-            "--padding-right": !title ? "calc(var(--spacing) * 8)" : undefined,
+            "--padding-right": !title ? "80px" : undefined,
             counterSet: props["data-line-numbers"]
               ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
               : undefined,
@@ -161,24 +147,14 @@ function CopyButton({
   containerRef: RefObject<HTMLElement | null>;
   className?: string;
 }) {
-  const [text, setText] = useState("");
-
-  useEffect(() => {
-    const pre = containerRef.current?.getElementsByTagName("pre").item(0);
-    if (!pre) return;
-
+  function getText() {
+    const pre = containerRef.current?.querySelector("pre");
+    if (!pre) return "";
     const clone = pre.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll(".nd-copy-ignore").forEach((node) => {
-      node.replaceWith("\n");
-    });
-
-    setText(clone.textContent ?? "");
-  }, [containerRef]);
-
-  return (
-    <CustomCopyButton
-      text={text}
-      className={cn("size-6 top-2 right-0.5", className)}
-    />
-  );
+    clone
+      .querySelectorAll(".nd-copy-ignore")
+      .forEach((node) => node.replaceWith("\n"));
+    return clone.textContent ?? "";
+  }
+  return <CustomCopyButton text={getText} label className={className} />;
 }

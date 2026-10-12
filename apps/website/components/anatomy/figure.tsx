@@ -1,33 +1,50 @@
 import type { CSSProperties } from "react";
 import { workbenchArt, workbenchMotion } from "./geometry";
 import { Workbench } from "./workbench";
-import { conceptKeys, type Concept } from "./model";
+import { type Concept } from "./model";
+
+export type AnatomyTokens = Partial<Record<`--anatomy-${string}`, string>>;
 
 export function McpWorkbench({
   initialConcept = "tools",
   compact = false,
+  tokens,
 }: {
   initialConcept?: Concept;
   compact?: boolean;
+  tokens?: AnatomyTokens;
 }) {
   return (
-    <Workbench initialConcept={initialConcept} compact={compact}>
-      <svg
-        viewBox="0 0 820 470"
-        className="workbench-art"
-        style={workbenchMotion as CSSProperties}
-        aria-hidden="true"
-        focusable="false"
-      >
-        <g dangerouslySetInnerHTML={{ __html: workbenchArt.base }} />
-        {conceptKeys.map((key) => (
+    <Workbench
+      initialConcept={initialConcept}
+      compact={compact}
+      style={{ ...workbenchMotion, ...tokens } as CSSProperties}
+      art={{
+        base: (
           <g
-            key={key}
-            data-instrument={key}
-            dangerouslySetInnerHTML={{ __html: workbenchArt[key] }}
+            key="base"
+            dangerouslySetInnerHTML={{ __html: workbenchArt.base }}
           />
-        ))}
-      </svg>
-    </Workbench>
+        ),
+        tools: (
+          <g
+            key="tools"
+            dangerouslySetInnerHTML={{ __html: workbenchArt.tools }}
+          />
+        ),
+        resources: (
+          <g
+            key="resources"
+            dangerouslySetInnerHTML={{ __html: workbenchArt.resources }}
+          />
+        ),
+        prompts: (
+          <g
+            key="prompts"
+            dangerouslySetInnerHTML={{ __html: workbenchArt.prompts }}
+          />
+        ),
+      }}
+    />
   );
 }

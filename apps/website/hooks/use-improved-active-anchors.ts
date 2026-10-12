@@ -7,69 +7,45 @@ export function useImprovedActiveAnchors(toc: TOCItemType[]): string[] {
   const [activeAnchors, setActiveAnchors] = useState<string[]>([]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const offset = 120;
-      const scrollPosition = window.scrollY + offset;
+    const headings = toc.flatMap((item) => {
+      const element = document.getElementById(
+        decodeURIComponent(item.url.slice(1))
+      );
+      return element ? [element] : [];
+    });
+    let frame = 0;
 
-      // all heading elements based on TOC items
-      const headingElements = toc
-        .map((item) => {
-          const id = item.url.replace("#", "");
-          try {
-            return document.querySelector(item.url);
-          } catch {
-            // fallback to getElementById for IDs that start with numbers or contain invalid characters
-            return document.getElementById(id);
-          }
-        })
-        .filter(Boolean);
-
-      if (headingElements.length === 0) {
-        setActiveAnchors([]);
-        return;
+    const update = () => {
+      frame = 0;
+      let current = headings[0]?.id;
+      for (const heading of headings) {
+        // Match native anchor positioning, including subpixel scroll rounding.
+        const inset =
+          parseFloat(getComputedStyle(heading).scrollMarginTop) || 0;
+        if (heading.getBoundingClientRect().top <= inset + 1)
+          current = heading.id;
+        else break;
       }
-
-      const headingPositions = headingElements.map((heading) => {
-        const rect = (heading as HTMLElement).getBoundingClientRect();
-        return rect.top + window.scrollY;
-      });
-
-      let activeIndex = 0;
-
-      // current active section using the same logic as working TOC
-      for (let i = headingPositions.length - 1; i >= 0; i--) {
-        if (headingPositions[i] <= scrollPosition) {
-          activeIndex = i;
-          break;
-        }
-      }
-
-      // active anchor (fumadocs expects the ID without #)
-      if (toc[activeIndex]) {
-        const activeId = toc[activeIndex].url.slice(1);
-        setActiveAnchors([activeId]);
-      } else {
-        setActiveAnchors([]);
-      }
+      setActiveAnchors((previous) =>
+        previous[0] === current ? previous : current ? [current] : []
+      );
     };
-
-    handleScroll();
-
-    let ticking = false;
-    const scrollListener = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
     };
-
-    window.addEventListener("scroll", scrollListener);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(document.body);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.addEventListener("hashchange", schedule);
+    schedule();
 
     return () => {
-      window.removeEventListener("scroll", scrollListener);
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("hashchange", schedule);
     };
   }, [toc]);
 

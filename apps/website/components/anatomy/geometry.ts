@@ -87,8 +87,9 @@ function base() {
     // Recessed bus rail physically joins the three mounted instruments.
     block(-157, 66, 312, 9, 0, 3),
     ...[-119, -10, 99].map((x) => block(x, 50, 10, 16, 0, 3)),
-    ...[-150, -122, -94, -66, -38, -10, 18, 46, 74, 102, 130].map((x) =>
-      block(x, 69, 9, 3, 3, 1)
+    ...[-150, -122, -94, -66, -38, -10, 18, 46, 74, 102, 130].map(
+      (x, index) =>
+        `<g class="bus-contact" style="--contact-index:${index}">${block(x, 69, 9, 3, 3, 1)}</g>`
     ),
     label(121, 78, 0.1),
   ].join("");

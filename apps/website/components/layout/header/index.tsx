@@ -5,11 +5,13 @@ import { AskAIButton } from "@/components/ai/ask";
 import { SearchToggle } from "../search-toggle";
 import { AnimatedLink } from "@/components/animated-link";
 import { LogoContextMenu } from "./logo-menu";
+import { source } from "@/lib/source";
+import { DocumentationNavigation } from "../docs";
 import { ThemeToggle } from "fumadocs-ui/components/layout/theme-toggle";
 
 export const Header = () => (
   <header className="site-header sticky top-0 z-100 w-full">
-    <div className="mx-auto flex h-[72px] max-w-[1440px] items-center gap-6 px-4 md:px-8">
+    <div className="site-header-inner mx-auto flex h-[72px] max-w-[1440px] items-center gap-6 px-4 md:px-8">
       <Link
         href="/"
         prefetch={false}
@@ -20,26 +22,29 @@ export const Header = () => (
           <XmcpLogo className="h-7 w-auto" />
         </LogoContextMenu>
       </Link>
-      <span className="hidden 2xl:block border-l border-brand-neutral-500 pl-5 font-mono text-[10px] uppercase tracking-[.12em] text-brand-neutral-100">
+      <span className="site-brand-caption hidden 2xl:block border-l border-brand-neutral-500 pl-5 font-mono text-[10px] uppercase tracking-[.12em] text-brand-neutral-100">
         The MCP framework
       </span>
-      <nav
-        aria-label="Main"
-        className="hidden xl:flex items-center gap-5 ml-auto text-[13px]"
-      >
-        <AnimatedLink href="/docs">Docs</AnimatedLink>
-        <AnimatedLink href="/templates">Templates</AnimatedLink>
-        <AnimatedLink href="/showcase">Showcase</AnimatedLink>
-        <AnimatedLink href="/blog">Blog</AnimatedLink>
-        <AnimatedLink href="/changelog">Changelog</AnimatedLink>
-        <AnimatedLink href="/faq">FAQ</AnimatedLink>
-      </nav>
-      <div className="ml-auto xl:ml-0 flex items-center gap-2 md:gap-3">
+      <div className="site-navigation-scroll">
+        <nav
+          aria-label="Main"
+          className="site-navigation hidden xl:flex items-center gap-5 ml-auto text-[13px]"
+        >
+          <AnimatedLink href="/">Overview</AnimatedLink>
+          <DocumentationNavigation tree={source.pageTree} />
+          <AnimatedLink href="/templates">Templates</AnimatedLink>
+          <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+          <AnimatedLink href="/blog">Blog</AnimatedLink>
+          <AnimatedLink href="/changelog">Changelog</AnimatedLink>
+          <AnimatedLink href="/faq">FAQ</AnimatedLink>
+        </nav>
+      </div>
+      <div className="site-controls ml-auto xl:ml-0 flex items-center gap-2 md:gap-3">
         <SearchToggle
           aria-label="Search documentation"
           className="min-h-11 min-w-11"
         />
-        <div className="hidden sm:block">
+        <div className="site-ask hidden sm:block">
           <AskAIButton />
         </div>
         <ThemeToggle

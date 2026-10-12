@@ -2,15 +2,19 @@
 
 import { cn } from "../../utils/cn";
 import { CopyButton } from "../ui/copy-button";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import bash from "@shikijs/langs/bash";
-import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import {
+  XMCP_SHIKI_THEME_NAME,
+  xmcpAyuDarkTheme,
+  xmcpLightTheme,
+} from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [bash],
-  themes: [xmcpAyuDarkTheme],
+  themes: [xmcpAyuDarkTheme, xmcpLightTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -31,50 +35,75 @@ export function TerminalTabs({
   defaultTab,
   className,
 }: TerminalTabsProps) {
+  const id = useId();
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.value);
   const activeContent =
     tabs.find((tab) => tab.value === activeTab)?.content || "";
 
   const highlightedContent = useMemo(() => {
     return highlighter.codeToHtml(activeContent, {
-      theme: XMCP_SHIKI_THEME_NAME,
+      themes: { light: xmcpLightTheme.name!, dark: XMCP_SHIKI_THEME_NAME },
+      defaultColor: false,
       lang: "bash",
     });
   }, [activeContent]);
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Tab buttons */}
-      <div className="flex gap-1 rounded-t-lg overflow-hidden border border-brand-neutral-400 border-b-0 bg-black/50">
-        {tabs.map((tab) => (
+    <div className={cn("site-terminal", className)}>
+      <div
+        className="site-terminal-tabs"
+        role="tablist"
+        aria-label="Package manager"
+      >
+        {tabs.map((tab, index) => (
           <button
             key={tab.value}
+            type="button"
+            role="tab"
+            id={`${id}-${tab.value}`}
+            aria-controls={`${id}-panel`}
+            aria-selected={activeTab === tab.value}
+            tabIndex={activeTab === tab.value ? 0 : -1}
             onClick={() => setActiveTab(tab.value)}
-            className={cn(
-              "px-4 py-2 text-sm font-mono transition-colors relative",
-              "hover:bg-white/10",
-              activeTab === tab.value
-                ? "bg-black text-brand-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-brand-neutral-200"
-                : "text-brand-neutral-100"
-            )}
+            onKeyDown={(event) => {
+              const next =
+                event.key === "ArrowRight"
+                  ? (index + 1) % tabs.length
+                  : event.key === "ArrowLeft"
+                    ? (index + tabs.length - 1) % tabs.length
+                    : event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? tabs.length - 1
+                        : undefined;
+              if (next === undefined) return;
+              event.preventDefault();
+              setActiveTab(tabs[next].value);
+              (
+                event.currentTarget.parentElement?.children[
+                  next
+                ] as HTMLButtonElement
+              )?.focus();
+            }}
           >
             {tab.label}
           </button>
         ))}
       </div>
-
-      {/* Terminal content */}
-      <div className="py-3 rounded-b-lg bg-black border border-brand-neutral-400 relative">
-        <div
-          className="font-mono text-sm [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-sm"
-          dangerouslySetInnerHTML={{ __html: highlightedContent }}
+      <div
+        className="site-terminal-panel"
+        id={`${id}-panel`}
+        role="tabpanel"
+        aria-labelledby={`${id}-${activeTab}`}
+        tabIndex={0}
+      >
+        <div dangerouslySetInnerHTML={{ __html: highlightedContent }} />
+        <CopyButton
+          text={activeContent}
+          label
+          className="absolute top-2 right-2"
         />
       </div>
-
-      <CopyButton
-        text={activeContent}
-        className="size-4 absolute top-14 right-4"
-      />
     </div>
   );
 }

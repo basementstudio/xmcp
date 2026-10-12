@@ -139,7 +139,7 @@ export function TemplatesListing({
         </div>
 
         <div className="min-h-[60vh] flex flex-col gap-6">
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.length > 0 ? (
               pageItems.map((item, index) => (
                 <TemplateCard

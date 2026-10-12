@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn";
 import { Icons } from "./icons";
 
 const calloutVariants = cva(
-  "relative flex flex-col gap-4 my-4 rounded-lg border p-4",
+  "site-callout relative flex flex-col gap-4 my-4 rounded-lg border p-4",
   {
     variants: {
       variant: {
@@ -63,6 +63,7 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
 
     return (
       <div
+        data-variant={resolvedVariant}
         ref={ref}
         className={cn(calloutVariants({ variant }), className)}
         {...props}

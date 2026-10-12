@@ -3,52 +3,54 @@
 
 @import "./shiki.css";
 @import "../components/anatomy/workbench.css";
+@import "./design-system.css";
+@import "./components.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
-  --background: #f5f6f8;
-  --foreground: #202631;
-  --surface: #ffffff;
-  --surface-raised: #eef1f5;
-  --accent: #225ad7;
-  --accent-soft: #e7edfc;
-  --brand-white: #202631;
-  --brand-neutral-50: #394454;
-  --brand-neutral-100: #596577;
-  --brand-neutral-200: #657184;
-  --brand-neutral-300: #8993a2;
-  --brand-neutral-400: #bec6d1;
-  --brand-neutral-500: #d9dfe6;
-  --brand-neutral-600: #e9edf2;
-  --brand-black: #f5f6f8;
+  --background: var(--site-ground);
+  --foreground: var(--site-ink);
+  --surface: var(--site-card);
+  --surface-raised: var(--site-well);
+  --accent: var(--site-ink);
+  --accent-soft: var(--site-well);
+  --brand-white: var(--site-ink);
+  --brand-neutral-50: var(--site-text);
+  --brand-neutral-100: #666666;
+  --brand-neutral-200: #737373;
+  --brand-neutral-300: #929292;
+  --brand-neutral-400: var(--site-faint);
+  --brand-neutral-500: var(--site-rule);
+  --brand-neutral-600: var(--site-well);
+  --brand-black: var(--site-ground);
 }
 
 .dark {
   color-scheme: dark;
-  --background: #111418;
-  --foreground: #edf1f7;
-  --surface: #191e25;
-  --surface-raised: #222933;
-  --accent: #8aadff;
-  --accent-soft: #222f4c;
-  --brand-white: #edf1f7;
-  --brand-neutral-50: #c7d0dc;
-  --brand-neutral-100: #a2aeba;
-  --brand-neutral-200: #919eae;
-  --brand-neutral-300: #6b7a8d;
-  --brand-neutral-400: #4c596b;
-  --brand-neutral-500: #303945;
-  --brand-neutral-600: #222933;
-  --brand-black: #111418;
+  --background: var(--site-ground);
+  --foreground: var(--site-ink);
+  --surface: var(--site-card);
+  --surface-raised: var(--site-well);
+  --accent: var(--site-ink);
+  --accent-soft: var(--site-well);
+  --brand-white: var(--site-ink);
+  --brand-neutral-50: var(--site-text);
+  --brand-neutral-100: #a8a8a8;
+  --brand-neutral-200: #858585;
+  --brand-neutral-300: #595959;
+  --brand-neutral-400: var(--site-faint);
+  --brand-neutral-500: var(--site-rule);
+  --brand-neutral-600: var(--site-well);
+  --brand-black: var(--site-ground);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-space-grotesk);
+  --font-display: var(--font-inter);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-accent: var(--accent);
@@ -585,24 +587,6 @@ input[type="email"] {
     100% 1px;
 }
 
-/* Shared type and surfaces keep editorial, template and documentation pages aligned. */
-h1,
-h2,
-h3,
-.heading-1,
-.heading-2,
-.display {
-  font-family: var(--font-space-grotesk), sans-serif;
-  letter-spacing: -0.035em;
-}
-.heading-1 {
-  font-size: clamp(2.25rem, 5vw, 4rem);
-  line-height: 1.08;
-}
-.heading-2 {
-  font-size: clamp(1.7rem, 3vw, 2.5rem);
-  line-height: 1.16;
-}
 .prose h2 {
   margin-top: 2.5rem;
 }
@@ -658,9 +642,9 @@ h3,
   margin-bottom: 24px;
 }
 .listing-intro .display {
-  font-size: clamp(36px, 5vw, 60px);
+  font-size: clamp(28px, 4vw, 40px);
   line-height: 1.1;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.03em;
   margin-block: 20px;
   text-align: left;
 }

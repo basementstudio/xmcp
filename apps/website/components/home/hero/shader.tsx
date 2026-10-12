@@ -23,14 +23,20 @@ function HeroScene(props: ParticleSceneProps) {
 
 export default function Shader() {
   return (
-    <ParticleViewport
-      className="w-full aspect-square max-h-[250px] sm:max-h-[350px] md:max-h-[450px] lg:max-h-[500px]"
-      texture="/xmcp.webp"
-      width={850}
-      height={742}
-      showLoadingArtwork={false}
-    >
-      {(props) => <HeroScene {...props} />}
-    </ParticleViewport>
+    <figure className="hero-specimen">
+      {/* Both renderers and the fallback artwork are monochrome. Inverting the
+          finished scene preserves their identical additive glow in light mode,
+          and changes theme without rebuilding GPU resources or cursor state. */}
+      <div className="hero-particles">
+        <ParticleViewport
+          className="w-full h-[280px] sm:h-[360px]"
+          texture="/xmcp.webp"
+          width={850}
+          height={742}
+        >
+          {(props) => <HeroScene {...props} active={props.active} />}
+        </ParticleViewport>
+      </div>
+    </figure>
   );
 }

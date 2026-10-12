@@ -76,12 +76,14 @@ export function TemplateCard({
             loading={loading}
           />
         </div>
-        <div className="p-6 flex flex-col gap-3 flex-1">
-          <h3 className="text-brand-white text-lg">{displayName}</h3>
-          <p className="text-sm leading-relaxed text-brand-neutral-100">
+        <div className="p-4 flex flex-col gap-3 flex-1">
+          <h3 className="text-brand-white text-[13px] font-medium">
+            {displayName}
+          </h3>
+          <p className="text-[12.5px] leading-[18px] text-brand-neutral-100">
             {description}
           </p>
-          <div className="mt-auto pt-5 flex justify-between items-center gap-3">
+          <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
             {category && <Tag text={category} />}
             <span className="font-mono text-[10px] text-accent">
               {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}

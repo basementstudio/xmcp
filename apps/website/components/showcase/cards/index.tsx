@@ -7,7 +7,7 @@ import type { ShowcaseItem } from "@/utils/content";
 
 export function ShowcaseCards({ mcps }: { mcps: readonly ShowcaseItem[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[20px] col-span-12">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px] col-span-12">
       {mcps.map((mcp, index) => (
         <ShowcaseCard key={index} {...mcp} />
       ))}

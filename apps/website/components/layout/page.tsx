@@ -1,15 +1,12 @@
 "use client";
 
 import { type ComponentProps, type ReactNode, useMemo } from "react";
-import {
-  AnchorProvider,
-  type TOCItemType,
-  useActiveAnchors,
-} from "fumadocs-core/toc";
+import { AnchorProvider, type TOCItemType } from "fumadocs-core/toc";
 import { cn } from "../../lib/cn";
 import { useTreeContext } from "fumadocs-ui/contexts/tree";
 import { usePathname } from "fumadocs-core/framework";
 import type * as PageTree from "fumadocs-core/page-tree";
+import { TableOfContents } from "./table-of-contents";
 import { NavigationLink } from "./navigation-link";
 
 export interface DocsPageProps {
@@ -29,20 +26,11 @@ export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
         </div>
       </article>
       {(toc.length > 0 || pageActions) && (
-        <div className="sticky self-start top-20 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 overflow-auto max-xl:hidden">
-          {toc.length > 0 && (
-            <>
-              <p className="text-sm text-brand-white mb-2 font-medium">
-                On this page
-              </p>
-              <div className="flex flex-col pb-4 border-b border-white/20 max-h-2/3 overflow-y-auto sidebar-scrollbar">
-                {toc.map((item) => (
-                  <TocItem key={item.url} item={item} />
-                ))}
-              </div>
-            </>
+        <div className="docs-toc sticky self-start top-20 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 overflow-auto max-xl:hidden">
+          {toc.length > 0 && <TableOfContents toc={toc} />}
+          {pageActions && (
+            <div className="site-page-actions">{pageActions}</div>
           )}
-          {pageActions && <div className="mt-4">{pageActions}</div>}
         </div>
       )}
     </AnchorProvider>
@@ -79,25 +67,6 @@ export function DocsTitle(props: ComponentProps<"h1">) {
     >
       {props.children}
     </h1>
-  );
-}
-
-function TocItem({ item }: { item: TOCItemType }) {
-  const isActive = useActiveAnchors().includes(item.url.slice(1));
-
-  return (
-    <a
-      href={item.url}
-      className={cn(
-        "text-sm text-brand-neutral-100 py-1",
-        isActive && "text-brand-white font-medium"
-      )}
-      style={{
-        paddingLeft: Math.max(0, item.depth - 2) * 16,
-      }}
-    >
-      {item.title}
-    </a>
   );
 }
 

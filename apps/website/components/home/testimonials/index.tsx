@@ -7,16 +7,10 @@ export function HomeTestimonials() {
   const testimonials = getTestimonials();
 
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="home-section-heading">
-        <div>
-          <p className="eyebrow">03 / In good company</p>
-          <h2 className="heading-2">
-            Built by developers.
-            <br />
-            Backed by their experience.
-          </h2>
-        </div>
+    <div id="community" className="editorial-section home-testimonials">
+      <div className="editorial-section-head">
+        <h2>Built with xmcp</h2>
+        <span aria-hidden="true">IV</span>
       </div>
       <TestimonialsCarousel>
         {testimonials.map((testimonial) => (
@@ -35,7 +29,7 @@ const TestimonialCard = ({
   logo,
 }: Testimonial) => {
   return (
-    <div className="flex h-full min-h-[220px] flex-col rounded-lg border border-brand-neutral-500 bg-surface p-6 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
+    <div className="flex h-full min-h-[220px] flex-col rounded-lg border border-brand-neutral-500 p-4 transition-colors duration-200 hover:border-brand-neutral-300 hover:bg-black">
       <p className="text-brand-neutral-50 text-sm leading-relaxed line-clamp-4 flex-1">
         &ldquo;{tagline}&rdquo;
       </p>

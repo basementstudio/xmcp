@@ -17,25 +17,19 @@ export function tagClassName({
   selected?: boolean;
 }) {
   const base =
-    "py-1 px-2 text-[0.625rem] uppercase rounded-md border tracking-wide transition-colors duration-200";
+    "site-chip py-1 px-2.5 text-[12px] leading-[18px] rounded-full border border-transparent transition-colors duration-200";
 
   if (!interactive) {
-    return cn(
-      base,
-      "bg-brand-neutral-600 border-dashed border-brand-neutral-400 text-brand-neutral-100"
-    );
+    return cn(base, "bg-brand-neutral-600 text-brand-neutral-100");
   }
 
   if (selected) {
-    return cn(
-      base,
-      "bg-brand-neutral-600 border-solid border-brand-white text-brand-white"
-    );
+    return cn(base, "site-chip-selected");
   }
 
   return cn(
     base,
-    "bg-transparent border-dashed border-brand-neutral-400 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+    "bg-brand-neutral-600 text-brand-neutral-100 hover:text-brand-white hover:bg-brand-neutral-500"
   );
 }
 

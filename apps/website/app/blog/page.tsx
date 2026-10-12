@@ -83,7 +83,7 @@ export default function BlogPage() {
 
         {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 col-span-12">
+        <div className="grid gap-8 md:grid-cols-2 col-span-12">
           {regularPosts.map((post: BlogPost, index: number) => (
             <BlogCard
               key={post.slug}

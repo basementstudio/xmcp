@@ -3,8 +3,7 @@ import { ReactNode } from "react";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { TreeContextProvider } from "fumadocs-ui/contexts/tree";
 import { AnchorProvider, TOCItemType } from "fumadocs-core/toc";
-import { useImprovedActiveAnchors } from "@/hooks/use-improved-active-anchors";
-import { cn } from "@/lib/utils";
+import { TableOfContents } from "./table-of-contents";
 import Link from "next/link";
 import { getBaseUrl } from "@/lib/base-url";
 import { Icons } from "../icons";
@@ -35,39 +34,12 @@ export interface BlogPageProps {
   pageActions?: ReactNode;
 }
 
-function TocItem({
-  item,
-  activeAnchors,
-}: {
-  item: TOCItemType;
-  activeAnchors: string[];
-}) {
-  const isActive = activeAnchors.includes(item.url.slice(1));
-
-  return (
-    <Link
-      href={item.url}
-      className={cn(
-        "text-sm text-brand-neutral-100 py-1 hover:text-brand-neutral-50 transition-colors w-fit",
-        isActive && "text-brand-white font-medium"
-      )}
-      style={{
-        paddingLeft: Math.max(0, item.depth - 2) * 16,
-      }}
-    >
-      {item.title}
-    </Link>
-  );
-}
-
 export function BlogPage({
   toc = [],
   slug,
   pageActions,
   ...props
 }: BlogPageProps) {
-  const activeAnchors = useImprovedActiveAnchors(toc);
-
   return (
     <AnchorProvider toc={toc}>
       <div className="flex flex-1 w-full px-4 md:px-6 lg:px-8 xl:px-0 items-start">
@@ -89,23 +61,8 @@ export function BlogPage({
         </div>
 
         {(toc.length > 0 || pageActions) && (
-          <aside className="hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-[104px] h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
-            {toc.length > 0 && (
-              <>
-                <p className="text-sm text-brand-white font-medium">
-                  Table of contents
-                </p>
-                <nav className="flex flex-col pb-4 border-b border-white/20">
-                  {toc.map((item) => (
-                    <TocItem
-                      key={item.url}
-                      item={item}
-                      activeAnchors={activeAnchors}
-                    />
-                  ))}
-                </nav>
-              </>
-            )}
+          <aside className="blog-toc hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-[104px] h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
+            {toc.length > 0 && <TableOfContents toc={toc} />}
             {slug && (
               <div className="flex flex-wrap items-center gap-3 text-sm text-brand-neutral-50 w-full group hover:text-brand-white transition-colors">
                 <span className="inline-flex items-center gap-2 group-hover:text-brand-white transition-colors">
@@ -117,7 +74,9 @@ export function BlogPage({
                 </span>
               </div>
             )}
-            {pageActions && <div className="mt-2">{pageActions}</div>}
+            {pageActions && (
+              <div className="site-page-actions">{pageActions}</div>
+            )}
           </aside>
         )}
       </div>

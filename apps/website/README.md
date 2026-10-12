@@ -55,14 +55,52 @@ Check `/changelog`, a version permalink, and `/changelog.md` on desktop and mobi
 Sending `Accept: text/markdown` to `/changelog` returns the same Markdown document.
 The website is the runnable example; no framework API or separate example is needed.
 
+## Website design system
+
+This local visual test adapts the website components and tokens from
+[SF Interface Numbers](https://numbers.sfinterface.com): serif page titles,
+Roman-numeral section labels, specimen styling, left-aligned install commands, pill
+controls, and white code cards with a fine outline and shallow shadow. These
+patterns use the existing xmcp components; the Numbers package exports the number
+animation, not the site's component library, so no package was added.
+
+`app/design-system.css` owns the shared `--site-*` tokens: a 700px maximum reading
+column, 168px navigation rail, 48px gap between columns, 56px section spacing,
+12px cards, and Inter body text at 14px/1.55. Adhesion supplies titles and section
+indexes from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
+with font swapping.
+Docs, navigation, listings and controls share these styles in both themes. The
+xmcp wordmark and content remain; dark mode uses pure black.
+
+Shared component rules live in `app/components.css`. Docs, blog posts and homepage
+examples use the same `CodeBlock`: a single frame, 18px horizontal padding,
+wrapping source, and an always-visible Copy control that reads the current code
+when pressed. Copy feedback also reports clipboard failures. Terminal tabs follow
+the same surfaces and support Arrow keys, Home and End; syntax colors follow the
+theme. Inline code wraps without creating a horizontal scroll strip.
+
+`ContentTable` preserves table markup and adds column labels for stacked mobile
+rows. Search keeps the existing engine, shortcuts and result navigation, using
+the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
+labels and an active pill that follows the section, with motion disabled for
+reduced-motion preferences. Page actions remain below the TOC.
+
+Check `/` (open every Getting started step), `/docs/configuration/transports`,
+`/docs/configuration/server-info`, `/docs/getting-started/installation`, a blog
+post and `/templates` in light/dark themes and at 320px. Verify Copy and Copied
+feedback, search with Cmd/Ctrl+K, Arrow/Enter/Escape, empty search results,
+terminal-tab keyboard navigation, long code chips, mobile tables, and TOC links.
+
 ## Themes and interactive concepts
 
 The website follows the system theme on first visit. The header toggle selects
 light or dark and persists that preference across navigation and reloads. Keep
 both themes equally legible: shared surfaces, text, borders and focus states use
-tokens in `app/globals.css`. Shiki uses separate light and dark palettes.
+tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
+uses paper white (`#fdfdfc`). The site uses Inter for interface/body text and Adhesion for titles and section indexes.
+Shiki uses separate light and dark palettes.
 
-The homepage and the tools, resources and prompts docs include an interactive
+The tools, resources and prompts docs include an interactive
 MCP workbench. A press illustrates executing a tool, a cabinet illustrates reading
 a resource, and a printer illustrates preparing a prompt. These are local,
 illustrative demos; pressing a button does not contact a server or run a model.
@@ -75,11 +113,45 @@ separate four-tone material palettes. The geometry helpers are adapted from
 alongside `iso-kit.ts`. Use solid parts and actual attachment points when editing
 the drawing, and check occlusion in both themes.
 
-Tabs support arrow keys, Home and End. Each operation runs once, and CSS animation
-completion updates the live result. Reduced motion shows the result immediately.
-To try the runnable example, run `pnpm --filter website dev`, open `/`, select each
-concept and run its demo. Also check `/docs/core-concepts/tools`, resources and
-prompts, keyboard navigation, the theme toggle, and narrow viewports. No framework
+Tabs support arrow keys, Home and End. Click a machine (or focus it and press
+Enter/Space) to select its concept. Edit the tool's name or the prompt's code,
+then run the local demo. The resource URI is read-only. The result uses the input
+you entered; no network call is made. Drag the motion slider or use its arrow
+keys to inspect the advance, dwell, and return. At 100% the result is shown.
+Each playback runs once, with a signal traveling along the physical bus contacts;
+CSS animation completion updates the live result. Reduced motion completes
+playback immediately and leaves manual scrubbing available.
+
+The custom figure accepts figure-scoped Anatomy CSS tokens. Inline overrides
+win over the light and dark palettes, without changing other figures or the site.
+For example, in a server-rendered `page.tsx`:
+
+```tsx
+import { McpWorkbench } from "@/components/anatomy/figure";
+
+<McpWorkbench
+  tokens={{
+    "--anatomy-card": "#fafafa",
+    "--anatomy-lit": "#e5484d",
+    "--anatomy-weight": "0.8px",
+  }}
+/>;
+```
+
+Omit `tokens` to follow the site's theme. The defaults and available material
+tokens (`face`, `top`, `shade-0` through `shade-3`, `hi`, `mid`, `lo`, `faint`,
+`lit-top`, `lit-shade`, `lit`, `halo`, `card`, `weight`, `shadow`, each prefixed
+with `--anatomy-`) live together in `components/anatomy/workbench.css`.
+
+To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
+original cursor-responsive particle hero, displayed without a frame or control footer. WebGPU retains the WebGL fallback. Light mode inverts the finished
+monochrome canvas and fallback artwork, preserving the original glow and motion
+without rebuilding GPU resources on theme changes. Reduced motion uses the static
+artwork, and offscreen or hidden pages suspend animation. Check both renderers,
+GPU-unavailable fallback, theme changes, and narrow viewports.
+
+Open `/docs/core-concepts/tools`, resources and prompts to run the Anatomy demos;
+check keyboard navigation and the theme toggle there too. No framework
 API changes or separate example package are needed.
 
 ## Image performance
@@ -121,7 +193,7 @@ Compare three fresh-browser runs of `/`, `/blog`, `/blog/xmcp-v1`, `/templates`,
 Record transferred script/image bytes, LCP, CLS, and long-task blocking. Keep
 image-optimizer cache state comparable and do not benchmark while a build is
 running. Template metadata and detail content remain local. Check that the
-homepage does not load the former particle renderer, and that the AI dialog
+docs do not load the homepage particle renderer, and that the AI dialog
 loads only on first open or focus/hover. Verify both themes on desktop and mobile.
 
 ## Templates
@@ -254,16 +326,23 @@ for content changes; no framework example is needed.
 
 ## Docs navigation
 
-The docs layout spans the viewport. The article is centered in a 700px column
-between the fixed-width navigation and table of contents, shrinking to fit
-smaller screens with responsive padding.
+Docs use the same centered 700px maximum content column and left site navigation
+as every other page. On docs routes, the collapsible docs tree appears directly
+under the Documentation link. Site links and docs share one scrollable navigation
+area, with search and theme controls outside it at the foot of the rail. Focus
+indicators are inset so keyboard navigation stays visible at the scroll edges.
+Both rails use rounded hover pills and single-line labels with ellipses; page
+links retain their full accessible names and show their full labels on hover.
+The table of contents lives in the right margin and tracks headings at their
+native anchor scroll position on both docs and blog pages. Below 1200px, the site switches to its compact header and the docs
+tree is available through **Browse docs**.
 
 Docs sections and nested folders open by default. Readers can collapse them;
 navigating to a page reopens its ancestors while preserving other section choices.
 On small screens, **Browse docs** opens the keyboard-accessible navigation drawer.
-The navigation fills the available viewport below the header. Scroll-edge fades
-appear only where more content remains; padding keeps the first and last links
-fully visible, including in the mobile drawer.
+The navigation fills the available viewport below the header. Scroll-edge fades soften rows entering the viewport; padding keeps the first
+and last links fully visible. The mobile drawer fades only edges with more
+content beyond them.
 
 Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
 a docs page; unmapped pages use a document icon and explicit page icons take
@@ -293,9 +372,10 @@ runnable example; no framework API or example package changes are needed.
 
 ## Corner radii
 
-Use `rounded-lg` (8px) for bordered cards, panels, dialogs, and media, and
-`rounded-md` (6px) for buttons, inputs, tags, and inline code. Clip images to
-their card’s rounded edges; connected terminal tabs share rounded outer corners.
+Use the website system’s `--site-radius` (12px) for content cards and code
+blocks, 8px for compact controls, and fully rounded pills for category filters.
+Inline code uses 6px corners. Clip images to their card’s rounded edges; connected
+terminal tabs share rounded outer corners.
 Keep divider lines straight and circular controls circular. Preview the docs,
 showcase, templates, blog, and FAQ on desktop and mobile when changing these styles.
 
@@ -309,7 +389,8 @@ and mobile when changing dialog motion.
 
 ## Link hover
 
-Text links share the navbar’s underline animation: it draws from the left on
+Sidebar links use the same rounded hover treatment as the table of contents.
+Other text links share an underline animation: it draws from the left on
 hover or keyboard focus and retracts to the right. Use `link-underline` for text
 links, or `link-underline-group` with a `link-underline-label` span when a link
 also includes icons. Reduced-motion preferences make the state change immediate.

@@ -1,84 +1,94 @@
-import Link from "next/link";
-import {
-  FolderTree,
-  ShieldCheck,
-  Workflow,
-  SlidersHorizontal,
-  Cable,
-  Blocks,
-} from "lucide-react";
+import Image, { type StaticImageData } from "next/image";
+import Feature1 from "./feature-1.jpg";
+import Feature2 from "./feature-2.jpg";
+import Feature3 from "./feature-3.jpg";
+import Feature4 from "./feature-4.jpg";
+import Feature5 from "./feature-5.jpg";
+import Feature6 from "./feature-6.jpg";
 
-const capabilities = [
-  {
-    icon: FolderTree,
-    title: "A file is all it takes.",
-    description:
-      "Add a file. Export a function. Your tools, resources, and prompts are automatically registered.",
-    href: "/docs/getting-started/project-structure",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Access, on your terms.",
-    description:
-      "Connect your authentication provider and control who can use your server.",
-    href: "/docs/guides/authentication",
-  },
-  {
-    icon: Workflow,
-    title: "Make the request yours.",
-    description:
-      "Add authentication, logging, and custom logic with middleware in the request flow.",
-    href: "/docs/core-concepts/middlewares",
-  },
-  {
-    icon: SlidersHorizontal,
-    title: "Room to make it fit.",
-    description:
-      "Configure your server, infer input types, and choose how your project is organized.",
-    href: "/docs/configuration/server-info",
-  },
-  {
-    icon: Cable,
-    title: "Local or on the network.",
-    description:
-      "Serve over HTTP or connect through STDIO. Use the transport your clients need.",
-    href: "/docs/configuration/transports",
-  },
-  {
-    icon: Blocks,
-    title: "At home in your app.",
-    description:
-      "Bring MCP to an existing application with adapters for Next.js, Express, and more.",
-    href: "/docs/adapters/nextjs",
-  },
-];
-
-export function HomeFeatures() {
+export const HomeFeatures = () => {
   return (
-    <section className="col-span-12 py-12 md:py-16">
-      <div className="home-section-heading">
-        <div>
-          <p className="eyebrow">01 / Built for the way you work</p>
-          <h2 className="heading-2">
-            The framework around
-            <br />
-            your functions.
-          </h2>
-        </div>
-        <p>
-          Start with the code you know. Add the pieces you need as your server
-          grows.
-        </p>
+    <div id="features" className="editorial-section home-features">
+      <div className="editorial-section-head">
+        <h2>The framework</h2>
+        <span aria-hidden="true">II</span>
       </div>
-      <div className="capability-grid">
-        {capabilities.map(({ icon: Icon, ...item }) => (
-          <Link key={item.href} href={item.href}>
-            <Icon aria-hidden="true" />
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
-          </Link>
+      <p className="editorial-section-intro">
+        Everything you need to set up fast, customize with ease, and connect
+        your apps.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px] col-span-12">
+        {cards.map((card, index) => (
+          <Card key={index} {...card} />
         ))}
       </div>
-    </section>
+    </div>
   );
+};
+
+interface CardProps {
+  asset: StaticImageData;
+  title: string;
+  description: string;
 }
+
+const Card = ({ asset, title, description }: CardProps) => {
+  return (
+    <div className="editorial-feature">
+      <div className="flex items-center justify-center w-full gap-2 mb-4">
+        <Image
+          src={asset}
+          alt={title}
+          className="mx-auto feature-art"
+          width={245}
+          height={200}
+          sizes="245px"
+          placeholder="blur"
+        />
+      </div>
+      <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
+      <p className="text-brand-neutral-100 pt-1">{description}</p>
+    </div>
+  );
+};
+
+const cards = [
+  {
+    asset: Feature1,
+    title: "File System Routing",
+    description:
+      "Automatically register tools, prompts, and resources with zero configuration.",
+  },
+  {
+    asset: Feature2,
+    title: "Integrations",
+    description:
+      "Secure access with Better Auth's integration and monetize with Polar.",
+  },
+  {
+    asset: Feature3,
+    title: "Middlewares",
+    description:
+      "Add authentication, logging, or custom logic to intercept and process requests and responses.",
+  },
+  {
+    asset: Feature4,
+    title: "Extensible Configuration",
+    description:
+      "Customize every aspect of your MCP server with flexible configuration options.",
+  },
+
+  {
+    asset: Feature5,
+    title: "Multiple Transport Support",
+    description:
+      "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
+  },
+
+  {
+    asset: Feature6,
+    title: "Plug & play to your apps",
+    description:
+      "Initialize xmcp directly in your existing Next.js or Express projects with one command.",
+  },
+];

@@ -15,21 +15,12 @@ export const HomeBlog = () => {
   const posts = getListedBlogPosts().slice(0, 3);
 
   return (
-    <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="home-section-heading">
-        <div>
-          <p className="eyebrow">04 / From the field</p>
-          <h2 className="heading-2">
-            Notes on building
-            <br />
-            with MCP.
-          </h2>
-        </div>
-        <p>
-          Guides, releases, and ideas from the people building the framework.
-        </p>
+    <div id="from-the-blog" className="editorial-section home-blog">
+      <div className="editorial-section-head">
+        <h2>From the blog</h2>
+        <span aria-hidden="true">IV</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px] col-span-12">
         {posts.map((post) => (
           <BlogCard key={post.slug} post={post} />
         ))}
@@ -65,7 +56,7 @@ export const BlogCard = ({
       href={`/blog/${post.slug}`}
       className="text-left group relative overflow-visible h-full block"
     >
-      <div className="relative rounded-lg overflow-hidden border bg-surface group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="relative rounded-lg overflow-hidden border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {texture ? (
             <Image

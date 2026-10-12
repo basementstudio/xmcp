@@ -1,6 +1,6 @@
 "use client";
 import type * as PageTree from "fumadocs-core/page-tree";
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { TreeContextProvider, useTreeContext } from "fumadocs-ui/contexts/tree";
 import Link from "fumadocs-core/link";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/sheet";
 import { DocsPageIcon } from "./docs-icons";
 import { Icons } from "../icons";
+import { AnimatedLink } from "@/components/animated-link";
 
 export interface DocsLayoutProps {
   tree: PageTree.Root;
@@ -46,6 +47,50 @@ const focusRing =
   "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-white";
 const linkClassName = `flex items-center gap-2 w-full min-w-0 py-1 text-brand-neutral-100 text-sm pl-1 font-medium hover:text-brand-white ${focusRing}`;
 
+/** Rendered in the shared header so DOM order and keyboard order agree. */
+export function DocumentationNavigation({ tree }: { tree: PageTree.Root }) {
+  const pathname = usePathname();
+  const isDocs = pathname === "/docs" || pathname.startsWith("/docs/");
+  const nodes = useMemo(() => buildSidebarTree(tree.children), [tree]);
+  const { openState, toggle } = useSidebarOpenState(nodes);
+  const [section, setSection] = useState({ pathname, open: true });
+  if (section.pathname !== pathname) {
+    setSection({ pathname, open: true });
+  }
+
+  return (
+    <Collapsible
+      open={isDocs && section.open}
+      onOpenChange={(open) => setSection({ pathname, open })}
+      className="site-documentation"
+    >
+      <div className="site-documentation-heading">
+        <AnimatedLink href="/docs">Documentation</AnimatedLink>
+        {isDocs && (
+          <CollapsibleTrigger
+            aria-label={
+              section.open ? "Collapse documentation" : "Expand documentation"
+            }
+            className="site-documentation-toggle"
+          >
+            <Icons.arrowDown
+              className={cn("size-3.5", !section.open && "-rotate-90")}
+            />
+          </CollapsibleTrigger>
+        )}
+      </div>
+      <CollapsibleContent>
+        <SidebarNavigation
+          nodes={nodes}
+          openState={openState}
+          toggle={toggle}
+          embedded
+        />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 function Sidebar() {
   const { root } = useTreeContext();
   const { open, setOpen } = useSidebar();
@@ -53,7 +98,7 @@ function Sidebar() {
   const { openState, toggle } = useSidebarOpenState(nodes);
 
   useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 768px)");
+    const desktop = window.matchMedia("(min-width: 1200px)");
     const closeOnDesktop = () => {
       if (desktop.matches) setOpen(false);
     };
@@ -72,10 +117,7 @@ function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:block sticky self-start top-20 shrink-0 px-4 h-[calc(100dvh-96px)] w-[300px] min-h-0">
-        {navigation}
-      </aside>
-      <div className="md:hidden px-4">
+      <div className="docs-mobile-navigation">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
@@ -121,11 +163,13 @@ function SidebarNavigation({
   openState,
   toggle,
   onNavigate,
+  embedded = false,
 }: {
   nodes: SidebarNode[];
   openState: Record<string, boolean>;
   toggle: (id: string) => void;
-  onNavigate: () => void;
+  onNavigate?: () => void;
+  embedded?: boolean;
 }) {
   const pathname = usePathname();
   const ref = useRef<HTMLElement>(null);
@@ -133,7 +177,7 @@ function SidebarNavigation({
   useEffect(() => {
     const nav = ref.current;
     const content = nav?.firstElementChild;
-    if (!nav || !content) return;
+    if (embedded || !nav || !content) return;
 
     // Only fade edges with more content beyond them. Observe the content too,
     // since opening or closing a section changes the scrollable height.
@@ -152,7 +196,7 @@ function SidebarNavigation({
       observer.disconnect();
       nav.removeEventListener("scroll", updateEdges);
     };
-  }, []);
+  }, [embedded]);
 
   useEffect(() => {
     const nav = ref.current;
@@ -162,10 +206,12 @@ function SidebarNavigation({
       scrollIntoView(active, {
         scrollMode: "if-needed",
         block: "center",
-        boundary: nav,
+        boundary: embedded
+          ? (nav.closest(".site-navigation-scroll") ?? nav)
+          : nav,
       });
     }
-  }, [pathname]);
+  }, [pathname, embedded]);
 
   function renderItems(items: SidebarNode[]): ReactNode {
     return items.map(({ id, item, children }) => {
@@ -202,9 +248,7 @@ function SidebarNavigation({
               )}
             >
               {arrow}
-              <span className="min-w-0 break-words">
-                {item.name ?? "Section"}
-              </span>
+              <span className="min-w-0 truncate">{item.name ?? "Section"}</span>
             </CollapsibleTrigger>
           ) : (
             <div className="flex items-center gap-2">
@@ -227,14 +271,14 @@ function SidebarNavigation({
                   onNavigate={onNavigate}
                 />
               ) : (
-                <span className="min-w-0 break-words text-sm font-medium">
+                <span className="min-w-0 truncate text-sm font-medium">
                   {item.name}
                 </span>
               )}
             </div>
           )}
           <CollapsibleContent>
-            <div className="mt-1 pl-4 flex flex-col gap-1">
+            <div className="mt-1 pl-2 flex flex-col gap-1">
               {renderItems(children)}
             </div>
           </CollapsibleContent>
@@ -244,22 +288,34 @@ function SidebarNavigation({
   }
 
   return (
-    <div className="relative min-h-0 h-full flex-1">
+    <div
+      className={
+        embedded ? "docs-navigation-embedded" : "relative min-h-0 h-full flex-1"
+      }
+    >
       <nav
         ref={ref}
         aria-label="Docs"
-        className="peer sidebar-scrollbar h-full overflow-y-auto overscroll-contain scroll-py-4 px-1 text-sm"
+        className={
+          embedded
+            ? "docs-tree"
+            : "peer sidebar-scrollbar h-full overflow-y-auto overscroll-contain scroll-py-4 px-1 text-sm"
+        }
       >
-        <div className="py-4">{renderItems(nodes)}</div>
+        <div className={embedded ? "py-2" : "py-4"}>{renderItems(nodes)}</div>
       </nav>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-brand-black to-transparent opacity-0 peer-data-[scroll-top=true]:opacity-100"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-brand-black to-transparent opacity-0 peer-data-[scroll-bottom=true]:opacity-100"
-      />
+      {!embedded && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-brand-black to-transparent opacity-0 peer-data-[scroll-top=true]:opacity-100"
+        />
+      )}
+      {!embedded && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-brand-black to-transparent opacity-0 peer-data-[scroll-bottom=true]:opacity-100"
+        />
+      )}
     </div>
   );
 }
@@ -271,7 +327,7 @@ function SidebarLink({
 }: {
   item: PageTree.Item;
   pathname: string;
-  onNavigate: () => void;
+  onNavigate?: () => void;
 }) {
   const active = pathname === item.url;
   return (
@@ -285,16 +341,17 @@ function SidebarLink({
           !event.shiftKey &&
           !event.altKey
         ) {
-          onNavigate();
+          onNavigate?.();
         }
       }}
+      title={typeof item.name === "string" ? item.name : undefined}
       href={item.url}
       external={item.external}
       aria-current={active ? "page" : undefined}
       className={cn(linkClassName, active && "!text-brand-white")}
     >
       <DocsPageIcon item={item} />
-      <span className="min-w-0 break-words">{item.name}</span>
+      <span className="min-w-0 truncate">{item.name}</span>
     </Link>
   );
 }

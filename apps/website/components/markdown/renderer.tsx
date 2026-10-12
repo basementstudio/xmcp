@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
+import { ContentTable } from "./table";
 import { Code, Pre } from "./code-blocks";
 import { Callout } from "../ui/callout";
 import { Quote } from "../ui/quote";
@@ -93,6 +94,7 @@ const components = {
   // p: (props: { children: React.ReactNode }) => <p {...props} />,
   Image: RoundedImage,
   a: CustomLink,
+  table: ContentTable,
   code: Code,
   pre: Pre,
   Callout,

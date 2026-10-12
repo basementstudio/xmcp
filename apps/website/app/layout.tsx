@@ -5,7 +5,8 @@ import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,14 +16,17 @@ import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
 import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
 
-const displayFont = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const siteSans = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const siteSerif = localFont({
+  src: "./fonts/Adhesion-Regular.woff2",
+  variable: "--font-editorial-serif",
+  weight: "400",
+  style: "normal",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -109,17 +113,17 @@ export default function RootLayout({
       <head>
         <meta
           name="theme-color"
-          content="#f5f6f8"
+          content="#fdfdfc"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#111418"
+          content="#000000"
           media="(prefers-color-scheme: dark)"
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${displayFont.variable} antialiased min-h-[100dvh] flex flex-col`}
+        className={`${siteSans.variable} ${siteSerif.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <a
           href="#main-content"
