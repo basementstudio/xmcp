@@ -25,7 +25,7 @@ export function HomeHero({ version }: { version?: string }) {
     <section className="home-hero">
       <header className="editorial-masthead">
         <div className="editorial-meta">
-          <span>Open source</span>
+          <span>Latest version</span>
           <Link
             href="https://npmjs.com/package/xmcp"
             target="_blank"

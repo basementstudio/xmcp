@@ -397,17 +397,18 @@ input[type="email"] {
    way. Exclusivity (opening one closes the rest) comes from the shared
    `name` attribute on the elements themselves. */
 .site-accordion-item {
+  --accordion-duration: 320ms;
   interpolate-size: allow-keywords;
 
   &::details-content {
     block-size: 0;
     overflow: hidden;
     opacity: 0;
+    /* Keep allow-discrete in the shorthand so CSS optimization cannot reset it. */
     transition:
-      block-size 250ms ease,
-      opacity 200ms ease,
-      content-visibility 250ms;
-    transition-behavior: allow-discrete;
+      block-size var(--accordion-duration) ease-in-out,
+      opacity var(--accordion-duration) ease-in-out,
+      content-visibility var(--accordion-duration) allow-discrete;
   }
 
   &[open]::details-content {
