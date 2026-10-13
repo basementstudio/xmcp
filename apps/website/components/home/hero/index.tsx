@@ -25,11 +25,15 @@ export function HomeHero({ version }: { version?: string }) {
     <section className="home-hero">
       <header className="editorial-masthead">
         <div className="editorial-meta">
-          <Link href="https://npmjs.com/package/xmcp">
-            {version ? `xmcp · v${version}` : "xmcp · npm"}
-          </Link>
           <span>Open source</span>
-          <Link href="/docs">Get started ↗</Link>
+          <Link
+            href="https://npmjs.com/package/xmcp"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Latest xmcp version on npm (opens in a new tab)"
+          >
+            {version ? `xmcp · v${version}` : "xmcp · npm"} ↗
+          </Link>
         </div>
         <h1>The TypeScript MCP framework</h1>
       </header>
