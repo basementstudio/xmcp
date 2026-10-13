@@ -6,13 +6,13 @@
 }
 
 .shiki:not(.not-fumadocs-codeblock *) {
-  code span {
+  code span[style*="--shiki-"] {
     color: var(--shiki-light);
   }
 }
 
 .dark .shiki:not(.not-fumadocs-codeblock *) {
-  code span {
+  code span[style*="--shiki-"] {
     color: var(--shiki-dark);
   }
 }

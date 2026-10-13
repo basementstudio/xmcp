@@ -58,7 +58,7 @@ export function TemplateCard({
         className
       )}
     >
-      <article className="template-card">
+      <article className="template-card site-card-surface">
         <div className="template-preview">
           <Image
             src={previewImage.src}
@@ -77,12 +77,8 @@ export function TemplateCard({
           />
         </div>
         <div className="p-4 flex flex-col gap-3 flex-1">
-          <h3 className="text-brand-white text-[13px] font-medium">
-            {displayName}
-          </h3>
-          <p className="text-[12.5px] leading-[18px] text-brand-neutral-100">
-            {description}
-          </p>
+          <h3 className="site-card-title">{displayName}</h3>
+          <p className="site-card-description">{description}</p>
           <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
             {category && <Tag text={category} />}
             <span className="font-mono text-[10px] text-accent">

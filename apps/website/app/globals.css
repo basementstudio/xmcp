@@ -647,14 +647,7 @@ input[type="email"] {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid var(--brand-neutral-500);
-  border-radius: 8px;
   overflow: hidden;
-  background: var(--surface);
-  transition: border-color 150ms;
-}
-a:hover .template-card {
-  border-color: var(--brand-neutral-300);
 }
 /* Monochrome provider artwork follows the surrounding material palette. */
 .template-preview {

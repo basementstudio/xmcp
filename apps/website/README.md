@@ -77,12 +77,22 @@ Articles use `site-article-content`, and docs/blog share the `site-page-toc` rai
 Docs, navigation, listings and controls share these styles in both themes. The
 xmcp wordmark and content remain; dark mode uses pure black.
 
+Use the shared type roles instead of page-specific sizes: `site-description`
+for 14px/1.55 introductions, `site-section-title` for 17px section headings,
+`site-card-title` for 13px card titles, and `site-card-description` for 12.5px/18px
+card copy. Blog cards, featured posts, templates, showcase entries and homepage
+features use these same roles. Article subheadings never grow larger deeper in
+the hierarchy. `site-card-surface` supplies the shared card and theme-aware hover.
+
 Shared component rules live in `app/components.css`. Docs, blog posts and homepage
 examples use the same `CodeBlock`: a single frame, 18px horizontal padding,
 wrapping source, and an always-visible Copy control that reads the current code
 when pressed. Copy feedback also reports clipboard failures. Terminal tabs follow
-the same surfaces and support Arrow keys, Home and End; syntax colors follow the
+the same `CodeBlock` and support Arrow keys, Home and End; syntax colors follow the
 theme. Inline code wraps without creating a horizontal scroll strip.
+The homepage install command, Getting started steps, CLI prompts, showcase URLs
+and template READMEs all use this component at 13px/1.68. Command/output examples
+copy only the runnable command, while code examples copy their full source.
 
 `ContentTable` preserves table markup and adds column labels for stacked mobile
 rows. Search keeps the existing engine, shortcuts and result navigation, using

@@ -16,6 +16,13 @@
   --site-gutter: 20px;
   --site-section-gap: 56px;
   --site-radius: 12px;
+  --site-body-size: 14px;
+  --site-body-leading: 1.55;
+  --site-section-size: 17px;
+  --site-card-title-size: 13px;
+  --site-card-copy-size: 12.5px;
+  --site-code-size: 13px;
+  --site-code-leading: 1.68;
   --site-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --site-shadow: 0 0 0 1px #00000014, 0 2px 2px #0000000a;
 }
@@ -32,8 +39,8 @@
 }
 body {
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
   font-weight: 400;
   text-rendering: optimizeLegibility;
 }
@@ -156,29 +163,6 @@ body .home-hero {
 .editorial-lede p {
   margin-bottom: 12px;
 }
-.editorial-command {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  gap: 12px;
-  margin-top: 22px;
-  padding: 26px 16px;
-  border-radius: var(--site-radius);
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-}
-.editorial-command > span {
-  color: var(--site-faint);
-}
-.editorial-command button {
-  margin-left: auto;
-}
-.editorial-command code {
-  color: var(--site-ink);
-  font-size: 13px;
-  overflow-x: auto;
-}
 .editorial-section {
   margin-top: var(--site-section-gap);
   scroll-margin-top: 48px;
@@ -191,7 +175,7 @@ body .home-hero {
 }
 .editorial-section-head h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--site-section-size);
   line-height: 1.55;
   font-weight: 540;
   letter-spacing: -0.016em;
@@ -223,15 +207,6 @@ body .home-hero {
   max-height: 175px;
   width: auto;
   object-fit: contain;
-}
-.editorial-feature h3 {
-  font-size: 13px;
-  font-weight: 540;
-}
-.editorial-feature p {
-  font-size: 12.5px;
-  line-height: 18px;
-  color: var(--site-text);
 }
 .editorial-steps {
   margin-top: 24px;
@@ -269,10 +244,6 @@ body .home-hero {
   background: var(--site-card);
   box-shadow: var(--site-shadow);
   border-radius: var(--site-radius);
-}
-.editorial-steps pre {
-  font-size: 12px;
-  line-height: 19px;
 }
 body .site-header {
   background: var(--site-ground);
@@ -322,14 +293,8 @@ body .listing-intro .display {
   letter-spacing: 0;
 }
 body .listing-description {
-  font-size: 14px;
-  line-height: 1.55;
-}
-body .template-card {
-  border: 0;
-  box-shadow: var(--site-shadow);
-  border-radius: var(--site-radius);
-  background: var(--site-card);
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
 }
 body .template-preview {
   height: 160px;
@@ -347,8 +312,8 @@ body #templates-search {
 }
 body .prose p,
 body .prose li {
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
   color: var(--site-text);
 }
 body .prose h1 {
@@ -360,41 +325,18 @@ body .prose h2 {
   align-items: center;
   gap: 14px;
   margin-block: 48px 20px;
-  font-size: 14px;
-  line-height: 1.55;
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
   font-weight: 540;
 }
 
-body .prose h3 {
+body .prose :is(h3, h4, h5, h6) {
   margin-block: 28px 12px;
-  font-size: 14px;
-  line-height: 1.55;
-}
-body .prose code:not(pre code, :has(pre)) {
-  border: 0;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: var(--site-well) !important;
-  font-size: 12.5px;
-  color: var(--site-ink) !important;
-}
-body figure.shiki,
-body .not-fumadocs-codeblock {
-  border-radius: var(--site-radius);
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-  border: 0;
-}
-body figure.shiki pre,
-body .not-fumadocs-codeblock pre {
-  background: transparent;
-  font-size: 12px;
-  line-height: 19px;
-}
-body figure.shiki > div:first-child {
-  border-color: var(--site-rule);
-  color: var(--site-muted);
-  font-size: 12px;
+  font-family: inherit;
+  font-weight: 540;
+  text-transform: none;
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
 }
 body .docs-mobile-navigation {
   padding: 0;
@@ -516,11 +458,6 @@ body main > div:has(> .listing-intro) {
 .concept-card h3 span {
   color: var(--site-muted);
 }
-.concept-card p {
-  color: var(--site-text);
-  font-size: 13px;
-  line-height: 1.55;
-}
 .concept-card:hover h3 {
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -537,16 +474,7 @@ body #nd-blog-layout article h1 {
   letter-spacing: -2px;
 }
 body .prose h2 {
-  font-size: 17px;
-}
-body figure.shiki pre,
-body .not-fumadocs-codeblock pre,
-.editorial-steps pre {
-  font-size: 13px;
-  line-height: 1.68;
-}
-body .prose code:not(pre code, :has(pre)) {
-  border-radius: 6px;
+  font-size: var(--site-section-size);
 }
 @media (max-width: 640px) {
   .concept-cards {
@@ -688,4 +616,39 @@ body::before {
 }
 .site-release-meta :is(time, a) {
   margin-top: 0;
+}
+
+/* Use the same type roles in every page family. */
+.site-description {
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
+  color: var(--site-text);
+}
+.site-section-title {
+  font-size: var(--site-section-size);
+  line-height: var(--site-body-leading);
+  font-weight: 540;
+  color: var(--site-ink);
+}
+.site-card-title,
+body .prose .site-card-title {
+  font-size: var(--site-card-title-size);
+  line-height: var(--site-body-leading);
+  font-weight: 540;
+  color: var(--site-ink);
+}
+.site-card-description,
+body .prose .site-card-description {
+  font-size: var(--site-card-copy-size);
+  line-height: 18px;
+  color: var(--site-text);
+}
+.site-card-surface {
+  border-radius: var(--site-radius);
+  box-shadow: var(--site-shadow);
+  background: var(--site-card);
+  transition: background var(--site-control-quick) var(--site-control-ease);
+}
+.group:hover > .site-card-surface {
+  background: var(--site-well);
 }

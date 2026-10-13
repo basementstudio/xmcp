@@ -140,22 +140,19 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   }
 
   return (
-    <div className="site-terminal">
-      <div className="site-terminal-panel font-mono text-[13px] flex flex-col gap-3">
-        <CopyButton
-          text={step.command}
-          label
-          className="absolute top-2 right-2"
-        />
-        <div className="flex items-center gap-2">
-          <span className="text-brand-neutral-100">$</span>
-          <span className="text-brand-white">{step.command}</span>
+    <CodeBlock
+      Actions={({ className }) => (
+        <div className={className}>
+          <CopyButton text={step.command} label />
         </div>
-        <pre className="text-brand-neutral-100 whitespace-pre-wrap leading-relaxed">
-          {step.output}
-        </pre>
-      </div>
-    </div>
+      )}
+    >
+      <pre>
+        <code>{step.command}</code>
+        {"\n\n"}
+        <span className="text-brand-neutral-100">{step.output}</span>
+      </pre>
+    </CodeBlock>
   );
 };
 

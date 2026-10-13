@@ -30,9 +30,7 @@ export function TemplateDetailHeader({
             </div>
           )}
         </div>
-        <p className="text-brand-neutral-100 text-base max-w-2xl">
-          {description}
-        </p>
+        <p className="site-description">{description}</p>
       </div>
 
       <div className="flex w-full flex-wrap items-center gap-3">

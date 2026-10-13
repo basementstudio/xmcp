@@ -11,11 +11,9 @@ import { McpConnect } from "./mcp-connect";
 import { OAuthPlugins } from "./oauth-plugins";
 import { MonetizationPlugins } from "./monetization-plugins";
 
-// Account for the docs sidebar, optional table of contents, and article padding.
-const DOCS_IMAGE_SIZES =
-  "(min-width: 1440px) 796px, (min-width: 1280px) calc(100vw - 650px), (min-width: 1160px) 796px, (min-width: 768px) calc(100vw - 364px), calc(100vw - 32px)";
-export const BLOG_IMAGE_SIZES =
-  "(min-width: 1440px) 790px, (min-width: 1280px) calc(100vw - 650px), (min-width: 1024px) 796px, (min-width: 768px) calc(100vw - 112px), calc(100vw - 64px)";
+// Every article uses the same 700px column and 20px mobile gutters.
+const DOCS_IMAGE_SIZES = "(min-width: 740px) 700px, calc(100vw - 40px)";
+export const BLOG_IMAGE_SIZES = DOCS_IMAGE_SIZES;
 
 export function getMDXComponents(
   components?: MDXComponents,

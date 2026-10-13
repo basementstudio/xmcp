@@ -24,7 +24,7 @@ export function ShowcaseSubmissionCard() {
       className="col-span-12 mt-8 overflow-hidden rounded-lg border border-brand-neutral-500 bg-brand-neutral-600/40 md:mt-16"
     >
       <div className="grid md:grid-cols-[1.2fr_1fr]">
-        <div className="flex flex-col items-start p-6 md:p-8 lg:p-10">
+        <div className="flex flex-col items-start p-4">
           <span className="mb-5 inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-brand-neutral-100">
             <span
               aria-hidden="true"
@@ -34,11 +34,11 @@ export function ShowcaseSubmissionCard() {
           </span>
           <h2
             id="showcase-submission-title"
-            className="max-w-sm text-balance text-2xl font-medium leading-tight text-brand-white md:text-3xl"
+            className="site-section-title text-balance"
           >
             Showcase your MCP server
           </h2>
-          <p className="mt-4 max-w-md text-base leading-relaxed text-brand-neutral-100">
+          <p className="site-description mt-4">
             Built with xmcp? Share your server with the community and help
             others discover what it can do.
           </p>
@@ -66,7 +66,7 @@ export function ShowcaseSubmissionCard() {
             </a>
           </div>
         </div>
-        <div className="flex flex-col justify-center border-t border-brand-neutral-500 p-6 md:border-t-0 md:border-l md:p-8 lg:p-10">
+        <div className="flex flex-col justify-center border-t border-brand-neutral-500 p-4 md:border-t-0 md:border-l">
           <h3 className="mb-6 text-xs font-mono uppercase tracking-wider text-brand-neutral-100">
             How to get featured
           </h3>

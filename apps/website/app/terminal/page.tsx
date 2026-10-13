@@ -88,37 +88,20 @@ function EditableTerminal({
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent text-transparent caret-white resize-none focus:outline-none z-10"
+          className="terminal-playground-code absolute inset-0 w-full h-full p-4 bg-transparent text-transparent resize-none focus:outline-none z-10"
           aria-label="TypeScript code"
           placeholder=""
           spellCheck={false}
-          style={{
-            lineHeight: "24px",
-            fontSize: "14px",
-            fontFamily:
-              "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
-            whiteSpace: "pre-wrap",
-            wordWrap: "break-word",
-            tabSize: 2,
-          }}
         />
 
         <div
-          className="p-4 pointer-events-none [&_.shiki-pre]:!bg-transparent [&_.shiki-pre]:!p-0 [&_.shiki-pre]:!m-0 [&_.shiki-code]:!font-mono [&_.shiki-code]:!text-sm"
+          className="terminal-playground-code p-4 pointer-events-none [&_.shiki-pre]:!bg-transparent [&_.shiki-pre]:!p-0 [&_.shiki-pre]:!m-0"
           style={{
             whiteSpace: "pre-wrap",
             wordWrap: "break-word",
           }}
         >
-          <div
-            style={{
-              lineHeight: "24px",
-              fontSize: "14px",
-              fontFamily:
-                "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
-              tabSize: 2,
-            }}
-          >
+          <div>
             {highlightedCode ? (
               <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
             ) : (

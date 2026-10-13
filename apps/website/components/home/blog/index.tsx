@@ -56,7 +56,7 @@ export const BlogCard = ({
       href={`/blog/${post.slug}`}
       className="text-left group relative overflow-visible h-full block"
     >
-      <div className="relative rounded-lg overflow-hidden border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="site-card-surface relative overflow-hidden h-full min-h-[16rem] w-full flex flex-col">
         <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
           {texture ? (
             <Image
@@ -77,7 +77,7 @@ export const BlogCard = ({
         </div>
 
         <div className="flex flex-col gap-4 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <Tag text={post.category} />
             {post.date && (
               <time
@@ -93,13 +93,11 @@ export const BlogCard = ({
             )}
           </div>
 
-          <h3 className="text-base md:text-[1.125rem] text-brand-white leading-tight mt-auto">
-            {post.title}
-          </h3>
+          <h3 className="site-card-title mt-auto">{post.title}</h3>
 
           <div className="flex-1 flex flex-col justify-between">
             {post.description && (
-              <p className="text-sm text-brand-neutral-100 leading-relaxed line-clamp-3">
+              <p className="site-card-description line-clamp-3">
                 {post.description}
               </p>
             )}

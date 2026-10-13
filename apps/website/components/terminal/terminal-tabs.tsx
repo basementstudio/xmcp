@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "../../utils/cn";
-import { CopyButton } from "../ui/copy-button";
+import { CodeBlock } from "../codeblock";
 import { useState, useMemo, useId } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
@@ -90,20 +90,16 @@ export function TerminalTabs({
           </button>
         ))}
       </div>
-      <div
-        className="site-terminal-panel"
-        id={`${id}-panel`}
-        role="tabpanel"
-        aria-labelledby={`${id}-${activeTab}`}
-        tabIndex={0}
+      <CodeBlock
+        viewportProps={{
+          id: `${id}-panel`,
+          role: "tabpanel",
+          "aria-labelledby": `${id}-${activeTab}`,
+          tabIndex: 0,
+        }}
       >
         <div dangerouslySetInnerHTML={{ __html: highlightedContent }} />
-        <CopyButton
-          text={activeContent}
-          label
-          className="absolute top-2 right-2"
-        />
-      </div>
+      </CodeBlock>
     </div>
   );
 }

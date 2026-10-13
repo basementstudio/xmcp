@@ -1,7 +1,7 @@
 import { cn } from "../../../utils/cn";
 import Link from "next/link";
 import Image from "next/image";
-import { CopyButton } from "../../ui/copy-button";
+import { CodeBlock } from "../../codeblock";
 import { Tag } from "@/components/ui/tag";
 import type { ShowcaseItem } from "@/utils/content";
 
@@ -30,7 +30,7 @@ export async function ShowcaseCard({
         className
       )}
     >
-      <div className="relative rounded-lg border border-muted bg-surface p-6 group-hover:bg-black h-full min-h-[12rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
+      <div className="site-card-surface relative p-4 h-full min-h-[12rem] w-full flex flex-col">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 shrink-0 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded-md overflow-hidden">
             <Image
@@ -43,28 +43,20 @@ export async function ShowcaseCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
-              <h2 className="text-white font-medium break-words">{name}</h2>
+              <h2 className="site-card-title break-words">{name}</h2>
             </div>
           </div>
         </div>
 
         <div className="flex-1 flex flex-col justify-between">
           <div className="space-y-3 flex flex-col justify-between h-full">
-            <p className="text-sm text-brand-neutral-100 leading-relaxed">
-              {tagline}
-            </p>
+            <p className="site-card-description">{tagline}</p>
 
-            <div className="space-y-2">
-              <div className="bg-black/20 border border-white/10 rounded-md px-2 py-1 relative group/copy overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <code className="text-xs text-brand-neutral-100 font-mono whitespace-nowrap pr-8">
-                  {connection}
-                </code>
-                <CopyButton
-                  text={connection}
-                  className="absolute top-1 right-3 opacity-100 transition-opacity duration-200"
-                />
-              </div>
-            </div>
+            <CodeBlock>
+              <pre>
+                <code>{connection}</code>
+              </pre>
+            </CodeBlock>
           </div>
 
           <div className="flex items-center justify-between mt-4">

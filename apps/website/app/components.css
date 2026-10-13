@@ -169,6 +169,8 @@ body figure.shiki {
 body figure.shiki > div:first-child:not(.site-code-viewport) {
   padding-inline: 18px;
   border-color: var(--site-rule);
+  color: var(--site-muted);
+  font-size: 12px;
   min-height: 42px;
   height: auto;
   padding-block: 8px;
@@ -195,8 +197,8 @@ body .not-fumadocs-codeblock pre {
   border-radius: 0;
   box-shadow: none;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 13px;
-  line-height: 1.68;
+  font-size: var(--site-code-size);
+  line-height: var(--site-code-leading);
   text-align: left;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -423,28 +425,10 @@ body .site-terminal-tabs button:focus-visible {
   outline: 2px solid var(--site-ink);
   outline-offset: -2px;
 }
-body .site-terminal-panel {
-  position: relative;
-  padding: 40px 18px 16px;
-}
-body .site-terminal-panel pre {
+body .site-terminal > figure.shiki {
   margin: 0;
-  padding: 0;
-  border: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: transparent !important;
-  font-size: 13px;
-  line-height: 1.68;
-}
-body .site-terminal-panel .line {
-  padding-inline: 0;
-}
-body .site-terminal-panel pre span {
-  color: var(--shiki-light);
-}
-.dark body .site-terminal-panel pre span {
-  color: var(--shiki-dark);
+  border-radius: 0;
+  box-shadow: none;
 }
 @media (max-width: 640px) {
   body .prose .site-table thead {
@@ -520,8 +504,8 @@ body .prose > pre {
   box-shadow: var(--site-shadow);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font-size: 13px;
-  line-height: 1.68;
+  font-size: var(--site-code-size);
+  line-height: var(--site-code-leading);
   text-align: left;
 }
 
@@ -763,7 +747,12 @@ body .site-footer-label {
   border-radius: var(--site-radius);
   background: var(--site-card);
 }
-.terminal-playground-editor .shiki-pre {
+body .terminal-playground-code,
+body .terminal-playground-code :is(pre, code) {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: var(--site-code-size);
+  line-height: var(--site-code-leading);
+  tab-size: 2;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

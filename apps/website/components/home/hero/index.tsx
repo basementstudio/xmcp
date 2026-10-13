@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CopyButton } from "@/components/ui/copy-button";
+import { Code, Pre } from "@/components/markdown/code-blocks";
 import Shader from "./shader";
 
 const concepts = [
@@ -42,14 +42,9 @@ export function HomeHero({ version }: { version?: string }) {
         </p>
       </div>
       <Shader />
-      <div className="editorial-command">
-        <span aria-hidden="true">$</span>
-        <code>npx create-xmcp-app@latest</code>
-        <CopyButton
-          text="npx create-xmcp-app@latest"
-          className="relative top-auto right-auto shrink-0 size-6"
-        />
-      </div>
+      <Pre>
+        <Code className="language-bash">npx create-xmcp-app@latest</Code>
+      </Pre>
       <section id="concepts" className="editorial-section">
         <div className="editorial-section-head">
           <h2>Core concepts</h2>
@@ -66,11 +61,11 @@ export function HomeHero({ version }: { version?: string }) {
               href={concept.href}
               key={concept.name}
             >
-              <h3>
+              <h3 className="site-card-title">
                 {concept.name}
                 <span aria-hidden="true">↗</span>
               </h3>
-              <p>{concept.description}</p>
+              <p className="site-card-description">{concept.description}</p>
             </Link>
           ))}
         </div>

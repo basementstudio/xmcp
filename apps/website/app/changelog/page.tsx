@@ -39,7 +39,7 @@ export default function ChangelogPage() {
       <div className="listing-intro">
         <p className="eyebrow">The release log / Changelog</p>
         <h1 className="display">Changelog</h1>
-        <p className="text-brand-neutral-100 text-base mt-4">{description}</p>
+        <p className="site-description mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
           className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
@@ -58,7 +58,7 @@ export default function ChangelogPage() {
             <div className="site-release-meta">
               <h2
                 id={`release-${release.version}`}
-                className="text-xl font-mono text-brand-white"
+                className="site-section-title font-mono"
               >
                 <a
                   href={`#${releaseAnchor(release.version)}`}

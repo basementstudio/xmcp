@@ -8,7 +8,7 @@ export function RelatedTemplates({ items }: { items: TemplateItem[] }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-medium text-brand-white">Other templates</h2>
+      <h2 className="site-section-title">Other templates</h2>
       <div className="site-card-grid">
         {items.map((item) => (
           <TemplateCard

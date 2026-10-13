@@ -1,5 +1,5 @@
 import { blogSource } from "@/lib/source";
-import { DocsBody, DocsTitle } from "@/components/layout/page";
+import { DocsBody, DocsDescription, DocsTitle } from "@/components/layout/page";
 import { notFound } from "next/navigation";
 import {
   getMDXComponents,
@@ -74,9 +74,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
         )}
         <DocsTitle>{page.data.title}</DocsTitle>
         {page.data.description && (
-          <p className="text-base text-brand-neutral-50 max-w-3xl pb-1">
-            {page.data.description}
-          </p>
+          <DocsDescription>{page.data.description}</DocsDescription>
         )}
         <PostAuthors authors={authors} />
       </div>

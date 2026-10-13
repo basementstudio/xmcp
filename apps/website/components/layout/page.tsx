@@ -50,10 +50,7 @@ export function DocsDescription(props: ComponentProps<"p">) {
   if (props.children === undefined) return null;
 
   return (
-    <p
-      {...props}
-      className={cn("text-sm text-brand-neutral-50", props.className)}
-    >
+    <p {...props} className={cn("site-description", props.className)}>
       {props.children}
     </p>
   );

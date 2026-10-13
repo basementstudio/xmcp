@@ -46,8 +46,8 @@ const Card = ({ asset, title, description }: CardProps) => {
           placeholder="blur"
         />
       </div>
-      <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
-      <p className="text-brand-neutral-100 pt-1">{description}</p>
+      <h3 className="site-card-title mt-auto">{title}</h3>
+      <p className="site-card-description pt-1">{description}</p>
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { visit } from "unist-util-visit";
 import type { Root } from "hast";
+import { CodeBlock } from "@/components/codeblock";
+import { ContentTable } from "@/components/markdown/table";
 
 function safeUrl(value: unknown, baseUrl: string, image = false) {
   if (typeof value !== "string") return undefined;
@@ -44,7 +46,20 @@ export async function renderReleaseNotes(source: string, baseUrl: string) {
       node.tagName = `h${Math.min(6, Number(node.tagName[1]) - firstHeadingLevel + 3)}`;
     }
   });
-  return toJsxRuntime(tree, { Fragment, jsx, jsxs, development: false });
+  return toJsxRuntime(tree, {
+    Fragment,
+    jsx,
+    jsxs,
+    development: false,
+    components: {
+      pre: ({ children, ...props }) => (
+        <CodeBlock>
+          <pre {...props}>{children}</pre>
+        </CodeBlock>
+      ),
+      table: ContentTable,
+    },
+  });
 }
 
 export async function ReleaseNotes({
@@ -55,7 +70,7 @@ export async function ReleaseNotes({
   url: string;
 }) {
   return (
-    <div className="prose max-w-none min-w-0 [&>:first-child]:mt-0 [&_pre]:rounded-lg [&_pre]:border [&_pre]:border-brand-neutral-500 [&_pre]:p-4 [&_table]:block [&_table]:overflow-x-auto">
+    <div className="prose max-w-none min-w-0 [&>:first-child]:mt-0">
       {await renderReleaseNotes(source, url)}
     </div>
   );

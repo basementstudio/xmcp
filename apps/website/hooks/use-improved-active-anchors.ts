@@ -18,11 +18,17 @@ export function useImprovedActiveAnchors(toc: TOCItemType[]): string[] {
     const update = () => {
       frame = 0;
       let current = headings[0]?.id;
+      // A final section may be too short to reach the normal anchor inset.
+      const atBottom =
+        window.scrollY > 0 &&
+        Math.ceil(window.scrollY + window.innerHeight) >=
+          document.documentElement.scrollHeight;
       for (const heading of headings) {
         // Match native anchor positioning, including subpixel scroll rounding.
         const inset =
           parseFloat(getComputedStyle(heading).scrollMarginTop) || 0;
-        if (heading.getBoundingClientRect().top <= inset + 1)
+        const top = heading.getBoundingClientRect().top;
+        if (top <= inset + 1 || (atBottom && top < window.innerHeight))
           current = heading.id;
         else break;
       }
