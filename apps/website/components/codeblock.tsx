@@ -11,6 +11,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
+import { CodeIcon } from "@radix-ui/react-icons";
 import { describeCode } from "@/lib/code-language";
 import { cn } from "@/lib/cn";
 import { CopyButton as CustomCopyButton } from "./ui/copy-button";
@@ -162,7 +163,9 @@ export function CodeBlock({
       )}
     >
       <div className="site-code-header flex items-center gap-2 border-b border-brand-neutral-500 text-brand-neutral-100">
-        {typeof icon === "string" ? (
+        {description.label === "Shell" ? (
+          <CodeIcon aria-hidden="true" className="site-code-icon size-3.5" />
+        ) : typeof icon === "string" ? (
           <div
             aria-hidden="true"
             className="site-code-icon [&_svg]:size-3.5"

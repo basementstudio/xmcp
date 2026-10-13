@@ -97,6 +97,8 @@ Every code block has a shared header with a language badge, filename or language
 label, and Copy. Filenames and declared fence languages take precedence;
 recognizable unlabelled commands, URLs, JSON and code signatures can supply a
 label. Ambiguous snippets use “Code” rather than an invented filename.
+All Shell headers use Radix `CodeIcon`, overriding supplied Markdown icons so
+commands, shell files, and terminal tabs share the same icon.
 Single-line source scrolls horizontally below the header, including after tab
 changes. Header space is reserved in server HTML to avoid hydration shifts.
 Run the language checks with
