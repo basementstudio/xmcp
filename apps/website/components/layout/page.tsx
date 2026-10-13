@@ -58,10 +58,7 @@ export function DocsDescription(props: ComponentProps<"p">) {
 
 export function DocsTitle(props: ComponentProps<"h1">) {
   return (
-    <h1
-      {...props}
-      className={cn("text-3xl font-medium text-white", props.className)}
-    >
+    <h1 {...props} className={cn("site-page-title", props.className)}>
       {props.children}
     </h1>
   );

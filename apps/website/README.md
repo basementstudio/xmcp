@@ -66,9 +66,9 @@ animation, not the site's component library, so no package was added.
 
 `app/design-system.css` owns the shared `--site-*` tokens: a 700px maximum reading
 column, 168px navigation rail, 48px gap between columns, 56px section spacing,
-12px cards, and Inter body text at 14px/1.55. Adhesion supplies page titles from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
-with font swapping and -2px title letter spacing. EB Garamond supplies the Roman
-numerals in section labels and the table of contents.
+12px card radii, and Geist body text at 14px/20.5px. Adhesion supplies page titles from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
+with font swapping and -2px title letter spacing. EB Garamond supplies the numbers in section labels, the table of contents,
+accordions, and showcase steps.
 All pages use `site-page-grid`, including home, blogs, docs, templates, showcase,
 FAQ, changelog, telemetry, and the terminal playground: twelve
 columns inside the 700px reading column with a shared 24px gap. Their two-column
@@ -78,8 +78,8 @@ Docs, navigation, listings and controls share these styles in both themes. The
 xmcp wordmark and content remain; dark mode uses pure black.
 
 Use the shared type roles instead of page-specific sizes: `site-description`
-for 14px/1.55 introductions, `site-section-title` for 17px section headings,
-`site-card-title` for 13px card titles, and `site-card-description` for 12.5px/18px
+for 14px/20.5px introductions, `site-section-title` for 14px section headings,
+`site-card-title` for 12.5px card titles, and `site-card-description` for 12.5px/18px
 card copy. Blog cards, featured posts, templates, showcase entries and homepage
 features use these same roles. Article subheadings never grow larger deeper in
 the hierarchy. `site-card-surface` supplies the shared card and theme-aware hover.
@@ -91,10 +91,10 @@ when pressed. Copy feedback also reports clipboard failures. Terminal tabs follo
 the same `CodeBlock` and support Arrow keys, Home and End; syntax colors follow the
 theme. Inline code wraps without creating a horizontal scroll strip.
 The homepage install command, Getting started steps, CLI prompts, showcase URLs
-and template READMEs all use this component at 13px/1.68. Command/output examples
+and template READMEs all use this component at 12px/19px. Command/output examples
 copy only the runnable command, while code examples copy their full source.
 The shared code block detects single-line source, including plain text and tab
-changes, and centers Copy beside it with reserved space for wrapping on mobile.
+changes, and centers Copy beside it with reserved space for horizontal scrolling on mobile.
 
 `ContentTable` preserves table markup and adds column labels for stacked mobile
 rows. Search keeps the existing engine, shortcuts and result navigation, using
@@ -112,12 +112,10 @@ terminal-tab keyboard navigation, long code chips, mobile tables, and TOC links.
 
 The website follows the system theme on first visit. The header uses a single visible sun/moon icon to switch between light and dark,
 then persists that preference across navigation and reloads. Until a choice is
-made, changes to the system appearance also update the site. The search trigger
-uses a compact field with a platform-specific keyboard shortcut; it opens the
-existing search dialog. Keep
+made, changes to the system appearance also update the site. The search icon opens the existing search dialog, also available with Cmd/Ctrl+K. Keep
 both themes equally legible: shared surfaces, text, borders and focus states use
 tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
-uses paper white (`#fdfdfc`). The site uses Inter for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
+uses paper white (`#fdfdfc`). The site uses Geist for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
 Shiki uses separate light and dark palettes.
 
 To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
@@ -372,3 +370,38 @@ Other text links share an underline animation: it draws from the left on
 hover or keyboard focus and retracts to the right. Use `link-underline` for text
 links, or `link-underline-group` with a `link-underline-label` span when a link
 also includes icons. Reduced-motion preferences make the state change immediate.
+
+## Typography
+
+All website routes, Markdown/MDX content, template READMEs, cards, and dialogs
+share the typography tokens in `app/design-system.css`. The compact type scale
+and light-theme text palette follow [Anatomy's website](https://skills.wheresryan.sh/anatomy).
+Keep the existing layout and pure-black dark background.
+
+| Role                       | Font        | Size / line height                 | Weight    |
+| -------------------------- | ----------- | ---------------------------------- | --------- |
+| Page headline              | Adhesion    | 40px / 1.12; 34px on small screens | 500       |
+| Body and section heading   | Geist       | 14px / 20.5px                      | 450 / 550 |
+| Card title and description | Geist       | 12.5px / 18px                      | 500 / 450 |
+| Navigation and labels      | Geist       | 13px / 20px                        | 450       |
+| Captions and controls      | Geist       | 12px / 18px                        | 400–500   |
+| Code block                 | Geist Mono  | 12px / 19px                        | 400       |
+| Inline code                | Geist Mono  | 12.5px                             | 400       |
+| Section numbers            | EB Garamond | Context-sized                      | 400       |
+
+Use `site-page-title` for page headlines, `site-section-title` for section
+headings, and the shared card/body roles rather than new per-page font sizes.
+Headline tracking stays at -2px. Markdown headings use Geist; they do not
+inherit the page headline's display font.
+
+Use semantic text colors: `--site-ink` for primary text, `--site-text` for
+secondary copy, `--site-muted` for annotations, and `--site-faint` for quiet
+indicators. The light values are #171717, #525252, #8f8f8f, and #bdbdbd;
+dark equivalents are #ededed, #a3a3a3, #8f8f8f, and #525252. Existing brand
+text utilities map to these roles. Syntax highlighting and status colors
+remain distinct because they convey code structure or state.
+
+The runnable example is the website itself: `pnpm --filter website dev`.
+Review `/`, `/docs/getting-started/installation`, `/blog`, a blog article,
+`/templates`, a template detail page, `/showcase`, `/faq`, `/changelog`,
+`/telemetry`, and `/terminal` in both themes when changing these tokens.

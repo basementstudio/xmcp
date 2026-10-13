@@ -37,19 +37,19 @@ export function Quote({
   return (
     <div
       className={cn(
-        "my-6 flex flex-col gap-5 border-l border-white/70 pl-4",
+        "my-6 flex flex-col gap-5 border-l border-brand-neutral-500 pl-4",
         className
       )}
       {...props}
     >
-      <blockquote className="!my-0 !border-l-0 !pl-0 text-sm leading-[1.55] italic text-white/85 [&_p]:inline [&_p]:m-0">
+      <blockquote className="!my-0 !border-l-0 !pl-0 text-sm italic text-brand-white [&_p]:inline [&_p]:m-0">
         {"\u201c"}
         {content}
         {"\u201d"}
       </blockquote>
 
       {hasMeta && (
-        <div className="flex items-center gap-3 text-xs leading-[1.5] text-white/70">
+        <div className="flex items-center gap-3 text-xs text-brand-neutral-200">
           {avatarSrc ? (
             <span
               role="img"
@@ -58,8 +58,10 @@ export function Quote({
               style={{ backgroundImage: `url("${avatarSrc}")` }}
             />
           ) : null}
-          {name ? <span className="text-white/55">{name}</span> : null}
-          {position ? <span className="text-white/85">{position}</span> : null}
+          {name ? <span className="text-brand-neutral-200">{name}</span> : null}
+          {position ? (
+            <span className="text-brand-neutral-100">{position}</span>
+          ) : null}
         </div>
       )}
     </div>

@@ -35,7 +35,7 @@ export function HomeHero({ version }: { version?: string }) {
             {version ? `xmcp · v${version}` : "xmcp · npm"} ↗
           </Link>
         </div>
-        <h1>The TypeScript MCP framework</h1>
+        <h1 className="site-page-title">The TypeScript MCP framework</h1>
       </header>
       <div className="editorial-lede">
         <p>

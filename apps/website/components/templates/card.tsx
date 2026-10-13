@@ -75,7 +75,7 @@ export function TemplateCard({
       <p className="site-card-description">{description}</p>
       <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
         {category && <Tag text={category} />}
-        <span className="font-mono text-[10px] text-accent">
+        <span className="text-xs text-brand-neutral-100">
           {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}
         </span>
       </div>

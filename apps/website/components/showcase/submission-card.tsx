@@ -67,15 +67,13 @@ export function ShowcaseSubmissionCard() {
           </div>
         </div>
         <div className="flex flex-col justify-center border-t border-brand-neutral-500 p-4 md:border-t-0 md:border-l">
-          <h3 className="mb-6 text-xs font-mono uppercase tracking-wider text-brand-neutral-100">
-            How to get featured
-          </h3>
+          <h3 className="site-section-title mb-6">How to get featured</h3>
           <ol className="flex flex-col gap-6">
             {steps.map((step, index) => (
               <li key={step.title} className="flex gap-4">
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 font-mono text-xs leading-5 text-brand-neutral-100"
+                  className="site-step-number mt-0.5 text-xs leading-5 text-brand-neutral-100"
                 >
                   {String(index + 1).padStart(2, "0")}
                 </span>
@@ -83,7 +81,7 @@ export function ShowcaseSubmissionCard() {
                   <p className="text-sm font-medium text-brand-white">
                     {step.title}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-brand-neutral-100">
+                  <p className="mt-1 text-sm text-brand-neutral-100">
                     {step.description}
                   </p>
                 </div>

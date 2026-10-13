@@ -15,10 +15,10 @@
   --accent: var(--site-ink);
   --accent-soft: var(--site-well);
   --brand-white: var(--site-ink);
-  --brand-neutral-50: var(--site-text);
-  --brand-neutral-100: #666666;
-  --brand-neutral-200: #737373;
-  --brand-neutral-300: #929292;
+  --brand-neutral-50: var(--site-ink);
+  --brand-neutral-100: var(--site-text);
+  --brand-neutral-200: var(--site-muted);
+  --brand-neutral-300: var(--site-faint);
   --brand-neutral-400: var(--site-faint);
   --brand-neutral-500: var(--site-rule);
   --brand-neutral-600: var(--site-well);
@@ -34,10 +34,10 @@
   --accent: var(--site-ink);
   --accent-soft: var(--site-well);
   --brand-white: var(--site-ink);
-  --brand-neutral-50: var(--site-text);
-  --brand-neutral-100: #a8a8a8;
-  --brand-neutral-200: #858585;
-  --brand-neutral-300: #595959;
+  --brand-neutral-50: var(--site-ink);
+  --brand-neutral-100: var(--site-text);
+  --brand-neutral-200: var(--site-muted);
+  --brand-neutral-300: var(--site-faint);
   --brand-neutral-400: var(--site-faint);
   --brand-neutral-500: var(--site-rule);
   --brand-neutral-600: var(--site-well);
@@ -47,9 +47,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-inter);
+  --text-sm: var(--site-body-size);
+  --text-sm--line-height: var(--site-body-leading);
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --font-weight-normal: 450;
+  --font-weight-semibold: 550;
+  --font-weight-bold: 550;
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-accent: var(--accent);
@@ -147,29 +153,29 @@ html:has(#nd-blog-layout) {
 }
 
 .prose h1 {
-  @apply text-[2rem] font-medium mt-3 mb-1.5;
+  @apply mt-3 mb-1.5;
 }
 
 .prose h2 {
-  @apply text-[1.5rem] font-medium mb-2.5 mt-6;
+  @apply mb-2.5 mt-6;
 }
 
 .prose h3 {
-  @apply text-[1.25rem] font-medium mb-1 mt-6;
+  @apply mb-1 mt-6;
 }
 
 .prose h4 {
-  @apply text-[1.25rem] font-medium mb-1 mt-6;
+  @apply mb-1 mt-6;
 }
 
 .prose h5,
 .prose h6 {
-  font-size: 1.125rem;
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--site-section-size);
+  font-weight: 550;
+  line-height: var(--site-body-leading);
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  @apply font-mono uppercase;
+  font-family: var(--font-geist-sans), sans-serif;
 }
 
 .prose h1 a,
@@ -314,7 +320,7 @@ html:has(#nd-blog-layout) {
 }
 
 .prose strong {
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .prose em {

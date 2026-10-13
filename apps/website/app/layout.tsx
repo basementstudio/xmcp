@@ -5,7 +5,7 @@ import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Inter, Geist_Mono, EB_Garamond } from "next/font/google";
+import { Geist, Geist_Mono, EB_Garamond } from "next/font/google";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
@@ -16,8 +16,8 @@ import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
 import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
 
-const siteSans = Inter({
-  variable: "--font-inter",
+const siteSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 

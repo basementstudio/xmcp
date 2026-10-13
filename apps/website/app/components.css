@@ -85,7 +85,7 @@
   border-radius: 999px;
   color: var(--site-muted);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 20px;
   transition:
     color var(--site-control-quick) var(--site-control-ease),
     background var(--site-control-quick) var(--site-control-ease);
@@ -185,7 +185,7 @@ body .site-copy {
   padding: 3px 6px;
   background: var(--site-card);
   color: var(--site-muted);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
   font-size: 12px;
   line-height: 1.5;
   cursor: pointer;
@@ -263,6 +263,11 @@ body figure.shiki[data-single-line] {
     transform: translateY(-50%);
   }
 }
+body code {
+  font-family: var(--font-geist-mono), monospace;
+  font-weight: 400;
+}
+
 body figure.shiki pre,
 body .not-fumadocs-codeblock pre {
   margin: 0;
@@ -273,13 +278,17 @@ body .not-fumadocs-codeblock pre {
   box-shadow: none;
   font-family: var(--font-geist-mono), monospace;
   font-size: var(--site-code-size);
+  font-weight: 400;
   line-height: var(--site-code-leading);
   text-align: left;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-body figure.shiki pre code {
+body figure.shiki pre code,
+body .not-fumadocs-codeblock pre code {
   padding: 0;
+  font-family: inherit;
+  font-weight: inherit;
   font-size: inherit;
   line-height: inherit;
   white-space: inherit;
@@ -304,7 +313,7 @@ body .prose code:not(pre code, :has(pre)) {
   background: var(--site-well) !important;
   color: var(--site-ink) !important;
   font-family: var(--font-geist-mono), monospace;
-  font-size: 0.86em;
+  font-size: 12.5px;
   font-weight: 400;
   line-height: 1.5;
   letter-spacing: 0;
@@ -325,8 +334,8 @@ body .prose .site-table {
   width: 100%;
   margin: 0;
   border-collapse: collapse;
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
 }
 body .prose .site-table th {
   padding: 0 14px 9px 0;
@@ -359,7 +368,7 @@ body .site-chip {
   border: 0;
   padding: 5px 11px;
   font-size: 12.5px;
-  line-height: 1.4;
+  line-height: 18px;
   color: var(--site-muted);
   background: var(--site-well);
   transition:
@@ -397,7 +406,7 @@ body .site-search-header {
 }
 body .site-search-input {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: var(--site-body-leading);
   color: var(--site-ink);
 }
 body .site-search-input::placeholder {
@@ -487,7 +496,7 @@ body .site-terminal-tabs button {
   padding: 5px 12px;
   border-radius: 999px;
   font:
-    400 12.5px/1.5 var(--font-inter),
+    400 12.5px/1.5 var(--font-geist-sans),
     sans-serif;
   color: var(--site-muted);
   cursor: pointer;
@@ -536,7 +545,7 @@ body .site-terminal > figure.shiki {
     margin-bottom: 3px;
     color: var(--site-muted);
     font:
-      500 10.5px/1.5 var(--font-inter),
+      500 10.5px/1.5 var(--font-geist-sans),
       sans-serif;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -580,6 +589,7 @@ body .prose > pre {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: var(--site-code-size);
+  font-weight: 400;
   line-height: var(--site-code-leading);
   text-align: left;
 }
@@ -679,7 +689,7 @@ body .site-footer {
   grid-column: 3;
   margin: 0;
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 20px;
 }
 .site-footer-brand p span {
   display: block;
@@ -697,7 +707,7 @@ body .site-footer-label {
   border-top: 0;
   color: var(--site-ink);
   font:
-    500 12px/1.5 var(--font-inter),
+    500 12px/1.5 var(--font-geist-sans),
     sans-serif;
   letter-spacing: 0;
 }
@@ -715,7 +725,7 @@ body .site-footer-label {
   padding-block: 4px;
   border-radius: 6px;
   color: var(--site-muted);
-  line-height: 1.5;
+  line-height: 20px;
   transition: color var(--site-control-quick);
 }
 .site-footer-link > svg:last-of-type {
@@ -787,6 +797,7 @@ body .terminal-playground-code,
 body .terminal-playground-code :is(pre, code) {
   font-family: var(--font-geist-mono), monospace;
   font-size: var(--site-code-size);
+  font-weight: 400;
   line-height: var(--site-code-leading);
   tab-size: 2;
   white-space: pre-wrap;

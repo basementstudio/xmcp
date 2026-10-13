@@ -1,10 +1,10 @@
-/* Website-level primitives measured from numbers.sfinterface.com. */
+/* Anatomy typography and neutral text roles; retain the xmcp layout and surfaces. */
 :root {
   --site-ground: #fdfdfc;
-  --site-ink: #1c1c21;
-  --site-text: #2f2f2d;
-  --site-muted: #6f6f6c;
-  --site-faint: #9a9a96;
+  --site-ink: #171717;
+  --site-text: #525252;
+  --site-muted: #8f8f8f;
+  --site-faint: #bdbdbd;
   --site-rule: #11111117;
   --site-well: #1111110d;
   --site-card: #ffffff;
@@ -17,31 +17,31 @@
   --site-section-gap: 56px;
   --site-radius: 12px;
   --site-body-size: 14px;
-  --site-body-leading: 1.55;
-  --site-section-size: 17px;
-  --site-card-title-size: 13px;
+  --site-body-leading: 20.5px;
+  --site-section-size: 14px;
+  --site-card-title-size: 12.5px;
   --site-card-copy-size: 12.5px;
-  --site-code-size: 13px;
-  --site-code-leading: 1.68;
+  --site-code-size: 12px;
+  --site-code-leading: 19px;
   --site-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --site-shadow: 0 0 0 1px #00000014, 0 2px 2px #0000000a;
 }
 .dark {
   --site-ground: #000000;
-  --site-ink: #f7f7f7;
-  --site-text: #bdbdbd;
-  --site-muted: #919191;
-  --site-faint: #595959;
+  --site-ink: #ededed;
+  --site-text: #a3a3a3;
+  --site-muted: #8f8f8f;
+  --site-faint: #525252;
   --site-rule: #242424;
   --site-well: #141414;
   --site-card: #080808;
   --site-shadow: 0 0 0 1px #ffffff14, 0 1px 2px #00000033;
 }
 body {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
-  font-weight: 400;
+  font-weight: 450;
   text-rendering: optimizeLegibility;
 }
 body main {
@@ -139,11 +139,6 @@ body .home-hero {
 }
 .editorial-masthead h1 {
   margin: 0;
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 40px;
-  line-height: 1.08;
-  font-weight: 500;
-  letter-spacing: -2px;
   text-wrap: balance;
 }
 .editorial-meta {
@@ -176,9 +171,9 @@ body .home-hero {
 .editorial-section-head h2 {
   margin: 0;
   font-size: var(--site-section-size);
-  line-height: 1.55;
-  font-weight: 540;
-  letter-spacing: -0.016em;
+  line-height: var(--site-body-leading);
+  font-weight: 550;
+  letter-spacing: 0;
 }
 .editorial-section-head > span {
   order: -1;
@@ -212,6 +207,11 @@ body .home-hero {
 }
 .site-accordion-item > summary::-webkit-details-marker {
   display: none;
+}
+.site-accordion-index,
+.site-step-number {
+  font-family: var(--font-editorial-serif), Georgia, serif;
+  font-weight: 400;
 }
 .site-accordion-index {
   flex: none;
@@ -269,13 +269,11 @@ body .eyebrow {
   text-transform: none;
   color: var(--site-muted);
 }
-body .display,
-body .heading-1,
 body .heading-2 {
-  font-size: 18px;
-  line-height: 25px;
-  letter-spacing: -0.015em;
-  font-weight: 540;
+  font-size: var(--site-section-size);
+  line-height: var(--site-body-leading);
+  letter-spacing: 0;
+  font-weight: 550;
 }
 body .listing-intro {
   padding-block: 0 20px;
@@ -284,9 +282,6 @@ body .listing-intro {
 }
 body .listing-intro .display {
   margin-block: 12px;
-  font-size: 18px;
-  line-height: 25px;
-  letter-spacing: 0;
 }
 body .listing-description {
   font-size: var(--site-body-size);
@@ -296,11 +291,21 @@ body .prose p,
 body .prose li {
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
-  color: var(--site-text);
+  color: var(--site-ink);
+}
+body .prose :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--site-ink);
+  letter-spacing: 0;
+}
+body .prose :is(h1, h2, h3, h4, h5, h6) a {
+  font-family: inherit;
+  font-weight: inherit;
+  text-transform: none;
 }
 body .prose h1 {
-  font-size: 22px;
-  line-height: 28px;
+  font-size: var(--site-section-size);
+  line-height: var(--site-body-leading);
+  font-weight: 550;
 }
 body .prose h2 {
   display: flex;
@@ -309,13 +314,13 @@ body .prose h2 {
   margin-block: 48px 20px;
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
-  font-weight: 540;
+  font-weight: 550;
 }
 
 body .prose :is(h3, h4, h5, h6) {
   margin-block: 28px 12px;
   font-family: inherit;
-  font-weight: 540;
+  font-weight: 550;
   text-transform: none;
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
@@ -386,10 +391,6 @@ body .docs-navigation-embedded button {
   body .site-footer {
     width: calc(100% - 40px);
   }
-  body .editorial-masthead h1 {
-    font-size: 34px;
-    line-height: 1.08;
-  }
 }
 
 body main > div:has(> .listing-intro) {
@@ -428,7 +429,7 @@ body main > div:has(> .listing-intro) {
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  font-weight: 540;
+  font-weight: 550;
   margin-bottom: 8px;
 }
 .concept-card h3 span {
@@ -441,8 +442,7 @@ body main > div:has(> .listing-intro) {
 body .display,
 body .heading-1,
 body .listing-intro .display,
-body #nd-docs-layout > article h1,
-body #nd-blog-layout article h1 {
+body .site-page-title {
   font-family: var(--font-display), Georgia, serif;
   font-size: 40px;
   font-weight: 500;
@@ -459,8 +459,7 @@ body .prose h2 {
   body .display,
   body .heading-1,
   body .listing-intro .display,
-  body #nd-docs-layout > article h1,
-  body #nd-blog-layout article h1 {
+  body .site-page-title {
     font-size: 34px;
   }
 }
@@ -504,7 +503,7 @@ body::before {
   background: var(--site-ground);
   color: var(--site-ink);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 20px;
   text-align: left;
   cursor: pointer;
 }
@@ -533,7 +532,7 @@ body::before {
 .docs-tree button {
   padding: 4px 11px;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 20px;
 }
 .site-navigation :is(a, button):hover,
 .docs-tree a[aria-current="page"] {
@@ -609,14 +608,14 @@ body::before {
 .site-section-title {
   font-size: var(--site-section-size);
   line-height: var(--site-body-leading);
-  font-weight: 540;
+  font-weight: 550;
   color: var(--site-ink);
 }
 .site-card-title,
 body .prose .site-card-title {
   font-size: var(--site-card-title-size);
-  line-height: var(--site-body-leading);
-  font-weight: 540;
+  line-height: 18px;
+  font-weight: 500;
   color: var(--site-ink);
 }
 .site-card-description,
