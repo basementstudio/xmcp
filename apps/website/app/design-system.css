@@ -370,7 +370,7 @@ body .docs-navigation-embedded button {
   body .site-controls {
     flex-shrink: 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 10px;
     margin: 0;
     width: 100%;

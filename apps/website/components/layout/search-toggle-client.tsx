@@ -30,13 +30,11 @@ export function SearchToggleClient({
       className={cn("site-search-trigger", className)}
       aria-label="Search documentation"
       aria-haspopup="dialog"
+      aria-keyshortcuts={isWindows ? "Control+k" : "Meta+k"}
+      title={`Search documentation (${isWindows ? "Ctrl K" : "⌘ K"})`}
       onClick={() => setOpenSearch(true)}
     >
       <Icons.search className="size-4 shrink-0" aria-hidden="true" />
-      <span className="site-search-trigger-label">Search docs</span>
-      <kbd className="site-search-shortcut" aria-hidden="true">
-        {isWindows ? "Ctrl K" : "⌘ K"}
-      </kbd>
     </button>
   );
 }

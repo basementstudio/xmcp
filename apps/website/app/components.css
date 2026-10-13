@@ -91,17 +91,14 @@
     background var(--site-control-quick) var(--site-control-ease);
 }
 .site-toc-numeral {
-  position: absolute;
-  top: 6px;
-  right: calc(100% - 4px);
   flex: none;
-  width: 4.5em;
+  width: 24px;
   color: var(--site-faint);
   font:
     400 10.5px/1.5 var(--font-editorial-serif),
     Georgia,
     serif;
-  text-align: right;
+  text-align: left;
   counter-reset: toc-index var(--toc-index);
 }
 .site-toc-numeral::before {
@@ -120,8 +117,9 @@
 .site-toc-link:hover {
   background: var(--site-well);
 }
+.site-toc-link:hover .site-toc-numeral,
 .site-toc-link[aria-current] .site-toc-numeral {
-  color: var(--site-muted);
+  color: var(--site-ink);
 }
 .site-toc-link:focus-visible {
   outline: 2px solid var(--site-ink);
@@ -153,16 +151,24 @@ body .site-page-actions :is(a, button) {
   line-height: 1.5;
   padding-block: 5px;
 }
-/* Hang icons in the gutter so every rail label shares the TOC text edge. */
+/* Keep every leading element inside the rail's shared left edge. */
+body .site-page-actions :is(a, button) {
+  gap: 17px;
+}
 body .site-page-actions :is(a, button) > :first-child,
 .site-page-url > svg {
-  position: absolute;
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+body .site-page-actions :is(a, button) > :first-child svg {
+  max-width: 100%;
+  max-height: 100%;
 }
 .site-page-url {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 17px;
   margin-inline: 11px;
 }
 
@@ -578,42 +584,13 @@ body .prose > pre {
   text-align: left;
 }
 
-/* Compact rail controls share the same quiet borders and inset focus rings. */
-body .site-search-trigger {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 44px;
-  padding: 0 10px;
-  border: 1px solid var(--site-rule);
-  border-radius: 10px;
-  background: var(--site-well);
-  color: var(--site-muted);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background var(--site-control-quick),
-    color var(--site-control-quick);
-}
-.site-search-trigger-label {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-}
-.site-search-shortcut {
-  flex: none;
-  margin-left: auto;
-  color: var(--site-faint);
-  font-family: inherit;
-  font-size: 10px;
-  white-space: nowrap;
-}
+/* Search, theme, and GitHub share the same icon-button treatment. */
+body .site-search-trigger,
 body .site-theme-toggle,
 body .site-github-link {
   display: grid;
   place-items: center;
+  flex: none;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -641,6 +618,7 @@ body .site-theme-toggle > svg:first-child {
 .dark body .site-theme-toggle > svg:last-child {
   display: block;
 }
+body .site-search-trigger > svg,
 body .site-github-link > svg {
   width: 18px;
   height: 18px;
@@ -659,9 +637,6 @@ body
   outline-offset: -2px;
 }
 @media (min-width: 1200px) {
-  body .site-search-trigger {
-    width: 100%;
-  }
   body .site-controls {
     gap: 4px;
   }
@@ -669,14 +644,6 @@ body
 @media (max-width: 1199px) {
   body .site-github-link {
     display: none;
-  }
-  .site-search-trigger-label,
-  .site-search-shortcut {
-    display: none;
-  }
-  body .site-search-trigger {
-    border: 0;
-    background: transparent;
   }
 }
 
