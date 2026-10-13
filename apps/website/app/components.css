@@ -237,10 +237,17 @@ body figure.shiki .site-code-viewport {
 body figure.shiki:has(> .site-code-actions) .site-code-viewport {
   padding-top: 44px;
 }
-/* One source line shares a row with Copy; reserve room if it wraps on mobile. */
+/* Scroll long single-line commands within their own lane beside Copy. */
 body figure.shiki[data-single-line] {
   > .site-code-viewport {
-    padding: 16px 88px 16px 18px;
+    margin-right: 70px;
+    padding: 16px 18px;
+  }
+  pre {
+    width: max-content;
+    min-width: 100%;
+    white-space: pre;
+    overflow-wrap: normal;
   }
   .site-code-actions {
     position: absolute;

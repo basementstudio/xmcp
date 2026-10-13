@@ -96,7 +96,7 @@ export function CodeBlock({
         blocks.length === 1 && source.length > 0 && !source.includes("\n")
       );
       if (figure.hasAttribute("data-single-line")) {
-        // Include optional filename headers and wrapped source at narrow widths.
+        // Include optional filename headers when positioning Copy beside the code.
         const content = viewport.getBoundingClientRect();
         figure.style.setProperty(
           "--site-code-copy-y",

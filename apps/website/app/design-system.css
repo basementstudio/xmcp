@@ -301,15 +301,6 @@ body .template-preview {
   background: var(--site-ground);
   border-color: var(--site-rule);
 }
-body #templates-search {
-  min-height: 40px;
-  border-radius: 999px;
-  border: 0;
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-  color: var(--site-text);
-  font-size: 13px;
-}
 body .prose p,
 body .prose li {
   font-size: var(--site-body-size);
@@ -609,6 +600,10 @@ body::before {
   gap: var(--site-grid-gap);
   padding-block: 24px;
   border-top: 1px solid var(--site-rule);
+}
+.site-release:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 .site-release-meta {
   display: flex;

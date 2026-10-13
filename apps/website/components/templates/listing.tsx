@@ -1,13 +1,10 @@
 "use client";
 
-import { useMemo, useState, useDeferredValue } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { tagClassName } from "@/components/ui/tag";
-import { Input } from "@/components/ui/input";
-import { Icons } from "@/components/icons";
 import { cn } from "@/utils/cn";
 import { TemplateCard } from "./card";
 
@@ -24,8 +21,6 @@ export function TemplatesListing({
   categories,
   currentCategory,
 }: TemplatesListingProps) {
-  const [query, setQuery] = useState("");
-  const deferredQuery = useDeferredValue(query);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -33,35 +28,18 @@ export function TemplatesListing({
   const currentPage =
     Number.isFinite(pageParam) && pageParam >= 1 ? pageParam : 1;
 
-  const normalizedQuery = deferredQuery.trim().toLowerCase();
-
-  const filtered = useMemo(() => {
-    if (normalizedQuery.length === 0) return templates;
-    return templates.filter((item) => {
-      const haystack = [
-        item.name,
-        item.description,
-        item.category ?? "",
-        ...(item.tags ?? []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [templates, normalizedQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(templates.length / ITEMS_PER_PAGE));
   const effectivePage = Math.min(currentPage, totalPages);
-  const pageItems = filtered.slice(
+  const pageItems = templates.slice(
     (effectivePage - 1) * ITEMS_PER_PAGE,
     effectivePage * ITEMS_PER_PAGE
   );
 
-  const pageStart = filtered.length
+  const pageStart = templates.length
     ? (effectivePage - 1) * ITEMS_PER_PAGE + 1
     : 0;
-  const pageEnd = filtered.length
-    ? Math.min(effectivePage * ITEMS_PER_PAGE, filtered.length)
+  const pageEnd = templates.length
+    ? Math.min(effectivePage * ITEMS_PER_PAGE, templates.length)
     : 0;
 
   const chipHref = (category: string) =>
@@ -79,20 +57,6 @@ export function TemplatesListing({
             Quickstart guides and templates to get you started with xmcp with
             real-world implementations and best practices.
           </p>
-          <label htmlFor="templates-search" className="sr-only">
-            Search
-          </label>
-          <div className="relative mt-7 w-full max-w-[520px]">
-            <Icons.search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-brand-neutral-300" />
-            <Input
-              id="templates-search"
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search templates"
-              className="h-auto rounded-md border-brand-neutral-400 bg-brand-black p-2 pl-10 text-sm text-brand-neutral-200 shadow-none placeholder:text-brand-neutral-200 transition-colors duration-200 ease-in-out hover:bg-white/10 focus-visible:ring-0"
-            />
-          </div>
         </div>
       </div>
 
@@ -140,7 +104,7 @@ export function TemplatesListing({
 
         <div className="min-h-[60vh] flex flex-col gap-6">
           <section className="site-card-grid">
-            {filtered.length > 0 ? (
+            {templates.length > 0 ? (
               pageItems.map((item, index) => (
                 <TemplateCard
                   key={item.slug}
@@ -151,13 +115,13 @@ export function TemplatesListing({
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-brand-neutral-200 text-sm">
-                  No templates found for the current search and filters.
+                  No templates found in this category.
                 </p>
               </div>
             )}
           </section>
 
-          {filtered.length > ITEMS_PER_PAGE && (
+          {templates.length > ITEMS_PER_PAGE && (
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
               <div className="justify-self-start">
                 {effectivePage > 1 ? (
@@ -181,7 +145,7 @@ export function TemplatesListing({
                 </span>
                 <span className="hidden md:inline"> • </span>
                 <span className="block md:inline">
-                  Showing {pageStart}-{pageEnd} of {filtered.length}
+                  Showing {pageStart}-{pageEnd} of {templates.length}
                 </span>
               </p>
 
