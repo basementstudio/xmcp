@@ -292,11 +292,6 @@ body .listing-description {
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
 }
-body .template-preview {
-  height: 160px;
-  background: var(--site-ground);
-  border-color: var(--site-rule);
-}
 body .prose p,
 body .prose li {
   font-size: var(--site-body-size);
@@ -635,8 +630,8 @@ body .prose .site-card-description {
   box-shadow: var(--site-shadow);
   background: var(--site-card);
   transition:
-    background var(--site-control-quick) var(--site-control-ease),
-    box-shadow var(--site-control-quick) var(--site-control-ease);
+    background-color var(--site-control-glide) ease-in-out,
+    box-shadow var(--site-control-glide) ease-in-out;
 }
 .group:is(:hover, :focus-visible) > .site-card-surface {
   background: var(--site-well);
@@ -644,8 +639,16 @@ body .prose .site-card-description {
     0 0 0 1px color-mix(in srgb, var(--site-muted) 40%, transparent),
     0 4px 12px #0000000d;
 }
+.site-content-card:focus-visible {
+  outline: 2px solid var(--site-ink);
+  outline-offset: 4px;
+}
+.site-card-media {
+  transition: border-color var(--site-control-glide) ease-in-out;
+}
 @media (prefers-reduced-motion: reduce) {
-  .site-card-surface {
+  .site-card-surface,
+  .site-card-media {
     transition: none;
   }
 }

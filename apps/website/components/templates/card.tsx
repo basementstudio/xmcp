@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ContentCard } from "@/components/ui/content-card";
 import Image from "next/image";
 import { cn } from "../../utils/cn";
 import type { TemplateItem } from "@/app/templates/utils/content";
@@ -48,45 +48,37 @@ export function TemplateCard({
   const isExternal = linkTarget === "_blank";
 
   return (
-    <Link
+    <ContentCard
       href={linkHref}
       target={linkTarget}
       rel={isExternal ? "noopener noreferrer" : undefined}
-      className={cn(
-        "text-left group relative overflow-hidden h-full min-w-0 block",
-        isExternal ? "cursor-alias" : "cursor-pointer",
-        className
-      )}
+      className={cn(isExternal ? "cursor-alias" : "cursor-pointer", className)}
+      media={
+        <Image
+          src={previewImage.src}
+          alt={`${displayName} preview`}
+          width={1200}
+          height={630}
+          sizes="(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)"
+          unoptimized={shouldBypassImageOptimization(previewImage.src)}
+          className={cn(
+            "h-full w-full object-contain p-5",
+            previewImage.isFallback &&
+              previewImage.src !== "/templates/fallback.svg" &&
+              "template-provider-art"
+          )}
+          loading={loading}
+        />
+      }
     >
-      <article className="template-card site-card-surface">
-        <div className="template-preview">
-          <Image
-            src={previewImage.src}
-            alt={`${displayName} preview`}
-            width={1200}
-            height={630}
-            sizes="(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)"
-            unoptimized={shouldBypassImageOptimization(previewImage.src)}
-            className={cn(
-              "h-full w-full object-contain p-5",
-              previewImage.isFallback &&
-                previewImage.src !== "/templates/fallback.svg" &&
-                "template-provider-art"
-            )}
-            loading={loading}
-          />
-        </div>
-        <div className="p-4 flex flex-col gap-3 flex-1">
-          <h3 className="site-card-title">{displayName}</h3>
-          <p className="site-card-description">{description}</p>
-          <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
-            {category && <Tag text={category} />}
-            <span className="font-mono text-[10px] text-accent">
-              {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}
-            </span>
-          </div>
-        </div>
-      </article>
-    </Link>
+      <h3 className="site-card-title">{displayName}</h3>
+      <p className="site-card-description">{description}</p>
+      <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
+        {category && <Tag text={category} />}
+        <span className="font-mono text-[10px] text-accent">
+          {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}
+        </span>
+      </div>
+    </ContentCard>
   );
 }

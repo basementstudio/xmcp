@@ -644,20 +644,7 @@ input[type="email"] {
   font-size: 15px;
   line-height: 1.8;
 }
-.template-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
 /* Monochrome provider artwork follows the surrounding material palette. */
-.template-preview {
-  height: 190px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--brand-neutral-500);
-  background: var(--surface-raised);
-}
-
 .template-provider-art {
   filter: brightness(0);
   opacity: 0.65;
