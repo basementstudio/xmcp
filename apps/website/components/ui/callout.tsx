@@ -72,9 +72,7 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
       >
         <div className="flex items-center gap-2">
           {IconComponent && (
-            <span
-              className={cn("flex-shrink-0 [&_path]:fill-current", titleColor)}
-            >
+            <span className={cn("flex-shrink-0", titleColor)}>
               <IconComponent className="size-5" />
             </span>
           )}

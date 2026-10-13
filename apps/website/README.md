@@ -97,7 +97,7 @@ Every code block has a shared header with a language badge, filename or language
 label, and Copy. Filenames and declared fence languages take precedence;
 recognizable unlabelled commands, URLs, JSON and code signatures can supply a
 label. Ambiguous snippets use “Code” rather than an invented filename.
-All Shell headers use Radix `CodeIcon`, overriding supplied Markdown icons so
+All Shell headers use the shared Lucide Animated terminal `CodeIcon`, overriding supplied Markdown icons so
 commands, shell files, and terminal tabs share the same icon.
 Single-line source scrolls horizontally below the header, including after tab
 changes. Header space is reserved in server HTML to avoid hydration shifts.
@@ -113,7 +113,8 @@ the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
 labels and an active pill that follows the section, with motion disabled for
 reduced-motion preferences. Page actions remain below the TOC.
 On desktop docs, hovering over the reading column dims both sidebars with a soft
-800ms ease-in-out fade in both directions. Leaving
+800ms ease-in-out fade in both directions. The active TOC numeral and its
+highlight stay fully visible so the current section remains easy to find. Leaving
 the column or focusing a sidebar control with the keyboard restores them. This
 uses CSS without changing layout or disabling controls, stays off on touch and
 mobile layouts, and skips the fade when reduced motion is enabled.
@@ -442,17 +443,26 @@ Review `/`, `/docs/getting-started/installation`, `/blog`, a blog article,
 
 ## Icons and hover motion
 
-Import common UI icons from `components/ui/site-icons.tsx`, which wraps Radix
-Icons at 15 × 15px. Provider and brand glyphs retain their artwork and use the
-same `site-icon` size. Keep illustrations and wordmarks at their intended size;
-keep button hit areas large enough for touch.
+Import common UI icons from `components/ui/site-icons.tsx`. It maps the site's
+existing icon names to [Lucide Animated](https://lucide-animated.com/) components
+at 15 × 15px. Provider glyphs retain their artwork and the same `site-icon` size.
+Keep illustrations and wordmarks at their intended size; keep button hit areas
+large enough for touch. Information, warning, trash, and status-dot glyphs use
+static Lucide equivalents where the animated collection has no matching icon.
 
-`IconMotion` uses the existing Motion dependency (`framer-motion`) for glyph-specific gestures on button/link hover or keyboard focus: search
-zooms gently, refresh and settings turn, copy/check pulse, and arrows follow their
-direction. Gestures last 550ms with a 350ms return. Brand marks remain still. Delegated events cover route changes and portalled dialogs without a
-client boundary on every icon. Motion transforms preserve CSS chevron rotation; loading spinners are excluded. Touch and reduced-motion users get static
-icons. Preview search, theme, copy, menus, and footer links with
-`pnpm --filter website dev`.
+The vendored components in `components/ui/lucide-animated` retain the author's
+paths, variants, and timings, using the existing `framer-motion` dependency.
+See that directory's README and MIT license for provenance and local adaptations.
+`icon-interaction.ts` connects their animation handles to the nearest button or
+link's hover and keyboard focus. Touch, disabled controls, and reduced-motion
+preferences do not trigger hover animations. Loading spinners keep their existing
+loading behavior. Cleanup resets icons immediately, including when reduced motion
+is enabled during an animation. There is no global transform applied to icons.
+
+Run `pnpm --filter website dev` and open `/` and
+`/docs/getting-started/installation`. Hover and keyboard-focus search, theme,
+GitHub, sidebar links, and code-copy buttons. Check both themes, the 15px sizing,
+copy feedback, and reduced-motion behavior.
 
 ## Persistent homepage scene
 

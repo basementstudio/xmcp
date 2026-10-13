@@ -53,18 +53,41 @@
   --site-control-glide: 360ms;
   --site-reading-fade: 800ms;
 }
-/* Reading focus belongs to desktop docs, where both rails are visible.
-   Keyboard focus in either rail takes precedence over a parked pointer. */
+/* Fade TOC text individually: parent opacity would also dim the active
+   numeral, which must remain a clear reading-position marker. */
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
   body:has(#nd-docs-layout > .site-article:hover):not(
       :has(.site-header :focus-visible, .docs-toc :focus-visible)
-    )
-    :is(.site-header, .docs-toc) {
-    opacity: 0.35;
+    ) {
+    --site-reading-opacity: 0.35;
+  }
+
+  body:has(#nd-docs-layout)
+    :is(
+      .site-header,
+      .docs-toc .site-toc-label,
+      .docs-toc .site-toc-name,
+      .docs-toc .site-toc-numeral,
+      .docs-toc .site-page-actions
+    ) {
+    opacity: var(--site-reading-opacity, 1);
+  }
+  body:has(#nd-docs-layout)
+    .docs-toc
+    .site-toc-link[aria-current="location"]
+    .site-toc-numeral {
+    opacity: 1;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    body:has(#nd-docs-layout) :is(.site-header, .docs-toc) {
+    body:has(#nd-docs-layout)
+      :is(
+        .site-header,
+        .docs-toc .site-toc-label,
+        .docs-toc .site-toc-name,
+        .docs-toc .site-toc-numeral,
+        .docs-toc .site-page-actions
+      ) {
       transition: opacity var(--site-reading-fade) ease-in-out;
     }
   }
@@ -221,9 +244,6 @@ body .site-copy:hover {
 }
 body .site-copy:active {
   transform: scale(0.94);
-}
-body .site-copy svg path {
-  fill: currentColor;
 }
 body .site-copy:focus-visible {
   outline: 2px solid var(--site-ink);

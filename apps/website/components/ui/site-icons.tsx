@@ -1,70 +1,83 @@
-import type { ComponentProps } from "react";
-import {
-  ArchiveIcon as RadixArchiveIcon,
-  ArrowLeftIcon as RadixArrowLeftIcon,
-  ArrowRightIcon as RadixArrowRightIcon,
-  ArrowTopRightIcon as RadixArrowTopRightIcon,
-  AvatarIcon as RadixAvatarIcon,
-  BarChartIcon as RadixBarChartIcon,
-  CardStackPlusIcon as RadixCardStackPlusIcon,
-  ChatBubbleIcon as RadixChatBubbleIcon,
-  CheckCircledIcon as RadixCheckCircledIcon,
-  CheckIcon as RadixCheckIcon,
-  ChevronDownIcon as RadixChevronDownIcon,
-  ChevronLeftIcon as RadixChevronLeftIcon,
-  ChevronRightIcon as RadixChevronRightIcon,
-  ClockIcon as RadixClockIcon,
-  CodeIcon as RadixCodeIcon,
-  ColorWheelIcon as RadixColorWheelIcon,
-  Component2Icon as RadixComponent2Icon,
-  CopyIcon as RadixCopyIcon,
-  Cross2Icon as RadixCross2Icon,
-  CubeIcon as RadixCubeIcon,
-  DiscordLogoIcon as RadixDiscordLogoIcon,
-  DotFilledIcon as RadixDotFilledIcon,
-  DownloadIcon as RadixDownloadIcon,
-  ExclamationTriangleIcon as RadixExclamationTriangleIcon,
-  ExternalLinkIcon as RadixExternalLinkIcon,
-  FileTextIcon as RadixFileTextIcon,
-  GearIcon as RadixGearIcon,
-  GitHubLogoIcon as RadixGitHubLogoIcon,
-  GlobeIcon as RadixGlobeIcon,
-  GroupIcon as RadixGroupIcon,
-  HamburgerMenuIcon as RadixHamburgerMenuIcon,
-  HomeIcon as RadixHomeIcon,
-  IdCardIcon as RadixIdCardIcon,
-  InfoCircledIcon as RadixInfoCircledIcon,
-  LayersIcon as RadixLayersIcon,
-  LightningBoltIcon as RadixLightningBoltIcon,
-  Link2Icon as RadixLink2Icon,
-  ListBulletIcon as RadixListBulletIcon,
-  LockClosedIcon as RadixLockClosedIcon,
-  MagicWandIcon as RadixMagicWandIcon,
-  MagnifyingGlassIcon as RadixMagnifyingGlassIcon,
-  MoonIcon as RadixMoonIcon,
-  PaperPlaneIcon as RadixPaperPlaneIcon,
-  PersonIcon as RadixPersonIcon,
-  PlayIcon as RadixPlayIcon,
-  ReloadIcon as RadixReloadIcon,
-  RocketIcon as RadixRocketIcon,
-  SunIcon as RadixSunIcon,
-  TimerIcon as RadixTimerIcon,
-  TokensIcon as RadixTokensIcon,
-  TrashIcon as RadixTrashIcon,
-  UpdateIcon as RadixUpdateIcon,
-} from "@radix-ui/react-icons";
+"use client";
 
-// Keep icons server-renderable; the shared Motion controller handles interactions.
-function siteIcon(Icon: typeof RadixCodeIcon, name: string) {
-  return function SiteIcon({
-    className,
-    ...props
-  }: ComponentProps<typeof RadixCodeIcon>) {
+import type { ComponentType, Ref, RefAttributes, SVGAttributes } from "react";
+import { useEffect, useRef } from "react";
+import { Circle, TriangleAlert, Info, Trash2 } from "lucide-react";
+import { bindIconInteraction, type IconAnimation } from "./icon-interaction";
+import { AlignLeftIcon as AnimatedAlignLeftIcon } from "./lucide-animated/align-left";
+import { ArchiveIcon as AnimatedArchiveIcon } from "./lucide-animated/archive";
+import { ArrowLeftIcon as AnimatedArrowLeftIcon } from "./lucide-animated/arrow-left";
+import { ArrowRightIcon as AnimatedArrowRightIcon } from "./lucide-animated/arrow-right";
+import { ArrowUpRightIcon as AnimatedArrowUpRightIcon } from "./lucide-animated/arrow-up-right";
+import { BinaryIcon as AnimatedBinaryIcon } from "./lucide-animated/binary";
+import { BlocksIcon as AnimatedBlocksIcon } from "./lucide-animated/blocks";
+import { BoxIcon as AnimatedBoxIcon } from "./lucide-animated/box";
+import { ChartNoAxesColumnIncreasingIcon as AnimatedChartNoAxesColumnIncreasingIcon } from "./lucide-animated/chart-no-axes-column-increasing";
+import { CheckIcon as AnimatedCheckIcon } from "./lucide-animated/check";
+import { ChevronDownIcon as AnimatedChevronDownIcon } from "./lucide-animated/chevron-down";
+import { ChevronLeftIcon as AnimatedChevronLeftIcon } from "./lucide-animated/chevron-left";
+import { ChevronRightIcon as AnimatedChevronRightIcon } from "./lucide-animated/chevron-right";
+import { CircleCheckIcon as AnimatedCircleCheckIcon } from "./lucide-animated/circle-check";
+import { ClockIcon as AnimatedClockIcon } from "./lucide-animated/clock";
+import { CopyIcon as AnimatedCopyIcon } from "./lucide-animated/copy";
+import { DiscordIcon as AnimatedDiscordIcon } from "./lucide-animated/discord";
+import { DownloadIcon as AnimatedDownloadIcon } from "./lucide-animated/download";
+import { EarthIcon as AnimatedEarthIcon } from "./lucide-animated/earth";
+import { ExternalLinkIcon as AnimatedExternalLinkIcon } from "./lucide-animated/external-link";
+import { FileTextIcon as AnimatedFileTextIcon } from "./lucide-animated/file-text";
+import { GithubIcon as AnimatedGithubIcon } from "./lucide-animated/github";
+import { HomeIcon as AnimatedHomeIcon } from "./lucide-animated/home";
+import { IdCardIcon as AnimatedIdCardIcon } from "./lucide-animated/id-card";
+import { LayersIcon as AnimatedLayersIcon } from "./lucide-animated/layers";
+import { Link2Icon as AnimatedLink2Icon } from "./lucide-animated/link-2";
+import { LoaderCircleIcon as AnimatedLoaderCircleIcon } from "./lucide-animated/loader-circle";
+import { LockKeyholeIcon as AnimatedLockKeyholeIcon } from "./lucide-animated/lock-keyhole";
+import { MenuIcon as AnimatedMenuIcon } from "./lucide-animated/menu";
+import { MessageCircleIcon as AnimatedMessageCircleIcon } from "./lucide-animated/message-circle";
+import { MoonIcon as AnimatedMoonIcon } from "./lucide-animated/moon";
+import { PaletteIcon as AnimatedPaletteIcon } from "./lucide-animated/palette";
+import { PlayIcon as AnimatedPlayIcon } from "./lucide-animated/play";
+import { RefreshCWIcon as AnimatedRefreshCWIcon } from "./lucide-animated/refresh-cw";
+import { RocketIcon as AnimatedRocketIcon } from "./lucide-animated/rocket";
+import { SearchIcon as AnimatedSearchIcon } from "./lucide-animated/search";
+import { SendIcon as AnimatedSendIcon } from "./lucide-animated/send";
+import { SettingsIcon as AnimatedSettingsIcon } from "./lucide-animated/settings";
+import { SparklesIcon as AnimatedSparklesIcon } from "./lucide-animated/sparkles";
+import { SquareStackIcon as AnimatedSquareStackIcon } from "./lucide-animated/square-stack";
+import { SunIcon as AnimatedSunIcon } from "./lucide-animated/sun";
+import { TerminalIcon as AnimatedTerminalIcon } from "./lucide-animated/terminal";
+import { TimerIcon as AnimatedTimerIcon } from "./lucide-animated/timer";
+import { UserIcon as AnimatedUserIcon } from "./lucide-animated/user";
+import { UsersRoundIcon as AnimatedUsersRoundIcon } from "./lucide-animated/users-round";
+import { XIcon as AnimatedXIcon } from "./lucide-animated/x";
+import { ZapIcon as AnimatedZapIcon } from "./lucide-animated/zap";
+
+type IconProps = SVGAttributes<SVGSVGElement>;
+type AnimatedIcon = ComponentType<
+  IconProps & {
+    size?: number;
+    svgRef?: Ref<SVGSVGElement>;
+  } & RefAttributes<IconAnimation>
+>;
+
+// Preserve the site's SVG interface and layout while using the upstream motion.
+function siteIcon(Icon: AnimatedIcon, name: string) {
+  return function SiteIcon({ className, ...props }: IconProps) {
+    const svg = useRef<SVGSVGElement>(null);
+    const animation = useRef<IconAnimation>(null);
+    useEffect(() => {
+      if (!svg.current || !animation.current) return;
+      return bindIconInteraction(svg.current, animation.current);
+    }, []);
     return (
       <Icon
         aria-hidden="true"
         {...props}
+        ref={animation}
+        svgRef={svg}
         data-icon={name}
+        data-icon-library="lucide-animated"
+        size={15}
         width={15}
         height={15}
         className={`site-icon ${className ?? ""}`}
@@ -73,94 +86,118 @@ function siteIcon(Icon: typeof RadixCodeIcon, name: string) {
   };
 }
 
-export const ArchiveIcon = siteIcon(RadixArchiveIcon, "ArchiveIcon");
-export const ArrowLeftIcon = siteIcon(RadixArrowLeftIcon, "ArrowLeftIcon");
-export const ArrowRightIcon = siteIcon(RadixArrowRightIcon, "ArrowRightIcon");
+// Keep semantic glyphs where Lucide Animated does not yet offer an equivalent.
+function staticIcon(
+  Icon: ComponentType<IconProps>,
+  name: string,
+  filled = false
+) {
+  return function SiteIcon({ className, ...props }: IconProps) {
+    return (
+      <Icon
+        aria-hidden="true"
+        {...props}
+        data-icon={name}
+        width={15}
+        height={15}
+        fill={filled ? "currentColor" : "none"}
+        className={`site-icon ${className ?? ""}`}
+      />
+    );
+  };
+}
+
+export const ArchiveIcon = siteIcon(AnimatedArchiveIcon, "ArchiveIcon");
+export const ArrowLeftIcon = siteIcon(AnimatedArrowLeftIcon, "ArrowLeftIcon");
+export const ArrowRightIcon = siteIcon(
+  AnimatedArrowRightIcon,
+  "ArrowRightIcon"
+);
 export const ArrowTopRightIcon = siteIcon(
-  RadixArrowTopRightIcon,
+  AnimatedArrowUpRightIcon,
   "ArrowTopRightIcon"
 );
-export const AvatarIcon = siteIcon(RadixAvatarIcon, "AvatarIcon");
-export const BarChartIcon = siteIcon(RadixBarChartIcon, "BarChartIcon");
+export const AvatarIcon = siteIcon(AnimatedUserIcon, "AvatarIcon");
+export const BarChartIcon = siteIcon(
+  AnimatedChartNoAxesColumnIncreasingIcon,
+  "BarChartIcon"
+);
 export const CardStackPlusIcon = siteIcon(
-  RadixCardStackPlusIcon,
+  AnimatedSquareStackIcon,
   "CardStackPlusIcon"
 );
-export const ChatBubbleIcon = siteIcon(RadixChatBubbleIcon, "ChatBubbleIcon");
+export const ChatBubbleIcon = siteIcon(
+  AnimatedMessageCircleIcon,
+  "ChatBubbleIcon"
+);
 export const CheckCircledIcon = siteIcon(
-  RadixCheckCircledIcon,
+  AnimatedCircleCheckIcon,
   "CheckCircledIcon"
 );
-export const CheckIcon = siteIcon(RadixCheckIcon, "CheckIcon");
+export const CheckIcon = siteIcon(AnimatedCheckIcon, "CheckIcon");
 export const ChevronDownIcon = siteIcon(
-  RadixChevronDownIcon,
+  AnimatedChevronDownIcon,
   "ChevronDownIcon"
 );
 export const ChevronLeftIcon = siteIcon(
-  RadixChevronLeftIcon,
+  AnimatedChevronLeftIcon,
   "ChevronLeftIcon"
 );
 export const ChevronRightIcon = siteIcon(
-  RadixChevronRightIcon,
+  AnimatedChevronRightIcon,
   "ChevronRightIcon"
 );
-export const ClockIcon = siteIcon(RadixClockIcon, "ClockIcon");
-export const CodeIcon = siteIcon(RadixCodeIcon, "CodeIcon");
-export const ColorWheelIcon = siteIcon(RadixColorWheelIcon, "ColorWheelIcon");
-export const Component2Icon = siteIcon(RadixComponent2Icon, "Component2Icon");
-export const CopyIcon = siteIcon(RadixCopyIcon, "CopyIcon");
-export const Cross2Icon = siteIcon(RadixCross2Icon, "Cross2Icon");
-export const CubeIcon = siteIcon(RadixCubeIcon, "CubeIcon");
-export const DiscordLogoIcon = siteIcon(
-  RadixDiscordLogoIcon,
-  "DiscordLogoIcon"
-);
-export const DotFilledIcon = siteIcon(RadixDotFilledIcon, "DotFilledIcon");
-export const DownloadIcon = siteIcon(RadixDownloadIcon, "DownloadIcon");
-export const ExclamationTriangleIcon = siteIcon(
-  RadixExclamationTriangleIcon,
-  "ExclamationTriangleIcon"
-);
+export const ClockIcon = siteIcon(AnimatedClockIcon, "ClockIcon");
+export const CodeIcon = siteIcon(AnimatedTerminalIcon, "CodeIcon");
+export const ColorWheelIcon = siteIcon(AnimatedPaletteIcon, "ColorWheelIcon");
+export const Component2Icon = siteIcon(AnimatedBlocksIcon, "Component2Icon");
+export const CopyIcon = siteIcon(AnimatedCopyIcon, "CopyIcon");
+export const Cross2Icon = siteIcon(AnimatedXIcon, "Cross2Icon");
+export const CubeIcon = siteIcon(AnimatedBoxIcon, "CubeIcon");
+export const DiscordLogoIcon = siteIcon(AnimatedDiscordIcon, "DiscordLogoIcon");
+export const DownloadIcon = siteIcon(AnimatedDownloadIcon, "DownloadIcon");
 export const ExternalLinkIcon = siteIcon(
-  RadixExternalLinkIcon,
+  AnimatedExternalLinkIcon,
   "ExternalLinkIcon"
 );
-export const FileTextIcon = siteIcon(RadixFileTextIcon, "FileTextIcon");
-export const GearIcon = siteIcon(RadixGearIcon, "GearIcon");
-export const GitHubLogoIcon = siteIcon(RadixGitHubLogoIcon, "GitHubLogoIcon");
-export const GlobeIcon = siteIcon(RadixGlobeIcon, "GlobeIcon");
-export const GroupIcon = siteIcon(RadixGroupIcon, "GroupIcon");
+export const FileTextIcon = siteIcon(AnimatedFileTextIcon, "FileTextIcon");
+export const GearIcon = siteIcon(AnimatedSettingsIcon, "GearIcon");
+export const GitHubLogoIcon = siteIcon(AnimatedGithubIcon, "GitHubLogoIcon");
+export const GlobeIcon = siteIcon(AnimatedEarthIcon, "GlobeIcon");
+export const GroupIcon = siteIcon(AnimatedUsersRoundIcon, "GroupIcon");
 export const HamburgerMenuIcon = siteIcon(
-  RadixHamburgerMenuIcon,
+  AnimatedMenuIcon,
   "HamburgerMenuIcon"
 );
-export const HomeIcon = siteIcon(RadixHomeIcon, "HomeIcon");
-export const IdCardIcon = siteIcon(RadixIdCardIcon, "IdCardIcon");
-export const InfoCircledIcon = siteIcon(
-  RadixInfoCircledIcon,
-  "InfoCircledIcon"
+export const HomeIcon = siteIcon(AnimatedHomeIcon, "HomeIcon");
+export const IdCardIcon = siteIcon(AnimatedIdCardIcon, "IdCardIcon");
+export const LayersIcon = siteIcon(AnimatedLayersIcon, "LayersIcon");
+export const LightningBoltIcon = siteIcon(AnimatedZapIcon, "LightningBoltIcon");
+export const Link2Icon = siteIcon(AnimatedLink2Icon, "Link2Icon");
+export const ListBulletIcon = siteIcon(AnimatedAlignLeftIcon, "ListBulletIcon");
+export const LockClosedIcon = siteIcon(
+  AnimatedLockKeyholeIcon,
+  "LockClosedIcon"
 );
-export const LayersIcon = siteIcon(RadixLayersIcon, "LayersIcon");
-export const LightningBoltIcon = siteIcon(
-  RadixLightningBoltIcon,
-  "LightningBoltIcon"
-);
-export const Link2Icon = siteIcon(RadixLink2Icon, "Link2Icon");
-export const ListBulletIcon = siteIcon(RadixListBulletIcon, "ListBulletIcon");
-export const LockClosedIcon = siteIcon(RadixLockClosedIcon, "LockClosedIcon");
-export const MagicWandIcon = siteIcon(RadixMagicWandIcon, "MagicWandIcon");
+export const MagicWandIcon = siteIcon(AnimatedSparklesIcon, "MagicWandIcon");
 export const MagnifyingGlassIcon = siteIcon(
-  RadixMagnifyingGlassIcon,
+  AnimatedSearchIcon,
   "MagnifyingGlassIcon"
 );
-export const MoonIcon = siteIcon(RadixMoonIcon, "MoonIcon");
-export const PaperPlaneIcon = siteIcon(RadixPaperPlaneIcon, "PaperPlaneIcon");
-export const PersonIcon = siteIcon(RadixPersonIcon, "PersonIcon");
-export const PlayIcon = siteIcon(RadixPlayIcon, "PlayIcon");
-export const ReloadIcon = siteIcon(RadixReloadIcon, "ReloadIcon");
-export const RocketIcon = siteIcon(RadixRocketIcon, "RocketIcon");
-export const SunIcon = siteIcon(RadixSunIcon, "SunIcon");
-export const TimerIcon = siteIcon(RadixTimerIcon, "TimerIcon");
-export const TokensIcon = siteIcon(RadixTokensIcon, "TokensIcon");
-export const TrashIcon = siteIcon(RadixTrashIcon, "TrashIcon");
-export const UpdateIcon = siteIcon(RadixUpdateIcon, "UpdateIcon");
+export const MoonIcon = siteIcon(AnimatedMoonIcon, "MoonIcon");
+export const PaperPlaneIcon = siteIcon(AnimatedSendIcon, "PaperPlaneIcon");
+export const PersonIcon = siteIcon(AnimatedUserIcon, "PersonIcon");
+export const PlayIcon = siteIcon(AnimatedPlayIcon, "PlayIcon");
+export const ReloadIcon = siteIcon(AnimatedRefreshCWIcon, "ReloadIcon");
+export const RocketIcon = siteIcon(AnimatedRocketIcon, "RocketIcon");
+export const SunIcon = siteIcon(AnimatedSunIcon, "SunIcon");
+export const TimerIcon = siteIcon(AnimatedTimerIcon, "TimerIcon");
+export const TokensIcon = siteIcon(AnimatedBinaryIcon, "TokensIcon");
+export const UpdateIcon = siteIcon(AnimatedLoaderCircleIcon, "UpdateIcon");
+export const DotFilledIcon = staticIcon(Circle, "DotFilledIcon", true);
+export const ExclamationTriangleIcon = staticIcon(
+  TriangleAlert,
+  "ExclamationTriangleIcon"
+);
+export const InfoCircledIcon = staticIcon(Info, "InfoCircledIcon");
+export const TrashIcon = staticIcon(Trash2, "TrashIcon");
