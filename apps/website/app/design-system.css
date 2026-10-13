@@ -138,7 +138,7 @@ body .home-hero {
   padding: 0;
 }
 .editorial-masthead h1 {
-  margin: 0 0 12px;
+  margin: 0;
   font-family: var(--font-display), Georgia, serif;
   font-size: 40px;
   line-height: 1.08;
@@ -150,7 +150,7 @@ body .home-hero {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
-  margin-top: 14px;
+  margin-bottom: 14px;
   color: var(--site-muted);
   font-size: 13px;
 }
@@ -211,11 +211,11 @@ body .home-hero {
 .editorial-steps {
   margin-top: 24px;
 }
-.editorial-steps details {
+.site-accordion-item {
   border-top: 1px solid var(--site-rule);
   padding-block: 12px;
 }
-.editorial-steps summary {
+.site-accordion-item > summary {
   display: flex;
   gap: 14px;
   align-items: center;
@@ -223,27 +223,36 @@ body .home-hero {
   list-style: none;
   font-size: 13px;
 }
-.editorial-steps summary::-webkit-details-marker {
+.site-accordion-item > summary::-webkit-details-marker {
   display: none;
 }
-.editorial-steps summary > span {
+.site-accordion-index {
+  flex: none;
   color: var(--site-muted);
   font-variant-numeric: tabular-nums;
 }
-.editorial-steps summary::after {
+.site-accordion-item > summary::after {
   content: "+";
+  flex: none;
   margin-left: auto;
   color: var(--site-muted);
 }
-.editorial-steps details[open] summary::after {
+.site-accordion-item[open] > summary::after {
   content: "−";
 }
-.editorial-steps details > div {
-  margin-block: 16px 4px;
-  border: 0;
-  background: var(--site-card);
-  box-shadow: var(--site-shadow);
-  border-radius: var(--site-radius);
+.site-accordion-item > summary h2 {
+  margin: 0;
+  font: inherit;
+}
+.site-accordion-answer {
+  margin: 16px 0 4px;
+  color: var(--site-text);
+  font-size: var(--site-body-size);
+  line-height: var(--site-body-leading);
+}
+.site-listing > .site-accordion > .site-accordion-item:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 body .site-header {
   background: var(--site-ground);

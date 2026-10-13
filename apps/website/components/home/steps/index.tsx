@@ -6,6 +6,7 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
 import { CodeBlock } from "@/components/codeblock";
+import { AccordionItem } from "@/components/ui/accordion-item";
 import { CopyButton } from "@/components/ui/copy-button";
 import {
   XMCP_SHIKI_THEME_NAME,
@@ -165,13 +166,15 @@ export const HomeSteps = () => (
     <p>From a new project to a running server in four steps.</p>
     <div className="editorial-steps">
       {steps.map((step) => (
-        <details key={step.id} open={step.id === 1}>
-          <summary>
-            <span>{String(step.id).padStart(2, "0")}</span>
-            {step.title}
-          </summary>
+        <AccordionItem
+          key={step.id}
+          name="getting-started"
+          index={step.id}
+          title={step.title}
+          open={step.id === 1}
+        >
           <Terminal step={step} />
-        </details>
+        </AccordionItem>
       ))}
     </div>
   </section>

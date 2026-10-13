@@ -390,13 +390,13 @@ input[type="email"] {
   }
 }
 
-/* FAQ dropdowns. Animating a <details> needs ::details-content plus
+/* Shared accordions. Animating a <details> needs ::details-content plus
    interpolate-size, because the closed height is a keyword, not a length.
    Browsers without those features toggle instantly, which is why the effect
    lives here instead of in JS — the answers stay in the initial HTML either
    way. Exclusivity (opening one closes the rest) comes from the shared
    `name` attribute on the elements themselves. */
-.faq-item {
+.site-accordion-item {
   interpolate-size: allow-keywords;
 
   &::details-content {
@@ -417,7 +417,7 @@ input[type="email"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faq-item::details-content {
+  .site-accordion-item::details-content {
     transition-duration: 0s;
   }
 }
