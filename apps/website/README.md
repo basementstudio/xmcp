@@ -95,12 +95,18 @@ and template READMEs all use this component at 12px/19px. Command/output example
 copy only the runnable command, while code examples copy their full source.
 The shared code block detects single-line source, including plain text and tab
 changes, and centers Copy beside it with reserved space for horizontal scrolling on mobile.
+Markdown commands receive their single-line layout in the server HTML so the
+homepage install block does not shrink and move content when JavaScript loads.
 
 `ContentTable` preserves table markup and adds column labels for stacked mobile
 rows. Search keeps the existing engine, shortcuts and result navigation, using
 the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
 labels and an active pill that follows the section, with motion disabled for
 reduced-motion preferences. Page actions remain below the TOC.
+On desktop docs, hovering over the reading column dims both sidebars. Leaving
+the column or focusing a sidebar control with the keyboard restores them. This
+uses CSS without changing layout or disabling controls, stays off on touch and
+mobile layouts, and skips the fade when reduced motion is enabled.
 
 Check `/` (open every Getting started step), `/docs/configuration/transports`,
 `/docs/configuration/server-info`, `/docs/getting-started/installation`, a blog

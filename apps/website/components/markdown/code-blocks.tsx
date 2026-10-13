@@ -67,8 +67,23 @@ export function Pre({
   children: React.ReactNode;
   className?: string;
 }) {
+  const nodes = React.Children.toArray(children);
+  const code = nodes.length === 1 ? nodes[0] : undefined;
+  const source = React.isValidElement<{ children?: React.ReactNode }>(code)
+    ? code.props.children
+    : undefined;
+  // Reserve the final command height in the server HTML, before hydration.
+  // CodeBlock still observes rendered source for tab and content changes.
+  const singleLine =
+    typeof source === "string" &&
+    source.trimEnd().length > 0 &&
+    !source.trimEnd().includes("\n");
+
   return (
-    <CodeBlock className={cn("not-fumadocs-codeblock", className)}>
+    <CodeBlock
+      className={cn("not-fumadocs-codeblock", className)}
+      data-single-line={singleLine ? "" : undefined}
+    >
       <preContext.Provider value={{ editor: true }}>
         {children}
       </preContext.Provider>

@@ -52,6 +52,22 @@
   --site-control-settle: 240ms;
   --site-control-glide: 360ms;
 }
+/* Reading focus belongs to desktop docs, where both rails are visible.
+   Keyboard focus in either rail takes precedence over a parked pointer. */
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+  body:has(#nd-docs-layout > .site-article:hover):not(
+      :has(.site-header :focus-visible, .docs-toc :focus-visible)
+    )
+    :is(.site-header, .docs-toc) {
+    opacity: 0.35;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    body:has(#nd-docs-layout) :is(.site-header, .docs-toc) {
+      transition: opacity var(--site-control-glide) var(--site-control-ease);
+    }
+  }
+}
 .site-toc-label {
   margin: 0 0 5px;
   padding-inline: 11px;
