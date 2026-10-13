@@ -49,7 +49,9 @@ const Callout = React.forwardRef<HTMLDivElement, CalloutProps>(
   ({ className, variant, title, children, ...props }, ref) => {
     const resolvedVariant = variant ?? "default";
 
-    let IconComponent: React.FC<React.SVGProps<SVGSVGElement>> | null = null;
+    let IconComponent: React.ComponentType<
+      React.ComponentProps<typeof Icons.warning>
+    > | null = null;
     if (resolvedVariant === "warning" || resolvedVariant === "destructive") {
       IconComponent = Icons.warning;
     } else if (resolvedVariant === "info") {

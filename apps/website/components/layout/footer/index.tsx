@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { XmcpLogo } from "@/components/xmcp-logo";
-import { DiscordLogoIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
-import { ArrowUpRight, CircleDot } from "lucide-react";
+import { DiscordLogoIcon, GitHubLogoIcon } from "@/components/ui/site-icons";
+import {
+  ArrowTopRightIcon as ArrowUpRight,
+  DotFilledIcon as CircleDot,
+} from "@/components/ui/site-icons";
 import { Icons } from "@/components/icons";
 
 const linkGroups = [

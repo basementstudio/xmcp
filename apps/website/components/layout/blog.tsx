@@ -1,4 +1,5 @@
 "use client";
+import { ArrowLeftIcon } from "@/components/ui/site-icons";
 import { ReactNode } from "react";
 import type * as PageTree from "fumadocs-core/page-tree";
 import { TreeContextProvider } from "fumadocs-ui/contexts/tree";
@@ -42,7 +43,7 @@ export function BlogPage({
       <article className="site-article">
         <div className="site-article-content">
           <Link href="/blog" className="site-back-link">
-            ← Back to blog
+            <ArrowLeftIcon className="inline-block align-middle" /> Back to blog
           </Link>
           {props.children}
         </div>

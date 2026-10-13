@@ -11,7 +11,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
-import { CodeIcon } from "@radix-ui/react-icons";
+import { CodeIcon } from "@/components/ui/site-icons";
 import { describeCode } from "@/lib/code-language";
 import { cn } from "@/lib/cn";
 import { CopyButton as CustomCopyButton } from "./ui/copy-button";

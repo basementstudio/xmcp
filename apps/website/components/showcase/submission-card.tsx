@@ -1,5 +1,5 @@
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { ArrowUpRight } from "lucide-react";
+import { GitHubLogoIcon } from "@/components/ui/site-icons";
+import { ArrowTopRightIcon as ArrowUpRight } from "@/components/ui/site-icons";
 
 const steps = [
   {

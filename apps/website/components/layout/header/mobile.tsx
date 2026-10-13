@@ -7,37 +7,11 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/cn";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Cross2Icon as X, HamburgerMenuIcon } from "@/components/ui/site-icons";
 
-const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
-  <div className="w-5 h-5 relative">
-    <div
-      className={cn(
-        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
-        isOpen
-          ? "top-1/2 -translate-y-1/2 rotate-45"
-          : "top-[22%] -translate-y-1/2"
-      )}
-    />
-
-    <div
-      className={cn(
-        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
-        isOpen ? "hidden" : "top-1/2 -translate-y-1/2"
-      )}
-    />
-    <div
-      className={cn(
-        "absolute w-full h-[1px] bg-white transition-all duration-300 ease-in-out rounded-full",
-        isOpen
-          ? "top-1/2 -translate-y-1/2 -rotate-45"
-          : "top-[78%] -translate-y-1/2"
-      )}
-    />
-  </div>
-);
+const MenuIcon = ({ isOpen }: { isOpen: boolean }) =>
+  isOpen ? <X /> : <HamburgerMenuIcon />;
 
 export const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +40,7 @@ export const MobileMenu = () => {
             className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-md border border-brand-neutral-500"
             aria-label="Close navigation"
           >
-            <X size={18} />
+            <X />
           </SheetClose>
           <div className="flex flex-col items-center justify-center gap-8 mt-8 min-h-[60vh]">
             <nav aria-label="Main" className="flex flex-col items-center gap-6">

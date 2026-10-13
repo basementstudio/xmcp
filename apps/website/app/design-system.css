@@ -406,6 +406,10 @@ body main > div:has(> .listing-intro) {
   margin: 32px 0 0;
   background: transparent;
 }
+.hero-scene-size {
+  width: 100%;
+  aspect-ratio: 350 / 243;
+}
 .hero-particles {
   background: #000;
   filter: invert(1);

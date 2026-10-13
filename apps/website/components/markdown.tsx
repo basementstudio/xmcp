@@ -15,6 +15,7 @@ import {
 } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { headingComponents } from "./markdown/headings";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { visit } from "unist-util-visit";
 import type { ElementContent, Root, RootContent } from "hast";
@@ -77,6 +78,7 @@ function createProcessor(): Processor {
         Fragment,
         components: {
           ...defaultMdxComponents,
+          ...headingComponents,
           pre: Pre,
           table: ContentTable,
           img: undefined, // use JSX

@@ -10,7 +10,10 @@ import {
   useState,
 } from "react";
 import { track } from "@vercel/analytics";
-import { Loader2, X } from "lucide-react";
+import {
+  UpdateIcon as Loader2,
+  Cross2Icon as X,
+} from "@/components/ui/site-icons";
 import { cn } from "@/lib/cn";
 import Link from "fumadocs-core/link";
 import { type UIMessage, useChat, type UseChatHelpers } from "@ai-sdk/react";

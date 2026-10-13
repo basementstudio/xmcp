@@ -175,8 +175,8 @@ body .site-page-actions :is(a, button) {
 body .site-page-actions :is(a, button) > :first-child,
 .site-page-url > svg {
   flex: none;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
 }
 body .site-page-actions :is(a, button) > :first-child svg {
   max-width: 100%;
@@ -327,7 +327,8 @@ body figure.shiki[data-line-numbers] pre .line::after {
 body .editorial-steps details > figure {
   margin-block: 16px 4px;
 }
-body .prose code:not(pre code, :has(pre)) {
+body .prose code:not(pre code, :has(pre)),
+body .site-inline-code {
   display: inline;
   padding: 2px 6px;
   border: 0;
@@ -837,4 +838,29 @@ body .terminal-playground-code :is(pre, code) {
 .terminal-playground-editor:focus-within {
   outline: 2px solid var(--site-muted);
   outline-offset: 2px;
+}
+
+/* A single size for interface glyphs, including MDX-provided language icons.
+   Explicit sizing wins over historical per-component utilities. Artwork and
+   wordmarks are intentionally not tagged as interface icons. */
+body .site-icon,
+body .site-icon-slot svg,
+body .site-code-icon svg,
+body .site-code-language-icon {
+  width: 15px !important;
+  height: 15px !important;
+  min-width: 15px;
+  flex-shrink: 0;
+}
+body .site-code-language-icon {
+  padding: 0;
+  font-size: 8px;
+}
+body .site-icon {
+  transform-box: fill-box;
+}
+
+.site-version-number {
+  font-family: var(--font-editorial-serif), serif;
+  font-size: 15px;
 }

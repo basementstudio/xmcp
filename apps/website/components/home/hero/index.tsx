@@ -1,3 +1,5 @@
+import { romanVersion } from "@/lib/roman-version";
+import { ArrowTopRightIcon } from "@/components/ui/site-icons";
 import Link from "next/link";
 import { Code, Pre } from "@/components/markdown/code-blocks";
 import Shader from "./shader";
@@ -30,19 +32,43 @@ export function HomeHero({ version }: { version?: string }) {
             href="https://npmjs.com/package/xmcp"
             target="_blank"
             rel="noopener noreferrer"
-            title="Latest xmcp version on npm (opens in a new tab)"
+            title={
+              version
+                ? `xmcp v${version} on npm (opens in a new tab)`
+                : "Latest xmcp version on npm (opens in a new tab)"
+            }
+            aria-label={
+              version
+                ? `xmcp version ${version} on npm (opens in a new tab)`
+                : "xmcp on npm (opens in a new tab)"
+            }
           >
-            {version ? `xmcp · v${version}` : "xmcp · npm"} ↗
+            {version ? (
+              <>
+                xmcp · v
+                <span className="site-version-number">
+                  {romanVersion(version)}
+                </span>
+              </>
+            ) : (
+              "xmcp · npm"
+            )}{" "}
+            <ArrowTopRightIcon className="inline-block align-middle" />
           </Link>
         </div>
         <h1 className="site-page-title">The TypeScript MCP framework</h1>
       </header>
       <div className="editorial-lede">
         <p>
-          <em>Build and ship MCP servers with the code you already know.</em>{" "}
-          Give AI applications access to your tools, data, and workflows. Write
-          TypeScript functions; xmcp handles the protocol, validation, and
-          transport.
+          <span className="text-brand-white">
+            Build and ship <code className="site-inline-code">MCP servers</code>{" "}
+            with the code you already know.
+          </span>{" "}
+          <span className="text-brand-neutral-200">
+            Give AI applications access to your tools, data, and workflows.
+            Write TypeScript functions; xmcp handles the protocol, validation,
+            and transport.
+          </span>
         </p>
       </div>
       <Shader />
@@ -67,7 +93,7 @@ export function HomeHero({ version }: { version?: string }) {
             >
               <h3 className="site-card-title">
                 {concept.name}
-                <span aria-hidden="true">↗</span>
+                <ArrowTopRightIcon />
               </h3>
               <p className="site-card-description">{concept.description}</p>
             </Link>

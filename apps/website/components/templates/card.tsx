@@ -1,3 +1,4 @@
+import { ArrowTopRightIcon, ArrowRightIcon } from "@/components/ui/site-icons";
 import { ContentCard } from "@/components/ui/content-card";
 import Image from "next/image";
 import { cn } from "../../utils/cn";
@@ -75,8 +76,9 @@ export function TemplateCard({
       <p className="site-card-description">{description}</p>
       <div className="mt-auto pt-3 flex flex-wrap justify-between items-center gap-3">
         {category && <Tag text={category} />}
-        <span className="text-xs text-brand-neutral-100">
-          {ctaLabel || "Explore template"} {isExternal ? "↗" : "→"}
+        <span className="text-xs text-brand-neutral-100 inline-flex items-center gap-1">
+          {ctaLabel || "Explore template"}{" "}
+          {isExternal ? <ArrowTopRightIcon /> : <ArrowRightIcon />}
         </span>
       </div>
     </ContentCard>

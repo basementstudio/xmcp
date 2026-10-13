@@ -1,4 +1,6 @@
 import "./globals.css";
+import { PersistentHero } from "@/components/home/hero/persistent-hero";
+import { IconMotion } from "@/components/ui/icon-motion";
 import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "../components/layout/footer";
 import { Header } from "../components/layout/header";
@@ -156,11 +158,14 @@ export default function RootLayout({
             },
           }}
         >
-          <Header />
-          {children}
-          <Prefooter />
-          <Footer />
-          <Toaster />
+          <PersistentHero>
+            <IconMotion />
+            <Header />
+            {children}
+            <Prefooter />
+            <Footer />
+            <Toaster />
+          </PersistentHero>
         </RootProvider>
         <WebMCPProvider />
         <Analytics />

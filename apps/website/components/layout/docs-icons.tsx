@@ -26,7 +26,7 @@ import {
   PersonIcon,
   TokensIcon,
   TimerIcon,
-} from "@radix-ui/react-icons";
+} from "@/components/ui/site-icons";
 
 export const sidebarIcons: Partial<
   Record<string, ComponentType<{ className?: string; id?: string }>>
@@ -102,7 +102,7 @@ export function DocsPageIcon({
   return (
     <span
       aria-hidden="true"
-      className="shrink-0 text-brand-neutral-100 [&_svg]:size-4"
+      className="shrink-0 text-brand-neutral-100 site-icon-slot"
     >
       {item.icon ?? <Icon id={iconId} />}
     </span>

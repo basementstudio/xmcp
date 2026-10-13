@@ -439,3 +439,31 @@ The runnable example is the website itself: `pnpm --filter website dev`.
 Review `/`, `/docs/getting-started/installation`, `/blog`, a blog article,
 `/templates`, a template detail page, `/showcase`, `/faq`, `/changelog`,
 `/telemetry`, and `/terminal` in both themes when changing these tokens.
+
+## Icons and hover motion
+
+Import common UI icons from `components/ui/site-icons.tsx`, which wraps Radix
+Icons at 15 × 15px. Provider and brand glyphs retain their artwork and use the
+same `site-icon` size. Keep illustrations and wordmarks at their intended size;
+keep button hit areas large enough for touch.
+
+`IconMotion` uses the existing Motion dependency (`framer-motion`) for glyph-specific gestures on button/link hover or keyboard focus: search
+zooms gently, refresh and settings turn, copy/check pulse, and arrows follow their
+direction. Gestures last 550ms with a 350ms return. Brand marks remain still. Delegated events cover route changes and portalled dialogs without a
+client boundary on every icon. Motion transforms preserve CSS chevron rotation; loading spinners are excluded. Touch and reduced-motion users get static
+icons. Preview search, theme, copy, menus, and footer links with
+`pnpm --filter website dev`.
+
+## Persistent homepage scene
+
+`PersistentHero` lives in the root layout. The first homepage visit lazily loads
+the particle scene into a stable portal host; navigation parks that host in a
+hidden container and pauses the renderer. Returning home reattaches the same
+canvas, textures, and simulation. Direct visits to other pages do not load the
+hero. A hard refresh still initializes a new scene. Reduced-motion and GPU-error
+artwork fallbacks remain available, and the homepage slot reserves its height
+before hydration.
+
+The latest-version link displays Roman numeral semver segments in EB Garamond
+(e.g. `1.7.1` → `I.VII.I`; zero is `N`). Its accessible label and tooltip retain
+the standard version, and prerelease suffixes remain unchanged.

@@ -1,7 +1,7 @@
 "use client";
 
 import * as ToastPrimitives from "@radix-ui/react-toast";
-import { X } from "lucide-react";
+import { Cross2Icon as X } from "@/components/ui/site-icons";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";

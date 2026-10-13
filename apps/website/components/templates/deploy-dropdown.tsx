@@ -1,4 +1,5 @@
 "use client";
+import { ChevronDownIcon as ArrowDownIcon } from "@/components/ui/site-icons";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Cloud, ExternalLink, Layers, Rocket, Train } from "lucide-react";
+import {
+  GlobeIcon as Cloud,
+  ExternalLinkIcon as ExternalLink,
+  LayersIcon as Layers,
+  RocketIcon as Rocket,
+  GlobeIcon as Train,
+} from "@/components/ui/site-icons";
 import type { VariantProps } from "class-variance-authority";
 import { Button, buttonVariants } from "@/components/ui/button";
 
@@ -89,39 +96,24 @@ export function DeployDropdown({
   );
 }
 
-function ArrowDownIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      width="10"
-      height="5"
-      viewBox="0 0 10 5"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <path d="M5 5L0 0H10L5 5Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 function ProviderIcon({ provider }: { provider: DeployProvider }) {
   switch (provider) {
     case "vercel":
-      return <VercelMarkIcon className="size-3.5" />;
+      return <VercelMarkIcon className="site-icon" />;
     case "alpic":
-      return <AlpicMarkIcon className="size-3.5" />;
+      return <AlpicMarkIcon className="site-icon" />;
     case "replit":
-      return <ReplitMarkIcon className="size-3.5" />;
+      return <ReplitMarkIcon className="site-icon" />;
     case "netlify":
-      return <Layers className="size-3.5" />;
+      return <Layers className="site-icon" />;
     case "railway":
-      return <Train className="size-3.5" />;
+      return <Train className="site-icon" />;
     case "render":
-      return <Rocket className="size-3.5" />;
+      return <Rocket className="site-icon" />;
     case "cloudflare":
-      return <Cloud className="size-3.5" />;
+      return <Cloud className="site-icon" />;
     default:
-      return <ExternalLink className="size-3.5" />;
+      return <ExternalLink className="site-icon" />;
   }
 }
 
@@ -143,8 +135,8 @@ function AlpicMarkIcon({ className }: { className?: string }) {
     <Image
       src="/templates/alpic.png"
       alt="Alpic"
-      width={14}
-      height={14}
+      width={15}
+      height={15}
       className={className}
     />
   );
