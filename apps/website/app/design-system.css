@@ -195,19 +195,6 @@ body .home-hero {
   margin-bottom: 24px;
   color: var(--site-text);
 }
-.editorial-feature {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.editorial-feature > div {
-  height: 175px;
-}
-.editorial-feature img {
-  max-height: 175px;
-  width: auto;
-  object-fit: contain;
-}
 .editorial-steps {
   margin-top: 24px;
 }
@@ -407,12 +394,6 @@ body .docs-navigation-embedded button {
   body .editorial-masthead h1 {
     font-size: 34px;
     line-height: 1.08;
-  }
-  body .editorial-feature > div {
-    height: auto;
-  }
-  body .editorial-feature img {
-    max-height: 200px;
   }
 }
 
@@ -653,8 +634,18 @@ body .prose .site-card-description {
   border-radius: var(--site-radius);
   box-shadow: var(--site-shadow);
   background: var(--site-card);
-  transition: background var(--site-control-quick) var(--site-control-ease);
+  transition:
+    background var(--site-control-quick) var(--site-control-ease),
+    box-shadow var(--site-control-quick) var(--site-control-ease);
 }
-.group:hover > .site-card-surface {
+.group:is(:hover, :focus-visible) > .site-card-surface {
   background: var(--site-well);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--site-muted) 40%, transparent),
+    0 4px 12px #0000000d;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-card-surface {
+    transition: none;
+  }
 }

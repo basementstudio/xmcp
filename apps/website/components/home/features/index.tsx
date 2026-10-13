@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Image, { type StaticImageData } from "next/image";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
@@ -30,25 +31,33 @@ interface CardProps {
   asset: StaticImageData;
   title: string;
   description: string;
+  href: string;
 }
 
-const Card = ({ asset, title, description }: CardProps) => {
+const Card = ({ asset, title, description, href }: CardProps) => {
   return (
-    <div className="editorial-feature">
-      <div className="flex items-center justify-center w-full gap-2 mb-4">
-        <Image
-          src={asset}
-          alt={title}
-          className="mx-auto feature-art"
-          width={245}
-          height={200}
-          sizes="245px"
-          placeholder="blur"
-        />
+    <Link
+      href={href}
+      className="group block h-full min-w-0 text-left rounded-xl"
+    >
+      <div className="site-card-surface relative overflow-hidden h-full w-full flex flex-col">
+        <div className="flex items-center justify-center w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 group-focus-visible:border-brand-neutral-300 transition-colors duration-200 overflow-hidden">
+          <Image
+            src={asset}
+            alt=""
+            className="feature-art h-full w-auto object-contain"
+            width={245}
+            height={200}
+            sizes="245px"
+            placeholder="blur"
+          />
+        </div>
+        <div className="flex flex-col gap-2 p-4">
+          <h3 className="site-card-title">{title}</h3>
+          <p className="site-card-description">{description}</p>
+        </div>
       </div>
-      <h3 className="site-card-title mt-auto">{title}</h3>
-      <p className="site-card-description pt-1">{description}</p>
-    </div>
+    </Link>
   );
 };
 
@@ -56,24 +65,28 @@ const cards = [
   {
     asset: Feature1,
     title: "File System Routing",
+    href: "/docs/getting-started/project-structure",
     description:
       "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
     asset: Feature2,
     title: "Integrations",
+    href: "/docs/integrations/better-auth",
     description:
       "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
     asset: Feature3,
     title: "Middlewares",
+    href: "/docs/core-concepts/middlewares",
     description:
       "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
     asset: Feature4,
     title: "Extensible Configuration",
+    href: "/docs/configuration/custom-directories",
     description:
       "Customize every aspect of your MCP server with flexible configuration options.",
   },
@@ -81,6 +94,7 @@ const cards = [
   {
     asset: Feature5,
     title: "Multiple Transport Support",
+    href: "/docs/configuration/transports",
     description:
       "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
@@ -88,6 +102,7 @@ const cards = [
   {
     asset: Feature6,
     title: "Plug & play to your apps",
+    href: "/docs/adapters/nextjs",
     description:
       "Initialize xmcp directly in your existing Next.js or Express projects with one command.",
   },
