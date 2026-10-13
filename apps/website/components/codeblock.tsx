@@ -6,6 +6,7 @@ import {
   type ReactNode,
   type RefObject,
   useContext,
+  useLayoutEffect,
   useRef,
 } from "react";
 import { cn } from "@/lib/cn";
@@ -79,6 +80,44 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const inTab = useContext(TabsContext) !== null;
   const areaRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const viewport = areaRef.current;
+    const figure = viewport?.closest("figure");
+    if (!viewport || !figure) return;
+
+    // Inspect rendered source so MDX, plain text, and highlighted/tabbed code
+    // all get the same layout without requiring flags on individual pages.
+    const updateLayout = () => {
+      const blocks = viewport.querySelectorAll("pre");
+      const source = blocks[0]?.textContent?.trimEnd() ?? "";
+      figure.toggleAttribute(
+        "data-single-line",
+        blocks.length === 1 && source.length > 0 && !source.includes("\n")
+      );
+      if (figure.hasAttribute("data-single-line")) {
+        // Include optional filename headers and wrapped source at narrow widths.
+        const content = viewport.getBoundingClientRect();
+        figure.style.setProperty(
+          "--site-code-copy-y",
+          `${content.top - figure.getBoundingClientRect().top + content.height / 2}px`
+        );
+      }
+    };
+    const observer = new MutationObserver(updateLayout);
+    observer.observe(viewport, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+    const resizeObserver = new ResizeObserver(updateLayout);
+    resizeObserver.observe(viewport);
+    updateLayout();
+    return () => {
+      observer.disconnect();
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
     <figure

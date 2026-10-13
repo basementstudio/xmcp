@@ -584,7 +584,9 @@ body::before {
     display: block;
     flex: 1;
     min-height: 0;
-    width: 100%;
+    /* Hang the pill padding outside the rail so labels align with the logo. */
+    width: calc(100% + 15px);
+    margin-left: -15px;
     padding: 8px 4px;
     overflow-y: auto;
     overscroll-behavior: contain;

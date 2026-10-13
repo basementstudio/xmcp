@@ -1,4 +1,51 @@
 /* Shared SF Interface component treatments. Site colors come from design-system.css. */
+.showcase-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.showcase-logo img {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  max-width: none;
+  filter: brightness(0);
+  opacity: 0.6;
+}
+.dark .showcase-logo img {
+  filter: brightness(0) invert(1);
+  opacity: 0.66;
+}
+/* These source images include dark backgrounds and extra canvas padding. */
+.showcase-logo:is(
+    [data-logo="/showcase/basehub.png"],
+    [data-logo="/showcase/jellypod-ai.png"]
+  )
+  img {
+  width: 32px;
+  height: 32px;
+  filter: grayscale(1) contrast(3) invert(1);
+  mix-blend-mode: multiply;
+}
+.dark
+  .showcase-logo:is(
+    [data-logo="/showcase/basehub.png"],
+    [data-logo="/showcase/jellypod-ai.png"]
+  )
+  img {
+  filter: grayscale(1) contrast(3);
+  mix-blend-mode: screen;
+}
+.showcase-logo[data-logo="/showcase/basehub.png"] img {
+  filter: grayscale(1) brightness(2) contrast(3) invert(1);
+}
+.dark .showcase-logo[data-logo="/showcase/basehub.png"] img {
+  filter: grayscale(1) brightness(2) contrast(3);
+}
+
 :root {
   --site-control-ease: cubic-bezier(0.32, 0.72, 0, 1);
   --site-control-quick: 140ms;
@@ -166,7 +213,9 @@ body figure.shiki {
   box-shadow: var(--site-shadow);
   background: var(--site-card);
 }
-body figure.shiki > div:first-child:not(.site-code-viewport) {
+body
+  figure.shiki
+  > div:first-child:not(.site-code-viewport, .site-code-actions) {
   padding-inline: 18px;
   border-color: var(--site-rule);
   color: var(--site-muted);
@@ -187,6 +236,19 @@ body figure.shiki .site-code-viewport {
 }
 body figure.shiki:has(> .site-code-actions) .site-code-viewport {
   padding-top: 44px;
+}
+/* One source line shares a row with Copy; reserve room if it wraps on mobile. */
+body figure.shiki[data-single-line] {
+  > .site-code-viewport {
+    padding: 16px 88px 16px 18px;
+  }
+  .site-code-actions {
+    position: absolute;
+    top: var(--site-code-copy-y, 50%);
+    right: 10px;
+    min-height: 0;
+    transform: translateY(-50%);
+  }
 }
 body figure.shiki pre,
 body .not-fumadocs-codeblock pre {

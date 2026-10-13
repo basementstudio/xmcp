@@ -32,13 +32,13 @@ export async function ShowcaseCard({
     >
       <div className="site-card-surface relative p-4 h-full min-h-[12rem] w-full flex flex-col">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 shrink-0 border border-brand-neutral-400 flex items-center justify-center bg-brand-neutral-400 rounded-md overflow-hidden">
+          <div className="showcase-logo" data-logo={logo}>
             <Image
               src={logo}
-              alt={`${name} logo`}
+              alt=""
               width={32}
               height={32}
-              className="object-cover"
+              className="object-contain"
             />
           </div>
           <div className="flex-1 min-w-0">

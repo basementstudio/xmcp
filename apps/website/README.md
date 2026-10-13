@@ -93,6 +93,8 @@ theme. Inline code wraps without creating a horizontal scroll strip.
 The homepage install command, Getting started steps, CLI prompts, showcase URLs
 and template READMEs all use this component at 13px/1.68. Command/output examples
 copy only the runnable command, while code examples copy their full source.
+The shared code block detects single-line source, including plain text and tab
+changes, and centers Copy beside it with reserved space for wrapping on mobile.
 
 `ContentTable` preserves table markup and adds column labels for stacked mobile
 rows. Search keeps the existing engine, shortcuts and result navigation, using
