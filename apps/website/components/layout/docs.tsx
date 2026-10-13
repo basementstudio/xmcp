@@ -60,13 +60,15 @@ export function DocumentationNavigation({ tree }: { tree: PageTree.Root }) {
       onOpenChange={(open) => setSection({ pathname, open })}
       className="site-documentation"
     >
-      <CollapsibleTrigger className="site-documentation-heading">
-        <span className="site-documentation-label">Documentation</span>
-        <Icons.arrowDown
-          aria-hidden="true"
-          className={cn("size-3.5 shrink-0", !section.open && "-rotate-90")}
-        />
-      </CollapsibleTrigger>
+      <div className="site-documentation-header">
+        <CollapsibleTrigger className="site-documentation-heading">
+          <span className="site-documentation-label">Documentation</span>
+          <Icons.arrowDown
+            aria-hidden="true"
+            className={cn("size-3.5 shrink-0", !section.open && "-rotate-90")}
+          />
+        </CollapsibleTrigger>
+      </div>
       <CollapsibleContent>
         <SidebarNavigation
           nodes={nodes}

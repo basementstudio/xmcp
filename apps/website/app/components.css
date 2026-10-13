@@ -96,14 +96,27 @@
     opacity var(--site-control-quick) var(--site-control-ease);
 }
 body .site-page-actions {
-  margin-top: 24px;
-  padding: 16px 11px 0;
+  margin: 24px 11px 0;
+  padding-top: 16px;
   border-top: 1px solid var(--site-rule);
 }
 body .site-page-actions :is(a, button) {
+  position: relative;
   font-size: 12px;
   line-height: 1.5;
   padding-block: 5px;
+}
+/* Hang icons in the gutter so every rail label shares the TOC text edge. */
+body .site-page-actions :is(a, button) > :first-child,
+.site-page-url > svg {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.site-page-url {
+  position: relative;
+  margin-inline: 11px;
 }
 
 /* Copy controls stay visible, including on touch devices. */

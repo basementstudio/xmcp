@@ -581,10 +581,16 @@ body::before {
 }
 
 /* One scroll owner; inset rows keep pills and focus rings inside its edges. */
-.site-documentation-heading {
+.site-documentation-header {
   position: sticky;
-  top: 8px;
+  top: -8px;
   z-index: 1;
+  /* Cover the scroll pane above and around the rounded toggle. */
+  margin: -8px -4px 0;
+  padding: 8px 4px 0;
+  background: var(--site-ground);
+}
+.site-documentation-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;

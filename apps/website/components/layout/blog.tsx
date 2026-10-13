@@ -51,14 +51,12 @@ export function BlogPage({
         <aside className="site-page-toc blog-toc">
           {toc.length > 0 && <TableOfContents toc={toc} />}
           {slug && (
-            <div className="flex flex-wrap items-center gap-3 text-sm text-brand-neutral-50 w-full group hover:text-brand-white transition-colors">
-              <span className="inline-flex items-center gap-2 group-hover:text-brand-white transition-colors">
-                <Icons.link className="size-3.5 text-brand-neutral-100 group-hover:text-brand-white transition-colors" />
-                <CopyUrlButton
-                  url={`${getBaseUrl()}/blog/${slug}`}
-                  className="group-hover:text-brand-white transition-colors"
-                />
-              </span>
+            <div className="site-page-url group">
+              <Icons.link className="size-3.5 text-brand-neutral-100 group-hover:text-brand-white transition-colors" />
+              <CopyUrlButton
+                url={`${getBaseUrl()}/blog/${slug}`}
+                className="group-hover:text-brand-white transition-colors"
+              />
             </div>
           )}
           {pageActions && (
