@@ -18,6 +18,7 @@
   --site-radius: 12px;
   --site-body-size: 14px;
   --site-body-leading: 20.5px;
+  --site-paragraph-leading: 1.6;
   --site-section-size: 14px;
   --site-card-title-size: 12.5px;
   --site-card-copy-size: 12.5px;
@@ -43,6 +44,10 @@ body {
   line-height: var(--site-body-leading);
   font-weight: 450;
   text-rendering: optimizeLegibility;
+}
+body p,
+body blockquote {
+  line-height: var(--site-paragraph-leading);
 }
 body main {
   width: calc(100% - 2 * var(--site-gutter));
@@ -235,7 +240,7 @@ body .home-hero {
   margin: 16px 0 4px;
   color: var(--site-text);
   font-size: var(--site-body-size);
-  line-height: var(--site-body-leading);
+  line-height: var(--site-paragraph-leading);
 }
 .site-listing > .site-accordion > .site-accordion-item:first-child {
   border-top: 0;
@@ -255,16 +260,10 @@ body .site-navigation {
 .site-navigation [data-active="true"] {
   color: var(--site-ink);
 }
-body .site-cta {
-  width: calc(100% - 40px);
-  max-width: var(--site-column);
-  margin: 72px auto 48px;
-  padding: 0;
-}
 body .eyebrow {
   font-family: inherit;
   font-size: 12px;
-  line-height: 20px;
+  line-height: var(--site-paragraph-leading);
   letter-spacing: 0;
   text-transform: none;
   color: var(--site-muted);
@@ -285,12 +284,12 @@ body .listing-intro .display {
 }
 body .listing-description {
   font-size: var(--site-body-size);
-  line-height: var(--site-body-leading);
+  line-height: var(--site-paragraph-leading);
 }
 body .prose p,
 body .prose li {
   font-size: var(--site-body-size);
-  line-height: var(--site-body-leading);
+  line-height: var(--site-paragraph-leading);
   color: var(--site-ink);
 }
 body .prose :is(h1, h2, h3, h4, h5, h6) {
@@ -414,6 +413,38 @@ body main > div:has(> .listing-intro) {
 .dark .hero-particles {
   filter: none;
 }
+.site-prefooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  width: calc(100% - 40px);
+  max-width: var(--site-column);
+  min-height: 300px;
+  margin-inline: auto;
+  padding-block: var(--site-section-gap);
+  text-align: center;
+}
+body .site-prefooter .site-page-title {
+  margin: 0;
+  font-size: 24px;
+  text-wrap: balance;
+}
+.prefooter-particles {
+  background: #000;
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}
+.dark .prefooter-particles {
+  filter: none;
+  mix-blend-mode: normal;
+}
+@media (min-width: 768px) {
+  .site-prefooter {
+    min-height: 600px;
+  }
+}
 .concept-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -501,7 +532,7 @@ body::before {
   width: 100%;
   padding: 4px 11px;
   background: var(--site-ground);
-  color: var(--site-ink);
+  color: var(--site-muted);
   font-size: 13px;
   line-height: 20px;
   text-align: left;
@@ -602,7 +633,7 @@ body::before {
 /* Use the same type roles in every page family. */
 .site-description {
   font-size: var(--site-body-size);
-  line-height: var(--site-body-leading);
+  line-height: var(--site-paragraph-leading);
   color: var(--site-text);
 }
 .site-section-title {
@@ -621,7 +652,7 @@ body .prose .site-card-title {
 .site-card-description,
 body .prose .site-card-description {
   font-size: var(--site-card-copy-size);
-  line-height: 18px;
+  line-height: var(--site-paragraph-leading);
   color: var(--site-text);
 }
 .site-card-surface {

@@ -1,5 +1,6 @@
 import { ContentCard } from "@/components/ui/content-card";
-import Image, { type StaticImageData } from "next/image";
+import type { StaticImageData } from "next/image";
+import ParticleImage from "@/components/particles/image";
 import Feature1 from "./feature-1.jpg";
 import Feature2 from "./feature-2.jpg";
 import Feature3 from "./feature-3.jpg";
@@ -39,15 +40,14 @@ const Card = ({ asset, title, description, href }: CardProps) => {
     <ContentCard
       href={href}
       media={
-        <Image
-          src={asset}
-          alt=""
-          className="feature-art h-full w-auto object-contain"
-          width={245}
-          height={200}
-          sizes="245px"
-          placeholder="blur"
-        />
+        <div className="feature-art h-full w-full">
+          <ParticleImage
+            src={asset.src}
+            width={asset.width}
+            height={asset.height}
+            className="h-full w-full"
+          />
+        </div>
       }
     >
       <h3 className="site-card-title">{title}</h3>

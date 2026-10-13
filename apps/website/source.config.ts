@@ -53,7 +53,15 @@ export default defineConfig({
         light: xmcpLightTheme,
         dark: xmcpAyuDarkTheme,
       },
-      transformers: [...(rehypeCodeDefaultOptions.transformers ?? [])],
+      transformers: [
+        ...(rehypeCodeDefaultOptions.transformers ?? []),
+        {
+          name: "code-language-label",
+          pre(node) {
+            node.properties["data-language"] = this.options.lang;
+          },
+        },
+      ],
     },
     rehypePlugins: [rehypeCode],
   },

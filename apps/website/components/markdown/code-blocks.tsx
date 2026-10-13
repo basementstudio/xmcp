@@ -83,6 +83,11 @@ export function Pre({
     <CodeBlock
       className={cn("not-fumadocs-codeblock", className)}
       data-single-line={singleLine ? "" : undefined}
+      language={
+        React.isValidElement<{ className?: string }>(code)
+          ? code.props.className?.match(/language-([\w-]+)/)?.[1]
+          : undefined
+      }
     >
       <preContext.Provider value={{ editor: true }}>
         {children}

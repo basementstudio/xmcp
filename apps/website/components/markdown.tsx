@@ -109,7 +109,7 @@ function Pre(props: ComponentProps<"pre">) {
         defaultColor: false,
         components: {
           pre: ({ ref, ...props }) => (
-            <CodeBlock ref={ref} {...props}>
+            <CodeBlock ref={ref} {...props} language={lang}>
               <pre className="!text-[12px] [&_*]:!text-[12px]">
                 {props.children}
               </pre>

@@ -61,7 +61,10 @@ export function DocumentationNavigation({ tree }: { tree: PageTree.Root }) {
       className="site-documentation"
     >
       <div className="site-documentation-header">
-        <CollapsibleTrigger className="site-documentation-heading">
+        <CollapsibleTrigger
+          className="site-documentation-heading"
+          data-active={isDocs}
+        >
           <span className="site-documentation-label">Documentation</span>
           <Icons.arrowDown
             aria-hidden="true"

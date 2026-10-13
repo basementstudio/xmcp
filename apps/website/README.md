@@ -78,8 +78,8 @@ Docs, navigation, listings and controls share these styles in both themes. The
 xmcp wordmark and content remain; dark mode uses pure black.
 
 Use the shared type roles instead of page-specific sizes: `site-description`
-for 14px/20.5px introductions, `site-section-title` for 14px section headings,
-`site-card-title` for 12.5px card titles, and `site-card-description` for 12.5px/18px
+for 14px/160% introductions, `site-section-title` for 14px section headings,
+`site-card-title` for 12.5px card titles, and `site-card-description` for 12.5px/160%
 card copy. Blog cards, featured posts, templates, showcase entries and homepage
 features use these same roles. Article subheadings never grow larger deeper in
 the hierarchy. `site-card-surface` supplies the shared card and theme-aware hover.
@@ -93,8 +93,15 @@ theme. Inline code wraps without creating a horizontal scroll strip.
 The homepage install command, Getting started steps, CLI prompts, showcase URLs
 and template READMEs all use this component at 12px/19px. Command/output examples
 copy only the runnable command, while code examples copy their full source.
-The shared code block detects single-line source, including plain text and tab
-changes, and centers Copy beside it with reserved space for horizontal scrolling on mobile.
+Every code block has a shared header with a language badge, filename or language
+label, and Copy. Filenames and declared fence languages take precedence;
+recognizable unlabelled commands, URLs, JSON and code signatures can supply a
+label. Ambiguous snippets use “Code” rather than an invented filename.
+Single-line source scrolls horizontally below the header, including after tab
+changes. Header space is reserved in server HTML to avoid hydration shifts.
+Run the language checks with
+`node --experimental-strip-types --test apps/website/lib/code-language.test.mjs`
+from the repository root (Node 22).
 Markdown commands receive their single-line layout in the server HTML so the
 homepage install block does not shrink and move content when JavaScript loads.
 
@@ -124,6 +131,12 @@ both themes equally legible: shared surfaces, text, borders and focus states use
 tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
 uses paper white (`#fdfdfc`). The site uses Geist for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
 Shiki uses separate light and dark palettes.
+
+All six homepage feature images share the prefooter X’s cursor-responsive
+particle renderer through `components/particles/image.tsx`. Each supplies its own
+texture; scenes load near the viewport and stop animating while offscreen or
+when the page is hidden. Reduced motion and GPU failure retain static artwork.
+The image container reserves its dimensions before the renderer loads.
 
 To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
 original cursor-responsive particle hero, displayed without a frame or control footer. WebGPU retains the WebGL fallback. Light mode inverts the finished
@@ -339,6 +352,12 @@ pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
 
 ## Footer navigation
 
+The shared prefooter restores the interactive particle X and “One framework to
+rule them all” headline above the footer. It follows the shared 700px column and
+Adhesion title styling at 24px on all screens, inverts the monochrome artwork in light mode, and uses
+the existing deferred renderer with static artwork for reduced motion or GPU
+failure. The separate “Start building” call-to-action is omitted.
+
 The shared footer pairs the wordmark with a short framework description, then
 shows three labeled navigation groups. On phones, the community links span two
 columns below Build and Explore. Keep labels descriptive and use crawlable links rendered in the initial
@@ -385,16 +404,22 @@ share the typography tokens in `app/design-system.css`. The compact type scale
 and light-theme text palette follow [Anatomy's website](https://skills.wheresryan.sh/anatomy).
 Keep the existing layout and pure-black dark background.
 
-| Role                       | Font        | Size / line height                 | Weight    |
-| -------------------------- | ----------- | ---------------------------------- | --------- |
-| Page headline              | Adhesion    | 40px / 1.12; 34px on small screens | 500       |
-| Body and section heading   | Geist       | 14px / 20.5px                      | 450 / 550 |
-| Card title and description | Geist       | 12.5px / 18px                      | 500 / 450 |
-| Navigation and labels      | Geist       | 13px / 20px                        | 450       |
-| Captions and controls      | Geist       | 12px / 18px                        | 400–500   |
-| Code block                 | Geist Mono  | 12px / 19px                        | 400       |
-| Inline code                | Geist Mono  | 12.5px                             | 400       |
-| Section numbers            | EB Garamond | Context-sized                      | 400       |
+| Role                  | Font        | Size / line height                 | Weight  |
+| --------------------- | ----------- | ---------------------------------- | ------- |
+| Page headline         | Adhesion    | 40px / 1.12; 34px on small screens | 500     |
+| Body paragraph        | Geist       | 14px / 160%                        | 450     |
+| Section heading       | Geist       | 14px / 20.5px                      | 550     |
+| Card title            | Geist       | 12.5px / 18px                      | 500     |
+| Card description      | Geist       | 12.5px / 160%                      | 450     |
+| Navigation and labels | Geist       | 13px / 20px                        | 450     |
+| Captions and controls | Geist       | 12px / 18px                        | 400–500 |
+| Code block            | Geist Mono  | 12px / 19px                        | 400     |
+| Inline code           | Geist Mono  | 12.5px                             | 400     |
+| Section numbers       | EB Garamond | Context-sized                      | 400     |
+
+All paragraphs and prose lists use `--site-paragraph-leading: 1.6` (160%),
+including introductions, cards, quotes, template READMEs, and footer copy.
+Navigation, headings, and code keep their own line-height roles.
 
 Use `site-page-title` for page headlines, `site-section-title` for section
 headings, and the shared card/body roles rather than new per-page font sizes.

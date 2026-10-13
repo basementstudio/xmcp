@@ -1,17 +1,18 @@
 "use client";
 
-import PrefooterParticlesCursorAnimation from "./prefooter-particles-cursor-animation";
+import ImageParticles from "./image-particles";
 import { ParticleCanvas } from "@/components/particles/canvas";
 import type { ParticleSceneProps } from "@/components/particles/viewport";
 
-export default function PrefooterScene({
+export default function ImageScene({
   active,
   onReady,
   onError,
-}: ParticleSceneProps) {
+  texture,
+}: ParticleSceneProps & { texture: string }) {
   return (
     <ParticleCanvas active={active} onError={onError}>
-      <PrefooterParticlesCursorAnimation onReady={onReady} />
+      <ImageParticles onReady={onReady} texture={texture} />
     </ParticleCanvas>
   );
 }

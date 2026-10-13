@@ -91,6 +91,12 @@ export function TerminalTabs({
         ))}
       </div>
       <CodeBlock
+        language="shell"
+        data-single-line={
+          activeContent.trimEnd() && !activeContent.trimEnd().includes("\n")
+            ? ""
+            : undefined
+        }
         viewportProps={{
           id: `${id}-panel`,
           role: "tabpanel",

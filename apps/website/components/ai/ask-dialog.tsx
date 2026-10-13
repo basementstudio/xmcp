@@ -315,7 +315,7 @@ function Message({
       >
         <div
           className={cn(
-            "prose prose-sm max-w-none dark:prose-invert text-brand-neutral-50 [&_*]:!text-sm [&_p]:!leading-6",
+            "prose prose-sm max-w-none dark:prose-invert text-brand-neutral-50 [&_*]:!text-sm",
             isUser && "[&_p]:!my-0.5"
           )}
         >

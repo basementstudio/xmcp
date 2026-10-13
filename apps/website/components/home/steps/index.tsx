@@ -142,6 +142,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
 
   return (
     <CodeBlock
+      language="shell"
       Actions={({ className }) => (
         <div className={className}>
           <CopyButton text={step.command} label />

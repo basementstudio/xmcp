@@ -160,7 +160,7 @@ export function TerminalPrompt({ children, className }: TerminalPromptProps) {
   const segments = parsePrompt(children);
 
   return (
-    <CodeBlock className={className}>
+    <CodeBlock language="shell" className={className}>
       <pre className="font-mono text-sm">
         <code>
           {segments.map((segment, idx) => (

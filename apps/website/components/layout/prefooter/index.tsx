@@ -1,14 +1,17 @@
-import Link from "next/link";
+import ParticleImage from "@/components/particles/image";
 
 export const Prefooter = () => (
-  <section className="site-cta">
-    <div className="editorial-section-head">
-      <h2>Start building</h2>
+  <section className="site-prefooter" aria-labelledby="prefooter-title">
+    <div className="prefooter-particles">
+      <ParticleImage
+        src="/x.webp"
+        width={176}
+        height={212}
+        className="w-[127px] h-[154px]"
+      />
     </div>
-    <p>Build your first MCP server, or start with a working template.</p>
-    <div className="editorial-meta">
-      <Link href="/docs">Read the documentation ↗</Link>
-      <Link href="/templates">Explore templates ↗</Link>
-    </div>
+    <h2 id="prefooter-title" className="site-page-title">
+      One framework to rule them all
+    </h2>
   </section>
 );

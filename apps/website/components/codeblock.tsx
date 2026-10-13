@@ -1,5 +1,7 @@
 "use client";
 import {
+  Children,
+  isValidElement,
   type ComponentProps,
   createContext,
   type HTMLAttributes,
@@ -9,10 +11,13 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
+import { describeCode } from "@/lib/code-language";
 import { cn } from "@/lib/cn";
 import { CopyButton as CustomCopyButton } from "./ui/copy-button";
 
 export interface CodeBlockProps extends ComponentProps<"figure"> {
+  language?: string;
+  "data-language"?: string;
   /**
    * Icon of code block
    *
@@ -65,9 +70,34 @@ export function Pre(props: ComponentProps<"pre">) {
   );
 }
 
+function readCode(nodes: ReactNode): { source: string; language?: string } {
+  let source = "";
+  let language: string | undefined;
+  Children.forEach(nodes, (node) => {
+    if (typeof node === "string" || typeof node === "number") source += node;
+    else if (
+      isValidElement<{
+        children?: ReactNode;
+        className?: string;
+        "data-language"?: string;
+      }>(node)
+    ) {
+      const nested = readCode(node.props.children);
+      source += nested.source;
+      language ??=
+        node.props["data-language"] ??
+        node.props.className?.match(/(?:^|\s)language-([\w-]+)/)?.[1] ??
+        nested.language;
+    }
+  });
+  return { source, language };
+}
+
 export function CodeBlock({
   ref,
   title,
+  language,
+  "data-language": dataLanguage,
   allowCopy = true,
   keepBackground = false,
   icon,
@@ -80,6 +110,12 @@ export function CodeBlock({
 }: CodeBlockProps) {
   const inTab = useContext(TabsContext) !== null;
   const areaRef = useRef<HTMLDivElement>(null);
+  const snippet = readCode(children);
+  const description = describeCode({
+    title,
+    language: language ?? dataLanguage ?? snippet.language,
+    source: snippet.source,
+  });
 
   useLayoutEffect(() => {
     const viewport = areaRef.current;
@@ -95,14 +131,6 @@ export function CodeBlock({
         "data-single-line",
         blocks.length === 1 && source.length > 0 && !source.includes("\n")
       );
-      if (figure.hasAttribute("data-single-line")) {
-        // Include optional filename headers when positioning Copy beside the code.
-        const content = viewport.getBoundingClientRect();
-        figure.style.setProperty(
-          "--site-code-copy-y",
-          `${content.top - figure.getBoundingClientRect().top + content.height / 2}px`
-        );
-      }
     };
     const observer = new MutationObserver(updateLayout);
     observer.observe(viewport, {
@@ -110,12 +138,9 @@ export function CodeBlock({
       characterData: true,
       subtree: true,
     });
-    const resizeObserver = new ResizeObserver(updateLayout);
-    resizeObserver.observe(viewport);
     updateLayout();
     return () => {
       observer.disconnect();
-      resizeObserver.disconnect();
     };
   }, []);
 
@@ -123,6 +148,11 @@ export function CodeBlock({
     <figure
       ref={ref}
       dir="ltr"
+      data-single-line={
+        snippet.source.trimEnd() && !snippet.source.trimEnd().includes("\n")
+          ? ""
+          : undefined
+      }
       {...props}
       className={cn(
         inTab ? "bg-fd-secondary -mx-px -mb-px" : "my-2 bg-fd-card",
@@ -131,30 +161,31 @@ export function CodeBlock({
         props.className
       )}
     >
-      {title ? (
-        <div className="flex items-center gap-2 h-10 border-b px-4 border-brand-neutral-500 text-brand-neutral-100">
-          {typeof icon === "string" ? (
-            <div
-              className="[&_svg]:size-3.5"
-              dangerouslySetInnerHTML={{
-                __html: icon,
-              }}
-            />
-          ) : (
-            icon
-          )}
-          <figcaption className="flex-1 truncate">{title}</figcaption>
-          {Actions({
-            className: "site-code-actions",
-            children: allowCopy && <CopyButton containerRef={areaRef} />,
-          })}
-        </div>
-      ) : (
-        Actions({
-          className: "site-code-actions absolute top-2.5 right-2.5 z-2",
+      <div className="site-code-header flex items-center gap-2 border-b border-brand-neutral-500 text-brand-neutral-100">
+        {typeof icon === "string" ? (
+          <div
+            aria-hidden="true"
+            className="site-code-icon [&_svg]:size-3.5"
+            dangerouslySetInnerHTML={{ __html: icon }}
+          />
+        ) : (
+          icon || (
+            <span aria-hidden="true" className="site-code-language-icon">
+              {description.badge}
+            </span>
+          )
+        )}
+        <figcaption
+          className="min-w-0 flex-1 truncate"
+          title={title || description.label}
+        >
+          {title || description.label}
+        </figcaption>
+        {Actions({
+          className: "site-code-actions",
           children: allowCopy && <CopyButton containerRef={areaRef} />,
-        })
-      )}
+        })}
+      </div>
       <div
         ref={areaRef}
         {...viewportProps}
@@ -164,8 +195,6 @@ export function CodeBlock({
         )}
         style={
           {
-            // space for toolbar
-            "--padding-right": !title ? "80px" : undefined,
             counterSet: props["data-line-numbers"]
               ? `line ${Number(props["data-line-numbers-start"] ?? 1) - 1}`
               : undefined,

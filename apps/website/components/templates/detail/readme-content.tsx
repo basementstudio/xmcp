@@ -32,7 +32,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
+          <CodeBlock ref={ref} data-line-numbers {...props} language={lang}>
             <pre>{props.children}</pre>
           </CodeBlock>
         ),
@@ -46,7 +46,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
+          <CodeBlock ref={ref} data-line-numbers {...props} language={lang}>
             <pre>{props.children}</pre>
           </CodeBlock>
         ),

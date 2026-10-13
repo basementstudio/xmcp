@@ -218,7 +218,7 @@ html:has(#nd-blog-layout) {
 .prose p {
   @apply font-sans text-brand-neutral-50;
   /* letter-spacing: -0.5px; */
-  line-height: 180%;
+  line-height: var(--site-paragraph-leading);
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   font-size: 1rem;
@@ -648,7 +648,7 @@ input[type="email"] {
   max-width: 620px;
   color: var(--brand-neutral-100);
   font-size: 15px;
-  line-height: 1.8;
+  line-height: var(--site-paragraph-leading);
 }
 /* Monochrome provider artwork follows the surrounding material palette. */
 .template-provider-art {

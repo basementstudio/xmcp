@@ -257,28 +257,33 @@ body figure.shiki .site-code-viewport {
   --padding-left: 0px;
   --padding-right: 0px !important;
 }
-body figure.shiki:has(> .site-code-actions) .site-code-viewport {
-  padding-top: 44px;
+/* Headers reserve their height before hydration; one-line source scrolls below. */
+body figure.shiki[data-single-line] pre {
+  width: max-content;
+  min-width: 100%;
+  white-space: pre;
+  overflow-wrap: normal;
 }
-/* Scroll long single-line commands within their own lane beside Copy. */
-body figure.shiki[data-single-line] {
-  > .site-code-viewport {
-    margin-right: 70px;
-    padding: 16px 18px;
-  }
-  pre {
-    width: max-content;
-    min-width: 100%;
-    white-space: pre;
-    overflow-wrap: normal;
-  }
-  .site-code-actions {
-    position: absolute;
-    top: var(--site-code-copy-y, 50%);
-    right: 10px;
-    min-height: 0;
-    transform: translateY(-50%);
-  }
+.site-code-header {
+  min-width: 0;
+}
+.site-code-language-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 2px;
+  border-radius: 2px;
+  background: var(--site-muted);
+  color: var(--site-card);
+  font:
+    600 10px/1 var(--font-geist-mono),
+    monospace;
+}
+.site-code-icon {
+  flex: none;
 }
 body code {
   font-family: var(--font-geist-mono), monospace;
@@ -706,7 +711,7 @@ body .site-footer {
   grid-column: 3;
   margin: 0;
   font-size: 13px;
-  line-height: 20px;
+  line-height: var(--site-paragraph-leading);
 }
 .site-footer-brand p span {
   display: block;
