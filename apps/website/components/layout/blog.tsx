@@ -17,10 +17,7 @@ export interface BlogLayoutProps {
 export function BlogLayout({ tree, children }: BlogLayoutProps) {
   return (
     <TreeContextProvider tree={tree}>
-      <main
-        id="nd-blog-layout"
-        className="flex flex-1 flex-row max-w-[1440px] mx-auto mt-4 pb-20 w-full"
-      >
+      <main id="nd-blog-layout" className="site-page-grid">
         {children}
       </main>
     </TreeContextProvider>
@@ -42,44 +39,33 @@ export function BlogPage({
 }: BlogPageProps) {
   return (
     <AnchorProvider toc={toc}>
-      <div className="flex flex-1 w-full px-4 md:px-6 lg:px-8 xl:px-0 items-start">
-        <aside className="hidden xl:flex w-[300px] shrink-0 sticky top-[104px] h-[calc(100dvh-156px)] p-4 pt-0 overflow-auto">
-          <div className="flex flex-col gap-4 w-full">
-            <Link
-              href="/blog"
-              className="text-sm text-brand-neutral-100 hover:text-brand-white transition-colors"
-            >
-              ← Back to blog
-            </Link>
-          </div>
-        </aside>
-
-        <div className="flex min-w-0 flex-col max-w-full lg:max-w-[860px] w-full h-full mt-8">
-          <article className="flex flex-1 flex-col w-full max-w-full lg:max-w-[860px] gap-6 py-8 pt-0 px-4 md:px-8 md:mx-auto items-start min-h-[calc(100dvh-96px)]">
-            {props.children}
-          </article>
+      <article className="site-article">
+        <div className="site-article-content">
+          <Link href="/blog" className="site-back-link">
+            ← Back to blog
+          </Link>
+          {props.children}
         </div>
-
-        {(toc.length > 0 || pageActions) && (
-          <aside className="blog-toc hidden xl:flex xl:flex-col w-[286px] shrink-0 sticky top-[104px] h-[calc(100dvh-96px)] p-4 pt-0 gap-2 overflow-auto">
-            {toc.length > 0 && <TableOfContents toc={toc} />}
-            {slug && (
-              <div className="flex flex-wrap items-center gap-3 text-sm text-brand-neutral-50 w-full group hover:text-brand-white transition-colors">
-                <span className="inline-flex items-center gap-2 group-hover:text-brand-white transition-colors">
-                  <Icons.link className="size-3.5 text-brand-neutral-100 group-hover:text-brand-white transition-colors" />
-                  <CopyUrlButton
-                    url={`${getBaseUrl()}/blog/${slug}`}
-                    className="group-hover:text-brand-white transition-colors"
-                  />
-                </span>
-              </div>
-            )}
-            {pageActions && (
-              <div className="site-page-actions">{pageActions}</div>
-            )}
-          </aside>
-        )}
-      </div>
+      </article>
+      {(toc.length > 0 || pageActions) && (
+        <aside className="site-page-toc blog-toc">
+          {toc.length > 0 && <TableOfContents toc={toc} />}
+          {slug && (
+            <div className="flex flex-wrap items-center gap-3 text-sm text-brand-neutral-50 w-full group hover:text-brand-white transition-colors">
+              <span className="inline-flex items-center gap-2 group-hover:text-brand-white transition-colors">
+                <Icons.link className="size-3.5 text-brand-neutral-100 group-hover:text-brand-white transition-colors" />
+                <CopyUrlButton
+                  url={`${getBaseUrl()}/blog/${slug}`}
+                  className="group-hover:text-brand-white transition-colors"
+                />
+              </span>
+            </div>
+          )}
+          {pageActions && (
+            <div className="site-page-actions">{pageActions}</div>
+          )}
+        </aside>
+      )}
     </AnchorProvider>
   );
 }

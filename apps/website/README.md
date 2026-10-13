@@ -69,6 +69,11 @@ column, 168px navigation rail, 48px gap between columns, 56px section spacing,
 12px cards, and Inter body text at 14px/1.55. Adhesion supplies page titles from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
 with font swapping and -2px title letter spacing. EB Garamond supplies the Roman
 numerals in section labels and the table of contents.
+All pages use `site-page-grid`, including home, blogs, docs, templates, showcase,
+FAQ, changelog, telemetry, and the terminal playground: twelve
+columns inside the 700px reading column with a shared 24px gap. Their two-column
+card grids use the same 640px breakpoint; mobile pages share 20px outer gutters.
+Articles use `site-article-content`, and docs/blog share the `site-page-toc` rail.
 Docs, navigation, listings and controls share these styles in both themes. The
 xmcp wordmark and content remain; dark mode uses pure black.
 

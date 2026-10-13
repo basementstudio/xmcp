@@ -9,7 +9,7 @@ export function RelatedTemplates({ items }: { items: TemplateItem[] }) {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-medium text-brand-white">Other templates</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="site-card-grid">
         {items.map((item) => (
           <TemplateCard
             key={item.slug}

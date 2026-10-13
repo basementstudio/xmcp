@@ -21,7 +21,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
                 {...getBlogImageProps(image)}
                 alt={featuredPost.title}
                 fill
-                sizes="(min-width: 1200px) 584px, (min-width: 768px) calc((100vw - 32px) / 2), calc(100vw - 32px)"
+                sizes="(min-width: 768px) 350px, (min-width: 740px) 700px, calc(100vw - 40px)"
                 preload
                 className="object-cover"
               />

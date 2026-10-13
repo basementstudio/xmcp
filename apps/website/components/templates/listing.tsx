@@ -70,7 +70,7 @@ export function TemplatesListing({
     target <= 1 ? pathname : `${pathname}?page=${target}`;
 
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
+    <div className="site-listing">
       <div className="listing-intro">
         <p className="eyebrow">The starting points / Templates</p>
         <div>
@@ -98,7 +98,7 @@ export function TemplatesListing({
 
       <div className="col-span-12 flex flex-col gap-8">
         <div className="flex flex-col gap-4 max-w-[920px] w-full mx-auto">
-          <div className="flex flex-col items-center gap-2 min-w-0 md:flex-row md:justify-center md:gap-4">
+          <div className="flex flex-col items-start gap-2 min-w-0">
             <h2 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
               Filter by category
             </h2>
@@ -139,7 +139,7 @@ export function TemplatesListing({
         </div>
 
         <div className="min-h-[60vh] flex flex-col gap-6">
-          <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <section className="site-card-grid">
             {filtered.length > 0 ? (
               pageItems.map((item, index) => (
                 <TemplateCard

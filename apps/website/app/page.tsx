@@ -26,10 +26,7 @@ export default async function Home() {
   const version = await getLatestVersion();
 
   return (
-    <main
-      id="main-content"
-      className="home-page grid grid-cols-12 gap-x-6 max-w-[1328px] w-full mx-auto px-6"
-    >
+    <main id="main-content" className="site-page-grid home-page">
       <JsonLd data={getSoftwareApplicationSchema(SITE_URL)} />
       <HomeHero version={version} />
       <HomeFeatures />

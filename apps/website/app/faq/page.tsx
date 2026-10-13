@@ -51,10 +51,7 @@ export const metadata: Metadata = {
 
 export default function FaqPage() {
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           getFaqSchema(FAQ_ITEMS, FAQ_URL),
@@ -67,7 +64,7 @@ export default function FaqPage() {
           ),
         ]}
       />
-      <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
+      <div className="site-listing">
         <div className="listing-intro">
           <p className="eyebrow">A closer look / FAQ</p>
           <h1 className="display">Frequently asked questions</h1>
@@ -86,7 +83,7 @@ export default function FaqPage() {
             client bundle. The browser owns the open/close state — the shared
             `name` makes the group exclusive, and `.faq-item` in globals.css
             animates the reveal. */}
-        <div className="col-span-12 lg:col-span-9 flex flex-col gap-[20px]">
+        <div className="site-stack">
           {FAQ_ITEMS.map((faq, index) => (
             <details
               key={faq.slug}
@@ -98,7 +95,7 @@ export default function FaqPage() {
               className="faq-item bg-surface group p-4 rounded-lg border border-brand-neutral-500 scroll-mt-24"
             >
               <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-                <h2 className="text-brand-white text-lg text-balance">
+                <h2 className="text-brand-white text-sm font-medium text-balance">
                   {faq.question}
                 </h2>
                 <Icons.arrowDown
@@ -106,7 +103,9 @@ export default function FaqPage() {
                   className="size-5 shrink-0 text-brand-neutral-100 transition-transform duration-200 group-open:rotate-180"
                 />
               </summary>
-              <p className="text-brand-neutral-100 body-l pt-2">{faq.answer}</p>
+              <p className="text-brand-neutral-100 text-sm leading-[1.55] pt-2">
+                {faq.answer}
+              </p>
             </details>
           ))}
         </div>

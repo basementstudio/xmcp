@@ -19,14 +19,14 @@ export interface DocsPageProps {
 export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
   return (
     <AnchorProvider toc={toc}>
-      <article className="flex w-full min-w-0 flex-1 flex-col h-full mt-8 md:mt-0">
-        <div className="flex flex-1 flex-col w-full min-w-0 max-w-[700px] mx-auto gap-6 px-4 md:px-8 md:pt-4">
+      <article className="site-article">
+        <div className="site-article-content">
           {props.children}
           <Footer />
         </div>
       </article>
       {(toc.length > 0 || pageActions) && (
-        <div className="docs-toc sticky self-start top-20 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 overflow-auto max-xl:hidden">
+        <div className="site-page-toc docs-toc">
           {toc.length > 0 && <TableOfContents toc={toc} />}
           {pageActions && (
             <div className="site-page-actions">{pageActions}</div>
@@ -52,7 +52,7 @@ export function DocsDescription(props: ComponentProps<"p">) {
   return (
     <p
       {...props}
-      className={cn("text-lg text-brand-neutral-50 pb-4", props.className)}
+      className={cn("text-sm text-brand-neutral-50", props.className)}
     >
       {props.children}
     </p>
@@ -101,7 +101,7 @@ function Footer() {
   }, [flatten, pathname]);
 
   return (
-    <div className="flex flex-row justify-between gap-4 items-stretch mt-8">
+    <div className="site-card-grid mt-8">
       {previous ? (
         <NavigationLink item={previous} direction="previous" />
       ) : (

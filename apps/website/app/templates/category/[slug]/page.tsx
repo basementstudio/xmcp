@@ -98,10 +98,7 @@ export default async function CategoryPage(props: CategoryPageProps) {
   const label = humanizeMetadataName(match);
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           ...(filtered.length > 0

@@ -20,7 +20,7 @@ export const HomeBlog = () => {
         <h2>From the blog</h2>
         <span aria-hidden="true">IV</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px] col-span-12">
+      <div className="site-card-grid">
         {posts.map((post) => (
           <BlogCard key={post.slug} post={post} />
         ))}
@@ -32,7 +32,7 @@ export const HomeBlog = () => {
 export const BlogCard = ({
   post,
   loading = "lazy",
-  sizes = "(min-width: 1200px) 376px, (min-width: 768px) calc((100vw - 72px) / 3), (min-width: 640px) calc((100vw - 52px) / 2), calc(100vw - 32px)",
+  sizes = "(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)",
 }: {
   post: BlogPost;
   loading?: "eager" | "lazy";

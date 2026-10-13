@@ -35,10 +35,7 @@ export const metadata: Metadata = {
 export default function ChangelogPage() {
   const releases = getReleases();
   return (
-    <main
-      id="main-content"
-      className="max-w-[1200px] w-full mx-auto px-4 py-8 md:py-16"
-    >
+    <main id="main-content" className="site-page-grid site-page-stack">
       <div className="listing-intro">
         <p className="eyebrow">The release log / Changelog</p>
         <h1 className="display">Changelog</h1>
@@ -50,15 +47,15 @@ export default function ChangelogPage() {
           All releases on GitHub ↗
         </a>
       </div>
-      <div className="max-w-[960px]">
+      <div className="site-stack">
         {releases.map((release) => (
           <article
             key={release.version}
             id={releaseAnchor(release.version)}
             aria-labelledby={`release-${release.version}`}
-            className="grid md:grid-cols-[180px_minmax(0,1fr)] gap-6 md:gap-12 border-t border-brand-neutral-500 py-8 md:py-12"
+            className="site-release"
           >
-            <div className="md:sticky md:top-[104px] md:self-start">
+            <div className="site-release-meta">
               <h2
                 id={`release-${release.version}`}
                 className="text-xl font-mono text-brand-white"

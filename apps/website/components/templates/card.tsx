@@ -65,7 +65,7 @@ export function TemplateCard({
             alt={`${displayName} preview`}
             width={1200}
             height={630}
-            sizes="(min-width: 1200px) 378px, (min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)"
             unoptimized={shouldBypassImageOptimization(previewImage.src)}
             className={cn(
               "h-full w-full object-contain p-5",

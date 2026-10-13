@@ -31,10 +31,7 @@ export interface DocsLayoutProps {
 export function DocsLayout({ tree, children }: DocsLayoutProps) {
   return (
     <TreeContextProvider tree={tree}>
-      <main
-        id="nd-docs-layout"
-        className="flex flex-1 flex-col md:flex-row mt-4 md:pt-4 w-full"
-      >
+      <main id="nd-docs-layout" className="site-page-grid">
         <Sidebar />
         {children}
       </main>

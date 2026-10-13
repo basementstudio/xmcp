@@ -595,16 +595,6 @@ input[type="email"] {
 .prose blockquote {
   font-style: normal;
 }
-#nd-docs-layout {
-  max-width: 1560px;
-  margin-inline: auto;
-}
-#nd-docs-layout article {
-  padding-top: 1.5rem;
-}
-#nd-docs-layout aside {
-  border-right: 1px solid var(--brand-neutral-500);
-}
 #nd-docs-layout nav a[aria-current="page"] {
   background: var(--accent-soft);
   color: var(--accent);

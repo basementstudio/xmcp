@@ -148,10 +148,7 @@ Add a README.md to this template to show content here.`;
   const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
 
   return (
-    <main
-      id="main-content"
-      className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10"
-    >
+    <main id="main-content" className="site-page-grid site-page-stack">
       <JsonLd
         data={[
           getBreadcrumbSchema(
@@ -197,7 +194,7 @@ Add a README.md to this template to show content here.`;
               alt={`${template.name} preview`}
               unoptimized={shouldBypassImageOptimization(previewImage.src)}
               fill
-              sizes="(min-width: 1200px) 1168px, calc(100vw - 32px)"
+              sizes="(min-width: 740px) 700px, calc(100vw - 40px)"
               className={
                 previewImage.isFallback
                   ? `object-contain p-10 ${previewImage.src !== "/templates/fallback.svg" ? "template-provider-art" : ""}`
@@ -209,7 +206,7 @@ Add a README.md to this template to show content here.`;
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="site-stack">
         <TemplateDetailSidebar
           template={template}
           repositoryLabel={repositoryLabel}
@@ -219,7 +216,7 @@ Add a README.md to this template to show content here.`;
           xShareUrl={xShareUrl}
         />
 
-        <section className="lg:col-span-9 space-y-6 lg:pl-8 lg:border-l border-brand-neutral-500">
+        <section className="space-y-6 min-w-0">
           <TemplateReadmeContent source={bodyContent} />
         </section>
       </div>

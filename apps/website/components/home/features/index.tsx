@@ -17,7 +17,7 @@ export const HomeFeatures = () => {
         Everything you need to set up fast, customize with ease, and connect
         your apps.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[20px] col-span-12">
+      <div className="site-card-grid">
         {cards.map((card, index) => (
           <Card key={index} {...card} />
         ))}

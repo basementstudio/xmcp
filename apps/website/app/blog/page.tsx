@@ -56,10 +56,7 @@ export default function BlogPage() {
     : posts;
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           getBlogCollectionSchema(posts, SITE_URL),
@@ -72,7 +69,7 @@ export default function BlogPage() {
           ),
         ]}
       />
-      <div className="col-span-full grid grid-cols-12 gap-y-8 py-8 md:py-16">
+      <div className="site-listing">
         <div className="listing-intro">
           <p className="eyebrow">The field notes / Blog</p>
           <h1 className="display">Blog</h1>
@@ -83,14 +80,13 @@ export default function BlogPage() {
 
         {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
-        <div className="grid gap-8 md:grid-cols-2 col-span-12">
+        <div className="site-card-grid">
           {regularPosts.map((post: BlogPost, index: number) => (
             <BlogCard
               key={post.slug}
               post={post}
-              // The first desktop row is visible below the featured post.
-              loading={index < 3 ? "eager" : "lazy"}
-              sizes="(min-width: 1200px) 368px, (min-width: 1024px) calc((100vw - 96px) / 3), (min-width: 768px) calc((100vw - 64px) / 2), calc(100vw - 32px)"
+              // The first row is visible below the featured post.
+              loading={index < 2 ? "eager" : "lazy"}
             />
           ))}
 
