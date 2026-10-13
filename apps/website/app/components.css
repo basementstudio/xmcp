@@ -51,6 +51,7 @@
   --site-control-quick: 140ms;
   --site-control-settle: 240ms;
   --site-control-glide: 360ms;
+  --site-reading-fade: 800ms;
 }
 /* Reading focus belongs to desktop docs, where both rails are visible.
    Keyboard focus in either rail takes precedence over a parked pointer. */
@@ -64,7 +65,7 @@
 
   @media (prefers-reduced-motion: no-preference) {
     body:has(#nd-docs-layout) :is(.site-header, .docs-toc) {
-      transition: opacity var(--site-control-glide) var(--site-control-ease);
+      transition: opacity var(--site-reading-fade) ease-in-out;
     }
   }
 }
