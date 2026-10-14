@@ -396,12 +396,13 @@ body .editorial-steps details > figure {
   position: relative;
 }
 [data-shell-state="running"] [data-shell-caret]::after {
-  content: "";
+  content: "█";
+  color: #ffffff;
   position: absolute;
   left: 100%;
   top: 0;
-  height: 1em;
-  border-left: 1px solid currentColor;
+  line-height: 1;
+  pointer-events: none;
   animation: shell-caret-blink 1s step-end infinite;
 }
 [data-shell-selecting]::before {
