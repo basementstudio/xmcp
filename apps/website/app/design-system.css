@@ -670,6 +670,40 @@ body .prose .site-card-description {
     background-color var(--site-control-glide) ease-in-out,
     box-shadow var(--site-control-glide) ease-in-out;
 }
+.site-logo-menu {
+  z-index: 110;
+  min-width: 164px;
+  max-width: var(--radix-dropdown-menu-content-available-width);
+  padding: 5px;
+  border: 1px solid var(--site-rule);
+  border-radius: var(--site-radius);
+  background: var(--site-card);
+  color: var(--site-text);
+  box-shadow:
+    var(--site-shadow),
+    0 8px 24px #0000001a;
+  font-size: var(--site-card-copy-size);
+  line-height: 20px;
+}
+.site-logo-menu [role="menuitem"] {
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--site-control-glide) ease-in-out,
+    color var(--site-control-glide) ease-in-out;
+}
+.site-logo-menu [data-highlighted] {
+  background: var(--site-well);
+  color: var(--site-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-logo-menu [role="menuitem"] {
+    transition: none;
+  }
+}
 .group:is(:hover, :focus-visible) > .site-card-surface {
   background: var(--site-well);
   box-shadow:

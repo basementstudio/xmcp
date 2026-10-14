@@ -367,9 +367,11 @@ body .editorial-steps details > figure {
 }
 [data-shell-prompt],
 [data-shell-choice][data-shell-checked="true"],
-[data-shell-tone="success"],
-[data-shell-completion] {
+[data-shell-check] {
   color: var(--shell-green);
+}
+[data-shell-tone="success"] {
+  color: var(--site-ink);
 }
 [data-shell-answer],
 [data-shell-tone="command"] {
@@ -380,7 +382,14 @@ body .editorial-steps details > figure {
   font-weight: 550;
 }
 [data-shell-completion] {
+  display: block;
+  color: #000000;
+  font-size: clamp(5px, 0.8vw, 8px);
+  line-height: 1.1;
   white-space: pre;
+}
+.dark [data-shell-completion] {
+  color: #ffffff;
 }
 [data-shell-character],
 [data-shell-line] {

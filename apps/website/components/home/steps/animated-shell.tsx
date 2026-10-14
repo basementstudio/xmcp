@@ -8,15 +8,24 @@ const OUTPUT_CHARACTER_MS = 16;
 const LINE_PAUSE_MS = 180;
 const ANSWER_PAUSE_MS = 500;
 const SELECTION_PAUSE_MS = 550;
-// The completion mark prints as a quick terminal flourish after the transcript.
+// The wordmark prints as a quick terminal flourish after the success message.
 const MARK_CHARACTER_MS = 4;
 const PAUSES = { launch: 750, prompt: 400, work: 1800 } as const;
 
-const XMCP_MARK = String.raw`__  __ __  __  ____ ____
-\ \/ /|  \/  |/ ___|  _ \
- >  < | |\/| | |   | |_) |
-/_/\_\|_|  |_|\____|  __/
-                  |_|`;
+// Supplied xmcp wordmark, with its outer whitespace trimmed.
+const XMCP_MARK = String.raw` ░░▓██▓░░   ░▓▓░░█▓░░
+░▓█▓▒████▒░░▓█████▓░ ░░     ░░     ░░         ░░░       ░░░
+▒▒░  ░████▒▒▒▓▓█▓▒  ░▓█▒   ░▓▓▒░ ░░▓▓▒      ░▒▓▓▒     ░▒▓██▓░░
+      ░█████▒▒░   ░▒▓███▓▒▒▓███▓▒▒▓███▓░ ░▓██▓████▒░▒▓██░▒███▒░
+   ░▒▒▒▓████▒▒▒▒▒   ▒███▓░░▒███▓░░▒███▓░▒███▓░▒▓█▓░ ▒███░ ▒███░
+ ░▒████████████▓░   ▒███▓░ ▒███▒░░▒███▓░▒███▓  ░▒▓  ▒███░ ▒███░
+        ▒████▓░     ▒███▓░ ▒███▒░░▒███▓ ▒███▓       ▒███░ ▒███░
+     ░░▒▒░░████▒░   ▒███▓░ ▒███▒░░▒███▓ ▒███▓  ░░░▒ ▒███▓▒▓██▒░
+  ░░░▓▓░░  ░▓████░░░▒███▓░░▒███▓░░▒███▓░░████▒░▓▓▒  ▒███░ ░░
+ ░▒██████▒░▒░▓████▒▓▓▓██▓▒▒▓▓█▓▓▒░▓▓█▓▓▒ ░▒▓███▒░  ░▓███▒░░
+░████▓▓███▒░ ░▓█▒░░░ ░░░    ░░░░   ░░░      ░░░░   ░░░░░░░░
+░▓█▓░ ░▒▒░    ░░
+ ░▒█▓`;
 
 export type ShellLine = {
   text: string;
@@ -31,6 +40,7 @@ function Characters({ text }: { text: string }) {
     <span
       key={index}
       data-shell-character=""
+      data-shell-check={character === "✔" ? "" : undefined}
       data-shell-prompt={index === 0 && text.startsWith("? ") ? "" : undefined}
     >
       {character}
@@ -104,6 +114,10 @@ export function AnimatedShell({
         time += ANSWER_PAUSE_MS;
         type(line.querySelector("[data-shell-answer]"), INPUT_CHARACTER_MS);
       }
+      if (output[index].tone === "success") {
+        time += PAUSES.prompt;
+        type(line.querySelector("[data-shell-completion]"), MARK_CHARACTER_MS);
+      }
     };
 
     type(element.querySelector("code"), INPUT_CHARACTER_MS);
@@ -150,8 +164,6 @@ export function AnimatedShell({
       });
       index--;
     }
-    time += PAUSES.prompt;
-    type(element.querySelector("[data-shell-completion]"), MARK_CHARACTER_MS);
 
     characters.forEach((character) => {
       character.style.opacity = "0";
@@ -280,12 +292,14 @@ export function AnimatedShell({
                 </span>
               )}
               {"\n"}
+              {line.tone === "success" && (
+                <span data-shell-completion="">
+                  {"\n"}
+                  <Characters text={XMCP_MARK} />
+                </span>
+              )}
             </span>
           ))}
-          <span data-shell-completion="">
-            {"\n"}
-            <Characters text={XMCP_MARK} />
-          </span>
         </span>
       </span>
     </pre>

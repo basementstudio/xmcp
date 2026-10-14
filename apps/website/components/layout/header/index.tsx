@@ -13,16 +13,16 @@ import { ThemeToggle } from "../theme-toggle";
 export const Header = () => (
   <header className="site-header sticky top-0 z-100 w-full">
     <div className="site-header-inner mx-auto flex h-[72px] max-w-[1440px] items-center gap-6 px-4 md:px-8">
-      <Link
-        href="/"
-        prefetch={false}
-        aria-label="xmcp home"
-        className="shrink-0 text-brand-white"
-      >
-        <LogoContextMenu>
+      <LogoContextMenu>
+        <Link
+          href="/"
+          prefetch={false}
+          aria-label="xmcp home"
+          className="block text-brand-white"
+        >
           <XmcpLogo className="h-7 w-auto" />
-        </LogoContextMenu>
-      </Link>
+        </Link>
+      </LogoContextMenu>
       <span className="site-brand-caption hidden 2xl:block border-l border-brand-neutral-500 pl-5 font-mono text-[10px] uppercase tracking-[.12em] text-brand-neutral-100">
         The MCP framework
       </span>

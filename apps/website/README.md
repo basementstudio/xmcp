@@ -102,13 +102,17 @@ Homepage command demos type the command, prompts, answers, and output once
 visible, with a blinking caret and pauses for input and simulated work. The
 scaffolding demo moves through the component list and checks each choice. One
 animation-frame clock pauses all typing, selections, and waits together.
-Green prompt/check/success markers and cyan answers, selections, and commands
-mirror the CLI's ANSI color roles with readable light/dark variants. A compact
-xmcp ASCII mark finishes the website demo; it is a visual addition to the demo,
-not a change to the CLI's output.
+Green prompt/check markers and cyan answers, selections, and commands mirror the
+CLI's ANSI color roles with readable light/dark variants. Success text stays
+neutral, with only its check mark green. A compact xmcp block-character wordmark
+appears immediately after the success message, before the next steps. It is black
+in light mode, white in dark mode, and scales down on mobile. The mark is a visual
+addition to the website demo, not a change to the CLI's output.
 The full transcript reserves its height; closing the accordion, leaving
 the viewport, or hiding the tab pauses playback. Reduced motion shows the entire
 transcript immediately. Copy always copies the complete command.
+Right-click the header logo (or focus it and press Shift+F10) to copy or download
+the SVG. Its theme-aware menu is portaled above the sidebar navigation.
 Every code block has a shared header with a language badge, filename or language
 label, and Copy. Filenames and declared fence languages take precedence;
 recognizable unlabelled commands, URLs, JSON and code signatures can supply a
