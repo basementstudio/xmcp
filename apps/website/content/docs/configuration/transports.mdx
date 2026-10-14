@@ -28,6 +28,41 @@ export default config;
 
 These are the default values. Override only what you need to customize.
 
+### Subscription streams
+
+Clients on protocol revision 2026-07-28 can open a `subscriptions/listen`
+stream to receive list-changed notifications. The stream is long lived by
+design: it stays open, sending keepalive frames, until the client goes away.
+
+`maxSubscriptions` caps how many of those streams one server instance holds
+open at once, so a horizontally scaled deployment allows that many per instance
+rather than in total. Once the cap is reached, a further `subscriptions/listen`
+is refused in band with a JSON-RPC error instead of being served. It defaults to
+the MCP SDK's own limit; set it to `0` to refuse every subscription:
+
+```typescript title="xmcp.config.ts"
+const config: XmcpConfig = {
+  http: {
+    maxSubscriptions: 0,
+  },
+};
+
+export default config;
+```
+
+Turn subscriptions off when your server runs on a platform that caps how long a
+single request may last, such as a serverless function. There, a held-open
+stream cannot outlive the invocation: it is killed when the limit is reached,
+after billing the whole window.
+
+A refused client receives no list-changed notifications and has to ask for the
+list again on its own initiative. That costs a stateless server nothing, because
+it builds its tools, prompts and resources per request and answers every
+`tools/list` from the current one. Note that the server still advertises its
+`listChanged` capabilities when it is refusing subscriptions, and that the
+refusal reads as `Subscription limit reached` whether the cap is `0` or merely
+full.
+
 ### CORS
 
 CORS (Cross-Origin Resource Sharing) middleware that can be configured to control cross-origin requests.

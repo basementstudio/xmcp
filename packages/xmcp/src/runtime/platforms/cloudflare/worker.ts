@@ -17,6 +17,7 @@ const httpConfig = HTTP_CONFIG as {
   host: string;
   bodySizeLimit: number;
   endpoint: string;
+  maxSubscriptions?: number;
   debug: boolean;
 };
 
@@ -121,6 +122,7 @@ preloadSchemas();
 const mcpHandler = createMcpHandler(createServer, {
   legacy: "stateless",
   responseMode: "json",
+  maxSubscriptions: httpConfig.maxSubscriptions,
   onerror: (error) => log("MCP handler error:", error),
 });
 

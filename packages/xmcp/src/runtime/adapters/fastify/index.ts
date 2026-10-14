@@ -13,6 +13,7 @@ const httpConfig = HTTP_CONFIG as {
   host: string;
   bodySizeLimit: number;
   endpoint: string;
+  maxSubscriptions?: number;
   debug: boolean;
 };
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
@@ -22,6 +23,7 @@ const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // stateless fallback.
 const mcpHandler = createMcpHandler(createServer, {
   legacy: "stateless",
+  maxSubscriptions: httpConfig.maxSubscriptions,
   onerror: httpConfig.debug
     ? (error) => console.error("[HTTP-server] MCP handler error:", error)
     : undefined,

@@ -71,6 +71,7 @@ export class StatelessStreamableHTTPTransport {
     this.mcpHandler = createMcpHandler(() => this.createServerFn(), {
       legacy: "stateless",
       onerror: (error) => this.log("MCP handler error:", error),
+      maxSubscriptions: this.options.maxSubscriptions,
     });
     this.nodeMcpHandler = toNodeHandler(this.mcpHandler, {
       onerror: (error) =>

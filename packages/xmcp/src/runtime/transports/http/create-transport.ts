@@ -32,6 +32,7 @@ export async function createHttpTransport(): Promise<StatelessStreamableHTTPTran
     host: httpConfig?.host,
     debug: httpConfig?.debug,
     bodySizeLimit: httpConfig?.bodySizeLimit?.toString(),
+    maxSubscriptions: httpConfig?.maxSubscriptions,
     endpoint: httpConfig?.endpoint,
     template: templateConfig,
   };

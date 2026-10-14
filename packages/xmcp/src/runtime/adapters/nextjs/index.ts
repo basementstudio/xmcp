@@ -10,6 +10,7 @@ import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 // stateless fallback.
 const mcpHandler = createMcpHandler(initializeMcpServer, {
   legacy: "stateless",
+  maxSubscriptions: HTTP_CONFIG.maxSubscriptions,
 });
 
 /**
