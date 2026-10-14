@@ -468,15 +468,24 @@ copy feedback, and reduced-motion behavior.
 
 ## Persistent homepage scene
 
-`PersistentHero` lives in the root layout. The first homepage visit lazily loads
-the particle scene into a stable portal host; navigation parks that host in a
-noninteractive, visibility-hidden container at its last measured size and pauses
-the renderer. Unlike `display: none`, this retains the canvas dimensions and
-avoids clearing the WebGL drawing buffer. Returning home reattaches the same canvas, textures, and
-simulation; WebGPU presents a frame before paint when resumed. Direct visits to other pages do not load the
-hero. A hard refresh still initializes a new scene. Reduced-motion and GPU-error
-artwork fallbacks remain available, and the homepage slot reserves its height
-before hydration.
+`PersistentHero` lives in the root layout. On the first homepage visit it lazily
+loads the particle scene into a permanent layer. The canvas and its ancestors
+stay connected to the same DOM parents across routes: there is no portal
+reparenting, hidden route subtree, or renderer remount on navigation.
+
+The homepage slot reserves the scene's space. A layout effect and resize/scroll
+observers align the fixed layer with that slot before paint, including font
+loading and responsive changes. On other routes the layer is invisible and
+noninteractive, retains its dimensions and GPU resources, and stops rendering.
+Returning home reveals the same scene; WebGPU presents a frame before paint.
+Direct visits to other pages do not load the hero. A hard refresh initializes a
+new scene. Reduced-motion and GPU-error artwork fallbacks remain available.
+
+Run `pnpm --filter website dev`, visit `/`, navigate to `/blog` and `/docs`, and
+return using the logo or browser history. Check that the canvas and every one of
+its ancestors retain their identities, the initial return frame contains the
+scene, scrolling/resizing keeps it aligned with its slot, and off-page GPU
+rendering stays paused. Test both themes and reduced motion.
 
 The latest-version link displays Roman numeral semver segments using the same
 10.5px EB Garamond typesetting as the table-of-contents numbers
