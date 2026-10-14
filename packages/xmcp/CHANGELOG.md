@@ -1,5 +1,11 @@
 # xmcp
 
+## 1.7.2
+
+### Patch Changes
+
+- f42dd7d: Allow static resources to return `inputRequired` results so clients can supply input before reading their contents.
+
 ## 1.7.1
 
 ### Patch Changes
