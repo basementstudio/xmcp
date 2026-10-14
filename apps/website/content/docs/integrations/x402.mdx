@@ -84,10 +84,13 @@ export default x402Provider({
 - **`wallet`**: Your wallet address that receives payments
 - **`facilitator`**: (Optional) Facilitator URL (defaults to `https://x402.org/facilitator`)
 - **`debug`**: (Optional) Enable debug logging
+- **`nano`**: (Optional) Settings for tools on the `nano` network, see [Nano (XNO)](#nano-xno)
+  - **`wallet`**: `nano_` address that receives XNO (falls back to `wallet`)
+  - **`rpc`**: Nano node RPC URL used to verify payments (default: `https://rpc.nano.to`)
 - **`defaults`**: (Optional) Default values for all paid tools
   - **`price`**: Price in USDC (default: `0.01`)
   - **`currency`**: Currency code (default: `"USDC"`)
-  - **`network`**: Blockchain network - `"base"` or `"base-sepolia"` (default: `"base"`)
+  - **`network`**: Network - `"base"`, `"base-sepolia"` or `"nano"` (default: `"base"`)
   - **`maxPaymentAge`**: Maximum payment age in seconds (default: `300`)
 
 ## Monetize a Tool
@@ -156,12 +159,74 @@ export default paid(async function paidGreet({ name }) {
 
 ## Networks
 
-The plugin supports two networks:
+The plugin supports three networks:
 
-| Network | Chain ID | Use Case |
-|---------|----------|----------|
-| `base` | 8453 | Production with real USDC |
-| `base-sepolia` | 84532 | Testing with testnet USDC |
+| Network | ID | Asset | Use Case |
+|---------|----|-------|----------|
+| `base` | `eip155:8453` | USDC | Production with real USDC |
+| `base-sepolia` | `eip155:84532` | USDC | Testing with testnet USDC |
+| `nano` | `nano:mainnet` | XNO | Production with real XNO |
+
+## Nano (XNO)
+
+Tools can also be paid in XNO on the Nano network, next to USDC on Base. Nano has no facilitator: the payer publishes a send block to your Nano address first, then retries the call with the block hash as the payment payload. The plugin checks the block against a Nano node and does not hold a key or broadcast anything.
+
+```typescript title="src/middleware.ts"
+import { x402Provider } from "@xmcp-dev/x402";
+
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  defaults: {
+    price: 0.01,
+    network: "base",
+  },
+  nano: {
+    wallet: process.env.X402_NANO_WALLET,
+  },
+});
+```
+
+```typescript title="src/tools/word-count.ts"
+import { paid } from "@xmcp-dev/x402";
+
+// 0.001 XNO per call
+export default paid(
+  { network: "nano", price: 0.001 },
+  async function wordCount({ text }) {
+    return `${text.trim().split(/\s+/).length} words`;
+  }
+);
+```
+
+<Callout variant="warning">
+  On the `nano` network, `price` is an amount of XNO, not USD. There is no exchange rate conversion. The payment requirements advertise the amount in raw (1 XNO = 10^30 raw).
+</Callout>
+
+The client sends the hash of its send block in the `payload` of the x402 payment:
+
+```json
+{
+  "x402Version": 2,
+  "accepted": { "scheme": "exact", "network": "nano:mainnet" },
+  "payload": { "blockHash": "<64 hex characters>" }
+}
+```
+
+A payment is accepted when the block:
+
+- is a confirmed state block with subtype `send`
+- sends to the configured `nano.wallet` (checksum validated)
+- sends at least the tool price (previous balance minus the block's balance)
+- was first seen by the node within `maxPaymentAge` seconds, when the node reports a timestamp
+- has not already paid for another call on this server
+
+The block hash and payer are returned in `payment()` and in the `x402/payment-response` metadata. If the tool returns an error, the block can be used again for a retry.
+
+Things to know before using it:
+
+- The block hash is a bearer proof. Anyone who sees the block on the public ledger could present it first, so keep `maxPaymentAge` short.
+- Used block hashes are kept in memory. They are forgotten on restart and are not shared between server instances.
+- Verification depends on the Nano node RPC you configure. Use a node you trust.
 
 ## Troubleshooting
 
@@ -180,6 +245,7 @@ If payment verification fails:
 - Ensure the payment amount matches the tool price
 - Check that the payment is recent (within `maxPaymentAge` seconds)
 - Verify the correct network is being used (base vs base-sepolia)
+- For `nano`, ensure the send block is confirmed before retrying the call
 
 ### Settlement Errors
 

@@ -4,6 +4,7 @@ import { extractToolNamesFromRequest } from "xmcp";
 import {
   type X402Config,
   type X402ToolContext,
+  type X402PaymentContext,
   type PaymentPayload,
   type PaymentRequirements,
   x402ConfigSchema,
@@ -13,6 +14,7 @@ import {
   verifyPayment,
   settlePayment,
   createPaymentRequiredResponse,
+  networkIdOf,
 } from "./verify.js";
 import { log, logError } from "./logger.js";
 import {
@@ -21,10 +23,13 @@ import {
   getToolContext,
 } from "./context.js";
 import { NETWORKS } from "./constants.js";
+import { isValidNanoAddress } from "./nano.js";
 
 interface PendingSettlement {
   payload: PaymentPayload;
   requirements: PaymentRequirements;
+  context?: X402PaymentContext;
+  release?: () => void;
 }
 
 export function x402Provider(config: X402Config): RequestHandler {
@@ -38,10 +43,23 @@ export function x402Provider(config: X402Config): RequestHandler {
     throw new Error(`x402Provider configuration error:\n${errors}`);
   }
 
-  return x402Middleware(parsedConfig.data);
+  const { data } = parsedConfig;
+  if (
+    data.defaults?.network === "nano" &&
+    !isValidNanoAddress(data.nano?.wallet ?? data.wallet)
+  ) {
+    throw new Error(
+      "x402Provider configuration error:\n  - nano.wallet: a valid nano_ address is required for the nano network"
+    );
+  }
+
+  return x402Middleware(data);
 }
 
 function x402Middleware(config: X402Config): RequestHandler {
+  // Nano block hashes already accepted by this provider, to prevent replay
+  const nanoBlocks = new Set<string>();
+
   return async (req: Request, res: Response, next: NextFunction) => {
     const paidToolResult = findPaidToolInRequest(req);
     if (paidToolResult.error) {
@@ -76,6 +94,7 @@ function x402Middleware(config: X402Config): RequestHandler {
       toolName,
       toolOptions,
       config,
+      nanoBlocks,
     };
 
     toolContextProvider(toolCtx, async () => {
@@ -102,6 +121,8 @@ function x402Middleware(config: X402Config): RequestHandler {
         {
           payload: verification.payload!,
           requirements: verification.requirements!,
+          context: verification.context,
+          release: verification.release,
         },
         verification.isV2Format ?? false
       );
@@ -213,6 +234,7 @@ function setupSettlementInterceptor(
     }
 
     if (isToolError(body)) {
+      pendingSettlement.release?.();
       return originalEnd(
         chunk,
         encoding as BufferEncoding,
@@ -258,19 +280,24 @@ async function handleSettlement(
   pendingSettlement: PendingSettlement,
   body: unknown
 ): Promise<unknown> {
-  const { payload, requirements } = pendingSettlement;
+  const { payload, requirements, context } = pendingSettlement;
   const { config } = getToolContext();
   const debug = config.debug ?? false;
 
-  const settlement = await settlePayment(payload, requirements);
+  const settlement = await settlePayment(payload, requirements, context);
 
   log(debug, "Settlement result:", settlement);
 
   if (settlement.success && settlement.transaction) {
-    const networkName =
-      settlement.network === "eip155:8453" ? "base" : "base-sepolia";
-    const explorer = NETWORKS[networkName].explorer;
-    log(debug, `Transaction: ${explorer}/tx/${settlement.transaction}`);
+    const network = Object.values(NETWORKS).find(
+      (entry) => entry.id === networkIdOf(settlement.network ?? "")
+    );
+    if (network) {
+      log(
+        debug,
+        `Transaction: ${network.explorer}${network.explorerTxPath}${settlement.transaction}`
+      );
+    }
   }
 
   return addPaymentResponseToMeta(body, settlement);
