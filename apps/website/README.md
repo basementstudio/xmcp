@@ -113,7 +113,7 @@ the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
 labels and an active pill that follows the section, with motion disabled for
 reduced-motion preferences. Page actions remain below the TOC.
 On desktop docs, hovering over the reading column dims both sidebars with a soft
-800ms ease-in-out fade in both directions. The active TOC numeral and its
+800ms ease-in-out fade in both directions. The active TOC number, label, and
 highlight stay fully visible so the current section remains easy to find. Leaving
 the column or focusing a sidebar control with the keyboard restores them. This
 uses CSS without changing layout or disabling controls, stays off on touch and
@@ -395,10 +395,12 @@ and mobile when changing dialog motion.
 ## Link hover
 
 Sidebar links use the same rounded hover treatment as the table of contents.
-Other text links share an underline animation: it draws from the left on
-hover or keyboard focus and retracts to the right. Use `link-underline` for text
-links, or `link-underline-group` with a `link-underline-label` span when a link
-also includes icons. Reduced-motion preferences make the state change immediate.
+Text links have no underlines at rest, on hover, or during keyboard focus.
+They keep their color feedback and visible focus outlines. The existing
+`link-underline` class names now supply only color transitions, including when
+the label is inside `link-underline-group`. Search matches use font weight rather
+than underlines. Footer link icons, including brand marks and external-link
+arrows, are explicitly 15 × 15px.
 
 ## Typography
 
@@ -468,12 +470,15 @@ copy feedback, and reduced-motion behavior.
 
 `PersistentHero` lives in the root layout. The first homepage visit lazily loads
 the particle scene into a stable portal host; navigation parks that host in a
-hidden container and pauses the renderer. Returning home reattaches the same
-canvas, textures, and simulation. Direct visits to other pages do not load the
+noninteractive, visibility-hidden container at its last measured size and pauses
+the renderer. Unlike `display: none`, this retains the canvas dimensions and
+avoids clearing the WebGL drawing buffer. Returning home reattaches the same canvas, textures, and
+simulation; WebGPU presents a frame before paint when resumed. Direct visits to other pages do not load the
 hero. A hard refresh still initializes a new scene. Reduced-motion and GPU-error
 artwork fallbacks remain available, and the homepage slot reserves its height
 before hydration.
 
-The latest-version link displays Roman numeral semver segments in EB Garamond
+The latest-version link displays Roman numeral semver segments using the same
+10.5px EB Garamond typesetting as the table-of-contents numbers
 (e.g. `1.7.1` → `I.VII.I`; zero is `N`). Its accessible label and tooltip retain
 the standard version, and prerelease suffixes remain unchanged.

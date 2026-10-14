@@ -6,6 +6,7 @@ import {
   Suspense,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type ReactNode,
@@ -22,6 +23,22 @@ export function PersistentHero({ children }: { children: ReactNode }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const [active, setActive] = useState(false);
+  // Keep the last nonzero size when the homepage is hidden by the router.
+  // display:none parking loses layout and can discard the presented GPU frame.
+  useEffect(() => {
+    if (!target) return;
+    const rememberSize = () => {
+      const bounds = target.getBoundingClientRect();
+      if (!parking.current || !bounds.width || !bounds.height) return;
+      parking.current.style.width = `${bounds.width}px`;
+      parking.current.style.height = `${bounds.height}px`;
+    };
+    rememberSize();
+    const observer = new ResizeObserver(rememberSize);
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [target]);
+
   const attach = useCallback((slot: HTMLDivElement | null) => {
     if (slot) {
       if (!host.current) {
@@ -31,7 +48,14 @@ export function PersistentHero({ children }: { children: ReactNode }) {
       slot.appendChild(host.current);
       setActive(true);
     } else {
-      if (host.current) parking.current?.appendChild(host.current);
+      if (host.current && parking.current) {
+        const bounds = host.current.getBoundingClientRect();
+        if (bounds.width && bounds.height) {
+          parking.current.style.width = `${bounds.width}px`;
+          parking.current.style.height = `${bounds.height}px`;
+        }
+        parking.current.appendChild(host.current);
+      }
       setActive(false);
     }
   }, []);
@@ -39,10 +63,23 @@ export function PersistentHero({ children }: { children: ReactNode }) {
   return (
     <HeroSlotContext.Provider value={attach}>
       {children}
-      <div ref={parking} hidden aria-hidden="true" data-hero-parking="" />
+      <div
+        ref={parking}
+        aria-hidden="true"
+        inert
+        data-hero-parking=""
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          visibility: "hidden",
+          pointerEvents: "none",
+        }}
+      />
       {/* The portal target stays identical across routes. Moving its host keeps
           the React scene, GPU context, textures and simulation alive. Only the
-          homepage slot starts loading it; parked scenes never render frames. */}
+          homepage slot starts loading it; dimension-preserving parking retains
+          the renderer size while the scene stops rendering frames. */}
       {target &&
         createPortal(
           <Suspense fallback={null}>

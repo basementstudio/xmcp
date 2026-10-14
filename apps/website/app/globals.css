@@ -315,8 +315,7 @@ html:has(#nd-blog-layout) {
 }
 
 .prose a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .prose strong {
@@ -542,28 +541,19 @@ input[type="email"] {
   }
 }
 
-/* Draw from the left on hover/focus, then retract toward the right. */
+/* Links use color and existing focus outlines, without decorative underlines. */
+body a,
+body a:is(:hover, :focus-visible),
 .link-underline,
 .link-underline-label,
 .prose :is(p, li, td) a:not(:has(img)) {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: 0% 1px;
   text-decoration: none;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  transition:
-    background-size 200ms ease-out,
-    color 200ms ease-out;
 }
-
-.link-underline:is(:hover, :focus-visible),
-.link-underline-group:is(:hover, :focus-visible, [data-active="true"])
-  .link-underline-label,
-.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
-  background-position: left bottom;
-  background-size: 100% 1px;
+.link-underline,
+.link-underline-label,
+.prose :is(p, li, td) a:not(:has(img)) {
+  background-image: none;
+  transition: color 200ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -572,25 +562,6 @@ input[type="email"] {
   .prose :is(p, li, td) a:not(:has(img)) {
     transition: none;
   }
-}
-
-/* Keep links identifiable within prose before they are hovered. */
-.prose :is(p, li, td) a:not(:has(img)) {
-  background-image:
-    linear-gradient(currentColor, currentColor),
-    linear-gradient(
-      color-mix(in srgb, var(--foreground) 40%, transparent),
-      color-mix(in srgb, var(--foreground) 40%, transparent)
-    );
-  background-size:
-    0% 1px,
-    100% 1px;
-}
-
-.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
-  background-size:
-    100% 1px,
-    100% 1px;
 }
 
 .prose h2 {

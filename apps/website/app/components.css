@@ -53,8 +53,7 @@
   --site-control-glide: 360ms;
   --site-reading-fade: 800ms;
 }
-/* Fade TOC text individually: parent opacity would also dim the active
-   numeral, which must remain a clear reading-position marker. */
+/* Fade TOC text individually so the entire active item stays fully visible. */
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
   body:has(#nd-docs-layout > .site-article:hover):not(
       :has(.site-header :focus-visible, .docs-toc :focus-visible)
@@ -75,7 +74,7 @@
   body:has(#nd-docs-layout)
     .docs-toc
     .site-toc-link[aria-current="location"]
-    .site-toc-numeral {
+    :is(.site-toc-numeral, .site-toc-name) {
     opacity: 1;
   }
 
@@ -134,10 +133,6 @@
   flex: none;
   width: 24px;
   color: var(--site-faint);
-  font:
-    400 10.5px/1.5 var(--font-editorial-serif),
-    Georgia,
-    serif;
   text-align: left;
   counter-reset: toc-index var(--toc-index);
 }
@@ -771,15 +766,16 @@ body .site-footer-label {
   line-height: 20px;
   transition: color var(--site-control-quick);
 }
+.site-footer-link > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
 .site-footer-link > svg:last-of-type {
   opacity: 0.6;
 }
 .site-footer-link:hover {
   color: var(--site-ink);
-}
-.site-footer-link:hover .site-footer-link-label {
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 .site-footer :is(a, button):focus-visible {
   outline: 2px solid var(--site-ink);
@@ -880,7 +876,13 @@ body .site-icon {
   transform-box: fill-box;
 }
 
+.site-toc-numeral,
 .site-version-number {
-  font-family: var(--font-editorial-serif), serif;
-  font-size: 15px;
+  font:
+    400 10.5px/1.5 var(--font-editorial-serif),
+    Georgia,
+    serif;
+}
+.site-version-number {
+  color: var(--site-ink);
 }

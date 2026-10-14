@@ -103,7 +103,7 @@ export const Footer = () => {
                           {Icon && (
                             <Icon
                               aria-hidden="true"
-                              className="size-4 shrink-0"
+                              className="size-[15px] shrink-0"
                             />
                           )}
                           <span className="site-footer-link-label">
@@ -113,7 +113,7 @@ export const Footer = () => {
                             <>
                               <ArrowUpRight
                                 aria-hidden="true"
-                                className="size-3 shrink-0"
+                                className="size-[15px] shrink-0"
                               />
                               <span className="sr-only">
                                 {" "}
@@ -138,9 +138,9 @@ export const Footer = () => {
             rel="noopener noreferrer"
             className={linkClassName}
           >
-            <Icons.vercel aria-hidden="true" className="size-3.5 shrink-0" />
+            <Icons.vercel aria-hidden="true" className="size-[15px] shrink-0" />
             <span className="site-footer-link-label">Supported by Vercel</span>
-            <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
+            <ArrowUpRight aria-hidden="true" className="size-[15px] shrink-0" />
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
         </div>

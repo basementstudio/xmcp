@@ -520,7 +520,7 @@ function renderHighlights(highlights: HighlightedText<ReactNode>[]): ReactNode {
   return highlights.map((node, i) => {
     if (node.styles?.highlight) {
       return (
-        <span key={i} className="text-brand-neutral-50 underline">
+        <span key={i} className="text-brand-neutral-50 font-medium">
           {node.content}
         </span>
       );

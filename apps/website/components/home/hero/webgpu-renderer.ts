@@ -444,8 +444,11 @@ export function createHeroRenderer(
       if (!active) {
         cancelAnimationFrame(frame);
         frame = 0;
-      } else if (!disposed && initialized && !frame)
-        frame = requestAnimationFrame(render);
+      } else if (!disposed && initialized && !frame) {
+        // Re-present the retained scene before the reattached canvas is painted.
+        // Subsequent frames still use the normal requestAnimationFrame loop.
+        render(performance.now());
+      }
     },
     setControls(next: ParticleControls) {
       const previous = controls;

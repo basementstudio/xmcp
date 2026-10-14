@@ -1,6 +1,13 @@
 "use client";
 
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import type { ParticleSceneProps } from "@/components/particles/viewport";
 import { HERO_CONTROLS } from "@/components/particles/controls";
 import { createHeroRenderer } from "./webgpu-renderer";
@@ -21,7 +28,7 @@ export default function WebGPUCanvas({
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).has("debug");
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const instance = createHeroRenderer(
       canvas.current!,
       false,
@@ -35,7 +42,7 @@ export default function WebGPUCanvas({
     };
   }, [onReady, onError]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     renderer.current?.setActive(active);
   }, [active]);
   useEffect(() => {

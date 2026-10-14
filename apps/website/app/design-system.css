@@ -470,10 +470,6 @@ body .site-prefooter .site-page-title {
 .concept-card h3 span {
   color: var(--site-muted);
 }
-.concept-card:hover h3 {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
 body .display,
 body .heading-1,
 body .listing-intro .display,
