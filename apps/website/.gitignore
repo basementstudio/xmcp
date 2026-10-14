@@ -48,3 +48,6 @@ xmcp-env.d.ts
 
 # Build-time GitHub release snapshot
 /.generated/
+
+# Local IndexNow submission baseline
+/.indexnow/

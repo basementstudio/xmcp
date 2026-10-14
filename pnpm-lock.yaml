@@ -314,6 +314,9 @@ importers:
       glslify-loader:
         specifier: ^2.0.0
         version: 2.0.0
+      hast-util-from-html:
+        specifier: 2.0.3
+        version: 2.0.3
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
