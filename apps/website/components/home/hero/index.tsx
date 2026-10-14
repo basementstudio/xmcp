@@ -27,9 +27,9 @@ export function HomeHero({ version }: { version?: string }) {
     <section className="home-hero">
       <header className="editorial-masthead">
         <div className="editorial-meta">
-          <span>Latest version</span>
           <Link
             href="https://npmjs.com/package/xmcp"
+            className="inline-flex flex-wrap items-baseline gap-x-4 gap-y-2"
             target="_blank"
             rel="noopener noreferrer"
             title={
@@ -43,17 +43,18 @@ export function HomeHero({ version }: { version?: string }) {
                 : "xmcp on npm (opens in a new tab)"
             }
           >
-            {version ? (
-              <>
-                xmcp · v
-                <span className="site-version-number">
-                  {romanVersion(version)}
+            <span>Latest version</span>
+            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              {version && (
+                <span>
+                  v
+                  <span className="site-version-number">
+                    {romanVersion(version)}
+                  </span>
                 </span>
-              </>
-            ) : (
-              "xmcp · npm"
-            )}{" "}
-            <ArrowTopRightIcon className="inline-block align-middle" />
+              )}
+              <ArrowTopRightIcon />
+            </span>
           </Link>
         </div>
         <h1 className="site-page-title">The TypeScript MCP framework</h1>

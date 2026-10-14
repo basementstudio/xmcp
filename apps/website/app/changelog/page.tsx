@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ReleaseNotes } from "@/components/changelog/release-notes";
 import { SITE_URL } from "@/lib/base-url";
 import { formatReleaseDate, getReleases, releaseAnchor } from "@/lib/releases";
+import { romanVersion } from "@/lib/roman-version";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -58,13 +59,18 @@ export default function ChangelogPage() {
             <div className="site-release-meta">
               <h2
                 id={`release-${release.version}`}
-                className="site-section-title font-mono"
+                className="site-section-title"
               >
                 <a
                   href={`#${releaseAnchor(release.version)}`}
                   className="link-underline"
+                  aria-label={`Version ${release.version}`}
+                  title={`v${release.version}`}
                 >
-                  v{release.version}
+                  v
+                  <span className="site-version-number">
+                    {romanVersion(release.version)}
+                  </span>
                 </a>
               </h2>
               <time

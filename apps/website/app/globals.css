@@ -92,10 +92,14 @@
   --color-brand-black: var(--brand-black);
 }
 
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  overscroll-behavior: none;
 }
 
 h1,
@@ -408,6 +412,9 @@ input[type="email"] {
   &::details-content {
     block-size: 0;
     overflow: hidden;
+    /* Leave room for card shadows without shifting the content alignment. */
+    padding-inline: 4px;
+    margin-inline: -4px;
     opacity: 0;
     /* Keep allow-discrete in the shorthand so CSS optimization cannot reset it. */
     transition:

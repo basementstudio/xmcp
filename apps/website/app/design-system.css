@@ -517,11 +517,12 @@ body::before {
 /* One scroll owner; inset rows keep pills and focus rings inside its edges. */
 .site-documentation-header {
   position: sticky;
+  /* Cover the scroll pane's full 8px top inset once the header sticks. */
   top: -8px;
   z-index: 1;
-  /* Cover the scroll pane above and around the rounded toggle. */
-  margin: -8px -4px 0;
-  padding: 8px 4px 0;
+  /* Cover the gap without overlapping the preceding link's focus ring. */
+  margin: -6px -4px 0;
+  padding: 6px 4px 0;
   background: var(--site-ground);
 }
 .site-documentation-heading {
@@ -595,12 +596,12 @@ body::before {
     margin-left: -15px;
     padding: 8px 4px;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
     scroll-padding: 48px 0 12px;
     scrollbar-width: thin;
     mask-image: linear-gradient(
-      transparent,
-      black 8px,
+      transparent 2px,
+      black 6px,
       black calc(100% - 8px),
       transparent
     );

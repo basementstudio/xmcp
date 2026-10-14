@@ -112,7 +112,8 @@ rows. Search keeps the existing engine, shortcuts and result navigation, using
 the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
 labels and an active pill that follows the section, with motion disabled for
 reduced-motion preferences. Page actions remain below the TOC.
-On desktop docs, hovering over the reading column dims both sidebars with a soft
+On desktop docs and blog articles, hovering over the reading column dims both
+sidebars with a soft
 800ms ease-in-out fade in both directions. The active TOC number, label, and
 highlight stay fully visible so the current section remains easy to find. Leaving
 the column or focusing a sidebar control with the keyboard restores them. This

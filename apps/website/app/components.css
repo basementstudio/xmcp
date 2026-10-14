@@ -55,37 +55,39 @@
 }
 /* Fade TOC text individually so the entire active item stays fully visible. */
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
-  body:has(#nd-docs-layout > .site-article:hover):not(
-      :has(.site-header :focus-visible, .docs-toc :focus-visible)
+  body:has(:is(#nd-docs-layout, #nd-blog-layout) > .site-article:hover):not(
+      :has(.site-header :focus-visible, .site-page-toc :focus-visible)
     ) {
     --site-reading-opacity: 0.35;
   }
 
-  body:has(#nd-docs-layout)
+  body:has(#nd-docs-layout, #nd-blog-layout)
     :is(
       .site-header,
-      .docs-toc .site-toc-label,
-      .docs-toc .site-toc-name,
-      .docs-toc .site-toc-numeral,
-      .docs-toc .site-page-actions
+      .site-page-toc .site-toc-label,
+      .site-page-toc .site-toc-name,
+      .site-page-toc .site-toc-numeral,
+      .site-page-toc .site-page-url,
+      .site-page-toc .site-page-actions
     ) {
     opacity: var(--site-reading-opacity, 1);
   }
-  body:has(#nd-docs-layout)
-    .docs-toc
+  body:has(#nd-docs-layout, #nd-blog-layout)
+    .site-page-toc
     .site-toc-link[aria-current="location"]
     :is(.site-toc-numeral, .site-toc-name) {
     opacity: 1;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    body:has(#nd-docs-layout)
+    body:has(#nd-docs-layout, #nd-blog-layout)
       :is(
         .site-header,
-        .docs-toc .site-toc-label,
-        .docs-toc .site-toc-name,
-        .docs-toc .site-toc-numeral,
-        .docs-toc .site-page-actions
+        .site-page-toc .site-toc-label,
+        .site-page-toc .site-toc-name,
+        .site-page-toc .site-toc-numeral,
+        .site-page-toc .site-page-url,
+        .site-page-toc .site-page-actions
       ) {
       transition: opacity var(--site-reading-fade) ease-in-out;
     }
