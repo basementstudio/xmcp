@@ -8,7 +8,7 @@ import {
   rehypeCode,
   rehypeCodeDefaultOptions,
 } from "fumadocs-core/mdx-plugins";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -50,10 +50,18 @@ export default defineConfig({
       langs: ["ts", "js", "html", "tsx", "jsx", "json", "mdx", "bash", "shell"],
       inline: "tailing-curly-colon",
       themes: {
-        light: xmcpAyuDarkTheme,
+        light: xmcpLightTheme,
         dark: xmcpAyuDarkTheme,
       },
-      transformers: [...(rehypeCodeDefaultOptions.transformers ?? [])],
+      transformers: [
+        ...(rehypeCodeDefaultOptions.transformers ?? []),
+        {
+          name: "code-language-label",
+          pre(node) {
+            node.properties["data-language"] = this.options.lang;
+          },
+        },
+      ],
     },
     rehypePlugins: [rehypeCode],
   },

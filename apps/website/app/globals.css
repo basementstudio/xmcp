@@ -2,20 +2,46 @@
 @import "tw-animate-css";
 
 @import "./shiki.css";
+@import "./design-system.css";
+@import "./components.css";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  color-scheme: light;
+  --background: var(--site-ground);
+  --foreground: var(--site-ink);
+  --surface: var(--site-card);
+  --surface-raised: var(--site-well);
+  --accent: var(--site-ink);
+  --accent-soft: var(--site-well);
+  --brand-white: var(--site-ink);
+  --brand-neutral-50: var(--site-ink);
+  --brand-neutral-100: var(--site-text);
+  --brand-neutral-200: var(--site-muted);
+  --brand-neutral-300: var(--site-faint);
+  --brand-neutral-400: var(--site-faint);
+  --brand-neutral-500: var(--site-rule);
+  --brand-neutral-600: var(--site-well);
+  --brand-black: var(--site-ground);
+}
 
-  --brand-white: #f7f7f7;
-  --brand-neutral-50: #dbdbdb;
-  --brand-neutral-100: #a8a8a8;
-  --brand-neutral-200: #757575;
-  --brand-neutral-300: #595959;
-  --brand-neutral-400: #424242;
-  --brand-neutral-500: #262626;
-  --brand-neutral-600: #171717;
-  --brand-black: #000000;
+.dark {
+  color-scheme: dark;
+  --background: var(--site-ground);
+  --foreground: var(--site-ink);
+  --surface: var(--site-card);
+  --surface-raised: var(--site-well);
+  --accent: var(--site-ink);
+  --accent-soft: var(--site-well);
+  --brand-white: var(--site-ink);
+  --brand-neutral-50: var(--site-ink);
+  --brand-neutral-100: var(--site-text);
+  --brand-neutral-200: var(--site-muted);
+  --brand-neutral-300: var(--site-faint);
+  --brand-neutral-400: var(--site-faint);
+  --brand-neutral-500: var(--site-rule);
+  --brand-neutral-600: var(--site-well);
+  --brand-black: var(--site-ground);
 }
 
 @theme inline {
@@ -23,6 +49,36 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --text-sm: var(--site-body-size);
+  --text-sm--line-height: var(--site-body-leading);
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --font-weight-normal: 450;
+  --font-weight-semibold: 550;
+  --font-weight-bold: 550;
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  /* Existing monochrome UI utilities follow the semantic foreground/background. */
+  --color-white: var(--foreground);
+  --color-black: var(--background);
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-card: var(--surface);
+  --color-fd-card-foreground: var(--foreground);
+  --color-fd-popover: var(--surface);
+  --color-fd-popover-foreground: var(--foreground);
+  --color-fd-muted: var(--surface-raised);
+  --color-fd-muted-foreground: var(--brand-neutral-100);
+  --color-fd-accent: var(--accent-soft);
+  --color-fd-accent-foreground: var(--accent);
+  --color-fd-primary: var(--accent);
+  --color-fd-primary-foreground: var(--background);
+  --color-fd-secondary: var(--surface-raised);
+  --color-fd-secondary-foreground: var(--foreground);
+  --color-fd-border: var(--brand-neutral-500);
+  --color-fd-ring: var(--accent);
 
   /* Brand colors */
   --color-brand-white: var(--brand-white);
@@ -36,10 +92,14 @@
   --color-brand-black: var(--brand-black);
 }
 
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  overscroll-behavior: none;
 }
 
 h1,
@@ -97,29 +157,29 @@ html:has(#nd-blog-layout) {
 }
 
 .prose h1 {
-  @apply text-[2rem] font-medium mt-3 mb-1.5;
+  @apply mt-3 mb-1.5;
 }
 
 .prose h2 {
-  @apply text-[1.5rem] font-medium mb-2.5 mt-6;
+  @apply mb-2.5 mt-6;
 }
 
 .prose h3 {
-  @apply text-[1.25rem] font-medium mb-1 mt-6;
+  @apply mb-1 mt-6;
 }
 
 .prose h4 {
-  @apply text-[1.25rem] font-medium mb-1 mt-6;
+  @apply mb-1 mt-6;
 }
 
 .prose h5,
 .prose h6 {
-  font-size: 1.125rem;
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: var(--site-section-size);
+  font-weight: 550;
+  line-height: var(--site-body-leading);
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
-  @apply font-mono uppercase;
+  font-family: var(--font-geist-sans), sans-serif;
 }
 
 .prose h1 a,
@@ -136,7 +196,7 @@ html:has(#nd-blog-layout) {
 }
 
 .prose code {
-  color: #ffffff;
+  color: var(--foreground);
 }
 
 .prose code:has(pre) {
@@ -162,7 +222,7 @@ html:has(#nd-blog-layout) {
 .prose p {
   @apply font-sans text-brand-neutral-50;
   /* letter-spacing: -0.5px; */
-  line-height: 180%;
+  line-height: var(--site-paragraph-leading);
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   font-size: 1rem;
@@ -173,9 +233,9 @@ html:has(#nd-blog-layout) {
 }
 
 .prose code:not(pre code, :has(pre)) {
-  @apply border border-brand-neutral-400 bg-brand-black text-[#EC9D00] text-[0.75rem] px-1.5 py-0.5 rounded-md font-mono leading-none inline-block max-w-full overflow-x-auto whitespace-nowrap align-middle;
+  @apply border border-brand-neutral-400 bg-brand-black text-accent text-[0.75rem] px-1.5 py-0.5 rounded-md font-mono leading-none inline-block max-w-full overflow-x-auto whitespace-nowrap align-middle;
   letter-spacing: 0;
-  color: #ec9d00 !important;
+  color: var(--accent) !important;
   background-color: var(--color-brand-black) !important;
 }
 
@@ -189,19 +249,19 @@ html:has(#nd-blog-layout) {
 }
 
 .prose blockquote {
-  border-left: 3px solid #333333;
+  border-left: 3px solid var(--brand-neutral-500);
   padding-left: 1.5rem;
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
   font-style: italic;
-  color: #cccccc;
+  color: var(--brand-neutral-100);
 }
 
 .prose ul {
   @apply mt-4;
   list-style: none;
   padding-left: 0;
-  color: #c6c6c6;
+  color: var(--brand-neutral-50);
 }
 
 .prose ol {
@@ -250,21 +310,20 @@ html:has(#nd-blog-layout) {
   padding: 0.75rem 1rem;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid #333333;
+  border-bottom: 2px solid var(--brand-neutral-500);
 }
 
 .prose td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--brand-neutral-500);
 }
 
 .prose a {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .prose strong {
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .prose em {
@@ -293,13 +352,13 @@ input[type="email"] {
 
 /* Text selection styling */
 ::selection {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--foreground);
+  color: var(--background);
 }
 
 ::-moz-selection {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--foreground);
+  color: var(--background);
 }
 
 *:focus {
@@ -307,7 +366,7 @@ input[type="email"] {
 }
 
 *:focus-visible {
-  outline: 1px solid white;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -329,29 +388,7 @@ input[type="email"] {
 }
 
 .text-gradient {
-  background: var(
-    --80-100-80,
-    linear-gradient(
-      270deg,
-      rgba(247, 247, 247, 0.8) 0%,
-      #f7f7f7 50%,
-      rgba(247, 247, 247, 0.8) 100%
-    )
-  );
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-
-  /* to prevent some text from clipping, like "g"s - check */
-  &.heading-2 {
-    padding-bottom: 0.12rem;
-    margin-bottom: -0.12rem;
-  }
-
-  &.display {
-    padding-bottom: 0.22rem;
-    margin-bottom: -0.22rem;
-  }
+  color: var(--foreground);
 }
 
 .scrollbar-hide {
@@ -362,24 +399,28 @@ input[type="email"] {
   }
 }
 
-/* FAQ dropdowns. Animating a <details> needs ::details-content plus
+/* Shared accordions. Animating a <details> needs ::details-content plus
    interpolate-size, because the closed height is a keyword, not a length.
    Browsers without those features toggle instantly, which is why the effect
    lives here instead of in JS — the answers stay in the initial HTML either
    way. Exclusivity (opening one closes the rest) comes from the shared
    `name` attribute on the elements themselves. */
-.faq-item {
+.site-accordion-item {
+  --accordion-duration: 320ms;
   interpolate-size: allow-keywords;
 
   &::details-content {
     block-size: 0;
     overflow: hidden;
+    /* Leave room for card shadows without shifting the content alignment. */
+    padding-inline: 4px;
+    margin-inline: -4px;
     opacity: 0;
+    /* Keep allow-discrete in the shorthand so CSS optimization cannot reset it. */
     transition:
-      block-size 250ms ease,
-      opacity 200ms ease,
-      content-visibility 250ms;
-    transition-behavior: allow-discrete;
+      block-size var(--accordion-duration) ease-in-out,
+      opacity var(--accordion-duration) ease-in-out,
+      content-visibility var(--accordion-duration) allow-discrete;
   }
 
   &[open]::details-content {
@@ -389,7 +430,7 @@ input[type="email"] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .faq-item::details-content {
+  .site-accordion-item::details-content {
     transition-duration: 0s;
   }
 }
@@ -507,28 +548,19 @@ input[type="email"] {
   }
 }
 
-/* Draw from the left on hover/focus, then retract toward the right. */
+/* Links use color and existing focus outlines, without decorative underlines. */
+body a,
+body a:is(:hover, :focus-visible),
 .link-underline,
 .link-underline-label,
 .prose :is(p, li, td) a:not(:has(img)) {
-  background-image: linear-gradient(currentColor, currentColor);
-  background-repeat: no-repeat;
-  background-position: right bottom;
-  background-size: 0% 1px;
   text-decoration: none;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  transition:
-    background-size 200ms ease-out,
-    color 200ms ease-out;
 }
-
-.link-underline:is(:hover, :focus-visible),
-.link-underline-group:is(:hover, :focus-visible, [data-active="true"])
-  .link-underline-label,
-.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
-  background-position: left bottom;
-  background-size: 100% 1px;
+.link-underline,
+.link-underline-label,
+.prose :is(p, li, td) a:not(:has(img)) {
+  background-image: none;
+  transition: color 200ms ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -539,18 +571,81 @@ input[type="email"] {
   }
 }
 
-/* Keep links identifiable within prose before they are hovered. */
-.prose :is(p, li, td) a:not(:has(img)) {
-  background-image:
-    linear-gradient(currentColor, currentColor),
-    linear-gradient(rgb(255 255 255 / 0.4), rgb(255 255 255 / 0.4));
-  background-size:
-    0% 1px,
-    100% 1px;
+.prose h2 {
+  margin-top: 2.5rem;
+}
+.prose pre {
+  background: var(--surface);
+}
+.prose blockquote {
+  font-style: normal;
+}
+#nd-docs-layout nav a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 5px;
+}
+[data-theme-toggle] {
+  border-color: var(--brand-neutral-500);
+  background: var(--surface);
+  min-height: 44px;
+}
+[data-theme-toggle] > button {
+  cursor: pointer;
+}
+.site-header {
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--brand-neutral-500);
+}
+.site-footer {
+  border-top: 1px solid var(--brand-neutral-500);
+}
+.not-fumadocs-codeblock .shiki span {
+  color: var(--shiki-light);
+}
+.dark .not-fumadocs-codeblock .shiki span {
+  color: var(--shiki-dark);
 }
 
-.prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
-  background-size:
-    100% 1px,
-    100% 1px;
+/* Editorial framing shared by the content indexes. */
+.listing-intro {
+  grid-column: 1 / -1;
+  padding-block: 24px 36px;
+  border-bottom: 1px solid var(--brand-neutral-500);
+  margin-bottom: 24px;
+}
+.listing-intro .display {
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-block: 20px;
+  text-align: left;
+}
+.listing-description {
+  max-width: 620px;
+  color: var(--brand-neutral-100);
+  font-size: 15px;
+  line-height: var(--site-paragraph-leading);
+}
+/* Monochrome provider artwork follows the surrounding material palette. */
+.template-provider-art {
+  filter: brightness(0);
+  opacity: 0.65;
+}
+.dark .template-provider-art {
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+.feature-art {
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}
+.dark .feature-art {
+  filter: none;
+  mix-blend-mode: screen;
+}
+.hero-trust svg [fill="#F7F7F7"] {
+  fill: currentColor;
 }

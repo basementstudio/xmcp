@@ -3,8 +3,8 @@ import { Children, type ComponentProps, type ReactElement } from "react";
 import { highlight } from "fumadocs-core/highlight";
 import type { BundledLanguage } from "shiki";
 import { getMDXComponents } from "@/components/mdx-components";
-import { CodeBlock } from "@/components/codeblock";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { ArticleCodeBlock } from "@/components/codeblock";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 const BROKEN_INTERNAL_LINK_RE = /\/docs\/integrations\/chatgpt\b/;
 
@@ -27,32 +27,24 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
       lang: lang as BundledLanguage,
-      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
       // Match docs: shared code-block styles own the background.
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
   } catch {
     return await highlight(code, {
       lang: "plaintext",
-      themes: { light: xmcpAyuDarkTheme, dark: xmcpAyuDarkTheme },
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
       // Match docs: shared code-block styles own the background.
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
@@ -65,11 +57,7 @@ async function ReadmePre(props: ComponentProps<"pre">) {
   const content = codeProps.children;
 
   if (typeof content !== "string") {
-    return (
-      <CodeBlock>
-        <pre>{props.children}</pre>
-      </CodeBlock>
-    );
+    return <ArticleCodeBlock>{props.children}</ArticleCodeBlock>;
   }
 
   let lang =

@@ -163,10 +163,12 @@ void main()
 }
 `;
 
-export default function PrefooterParticlesCursorAnimation({
+export default function ImageParticles({
   onReady,
+  texture,
 }: {
   onReady: () => void;
+  texture: string;
 }) {
   const ready = useRef(false);
   const { size, camera, raycaster, gl } = useThree();
@@ -230,7 +232,7 @@ export default function PrefooterParticlesCursorAnimation({
 
   // useLoader suspends until the image is decoded and propagates failures to
   // the canvas boundary. Its shared texture cache owns the texture lifetime.
-  const pictureTexture = useLoader(THREE.TextureLoader, "/x.webp");
+  const pictureTexture = useLoader(THREE.TextureLoader, texture);
   const imageAspect = pictureTexture.image.width / pictureTexture.image.height;
 
   const planeSize = useMemo(() => {

@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { cn } from "@/lib/cn";
+import { ContentCard } from "@/components/ui/content-card";
 import type * as PageTree from "fumadocs-core/page-tree";
 
 export function NavigationLink({
@@ -13,19 +12,13 @@ export function NavigationLink({
   const label = isPrevious ? "Previous" : "Next";
 
   return (
-    <Link
+    <ContentCard
       href={item.url}
-      className={cn(
-        "flex flex-col gap-2 p-4 border border-brand-neutral-400 hover:border-brand-neutral-200 transition-colors group flex-1 rounded-lg",
-        !isPrevious && "items-end text-right"
-      )}
+      rel={isPrevious ? "prev" : "next"}
+      className={!isPrevious ? "text-right" : undefined}
     >
-      <span className="text-sm text-brand-neutral-100 flex items-center gap-2">
-        {label}
-      </span>
-      <span className="text-brand-white font-medium group-hover:text-fd-primary transition-colors">
-        {item.name}
-      </span>
-    </Link>
+      <span className="site-card-description">{label}</span>
+      <span className="site-card-title">{item.name}</span>
+    </ContentCard>
   );
 }

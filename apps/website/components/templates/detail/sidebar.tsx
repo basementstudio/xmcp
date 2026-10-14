@@ -21,7 +21,7 @@ export function TemplateDetailSidebar({
   xShareUrl: string;
 }) {
   return (
-    <aside className="lg:col-span-3 space-y-8">
+    <aside className="site-card-grid">
       <InfoCard label="GitHub Repo">
         <Link
           href={template.repositoryUrl}

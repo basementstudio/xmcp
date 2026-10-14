@@ -55,47 +55,124 @@ Check `/changelog`, a version permalink, and `/changelog.md` on desktop and mobi
 Sending `Accept: text/markdown` to `/changelog` returns the same Markdown document.
 The website is the runnable example; no framework API or separate example is needed.
 
-## Image and animation performance
+## Website design system
 
-The homepage starts its particle animation on hydration. Its lossless
-`/xmcp.webp` texture is preloaded by the homepage for its GPU renderer;
-keep their URLs and anonymous CORS mode aligned to avoid
-duplicate downloads. `/x.webp` is the footer texture. Both retain the original
-PNG dimensions and decoded pixels. The PNGs remain error fallbacks.
-The hero shows the canvas directly, without a still-image loading placeholder;
-static hero artwork only mounts for reduced motion or a rendering failure.
+This local visual test adapts the website components and tokens from
+[SF Interface Numbers](https://numbers.sfinterface.com): serif page titles,
+Roman-numeral section labels, specimen styling, left-aligned install commands, pill
+controls, and white code cards with a fine outline and shallow shadow. These
+patterns use the existing xmcp components; the Numbers package exports the number
+animation, not the site's component library, so no package was added.
 
-The hero uses a dedicated WebGPU renderer on supported devices in secure contexts
-(HTTPS or localhost). It renders the same 148,225 particles with WGSL shaders and
-instanced quads, preserving the point sizing, camera, cursor trail, motion and
-ACES/sRGB color pipeline. WebGPU cannot draw variable-sized point primitives, so
-small rasterization differences from WebGL are expected. Keep `webgpu-shader.ts`
-and the GLSL equations in `particles-cursor-animation.tsx` aligned when changing
-the effect. The native path uses existing WebGPU type declarations and adds no
-runtime dependency.
+`app/design-system.css` owns the shared `--site-*` tokens: a 700px maximum reading
+column, 168px navigation rail, 48px gap between columns, 56px section spacing,
+12px card radii, and Geist body text at 14px/20.5px. Adhesion supplies page titles from `app/fonts/Adhesion-Regular.woff2`, loaded through `next/font/local`
+with font swapping and -2px title letter spacing. EB Garamond supplies the numbers in section labels, the table of contents,
+accordions, and showcase steps.
+All pages use `site-page-grid`, including home, blogs, docs, templates, showcase,
+FAQ, changelog, telemetry, and the terminal playground: twelve
+columns inside the 700px reading column with a shared 24px gap. Their two-column
+card grids use the same 640px breakpoint; mobile pages share 20px outer gutters.
+Articles use `site-article-content`, and docs/blog share the `site-page-toc` rail.
+Docs, navigation, listings and controls share these styles in both themes. The
+xmcp wordmark and content remain; dark mode uses pure black.
 
-Missing adapters, initialization errors, GPU validation errors and device loss
-load the original WebGL hero as a fallback. Three.js and React Three Fiber are
-downloaded only for that fallback or the deferred footer. If both renderers
-fail, the static artwork remains available. Native buffers, textures and devices
-are released on teardown; resize replaces only the canvas attachments. `?debug`
-works with either hero renderer. Inspect `canvas[data-renderer="webgpu"]` and its
-`data-ready` attribute to confirm the native path is rendering.
+Use the shared type roles instead of page-specific sizes: `site-description`
+for 14px/160% introductions, `site-section-title` for 14px section headings,
+`site-card-title` for 12.5px card titles, and `site-card-description` for 12.5px/160%
+card copy. Blog cards, featured posts, templates, showcase entries and homepage
+features use these same roles. Article subheadings never grow larger deeper in
+the hierarchy. `site-card-surface` supplies the shared card and theme-aware hover.
+Previous/next docs links use `ContentCard` without media, sharing the same
+padding, typography, hover transition, and keyboard focus treatment as listings.
 
-The shared footer imports its scene as it approaches the viewport. Both scenes
-stop rendering offscreen or in a hidden tab. Reduced motion and unavailable
-WebGL use static artwork in the same reserved space. `?debug` loads the Leva
-controls separately; normal visits do not download them. The AI dialog similarly
-loads on first open (or warms on button focus/hover), then stays mounted to retain
-conversation state.
+Shared component rules live in `app/components.css`. Docs, blog posts and homepage
+examples use the same `CodeBlock`: a single frame, 18px horizontal padding,
+wrapping source, and an always-visible Copy control that reads the current code
+when pressed. Copy feedback also reports clipboard failures. Terminal tabs follow
+the same `CodeBlock` and support Arrow keys, Home and End; syntax colors follow the
+theme. Inline code wraps without creating a horizontal scroll strip.
+Docs, blog posts and template READMEs render highlighted fences through
+`ArticleCodeBlock`, registered in `getMDXComponents`. Templates use the same
+unnumbered default as docs; explicit line-number metadata remains supported.
+The homepage install command, Getting started steps, CLI prompts, showcase URLs
+and template READMEs all use this component at 12px/19px. Command/output examples
+copy only the runnable command, while code examples copy their full source.
+Homepage command demos type the command, prompts, answers, and output once
+visible, with a blinking caret and pauses for input and simulated work. The
+scaffolding demo moves through the component list and checks each choice. One
+animation-frame clock pauses all typing, selections, and waits together.
+Green prompt/check markers and cyan answers, selections, and commands mirror the
+CLI's ANSI color roles with readable light/dark variants. Success text stays
+neutral, with only its check mark green. A compact xmcp block-character wordmark
+appears immediately after the success message, before the next steps. It is black
+in light mode, white in dark mode, and scales down on mobile. The mark is a visual
+addition to the website demo, not a change to the CLI's output.
+The full transcript reserves its height; closing the accordion, leaving
+the viewport, or hiding the tab pauses playback. Reduced motion shows the entire
+transcript immediately. Copy always copies the complete command.
+Right-click the header logo (or focus it and press Shift+F10) to copy or download
+the SVG. Its theme-aware menu is portaled above the sidebar navigation.
+Every code block has a shared header with a language badge, filename or language
+label, and Copy. Filenames and declared fence languages take precedence;
+recognizable unlabelled commands, URLs, JSON and code signatures can supply a
+label. Ambiguous snippets use “Code” rather than an invented filename.
+All Shell headers use the shared Lucide Animated terminal `CodeIcon`, overriding supplied Markdown icons so
+commands, shell files, and terminal tabs share the same icon.
+Single-line source scrolls horizontally below the header, including after tab
+changes. Header space is reserved in server HTML to avoid hydration shifts.
+Run the language checks with
+`node --experimental-strip-types --test apps/website/lib/code-language.test.mjs`
+from the repository root (Node 22).
+Markdown commands receive their single-line layout in the server HTML so the
+homepage install block does not shrink and move content when JavaScript loads.
 
-Shared Home links disable automatic prefetch: prefetching the homepage also
-pulls its eager WebGL assets into unrelated routes. Navigation still uses Next.js
-links; other routes retain their existing prefetch behavior.
+`ContentTable` preserves table markup and adds column labels for stacked mobile
+rows. Search keeps the existing engine, shortcuts and result navigation, using
+the same surfaces and pill selection. Docs and blog TOCs share Roman-numeral
+labels and an active pill that follows the section, with motion disabled for
+reduced-motion preferences. Page actions remain below the TOC.
+On desktop docs and blog articles, hovering over the reading column dims both
+sidebars with a soft
+800ms ease-in-out fade in both directions. The active TOC number, label, and
+highlight stay fully visible so the current section remains easy to find. Leaving
+the column or focusing a sidebar control with the keyboard restores them. This
+uses CSS without changing layout or disabling controls, stays off on touch and
+mobile layouts, and skips the fade when reduced motion is enabled.
 
-WebGL drawing-buffer preservation remains enabled: disabling it caused surrounding
-text and buttons to disappear in Chromium visual checks. Recheck visual output
-before changing that renderer option.
+Check `/` (open every Getting started step), `/docs/configuration/transports`,
+`/docs/configuration/server-info`, `/docs/getting-started/installation`, a blog
+post and `/templates` in light/dark themes and at 320px. Verify Copy and Copied
+feedback, search with Cmd/Ctrl+K, Arrow/Enter/Escape, empty search results,
+terminal-tab keyboard navigation, long code chips, mobile tables, and TOC links.
+
+## Themes and homepage illustration
+
+The website follows the system theme on first visit. The header uses a single visible sun/moon icon to switch between light and dark,
+then persists that preference across navigation and reloads. Until a choice is
+made, changes to the system appearance also update the site. The search icon opens the existing search dialog, also available with Cmd/Ctrl+K. Keep
+both themes equally legible: shared surfaces, text, borders and focus states use
+tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
+uses paper white (`#fdfdfc`). The site uses Geist for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
+Shiki uses separate light and dark palettes.
+
+All six homepage feature images share the prefooter X’s cursor-responsive
+particle renderer through `components/particles/image.tsx`. Each supplies its own
+texture; scenes load near the viewport and stop animating while offscreen or
+when the page is hidden. Reduced motion and GPU failure retain static artwork.
+The image container reserves its dimensions before the renderer loads.
+
+To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
+original cursor-responsive particle hero, displayed without a frame or control footer. WebGPU retains the WebGL fallback. Light mode inverts the finished
+monochrome canvas and fallback artwork, preserving the original glow and motion
+without rebuilding GPU resources on theme changes. Reduced motion uses the static
+artwork, and offscreen or hidden pages suspend animation. Check both renderers,
+GPU-unavailable fallback, theme changes, and narrow viewports.
+
+The website is the runnable example. No framework API changes or separate
+example package are needed.
+
+## Image performance
 
 Use static image imports where possible to retain dimensions and blur metadata.
 Match `sizes` to the image's actual grid and maximum width; homepage and blog
@@ -115,13 +192,12 @@ while avoiding empty image slots during loading.
 
 Template listings likewise load their first three previews eagerly, including
 after pagination or filtering; lower cards and related templates remain lazy.
-Shared card/detail textures and the listing header use static imports with blur
-previews. Decorative textures and shadows have low fetch priority so they do not
-compete with the main preview. Detail pages preload only the principal preview.
+Cards and detail pages frame monochrome provider artwork on a theme-aware
+surface. Detail pages preload only the principal preview.
 Local SVG provider artwork stays vector-based and does not need a blur preview;
 remote raster covers keep Next.js optimization without inventing blur metadata.
 Template README code snippets also use the docs theme variables and shared
-black code-block background.
+semantic code-block background.
 
 For performance checks, build and run production, not the development server:
 
@@ -132,23 +208,11 @@ pnpm --filter website start
 
 Compare three fresh-browser runs of `/`, `/blog`, `/blog/xmcp-v1`, `/templates`,
 `/templates/express`, and `/docs` at the same viewport, network and CPU settings.
-Record transferred script/image bytes, LCP, CLS, and long-task blocking, plus
-time to the first textured hero frame: canvas animation is not represented by
-LCP. Keep image-optimizer cache state comparable and do not benchmark while a
-build is running. Template metadata and detail content are local; template pages must remain
-populated even when GitHub is unavailable.
-
-Check the waterfall for one early hero texture request, no initial Leva or chat
-chunk, and no footer WebGL on a long page until it approaches the viewport.
-Also check mobile/desktop resizing, cursor interaction, scrolling away/back,
-hidden-tab resume, reduced motion, blocked textures/WebGL, and reopening chat.
-For WebGPU, additionally test a missing adapter, rejected device/pipeline,
-device loss and unmount during initialization. Compare native and WebGL fallback
-on the same browser and hardware; headless browsers may expose `navigator.gpu`
-without offering an adapter. Record the actual backend and GPU adapter, and
-measure first textured submission/frame separately from steady-state animation.
-This website is the runnable example for these loading behaviors; no framework
-API or separate example package changes are required.
+Record transferred script/image bytes, LCP, CLS, and long-task blocking. Keep
+image-optimizer cache state comparable and do not benchmark while a build is
+running. Template metadata and detail content remain local. Check that the
+docs do not load the homepage particle renderer, and that the AI dialog
+loads only on first open or focus/hover. Verify both themes on desktop and mobile.
 
 ## Templates
 
@@ -280,16 +344,24 @@ for content changes; no framework example is needed.
 
 ## Docs navigation
 
-The docs layout spans the viewport. The article is centered in a 700px column
-between the fixed-width navigation and table of contents, shrinking to fit
-smaller screens with responsive padding.
+Docs use the same centered 700px maximum content column and left site navigation
+as every other page. Documentation and its arrow form one toggle on every page. The docs tree opens
+directly beneath it, starts expanded on docs routes, and keeps its toggle pinned
+while the list scrolls. Site links and docs share one scrollable navigation
+area, with search and theme controls outside it at the foot of the rail. Focus
+indicators are inset so keyboard navigation stays visible at the scroll edges.
+Both rails use rounded hover pills and single-line labels with ellipses; page
+links retain their full accessible names and show their full labels on hover.
+The table of contents lives in the right margin and tracks headings at their
+native anchor scroll position on both docs and blog pages. Below 1200px, the site switches to its compact header and the docs
+tree is available through **Browse docs**.
 
 Docs sections and nested folders open by default. Readers can collapse them;
 navigating to a page reopens its ancestors while preserving other section choices.
 On small screens, **Browse docs** opens the keyboard-accessible navigation drawer.
-The navigation fills the available viewport below the header. Scroll-edge fades
-appear only where more content remains; padding keeps the first and last links
-fully visible, including in the mobile drawer.
+The navigation fills the available viewport below the header. Scroll-edge fades soften rows entering the viewport; padding keeps the first
+and last links fully visible. The mobile drawer fades only edges with more
+content beyond them.
 
 Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
 a docs page; unmapped pages use a document icon and explicit page icons take
@@ -304,8 +376,15 @@ pnpm --filter website exec tsx --test components/layout/docs-icons.test.tsx
 
 ## Footer navigation
 
-The shared footer includes a short framework description and labeled navigation
-groups. Keep labels descriptive and use crawlable links rendered in the initial
+The shared prefooter restores the interactive particle X and “One framework to
+rule them all” headline above the footer. It follows the shared 700px column and
+Adhesion title styling at 24px on all screens, inverts the monochrome artwork in light mode, and uses
+the existing deferred renderer with static artwork for reduced motion or GPU
+failure. The separate “Start building” call-to-action is omitted.
+
+The shared footer pairs the wordmark with a short framework description, then
+shows three labeled navigation groups. On phones, the community links span two
+columns below Build and Explore. Keep labels descriptive and use crawlable links rendered in the initial
 HTML.
 The existing site-wide Organization and WebSite structured data remains the
 source of entity metadata; the footer does not add duplicate schema.
@@ -313,15 +392,16 @@ source of entity metadata; the footer does not add duplicate schema.
 Internal links stay in the same tab. External links open in a new tab with
 `noopener noreferrer`, a visual indicator, and a screen-reader notice. Community
 links pair their text labels with decorative SVG icons. All links have visible
-keyboard focus and provide at least 44px of target height. Check keyboard navigation, text contrast, narrow screens,
+keyboard focus and compact 32px link rows. Check keyboard navigation, text contrast, narrow screens,
 and the mobile assistant button when editing the footer. The website is the
 runnable example; no framework API or example package changes are needed.
 
 ## Corner radii
 
-Use `rounded-lg` (8px) for bordered cards, panels, dialogs, and media, and
-`rounded-md` (6px) for buttons, inputs, tags, and inline code. Clip images to
-their card’s rounded edges; connected terminal tabs share rounded outer corners.
+Use the website system’s `--site-radius` (12px) for content cards and code
+blocks, 8px for compact controls, and fully rounded pills for category filters.
+Inline code uses 6px corners. Clip images to their card’s rounded edges; connected
+terminal tabs share rounded outer corners.
 Keep divider lines straight and circular controls circular. Preview the docs,
 showcase, templates, blog, and FAQ on desktop and mobile when changing these styles.
 
@@ -335,7 +415,99 @@ and mobile when changing dialog motion.
 
 ## Link hover
 
-Text links share the navbar’s underline animation: it draws from the left on
-hover or keyboard focus and retracts to the right. Use `link-underline` for text
-links, or `link-underline-group` with a `link-underline-label` span when a link
-also includes icons. Reduced-motion preferences make the state change immediate.
+Sidebar links use the same rounded hover treatment as the table of contents.
+Text links have no underlines at rest, on hover, or during keyboard focus.
+They keep their color feedback and visible focus outlines. The existing
+`link-underline` class names now supply only color transitions, including when
+the label is inside `link-underline-group`. Search matches use font weight rather
+than underlines. Footer link icons, including brand marks and external-link
+arrows, are explicitly 15 × 15px.
+
+## Typography
+
+All website routes, Markdown/MDX content, template READMEs, cards, and dialogs
+share the typography tokens in `app/design-system.css`. The compact type scale
+and light-theme text palette follow [Anatomy's website](https://skills.wheresryan.sh/anatomy).
+Keep the existing layout and pure-black dark background.
+
+| Role                  | Font        | Size / line height                 | Weight  |
+| --------------------- | ----------- | ---------------------------------- | ------- |
+| Page headline         | Adhesion    | 40px / 1.12; 34px on small screens | 500     |
+| Body paragraph        | Geist       | 14px / 160%                        | 450     |
+| Section heading       | Geist       | 14px / 20.5px                      | 550     |
+| Card title            | Geist       | 12.5px / 18px                      | 500     |
+| Card description      | Geist       | 12.5px / 160%                      | 450     |
+| Navigation and labels | Geist       | 13px / 20px                        | 450     |
+| Captions and controls | Geist       | 12px / 18px                        | 400–500 |
+| Code block            | Geist Mono  | 12px / 19px                        | 400     |
+| Inline code           | Geist Mono  | 12.5px                             | 400     |
+| Section numbers       | EB Garamond | Context-sized                      | 400     |
+
+All paragraphs and prose lists use `--site-paragraph-leading: 1.6` (160%),
+including introductions, cards, quotes, template READMEs, and footer copy.
+Navigation, headings, and code keep their own line-height roles.
+
+Use `site-page-title` for page headlines, `site-section-title` for section
+headings, and the shared card/body roles rather than new per-page font sizes.
+Headline tracking stays at -2px. Markdown headings use Geist; they do not
+inherit the page headline's display font.
+
+Use semantic text colors: `--site-ink` for primary text, `--site-text` for
+secondary copy, `--site-muted` for annotations, and `--site-faint` for quiet
+indicators. The light values are #171717, #525252, #8f8f8f, and #bdbdbd;
+dark equivalents are #ededed, #a3a3a3, #8f8f8f, and #525252. Existing brand
+text utilities map to these roles. Syntax highlighting and status colors
+remain distinct because they convey code structure or state.
+
+The runnable example is the website itself: `pnpm --filter website dev`.
+Review `/`, `/docs/getting-started/installation`, `/blog`, a blog article,
+`/templates`, a template detail page, `/showcase`, `/faq`, `/changelog`,
+`/telemetry`, and `/terminal` in both themes when changing these tokens.
+
+## Icons and hover motion
+
+Import common UI icons from `components/ui/site-icons.tsx`. It maps the site's
+existing icon names to [Lucide Animated](https://lucide-animated.com/) components
+at 15 × 15px. Provider glyphs retain their artwork and the same `site-icon` size.
+Keep illustrations and wordmarks at their intended size; keep button hit areas
+large enough for touch. Information, warning, trash, and status-dot glyphs use
+static Lucide equivalents where the animated collection has no matching icon.
+
+The vendored components in `components/ui/lucide-animated` retain the author's
+paths, variants, and timings, using the existing `framer-motion` dependency.
+See that directory's README and MIT license for provenance and local adaptations.
+`icon-interaction.ts` connects their animation handles to the nearest button or
+link's hover and keyboard focus. Touch, disabled controls, and reduced-motion
+preferences do not trigger hover animations. Loading spinners keep their existing
+loading behavior. Cleanup resets icons immediately, including when reduced motion
+is enabled during an animation. There is no global transform applied to icons.
+
+Run `pnpm --filter website dev` and open `/` and
+`/docs/getting-started/installation`. Hover and keyboard-focus search, theme,
+GitHub, sidebar links, and code-copy buttons. Check both themes, the 15px sizing,
+copy feedback, and reduced-motion behavior.
+
+## Persistent homepage scene
+
+`PersistentHero` lives in the root layout. On the first homepage visit it lazily
+loads the particle scene into a permanent layer. The canvas and its ancestors
+stay connected to the same DOM parents across routes: there is no portal
+reparenting, hidden route subtree, or renderer remount on navigation.
+
+The homepage slot reserves the scene's space. A layout effect and resize/scroll
+observers align the fixed layer with that slot before paint, including font
+loading and responsive changes. On other routes the layer is invisible and
+noninteractive, retains its dimensions and GPU resources, and stops rendering.
+Returning home reveals the same scene; WebGPU presents a frame before paint.
+Direct visits to other pages do not load the hero. A hard refresh initializes a
+new scene. Reduced-motion and GPU-error artwork fallbacks remain available.
+
+Run `pnpm --filter website dev`, visit `/`, navigate to `/blog` and `/docs`, and
+return using the logo or browser history. Check that the canvas and every one of
+its ancestors retain their identities, the initial return frame contains the
+scene, scrolling/resizing keeps it aligned with its slot, and off-page GPU
+rendering stays paused. Test both themes and reduced motion.
+
+The latest-version link and changelog display standard version numbers
+(e.g. `v1.7.1`), including prerelease suffixes. Inline code chips use an amber
+accent with a subtle outline; light mode uses a darker amber for readability.

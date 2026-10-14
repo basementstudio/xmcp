@@ -10,7 +10,10 @@ import {
   useState,
 } from "react";
 import { track } from "@vercel/analytics";
-import { Loader2, X } from "lucide-react";
+import {
+  UpdateIcon as Loader2,
+  Cross2Icon as X,
+} from "@/components/ui/site-icons";
 import { cn } from "@/lib/cn";
 import Link from "fumadocs-core/link";
 import { type UIMessage, useChat, type UseChatHelpers } from "@ai-sdk/react";
@@ -315,7 +318,7 @@ function Message({
       >
         <div
           className={cn(
-            "prose prose-sm max-w-none dark:prose-invert text-brand-neutral-50 [&_*]:!text-sm [&_p]:!leading-6",
+            "prose prose-sm max-w-none dark:prose-invert text-brand-neutral-50 [&_*]:!text-sm",
             isUser && "[&_p]:!my-0.5"
           )}
         >

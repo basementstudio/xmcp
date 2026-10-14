@@ -35,13 +35,11 @@ export const metadata: Metadata = {
 export default function ChangelogPage() {
   const releases = getReleases();
   return (
-    <main
-      id="main-content"
-      className="max-w-[1200px] w-full mx-auto px-4 py-8 md:py-16"
-    >
-      <div className="max-w-[720px] mx-auto text-center mb-12 md:mb-20">
-        <h1 className="display text-gradient">Changelog</h1>
-        <p className="text-brand-neutral-100 text-base mt-4">{description}</p>
+    <main id="main-content" className="site-page-grid site-page-stack">
+      <div className="listing-intro">
+        <p className="eyebrow">The release log / Changelog</p>
+        <h1 className="display">Changelog</h1>
+        <p className="site-description mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
           className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
@@ -49,22 +47,24 @@ export default function ChangelogPage() {
           All releases on GitHub ↗
         </a>
       </div>
-      <div className="max-w-[960px] mx-auto">
+      <div className="site-stack">
         {releases.map((release) => (
           <article
             key={release.version}
             id={releaseAnchor(release.version)}
             aria-labelledby={`release-${release.version}`}
-            className="grid md:grid-cols-[180px_minmax(0,1fr)] gap-6 md:gap-12 border-t border-brand-neutral-500 py-8 md:py-12"
+            className="site-release"
           >
-            <div className="md:sticky md:top-[104px] md:self-start">
+            <div className="site-release-meta">
               <h2
                 id={`release-${release.version}`}
-                className="text-xl font-mono text-brand-white"
+                className="site-section-title"
               >
                 <a
                   href={`#${releaseAnchor(release.version)}`}
                   className="link-underline"
+                  aria-label={`Version ${release.version}`}
+                  title={`v${release.version}`}
                 >
                   v{release.version}
                 </a>

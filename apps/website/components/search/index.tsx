@@ -111,7 +111,10 @@ export function SearchDialogHeader(props: ComponentProps<"div">) {
   return (
     <div
       {...props}
-      className={cn("flex flex-row items-center gap-2", props.className)}
+      className={cn(
+        "site-search-header flex flex-row items-center gap-2",
+        props.className
+      )}
     />
   );
 }
@@ -123,10 +126,11 @@ export function SearchDialogInput(props: ComponentProps<"input">) {
   return (
     <input
       {...props}
+      aria-label={text.search}
       value={search}
       onChange={(e) => onSearchChange(e.target.value)}
       placeholder={text.search}
-      className="w-0 flex-1 bg-transparent text-lg placeholder:text-brand-neutral-200 focus-visible:!outline-none focus:outline-none leading-none"
+      className="site-search-input w-0 flex-1 bg-transparent text-lg placeholder:text-brand-neutral-200 focus-visible:!outline-none focus:outline-none leading-none"
     />
   );
 }
@@ -141,9 +145,10 @@ export function SearchDialogClose({
   return (
     <button
       type="button"
+      aria-label="Close search"
       onClick={() => onOpenChange(false)}
       className={cn(
-        "hidden md:block text-sm font-medium px-1 pt-0.5 pb-0.5",
+        "site-search-close text-sm font-medium px-1 pt-0.5 pb-0.5",
         className
       )}
       {...props}
@@ -201,7 +206,7 @@ export function SearchDialogContent({
           side="bottom"
           overlayClassName="dialog-overlay-motion"
           style={{ height: "60vh", maxHeight: "60vh" }}
-          className="!top-16 !bottom-auto w-full md:max-w-[calc(100%-2rem)] mx-auto md:!left-4 md:!right-4 p-0 bg-brand-black border border-brand-neutral-200 flex flex-col [&>button]:hidden dialog-motion rounded-lg z-[200]"
+          className="site-search-dialog !top-16 !bottom-auto w-full md:max-w-[calc(100%-2rem)] mx-auto md:!left-4 md:!right-4 p-0 bg-brand-black border border-brand-neutral-200 flex flex-col [&>button]:hidden dialog-motion rounded-lg z-[200]"
         >
           <SheetTitle className="sr-only">{text.search}</SheetTitle>
           <div className="flex flex-col gap-4 p-4 py-3.5 h-full overflow-hidden">
@@ -217,7 +222,7 @@ export function SearchDialogContent({
       aria-describedby={undefined}
       {...props}
       className={cn(
-        "fixed bg-brand-black dialog-motion top-4 md:top-[calc(50%-250px)] left-1/2 z-[200] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-lg border p-4 py-3.5 sm:max-w-lg border-brand-neutral-400",
+        "site-search-dialog fixed bg-brand-black dialog-motion top-4 md:top-[calc(50%-250px)] left-1/2 z-[200] grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 gap-4 rounded-lg border p-4 py-3.5 sm:max-w-lg border-brand-neutral-400",
         props.className
       )}
     >
@@ -268,6 +273,13 @@ export function SearchDialogList({
 
   const onKey = useEffectEvent((e: KeyboardEvent) => {
     if (!items || e.isComposing) return;
+    // Arrow/Enter handling belongs to the search field and results, not Close.
+    const target = e.target;
+    if (
+      !(target instanceof HTMLElement) ||
+      target.closest("button:not([role=option])")
+    )
+      return;
 
     if (e.key === "ArrowDown" || e.key == "ArrowUp") {
       let idx = items.findIndex((item) => item.id === active);
@@ -308,7 +320,6 @@ export function SearchDialogList({
       observer.disconnect();
       window.removeEventListener("keydown", onKey);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useOnChange(items, () => {
@@ -329,8 +340,10 @@ export function SearchDialogList({
       )}
     >
       <div
+        role="listbox"
+        aria-label="Search results"
         className={cn(
-          "sidebar-scrollbar w-full flex flex-col overflow-y-auto max-h-[400px] p-1"
+          "site-search-results sidebar-scrollbar w-full flex flex-col overflow-y-auto max-h-[400px] p-1"
         )}
       >
         <ListContext.Provider
@@ -417,7 +430,7 @@ export function SearchDialogListItem({
       )}
       aria-selected={active}
       className={cn(
-        "relative select-none px-2.5 py-2 text-start text-sm rounded-md",
+        "site-search-result relative select-none px-2.5 py-2 text-start text-sm rounded-md",
         active && "text-brand-neutral-50 bg-white/10",
         className
       )}
@@ -507,7 +520,7 @@ function renderHighlights(highlights: HighlightedText<ReactNode>[]): ReactNode {
   return highlights.map((node, i) => {
     if (node.styles?.highlight) {
       return (
-        <span key={i} className="text-brand-neutral-50 underline">
+        <span key={i} className="text-brand-neutral-50 font-medium">
           {node.content}
         </span>
       );

@@ -20,9 +20,9 @@ export function TemplateDetailHeader({
   deployOptions: DeployOption[];
 }) {
   return (
-    <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+    <header className="flex flex-col gap-4">
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="heading-1 text-gradient capitalize">{name}</h1>
           {deployOptions.length > 0 && (
             <div className="lg:hidden shrink-0">
@@ -30,12 +30,10 @@ export function TemplateDetailHeader({
             </div>
           )}
         </div>
-        <p className="text-brand-neutral-100 text-base max-w-2xl capitalize">
-          {description}
-        </p>
+        <p className="site-description">{description}</p>
       </div>
 
-      <div className="flex w-full justify-end lg:w-auto flex-wrap items-center gap-3">
+      <div className="flex w-full flex-wrap items-center gap-3">
         {deployOptions.length > 0 && (
           <div className="hidden lg:block">
             <DeployDropdown options={deployOptions} variant="primary" />

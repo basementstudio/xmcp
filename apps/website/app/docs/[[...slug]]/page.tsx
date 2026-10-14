@@ -10,7 +10,6 @@ import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
-import { CodeBlock } from "@/components/codeblock";
 import { SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -61,7 +60,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
       <JsonLd data={structuredData} />
       <DocsTitle>{displayTitle}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
-      <DocsBody className="border-t border-white/20 pt-4">
+      <DocsBody className="site-docs-body border-t border-white/20">
         <blockquote className="sr-only">
           For the complete documentation index, see{" "}
           <a href="/llms.txt">llms.txt</a>. Markdown variants of every page are
@@ -71,11 +70,6 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
-            pre: ({ ref, ...props }) => (
-              <CodeBlock ref={ref} {...props}>
-                <pre>{props.children}</pre>
-              </CodeBlock>
-            ),
           })}
         />
       </DocsBody>

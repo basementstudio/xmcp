@@ -1,78 +1,100 @@
+import { ArrowTopRightIcon } from "@/components/ui/site-icons";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Icons } from "@/components/icons";
-import { Logos } from "@/components/home/hero/logos";
-import { Tag } from "@/components/ui/tag";
-import Shader from "@/components/home/hero/shader";
+import { Code, Pre } from "@/components/markdown/code-blocks";
+import Shader from "./shader";
 
-export const HomeHero = ({ version }: { version?: string }) => {
+const concepts = [
+  {
+    name: "Tools",
+    description: "Functions that let AI applications take action.",
+    href: "/docs/core-concepts/tools",
+  },
+  {
+    name: "Resources",
+    description: "Data and context that AI applications can read.",
+    href: "/docs/core-concepts/resources",
+  },
+  {
+    name: "Prompts",
+    description: "Reusable starting points for guided AI conversations.",
+    href: "/docs/core-concepts/prompts",
+  },
+];
+
+export function HomeHero({ version }: { version?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto py-8 md:py-16 gap-4 col-span-12">
-      <Link
-        className="flex items-center justify-center gap-2 z-10 text-xs group"
-        href="https://npmjs.com/package/xmcp"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {version ? `v${version}` : ""}
-        <Tag
-          text="Latest Version"
-          className="group-hover:border-brand-neutral-200 group-hover:text-brand-neutral-50 transition-colors duration-200"
-        />
-      </Link>
-      <h1 className="display text-center text-balance z-10 text-gradient">
-        The TypeScript framework for building & shipping MCP servers
-      </h1>
-      <Shader />
-      <div className="flex items-center justify-center gap-2">
-        <Button
-          variant="primary"
-          asChild
-          trackIntent="get started"
-          trackLocation="home hero"
-        >
-          <Link href="/docs">Get started</Link>
-        </Button>
-        <Button
-          variant="secondary"
-          asChild
-          trackIntent="deploy to vercel"
-          trackLocation="home hero"
-        >
+    <section className="home-hero">
+      <header className="editorial-masthead">
+        <div className="editorial-meta">
           <Link
-            href="https://vercel.com/new/clone?demo-description=The%20TypeScript%20MCP%20framework&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2FasHTCFA47swQRiCYbWJDl%2F85fc42d9ef2dae4312744a964251f223%2Fimage__7_.png&demo-title=xmcp%20boilerplate&demo-url=https%3A%2F%2Fxmcp-template.vercel.app%2F&from=templates&project-name=xmcp%20boilerplate&project-names=Comma%20separated%20list%20of%20project%20names%2Cto%20match%20the%20root-directories&repository-name=xmcp-boilerplate&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fframework-boilerplates%2Fxmcp&root-directories=List%20of%20directory%20paths%20for%20the%20directories%20to%20clone%20into%20projects&skippable-integrations=1"
+            href="https://npmjs.com/package/xmcp"
+            className="inline-flex flex-wrap items-baseline gap-x-4 gap-y-2"
             target="_blank"
             rel="noopener noreferrer"
+            title={
+              version
+                ? `xmcp v${version} on npm (opens in a new tab)`
+                : "Latest xmcp version on npm (opens in a new tab)"
+            }
+            aria-label={
+              version
+                ? `xmcp version ${version} on npm (opens in a new tab)`
+                : "xmcp on npm (opens in a new tab)"
+            }
           >
-            Deploy to <Icons.vercel aria-hidden="true" className="size-3 ml-1" />
+            <span>Latest version</span>
+            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              {version && <span>v{version}</span>}
+              <ArrowTopRightIcon />
+            </span>
           </Link>
-        </Button>
-      </div>
-      <div className="flex flex-col items-center justify-center gap-4.5 py-8">
-        <p className="text-brand-neutral-200 text-sm">Trusted by builders at</p>
-        <div className="flex items-center justify-center gap-4 md:gap-6 flex-wrap w-full">
-          <Logos.Vercel
-            role="img"
-            aria-label="Vercel"
-            className="max-h-3.5 md:max-h-5 w-auto"
-          />
-          <Logos.Nextjs
-            role="img"
-            aria-label="Next.js"
-            className="max-h-3 md:max-h-4 w-auto"
-          />
-          <Logos.Localstack
-            role="img"
-            aria-label="LocalStack"
-            className="max-h-5 md:max-h-6 w-auto"
-          />
-          <Logos.Basehub
-            role="img"
-            aria-label="BaseHub"
-            className="max-h-5 md:max-h-6 w-auto"
-          />
         </div>
+        <h1 className="site-page-title">The TypeScript MCP framework</h1>
+      </header>
+      <div className="editorial-lede">
+        <p>
+          <span className="text-brand-white">
+            Build and ship <code className="site-inline-code">MCP servers</code>{" "}
+            with the code you already know.
+          </span>{" "}
+          <span className="text-brand-neutral-200">
+            Give AI applications access to your tools, data, and workflows.
+            Write TypeScript functions; xmcp handles the protocol, validation,
+            and transport.
+          </span>
+        </p>
       </div>
-    </div>
+      <Shader />
+      <Pre>
+        <Code className="language-bash">npx create-xmcp-app@latest</Code>
+      </Pre>
+      <section id="concepts" className="editorial-section">
+        <div className="editorial-section-head">
+          <h2>Core concepts</h2>
+          <span aria-hidden="true">I</span>
+        </div>
+        <p className="editorial-section-intro">
+          Three primitives connect your application to an AI client. Explore
+          each one in the docs.
+        </p>
+        <div className="concept-cards">
+          {concepts.map((concept) => (
+            <Link
+              className="concept-card"
+              href={concept.href}
+              key={concept.name}
+            >
+              <h3 className="site-card-title">
+                {concept.name}
+                <ArrowTopRightIcon />
+              </h3>
+              <p className="site-card-description text-pretty">
+                {concept.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </section>
   );
-};
+}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ContentCard } from "@/components/ui/content-card";
 import Image from "next/image";
 import { type BlogPost } from "../../utils/blog";
 import { Tag } from "../ui/tag";
@@ -12,58 +12,51 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
   const image = featuredPost.previewImage || featuredPost.textureImage;
 
   return (
-    <Link href={`/blog/${featuredPost.slug}`} className="block col-span-12">
-      <section className="relative group overflow-visible mb-2">
-        <div className="relative rounded-lg overflow-hidden border border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 w-full flex flex-col md:flex-row">
-          <div className="w-full md:w-1/2 md:border-r border-brand-neutral-500 overflow-hidden mb-4 md:mb-0 group-hover:border-brand-neutral-300 transition-colors duration-200 relative aspect-video">
-            {image ? (
-              <Image
-                {...getBlogImageProps(image)}
-                alt={featuredPost.title}
-                fill
-                sizes="(min-width: 1200px) 584px, (min-width: 768px) calc((100vw - 32px) / 2), calc(100vw - 32px)"
-                preload
-                className="object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-brand-neutral-200 text-sm">
-                No preview image
-              </div>
-            )}
+    <ContentCard
+      href={`/blog/${featuredPost.slug}`}
+      className="col-span-12"
+      horizontal
+      media={
+        image ? (
+          <Image
+            {...getBlogImageProps(image)}
+            alt={featuredPost.title}
+            fill
+            sizes="(min-width: 768px) 350px, (min-width: 740px) 700px, calc(100vw - 40px)"
+            preload
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-brand-neutral-200 text-sm">
+            No preview image
           </div>
-
-          <div className="flex-1 flex flex-col p-8">
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <div className="flex items-center gap-3">
-                <Tag text="FEATURED" />
-                <Tag text={featuredPost.category} />
-              </div>
-              {featuredPost.date && (
-                <time
-                  dateTime={featuredPost.date}
-                  className="text-xs text-brand-neutral-200 uppercase tracking-wide"
-                >
-                  {new Date(featuredPost.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </time>
-              )}
-            </div>
-
-            <h2 className="text-base md:text-2xl text-brand-white font-medium mb-3 md:mb-4 leading-tight">
-              {featuredPost.title}
-            </h2>
-
-            {featuredPost.description && (
-              <p className="text-sm md:text-base text-brand-neutral-200 leading-relaxed">
-                {featuredPost.description}
-              </p>
-            )}
-          </div>
+        )
+      }
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Tag text="FEATURED" />
+          <Tag text={featuredPost.category} />
         </div>
-      </section>
-    </Link>
+        {featuredPost.date && (
+          <time
+            dateTime={featuredPost.date}
+            className="text-xs text-brand-neutral-200 tracking-wide"
+          >
+            {new Date(featuredPost.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </time>
+        )}
+      </div>
+
+      <h2 className="site-card-title">{featuredPost.title}</h2>
+
+      {featuredPost.description && (
+        <p className="site-card-description">{featuredPost.description}</p>
+      )}
+    </ContentCard>
   );
 }
