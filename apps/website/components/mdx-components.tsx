@@ -1,4 +1,5 @@
 import { ContentTable } from "./markdown/table";
+import { ArticleCodeBlock } from "./codeblock";
 import { headingComponents } from "./markdown/headings";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
@@ -24,6 +25,7 @@ export function getMDXComponents(
   return {
     ...defaultMdxComponents,
     ...headingComponents,
+    pre: ArticleCodeBlock,
     table: ContentTable,
     img: (props) => <MdxImage sizes={imageSizes} {...props} />,
     TerminalPrompt,

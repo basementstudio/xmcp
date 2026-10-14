@@ -3,7 +3,7 @@ import { Children, type ComponentProps, type ReactElement } from "react";
 import { highlight } from "fumadocs-core/highlight";
 import type { BundledLanguage } from "shiki";
 import { getMDXComponents } from "@/components/mdx-components";
-import { CodeBlock } from "@/components/codeblock";
+import { ArticleCodeBlock } from "@/components/codeblock";
 import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 const BROKEN_INTERNAL_LINK_RE = /\/docs\/integrations\/chatgpt\b/;
@@ -32,9 +32,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props} language={lang}>
-            <pre>{props.children}</pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
@@ -46,9 +44,7 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
       defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props} language={lang}>
-            <pre>{props.children}</pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
@@ -61,11 +57,7 @@ async function ReadmePre(props: ComponentProps<"pre">) {
   const content = codeProps.children;
 
   if (typeof content !== "string") {
-    return (
-      <CodeBlock>
-        <pre>{props.children}</pre>
-      </CodeBlock>
-    );
+    return <ArticleCodeBlock>{props.children}</ArticleCodeBlock>;
   }
 
   let lang =

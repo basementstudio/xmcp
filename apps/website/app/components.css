@@ -335,23 +335,94 @@ body .not-fumadocs-codeblock pre code {
 body figure.shiki pre .line {
   padding-inline: 0;
 }
+/* Markdown renderers may emit inline spans separated by literal newlines.
+   Give each source line a row so wrapped text stays inside its own gutter. */
+body figure.shiki[data-line-numbers] pre code:has(> .line) {
+  display: flex;
+  flex-direction: column;
+}
 body figure.shiki[data-line-numbers] pre .line {
-  padding-left: 28px;
+  display: block;
+  position: relative;
+  min-height: 1lh;
+  padding-left: calc(4ch + 12px);
 }
 body figure.shiki[data-line-numbers] pre .line::after {
   left: 0;
+  width: 4ch;
+  text-align: right;
+  white-space: nowrap;
 }
 body .editorial-steps details > figure {
   margin-block: 16px 4px;
+}
+/* Match the CLI's ANSI green/cyan roles, adjusted for each page background. */
+[data-shell-demo] {
+  --shell-green: #137333;
+  --shell-cyan: #006b80;
+}
+.dark [data-shell-demo] {
+  --shell-green: #a8eb7c;
+  --shell-cyan: #5ccfe6;
+}
+[data-shell-prompt],
+[data-shell-choice][data-shell-checked="true"],
+[data-shell-tone="success"],
+[data-shell-completion] {
+  color: var(--shell-green);
+}
+[data-shell-answer],
+[data-shell-tone="command"] {
+  color: var(--shell-cyan);
+}
+[data-shell-prompt-text] {
+  color: var(--site-ink);
+  font-weight: 550;
+}
+[data-shell-completion] {
+  white-space: pre;
+}
+[data-shell-character],
+[data-shell-line] {
+  position: relative;
+}
+[data-shell-state="running"] [data-shell-caret]::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 0;
+  height: 1em;
+  border-left: 1px solid currentColor;
+  animation: shell-caret-blink 1s step-end infinite;
+}
+[data-shell-selecting]::before {
+  content: "❯";
+  position: absolute;
+  left: 0;
+  font-size: 14px;
+  color: var(--shell-cyan);
+}
+[data-shell-selecting] {
+  color: var(--shell-cyan);
+}
+@keyframes shell-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-shell-caret]::after {
+    display: none;
+  }
 }
 body .prose code:not(pre code, :has(pre)),
 body .site-inline-code {
   display: inline;
   padding: 2px 6px;
-  border: 0;
+  border: 1px solid var(--site-faint);
   border-radius: 6px;
-  background: var(--site-well) !important;
-  color: var(--site-ink) !important;
+  background: var(--background) !important;
+  color: var(--site-code-accent) !important;
   font-family: var(--font-geist-mono), monospace;
   font-size: 12.5px;
   font-weight: 400;
@@ -641,8 +712,8 @@ body .site-github-link {
   display: grid;
   place-items: center;
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: var(--site-control-size);
+  height: var(--site-control-size);
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -788,7 +859,7 @@ body .site-footer-label {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: 8px var(--site-grid-gap);
-  padding-block: 12px 24px;
+  padding-block: 12px var(--site-bottom-inset);
   border-top: 0;
   color: var(--site-faint);
   font-size: 12px;
@@ -800,6 +871,12 @@ body .site-footer-label {
 .site-footer-bottom > a {
   grid-column: 3;
   justify-self: start;
+}
+@media (min-width: 1200px) {
+  /* Match the sidebar controls' centerline when the page reaches its footer. */
+  .site-footer-bottom {
+    grid-auto-rows: minmax(var(--site-control-size), auto);
+  }
 }
 @media (max-width: 539px) {
   .site-footer-brand {
@@ -878,13 +955,9 @@ body .site-icon {
   transform-box: fill-box;
 }
 
-.site-toc-numeral,
-.site-version-number {
+.site-toc-numeral {
   font:
     400 10.5px/1.5 var(--font-editorial-serif),
     Georgia,
     serif;
-}
-.site-version-number {
-  color: var(--site-ink);
 }

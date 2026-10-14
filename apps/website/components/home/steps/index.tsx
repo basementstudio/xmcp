@@ -8,6 +8,7 @@ import bash from "@shikijs/langs/bash";
 import { CodeBlock } from "@/components/codeblock";
 import { AccordionItem } from "@/components/ui/accordion-item";
 import { CopyButton } from "@/components/ui/copy-button";
+import { AnimatedShell, type ShellLine } from "./animated-shell";
 import {
   XMCP_SHIKI_THEME_NAME,
   xmcpAyuDarkTheme,
@@ -26,21 +27,30 @@ const steps = [
     title: "Create a new xmcp app",
     type: "command" as const,
     command: "npx create-xmcp-app@latest",
-    output: `? What is your project named? my-server
-? Select a package manager: pnpm
-? Select the transport you want to use: HTTP (runs on a server)
-? Select components to initialize:
-  ◉ Tools
-  ◉ Prompts
-  ◉ Resources
-
-✔ Creating a new xmcp app in ...
-✔ Your xmcp app is ready
-
-Next steps:
-  cd my-server
-  pnpm dev
-`,
+    output: [
+      { text: "? What is your project named? ", answer: "my-server" },
+      {
+        text: "? Select a package manager: ",
+        answer: "pnpm",
+        waitBefore: "prompt",
+      },
+      {
+        text: "? Select the transport you want to use: ",
+        answer: "HTTP (runs on a server)",
+        waitBefore: "prompt",
+      },
+      { text: "? Select components to initialize:", waitBefore: "prompt" },
+      { text: "Tools", selection: true },
+      { text: "Prompts", selection: true },
+      { text: "Resources", selection: true },
+      { text: "" },
+      { text: "Creating a new xmcp app in ...", waitBefore: "prompt" },
+      { text: "✔ Your xmcp app is ready", waitBefore: "work", tone: "success" },
+      { text: "" },
+      { text: "Next steps:" },
+      { text: "  cd my-server", tone: "command" },
+      { text: "  pnpm dev", tone: "command" },
+    ] satisfies ShellLine[],
   },
   {
     id: 2,
@@ -92,17 +102,23 @@ export default async function getWeather({
     title: "Deploy your server",
     type: "command" as const,
     command: "vc deploy",
-    output: `Vercel CLI 37.0.0
-Inspect: https://vercel.com/...
-Production: https://my-server.vercel.app
-
-Deployment Summary:
-  • Environment: Production
-  • Region: iad1
-  • Build Time: 12s
-  • Status: Ready
-
-Your MCP server is live!`,
+    output: [
+      { text: "Vercel CLI 37.0.0" },
+      { text: "Inspect: https://vercel.com/...", waitBefore: "prompt" },
+      { text: "Production: https://my-server.vercel.app", waitBefore: "work" },
+      { text: "" },
+      { text: "Deployment Summary:" },
+      { text: "  • Environment: Production" },
+      { text: "  • Region: iad1" },
+      { text: "  • Build Time: 12s" },
+      { text: "  • Status: Ready" },
+      { text: "" },
+      {
+        text: "Your MCP server is live!",
+        waitBefore: "prompt",
+        tone: "success",
+      },
+    ] satisfies ShellLine[],
   },
 ];
 
@@ -149,11 +165,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
         </div>
       )}
     >
-      <pre>
-        <code>{step.command}</code>
-        {"\n\n"}
-        <span className="text-brand-neutral-100">{step.output}</span>
-      </pre>
+      <AnimatedShell command={step.command} output={step.output} />
     </CodeBlock>
   );
 };

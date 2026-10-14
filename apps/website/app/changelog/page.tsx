@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ReleaseNotes } from "@/components/changelog/release-notes";
 import { SITE_URL } from "@/lib/base-url";
 import { formatReleaseDate, getReleases, releaseAnchor } from "@/lib/releases";
-import { romanVersion } from "@/lib/roman-version";
 
 export const dynamic = "force-static";
 export const revalidate = false;
@@ -67,10 +66,7 @@ export default function ChangelogPage() {
                   aria-label={`Version ${release.version}`}
                   title={`v${release.version}`}
                 >
-                  v
-                  <span className="site-version-number">
-                    {romanVersion(release.version)}
-                  </span>
+                  v{release.version}
                 </a>
               </h2>
               <time

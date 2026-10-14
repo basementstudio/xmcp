@@ -8,10 +8,13 @@
   --site-rule: #11111117;
   --site-well: #1111110d;
   --site-card: #ffffff;
+  --site-code-accent: #946200;
   --site-column: 700px;
   --site-rail: 168px;
   --site-gap: 48px;
   --site-grid-gap: 24px;
+  --site-bottom-inset: 24px;
+  --site-control-size: 44px;
   --site-page-top: 36px;
   --site-gutter: 20px;
   --site-section-gap: 56px;
@@ -36,6 +39,7 @@
   --site-rule: #242424;
   --site-well: #141414;
   --site-card: #080808;
+  --site-code-accent: #ec9d00;
   --site-shadow: 0 0 0 1px #ffffff14, 0 1px 2px #00000033;
 }
 body {
@@ -78,6 +82,13 @@ body .site-page-grid {
   flex-direction: column;
   gap: var(--site-grid-gap);
   min-width: 0;
+}
+.site-docs-body {
+  padding-top: var(--site-grid-gap);
+}
+/* The introductory divider owns the spacing; skip the hidden index notice. */
+body .site-docs-body > :nth-child(1 of :not(.sr-only)) {
+  margin-top: 0;
 }
 .site-back-link {
   align-self: flex-start;
@@ -311,7 +322,7 @@ body .prose h2 {
   align-items: center;
   gap: 14px;
   margin-block: 48px 20px;
-  font-size: var(--site-body-size);
+  font-size: 16px;
   line-height: var(--site-body-leading);
   font-weight: 550;
 }
@@ -342,7 +353,7 @@ body .docs-navigation-embedded button {
       50% - var(--site-column) / 2 - var(--site-gap) - var(--site-rail)
     );
     width: var(--site-rail);
-    height: calc(100dvh - 80px);
+    height: calc(100dvh - var(--site-page-top) - var(--site-bottom-inset));
     border: 0;
   }
   body .site-header-inner {
@@ -410,12 +421,19 @@ body main > div:has(> .listing-intro) {
   width: 100%;
   aspect-ratio: 350 / 243;
 }
+/* Give the inverted scene an explicit backdrop inside its fixed layer. */
+[data-persistent-hero] {
+  background: var(--background);
+  isolation: isolate;
+}
 .hero-particles {
   background: #000;
   filter: invert(1);
+  mix-blend-mode: multiply;
 }
 .dark .hero-particles {
   filter: none;
+  mix-blend-mode: normal;
 }
 .site-prefooter {
   display: flex;
@@ -434,6 +452,11 @@ body .site-prefooter .site-page-title {
   margin: 0;
   font-size: 24px;
   text-wrap: balance;
+}
+.prefooter-artwork {
+  /* Keep the blend backdrop local so it cannot cover neighboring card shadows. */
+  background: var(--background);
+  isolation: isolate;
 }
 .prefooter-particles {
   background: #000;
@@ -480,9 +503,6 @@ body .site-page-title {
   line-height: 1.12;
   letter-spacing: -2px;
 }
-body .prose h2 {
-  font-size: var(--site-section-size);
-}
 @media (max-width: 640px) {
   .concept-cards {
     grid-template-columns: 1fr;
@@ -497,23 +517,9 @@ body .prose h2 {
 @media (prefers-reduced-motion: reduce) {
 }
 
-/* A static paper grain, confined to the light theme. Dark stays pure black. */
 body {
   isolation: isolate;
 }
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='1' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='4.6' intercept='-2.55'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
-}
-.dark body::before {
-  display: none;
-}
-
 /* One scroll owner; inset rows keep pills and focus rings inside its edges. */
 .site-documentation-header {
   position: sticky;

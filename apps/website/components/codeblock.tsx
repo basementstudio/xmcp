@@ -60,6 +60,15 @@ const TabsContext = createContext<{
   nested: boolean;
 } | null>(null);
 
+/** Shared renderer for highlighted Markdown in docs, blog posts and templates. */
+export function ArticleCodeBlock({ children, ...props }: CodeBlockProps) {
+  return (
+    <CodeBlock {...props}>
+      <pre>{children}</pre>
+    </CodeBlock>
+  );
+}
+
 export function Pre(props: ComponentProps<"pre">) {
   return (
     <pre

@@ -12,7 +12,7 @@ const TEXTURE_IMAGES = [
 ];
 
 export const HomeBlog = () => {
-  const posts = getListedBlogPosts().slice(0, 3);
+  const posts = getListedBlogPosts().slice(0, 4);
 
   return (
     <div id="from-the-blog" className="editorial-section home-blog">

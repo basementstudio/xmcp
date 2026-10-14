@@ -1,4 +1,3 @@
-import { romanVersion } from "@/lib/roman-version";
 import { ArrowTopRightIcon } from "@/components/ui/site-icons";
 import Link from "next/link";
 import { Code, Pre } from "@/components/markdown/code-blocks";
@@ -45,14 +44,7 @@ export function HomeHero({ version }: { version?: string }) {
           >
             <span>Latest version</span>
             <span className="inline-flex items-center gap-1 whitespace-nowrap">
-              {version && (
-                <span>
-                  v
-                  <span className="site-version-number">
-                    {romanVersion(version)}
-                  </span>
-                </span>
-              )}
+              {version && <span>v{version}</span>}
               <ArrowTopRightIcon />
             </span>
           </Link>

@@ -7,7 +7,6 @@ import {
 } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
 import {
   getBlogMetadata,
@@ -84,11 +83,6 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
             {
               // this allows you to link to other pages with relative file paths
               a: createRelativeLink(blogSource, page),
-              pre: ({ ref, ...props }) => (
-                <CodeBlock ref={ref} {...props}>
-                  <pre>{props.children}</pre>
-                </CodeBlock>
-              ),
             },
             BLOG_IMAGE_SIZES
           )}

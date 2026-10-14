@@ -83,6 +83,8 @@ for 14px/160% introductions, `site-section-title` for 14px section headings,
 card copy. Blog cards, featured posts, templates, showcase entries and homepage
 features use these same roles. Article subheadings never grow larger deeper in
 the hierarchy. `site-card-surface` supplies the shared card and theme-aware hover.
+Previous/next docs links use `ContentCard` without media, sharing the same
+padding, typography, hover transition, and keyboard focus treatment as listings.
 
 Shared component rules live in `app/components.css`. Docs, blog posts and homepage
 examples use the same `CodeBlock`: a single frame, 18px horizontal padding,
@@ -90,9 +92,23 @@ wrapping source, and an always-visible Copy control that reads the current code
 when pressed. Copy feedback also reports clipboard failures. Terminal tabs follow
 the same `CodeBlock` and support Arrow keys, Home and End; syntax colors follow the
 theme. Inline code wraps without creating a horizontal scroll strip.
+Docs, blog posts and template READMEs render highlighted fences through
+`ArticleCodeBlock`, registered in `getMDXComponents`. Templates use the same
+unnumbered default as docs; explicit line-number metadata remains supported.
 The homepage install command, Getting started steps, CLI prompts, showcase URLs
 and template READMEs all use this component at 12px/19px. Command/output examples
 copy only the runnable command, while code examples copy their full source.
+Homepage command demos type the command, prompts, answers, and output once
+visible, with a blinking caret and pauses for input and simulated work. The
+scaffolding demo moves through the component list and checks each choice. One
+animation-frame clock pauses all typing, selections, and waits together.
+Green prompt/check/success markers and cyan answers, selections, and commands
+mirror the CLI's ANSI color roles with readable light/dark variants. A compact
+xmcp ASCII mark finishes the website demo; it is a visual addition to the demo,
+not a change to the CLI's output.
+The full transcript reserves its height; closing the accordion, leaving
+the viewport, or hiding the tab pauses playback. Reduced motion shows the entire
+transcript immediately. Copy always copies the complete command.
 Every code block has a shared header with a language badge, filename or language
 label, and Copy. Filenames and declared fence languages take precedence;
 recognizable unlabelled commands, URLs, JSON and code signatures can supply a
@@ -488,7 +504,6 @@ its ancestors retain their identities, the initial return frame contains the
 scene, scrolling/resizing keeps it aligned with its slot, and off-page GPU
 rendering stays paused. Test both themes and reduced motion.
 
-The latest-version link displays Roman numeral semver segments using the same
-10.5px EB Garamond typesetting as the table-of-contents numbers
-(e.g. `1.7.1` → `I.VII.I`; zero is `N`). Its accessible label and tooltip retain
-the standard version, and prerelease suffixes remain unchanged.
+The latest-version link and changelog display standard version numbers
+(e.g. `v1.7.1`), including prerelease suffixes. Inline code chips use an amber
+accent with a subtle outline; light mode uses a darker amber for readability.
