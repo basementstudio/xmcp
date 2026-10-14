@@ -11,12 +11,12 @@ const concepts = [
   },
   {
     name: "Resources",
-    description: "Data and context for a model to read.",
+    description: "Data and context that AI applications can read.",
     href: "/docs/core-concepts/resources",
   },
   {
     name: "Prompts",
-    description: "Reusable starting points for a conversation.",
+    description: "Reusable starting points for guided AI conversations.",
     href: "/docs/core-concepts/prompts",
   },
 ];
@@ -88,7 +88,9 @@ export function HomeHero({ version }: { version?: string }) {
                 {concept.name}
                 <ArrowTopRightIcon />
               </h3>
-              <p className="site-card-description">{concept.description}</p>
+              <p className="site-card-description text-pretty">
+                {concept.description}
+              </p>
             </Link>
           ))}
         </div>

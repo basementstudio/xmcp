@@ -77,7 +77,7 @@ export const BlogCard = ({
         {post.date && (
           <time
             dateTime={post.date}
-            className="text-xs text-brand-neutral-50 uppercase tracking-wide"
+            className="text-xs text-brand-neutral-50 tracking-wide"
           >
             {new Date(post.date).toLocaleDateString("en-US", {
               month: "short",

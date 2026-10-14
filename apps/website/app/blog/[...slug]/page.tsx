@@ -62,7 +62,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
         {page.data.date && (
           <time
             dateTime={page.data.date}
-            className="text-xs uppercase tracking-wide text-brand-neutral-50"
+            className="text-xs tracking-wide text-brand-neutral-50"
           >
             {new Date(page.data.date).toLocaleDateString("en-US", {
               month: "short",

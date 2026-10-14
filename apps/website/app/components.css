@@ -397,13 +397,16 @@ body .editorial-steps details > figure {
 }
 [data-shell-state="running"] [data-shell-caret]::after {
   content: "█";
-  color: #ffffff;
+  color: #000000;
   position: absolute;
   left: 100%;
   top: 0;
   line-height: 1;
   pointer-events: none;
   animation: shell-caret-blink 1s step-end infinite;
+}
+.dark [data-shell-state="running"] [data-shell-caret]::after {
+  color: #ffffff;
 }
 [data-shell-selecting]::before {
   content: "❯";

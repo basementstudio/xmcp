@@ -41,7 +41,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
         {featuredPost.date && (
           <time
             dateTime={featuredPost.date}
-            className="text-xs text-brand-neutral-200 uppercase tracking-wide"
+            className="text-xs text-brand-neutral-200 tracking-wide"
           >
             {new Date(featuredPost.date).toLocaleDateString("en-US", {
               year: "numeric",
