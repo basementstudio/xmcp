@@ -149,9 +149,9 @@ test("operation selection, fallback names, overrides, and path-level parameters 
     () => buildOpenApiTools(input, { operations: ["missing"] }),
     /Unknown operation/
   );
-  assert.throws(
-    () => buildOpenApiTools(input, { operations: ["create-user"] }),
-    /only GET/
+  assert.match(
+    buildOpenApiTools(input, { operations: ["create-user"] })[0].content,
+    /method: "POST"/
   );
   const item = input.paths["/users/{id}"];
   Object.assign(item, { servers: [{ url: "https://path.test/path" }] });
@@ -208,7 +208,7 @@ test("unsupported schemas, serialization, security, and references fail with act
     { requestBody: {} },
     { security: [{ token: [] }] },
     {
-      parameters: [{ name: "token", in: "header", schema: { type: "string" } }],
+      parameters: [{ name: "token", in: "cookie", schema: { type: "string" } }],
     },
     {
       parameters: [
@@ -332,7 +332,7 @@ test("CLI options are non-interactive and reject ambiguous or unknown input", ()
     ["api.json", "other.json"],
     ["api.json", "--out"],
     ["api.json", "--operations", "one,"],
-    ["api.json", "--overwrite"],
+    ["api.json", "--unknown"],
   ])
     assert.throws(() => parseImportOpenApiOptions(args));
 });

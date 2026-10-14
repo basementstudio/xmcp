@@ -190,3 +190,78 @@ export function parameterSchema(
   }
   return { code, array: type === "array" };
 }
+
+/** JSON request bodies can nest objects and arrays; parameter serialization cannot. */
+export function bodySchema(
+  document: JsonObject,
+  input: unknown,
+  location: string,
+  references = new Set<string>()
+): string {
+  const raw = object(input, location);
+  const seen = new Set(references);
+  if (typeof raw.$ref === "string") {
+    if (seen.has(raw.$ref))
+      throw new Error(`${location}: circular reference ${raw.$ref}.`);
+    seen.add(raw.$ref);
+  }
+  const schema = resolveObject(document, input, location);
+  if (schema.type !== "object" && schema.type !== "array")
+    return parameterSchema(document, schema, location, false).code;
+  const allowed = new Set([
+    "type",
+    ...ANNOTATIONS,
+    ...(schema.type === "object"
+      ? ["properties", "required", "additionalProperties"]
+      : ["items", "minItems", "maxItems"]),
+  ]);
+  for (const key of Object.keys(schema))
+    if (!allowed.has(key) && !key.startsWith("x-"))
+      throw new Error(`${location}: unsupported schema keyword ${key}.`);
+  let code: string;
+  if (schema.type === "array") {
+    code = `z.array(${bodySchema(document, schema.items, `${location}.items`, seen)})`;
+    for (const [key, method] of [
+      ["minItems", "min"],
+      ["maxItems", "max"],
+    ]) {
+      const value = schema[key];
+      if (value === undefined) continue;
+      if (typeof value !== "number" || !Number.isInteger(value) || value < 0)
+        throw new Error(`${location}: invalid ${key}.`);
+      code += `.${method}(${value})`;
+    }
+  } else {
+    const properties = object(
+      schema.properties ?? {},
+      `${location}.properties`
+    );
+    const required = schema.required ?? [];
+    if (
+      !Array.isArray(required) ||
+      required.some(
+        (key) => typeof key !== "string" || !Object.hasOwn(properties, key)
+      )
+    )
+      throw new Error(`${location}: required must name declared properties.`);
+    const shape = Object.entries(properties).map(([key, value]) => {
+      if (["__proto__", "constructor", "prototype"].includes(key))
+        throw new Error(`${location}: unsupported property name ${key}.`);
+      return `${JSON.stringify(key)}: ${bodySchema(document, value, `${location}.${key}`, seen)}${required.includes(key) ? "" : ".optional()"}`;
+    });
+    code = `z.object({${shape.join(", ")}})`;
+    const additional = schema.additionalProperties;
+    if (additional === false) code += ".strict()";
+    // JSON Schema allows additional properties by default. Do not silently strip them.
+    else if (additional === undefined || additional === true)
+      code += ".passthrough()";
+    else
+      code += `.catchall(${bodySchema(document, additional, `${location}.additionalProperties`, seen)})`;
+  }
+  if (schema.description !== undefined) {
+    if (typeof schema.description !== "string")
+      throw new Error(`${location}: description must be a string.`);
+    code += `.describe(${JSON.stringify(schema.description)})`;
+  }
+  return code;
+}
