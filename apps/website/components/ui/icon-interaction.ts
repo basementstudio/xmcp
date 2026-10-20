@@ -65,8 +65,7 @@ export function bindIconInteraction(
   control.addEventListener("pointercancel", leave, options);
   control.addEventListener("focus", focus, options);
   control.addEventListener("blur", blur, options);
-  return () => {
-    listeners.abort();
-    animation.resetAnimation();
-  };
+  // Do not reset on cleanup: motion unmounts the icon's controls first, and
+  // setting them afterwards throws in development, which aborts the route render.
+  return () => listeners.abort();
 }
