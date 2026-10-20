@@ -17,7 +17,11 @@ import {
 
 // Exercise the same request boundary used by tool registration.
 function createToolHandler(handler: UserToolHandler) {
-  return wrapToolWithMiddleware(transform(handler), "context-test", []);
+  return wrapToolWithMiddleware(
+    transform(handler),
+    { name: "context-test", description: "Test tool" },
+    []
+  );
 }
 
 function serverContext(
@@ -189,7 +193,7 @@ test("shares SDK auth with middleware and helpers without freezing it or retaini
       assert.strictEqual(getRequestContext().authInfo, extra.authInfo);
       return "ok";
     }),
-    "authenticated",
+    { name: "authenticated", description: "Test tool" },
     [
       async (ctx, next) => {
         const expected =
