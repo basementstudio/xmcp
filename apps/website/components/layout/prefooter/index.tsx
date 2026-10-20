@@ -9,6 +9,7 @@ export const Prefooter = () => (
           width={176}
           height={212}
           className="w-[127px] h-[154px]"
+          preset="footer"
         />
       </div>
     </div>

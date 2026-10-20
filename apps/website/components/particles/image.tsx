@@ -2,19 +2,31 @@
 
 import { lazy, Suspense } from "react";
 import { ParticleViewport } from "./viewport";
+import {
+  CARD_DUST_CONTROLS,
+  FOOTER_DUST_CONTROLS,
+  type DustControls,
+} from "./dust";
 
-const ImageScene = lazy(() => import("./image-scene"));
+const DustScene = lazy(() => import("./dust-scene"));
+
+const PRESETS = {
+  card: CARD_DUST_CONTROLS,
+  footer: FOOTER_DUST_CONTROLS,
+} satisfies Record<string, DustControls>;
 
 export default function ParticleImage({
   src,
   width,
   height,
   className,
+  preset = "card",
 }: {
   src: string;
   width: number;
   height: number;
   className: string;
+  preset?: keyof typeof PRESETS;
 }) {
   return (
     <ParticleViewport
@@ -26,7 +38,12 @@ export default function ParticleImage({
     >
       {(props) => (
         <Suspense fallback={null}>
-          <ImageScene {...props} texture={src} />
+          <DustScene
+            {...props}
+            picture={src}
+            name={preset}
+            defaults={PRESETS[preset]}
+          />
         </Suspense>
       )}
     </ParticleViewport>
