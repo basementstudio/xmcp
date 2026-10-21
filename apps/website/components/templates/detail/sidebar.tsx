@@ -21,8 +21,8 @@ export function TemplateDetailSidebar({
   xShareUrl: string;
 }) {
   return (
-    <aside className="site-card-grid">
-      <InfoCard label="GitHub Repo">
+    <dl className="template-details">
+      <InfoCard label="Repository">
         <Link
           href={template.repositoryUrl}
           target="_blank"
@@ -34,7 +34,7 @@ export function TemplateDetailSidebar({
       </InfoCard>
 
       {(template.demoUrl || template.websiteUrl) && (
-        <InfoCard label="Website link">
+        <InfoCard label="Website">
           <Link
             href={template.demoUrl || template.websiteUrl!}
             target="_blank"
@@ -47,7 +47,7 @@ export function TemplateDetailSidebar({
       )}
 
       {template.replitUrl && (
-        <InfoCard label="Remix on Replit">
+        <InfoCard label="Replit">
           <Link
             href={template.replitUrl}
             target="_blank"
@@ -86,15 +86,15 @@ export function TemplateDetailSidebar({
           xShareUrl={xShareUrl}
         />
       </InfoCard>
-    </aside>
+    </dl>
   );
 }
 
 function InfoCard({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs tracking-wide text-brand-neutral-100">{label}</p>
-      <div className="text-sm text-brand-white leading-relaxed">{children}</div>
+    <div className="template-details-row">
+      <dt>{label}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }

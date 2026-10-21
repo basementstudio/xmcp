@@ -179,31 +179,33 @@ Add a README.md to this template to show content here.`;
           demoUrl={template.demoUrl}
           replitUrl={template.replitUrl}
           deployOptions={deployOptions}
+          logo={
+            previewImage.isFallback
+              ? {
+                  src: previewImage.src,
+                  tinted: previewImage.src !== "/templates/fallback.svg",
+                }
+              : undefined
+          }
         />
 
-        <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500 bg-surface-raised">
-          <div
-            className={
-              previewImage.isFallback
-                ? "relative h-[240px] md:h-[340px]"
-                : "relative aspect-[16/8]"
-            }
-          >
-            <Image
-              src={previewImage.src}
-              alt={`${template.name} preview`}
-              unoptimized={shouldBypassImageOptimization(previewImage.src)}
-              fill
-              sizes="(min-width: 740px) 700px, calc(100vw - 40px)"
-              className={
-                previewImage.isFallback
-                  ? `object-contain p-10 ${previewImage.src !== "/templates/fallback.svg" ? "template-provider-art" : ""}`
-                  : "object-cover"
-              }
-              preload
-            />
+        {/* Only real screenshots get a preview panel; provider logos sit beside
+            the title instead of filling a large empty frame. */}
+        {!previewImage.isFallback && (
+          <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500 bg-surface-raised">
+            <div className="relative aspect-[16/8]">
+              <Image
+                src={previewImage.src}
+                alt={`${template.name} preview`}
+                unoptimized={shouldBypassImageOptimization(previewImage.src)}
+                fill
+                sizes="(min-width: 740px) 700px, calc(100vw - 40px)"
+                className="object-cover"
+                preload
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="site-stack">

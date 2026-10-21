@@ -140,6 +140,41 @@ body a[target="_blank"],
 body a[target="_blank"] * {
   cursor: alias;
 }
+/* Template detail: provider logo tile and a compact details list. */
+.template-logo-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--site-rule);
+  border-radius: 10px;
+  background: var(--site-card);
+}
+.template-details {
+  margin: 0;
+  border-block: 1px solid var(--site-rule);
+}
+.template-details-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 16px;
+  align-items: baseline;
+  padding-block: 12px;
+  font-size: 13px;
+}
+.template-details-row + .template-details-row {
+  border-top: 1px solid var(--site-rule);
+}
+.template-details-row dt {
+  color: var(--site-muted);
+}
+.template-details-row dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--site-ink);
+}
 /* Line schematics in the homepage feature cards. */
 .feature-schematic {
   width: 120px;

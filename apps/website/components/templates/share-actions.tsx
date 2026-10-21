@@ -53,15 +53,15 @@ export function TemplateShareActions({
         rel="noopener noreferrer"
         className="link-underline hover:text-brand-white"
       >
-        Twitter
+        X
       </Link>
-      <span>{", "}</span>
+      <span className="text-brand-neutral-200">{" · "}</span>
       <button
         type="button"
         onClick={() => copyToClipboard("github", repositoryUrl)}
         className="link-underline hover:text-brand-white cursor-pointer"
       >
-        <span>GitHub</span>
+        <span>Copy repo</span>
         <span
           aria-hidden
           className={`relative top-[4px] inline-block overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin-left] duration-250 ease-out ${
@@ -73,13 +73,13 @@ export function TemplateShareActions({
           ✓
         </span>
       </button>
-      <span>{", "}</span>
+      <span className="text-brand-neutral-200">{" · "}</span>
       <button
         type="button"
         onClick={() => copyToClipboard("page", pageUrl)}
         className="link-underline hover:text-brand-white cursor-pointer"
       >
-        <span>Link</span>
+        <span>Copy link</span>
         <span
           aria-hidden
           className={`relative top-[4px] inline-block overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin-left] duration-250 ease-out ${
