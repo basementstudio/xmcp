@@ -1080,7 +1080,7 @@ body {
 
 .site-release {
   display: grid;
-  gap: var(--site-grid-gap);
+  gap: 12px;
   padding-block: 24px;
   border-top: 1px solid var(--site-rule);
 }
@@ -1088,14 +1088,41 @@ body {
   border-top: 0;
   padding-top: 0;
 }
+/* Version, date and source stack in a left column beside the notes. */
 .site-release-meta {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 8px 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
-.site-release-meta :is(time, a) {
+.site-release-meta .site-section-title {
+  margin: 0;
+}
+.site-release-date,
+.site-release-link {
+  color: var(--site-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.site-release-link {
+  margin-top: 6px;
+}
+.site-release-link:hover {
+  color: var(--site-ink);
+}
+.site-release > .prose > :first-child {
   margin-top: 0;
+}
+@media (min-width: 768px) {
+  .site-release {
+    grid-template-columns: 136px minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+  .site-release-meta {
+    position: sticky;
+    top: var(--site-page-top);
+  }
 }
 
 /* Use the same type roles in every page family. */

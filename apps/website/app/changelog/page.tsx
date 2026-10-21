@@ -73,7 +73,7 @@ export default function ChangelogPage() {
               </h2>
               <time
                 dateTime={release.publishedAt}
-                className="block text-sm text-brand-neutral-100 mt-2"
+                className="site-release-date"
               >
                 {formatReleaseDate(release.publishedAt)}
               </time>
@@ -81,9 +81,9 @@ export default function ChangelogPage() {
                 href={release.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
+                className="site-release-link link-underline"
               >
-                View on GitHub ↗
+                GitHub ↗
               </a>
             </div>
             {release.body.trim() ? (
