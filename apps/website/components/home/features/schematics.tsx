@@ -46,7 +46,7 @@ const lit = (delay: number, rest = false) => ({
   style: vars({ "--delay": `${delay}s`, "--rest": rest ? 1 : 0 }),
 });
 
-// Lucide's folder and file-text (sheet) icons, as used in the docs sidebar.
+// Lucide icons, the set the docs sidebar uses: folder and file-text (sheet).
 const FOLDER =
   "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z";
 const SHEET = [
@@ -248,43 +248,32 @@ export function ConfigurationSchematic() {
   );
 }
 
-const http = "M16 40C38 40 42 17 66 17H97";
-const stdio = "M16 40C38 40 42 63 66 63H97";
+const http = "M24 40C42 40 44 20 64 20H86";
+const stdio = "M24 40C42 40 44 60 64 60H86";
 
-/** One server reaching clients over HTTP and STDIO. */
+/** One server reaching clients over HTTP (the web) and STDIO (a local shell). */
 export function TransportSchematic() {
   return (
     <Schematic>
-      {[-14, -7, 7, 14].map((offset, i) => {
-        const d = `M16 40C34 40 38 ${40 + offset} 56 ${40 + offset}`;
-        return (
-          <g key={offset}>
-            <path d={d} className="faint" />
-            <Pulse d={d} delay={-1.2 + i * 0.3} />
-          </g>
-        );
-      })}
-      <circle cx={13.5} cy={40} r={2.5} stroke="currentColor" />
+      <Icon x={8} y={33} size={14}>
+        <rect x={2} y={2} width={20} height={8} rx={2} />
+        <rect x={2} y={14} width={20} height={8} rx={2} />
+        <path d="M6 6h.01M6 18h.01" />
+      </Icon>
       <path d={http} stroke="currentColor" />
       <Pulse d={http} />
       <path d={stdio} className="dotted muted" />
       <Pulse d={stdio} delay={1.2} />
-      <rect
-        x={98.5}
-        y={12.5}
-        width={9}
-        height={9}
-        stroke="currentColor"
-        {...lit(0, true)}
-      />
-      <rect
-        x={98.5}
-        y={58.5}
-        width={9}
-        height={9}
-        stroke="currentColor"
-        {...lit(1.2)}
-      />
+      <circle cx={87.5} cy={20} r={1.5} stroke="currentColor" {...lit(0)} />
+      <circle cx={87.5} cy={60} r={1.5} stroke="currentColor" {...lit(1.2)} />
+      <Icon x={93} y={13} size={14}>
+        <circle cx={12} cy={12} r={10} />
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
+      </Icon>
+      <Icon x={93} y={53} size={14}>
+        <rect x={3} y={3} width={18} height={18} rx={2} />
+        <path d="m7 11 2-2-2-2M11 13h4" />
+      </Icon>
     </Schematic>
   );
 }
