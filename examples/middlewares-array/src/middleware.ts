@@ -75,15 +75,24 @@ const protectResource: McpMiddleware = async (ctx, next) => {
   return result;
 };
 
-function canGreet(authInfo: RequestContext["authInfo"]): boolean {
-  return authInfo?.scopes.includes("greet") ?? false;
+function canCall(
+  meta: Readonly<Record<string, unknown>> | undefined,
+  authInfo: RequestContext["authInfo"]
+): boolean {
+  const required = meta?.["demo/requires"];
+  if (required === undefined) return true;
+  return (
+    Array.isArray(required) &&
+    required.every(
+      (scope) => typeof scope === "string" && authInfo?.scopes.includes(scope)
+    )
+  );
 }
 
 const authorizeTools: McpMiddleware = async (ctx, next) => {
   if (
     ctx.method === "tools/call" &&
-    ctx.params.name === "greet" &&
-    !canGreet(ctx.authInfo)
+    !canCall(ctx.tool.metadata._meta, ctx.authInfo)
   ) {
     return { isError: true, content: [{ type: "text", text: "Forbidden" }] };
   }
@@ -91,9 +100,7 @@ const authorizeTools: McpMiddleware = async (ctx, next) => {
   if (ctx.method === "tools/list" && Array.isArray(result.tools)) {
     return {
       ...result,
-      tools: result.tools.filter(
-        (tool) => tool.name !== "greet" || canGreet(ctx.authInfo)
-      ),
+      tools: result.tools.filter((tool) => canCall(tool._meta, ctx.authInfo)),
     };
   }
   return result;

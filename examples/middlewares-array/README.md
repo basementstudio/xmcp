@@ -52,8 +52,11 @@ on STDIO. Keep shared module initialization free of HTTP-only side effects.
 
 The public demo keys are `demo-reader` (scope `greet`) and `demo-limited` (no
 scopes). They are examples, not production credentials. MCP middleware reads
-`ctx.authInfo` to hide `greet` from callers without its scope and deny direct
-calls before the handler runs. Verify both paths:
+`ctx.authInfo` and the tool's registered `_meta["demo/requires"]` policy to
+hide `greet` from callers without its scope and deny direct calls before the
+handler runs. The same `canCall` function checks `ctx.tool.metadata._meta` for
+calls and each tool's `_meta` in listing results; no separate name-to-policy map
+is needed. Verify both paths:
 
 ```sh
 curl -s http://localhost:3001/mcp \
