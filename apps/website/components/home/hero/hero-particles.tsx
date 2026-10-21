@@ -4,7 +4,8 @@ import { ParticleViewport } from "@/components/particles/viewport";
 import { DUST_CONTROLS } from "@/components/particles/dust";
 import DustScene from "@/components/particles/dust-scene";
 
-const PICTURE = "/xmcp.webp";
+// Soft folds behind the product mock, drawn as flowing dashes.
+const PICTURE = "/hero-folds.webp";
 
 export default function HeroParticles({ active }: { active: boolean }) {
   return (
@@ -16,8 +17,8 @@ export default function HeroParticles({ active }: { active: boolean }) {
         <ParticleViewport
           className="hero-scene-size"
           texture={PICTURE}
-          width={850}
-          height={742}
+          width={900}
+          height={625}
         >
           {(props) => (
             <DustScene

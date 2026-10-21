@@ -129,6 +129,167 @@ body .site-docs-body > :nth-child(1 of :not(.sr-only)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Line schematics in the homepage feature cards. */
+.feature-schematic {
+  width: 120px;
+  height: 80px;
+  overflow: visible;
+  stroke-linecap: square;
+}
+.feature-schematic .faint {
+  stroke: var(--site-faint);
+}
+.feature-schematic .muted {
+  stroke: var(--site-muted);
+}
+.feature-schematic .dotted {
+  stroke-dasharray: 1 2.5;
+  stroke-linecap: butt;
+}
+.feature-schematic .fill {
+  fill: currentColor;
+}
+.feature-schematic .ground {
+  fill: var(--site-ground);
+}
+.feature-schematic .muted:not(path) {
+  fill: var(--site-muted);
+  stroke: none;
+}
+/* Shared motion cycle; see schematics.tsx for how delays line up. */
+.feature-schematic {
+  --cycle: 2.4s;
+  --pulse: var(--site-muted);
+}
+.site-content-card:hover .feature-schematic,
+.site-content-card:focus-visible .feature-schematic {
+  --pulse: var(--site-ink);
+}
+.feature-schematic .pulse {
+  stroke: var(--pulse);
+  stroke-width: 1.5;
+  stroke-dasharray: 12 100;
+  stroke-dashoffset: 12;
+  opacity: 0;
+  transition: stroke 300ms var(--site-ease);
+}
+.feature-schematic .lit {
+  fill: currentColor;
+  fill-opacity: var(--rest, 0);
+}
+.feature-schematic .lit.ground {
+  fill: currentColor;
+}
+.feature-schematic .track {
+  stroke-dasharray: var(--length) 200;
+}
+.feature-schematic .plug {
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .feature-schematic .pulse {
+    animation: schematic-pulse var(--cycle) var(--delay, 0s) infinite
+      cubic-bezier(0.45, 0, 0.25, 1);
+  }
+  .feature-schematic .lit {
+    animation: schematic-lit var(--cycle) var(--delay, 0s) infinite;
+  }
+  .feature-schematic .track {
+    animation: schematic-track calc(var(--cycle) * 1.5) var(--delay, 0s)
+      infinite var(--site-ease);
+  }
+  .feature-schematic .knob {
+    animation: schematic-knob calc(var(--cycle) * 1.5) var(--delay, 0s) infinite
+      var(--site-ease);
+  }
+  .feature-schematic .type {
+    animation: schematic-type calc(var(--cycle) * 1.5) var(--delay, 0s) infinite;
+  }
+  .feature-schematic .plug {
+    animation: schematic-plug calc(var(--cycle) * 1.5) infinite var(--site-ease);
+  }
+}
+@keyframes schematic-pulse {
+  0% {
+    stroke-dashoffset: 12;
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  36% {
+    stroke-dashoffset: -100;
+    opacity: 1;
+  }
+  40%,
+  100% {
+    stroke-dashoffset: -100;
+    opacity: 0;
+  }
+}
+@keyframes schematic-lit {
+  0%,
+  32% {
+    fill-opacity: var(--rest, 0);
+  }
+  38%,
+  82% {
+    fill-opacity: 1;
+  }
+  94%,
+  100% {
+    fill-opacity: var(--rest, 0);
+  }
+}
+@keyframes schematic-track {
+  0%,
+  15%,
+  100% {
+    stroke-dasharray: var(--length) 200;
+  }
+  50%,
+  65% {
+    stroke-dasharray: calc(var(--length) + var(--shift)) 200;
+  }
+}
+@keyframes schematic-knob {
+  0%,
+  15%,
+  100% {
+    transform: none;
+  }
+  50%,
+  65% {
+    transform: translateX(calc(var(--shift) * 1px));
+  }
+}
+@keyframes schematic-type {
+  0% {
+    stroke-dasharray: 0 1;
+  }
+  30%,
+  80% {
+    stroke-dasharray: 1 1;
+  }
+  95%,
+  100% {
+    stroke-dasharray: 0 1;
+  }
+}
+@keyframes schematic-plug {
+  0%,
+  8% {
+    transform: translateX(10px);
+  }
+  30%,
+  78% {
+    transform: none;
+  }
+  96%,
+  100% {
+    transform: translateX(10px);
+  }
+}
 .site-page-toc {
   display: none;
 }
@@ -414,8 +575,252 @@ body main > div:has(> .listing-intro) {
 
 /* SF Interface specimen, install, pill and code-panel treatments. */
 .hero-specimen {
+  position: relative;
   margin: 32px 0 0;
+  overflow: hidden;
+  border-radius: var(--site-radius);
   background: transparent;
+}
+/* The install command sits flush under the hero frame. It stacks above the
+   fixed hero layer so its top border is not covered by the backdrop. */
+body .hero-specimen + figure.shiki {
+  position: relative;
+  z-index: 1;
+  margin-top: 0;
+}
+/* Product mock over the dust backdrop, cut off by the frame's bottom edge. */
+.hero-mock {
+  position: absolute;
+  z-index: 1;
+  inset: 9% 6% -12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--site-rule);
+  border-radius: 10px;
+  background: var(--site-card);
+  box-shadow: 0 24px 64px #0000001f;
+  color: var(--site-ink);
+  font-size: 11px;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.dark .hero-mock {
+  box-shadow: 0 24px 64px #00000059;
+}
+.hero-mock-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+}
+.hero-mock-brand {
+  font: 400 15px/1 var(--font-display);
+}
+.hero-mock-mono {
+  font-family: var(--font-geist-mono), monospace;
+}
+.hero-mock-bar .hero-mock-mono,
+.hero-mock-muted {
+  color: var(--site-muted);
+}
+.hero-mock-strong {
+  color: var(--site-ink);
+}
+.hero-mock-panels {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 0 6px 6px;
+}
+@media (min-width: 640px) {
+  .hero-mock-panels {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+.hero-mock-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+  padding: 14px;
+  border-radius: 6px;
+  background: var(--site-well);
+}
+.hero-mock-chart {
+  display: none;
+}
+@media (min-width: 640px) {
+  .hero-mock-chart {
+    display: flex;
+  }
+}
+.hero-mock-server {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero-mock-server > span:last-child,
+.hero-mock-stats > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hero-mock-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--site-faint), var(--site-ink));
+}
+.hero-mock-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--site-rule);
+}
+.hero-mock-figure {
+  font-size: 19px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.hero-mock-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--site-rule);
+}
+.hero-mock-row {
+  display: grid;
+  /* Fixed numeric columns so figures line up across rows. */
+  grid-template-columns: minmax(0, 1fr) 52px 52px;
+  gap: 12px;
+  text-align: right;
+}
+.hero-mock-row > :first-child {
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hero-mock-middleware {
+  grid-template-columns: minmax(0, 1fr) auto 40px;
+}
+.hero-mock-status::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--site-ink);
+  vertical-align: 1px;
+}
+.hero-mock-chart .hero-mock-stats {
+  padding: 0 0 12px;
+  border-top: 0;
+  border-bottom: 1px solid var(--site-rule);
+}
+/* Hourly columns over a dotted grid; hovering one dims the rest. */
+.hero-mock-plot {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  align-items: flex-end;
+  gap: 3px;
+  background: repeating-linear-gradient(
+      to top,
+      transparent 0 calc(25% - 1px),
+      var(--site-rule) calc(25% - 1px) 25%
+    )
+    bottom / 100% 100%;
+}
+.hero-mock-column {
+  display: flex;
+  height: 100%;
+  flex: 1;
+  align-items: flex-end;
+  cursor: crosshair;
+}
+.hero-mock-fill {
+  display: flex;
+  width: 100%;
+  flex-direction: column-reverse;
+  gap: 1px;
+  overflow: hidden;
+  border-radius: 1.5px 1.5px 0 0;
+  opacity: 0.85;
+  transition:
+    height 500ms var(--site-ease),
+    opacity 200ms var(--site-ease);
+}
+.hero-mock-plot[data-hovering] .hero-mock-fill {
+  opacity: 0.25;
+}
+.hero-mock-plot .hero-mock-column[data-active] .hero-mock-fill {
+  opacity: 1;
+}
+/* Clients, bottom to top of each column. */
+.hero-mock-client-0 {
+  background: var(--site-ink);
+}
+.hero-mock-client-1 {
+  background: var(--site-muted);
+}
+.hero-mock-client-2 {
+  background: var(--site-faint);
+}
+.hero-mock-fill > span {
+  flex-basis: 0;
+}
+.hero-mock-swatch {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 1.5px;
+  vertical-align: 0;
+}
+.hero-mock-legend {
+  display: flex;
+  gap: 12px;
+}
+.hero-mock-tip {
+  position: absolute;
+  top: 0;
+  display: flex;
+  min-width: 112px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid var(--site-rule);
+  border-radius: 6px;
+  background: var(--site-card);
+  box-shadow: var(--site-shadow);
+  color: var(--site-muted);
+  pointer-events: none;
+}
+.hero-mock-tip [data-active],
+.hero-mock-tip b {
+  color: var(--site-ink);
+  font-weight: inherit;
+}
+.hero-mock-axis {
+  display: flex;
+  justify-content: space-between;
+}
+.hero-mock-run {
+  margin: -3px -6px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: background-color 200ms var(--site-ease);
+}
+.hero-mock-run[data-active],
+a.hero-mock-run:hover {
+  background: var(--site-rule);
 }
 .hero-scene-size {
   width: 100%;

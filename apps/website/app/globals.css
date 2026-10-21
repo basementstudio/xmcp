@@ -638,14 +638,6 @@ body a:is(:hover, :focus-visible),
   opacity: 0.7;
 }
 
-.feature-art {
-  filter: invert(1);
-  mix-blend-mode: multiply;
-}
-.dark .feature-art {
-  filter: none;
-  mix-blend-mode: screen;
-}
 .hero-trust svg [fill="#F7F7F7"] {
   fill: currentColor;
 }

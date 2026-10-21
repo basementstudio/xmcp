@@ -1,12 +1,13 @@
+import type { ComponentType } from "react";
 import { ContentCard } from "@/components/ui/content-card";
-import type { StaticImageData } from "next/image";
-import ParticleImage from "@/components/particles/image";
-import Feature1 from "./feature-1.jpg";
-import Feature2 from "./feature-2.jpg";
-import Feature3 from "./feature-3.jpg";
-import Feature4 from "./feature-4.jpg";
-import Feature5 from "./feature-5.jpg";
-import Feature6 from "./feature-6.jpg";
+import {
+  AdapterSchematic,
+  ConfigurationSchematic,
+  IntegrationsSchematic,
+  MiddlewareSchematic,
+  RoutingSchematic,
+  TransportSchematic,
+} from "./schematics";
 
 export const HomeFeatures = () => {
   return (
@@ -20,8 +21,8 @@ export const HomeFeatures = () => {
         your apps.
       </p>
       <div className="site-card-grid">
-        {cards.map((card, index) => (
-          <Card key={index} {...card} />
+        {cards.map((card) => (
+          <Card key={card.href} {...card} />
         ))}
       </div>
     </div>
@@ -29,27 +30,20 @@ export const HomeFeatures = () => {
 };
 
 interface CardProps {
-  asset: StaticImageData;
+  schematic: ComponentType;
   title: string;
   description: string;
   href: string;
 }
 
-const Card = ({ asset, title, description, href }: CardProps) => {
+const Card = ({
+  schematic: Schematic,
+  title,
+  description,
+  href,
+}: CardProps) => {
   return (
-    <ContentCard
-      href={href}
-      media={
-        <div className="feature-art h-full w-full">
-          <ParticleImage
-            src={asset.src}
-            width={asset.width}
-            height={asset.height}
-            className="h-full w-full"
-          />
-        </div>
-      }
-    >
+    <ContentCard href={href} media={<Schematic />}>
       <h3 className="site-card-title">{title}</h3>
       <p className="site-card-description">{description}</p>
     </ContentCard>
@@ -58,44 +52,42 @@ const Card = ({ asset, title, description, href }: CardProps) => {
 
 const cards = [
   {
-    asset: Feature1,
+    schematic: RoutingSchematic,
     title: "File System Routing",
     href: "/docs/getting-started/project-structure",
     description:
       "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
-    asset: Feature2,
+    schematic: IntegrationsSchematic,
     title: "Integrations",
     href: "/docs/integrations/better-auth",
     description:
       "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
-    asset: Feature3,
+    schematic: MiddlewareSchematic,
     title: "Middlewares",
     href: "/docs/core-concepts/middlewares",
     description:
       "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
-    asset: Feature4,
+    schematic: ConfigurationSchematic,
     title: "Extensible Configuration",
     href: "/docs/configuration/custom-directories",
     description:
       "Customize every aspect of your MCP server with flexible configuration options.",
   },
-
   {
-    asset: Feature5,
+    schematic: TransportSchematic,
     title: "Multiple Transport Support",
     href: "/docs/configuration/transports",
     description:
       "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
-
   {
-    asset: Feature6,
+    schematic: AdapterSchematic,
     title: "Plug & play to your apps",
     href: "/docs/adapters/nextjs",
     description:
