@@ -102,7 +102,7 @@ The first function enters first and receives the result last. `await next()` run
 
 Always check `ctx.method` before accessing operation-specific parameters. Existing middleware that assumes every request is a tool call should begin with `if (ctx.method !== "tools/call") return next();`.
 
-`ctx` also includes `clientInfo`, `http`, `signal`, `set`, `get`, `progress`, and `log` from [request context](/docs/core-concepts/request-context). `getRequestContext()` works before and after `next()`, and inside prompt, resource, and completion callbacks. Local values last for one operation and are isolated from concurrent requests. HTTP metadata is absent on STDIO.
+`ctx` also includes `authInfo`, `clientInfo`, `http`, `signal`, `set`, `get`, `progress`, and `log` from [request context](/docs/core-concepts/request-context). `getRequestContext()` works before and after `next()`, and inside prompt, resource, and completion callbacks. Local values last for one operation and are isolated from concurrent requests. HTTP metadata is absent on STDIO.
 
 Middleware receives normalized MCP results from `next()`. Return the result format for the current method; string and number shorthand belongs in component handlers. Check the result shape before accessing method-specific fields. Exceptions retain SDK behavior: tools produce tool-error results, while reads, prompts, completion, and listings reject with protocol errors. Invalid `mcp` exports or a failed middleware import prevent server setup from completing.
 
