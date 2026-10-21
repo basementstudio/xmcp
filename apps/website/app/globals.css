@@ -270,7 +270,7 @@ html:has(#nd-blog-layout) {
 
 .prose li {
   @apply my-3 relative text-brand-neutral-50;
-  padding-left: 0.9rem;
+  padding-left: 1.25rem;
 }
 
 .prose li > p {
@@ -278,15 +278,15 @@ html:has(#nd-blog-layout) {
   margin-bottom: 0;
 }
 
+/* A typographic marker for every unordered list in docs, blog and changelog. */
 .prose ul li::before {
-  content: "";
+  content: "⊹";
   position: absolute;
   left: 0;
-  top: calc(0.5lh - 2px);
-  width: 4px;
-  height: 4px;
-  border-radius: 9999px;
-  background: var(--color-brand-neutral-50);
+  top: 0;
+  color: var(--site-text);
+  font-size: 1.15em;
+  line-height: 1.4;
 }
 
 .prose hr {
