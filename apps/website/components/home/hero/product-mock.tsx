@@ -104,7 +104,7 @@ export function ProductMock() {
           <div className="hero-mock-server">
             <span className="hero-mock-avatar" />
             <span>
-              <span className="hero-mock-strong">acme-docs</span>
+              <span className="hero-mock-strong">my-server</span>
               <span className="hero-mock-muted">HTTP · xmcp 1.8.0</span>
             </span>
           </div>

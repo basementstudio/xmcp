@@ -46,22 +46,65 @@ const lit = (delay: number, rest = false) => ({
   style: vars({ "--delay": `${delay}s`, "--rest": rest ? 1 : 0 }),
 });
 
+// Lucide's folder and file-text (sheet) icons, as used in the docs sidebar.
+const FOLDER =
+  "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z";
+const SHEET = [
+  "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z",
+  "M14 2v4a2 2 0 0 0 2 2h4",
+  "M10 9H8",
+  "M16 13H8",
+  "M16 17H8",
+];
+
+/** A 24px Lucide icon placed in schematic units, stroked at 1px like the lines. */
+function Icon({
+  x,
+  y,
+  size,
+  children,
+}: {
+  x: number;
+  y: number;
+  size: number;
+  children: ReactNode;
+}) {
+  return (
+    <svg
+      x={x}
+      y={y}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={24 / size}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      overflow="visible"
+    >
+      {children}
+    </svg>
+  );
+}
+
 const rows = [34, 48, 62];
 
 /** Files in a folder, each registered as a tool on the server. */
 export function RoutingSchematic() {
   return (
     <Schematic>
-      <path d="M14 13.5h6l2 2h8v9H14z" stroke="currentColor" />
-      <path d="M20 24.5V62" className="faint" />
+      <Icon x={12} y={8} size={14}>
+        <path d={FOLDER} />
+      </Icon>
+      <path d="M19 22V62" className="faint" />
       {rows.map((y, i) => (
         <g key={y}>
-          <path d={`M20 ${y}h8`} className="faint" />
-          <path
-            d={`M29.5 ${y - 5}h5l3 3v7h-8z`}
-            stroke="currentColor"
-            strokeLinejoin="round"
-          />
+          <path d={`M19 ${y}h9`} className="faint" />
+          <Icon x={28} y={y - 6} size={12}>
+            {SHEET.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </Icon>
           <path d={`M42 ${y}h40`} className="dotted muted" />
           <Pulse d={`M42 ${y}h41`} delay={i * 0.3} />
           <rect
