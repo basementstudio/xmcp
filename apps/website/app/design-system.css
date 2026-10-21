@@ -160,9 +160,6 @@ body a[target="_blank"] * {
 .feature-schematic .fill {
   fill: currentColor;
 }
-.feature-schematic .ground {
-  fill: var(--site-ground);
-}
 .feature-schematic .muted:not(path) {
   fill: var(--site-muted);
   stroke: none;
@@ -188,14 +185,8 @@ body a[target="_blank"] * {
   fill: currentColor;
   fill-opacity: var(--rest, 0);
 }
-.feature-schematic .lit.ground {
-  fill: currentColor;
-}
 .feature-schematic .track {
   stroke-dasharray: var(--length) 200;
-}
-.feature-schematic .plug {
-  transform: none;
 }
 @media (prefers-reduced-motion: no-preference) {
   .feature-schematic .pulse {
@@ -215,9 +206,6 @@ body a[target="_blank"] * {
   }
   .feature-schematic .type {
     animation: schematic-type calc(var(--cycle) * 1.5) var(--delay, 0s) infinite;
-  }
-  .feature-schematic .plug {
-    animation: schematic-plug calc(var(--cycle) * 1.5) infinite var(--site-ease);
   }
 }
 @keyframes schematic-pulse {
@@ -285,20 +273,6 @@ body a[target="_blank"] * {
   95%,
   100% {
     stroke-dasharray: 0 1;
-  }
-}
-@keyframes schematic-plug {
-  0%,
-  8% {
-    transform: translateX(10px);
-  }
-  30%,
-  78% {
-    transform: none;
-  }
-  96%,
-  100% {
-    transform: translateX(10px);
   }
 }
 .site-page-toc {

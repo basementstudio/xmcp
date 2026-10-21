@@ -1,8 +1,12 @@
 import type { CSSProperties, ReactNode, SVGProps } from "react";
+import { Icons } from "@/components/icons";
 
-// Line drawings for the feature tiles. Strokes use currentColor and the site's
-// faint/muted tokens, so they follow the theme. Motion is CSS-only and shares
-// one cycle (see `.feature-schematic` in design-system.css):
+// Line drawings for the feature tiles, all in one vocabulary: 14px Lucide icons
+// (the docs' icon set) stroked at 1px, faint solid lines for structure, dotted
+// lines for data flow, and small dots that light when data arrives. Strokes use
+// currentColor and the site's faint/muted tokens, so they follow the theme.
+// Motion is CSS-only and shares one cycle (see `.feature-schematic` in
+// design-system.css):
 // - `pulse` paths carry a short segment from start to end of the path.
 // - `lit` shapes fill when a pulse arrives and empty again before the next one.
 // Both take `--delay`; a `lit` shape with the same delay as a pulse lights up
@@ -46,28 +50,97 @@ const lit = (delay: number, rest = false) => ({
   style: vars({ "--delay": `${delay}s`, "--rest": rest ? 1 : 0 }),
 });
 
-// Lucide icons, the set the docs sidebar uses: folder and file-text (sheet).
-const FOLDER =
-  "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z";
-const SHEET = [
-  "M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z",
-  "M14 2v4a2 2 0 0 0 2 2h4",
-  "M10 9H8",
-  "M16 13H8",
-  "M16 17H8",
-];
-
-/** A 24px Lucide icon placed in schematic units, stroked at 1px like the lines. */
-function Icon({
+/** The dot that lights where a pulse arrives. */
+function Arrival({
   x,
   y,
-  size,
-  children,
+  delay,
+  rest,
 }: {
   x: number;
   y: number;
-  size: number;
-  children: ReactNode;
+  delay: number;
+  rest?: boolean;
+}) {
+  return (
+    <circle cx={x} cy={y} r={1.5} stroke="currentColor" {...lit(delay, rest)} />
+  );
+}
+
+const ICON = 14;
+
+// Lucide icon shapes on their 24px grid.
+const glyphs = {
+  folder: (
+    <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+  ),
+  sheet: (
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4M10 9H8M16 13H8M16 17H8" />
+  ),
+  fileCode: (
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7zM14 2v4a2 2 0 0 0 2 2h4M10 12.5 8 15l2 2.5m4-5 2 2.5-2 2.5" />
+  ),
+  server: (
+    <>
+      <rect x={2} y={2} width={20} height={8} rx={2} />
+      <rect x={2} y={14} width={20} height={8} rx={2} />
+      <path d="M6 6h.01M6 18h.01" />
+    </>
+  ),
+  bot: (
+    <>
+      <rect x={4} y={8} width={16} height={12} rx={2} />
+      <path d="M12 8V4H8M2 14h2M20 14h2M15 13v2M9 13v2" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x={3} y={11} width={18} height={11} rx={2} />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </>
+  ),
+  card: (
+    <>
+      <rect x={2} y={5} width={20} height={14} rx={2} />
+      <path d="M2 10h20" />
+    </>
+  ),
+  chart: <path d="M5 21v-6M12 21V3M19 21V9" />,
+  shield: (
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  ),
+  gauge: <path d="m12 14 4-4M3.34 19a10 10 0 1 1 17.32 0" />,
+  scroll: (
+    <path d="M15 12h-5M15 8h-5M19 17V5a2 2 0 0 0-2-2H4M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" />
+  ),
+  globe: (
+    <>
+      <circle cx={12} cy={12} r={10} />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
+    </>
+  ),
+  terminal: (
+    <>
+      <rect x={3} y={3} width={18} height={18} rx={2} />
+      <path d="m7 11 2-2-2-2M11 13h4" />
+    </>
+  ),
+  box: (
+    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7l8.7 5 8.7-5M12 22V12" />
+  ),
+};
+
+/** A Lucide glyph placed in schematic units, stroked at 1px like the lines. */
+function Icon({
+  glyph,
+  x,
+  y,
+  size = ICON,
+}: {
+  glyph: keyof typeof glyphs;
+  x: number;
+  y: number;
+  size?: number;
 }) {
   return (
     <svg
@@ -82,125 +155,95 @@ function Icon({
       strokeLinejoin="round"
       overflow="visible"
     >
-      {children}
+      {glyphs[glyph]}
     </svg>
   );
 }
 
-const rows = [34, 48, 62];
+const files = [34, 48, 62];
 
 /** Files in a folder, each registered as a tool on the server. */
 export function RoutingSchematic() {
   return (
     <Schematic>
-      <Icon x={12} y={8} size={14}>
-        <path d={FOLDER} />
-      </Icon>
-      <path d="M19 22V62" className="faint" />
-      {rows.map((y, i) => (
+      <Icon glyph="folder" x={10} y={9} />
+      <path d="M17 24V62" className="faint" />
+      {files.map((y, i) => (
         <g key={y}>
-          <path d={`M19 ${y}h9`} className="faint" />
-          <Icon x={28} y={y - 6} size={12}>
-            {SHEET.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </Icon>
-          <path d={`M42 ${y}h40`} className="dotted muted" />
-          <Pulse d={`M42 ${y}h41`} delay={i * 0.3} />
-          <rect
-            x={84.5}
-            y={y - 3.5}
-            width={7}
-            height={7}
-            stroke="currentColor"
-            {...lit(i * 0.3, i === 0)}
-          />
-          <path d={`M92 ${y}h7`} className="faint" />
+          <path d={`M17 ${y}h7`} className="faint" />
+          <Icon glyph="sheet" x={24} y={y - 6} size={12} />
+          <path d={`M40 ${y}h38`} className="dotted muted" />
+          <Pulse d={`M40 ${y}h39`} delay={i * 0.3} />
+          <Arrival x={80.5} y={y} delay={i * 0.3} rest={i === 0} />
+          <path d={`M82 ${y}h6`} className="faint" />
         </g>
       ))}
-      <path d="M99 34v28M99 48h6" className="faint" />
-      <Pulse d="M92 34h7v14h6" delay={0.75} />
-      <Pulse d="M92 62h7V48h6" delay={1.05} />
-      <circle cx={107.5} cy={48} r={2.5} stroke="currentColor" {...lit(1.1)} />
+      <path d="M88 34v28M88 48h5" className="faint" />
+      <Pulse d="M82 34h6v14h5" delay={0.75} />
+      <Pulse d="M82 62h6V48h5" delay={1.05} />
+      <Icon glyph="server" x={94} y={41} />
     </Schematic>
   );
 }
 
-const services = [18, 40, 62];
+const services = [
+  { y: 18, glyph: "lock" },
+  { y: 40, glyph: "card" },
+  { y: 62, glyph: "chart" },
+] as const;
 
-/** A server fanning out to plugged-in services. */
+/** A client reaching a server that fans out to auth, payments and analytics. */
 export function IntegrationsSchematic() {
   return (
     <Schematic>
-      <circle cx={13.5} cy={40} r={2.5} stroke="currentColor" />
-      <path d="M16 40h34" className="dotted muted" />
-      <Pulse d="M16 40h34" />
-      <rect
-        x={50.5}
-        y={32.5}
-        width={15}
-        height={15}
-        stroke="currentColor"
-        {...lit(0)}
-      />
-      <path d="M66 40h12M78 18v44" className="faint" />
-      {services.map((y, i) => (
+      <Icon glyph="bot" x={6} y={33} />
+      <path d="M22 40h17" className="dotted muted" />
+      <Pulse d="M22 40h17" />
+      <Icon glyph="server" x={40} y={33} />
+      <path d="M56 40h10M66 18v44" className="faint" />
+      {services.map(({ y, glyph }, i) => (
         <g key={y}>
-          <path d={`M78 ${y}h20`} className="faint" />
-          <Pulse d={`M66 40h12V${y}h20`} delay={0.75 + i * 0.12} />
-          <circle cx={87.5} cy={y} r={1.5} stroke="currentColor" />
-          <rect
-            x={98.5}
-            y={y - 4.5}
-            width={9}
-            height={9}
-            stroke="currentColor"
-            {...lit(0.75 + i * 0.12, i !== 1)}
-          />
+          <path d={`M66 ${y}h20`} className="faint" />
+          <Pulse d={`M56 40h10V${y}h21`} delay={0.75 + i * 0.12} />
+          <Arrival x={88.5} y={y} delay={0.75 + i * 0.12} rest={i !== 1} />
+          <Icon glyph={glyph} x={94} y={y - 7} />
         </g>
       ))}
     </Schematic>
   );
 }
 
-// The request pulse crosses 14→106 in the first 36% of the cycle; each gate
-// lights when the pulse reaches it (see the timing note above).
-const gates = [33, 54, 75];
-const arrival = (x: number) => ((x + 3 - 14) / 92) * 0.864 - 0.77;
+// The request pulse crosses 22→93 in the first 36% of the cycle; each gate's
+// dot lights when the pulse reaches it (see the timing note above).
+const gates = [
+  { x: 36, glyph: "shield" },
+  { x: 57, glyph: "gauge" },
+  { x: 78, glyph: "scroll" },
+] as const;
+const arrival = (x: number) => ((x - 22) / 71) * 0.864 - 0.77;
 
-/** A request passing through a stack of middleware gates. */
+/** A request passing through auth, rate-limit and logging on its way in. */
 export function MiddlewareSchematic() {
   return (
     <Schematic>
-      <circle cx={11.5} cy={40} r={2.5} stroke="currentColor" />
-      <circle
-        cx={108.5}
-        cy={40}
-        r={2.5}
-        stroke="currentColor"
-        {...lit(arrival(103))}
-      />
-      <path d="M14 40H106" className="dotted muted" />
-      <Pulse d="M14 40H106" />
-      {gates.map((x, i) => (
+      <Icon glyph="bot" x={6} y={33} />
+      {/* The flow is drawn between the gates, so no line runs behind them. */}
+      {[22, ...gates.map(({ x }) => x + 9)].map((from, i) => (
+        <path
+          key={from}
+          d={`M${from} 40H${gates[i] ? gates[i].x - 9 : 93}`}
+          className="dotted muted"
+        />
+      ))}
+      <Pulse d="M22 40H93" />
+      {gates.map(({ x, glyph }, i) => (
         <g key={x}>
-          <rect
-            x={x + 0.5}
-            y={24.5}
-            width={5}
-            height={31}
-            stroke="currentColor"
-            className="lit ground"
-            style={vars({
-              "--delay": `${arrival(x)}s`,
-              "--rest": i === 0 ? 1 : 0,
-            })}
-          />
-          <path d={`M${x + 3} 18v3`} className="faint" />
-          <path d={`M${x + 3} 59v3`} className="faint" />
+          <Icon glyph={glyph} x={x - 7} y={33} />
+          <path d={`M${x} 49v5`} className="faint" />
+          <Arrival x={x} y={56.5} delay={arrival(x)} rest={i === 0} />
         </g>
       ))}
-      <path d="M22 62h76" className="faint dotted" />
+      <Icon glyph="server" x={94} y={33} />
     </Schematic>
   );
 }
@@ -208,40 +251,35 @@ export function MiddlewareSchematic() {
 // [y, resting value, drift, phase]
 const settings = [
   [20, 70, -18, -0.3],
-  [33, 44, 30, -1.1],
-  [46, 88, -26, -0.6],
-  [59, 58, 22, -1.7],
+  [33, 50, 30, -1.1],
+  [46, 92, -26, -0.6],
+  [59, 62, 22, -1.7],
 ];
 
-/** Settings tracks, each drifting between two values. */
+/** One config file driving settings, each drifting between two values. */
 export function ConfigurationSchematic() {
   return (
     <Schematic>
-      {settings.map(([y, value, shift, delay], i) => (
+      <Icon glyph="fileCode" x={4} y={33} />
+      <path d="M20 40h6M26 20v39" className="faint" />
+      {settings.map(([y, value, shift, delay]) => (
         <g
           key={y}
           style={vars({
             "--shift": shift,
-            "--length": value - 24,
+            "--length": value - 32,
             "--delay": `${delay}s`,
           })}
         >
-          <path d={`M10 ${y}h8`} className="muted" />
-          <path d={`M24 ${y}H100`} className="faint dotted" />
+          <path d={`M26 ${y}h6`} className="faint" />
+          <path d={`M32 ${y}H108`} className="faint dotted" />
           <path
-            d={`M24 ${y}H100`}
+            d={`M32 ${y}H108`}
             pathLength={76}
             stroke="currentColor"
             className="track"
           />
-          <rect
-            x={value - 3.5}
-            y={y - 3.5}
-            width={7}
-            height={7}
-            stroke="currentColor"
-            className={i === 2 ? "knob fill" : "knob ground"}
-          />
+          <circle cx={value} cy={y} r={2.5} className="knob fill" />
         </g>
       ))}
     </Schematic>
@@ -255,68 +293,62 @@ const stdio = "M24 40C42 40 44 60 64 60H86";
 export function TransportSchematic() {
   return (
     <Schematic>
-      <Icon x={8} y={33} size={14}>
-        <rect x={2} y={2} width={20} height={8} rx={2} />
-        <rect x={2} y={14} width={20} height={8} rx={2} />
-        <path d="M6 6h.01M6 18h.01" />
-      </Icon>
-      <path d={http} stroke="currentColor" />
+      <Icon glyph="server" x={8} y={33} />
+      <path d={http} className="faint" />
       <Pulse d={http} />
       <path d={stdio} className="dotted muted" />
       <Pulse d={stdio} delay={1.2} />
-      <circle cx={87.5} cy={20} r={1.5} stroke="currentColor" {...lit(0)} />
-      <circle cx={87.5} cy={60} r={1.5} stroke="currentColor" {...lit(1.2)} />
-      <Icon x={93} y={13} size={14}>
-        <circle cx={12} cy={12} r={10} />
-        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20" />
-      </Icon>
-      <Icon x={93} y={53} size={14}>
-        <rect x={3} y={3} width={18} height={18} rx={2} />
-        <path d="m7 11 2-2-2-2M11 13h4" />
-      </Icon>
+      <Arrival x={87.5} y={20} delay={0} />
+      <Arrival x={87.5} y={60} delay={1.2} />
+      <Icon glyph="globe" x={93} y={13} />
+      <Icon glyph="terminal" x={93} y={53} />
     </Schematic>
   );
 }
 
+// Both framework routes merge and enter the app window, where xmcp docks.
+const nextApp = "M25 20H30Q38 20 38 28V34Q38 40 46 40H62";
+const expressApp = "M25 60H30Q38 60 38 52V46Q38 40 46 40H62";
 const code = [
-  [30, 22],
-  [36, 16],
-  [42, 20],
-  [48, 12],
+  [32, 20],
+  [38, 14],
+  [44, 18],
+  [50, 10],
 ];
 
-/** An existing app window that xmcp docks into. */
+/** The docs' Next.js and Express marks plugging xmcp into an existing app. */
 export function AdapterSchematic() {
   return (
     <Schematic>
-      <rect x={18.5} y={12.5} width={72} height={55} stroke="currentColor" />
-      <path d="M19 21h71" className="faint" />
-      {[23, 27, 31].map((x) => (
-        <circle key={x} cx={x} cy={16.75} r={1} className="muted" />
+      <Icons.nextjs x={8} y={12.5} />
+      <Icons.express x={8} y={52.5} />
+      <path d={nextApp} className="faint" />
+      <path d={expressApp} className="dotted muted" />
+      <Pulse d={nextApp} />
+      <Pulse d={expressApp} delay={1.2} />
+      <rect
+        x={60.5}
+        y={14.5}
+        width={52}
+        height={51}
+        rx={3}
+        stroke="currentColor"
+      />
+      <path d="M61 22h51" className="faint" />
+      {[65, 69, 73].map((x) => (
+        <circle key={x} cx={x} cy={18.25} r={1} className="muted" />
       ))}
+      <Arrival x={64.5} y={40} delay={0} />
+      <Icon glyph="box" x={68} y={33} />
       {code.map(([y, length], i) => (
         <path
           key={y}
-          d={`M26 ${y}h${length}`}
+          d={`M87 ${y}h${length}`}
           pathLength={1}
           className="faint type"
           style={vars({ "--delay": `${i * 0.18}s` })}
         />
       ))}
-      <rect x={58.5} y={36.5} width={21} height={21} className="faint dotted" />
-      <g className="plug">
-        <rect
-          x={61.5}
-          y={39.5}
-          width={15}
-          height={15}
-          stroke="currentColor"
-          className="fill"
-        />
-        <path d="M77 47h24" className="dotted muted" />
-        <circle cx={103.5} cy={47} r={2.5} stroke="currentColor" />
-      </g>
-      <Pulse d="M101 47H78" delay={1} />
     </Schematic>
   );
 }

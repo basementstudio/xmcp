@@ -156,18 +156,22 @@ tokens in `app/globals.css`. Dark mode uses pure black (`#000000`); light mode
 uses paper white (`#fdfdfc`). The site uses Geist for interface/body text and Adhesion for page titles. EB Garamond keeps the section indexes legible.
 Shiki uses separate light and dark palettes.
 
-All six homepage feature images share the prefooter X’s cursor-responsive
-particle renderer through `components/particles/image.tsx`. Each supplies its own
-texture; scenes load near the viewport and stop animating while offscreen or
-when the page is hidden. Reduced motion and GPU failure retain static artwork.
-The image container reserves its dimensions before the renderer loads.
+The six homepage feature cards use theme-aware SVG line drawings from
+`components/home/features/schematics.tsx`, all in one vocabulary: 14px Lucide
+icons (the docs' icon set) at a 1px stroke, faint structural lines, dotted flow
+lines, and dots that light when a pulse arrives. The adapter drawing reuses the
+docs' Next.js and Express brand components. One shared CSS cycle runs the
+pulses, brightening them on hover or keyboard focus; reduced motion keeps the
+drawings still. The SVGs reserve their dimensions and need no image downloads.
 
 To try the runnable examples, run `pnpm --filter website dev`. Open `/` for the
-original cursor-responsive particle hero, displayed without a frame or control footer. WebGPU retains the WebGL fallback. Light mode inverts the finished
-monochrome canvas and fallback artwork, preserving the original glow and motion
-without rebuilding GPU resources on theme changes. Reduced motion uses the static
-artwork, and offscreen or hidden pages suspend animation. Check both renderers,
-GPU-unavailable fallback, theme changes, and narrow viewports.
+hero: an illustrative tool-call dashboard (sample data, pointer-only
+interactions) over the dust-dash shader, which also draws the prefooter X.
+WebGPU retains the WebGL2 fallback. Light mode inverts the finished monochrome
+canvas and fallback artwork without rebuilding GPU resources on theme changes.
+Reduced motion uses the static artwork, and offscreen or hidden pages suspend
+animation. Check both renderers, GPU-unavailable fallback, theme changes, and
+narrow viewports.
 
 The website is the runnable example. No framework API changes or separate
 example package are needed.
