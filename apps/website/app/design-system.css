@@ -160,6 +160,9 @@ body a[target="_blank"] * {
 .feature-schematic .fill {
   fill: currentColor;
 }
+.feature-schematic .frame {
+  stroke: var(--site-muted);
+}
 .feature-schematic .muted:not(path) {
   fill: var(--site-muted);
   stroke: none;

@@ -326,14 +326,8 @@ export function AdapterSchematic() {
       <path d={expressApp} className="dotted muted" />
       <Pulse d={nextApp} />
       <Pulse d={expressApp} delay={1.2} />
-      <rect
-        x={60.5}
-        y={14.5}
-        width={52}
-        height={51}
-        rx={3}
-        stroke="currentColor"
-      />
+      {/* The window is structure, so it takes the muted tone, not the ink. */}
+      <rect x={60.5} y={14.5} width={52} height={51} rx={3} className="frame" />
       <path d="M61 22h51" className="faint" />
       {[65, 69, 73].map((x) => (
         <circle key={x} cx={x} cy={18.25} r={1} className="muted" />
