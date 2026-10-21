@@ -1,10 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { DeployOption } from "@/components/templates/deploy-dropdown";
-import {
-  DeployDropdown,
-  ReplitMarkIcon,
-} from "@/components/templates/deploy-dropdown";
+import { DeployDropdown } from "@/components/templates/deploy-dropdown";
+import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 
 export function TemplateDetailHeader({
@@ -59,7 +57,7 @@ export function TemplateDetailHeader({
         {replitUrl && (
           <Button asChild variant="secondary" size="sm" className="px-6">
             <Link href={replitUrl} target="_blank" rel="noopener noreferrer">
-              <ReplitMarkIcon className="size-3.5" />
+              <Icons.replit />
               <span>Remix</span>
             </Link>
           </Button>

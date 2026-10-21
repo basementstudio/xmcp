@@ -175,6 +175,37 @@ body a[target="_blank"] * {
   overflow-wrap: anywhere;
   color: var(--site-ink);
 }
+.template-share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.template-share-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--site-rule);
+  border-radius: 999px;
+  background: var(--site-card);
+  color: var(--site-text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 200ms var(--site-ease),
+    border-color 200ms var(--site-ease);
+}
+.template-share-button:hover,
+.template-share-button:focus-visible {
+  border-color: var(--site-faint);
+  color: var(--site-ink);
+}
+.template-share-button .site-icon {
+  width: 12px;
+  height: 12px;
+}
 /* Line schematics in the homepage feature cards. */
 .feature-schematic {
   width: 120px;
