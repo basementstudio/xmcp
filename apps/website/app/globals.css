@@ -563,6 +563,23 @@ body a:is(:hover, :focus-visible),
   transition: color 200ms ease-out;
 }
 
+/* Body-copy links read grey with a faint underline, so they stand apart from
+   the surrounding text by more than color; hover brings them up to ink. */
+body .prose :is(p, li, td) a:not(:has(img)) {
+  color: var(--site-text);
+  text-decoration: underline;
+  text-decoration-color: var(--site-faint);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition:
+    color 200ms ease-out,
+    text-decoration-color 200ms ease-out;
+}
+body .prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
+  color: var(--site-ink);
+  text-decoration-color: var(--site-muted);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .link-underline,
   .link-underline-label,
