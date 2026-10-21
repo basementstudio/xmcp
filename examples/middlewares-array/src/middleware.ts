@@ -1,14 +1,27 @@
-import {
-  apiKeyAuthMiddleware,
-  type Middleware,
-  type McpMiddleware,
-} from "xmcp";
+import { type McpMiddleware, type Middleware, type RequestContext } from "xmcp";
+
+// Public demo credentials only. Use your authentication provider in production.
+const demoCredentials = new Map([
+  ["demo-reader", { clientId: "reader", scopes: ["greet"] }],
+  ["demo-limited", { clientId: "limited", scopes: [] }],
+]);
 
 const middleware: Middleware[] = [
-  apiKeyAuthMiddleware({
-    headerName: "x-api-key",
-    apiKey: "12345",
-  }),
+  (req, res, next) => {
+    const token = req.header("x-api-key");
+    const caller = token ? demoCredentials.get(token) : undefined;
+    if (!token || !caller) {
+      res.status(401).json({ error: "Missing or invalid demo API key" });
+      return;
+    }
+    const auth: NonNullable<RequestContext["authInfo"]> = {
+      token,
+      clientId: caller.clientId,
+      scopes: [...caller.scopes],
+    };
+    Object.assign(req, { auth });
+    next();
+  },
   (_req, res, next) => {
     res.setHeader("x-example", "middlewares-array");
     next();
@@ -62,4 +75,35 @@ const protectResource: McpMiddleware = async (ctx, next) => {
   return result;
 };
 
-export const mcp = [stampResult, checkName, protectResource];
+function canCall(
+  meta: Readonly<Record<string, unknown>> | undefined,
+  authInfo: RequestContext["authInfo"]
+): boolean {
+  const required = meta?.["demo/requires"];
+  if (required === undefined) return true;
+  return (
+    Array.isArray(required) &&
+    required.every(
+      (scope) => typeof scope === "string" && authInfo?.scopes.includes(scope)
+    )
+  );
+}
+
+const authorizeTools: McpMiddleware = async (ctx, next) => {
+  if (
+    ctx.method === "tools/call" &&
+    !canCall(ctx.tool.metadata._meta, ctx.authInfo)
+  ) {
+    return { isError: true, content: [{ type: "text", text: "Forbidden" }] };
+  }
+  const result = await next();
+  if (ctx.method === "tools/list" && Array.isArray(result.tools)) {
+    return {
+      ...result,
+      tools: result.tools.filter((tool) => canCall(tool._meta, ctx.authInfo)),
+    };
+  }
+  return result;
+};
+
+export const mcp = [authorizeTools, stampResult, checkName, protectResource];
