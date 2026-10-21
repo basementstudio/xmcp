@@ -620,7 +620,9 @@ body .hero-specimen + figure.shiki {
   padding: 10px 14px;
 }
 .hero-mock-brand {
-  font: 400 15px/1 var(--font-display);
+  width: auto;
+  height: 16px;
+  color: var(--site-ink);
 }
 .hero-mock-mono {
   font-family: var(--font-geist-mono), monospace;
