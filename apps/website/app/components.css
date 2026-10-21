@@ -819,11 +819,12 @@ body .site-footer {
   gap: var(--site-grid-gap);
   padding-bottom: 28px;
 }
+/* The link is exactly the logo, not the grid column it sits in. */
 .site-footer-home {
   display: inline-flex;
   flex: none;
   align-items: center;
-  min-height: 44px;
+  justify-self: start;
   color: var(--site-ink);
   border-radius: 6px;
 }
