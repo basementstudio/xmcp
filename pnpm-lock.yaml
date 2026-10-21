@@ -270,7 +270,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-        version: 1.7.2(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        version: 1.7.2(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -2357,10 +2357,10 @@ importers:
         version: 2.3.1
       '@modelcontextprotocol/node':
         specifier: ^2.0.0
-        version: 2.0.0(@modelcontextprotocol/server@2.0.0)(hono@4.12.34)
+        version: 2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.12.34)
       '@modelcontextprotocol/server':
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.3.0
+        version: 2.3.1
       '@nestjs/common':
         specifier: ^11.1.12
         version: 11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -4363,10 +4363,6 @@ packages:
     resolution: {integrity: sha512-mIGZXpHsjnZ6lD+gD/WCMpR5k8yVQQ8nNFH1N0Srf7AvnwTUMYD6pvTY8ng2+He5FfV7YMZLmrjL7cLa/cc3dQ==}
     engines: {node: '>=20'}
 
-  '@modelcontextprotocol/core@2.0.0':
-    resolution: {integrity: sha512-pJCEwGG7Lfr/+PQp9ZTwKXNeO5wzbfKL7H3MYpCorM4oFBoQrdjnBgEoqG+RjhsvS1FKrDbKux+M1HhlnGWqcA==}
-    engines: {node: '>=20'}
-
   '@modelcontextprotocol/core@2.3.1':
     resolution: {integrity: sha512-laVmIhPGpWi7rG9q+0UigblRN0Hws/Yjlb6qLFtVqryXVLkc4h+yN8z731POD2LnAGQlFe7/tXhUm7Bi0YB91g==}
     engines: {node: '>=20'}
@@ -4391,8 +4387,8 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@modelcontextprotocol/server@2.0.0':
-    resolution: {integrity: sha512-YhHWdHfpFMQfd0prsEnxKeS3Qz3ytIGmsS0sth4KDjnacIT7hxk6hXHkJ9KysxlkvTM+WZAtQbbcUhdoP4Hvtw==}
+  '@modelcontextprotocol/server@2.3.1':
+    resolution: {integrity: sha512-e59MfWuSssj6DoQ96JCTqdW1AXT5/XtnTl0WWd6MU1Ka434fFUGGosCLJbGNySDhHGvxQWoRWK137FXYFkYNWw==}
     engines: {node: '>=20'}
 
   '@module-federation/error-codes@0.21.6':
@@ -17057,18 +17053,14 @@ snapshots:
       pkce-challenge: 5.0.1
       zod: 4.6.5
 
-  '@modelcontextprotocol/core@2.0.0':
-    dependencies:
-      zod: 4.6.5
-
   '@modelcontextprotocol/core@2.3.1':
     dependencies:
       zod: 4.6.5
 
-  '@modelcontextprotocol/node@2.0.0(@modelcontextprotocol/server@2.0.0)(hono@4.12.34)':
+  '@modelcontextprotocol/node@2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.12.34)':
     dependencies:
       '@hono/node-server': 1.19.15(hono@4.12.34)
-      '@modelcontextprotocol/server': 2.0.0
+      '@modelcontextprotocol/server': 2.3.1
     optionalDependencies:
       hono: 4.12.34
 
@@ -17096,9 +17088,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@modelcontextprotocol/server@2.0.0':
+  '@modelcontextprotocol/server@2.3.1':
     dependencies:
-      '@modelcontextprotocol/core': 2.0.0
+      '@modelcontextprotocol/core': 2.3.1
       zod: 4.6.5
 
   '@module-federation/error-codes@0.21.6': {}
@@ -30685,12 +30677,12 @@ snapshots:
       is-wsl: 3.1.0
       powershell-utils: 0.2.1
 
-  xmcp@1.7.2(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.0.0)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
+  xmcp@1.7.2(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
     dependencies:
       zod: 4.1.13
     optionalDependencies:
       '@modelcontextprotocol/client': 2.3.1
-      '@modelcontextprotocol/server': 2.0.0
+      '@modelcontextprotocol/server': 2.3.1
       jose: 6.2.3
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
