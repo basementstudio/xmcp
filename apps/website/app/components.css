@@ -366,8 +366,8 @@ body .editorial-steps details > figure {
   --shell-cyan: #5ccfe6;
 }
 [data-shell-prompt],
-[data-shell-choice][data-shell-checked="true"],
-[data-shell-check] {
+[data-shell-check],
+[data-shell-tone="path"] [data-shell-answer] {
   color: var(--shell-green);
 }
 [data-shell-tone="success"] {
@@ -408,15 +408,37 @@ body .editorial-steps details > figure {
 .dark [data-shell-state="running"] [data-shell-caret]::after {
   color: #ffffff;
 }
-[data-shell-selecting]::before {
-  content: "❯";
+/* Hints, menus and spinners overlay lines that have not printed yet. */
+[data-shell-overlay] {
+  visibility: hidden;
+  white-space: pre;
+}
+[data-shell-overlay][data-shell-open] {
+  visibility: visible;
+}
+[data-shell-hint] {
+  position: absolute;
+  color: var(--site-muted);
+}
+[data-shell-menu] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  color: var(--site-ink);
+}
+[data-shell-pending] {
   position: absolute;
   left: 0;
-  font-size: 14px;
+  color: var(--site-muted);
+}
+[data-shell-pointer] {
+  visibility: hidden;
+}
+[data-shell-active] {
   color: var(--shell-cyan);
 }
-[data-shell-selecting] {
-  color: var(--shell-cyan);
+[data-shell-active] [data-shell-pointer] {
+  visibility: inherit;
 }
 @keyframes shell-caret-blink {
   50% {
