@@ -35,6 +35,11 @@ export async function renderReleaseNotes(source: string, baseUrl: string) {
   visit(tree, "element", (node) => {
     if (node.tagName === "a") {
       node.properties.href = safeUrl(node.properties.href, baseUrl);
+      // Release notes resolve against GitHub, so their links leave the site.
+      if (/^https?:/.test(String(node.properties.href))) {
+        node.properties.target = "_blank";
+        node.properties.rel = ["noopener", "noreferrer"];
+      }
     }
     if (node.tagName === "img") {
       node.properties.src = safeUrl(node.properties.src, baseUrl, true);

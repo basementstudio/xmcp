@@ -134,6 +134,12 @@ body .site-docs-body > :nth-child(1 of :not(.sr-only)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Links that leave the site open in a new tab and say so with the alias cursor.
+   The body prefix outranks control styles such as .site-github-link's pointer. */
+body a[target="_blank"],
+body a[target="_blank"] * {
+  cursor: alias;
+}
 /* Line schematics in the homepage feature cards. */
 .feature-schematic {
   width: 120px;

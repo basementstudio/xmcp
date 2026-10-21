@@ -42,6 +42,8 @@ export default function ChangelogPage() {
         <p className="site-description mt-4">{description}</p>
         <a
           href="https://github.com/basementstudio/xmcp/releases"
+          target="_blank"
+          rel="noopener noreferrer"
           className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
         >
           All releases on GitHub ↗
@@ -77,6 +79,8 @@ export default function ChangelogPage() {
               </time>
               <a
                 href={release.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-block text-sm text-brand-neutral-100 link-underline hover:text-brand-white mt-4"
               >
                 View on GitHub ↗
