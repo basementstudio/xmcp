@@ -9,11 +9,12 @@ interface TerminalPromptProps {
 
 /**
  * Parses terminal prompt text and returns styled segments
- * First ? on each line = green
- * ❯ = light blue
- * ◉ = green (list dots)
- * text after ❯ (until newline) = light blue
- * <text> = light blue (angle brackets content, takes priority over parentheses)
+ * Colors follow the code theme's shell tokens (see --shell-* in design-system.css):
+ * First ? on each line = string color
+ * ❯ = command color
+ * ◉ = string color (list dots)
+ * text after ❯ (until newline) = command color
+ * <text> = command color (angle brackets content, takes priority over parentheses)
  * (content) = gray
  * text = white
  */
@@ -36,7 +37,7 @@ function parsePrompt(text: string) {
       if (!questionMarkSeenOnLine) {
         segments.push({
           text: "?",
-          color: "text-green-700 dark:text-green-400",
+          color: "text-(--shell-string)",
         });
         questionMarkSeenOnLine = true;
       } else {
@@ -48,14 +49,14 @@ function parsePrompt(text: string) {
 
     // Check for list dot
     if (text[i] === "◉") {
-      segments.push({ text: "◉", color: "text-green-700 dark:text-green-400" });
+      segments.push({ text: "◉", color: "text-(--shell-string)" });
       i++;
       continue;
     }
 
     // Check for arrow (selected item indicator)
     if (text[i] === "❯") {
-      segments.push({ text: "❯", color: "text-cyan-700 dark:text-cyan-400" });
+      segments.push({ text: "❯", color: "text-(--shell-command)" });
       i++;
 
       // Color the text after the arrow (until newline) in light blue
@@ -66,7 +67,7 @@ function parsePrompt(text: string) {
       if (endIdx > i) {
         segments.push({
           text: text.slice(i, endIdx),
-          color: "text-cyan-700 dark:text-cyan-400",
+          color: "text-(--shell-command)",
         });
         i = endIdx;
       }
@@ -79,7 +80,7 @@ function parsePrompt(text: string) {
       if (endIdx !== -1) {
         segments.push({
           text: text.slice(i, endIdx + 1),
-          color: "text-cyan-700 dark:text-cyan-400",
+          color: "text-(--shell-command)",
         });
         i = endIdx + 1;
         continue;
@@ -136,7 +137,7 @@ function parseParentheses(
       if (endIdx !== -1) {
         segments.push({
           text: text.slice(i, endIdx + 1),
-          color: "text-cyan-700 dark:text-cyan-400",
+          color: "text-(--shell-command)",
         });
         i = endIdx + 1;
         continue;

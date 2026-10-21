@@ -9,6 +9,9 @@
   --site-well: #1111110d;
   --site-card: #ffffff;
   --site-code-accent: #946200;
+  /* Shell roles from the code theme: command (npx) and string arguments. */
+  --shell-command: #6f42c1;
+  --shell-string: #032f62;
   --site-column: 700px;
   --site-rail: 168px;
   --site-gap: 48px;
@@ -40,6 +43,8 @@
   --site-well: #141414;
   --site-card: #080808;
   --site-code-accent: #ec9d00;
+  --shell-command: #59c2ff;
+  --shell-string: #a8eb7c;
   --site-shadow: 0 0 0 1px #ffffff14, 0 1px 2px #00000033;
 }
 body {

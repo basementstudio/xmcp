@@ -356,14 +356,10 @@ body figure.shiki[data-line-numbers] pre .line::after {
 body .editorial-steps details > figure {
   margin-block: 16px 4px;
 }
-/* Match the CLI's ANSI green/cyan roles, adjusted for each page background. */
+/* Shell colors match the highlighted install command (--shell-* tokens). */
 [data-shell-demo] {
-  --shell-green: #137333;
-  --shell-cyan: #006b80;
-}
-.dark [data-shell-demo] {
-  --shell-green: #a8eb7c;
-  --shell-cyan: #5ccfe6;
+  --shell-green: var(--shell-string);
+  --shell-cyan: var(--shell-command);
 }
 [data-shell-prompt],
 [data-shell-check],
