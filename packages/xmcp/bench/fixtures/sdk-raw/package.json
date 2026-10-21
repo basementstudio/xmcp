@@ -4,7 +4,7 @@
   "dependencies": {
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.3.0",
-    "hono": "4.12.34",
+    "hono": "4.13.11",
     "zod": "4.4.3"
   },
   "devDependencies": {
