@@ -1,26 +1,34 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+
 import {
+  type AuthInfo,
   CLIENT_INFO_META_KEY,
   type ServerContext,
 } from "@modelcontextprotocol/server";
-import { getRequestContext } from "../../contexts/request-context";
+
 import { httpRequestContextProvider } from "../../contexts/http-request-context";
+import { getRequestContext } from "../../contexts/request-context";
+import { wrapToolWithMiddleware } from "../mcp-middleware";
 import {
   transformToolHandler as transform,
   type UserToolHandler,
 } from "../transformers/tool";
-import { wrapToolWithMiddleware } from "../mcp-middleware";
 
 // Exercise the same request boundary used by tool registration.
 function createToolHandler(handler: UserToolHandler) {
-  return wrapToolWithMiddleware(transform(handler), "context-test", []);
+  return wrapToolWithMiddleware(
+    transform(handler),
+    { name: "context-test", description: "Test tool" },
+    []
+  );
 }
 
 function serverContext(
   signal = new AbortController().signal,
   http = false,
-  name?: string
+  name?: string,
+  authInfo?: AuthInfo
 ): ServerContext {
   return {
     mcpReq: {
@@ -30,7 +38,9 @@ function serverContext(
         ? { [CLIENT_INFO_META_KEY]: { name, version: "1.0.0" } }
         : undefined,
     },
-    http: http ? { req: new Request("http://localhost/mcp") } : undefined,
+    http: http
+      ? { req: new Request("http://localhost/mcp"), authInfo }
+      : undefined,
   } as unknown as ServerContext;
 }
 
@@ -74,6 +84,7 @@ test("isolates overlapping HTTP requests across async helpers", async () => {
 
   const requests = ["first", "second"].map((name) => {
     const signal = new AbortController().signal;
+    const authInfo = { token: name, clientId: name, scopes: [name] };
     return httpRequestContextProvider(
       {
         id: name,
@@ -83,6 +94,8 @@ test("isolates overlapping HTTP requests across async helpers", async () => {
       () =>
         createToolHandler(async (_args, extra) => {
           const context = await helper();
+          assert.strictEqual(context.authInfo, authInfo);
+          assert.strictEqual(context.authInfo, extra.authInfo);
           assert.equal(context.http?.id, name);
           assert.equal(context.http?.headers["x-request"], name);
           assert.equal(context.clientInfo?.name, name);
@@ -90,7 +103,7 @@ test("isolates overlapping HTTP requests across async helpers", async () => {
           assert.strictEqual(context.signal, signal);
           assert.strictEqual(context.signal, extra.signal);
           return "ok";
-        })({}, serverContext(signal, true))
+        })({}, serverContext(signal, true, undefined, authInfo))
     );
   });
   await ready;
@@ -163,5 +176,45 @@ test("preserves the live SDK signal and clears scope after handler errors", asyn
       })({}, serverContext()),
     (caught: unknown) => caught === error
   );
+  outsideRequest();
+});
+
+test("shares SDK auth with middleware and helpers without freezing it or retaining it", async () => {
+  const authInfo: AuthInfo = {
+    token: "verified-token",
+    clientId: "caller",
+    scopes: ["read"],
+    resource: new URL("https://example.com/mcp"),
+    extra: { subject: "user" },
+  };
+  const handler = wrapToolWithMiddleware(
+    transform(async (_args, extra) => {
+      await Promise.resolve();
+      assert.strictEqual(getRequestContext().authInfo, extra.authInfo);
+      return "ok";
+    }),
+    { name: "authenticated", description: "Test tool" },
+    [
+      async (ctx, next) => {
+        const expected =
+          ctx.http?.id === "authenticated" ? authInfo : undefined;
+        assert.strictEqual(ctx.authInfo, expected);
+        assert.strictEqual(getRequestContext().authInfo, expected);
+        const result = await next();
+        assert.strictEqual(getRequestContext().authInfo, expected);
+        return result;
+      },
+    ]
+  );
+  await httpRequestContextProvider({ id: "authenticated", headers: {} }, () =>
+    handler({}, serverContext(undefined, true, undefined, authInfo))
+  );
+  assert.equal(Object.isFrozen(authInfo), false);
+  assert.equal(Object.isFrozen(authInfo.scopes), false);
+  assert.equal(Object.isFrozen(authInfo.extra), false);
+  await httpRequestContextProvider({ id: "anonymous", headers: {} }, () =>
+    handler({}, serverContext(undefined, true))
+  );
+  await handler({}, serverContext());
   outsideRequest();
 });

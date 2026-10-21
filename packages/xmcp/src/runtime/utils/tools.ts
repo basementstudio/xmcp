@@ -1,18 +1,20 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
-import { ToolFile } from "./server";
-import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
+
+import { getX402Registry, isPaidHandler } from "@/plugins/x402";
+import type { McpMiddleware } from "@/types/mcp-middleware";
 import { ToolMetadata } from "@/types/tool";
-import { transformToolHandler } from "./transformers/tool";
-import { isReactFile } from "./react";
+
+import { toMcpMetadata } from "./component-metadata";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { wrapToolWithMiddleware } from "./mcp-middleware";
+import { isReactFile } from "./react";
+import { RawShape, rawShapeToStandardSchema } from "./schema-compat";
+import { ToolFile } from "./server";
+import type { McpToolHandler } from "./transformers/tool";
+import { transformToolHandler } from "./transformers/tool";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
-import { isPaidHandler, getX402Registry } from "@/plugins/x402";
-import type { McpMiddleware } from "@/types/mcp-middleware";
-import { wrapToolWithMiddleware } from "./mcp-middleware";
-import type { McpToolHandler } from "./transformers/tool";
-import { toMcpMetadata } from "./component-metadata";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -184,7 +186,14 @@ export function addToolsToServer(
       toolConfigFormatted,
       wrapToolWithMiddleware(
         transformedHandler as McpToolHandler,
-        toolConfig.name,
+        {
+          name: toolConfig.name,
+          description: toolConfigFormatted.description,
+          annotations: toolConfigFormatted.annotations,
+          icons: toolConfigFormatted.icons,
+          tags: toolConfig.tags,
+          _meta: toolConfigFormatted._meta,
+        },
         middleware
       ) as never
     );

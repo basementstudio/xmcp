@@ -165,7 +165,7 @@ test("sits before application middleware, sees short circuits, and isolates conc
   });
   const handler = wrapToolWithMiddleware(
     () => assert.fail("short-circuited handler ran"),
-    "example",
+    { name: "example", description: "Test tool" },
     [
       logger.middleware,
       async () => {
