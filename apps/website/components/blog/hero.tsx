@@ -35,7 +35,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <Tag text="FEATURED" />
+          <Tag text="Featured" />
           <Tag text={featuredPost.category} />
         </div>
         {featuredPost.date && (

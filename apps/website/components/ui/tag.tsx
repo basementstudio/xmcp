@@ -1,6 +1,63 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+// Words that keep their own casing inside Sentence case labels.
+const PROPER_WORDS: Record<string, string> = {
+  ai: "AI",
+  api: "API",
+  auth0: "Auth0",
+  b2b: "B2B",
+  betterauth: "Better Auth",
+  chatgpt: "ChatGPT",
+  cli: "CLI",
+  clerk: "Clerk",
+  cloudflare: "Cloudflare",
+  cms: "CMS",
+  express: "Express",
+  fastify: "Fastify",
+  github: "GitHub",
+  http: "HTTP",
+  jwt: "JWT",
+  mcp: "MCP",
+  nestjs: "NestJS",
+  nextjs: "Next.js",
+  oauth: "OAuth",
+  polar: "Polar",
+  react: "React",
+  scalekit: "Scalekit",
+  saas: "SaaS",
+  sdk: "SDK",
+  stdio: "STDIO",
+  tailwind: "Tailwind",
+  typescript: "TypeScript",
+  ui: "UI",
+  vercel: "Vercel",
+  workos: "WorkOS",
+};
+
+/** Sentence case for every tag label, keeping acronyms and brand names. */
+export function formatTag(text: string) {
+  const whole = PROPER_WORDS[text.toLowerCase().replace(/[^a-z0-9]/g, "")];
+  if (whole) return whole;
+  const words = text.trim().split(/(\s+|-)/);
+  let first = true;
+  return words
+    .map((word) => {
+      if (!word.trim() || word === "-") return word === "-" ? " " : word;
+      const key = word.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const proper = PROPER_WORDS[key];
+      const out = proper
+        ? proper
+        : first
+          ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : word.toLowerCase();
+      first = false;
+      return out;
+    })
+    .join("")
+    .replace(/\s+/g, " ");
+}
+
 type TagProps = {
   text?: string;
   className?: string;
@@ -50,10 +107,10 @@ export const Tag = ({
   if (href) {
     return (
       <Link href={href} className={classes}>
-        {text}
+        {text && formatTag(text)}
       </Link>
     );
   }
 
-  return <div className={classes}>{text}</div>;
+  return <div className={classes}>{text && formatTag(text)}</div>;
 };

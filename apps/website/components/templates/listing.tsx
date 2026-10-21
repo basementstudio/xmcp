@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
-import { tagClassName } from "@/components/ui/tag";
+import { formatTag, tagClassName } from "@/components/ui/tag";
 import { cn } from "@/utils/cn";
 import { TemplateCard } from "./card";
 
@@ -93,7 +93,7 @@ export function TemplatesListing({
                         tagClassName({ interactive: true, selected: isActive })
                       )}
                     >
-                      {category}
+                      {formatTag(category)}
                     </Link>
                   );
                 })}
