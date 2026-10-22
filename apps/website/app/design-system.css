@@ -916,6 +916,10 @@ a.hero-mock-run:hover {
   padding-block: var(--site-section-gap);
   text-align: center;
 }
+/* The 404 already uses this artwork above its recovery links. */
+body:has(.site-not-found) .site-prefooter {
+  display: none;
+}
 body .site-prefooter .site-page-title {
   margin: 0;
   font-size: 24px;
