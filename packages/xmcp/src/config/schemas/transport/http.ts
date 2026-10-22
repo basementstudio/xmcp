@@ -1,6 +1,7 @@
 import { z } from "zod/v3";
-import { CLIENT_INFO_HEADER_NAMES } from "@/types/client-info";
+
 import { DEFAULT_CORS_CONFIG } from "@/runtime/transports/http/cors/defaults";
+import { CLIENT_INFO_HEADER_NAMES } from "@/types/client-info";
 
 // ------------------------------------------------------------
 // Cors config schema
@@ -71,6 +72,8 @@ const httpTransportObjectBaseSchema = z.object({
   bodySizeLimit: z.number().default(1024 * 1024 * 10), // 10MB
   debug: z.boolean().default(false),
   endpoint: z.string().default("/mcp"),
+  // Omission preserves the SDK default; zero refuses modern subscription streams.
+  maxSubscriptions: z.number().int().min(0).optional(),
   cors: corsConfigSchema,
 });
 

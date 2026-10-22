@@ -27,6 +27,7 @@ export function ParticleViewport({
   deferred = false,
   showLoadingArtwork = true,
   fadeIn = false,
+  fallback,
   children,
 }: {
   className: string;
@@ -37,6 +38,8 @@ export function ParticleViewport({
   showLoadingArtwork?: boolean;
   /** Ease the scene in once its first frame is ready, instead of popping in. */
   fadeIn?: boolean;
+  /** Preserve optimized, full-bleed artwork when a picture needs its own layout. */
+  fallback?: ReactNode;
   children: (props: ParticleSceneProps) => ReactNode;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -92,20 +95,29 @@ export function ParticleViewport({
 
   return (
     <div ref={container} className={`relative ${className}`} aria-hidden="true">
-      {(showLoadingArtwork || reducedMotion || failed) && (
-        <Image
-          src={fallbackSource}
-          width={width}
-          height={height}
-          alt=""
-          unoptimized
-          crossOrigin="anonymous"
-          loading={deferred ? "lazy" : "eager"}
-          // Keep the original asset as an independent fallback if the new texture fails.
-          onError={() => setFallbackSource(texture.replace(/\.webp$/, ".png"))}
-          className={`absolute inset-0 m-auto h-[90%] w-[90%] object-contain ${ready && !failed ? "invisible" : ""}`}
-        />
-      )}
+      {(showLoadingArtwork || reducedMotion || failed) &&
+        (fallback ? (
+          <div
+            className={`absolute inset-0 ${ready && !failed ? "invisible" : ""}`}
+          >
+            {fallback}
+          </div>
+        ) : (
+          <Image
+            src={fallbackSource}
+            width={width}
+            height={height}
+            alt=""
+            unoptimized
+            crossOrigin="anonymous"
+            loading={deferred ? "lazy" : "eager"}
+            // Keep the original asset as an independent fallback if the new texture fails.
+            onError={() =>
+              setFallbackSource(texture.replace(/\.webp$/, ".png"))
+            }
+            className={`absolute inset-0 m-auto h-[90%] w-[90%] object-contain ${ready && !failed ? "invisible" : ""}`}
+          />
+        ))}
       {enabled && nearby && !failed && (
         <div
           className={`absolute inset-0 ${fadeIn ? "particle-fade" : ""} ${(showLoadingArtwork || fadeIn) && !ready ? "opacity-0" : ""}`}

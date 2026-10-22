@@ -1,8 +1,7 @@
 import { Tag } from "@/components/ui/tag";
 import { BlogPost, getListedBlogPosts } from "@/utils/blog";
 import { ContentCard } from "@/components/ui/content-card";
-import Image from "next/image";
-import { getBlogImageProps } from "@/lib/blog-images";
+import { BlogArtwork } from "@/components/blog/artwork";
 
 const TEXTURE_IMAGES = [
   "/textures/text1.png",
@@ -55,11 +54,9 @@ export const BlogCard = ({
       href={`/blog/${post.slug}`}
       media={
         texture ? (
-          <Image
-            {...getBlogImageProps(texture)}
+          <BlogArtwork
+            src={texture}
             alt={post.title}
-            fill
-            className="object-cover"
             sizes={sizes}
             loading={loading}
           />

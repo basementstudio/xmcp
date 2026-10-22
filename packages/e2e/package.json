@@ -20,7 +20,7 @@
     "@xmcp-dev/compiler": "workspace:*",
     "express": "^4.22.1",
     "fastify": "^5.12.6",
-    "next": "^16.3.8",
+    "next": "^16.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "reflect-metadata": "^0.2.2",
