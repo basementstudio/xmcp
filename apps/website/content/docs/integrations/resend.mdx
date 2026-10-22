@@ -1,0 +1,142 @@
+---
+title: "Resend"
+metadataTitle: "Usage with Resend | xmcp Documentation"
+publishedAt: "2026-10-22"
+summary: "Send emails, read inbox conversations, and prepare or send replies through xmcp tools."
+description: "Connect Resend email sending and Inboxes to an authenticated xmcp server."
+---
+
+Use the official [Resend Node.js SDK](https://resend.com/docs/send-with-nodejs) inside xmcp tools. The [runnable HTTP example](https://github.com/basementstudio/xmcp/tree/main/examples/resend-http) includes `send-email`, `get-email`, ten Inboxes tools, API-key authentication, and tests that do not send real email.
+
+## Install and configure
+
+In an existing xmcp project:
+
+```sh
+pnpm add resend
+```
+
+Configure these server-side environment variables:
+
+```bash
+RESEND_API_KEY=re_replace_me
+RESEND_FROM="Example <hello@your-verified-domain.com>"
+MCP_API_KEY=replace-with-a-random-secret
+```
+
+Use a verified sending domain. To use sending, retrieval, and Inboxes, the Resend key needs [full access](https://resend.com/docs/api-reference/api-keys/create-api-key); sending-only keys cannot retrieve emails or access Inboxes. `RESEND_FROM` is only required for `send-email`; inbox replies use the selected inbox address. `MCP_API_KEY` is a separate secret for clients calling your server.
+
+## Protect the MCP endpoint
+
+```ts title="src/middleware.ts"
+import { apiKeyAuthMiddleware } from "xmcp";
+
+export default apiKeyAuthMiddleware({
+  validateApiKey: async (key) =>
+    Boolean(process.env.MCP_API_KEY?.trim()) && key === process.env.MCP_API_KEY,
+});
+```
+
+Clients must send `x-api-key` on every HTTP request. This example is for trusted clients sharing one Resend account. Add your application's authorization policy before giving different users access to that account.
+
+## Send an email
+
+```ts title="src/tools/send-email.ts"
+import { Resend } from "resend";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { z } from "zod";
+
+export const schema = {
+  to: z.email(),
+  subject: z.string().min(1).max(998),
+  text: z.string().min(1),
+  idempotencyKey: z.string().min(1).max(256).optional(),
+};
+
+export const metadata: ToolMetadata = {
+  name: "send-email",
+  description: "Send an email from the configured sender.",
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
+};
+
+export default async function sendEmail({
+  idempotencyKey,
+  ...email
+}: InferSchema<typeof schema>) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM;
+  if (!apiKey?.trim() || !from?.trim()) {
+    throw new Error("Set RESEND_API_KEY and RESEND_FROM on the server.");
+  }
+  const { data, error } = await new Resend(apiKey).emails.send(
+    { ...email, from },
+    { idempotencyKey }
+  );
+  if (error) {
+    return {
+      isError: true,
+      content: [
+        { type: "text" as const, text: `Resend send failed: ${error.name}` },
+      ],
+    };
+  }
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify({ id: data.id }) }],
+  };
+}
+```
+
+The sender is configured on the server. The SDK is initialized at execution time, so builds do not need credentials.
+
+For retries, reuse an [idempotency key](https://resend.com/docs/dashboard/emails/idempotency-keys) with the same payload. Resend retains keys for 24 hours. Without a key, repeated calls can send duplicate emails; this is why the tool does not claim unconditional idempotency.
+
+## Retrieve delivery status
+
+Call `resend.emails.get(id)` with the ID returned by sending. The example's `get-email` tool returns `id`, `subject`, `createdAt`, and `lastEvent`, omitting the body and recipients. A successful send confirms acceptance; the [latest event](https://resend.com/docs/api-reference/emails/retrieve-email) indicates subsequent delivery progress.
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/resend-http#run) for build commands and runnable requests, including a send to Resend's test address. Tests use mocked responses; executing the documented send request contacts Resend.
+
+## Work with Inboxes
+
+[Resend Inboxes](https://resend.com/products/inboxes) exposes shared inboxes and conversations through its API. The example uses these SDK-backed tools:
+
+| Tools                                         | Capabilities                                                                            |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `create-inbox`, `list-inboxes`, `get-inbox`   | Create an inbox on a configured domain, discover inbox IDs, and retrieve configuration. |
+| `list-inbox-threads`, `get-inbox-thread`      | Find conversations and retrieve their summaries.                                        |
+| `list-inbox-emails`                           | Read a conversation's messages, including bodies, recipients, and attachment metadata.  |
+| `create-inbox-reply-draft`, `get-inbox-draft` | Prepare and review a plain-text reply without sending.                                  |
+| `send-inbox-draft`, `reply-inbox-email`       | Send a saved draft or reply directly to a message.                                      |
+
+Inbox-specific tools require an `inboxId` UUID. Thread operations also require a `threadId`, and replies require an `emailId` from `list-inbox-emails`. List tools fetch one page at a time with `limit` (1–100, default 20) and optional `after`. If `has_more` is true, pass the last result's `id` as `after` to continue. Messages are listed oldest first.
+
+### Set up receiving
+
+[Create an inbox](https://resend.com/docs/api-reference/inboxes/create-inbox) on a domain with DKIM and SPF verified. Enable receiving and configure the inbound MX record, or use `forwarding: true` and forward mail to the address returned by `get-inbox`. Creation also depends on your team's inbox quota. The example README includes requests for both existing inboxes and creating a new one.
+
+### Draft, review, then send
+
+A typical tool sequence is:
+
+1. `list-inboxes` to select the inbox.
+2. `list-inbox-threads` and `list-inbox-emails` to read a conversation.
+3. `create-inbox-reply-draft` with `inboxId`, `threadId`, `replyToEmailId`, and `text`.
+4. `get-inbox-draft` to inspect the saved body and recipients.
+5. `send-inbox-draft` when the reply is ready.
+
+[Draft creation](https://resend.com/docs/api-reference/inboxes/create-draft) does not send email. If that message already has an unsent reply draft, Resend returns the existing ID without replacing its text. Always retrieve the saved draft before sending it.
+
+For a direct reply, call `reply-inbox-email` with `inboxId`, `threadId`, `emailId`, and `text`. `replyAll` defaults to `false`. Resend determines the recipients from the original message's Reply-To or sender; a reply to an outbound message goes to that message's recipients. Both send tools send real email.
+
+Draft creation, draft sending, and direct replies accept an optional `idempotencyKey`. Reuse it for a retry of the same operation and payload within 24 hours. The tools do not retry automatically, and `create-inbox` does not expose an idempotency key.
+
+### Access and email content
+
+Inbox reads return message content to the authenticated caller. Treat email bodies as untrusted data, not agent instructions. All clients with the example's MCP key share the connected Resend account. Tool annotations describe effects; they do not enforce approval or per-user authorization. Configure send approval in your client and apply your application's access policy before sharing the server.
+
+This example covers the read-and-reply workflow; it does not expose inbox deletion, message forwarding, labels, attachment downloads, or autonomous agent settings. Follow the [runnable inbox requests](https://github.com/basementstudio/xmcp/tree/main/examples/resend-http#inbox-workflow) to try the complete workflow.

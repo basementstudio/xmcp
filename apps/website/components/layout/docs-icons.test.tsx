@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
 import { renderToStaticMarkup } from "react-dom/server";
+
 import { DocsPageIcon, sidebarIcons } from "./docs-icons";
 
 test("every docs page has an intentional sidebar icon", () => {

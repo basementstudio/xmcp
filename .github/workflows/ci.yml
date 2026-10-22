@@ -66,6 +66,21 @@ jobs:
       - run: pnpm --filter @xmcp-dev/x402 test
       - run: pnpm --filter paid-http-transport exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter paid-http-transport exec tsc --noEmit
+      - run: pnpm --filter resend-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter resend-http typecheck
+      - run: pnpm --filter resend-http test
+      - run: pnpm --filter resend-http test:smoke
+      - run: pnpm --filter paper-stdio exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter paper-stdio typecheck
+      - run: pnpm --filter paper-stdio test
+      - run: pnpm --filter figma-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter figma-http typecheck
+      - run: pnpm --filter figma-http test
+      - run: pnpm --filter figma-http test:smoke
+      - run: pnpm --filter profound-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter profound-http typecheck
+      - run: pnpm --filter profound-http test
+      - run: pnpm --filter profound-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit

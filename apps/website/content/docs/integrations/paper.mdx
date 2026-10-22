@@ -1,0 +1,46 @@
+---
+title: "Paper"
+metadataTitle: "Usage with Paper Design | xmcp Documentation"
+publishedAt: "2026-10-22"
+summary: "Read and edit Paper designs through an xmcp tool allowlist."
+description: "Build a local xmcp integration with Paper Design using the managed MCP client."
+---
+
+[Paper Design](https://paper.design/docs/mcp) exposes design tools through its desktop CLI. Use `xmcp/client` to call those tools from your own xmcp server. The [runnable STDIO example](https://github.com/basementstudio/xmcp/tree/main/examples/paper-stdio) supports discovery, an explicit allowlist, and forwarding of text, images, and structured results.
+
+## Connect to Paper
+
+Install Paper Desktop, open a design file, and copy the absolute CLI path from the MCP panel into `PAPER_COMMAND`.
+
+```ts
+import { withClient } from "xmcp/client";
+
+const command = process.env.PAPER_COMMAND;
+if (!command) throw new Error("Set PAPER_COMMAND to your Paper CLI path.");
+
+const tools = await withClient(
+  { type: "stdio", name: "paper", command, args: ["mcp"] },
+  (client) => client.listTools()
+);
+```
+
+`withClient` closes the connection after the operation, including on failure. Put calls inside tool handlers so importing or building the server does not launch Paper. Use xmcp 1.8 or later for the managed client API.
+
+## Discover and authorize tools
+
+The example exposes two tools:
+
+| Tool               | Behavior                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `list-paper-tools` | Return upstream instructions, tool names and input schemas, and an `allowed` flag. |
+| `call-paper-tool`  | Forward a call only when its exact name appears in `PAPER_ALLOWED_TOOLS`.          |
+
+Start with an empty allowlist, inspect discovery, then choose the upstream tools needed for your workflow. Set their names as a comma-separated value in `.env` and restart the server. Both reads and writes must be explicitly enabled; direct calls cannot bypass the allowlist.
+
+Paper validates the delegated arguments against its own schemas. The forwarding tool preserves upstream `isError`, images, and structured content. Because allowed tools may edit or delete content, its annotations conservatively describe it as potentially destructive.
+
+## Local design workflow
+
+The integration operates on Paper's currently open file. Follow the upstream instructions and inspect the current document before modifying it. Paper's CLI can advertise tools while Desktop is closed, but design reads and writes still need the app and a file open. This example is a local workflow, not a hosted or multi-user service.
+
+See the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/paper-stdio#run) for build commands, MCP client configuration, and credential-free tests.

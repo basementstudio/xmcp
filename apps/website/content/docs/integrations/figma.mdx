@@ -1,0 +1,75 @@
+---
+title: "Figma"
+metadataTitle: "Usage with Figma | xmcp Documentation"
+publishedAt: "2026-10-22"
+summary: "Read, create, edit, and export Figma design nodes from xmcp tools."
+description: "Connect an xmcp server to a local Figma development plugin for canvas operations."
+---
+
+The [Figma example](https://github.com/basementstudio/xmcp/tree/main/examples/figma-http) pairs an xmcp HTTP server with a local development plugin. The plugin uses the [Figma Plugin API](https://developers.figma.com/docs/plugins/api/) to create and modify editable canvas nodes in the open file.
+
+Figma's hosted MCP server also offers [canvas writes](https://developers.figma.com/docs/figma-mcp-server/write-to-canvas/), but connections are limited to [approved clients](https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/). This example uses your own development plugin and does not require hosted MCP approval or a REST API token.
+
+## Run locally
+
+Follow the [example setup](https://github.com/basementstudio/xmcp/tree/main/examples/figma-http#start-the-server) to build the server and import the development plugin into Figma Desktop. You need an editable Figma Design file and permission to run development plugins.
+
+Configure two separate secrets on the server:
+
+```bash
+MCP_API_KEY=your-client-secret
+FIGMA_BRIDGE_KEY=your-plugin-secret
+```
+
+MCP clients send `MCP_API_KEY` in the `x-api-key` header on every request. Paste `FIGMA_BRIDGE_KEY` into the plugin UI and click **Connect**. These are local bridge credentials, not Figma account tokens.
+
+The example binds to `127.0.0.1:3001`. Keep it local and run a single server instance. The plugin is configured for this address and requires an open desktop file.
+
+## Tools
+
+| Tool                | Input and behavior                                                                                              |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `figma-status`      | No arguments. Inspect connection readiness, document/page names, and the current `sessionId`.                   |
+| `read-figma-page`   | `sessionId`. Return the selection and up to 100 top-level node summaries.                                       |
+| `create-figma-node` | `sessionId`, `kind`, `name`, and optional layout/fill/text properties. Create a frame, rectangle, or text node. |
+| `update-figma-node` | `sessionId`, `nodeId`, and `patch`. Change a frame, rectangle, or text node on the connected page.              |
+| `export-figma-node` | `sessionId`, `nodeId`, and optional `format` (`PNG` or `SVG`). Return an image or SVG text.                     |
+
+For example, after checking `figma-status`, call `create-figma-node` with:
+
+```json
+{
+  "sessionId": "paste-the-current-session-id",
+  "kind": "frame",
+  "name": "Profile card",
+  "width": 320,
+  "height": 180,
+  "fill": "#EEF2FF"
+}
+```
+
+The result contains the new node's ID. Pass it to `update-figma-node`:
+
+```json
+{
+  "sessionId": "paste-the-current-session-id",
+  "nodeId": "paste-the-created-node-id",
+  "patch": { "name": "Updated profile card", "width": 400 }
+}
+```
+
+To add text inside the frame, create a text node with its ID as `parentId`. The plugin loads Inter Regular for new text and the existing fonts for text edits. Set a text fill that contrasts with the frame. These tools execute specific operations; the example does not accept arbitrary plugin code.
+
+## Connection lifecycle
+
+Each plugin connection generates a session ID, and every canvas operation must use it. A page change disconnects the plugin; reconnect and inspect the new target before continuing. Node lookups are restricted to that page. The session ID identifies the local plugin connection and does not replace authentication.
+
+The server handles one operation at a time. The plugin waits on a long poll rather than repeatedly querying an empty queue. Idle polls renew after 25 seconds, and operations time out after 30 seconds. Calls while the plugin is busy or reconnecting fail with a readiness error.
+
+A timeout or disconnection can happen after a write has executed. Inspect the canvas before retrying; creating a node twice creates two nodes. Writes are not automatically retried, and updates are not transactional. The plugin commits successful changes to Figma's undo history.
+
+## Validation and scope
+
+The example includes credential-free tests for the bridge, plugin operations with a fake Figma API, and a built-server round trip with a simulated plugin. Live rendering and font availability require Figma Desktop. The plugin is intended for local development, not public hosting or multi-user document authorization.
+
+See the [README](https://github.com/basementstudio/xmcp/tree/main/examples/figma-http) for installation, runnable create/edit requests, and testing commands.
