@@ -1,0 +1,102 @@
+---
+title: "Resend"
+metadataTitle: "Usage with Resend | xmcp Documentation"
+publishedAt: "2026-10-22"
+summary: "Send emails and retrieve delivery status through xmcp tools."
+description: "Use the Resend SDK in an authenticated xmcp server with idempotent send requests."
+---
+
+Use the official [Resend Node.js SDK](https://resend.com/docs/send-with-nodejs) inside xmcp tools. The [runnable HTTP example](https://github.com/basementstudio/xmcp/tree/main/examples/resend-http) includes `send-email`, `get-email`, API-key authentication, and tests that do not send real email.
+
+## Install and configure
+
+In an existing xmcp project:
+
+```sh
+pnpm add resend
+```
+
+Configure these server-side environment variables:
+
+```bash
+RESEND_API_KEY=re_replace_me
+RESEND_FROM="Example <hello@your-verified-domain.com>"
+MCP_API_KEY=replace-with-a-random-secret
+```
+
+Use a verified sending domain. To use both sending and retrieval, the Resend key needs [full access](https://resend.com/docs/api-reference/api-keys/create-api-key); sending-only keys cannot retrieve emails. `MCP_API_KEY` is a separate secret for clients calling your server.
+
+## Protect the MCP endpoint
+
+```ts title="src/middleware.ts"
+import { apiKeyAuthMiddleware } from "xmcp";
+
+export default apiKeyAuthMiddleware({
+  validateApiKey: async (key) =>
+    Boolean(process.env.MCP_API_KEY?.trim()) && key === process.env.MCP_API_KEY,
+});
+```
+
+Clients must send `x-api-key` on every HTTP request. This example is for trusted clients sharing one Resend account. Add your application's authorization policy before giving different users access to that account.
+
+## Send an email
+
+```ts title="src/tools/send-email.ts"
+import { Resend } from "resend";
+import type { InferSchema, ToolMetadata } from "xmcp";
+import { z } from "zod";
+
+export const schema = {
+  to: z.email(),
+  subject: z.string().min(1).max(998),
+  text: z.string().min(1),
+  idempotencyKey: z.string().min(1).max(256).optional(),
+};
+
+export const metadata: ToolMetadata = {
+  name: "send-email",
+  description: "Send an email from the configured sender.",
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
+};
+
+export default async function sendEmail({
+  idempotencyKey,
+  ...email
+}: InferSchema<typeof schema>) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM;
+  if (!apiKey?.trim() || !from?.trim()) {
+    throw new Error("Set RESEND_API_KEY and RESEND_FROM on the server.");
+  }
+  const { data, error } = await new Resend(apiKey).emails.send(
+    { ...email, from },
+    { idempotencyKey }
+  );
+  if (error) {
+    return {
+      isError: true,
+      content: [
+        { type: "text" as const, text: `Resend send failed: ${error.name}` },
+      ],
+    };
+  }
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify({ id: data.id }) }],
+  };
+}
+```
+
+The sender is configured on the server. The SDK is initialized at execution time, so builds do not need credentials.
+
+For retries, reuse an [idempotency key](https://resend.com/docs/dashboard/emails/idempotency-keys) with the same payload. Resend retains keys for 24 hours. Without a key, repeated calls can send duplicate emails; this is why the tool does not claim unconditional idempotency.
+
+## Retrieve delivery status
+
+Call `resend.emails.get(id)` with the ID returned by sending. The example's `get-email` tool returns `id`, `subject`, `createdAt`, and `lastEvent`, omitting the body and recipients. A successful send confirms acceptance; the [latest event](https://resend.com/docs/api-reference/emails/retrieve-email) indicates subsequent delivery progress.
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/resend-http#run) for build commands and runnable requests, including a send to Resend's test address. Tests use mocked responses; executing the documented send request contacts Resend.

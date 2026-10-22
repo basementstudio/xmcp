@@ -75,6 +75,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/commet": Icons.commet,
   "/docs/integrations/descope": Icons.descope,
   "/docs/integrations/polar": Icons.polar,
+  "/docs/integrations/resend": PaperPlaneIcon,
   "/docs/integrations/scalekit": Icons.scalekit,
   "/docs/integrations/sentry": BarChartIcon,
   "/docs/integrations/supabase": Icons.supabase,
