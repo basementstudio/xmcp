@@ -17,6 +17,11 @@ const HeroParticles = lazy(() => import("./hero-particles"));
 const HeroSlotContext = createContext<
   ((slot: HTMLDivElement | null) => void) | null
 >(null);
+const HeroArtworkReadyContext = createContext(false);
+
+export function useHeroArtworkReady() {
+  return useContext(HeroArtworkReadyContext);
+}
 const LAYER_STYLE: CSSProperties = {
   position: "fixed",
   top: 0,
@@ -31,6 +36,8 @@ export function PersistentHero({ children }: { children: ReactNode }) {
   const slot = useRef<HTMLDivElement | null>(null);
   const [started, setStarted] = useState(false);
   const [active, setActive] = useState(false);
+  const [artworkReady, setArtworkReady] = useState(false);
+  const markArtworkReady = useCallback(() => setArtworkReady(true), []);
 
   // Only move the layer's screen position, never its DOM node. Reparenting a
   // canvas can invalidate the browser's presented GPU surface even when React
@@ -81,24 +88,26 @@ export function PersistentHero({ children }: { children: ReactNode }) {
 
   return (
     <HeroSlotContext.Provider value={attach}>
-      {children}
-      {/* This element and all renderer ancestors stay in the root layout.
+      <HeroArtworkReadyContext.Provider value={artworkReady}>
+        {children}
+        {/* This element and all renderer ancestors stay in the root layout.
           Off-page scenes retain their size and resources, with rendering paused.
           Both particle renderers already listen for pointer movement on window. */}
-      <div
-        ref={layer}
-        aria-hidden="true"
-        inert
-        data-persistent-hero=""
-        data-hero-active={active}
-        style={LAYER_STYLE}
-      >
-        {started && (
-          <Suspense fallback={null}>
-            <HeroParticles active={active} />
-          </Suspense>
-        )}
-      </div>
+        <div
+          ref={layer}
+          aria-hidden="true"
+          inert
+          data-persistent-hero=""
+          data-hero-active={active}
+          style={LAYER_STYLE}
+        >
+          {started && (
+            <Suspense fallback={null}>
+              <HeroParticles active={active} onReady={markArtworkReady} />
+            </Suspense>
+          )}
+        </div>
+      </HeroArtworkReadyContext.Provider>
     </HeroSlotContext.Provider>
   );
 }

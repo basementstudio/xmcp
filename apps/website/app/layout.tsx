@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import "./globals.css";
 import { PersistentHero } from "@/components/home/hero/persistent-hero";
 import { Analytics } from "@vercel/analytics/next";
@@ -73,12 +74,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: "xmcp",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-      alt: "xmcp — The TypeScript MCP framework",
-    },
+    images: DEFAULT_OG_IMAGE,
     url: "https://xmcp.dev",
     type: "website",
     locale: "en_US",
@@ -93,12 +89,7 @@ export const metadata: Metadata = {
     title: "xmcp — The TypeScript MCP framework",
     description:
       "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-      alt: "xmcp — The TypeScript MCP framework",
-    },
+    images: DEFAULT_TWITTER_IMAGE,
   },
   manifest: "/site.webmanifest",
   appleWebApp: {

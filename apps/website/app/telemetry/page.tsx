@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import type { Metadata } from "next";
 import { DocsBody } from "@/components/layout/page";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -21,18 +22,14 @@ export const metadata: Metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title: "Telemetry - xmcp",
     description:
       "xmcp collects anonymous build and run telemetry to prioritize transport, adapter, and compiler fixes. Learn exactly what we collect, why it matters, and how to opt out at any time.",
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 

@@ -2,6 +2,7 @@ import { Tag } from "@/components/ui/tag";
 import { BlogPost, getListedBlogPosts } from "@/utils/blog";
 import { ContentCard } from "@/components/ui/content-card";
 import { BlogArtwork } from "@/components/blog/artwork";
+import { getBlogImageProps } from "@/lib/blog-images";
 
 const TEXTURE_IMAGES = [
   "/textures/text1.png",
@@ -21,7 +22,7 @@ export const HomeBlog = () => {
       </div>
       <div className="site-card-grid">
         {posts.map((post) => (
-          <BlogCard key={post.slug} post={post} />
+          <BlogCard key={post.slug} post={post} prepareAfterHero />
         ))}
       </div>
     </div>
@@ -31,10 +32,12 @@ export const HomeBlog = () => {
 export const BlogCard = ({
   post,
   loading = "lazy",
+  prepareAfterHero = false,
   sizes = "(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)",
 }: {
   post: BlogPost;
   loading?: "eager" | "lazy";
+  prepareAfterHero?: boolean;
   sizes?: string;
 }) => {
   const texture =
@@ -55,10 +58,11 @@ export const BlogCard = ({
       media={
         texture ? (
           <BlogArtwork
-            src={texture}
+            image={getBlogImageProps(texture)}
             alt={post.title}
             sizes={sizes}
             loading={loading}
+            prepareAfterHero={prepareAfterHero}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">

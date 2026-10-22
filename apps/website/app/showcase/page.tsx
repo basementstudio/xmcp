@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import { Metadata } from "next";
 import { ShowcaseCards } from "@/components/showcase/cards";
 import { ShowcaseSubmissionCard } from "@/components/showcase/submission-card";
@@ -24,18 +25,14 @@ export const metadata: Metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title: "Showcase - xmcp",
     description:
       "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 

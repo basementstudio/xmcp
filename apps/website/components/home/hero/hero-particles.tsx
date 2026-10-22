@@ -7,7 +7,13 @@ import DustScene from "@/components/particles/dust-scene";
 // Soft folds behind the product mock, drawn as flowing dashes.
 const PICTURE = "/hero-folds.webp";
 
-export default function HeroParticles({ active }: { active: boolean }) {
+export default function HeroParticles({
+  active,
+  onReady,
+}: {
+  active: boolean;
+  onReady: () => void;
+}) {
   return (
     <>
       {/* Both renderers and the fallback artwork are monochrome. Inverting the
@@ -23,6 +29,7 @@ export default function HeroParticles({ active }: { active: boolean }) {
           // the other read as a flicker on reload; the scene fades in instead.
           showLoadingArtwork={false}
           fadeIn
+          onReady={onReady}
         >
           {(props) => (
             <DustScene

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Easing, interpolate, useCurrentFrame } from "remotion";
 
 // An illustrative xmcp dashboard for the homepage hero: tool calls per hour,
 // per tool. The figures are generated sample data; nothing is fetched.
@@ -22,6 +23,7 @@ const middleware = [
   ["auth", "Better Auth", "/docs/integrations/better-auth"],
   ["rate-limit", "Upstash", "/docs/integrations/upstash"],
   ["paywall", "Commet", "/docs/integrations/commet"],
+  ["email", "Resend", "/docs/integrations/resend"],
   ["logging", "JSON", "/docs/configuration/observability"],
 ];
 
@@ -48,7 +50,7 @@ const clientShares = Array.from({ length: HOURS }, (_, i) => {
 });
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
-const format = (n: number) => n.toLocaleString("en-US");
+const format = (n: number) => Math.round(n).toLocaleString("en-US");
 const ago = (hour: number) =>
   hour === HOURS - 1 ? "This hour" : `${HOURS - 1 - hour}h ago`;
 
@@ -81,17 +83,101 @@ function Wordmark() {
   );
 }
 
-export function ProductMock() {
-  const [tool, setTool] = useState<number | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const series =
-    tool === null
-      ? traffic.map((_, i) => sum(calls.map((perTool) => perTool[i])))
-      : calls[tool];
+export const DASHBOARD_FPS = 60;
+// Four seconds per view leaves time to read each tool before the next change.
+const VIEW_FRAMES = 4 * DASHBOARD_FPS;
+const TRANSITION_FRAMES = Math.round(0.75 * DASHBOARD_FPS);
+const TOUR = [null, 0, 1, 2, 3, 4, null] as const;
+export const DASHBOARD_FRAMES = TOUR.length * VIEW_FRAMES;
+const ease = Easing.bezier(0.4, 0, 0.2, 1);
+
+type DashboardView = { series: number[]; p95: number };
+const allTools: DashboardView = {
+  series: traffic.map((_, i) => sum(calls.map((perTool) => perTool[i]))),
+  p95: 96,
+};
+const viewFor = (tool: number | null): DashboardView =>
+  tool === null ? allTools : { series: calls[tool], p95: tools[tool].p95 };
+const progressAt = (frame: number) =>
+  interpolate(frame, [0, TRANSITION_FRAMES], [0, 1], {
+    easing: ease,
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+const blend = (
+  from: DashboardView,
+  to: DashboardView,
+  progress: number
+): DashboardView => ({
+  series: to.series.map(
+    (value, i) => from.series[i] + (value - from.series[i]) * progress
+  ),
+  p95: from.p95 + (to.p95 - from.p95) * progress,
+});
+
+type Interaction = {
+  tool: number | null;
+  resume: boolean;
+  from: DashboardView;
+  frame: number;
+  settled: boolean;
+};
+
+export function DashboardScene({ still }: { still: boolean }) {
+  const frame = useCurrentFrame();
+  const [interaction, setInteraction] = useState<Interaction | null>(null);
+  const [inspection, setInspection] = useState<{
+    hour: number;
+    view: DashboardView;
+    tool: number | null;
+  } | null>(null);
+  const stage = still ? 0 : Math.floor(frame / VIEW_FRAMES);
+  const tourTool = TOUR[stage];
+  // The last and first stages both show all tools, making the loop seamless.
+  const tourView = blend(
+    viewFor(TOUR[Math.max(0, stage - 1)]),
+    viewFor(tourTool),
+    still ? 1 : progressAt(frame % VIEW_FRAMES)
+  );
+  const selected =
+    interaction && !interaction.resume ? interaction.tool : tourTool;
+  const target =
+    interaction && !interaction.resume ? viewFor(interaction.tool) : tourView;
+  const elapsed = interaction
+    ? (frame - interaction.frame + DASHBOARD_FRAMES) % DASHBOARD_FRAMES
+    : 0;
+  const animated = interaction
+    ? blend(
+        interaction.from,
+        target,
+        still || interaction.settled ? 1 : progressAt(elapsed)
+      )
+    : tourView;
+
+  // Retire completed transitions so an old hover cannot replay at the loop boundary.
+  // Adjusting this local state during render also handles reduced motion immediately.
+  if (
+    interaction &&
+    !interaction.settled &&
+    (still || elapsed >= TRANSITION_FRAMES)
+  ) {
+    setInteraction(
+      interaction.resume ? null : { ...interaction, settled: true }
+    );
+  }
+
+  // Hold the values while a tooltip is being read, even as the tour clock advances.
+  const view = inspection?.view ?? animated;
+  const tool = inspection ? inspection.tool : selected;
+  const hovered = inspection?.hour ?? null;
+  const { series, p95 } = view;
   const peak = Math.max(...series);
   const total = sum(series);
   const errors = Math.round(total * 0.006);
-  const p95 = tool === null ? 96 : tools[tool].p95;
+  const select = (next: number | null, resume = false) => {
+    setInspection(null);
+    setInteraction({ tool: next, resume, from: view, frame, settled: false });
+  };
 
   return (
     <div className="hero-mock" aria-hidden="true">
@@ -108,7 +194,10 @@ export function ProductMock() {
               <span className="hero-mock-muted">HTTP · xmcp 1.8.0</span>
             </span>
           </div>
-          <div className="hero-mock-tools" onPointerLeave={() => setTool(null)}>
+          <div
+            className="hero-mock-tools"
+            onPointerLeave={() => select(null, true)}
+          >
             <span className="hero-mock-row hero-mock-muted">
               <span>Tool</span>
               <span>Calls</span>
@@ -119,7 +208,7 @@ export function ProductMock() {
                 key={name}
                 className="hero-mock-row hero-mock-run"
                 data-active={tool === i || undefined}
-                onPointerEnter={() => setTool(i)}
+                onPointerEnter={() => select(i)}
               >
                 <span className="hero-mock-mono hero-mock-strong">{name}</span>
                 <span className="hero-mock-mono hero-mock-muted">
@@ -165,20 +254,20 @@ export function ProductMock() {
             </span>
             <span className="text-right">
               <span className="hero-mock-muted">p95 latency</span>
-              <span className="hero-mock-figure">{p95} ms</span>
+              <span className="hero-mock-figure">{format(p95)} ms</span>
             </span>
           </div>
           <div
             className="hero-mock-plot"
             data-hovering={hovered !== null || undefined}
-            onPointerLeave={() => setHovered(null)}
+            onPointerLeave={() => select(null, true)}
           >
             {series.map((value, i) => (
               <span
                 key={i}
                 className="hero-mock-column"
                 data-active={hovered === i || undefined}
-                onPointerEnter={() => setHovered(i)}
+                onPointerEnter={() => setInspection({ hour: i, view, tool })}
               >
                 <span
                   className="hero-mock-fill"
@@ -188,7 +277,8 @@ export function ProductMock() {
                     <span
                       key={c}
                       className={`hero-mock-client-${c}`}
-                      style={{ flexGrow: share }}
+                      // CSS serializes flex factors with limited precision.
+                      style={{ flexGrow: Number(share.toFixed(6)) }}
                     />
                   ))}
                 </span>
@@ -222,7 +312,7 @@ export function ProductMock() {
                   Errors <b>{format(Math.round(series[hovered] * 0.006))}</b>
                 </span>
                 <span>
-                  p95 <b>{p95} ms</b>
+                  p95 <b>{format(p95)} ms</b>
                 </span>
               </span>
             )}

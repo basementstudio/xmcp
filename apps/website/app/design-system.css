@@ -639,10 +639,14 @@ body .hero-specimen + figure.shiki {
   margin-top: 0;
 }
 /* Product mock over the dust backdrop, cut off by the frame's bottom edge. */
-.hero-mock {
+.hero-dashboard-player {
   position: absolute;
   z-index: 1;
   inset: 9% 6% -12px;
+}
+.hero-mock {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -729,7 +733,7 @@ body .hero-specimen + figure.shiki {
 .hero-mock-stats {
   display: grid;
   /* Keep metric positions independent of the selected tool and its figures. */
-  grid-template-columns: minmax(0, 1fr) 4ch minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 7ch minmax(0, 1fr);
   gap: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--site-rule);
@@ -738,9 +742,12 @@ body .hero-specimen + figure.shiki {
   min-width: 0;
 }
 .hero-mock-stats .hero-mock-muted {
+  white-space: nowrap;
+}
+/* Only variable tool names can truncate; the metric labels stay readable. */
+.hero-mock-stats > span:first-child .hero-mock-muted {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .hero-mock-figure {
   font-size: 19px;
@@ -815,9 +822,7 @@ body .hero-specimen + figure.shiki {
   overflow: hidden;
   border-radius: 1.5px 1.5px 0 0;
   opacity: 0.85;
-  transition:
-    height 500ms var(--site-ease),
-    opacity 200ms var(--site-ease);
+  transition: opacity 200ms var(--site-ease);
 }
 .hero-mock-plot[data-hovering] .hero-mock-fill {
   opacity: 0.25;
@@ -885,6 +890,8 @@ a.hero-mock-run:hover {
 }
 .hero-scene-size {
   width: 100%;
+  /* Keep the tool and middleware rows visible when the frame gets narrow. */
+  min-height: 460px;
   aspect-ratio: 350 / 243;
 }
 /* Give the inverted scene an explicit backdrop inside its fixed layer. */
@@ -913,6 +920,21 @@ a.hero-mock-run:hover {
   margin-inline: auto;
   padding-block: var(--site-section-gap);
   text-align: center;
+}
+/* Keep error recovery in one viewport, without the marketing footer. */
+body:has(.site-not-found) :is(.site-prefooter, .site-footer) {
+  display: none;
+}
+body .site-not-found {
+  /* Fill the body's remaining height, including the mobile header's border. */
+  flex: 1;
+  padding-block: 24px;
+  align-content: center;
+}
+.site-not-found .prefooter-particles > div {
+  width: clamp(48px, 16dvh, 127px);
+  height: auto;
+  aspect-ratio: 127 / 154;
 }
 body .site-prefooter .site-page-title {
   margin: 0;
