@@ -29,6 +29,17 @@ export const FOOTER_DUST_CONTROLS: DustControls = {
   mouseRadius: 0.35,
 };
 
+// Cover artwork needs finer rows than isolated logos to retain small lettering.
+export const BLOG_DUST_CONTROLS: DustControls = {
+  ...CARD_DUST_CONTROLS,
+  rows: 100,
+  segments: 280,
+  size: 0.6,
+  brightness: 0.7,
+  vignette: 0.2,
+  mouseForce: 0.4,
+};
+
 export const DUST_UNIFORM_BYTES = 96;
 
 export type DustRendererOptions = {
