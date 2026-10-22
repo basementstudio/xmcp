@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SITE_URL } from "@/lib/base-url";
-import { fetchTemplates } from "@/app/templates/utils/github";
+import { getTemplates } from "@/app/templates/utils/content";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { humanizeMetadataName } from "@/app/templates/utils/detail";
@@ -20,13 +20,13 @@ type CategoryPageProps = {
 };
 
 export async function generateStaticParams() {
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
   const categories = collectUniqueCategories(templates);
   return categories.map((category) => ({ slug: slugifyCategory(category) }));
 }
 
 async function resolveCategory(slug: string) {
-  const templates = await fetchTemplates();
+  const templates = getTemplates();
   const categories = collectUniqueCategories(templates);
   const match = categories.find(
     (category) => slugifyCategory(category) === slug
@@ -98,10 +98,7 @@ export default async function CategoryPage(props: CategoryPageProps) {
   const label = humanizeMetadataName(match);
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           ...(filtered.length > 0

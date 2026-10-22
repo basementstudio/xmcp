@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { cn } from "@/utils/cn";
 import { Icons } from "@/components/icons";
 
 type IconKey = keyof typeof Icons;
@@ -17,27 +16,25 @@ export function ActionCard({ label, icon, onClick, href }: ActionCardProps) {
   const IconComponent = Icons[icon];
 
   const content = (
-    <>
-      <span className="w-8 h-8 border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
-        <IconComponent className="w-4 h-4 text-brand-w1" />
+    <span className="site-card-surface relative flex h-full w-full items-center gap-3 overflow-hidden px-3 py-2.5">
+      <span className="relative z-10 grid size-8 shrink-0 place-items-center rounded-md border border-dashed border-brand-neutral-500 bg-brand-neutral-600">
+        <IconComponent
+          aria-hidden="true"
+          className="size-[15px] text-brand-white"
+        />
       </span>
-      <span className="text-brand-w1 font-medium text-sm relative z-10">
-        {label}
-      </span>
-      <span className="absolute -right-2 top-1/2 -translate-y-1/2 text-brand-neutral-600 pointer-events-none">
+      <span className="site-card-title relative z-10 min-w-0">{label}</span>
+      <span
+        aria-hidden="true"
+        className="absolute -right-2 top-1/2 -translate-y-1/2 text-brand-neutral-600 pointer-events-none"
+      >
         <IconComponent className="size-12" />
       </span>
-    </>
+    </span>
   );
 
-  const className = cn(
-    "relative flex items-center gap-3 px-3 py-2.5",
-    "border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
-    "hover:border-brand-neutral-400",
-    "cursor-pointer text-left overflow-hidden",
-    "no-underline hover:no-underline !decoration-transparent hover:!decoration-transparent",
-    "hover:!text-brand-w1 !opacity-100 hover:!opacity-100"
-  );
+  const className =
+    "site-content-card group block h-full w-full min-w-0 cursor-pointer rounded-xl text-left";
 
   if (href) {
     return (
@@ -48,7 +45,7 @@ export function ActionCard({ label, icon, onClick, href }: ActionCardProps) {
   }
 
   return (
-    <button onClick={onClick} className={className}>
+    <button type="button" onClick={onClick} className={className}>
       {content}
     </button>
   );

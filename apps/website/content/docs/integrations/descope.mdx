@@ -66,7 +66,8 @@ SCOPES_SUPPORTED="openid,profile,email"
 ```
 
 <Callout variant="info">
-  For production, set `BASE_URL` to your deployed server URL and update the base URL on your MCP Server record in the Descope Console to match.
+  For production, set `BASE_URL` to your deployed server URL and update the base
+  URL on your MCP Server record in the Descope Console to match.
 </Callout>
 
 ### Create a Management Key (optional)
@@ -122,6 +123,10 @@ export default descopeProvider({
 - **`managementKey`**: (Optional) Descope management key. Required to use `getUser()` or `getManagementClient()`.
 - **`scopesSupported`**: (Optional) Array of OAuth scopes advertised in the resource metadata. Defaults to `["openid", "profile", "email"]`.
 
+Use the exact `issuerURL` from Descope, including its regional or custom host.
+Token verification and the fallback JWKS URL use that issuer's origin.
+`baseURL` identifies your MCP server; it does not select the Descope API host.
+
 ## Get a user session
 
 Access the authenticated user's session in your tools using `getSession()`.
@@ -150,7 +155,7 @@ export default function whoami(): string {
       expiresAt: session.expiresAt.toISOString(),
     },
     null,
-    2,
+    2
   );
 }
 ```
@@ -169,7 +174,8 @@ The `session` object contains the following fields:
 - `session.claims`: Raw JWT claims object.
 
 <Callout variant="warning">
-  Do not call `getSession()` at module load time. Only call it inside tool handler functions where the middleware context is active.
+  Do not call `getSession()` at module load time. Only call it inside tool
+  handler functions where the middleware context is active.
 </Callout>
 
 ### Example: Read custom JWT claims
@@ -209,7 +215,8 @@ import { getUser } from "@xmcp-dev/descope";
 
 export const metadata: ToolMetadata = {
   name: "user-profile",
-  description: "Returns the full Descope user profile for the authenticated user",
+  description:
+    "Returns the full Descope user profile for the authenticated user",
 };
 
 export default async function userProfile(): Promise<string> {
@@ -254,7 +261,8 @@ export default async function listRoles(): Promise<string> {
 ## Fetch a connection token
 
 <Callout variant="info">
-  Map your MCP server scopes to any corresponding connection scopes that are necessary to fetch from the Descope Connections Vault.
+  Map your MCP server scopes to any corresponding connection scopes that are
+  necessary to fetch from the Descope Connections Vault.
 </Callout>
 
 Use `fetchConnectionToken()` to retrieve a stored OAuth access token from a [Descope connection](https://docs.descope.com/agentic-identity-hub/core-components/connections). This uses the MCP Server's access token (no Management Key required).
@@ -265,7 +273,8 @@ import { fetchConnectionToken } from "@xmcp-dev/descope";
 
 export const metadata: ToolMetadata = {
   name: "github-repos",
-  description: "Lists the authenticated user's GitHub repositories using a Descope connection token",
+  description:
+    "Lists the authenticated user's GitHub repositories using a Descope connection token",
 };
 
 export default async function githubRepos(): Promise<string> {

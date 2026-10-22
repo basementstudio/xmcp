@@ -1,14 +1,16 @@
+import type { RspackOptions } from "@rspack/core";
 import { z } from "zod/v3";
+
 import {
-  stdioTransportConfigSchema,
-  httpTransportConfigSchema,
+  bundlerConfigSchema,
+  componentsConfigSchema,
   experimentalConfigSchema,
+  httpTransportConfigSchema,
   pathsConfigSchema,
+  stdioTransportConfigSchema,
   templateConfigSchema,
   typescriptConfigSchema,
-  bundlerConfigSchema,
 } from "./schemas";
-import type { RspackOptions } from "@rspack/core";
 
 /**
  * xmcp Config schema
@@ -21,6 +23,8 @@ export const configSchema = z.object({
   bundler: bundlerConfigSchema.optional(),
   template: templateConfigSchema.optional(),
   typescript: typescriptConfigSchema.optional(),
+  observability: z.object({ enabled: z.boolean() }).optional(),
+  components: componentsConfigSchema.optional(),
 });
 
 type BundlerConfigType = { bundler?: (config: RspackOptions) => RspackOptions };
@@ -40,10 +44,10 @@ export type XmcpConfigOutputSchema = Omit<
 // Re-export resolved types from utils (where they're defined)
 // Types are derived from resolution functions using ReturnType
 export type {
-  ResolvedHttpConfig,
-  ResolvedStdioConfig,
-  ResolvedPathsConfig,
   ResolvedExperimentalConfig,
+  ResolvedHttpConfig,
+  ResolvedPathsConfig,
+  ResolvedStdioConfig,
 } from "./utils";
 
 // Template, TypeScript, and CORS configs don't need resolved types
@@ -51,16 +55,17 @@ export type {
 
 // Re-export all types from schemas
 export type {
-  HttpTransportConfig,
-  StdioTransportConfig,
+  BundlerConfig,
+  ComponentsConfig,
+  ComponentSelector,
   CorsConfig,
   ExperimentalConfig,
+  HttpTransportConfig,
   PathsConfig,
-  BundlerConfig,
+  StdioTransportConfig,
   TemplateConfig,
   TypescriptConfig,
 } from "./schemas";
-
 export {
   getResolvedCorsConfig,
   getResolvedExperimentalConfig,

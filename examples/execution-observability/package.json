@@ -1,0 +1,17 @@
+{
+  "name": "execution-observability",
+  "private": true,
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js",
+    "start:stdio": "node dist/stdio.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}

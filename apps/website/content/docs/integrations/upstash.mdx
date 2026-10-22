@@ -1,0 +1,86 @@
+---
+title: "Upstash"
+metadataTitle: "Usage with Upstash | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Shared tool-call rate limits and per-customer quotas with Upstash Redis."
+description: "Limit xmcp tool execution across server instances using Upstash and verified customer identities."
+---
+
+## Installation
+
+`@xmcp-dev/upstash` applies an [Upstash rate limiter](https://upstash.com/docs/redis/sdks/ratelimit-ts/overview) to tool calls through [MCP middleware](/docs/core-concepts/middlewares). Requires xmcp 1.6 or later.
+
+```sh
+pnpm add @xmcp-dev/upstash @upstash/ratelimit @upstash/redis
+```
+
+Configure your Upstash Redis REST credentials:
+
+```bash
+UPSTASH_REDIS_REST_URL=https://your-database.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+```
+
+## Share a customer budget
+
+Create the limiter once and register the middleware in `src/middleware.ts`. Every replica must use the same Redis database, prefix, and quota configuration.
+
+```ts title="src/middleware.ts"
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import { upstashRateLimit } from "@xmcp-dev/upstash";
+
+const limiter = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.fixedWindow(100, "1 m"),
+  prefix: "my-app:tools",
+});
+
+export const mcp = upstashRateLimit({
+  limiter,
+  identifier: (context) => context.get<string>("customerId"),
+});
+```
+
+This snippet expects an earlier authenticated MCP middleware to set `context.set("customerId", verifiedCustomerId)` on the current request. Compose authentication before this middleware using the named `mcp` array export. Alternatively, verify the current request in the `identifier` callback; it may be asynchronous. Until authentication supplies an ID, tool calls are denied. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/upstash-http) verifies demo API keys and maps them to stable customer IDs.
+
+Use a verified account or customer ID. Never trust a raw customer header or use API keys, access tokens, or other credentials as the Redis identifier. For stateless HTTP, authentication must accompany every request. For STDIO, use a server-side identity source; HTTP headers are unavailable.
+
+## Weighted calls
+
+By default each tool attempt costs one unit. Use `rate` to charge more units for expensive operations:
+
+```ts
+export const mcp = upstashRateLimit({
+  limiter,
+  identifier: (context) => context.get<string>("customerId"),
+  rate: (context) => (context.params.name === "report" ? 3 : 1),
+});
+```
+
+The rate must be a positive safe integer and can be calculated asynchronously. A customer shares their budget across all tools. For separate per-tool budgets, include the tool name in the identifier after verifying the customer ID.
+
+## Options
+
+| Option                | Behavior                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `limiter`             | Required application-owned Upstash limiter; choose its algorithm, window, database, and prefix.            |
+| `identifier(context)` | Required verified customer ID, or a promise of one. Empty, missing, or whitespace-only IDs deny execution. |
+| `rate`                | Positive safe integer or callback; defaults to `1`.                                                        |
+| `failureMode`         | `"closed"` by default; `"open"` allows execution if the quota service fails.                               |
+
+## Denials and outages
+
+Quota denials return an MCP tool result with `isError: true`. Its `_meta["xmcp.dev/rateLimit"]` contains `reason` (`"limit"` or `"blocked"`), `limit`, `remaining`, `reset` (Unix milliseconds), and `retryAfterSeconds`. HTTP status remains governed by MCP; this is not an HTTP 429 response. A deny-list block requires resolving the policy that blocked the identifier; waiting for the reset alone may not unblock it.
+
+Redis failures and [Upstash SDK timeouts](https://upstash.com/docs/redis/sdks/ratelimit-ts/features) deny execution by default, even though Upstash can return `success: true` on timeout. Choose `failureMode: "open"` only when calls should continue during outages. Missing identities and known quota denials still deny execution in that mode. Raw provider errors and customer identifiers are not included in error responses.
+
+The middleware waits for the SDK's `pending` analytics or synchronization work before executing the tool. Failed background work follows the failure mode unless the quota was already denied. Waiting adds latency but ensures work completes in serverless runtimes.
+
+## Scope
+
+Only `tools/call` consumes quota. Discovery, prompt retrieval, and resource reads pass through. HTTP authentication can protect discovery independently.
+
+Each admitted attempt consumes units even if the tool later fails or is cancelled. Input-required workflows consume units for each execution round. No refunds are applied. Upstash's algorithm and deployment determine quota consistency; these counters are not a payment ledger or prepaid billing system.
+
+See the [HTTP example](https://github.com/basementstudio/xmcp/tree/main/examples/upstash-http) for setup and testing instructions.

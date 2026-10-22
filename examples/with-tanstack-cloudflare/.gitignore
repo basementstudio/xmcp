@@ -1,0 +1,8 @@
+node_modules/
+.xmcp/
+.output/
+dist/
+.wrangler/
+.tanstack/
+src/routeTree.gen.ts
+xmcp-env.d.ts

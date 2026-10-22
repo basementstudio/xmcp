@@ -182,6 +182,7 @@ const nodeBuiltinsRegex = new RegExp(`^(?:node:)?(${nodeBuiltins.join("|")})$`);
 const cloudflareConfig: RspackOptions = {
   name: "runtime-cloudflare",
   entry: {
+    "adapter-fetch-cloudflare": path.join(srcPath, "runtime/adapters/fetch"),
     "cloudflare-worker": path.join(
       srcPath,
       "runtime/platforms/cloudflare/worker.ts"
@@ -242,7 +243,8 @@ const cloudflareConfig: RspackOptions = {
 };
 
 /**
- * Vercel runtime bundle config.
+ * ESM Node runtime bundle config (Vercel and Fetch adapters).
+ * Fetch adapters need a native ESM entry so named exports survive re-bundling.
  *
  * The compiler copies `dist/runtime/vercel.js` into the user's `.xmcp/` folder
  * and uses it as the `--vercel` build entry, the same way it uses `http.js`
@@ -258,6 +260,7 @@ const vercelConfig: RspackOptions = {
   name: "runtime-vercel",
   entry: {
     vercel: path.join(srcPath, "runtime/platforms/vercel"),
+    "adapter-fetch": path.join(srcPath, "runtime/adapters/fetch"),
   },
   mode: "production",
   devtool: false,

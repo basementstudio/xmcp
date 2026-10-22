@@ -1,0 +1,160 @@
+---
+title: "TanStack"
+metadataTitle: "Usage with TanStack | xmcp Documentation"
+publishedAt: "2026-10-02"
+summary: "Add an MCP endpoint to a React TanStack app on Node.js or Cloudflare Workers."
+description: "Integrate xmcp tools, prompts, and resources into TanStack server routes."
+---
+
+The TanStack adapter serves MCP requests through your React Start application's server routes. It supports Node.js and Cloudflare Workers and uses the same file-based tools, prompts, and resources as other xmcp transports.
+
+## Automatic setup
+
+From an existing React TanStack project, run:
+
+```bash
+npx init-xmcp@latest
+```
+
+The initializer detects `@tanstack/react-start`, creates `xmcp.config.ts`, adds example tools, prompts, and resources, and creates `src/routes/mcp.ts`. It updates your build and development scripts so the adapter exists before TanStack starts.
+
+Use `--yes` for noninteractive setup. `--route-path src/routes/api` creates `src/routes/api/mcp.ts`, served at `/api/mcp`. For a custom routes root, supply its directory and check that the generated `createFileRoute` path matches your router configuration. Existing MCP route files are preserved: use `--skip-route` to integrate the handler yourself.
+
+If `@cloudflare/vite-plugin` is installed, the initializer uses Workers builds. You can also select them explicitly:
+
+```bash
+npx init-xmcp@latest --cf
+```
+
+This configures xmcp's adapter build. Your TanStack app still owns its Vite plugins, Worker entry point, and Wrangler configuration.
+
+## Manual setup
+
+Install xmcp and its compiler in your existing app:
+
+```bash
+pnpm add xmcp zod
+pnpm add -D @xmcp-dev/compiler
+```
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: { endpoint: "/mcp" },
+  experimental: { adapter: "tanstack" },
+  paths: {
+    tools: "./src/tools",
+    prompts: "./src/prompts",
+    resources: "./src/resources",
+  },
+  // TanStack generates route types after the adapter build.
+  typescript: { skipTypeCheck: true },
+};
+
+export default config;
+```
+
+Set a discovery path to `false` if you do not use that kind of handler. Run `pnpm exec xmcp build` to generate `.xmcp/adapter`, then add the route:
+
+```typescript title="src/routes/mcp.ts"
+import { createFileRoute } from "@tanstack/react-router";
+import { xmcpHandler } from "../../.xmcp/adapter/index.js";
+
+export const Route = createFileRoute("/mcp")({
+  server: {
+    handlers: {
+      GET: ({ request }) => xmcpHandler(request),
+      POST: ({ request }) => xmcpHandler(request),
+      DELETE: ({ request }) => xmcpHandler(request),
+    },
+  },
+});
+```
+
+The relative import works without adding a Vite alias. Adjust it if you move the route. The adapter is server code: import it only from server handlers, never from a component or client entry.
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = { name: z.string().describe("Name to greet") };
+export const metadata: ToolMetadata = {
+  name: "greet",
+  description: "Greet someone from TanStack",
+};
+
+export default function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+## Development and Node.js builds
+
+Keep your host application's build command and run xmcp first:
+
+```json title="package.json"
+{
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & vite dev)",
+    "build": "xmcp build && vite build && tsc --noEmit"
+  }
+}
+```
+
+The initial build generates the adapter before Vite loads your routes. The xmcp watcher updates discovery as handlers are added or removed; TanStack compiles application modules and their imports. Keep `.xmcp/` in `.gitignore` and run both builds in CI.
+
+For a Node production server, configure your TanStack hosting integration, such as Nitro, as described in the [TanStack hosting guide](https://tanstack.com/start/latest/docs/framework/react/guide/hosting). The [Node example](https://github.com/basementstudio/xmcp/tree/main/examples/with-tanstack) includes a complete Vite/Nitro configuration and a `start` command. The examples require Node 22.12 or newer.
+
+## Cloudflare Workers
+
+Configure the app with `@cloudflare/vite-plugin` and Wrangler following [TanStack's Cloudflare instructions](https://tanstack.com/start/latest/docs/framework/react/guide/hosting#cloudflare-workers--official-partner). Use `nodejs_compat` for xmcp's request context storage:
+
+```json title="wrangler.jsonc"
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "my-tanstack-app",
+  "main": "@tanstack/react-start/server-entry",
+  "compatibility_date": "2026-10-02",
+  "compatibility_flags": ["nodejs_compat"]
+}
+```
+
+```json title="package.json"
+{
+  "scripts": {
+    "dev": "xmcp build --cf && (xmcp dev --cf & vite dev)",
+    "build": "xmcp build --cf && vite build && tsc --noEmit",
+    "preview": "vite preview",
+    "deploy": "pnpm build && wrangler deploy"
+  }
+}
+```
+
+With `adapter: "tanstack"`, `--cf` emits the Workers-compatible adapter in `.xmcp/adapter`. TanStack builds and serves the Worker. xmcp does not create a standalone `worker.js` or replace your Wrangler configuration.
+
+Tools and their dependencies must support Workers. Avoid Node-only filesystem APIs in Worker tools. See the [Workers example](https://github.com/basementstudio/xmcp/tree/main/examples/with-tanstack-cloudflare) for the complete app and local preview workflow.
+
+## Authentication and CORS
+
+Use TanStack server-route middleware or a route-level handler to authenticate requests. Once your application has verified the credentials, pass its MCP authentication information to the adapter:
+
+```typescript
+return xmcpHandler(request, {
+  authInfo: {
+    token: verifiedToken,
+    clientId: verifiedClientId,
+    scopes: verifiedScopes,
+  },
+});
+```
+
+`verifiedToken`, `verifiedClientId`, and `verifiedScopes` come from your application's credential verification. The adapter forwards this information to tool handlers as `extra.authInfo`; passing the option does not verify a token. Reject unauthorized requests before calling the adapter.
+
+Configure browser CORS and `OPTIONS` handling on the TanStack route. The adapter handles the MCP request and leaves application HTTP middleware to TanStack. Existing xmcp MCP middleware remains available for tool-level behavior.
+
+## Stateless requests
+
+Each request gets a fresh MCP server. Initialization does not establish a server-side session, and subsequent calls must include their own authentication and client metadata. Modern clients send metadata in the protocol request envelope; older clients can repeat `x-mcp-client-name` and `x-mcp-client-version` headers on each call.
+
+The SDK controls protocol responses, including streaming responses and unsupported HTTP methods. Registering `GET` and `DELETE` forwards those methods to the SDK; it does not enable persistent sessions.

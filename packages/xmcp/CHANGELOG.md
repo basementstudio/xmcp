@@ -1,5 +1,81 @@
 # xmcp
 
+## 1.8.0
+
+### Minor Changes
+
+- 516fc7a: Expose current-request SDK authentication through `RequestContext.authInfo` and MCP middleware, including listing operations, without retaining authentication across requests.
+- ad824fe: Expose a read-only registered tool metadata snapshot on `tools/call` MCP middleware as `ctx.tool.metadata`, with normalized `_meta` matching discovery results for shared authorization policies.
+
+### Patch Changes
+
+- 798942d: Update `@modelcontextprotocol/server` to 2.3.0.
+
+## 1.7.2
+
+### Patch Changes
+
+- f42dd7d: Allow static resources to return `inputRequired` results so clients can supply input before reading their contents.
+
+## 1.7.1
+
+### Patch Changes
+
+- 92163c9: Update the bundled MCP client SDK to 2.2.0 and its optional peer requirement. This includes upstream OAuth issuer binding, input-required result metadata preservation, and pagination fixes.
+
+## 1.7.0
+
+### Minor Changes
+
+- 318cc48: Add opt-in `experimental.inferToolSchemas` to generate tool input validation and descriptions from TypeScript types and JSDoc. Resolve imported types and re-exported handlers, refresh schemas during development, and preserve explicit schema overrides. Unsupported inputs fail compilation with actionable diagnostics.
+
+  Support property JSDoc constraints for numeric bounds, string lengths, regular expressions, and email/URI/UUID formats, with source-located errors for invalid tags. Emit compact string enums with actionable validation errors and native boolean schemas.
+
+## 1.6.0
+
+### Minor Changes
+
+- 5948dda: Add Hono and SvelteKit adapters for Node.js and Cloudflare Workers, sharing the stateless Fetch runtime with TanStack Start. Add framework detection, route generation, build ordering, and Workers setup to init-xmcp while preserving host TypeScript configuration.
+- 5948dda: Add Nuxt, React Router Framework Mode, and Astro adapters using the shared stateless Fetch runtime, with automatic route setup and Node.js/Cloudflare Workers support.
+
+## 1.5.0
+
+### Minor Changes
+
+- a4950f9: Add optional component include/exclude rules by name or tag in xmcp.config.ts. Apply them before registration across tools, prompts, static resources, and resource templates, with generated UI resources following their owning tool.
+- 73deb2e: Add opt-in structured execution logging for tools, prompts, and resource reads through `observability.enabled`, with execution correlation, timing, safe outcomes, and HTTP trace context.
+- 4f501f0: Add the Node.js `xmcp/client` entry with `createClient` and `withClient` for managed HTTP and STDIO connections. Register sampling, elicitation, and roots handlers before connecting, advertise only configured capabilities, and await cleanup after failed connections or scoped operations.
+
+## 1.4.1
+
+### Patch Changes
+
+- 5d3fe81: Refresh workspace dependencies to Fastify 5.12.5, js-yaml 4.3.2, and Next.js 16.3.6, including the js-yaml and Next.js overrides. This maintenance release does not change public APIs.
+
+## 1.4.0
+
+### Minor Changes
+
+- 7a3097c: Add optional icons, tags, and enabled metadata for tools, prompts, resources, and resource templates. Expose tags under `_meta["xmcp/tags"]` and omit disabled components and their generated UI resources from registration, listings, and direct requests.
+
+## 1.3.0
+
+### Minor Changes
+
+- c844b6d: Add `image`, `audio`, and `embeddedResource` content helpers, available from `xmcp` and `xmcp/cloudflare`. Add Node-only file-reading variants under `xmcp/node`.
+- 1656cdc: Support a named `complete` export on resource template files for URI argument suggestions, including asynchronous and context-dependent completion callbacks. Export `ResourceCompletions` for typed callback maps.
+- a1f4d67: Add a TanStack adapter for React applications on Node.js and Cloudflare Workers, with ESM output, stateless request handling, and automatic setup through init-xmcp.
+
+## 1.2.0
+
+### Minor Changes
+
+- 826c21b: Extend MCP middleware to prompts, resource reads, completion, and component listings, sharing request context across each operation. Check `ctx.method` before accessing operation-specific parameters in existing tool middleware.
+- 176ac1d: Support a named `mcp` middleware export in `src/middleware.ts` for tool calls across HTTP, STDIO, and Node adapters. Middleware can inspect validated arguments, share request-local values with tools, transform results, or short-circuit execution.
+- ae2658a: Allow prompt handlers to return message arrays or full prompt results, preserving message roles, order, descriptions, and metadata. Export the `PromptMessage` and `GetPromptResult` types for typed prompt handlers.
+- 0ca4841: Add request-local `set`/`get` values and `progress`/`log` helpers to `getRequestContext()`. Progress is optional without a request token, and logging respects the SDK's capability and level checks.
+- b5ca4c8: Add `getRequestContext()` for read-only access to client identity, HTTP request details, and the cancellation signal from tool handlers and their async helpers.
+
 ## 1.1.3
 
 ### Patch Changes
@@ -51,8 +127,10 @@
 
 - Split the development compiler into `@xmcp-dev/compiler`. Existing `xmcp dev`,
   `xmcp build`, and `xmcp create` scripts continue to work through a small shim,
-  but projects must install the matching compiler version as a development
-  dependency: `npm i -D @xmcp-dev/compiler@0.8.0`.
+  but projects need a matching compiler as a development dependency.
+  `@xmcp-dev/compiler@0.8.0` is unavailable on npm. Follow the
+  [current installation guide](https://xmcp.dev/docs/getting-started/installation)
+  to upgrade to a supported runtime/compiler pair.
 - Production installs no longer include Rspack or TypeScript. Built HTTP and
   stdio artifacts remain self-contained and can run without `node_modules`.
 - Added the `xmcp/config` export so compiler validation uses the config schema

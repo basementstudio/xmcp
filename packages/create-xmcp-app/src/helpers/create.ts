@@ -21,6 +21,7 @@ interface ProjectOptions {
   paths?: string[];
   template?: string;
   tailwind?: boolean;
+  uiKit?: boolean;
   cloudflare?: boolean;
 }
 
@@ -47,6 +48,7 @@ export function createProject(options: ProjectOptions): void {
     paths = ["tools", "prompts", "resources"],
     template = "typescript",
     tailwind = false,
+    uiKit = false,
     cloudflare = false,
   } = options;
 
@@ -56,7 +58,7 @@ export function createProject(options: ProjectOptions): void {
   // Get the template directory path
   let templateDir: string;
   if (template === "mcp-apps") {
-    const subTemplate = tailwind ? "tailwind" : "default";
+    const subTemplate = uiKit ? "ui-kit" : tailwind ? "tailwind" : "default";
     templateDir = path.join(
       __dirname,
       "../../templates",

@@ -5,6 +5,10 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { init } from "./helpers/init.js";
 import {
+  detectFetchCloudflare,
+  isFetchFramework,
+} from "./helpers/create-fetch-route.js";
+import {
   detectFramework,
   detectTypeScript,
 } from "./helpers/detect-framework.js";
@@ -45,6 +49,7 @@ const program = new Command()
   .option("--skip-tools", "Skip tool creation", false)
   .option("--skip-prompts", "Skip prompt creation", false)
   .option("--skip-resources", "Skip resource creation", false)
+  .option("--cf", "Build a Fetch adapter for Cloudflare Workers", false)
   .option("--skip-route", "Skip route creation", false)
   .action(async (options) => {
     console.log(chalk.bold(`\ninit-xmcp@${packageJson.version}`));
@@ -129,6 +134,31 @@ const program = new Command()
       }
     }
 
+    if (detectedFramework === "tanstack" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes";
+    }
+    if (detectedFramework === "hono" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes";
+    }
+    if (detectedFramework === "sveltekit" && !options.skipRoute) {
+      routePath = options.routePath || "src/routes/mcp";
+    }
+    if (!options.skipRoute) {
+      const defaults = {
+        nuxt: "server/routes",
+        "react-router": "app/routes",
+        astro: "src/pages",
+      };
+      if (detectedFramework in defaults) {
+        routePath =
+          options.routePath ||
+          defaults[detectedFramework as keyof typeof defaults];
+      }
+    }
+    const cloudflare =
+      isFetchFramework(detectedFramework) &&
+      (options.cf || detectFetchCloudflare(projectRoot, detectedFramework));
+
     // determine package manager
     let packageManager: "npm" | "yarn" | "pnpm" | "bun";
     if (detectedPackageManager) {
@@ -183,12 +213,16 @@ const program = new Command()
         });
       }
 
-      if (detectedFramework === "nextjs" && !options.skipRoute) {
+      if (
+        (detectedFramework === "nextjs" ||
+          isFetchFramework(detectedFramework)) &&
+        !options.skipRoute
+      ) {
         prompts.push({
           type: "input",
           name: "routePath",
           message: "Route directory path:",
-          default: routePath, // will not be undefined if detectedFramework is nextjs
+          default: routePath,
         });
       }
 
@@ -240,7 +274,8 @@ const program = new Command()
       }
 
       if (
-        detectedFramework === "nextjs" &&
+        (detectedFramework === "nextjs" ||
+          isFetchFramework(detectedFramework)) &&
         !options.skipRoute &&
         answers.routePath
       ) {
@@ -284,8 +319,8 @@ const program = new Command()
     }
 
     // check if route directory already exists and has content
-    if (routePath) {
-      // means detectedFramework is nextjs
+    if (routePath && detectedFramework === "nextjs") {
+      // Existing Next.js route-directory handling.
       const routeDirPath = path.join(projectRoot, routePath);
       if (fs.existsSync(routeDirPath)) {
         const routeDirContent = fs.readdirSync(routeDirPath);
@@ -328,6 +363,7 @@ const program = new Command()
         routePath,
         packageManager,
         version: packageJson.version,
+        cloudflare,
       });
 
       console.log(chalk.green("\n✔ xmcp initialized successfully!"));
@@ -348,7 +384,9 @@ const program = new Command()
       }
 
       if (routePath) {
-        console.log(`   • ${routePath}/route.ts`);
+        console.log(
+          `   • ${routePath}/${detectedFramework === "sveltekit" ? "+server.ts" : isFetchFramework(detectedFramework) ? "mcp.ts" : "route.ts"}`
+        );
       }
 
       if (detectedFramework === "nestjs") {
@@ -360,9 +398,37 @@ const program = new Command()
 
       console.log(chalk.blue("\n❯ Files updated:"));
       console.log(`   • package.json`);
-      console.log(`   • tsconfig.json`);
+      if (!isFetchFramework(detectedFramework))
+        console.log(`   • tsconfig.json`);
 
       console.log(chalk.blue("\nNext steps:"));
+
+      if (detectedFramework === "hono") {
+        if (routePath) {
+          console.log(
+            `Mount the router from ${routePath}/mcp.ts in your Hono app:\n\napp.route("/mcp", mcp);\n`
+          );
+        } else {
+          console.log(
+            'Import xmcpHandler from .xmcp/adapter/index.js and register app.all("/mcp", (c) => xmcpHandler(c.req.raw)).'
+          );
+        }
+        console.log(
+          "Keep your existing Hono dev/build commands after the xmcp commands. See https://xmcp.dev/docs/adapters/hono"
+        );
+      }
+
+      if (detectedFramework === "nuxt") {
+        console.log(
+          "Add .xmcp to nitro.externals.inline in nuxt.config.ts so Nitro bundles the adapter during development. See https://xmcp.dev/docs/adapters/nuxt"
+        );
+      }
+
+      if (detectedFramework === "react-router" && routePath) {
+        console.log(
+          `Register ${routePath}/mcp.ts as a resource route in your route config (no default component). See https://xmcp.dev/docs/adapters/react-router`
+        );
+      }
 
       // code integration for express projects
       if (detectedFramework === "express") {

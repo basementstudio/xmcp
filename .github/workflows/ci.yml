@@ -10,7 +10,94 @@ env:
   SKIP_CLI_TESTS: true
 
 jobs:
+  schema-inference-windows:
+    # Run the compiler suite on Windows to guard native path separators (#690).
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Build xmcp config dependency
+        run: pnpm --filter xmcp build
+      - run: pnpm --filter @xmcp-dev/compiler test:config
+
+  e2e-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @xmcp-dev/e2e typecheck
+      - run: pnpm --filter @xmcp-dev/cli test
+      - run: pnpm --filter @xmcp-dev/descope build
+      - run: pnpm --filter @xmcp-dev/descope test
+      - run: pnpm --filter descope-http-example exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter @xmcp-dev/sentry build
+      - run: pnpm --filter @xmcp-dev/sentry test
+      - run: pnpm --filter sentry-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter sentry-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/supabase build
+      - run: pnpm --filter @xmcp-dev/supabase test
+      - run: pnpm --filter supabase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter supabase-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/billing build
+      - run: pnpm --filter @xmcp-dev/billing test
+      - run: pnpm --filter billing-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter billing-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/coinbase build
+      - run: pnpm --filter @xmcp-dev/coinbase test
+      - run: pnpm --filter coinbase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter coinbase-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/x402 build
+      - run: pnpm --filter @xmcp-dev/x402 test
+      - run: pnpm --filter paid-http-transport exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter paid-http-transport exec tsc --noEmit
+      - run: pnpm --filter resend-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter resend-http typecheck
+      - run: pnpm --filter resend-http test
+      - run: pnpm --filter resend-http test:smoke
+      - run: pnpm --filter paper-stdio exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter paper-stdio typecheck
+      - run: pnpm --filter paper-stdio test
+      - run: pnpm --filter figma-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter figma-http typecheck
+      - run: pnpm --filter figma-http test
+      - run: pnpm --filter figma-http test:smoke
+      - run: pnpm --filter profound-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter profound-http typecheck
+      - run: pnpm --filter profound-http test
+      - run: pnpm --filter profound-http test:smoke
+      - run: pnpm --filter @xmcp-dev/upstash test
+      - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter upstash-http exec tsc --noEmit
+      - run: pnpm --filter @xmcp-dev/e2e test:unit
+      - run: pnpm --filter @xmcp-dev/e2e test:fast
+      - name: Upload failed fixture logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-conformance-logs
+          path: packages/e2e/.work/**/*.log
+          include-hidden-files: true
+          if-no-files-found: ignore
+
   changeset-check:
+    # The generated release PR consumes changesets instead of adding one.
+    if: github.head_ref != 'changeset-release/main'
     # Flags a PR that edits a releasable package without adding a changeset.
     # Only packages/** counts — the website and examples are private, so
     # Changesets does not consider them releasable and they never trip this.
@@ -117,7 +204,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build main packages only
-        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp
+        run: pnpm turbo build --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui
 
       - name: Test xmcp runtime and compiler behavior
         run: |
@@ -127,7 +214,18 @@ jobs:
           pnpm --filter @xmcp-dev/compiler typecheck
 
       - name: Lint packages (if available)
-        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp || echo "No lint script available, skipping..."
+        run: pnpm turbo lint --filter=xmcp --filter=create-xmcp-app --filter=init-xmcp --filter=@xmcp-dev/ui || echo "No lint script available, skipping..."
+
+      - name: Test UI package
+        run: pnpm --filter @xmcp-dev/ui test
+
+      - name: Relink UI showcase workspace binaries
+        # Workspace CLI outputs do not exist during the initial install, so pnpm
+        # can only create their bin links after the packages have been built.
+        run: pnpm --filter ui-showcase install --offline --no-frozen-lockfile
+
+      - name: Build UI showcase example
+        run: pnpm turbo build --filter=ui-showcase
 
       - name: Verify xmcp package build
         run: |
@@ -301,7 +399,11 @@ jobs:
       - name: Verify lockfile and install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Check main packages integrity
+      - name: Test stable release decision
+        # Exercise the release decision without publishing or touching real changesets.
+        run: node --test scripts/prepare-stable-release.test.cjs
+
+      - name: Check main package metadata
         run: |
           echo "Checking main package.json files..."
 

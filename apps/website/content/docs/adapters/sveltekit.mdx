@@ -1,0 +1,119 @@
+---
+title: "SvelteKit"
+metadataTitle: "Usage with SvelteKit | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Add MCP tools, prompts, and resources to SvelteKit on Node.js or Cloudflare Workers."
+description: "Set up the xmcp SvelteKit adapter with automatic initialization and a stateless Fetch handler."
+---
+
+The SvelteKit adapter lets your existing application serve MCP requests. It generates an ESM module with `xmcpHandler(request, options?)`, returning a standard `Response`. Initial supported deployment targets are Node.js and Cloudflare Workers.
+
+## Automatic setup
+
+Run this inside an existing TypeScript SvelteKit project:
+
+```bash
+npx init-xmcp@latest --yes
+```
+
+The initializer creates `src/routes/mcp/+server.ts`, which SvelteKit serves at `/mcp`. Use `--route-path src/routes/api/mcp` for `/api/mcp`. If you configured a custom routes root in SvelteKit, pass the matching directory and set `http.endpoint` to its public URL.
+
+Initialization creates xmcp configuration and sample handlers, installs the packages, and prepends xmcp commands to your existing build and development scripts. Relative imports preserve your application's aliases and TypeScript configuration. Existing `.ts` and `.js` MCP route files cause a clear conflict error before configuration changes. Use `--skip-route` to keep your route and wire the handler yourself; `--skip-tools`, `--skip-prompts`, and `--skip-resources` omit those samples.
+
+Workers mode is inferred when `@sveltejs/adapter-cloudflare` or `@cloudflare/vite-plugin` is installed. Use `--cf` to select it explicitly. The initializer preserves your host framework and deployment configuration. If multiple deployment adapters are installed, check the generated scripts and remove `--cf` for a Node deployment.
+
+## Manual setup
+
+```bash
+pnpm add xmcp zod
+pnpm add -D @xmcp-dev/compiler
+```
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: { endpoint: "/mcp" },
+  experimental: { adapter: "sveltekit" },
+  paths: { tools: "./src/tools", prompts: false, resources: false },
+  // The host build checks application types after the adapter exists.
+  typescript: { skipTypeCheck: true },
+};
+export default config;
+```
+
+Set `paths.prompts` or `paths.resources` to directories to discover those handlers. Each uses the same exports as other xmcp transports. Create tools following the [runnable SvelteKit example](https://github.com/basementstudio/xmcp/tree/main/examples/with-sveltekit).
+
+Run `pnpm exec xmcp build` before importing the generated adapter:
+
+```typescript title="src/routes/mcp/+server.ts"
+import type { RequestHandler } from "./$types";
+import { xmcpHandler } from "../../../.xmcp/adapter/index.js";
+
+export const GET: RequestHandler = ({ request }) => xmcpHandler(request);
+export const POST: RequestHandler = ({ request }) => xmcpHandler(request);
+export const DELETE: RequestHandler = ({ request }) => xmcpHandler(request);
+```
+
+Import the adapter only from server code. Do not include it in browser components. Adjust relative imports if you move the route.
+
+## Development and build order
+
+Build the adapter first, then run the xmcp watcher alongside your host development server:
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & vite dev)"
+  }
+}
+```
+
+The xmcp watcher updates discovery when tools, prompts, or resources are added or removed. The host processes their TypeScript and framework imports. Keep `.xmcp/` ignored by Git. Run xmcp before your application's production build and retain the host's type checking; `skipTypeCheck` only disables xmcp's separate check.
+
+The runnable example uses SvelteKit 3 with configuration in `vite.config.ts` and requires Node 22.17+. Initialization also recognizes existing SvelteKit 2 projects and leaves their configuration intact.
+
+For Node production, use [SvelteKit's Node adapter](https://svelte.dev/docs/kit/adapter-node). Run `xmcp build && vite build && svelte-check`, then start the generated server with `node build`. Keep the MCP endpoint server-rendered; it cannot be served by a static-only deployment.
+
+## Cloudflare Workers
+
+Configure [SvelteKit's Cloudflare adapter](https://svelte.dev/docs/kit/adapter-cloudflare) and add `nodejs_compat` to Wrangler's `compatibility_flags`. Build xmcp with `--cf` before SvelteKit:
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp build --cf && (xmcp dev --cf & vite dev)",
+    "build": "xmcp build --cf && vite build && svelte-check",
+    "preview": "wrangler dev",
+    "deploy": "pnpm build && wrangler deploy"
+  }
+}
+```
+
+Vite development is useful for application edits. Validate the built Worker using `wrangler dev` as well. The [example](https://github.com/basementstudio/xmcp/tree/main/examples/with-sveltekit) has separate Node and Workers scripts and a Wrangler configuration for `.svelte-kit/cloudflare/_worker.js`.
+
+Workers builds emit `.xmcp/adapter/index.js` with the Workers-compatible runtime. xmcp does not emit a standalone Worker or rewrite Wrangler configuration in adapter mode. Tools and their dependencies must also be compatible with Workers.
+
+## Authentication and CORS
+
+Authenticate with SvelteKit server hooks or your endpoint. After verifying credentials, pass the verified information into the handler:
+
+```typescript
+return xmcpHandler(request, {
+  authInfo: {
+    token: verifiedToken,
+    clientId: verifiedClientId,
+    scopes: verifiedScopes,
+  },
+});
+```
+
+The variables above come from your application's credential verification. Reject unauthorized requests before calling the adapter. Passing `authInfo` forwards it to MCP handlers as `extra.authInfo`; it does not verify credentials itself.
+
+Configure browser CORS and `OPTIONS` responses in SvelteKit server hooks or your endpoint, before invoking xmcp. Include the MCP headers required by your clients. Preserve the returned streaming response; do not parse and reserialize it. Avoid consuming the original request body before passing it to xmcp.
+
+## Stateless request metadata
+
+Each request gets a fresh MCP server with isolated request context. Initialization does not create a persistent session. Repeat authentication and client metadata on each request: modern clients use protocol metadata, while older clients can send `x-mcp-client-name` and `x-mcp-client-version` headers.
+
+The SDK handles protocol validation, malformed JSON, and unsupported methods. Registering GET and DELETE forwards them to the transport; it does not enable persistent sessions.

@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Icons } from "@/components/icons";
+import {
+  CheckIcon,
+  GitHubLogoIcon,
+  Link2Icon,
+} from "@/components/ui/site-icons";
 
 type ShareTarget = "github" | "page";
+
+// Long enough to read "Copied" before the label returns.
+const COPIED_FEEDBACK_MS = 1200;
 
 export function TemplateShareActions({
   pageUrl,
@@ -14,81 +23,57 @@ export function TemplateShareActions({
   repositoryUrl: string;
   xShareUrl: string;
 }) {
-  const [activeSuccess, setActiveSuccess] = useState<ShareTarget | null>(null);
+  const [copied, setCopied] = useState<ShareTarget | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const triggerSuccess = (target: ShareTarget) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    setActiveSuccess(target);
-    timeoutRef.current = setTimeout(() => {
-      setActiveSuccess((current) => (current === target ? null : current));
-    }, 1200);
-  };
 
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
-  const copyToClipboard = async (target: ShareTarget, value: string) => {
+  const copy = async (target: ShareTarget, value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      triggerSuccess(target);
     } catch {
-      // no-op if clipboard is unavailable
+      return;
     }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setCopied(target);
+    timeoutRef.current = setTimeout(() => {
+      setCopied((current) => (current === target ? null : current));
+    }, COPIED_FEEDBACK_MS);
   };
 
   return (
-    <div className="text-brand-neutral-50">
+    <div className="template-share">
       <Link
         href={xShareUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 hover:text-brand-white"
+        className="template-share-button"
       >
-        Twitter
+        <Icons.x className="size-3" aria-hidden="true" />
+        Post on X
       </Link>
-      <span>{", "}</span>
       <button
         type="button"
-        onClick={() => copyToClipboard("github", repositoryUrl)}
-        className="underline underline-offset-2 hover:text-brand-white cursor-pointer"
+        onClick={() => copy("github", repositoryUrl)}
+        className="template-share-button"
       >
-        <span>GitHub</span>
-        <span
-          aria-hidden
-          className={`relative top-[4px] inline-block overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin-left] duration-250 ease-out ${
-            activeSuccess === "github"
-              ? "ml-1 max-w-3 opacity-100"
-              : "ml-0 max-w-0 opacity-0"
-          }`}
-        >
-          ✓
+        {copied === "github" ? <CheckIcon /> : <GitHubLogoIcon />}
+        <span aria-live="polite">
+          {copied === "github" ? "Copied" : "Copy repo URL"}
         </span>
       </button>
-      <span>{", "}</span>
       <button
         type="button"
-        onClick={() => copyToClipboard("page", pageUrl)}
-        className="underline underline-offset-2 hover:text-brand-white cursor-pointer"
+        onClick={() => copy("page", pageUrl)}
+        className="template-share-button"
       >
-        <span>Link</span>
-        <span
-          aria-hidden
-          className={`relative top-[4px] inline-block overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin-left] duration-250 ease-out ${
-            activeSuccess === "page"
-              ? "ml-1 max-w-3 opacity-100"
-              : "ml-0 max-w-0 opacity-0"
-          }`}
-        >
-          ✓
+        {copied === "page" ? <CheckIcon /> : <Link2Icon />}
+        <span aria-live="polite">
+          {copied === "page" ? "Copied" : "Copy page link"}
         </span>
       </button>
     </div>

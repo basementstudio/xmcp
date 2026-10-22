@@ -1,0 +1,29 @@
+{
+  "name": "nuxt-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & nuxt dev)",
+    "build": "xmcp build && nuxt build && nuxt typecheck",
+    "start": "node .output/server/index.mjs",
+    "dev:cf": "xmcp build --cf && (xmcp dev --cf & cross-env NITRO_PRESET=cloudflare_module nuxt dev)",
+    "build:cf": "xmcp build --cf && cross-env NITRO_PRESET=cloudflare_module nuxt build",
+    "preview:cf": "wrangler dev",
+    "deploy:cf": "pnpm build:cf && wrangler deploy"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.40"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.147.0",
+    "cross-env": "^7.0.3",
+    "vue-tsc": "^3.1.1"
+  }
+}

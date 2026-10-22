@@ -1,10 +1,12 @@
 import { blogSource } from "@/lib/source";
-import { DocsBody, DocsTitle } from "@/components/layout/page";
+import { DocsBody, DocsDescription, DocsTitle } from "@/components/layout/page";
 import { notFound } from "next/navigation";
-import { getMDXComponents } from "@/components/mdx-components";
+import {
+  getMDXComponents,
+  BLOG_IMAGE_SIZES,
+} from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { CodeBlock } from "@/components/codeblock";
 import { BlogPage } from "@/components/layout/blog";
 import {
   getBlogMetadata,
@@ -60,7 +62,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
         {page.data.date && (
           <time
             dateTime={page.data.date}
-            className="text-xs uppercase tracking-wide text-brand-neutral-50"
+            className="text-xs tracking-wide text-brand-neutral-50"
           >
             {new Date(page.data.date).toLocaleDateString("en-US", {
               month: "short",
@@ -71,23 +73,19 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
         )}
         <DocsTitle>{page.data.title}</DocsTitle>
         {page.data.description && (
-          <p className="text-base text-brand-neutral-50 max-w-3xl pb-1">
-            {page.data.description}
-          </p>
+          <DocsDescription>{page.data.description}</DocsDescription>
         )}
         <PostAuthors authors={authors} />
       </div>
       <DocsBody className="w-full border-t border-white/20 pt-4">
         <MDX
-          components={getMDXComponents({
-            // this allows you to link to other pages with relative file paths
-            a: createRelativeLink(blogSource, page),
-            pre: ({ ref, ...props }) => (
-              <CodeBlock ref={ref} {...props}>
-                <pre>{props.children}</pre>
-              </CodeBlock>
-            ),
-          })}
+          components={getMDXComponents(
+            {
+              // this allows you to link to other pages with relative file paths
+              a: createRelativeLink(blogSource, page),
+            },
+            BLOG_IMAGE_SIZES
+          )}
         />
       </DocsBody>
     </BlogPage>

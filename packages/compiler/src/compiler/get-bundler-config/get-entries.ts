@@ -2,13 +2,23 @@ import { runtimeFolderPath } from "@/utils/constants";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
 import path from "path";
 import { compilerContext } from "@/compiler/compiler-context";
-import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import {
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
 
 /** Get what packages are gonna be built by xmcp */
 export function getEntries(
   xmcpConfig: XmcpConfigOutputSchema
 ): Record<string, string> {
   const { platforms } = compilerContext.getContext();
+
+  if (isFetchAdapter(xmcpConfig) && xmcpConfig.http) {
+    const runtime = platforms.cloudflare
+      ? "adapter-fetch-cloudflare.js"
+      : "adapter-fetch.js";
+    return { adapter: path.join(runtimeFolderPath, runtime) };
+  }
 
   if (platforms.cloudflare) {
     // Prebuilt worker runtime copied into .xmcp by InjectRuntimePlugin

@@ -1,0 +1,63 @@
+---
+title: "Railway"
+metadataTitle: "Railway Deployment | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Deploy your xmcp MCP server to Railway from GitHub with a standalone Node.js server and a public HTTP endpoint."
+description: "Deploy your xmcp application to Railway."
+---
+
+Railway can run your xmcp server as a Node.js service, exposing your tools over Streamable HTTP.
+
+Start with an existing standalone xmcp project or create one with `pnpm create xmcp-app@latest`, choosing HTTP transport. The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport) demonstrates the server and build scripts used here.
+
+## Configure your server
+
+Set the HTTP host to `0.0.0.0` so Railway can reach your server:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: {
+    host: "0.0.0.0",
+  },
+};
+
+export default config;
+```
+
+Keep your existing tools and other configuration. The default HTTP port is `3001` and the default MCP endpoint is `/mcp`.
+
+Ensure your `package.json` includes these scripts and Node.js version, then commit your project and lockfile to GitHub:
+
+```json title="package.json"
+{
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node dist/http.js"
+  }
+}
+```
+
+The build requires the `@xmcp-dev/compiler` development dependency included by the scaffolder. Install development dependencies during the build.
+
+## Deploy from GitHub
+
+1. Create a project at [railway.com/new](https://railway.com/new), select **Deploy from GitHub repo**, and choose your repository.
+2. In the service's **Variables**, set `PORT` to `3001` and add any environment variables your tools need. This matches xmcp's default HTTP port. If you configure a different `http.port`, use that value for `PORT` and rebuild; the HTTP port is compiled into the server.
+3. In **Settings**, use `pnpm run build` as the build command and `node dist/http.js` as the start command. Railway detects Node.js and installs dependencies using your lockfile. For a project using npm, use `npm run build` instead.
+4. Set the healthcheck path to `/health`, xmcp's built-in health endpoint, and deploy the service.
+5. Under **Settings → Networking**, select **Generate Domain**. If prompted for a target port, use the same value as `PORT`.
+
+Your MCP endpoint is `https://<your-domain>/mcp`. If you customized `http.endpoint`, use that path instead. Add this URL to an [MCP client](/docs/getting-started/connecting) to list and call your tools.
+
+You can also check that the server is running with:
+
+```bash
+curl https://<your-domain>/health
+```
+
+Learn more in Railway's [Node.js deployment guide](https://docs.railway.com/guides/express) and [healthcheck documentation](https://docs.railway.com/deployments/healthchecks).

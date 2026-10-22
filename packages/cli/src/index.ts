@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import {
+  CliInputError,
+  parseExecutionOptions,
+} from "./utils/execution-options.js";
+
 interface ParsedArgs {
   command?: string;
   subcommand?: string;
@@ -16,6 +21,43 @@ Usage:
 Commands:
   generate                     Generate typed remote tool client files
   create <type> [name]         Scaffold a new tool, resource, or prompt
+  inspect <target>             Show MCP server details and capabilities
+  list <target>                List tools, prompts, resources, and templates
+  import-openapi <file>         Generate GET tools from an OpenAPI JSON file
+
+  install <target>             Print MCP JSON or install a client config entry
+
+  call <target> <tool>         Call a tool and print its complete JSON result
+  read-resource <target> <uri> Read a resource and print its JSON result
+  get-prompt <target> <name>   Render a prompt and print its JSON result
+
+Inspect / list options:
+  <target>                    HTTP(S) URL or client name from src/clients.ts
+  -c, --clients <path>         Path to a named-client config
+  --json                      Print a JSON result
+  --stdio <cmd> [args]         Spawn a server; put all CLI options before --stdio
+
+Import OpenAPI options:
+  --operations <ids>           Comma-separated operation IDs (default: all GETs)
+  --base-url <url>             Override the API server URL
+  -o, --out <path>             Tool output directory (default: src/tools)
+
+Install options (also accepts the connection options above):
+  --name <name>               Override the config entry name
+  --client <client>           Write claude-desktop or cursor's user config
+  --config <path>             Write this config file instead
+  --dry-run                   Print the proposed JSON without writing
+  --replace                   Replace a conflicting entry with the same name
+  Without --client/--config, print JSON only. STDIO commands are not launched.
+
+Call / read-resource / get-prompt:
+  Reuse the connection options above; with --stdio, omit <target>.
+  --arg <key=value>            Repeat for tool/prompt arguments
+  --args-file <path|->         Read a JSON argument object from a file or stdin
+  --stdin                     Read a JSON argument object from stdin
+  Piped stdin is read when no argument option is given. Do not mix sources.
+  read-resource takes a complete URI and no argument options.
+  Results are JSON. Exit codes: 0 success, 1 tool/server error, 2 invalid input.
 
 Generate options:
   -o, --out <path>             Output directory (default: src/generated)
@@ -88,6 +130,85 @@ function printHelp() {
 }
 
 async function main() {
+  if (process.argv[2] === "import-openapi") {
+    const { parseImportOpenApiOptions, runImportOpenApi } =
+      await import("./commands/import-openapi.js");
+    const options = parseImportOpenApiOptions(process.argv.slice(3));
+    if (options.help) return printHelp();
+    const paths = await runImportOpenApi(options);
+    for (const path of paths) console.log(`Created ${path}`);
+    return;
+  }
+
+  if (process.argv[2] === "install") {
+    const { parseInstallOptions } = await import("./utils/install-options.js");
+    const options = parseInstallOptions(process.argv.slice(3));
+    if (options.help) return printHelp();
+    const stdoutWrite = process.stdout.write;
+    let output: string;
+    // As with discovery, config-module diagnostics must not corrupt JSON output.
+    process.stdout.write = process.stderr.write.bind(process.stderr);
+    try {
+      const { runInstall } = await import("./commands/install.js");
+      const result = await runInstall(options);
+      output = JSON.stringify(result.config, null, 2);
+      if (result.path)
+        console.error(
+          `${!result.changed ? "Unchanged" : options.dryRun ? "Would update" : "Updated"} ${result.path}`
+        );
+    } finally {
+      process.stdout.write = stdoutWrite;
+    }
+    process.stdout.write(`${output}\n`);
+    return;
+  }
+
+  const commandName = process.argv[2];
+  const executionCommand =
+    commandName === "call" ||
+    commandName === "read-resource" ||
+    commandName === "get-prompt"
+      ? commandName
+      : undefined;
+  if (commandName === "inspect" || commandName === "list" || executionCommand) {
+    const { parseDiscoveryOptions } =
+      await import("./utils/discovery-options.js");
+    const execution = executionCommand
+      ? parseExecutionOptions(executionCommand, process.argv.slice(3))
+      : undefined;
+    const discovery = execution ?? parseDiscoveryOptions(process.argv.slice(3));
+    if (discovery.help) return printHelp();
+    // Config files and dependencies may log while loading. Reserve stdout for
+    // the final result so --json stays parseable, including on failure.
+    const stdoutWrite = process.stdout.write;
+    let output: string;
+    process.stdout.write = process.stderr.write.bind(process.stderr);
+    try {
+      if (execution) {
+        const { runExecution } = await import("./commands/execute.js");
+        const { result, exitCode } = await runExecution(execution);
+        output = JSON.stringify(result, null, 2);
+        process.exitCode = exitCode;
+      } else if (commandName === "inspect") {
+        const { runInspect, formatInspection } =
+          await import("./commands/inspect.js");
+        const result = await runInspect(discovery);
+        output = discovery.json
+          ? JSON.stringify(result, null, 2)
+          : formatInspection(result);
+      } else {
+        const { runList, formatCatalog } = await import("./commands/list.js");
+        const result = await runList(discovery);
+        output = discovery.json
+          ? JSON.stringify(result, null, 2)
+          : formatCatalog(result);
+      }
+    } finally {
+      process.stdout.write = stdoutWrite;
+    }
+    process.stdout.write(`${output}\n`);
+    return;
+  }
   const { command, subcommand, positional, options, helpRequested } = parseArgs(
     process.argv
   );
@@ -128,7 +249,9 @@ async function main() {
     });
 
     if (result.status === "skipped") {
-      console.log(`Skipped ${subcommand} -> ${result.outputPath} (already exists)`);
+      console.log(
+        `Skipped ${subcommand} -> ${result.outputPath} (already exists)`
+      );
       return;
     }
 
@@ -143,5 +266,5 @@ async function main() {
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+  process.exit(error instanceof CliInputError ? 2 : 1);
 });

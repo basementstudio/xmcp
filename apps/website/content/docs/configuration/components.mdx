@@ -1,0 +1,101 @@
+---
+title: "Component Visibility"
+metadataTitle: "Component Visibility | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Choose which tools, prompts, and resources your xmcp server exposes using component names and tags."
+description: "Include or exclude components by name or tag, with generated UI resources following their tools."
+---
+
+Use the optional `components` field in `xmcp.config.ts` to control which tools,
+prompts, static resources, and resource templates your server registers. Update
+both `xmcp` and `@xmcp-dev/compiler` to use this option.
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  components: {
+    exclude: {
+      names: ["delete-account"],
+      tags: ["internal", "experimental"],
+    },
+  },
+} satisfies XmcpConfig;
+```
+
+A component matches a selector when its name appears in `names` **or** any of
+its `metadata.tags` appear in `tags`. Names and tags are exact, case-sensitive
+strings. Names come from `metadata.name`, falling back to the file name without
+its extension. Use resource names in the `names` list.
+The rules apply to all component types, so a name shared by a tool and a prompt
+matches both.
+
+For example, this tool and its generated MCP Apps UI resource are excluded by
+the configuration above:
+
+```typescript title="src/tools/internal-dashboard.ts"
+import type { ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "internal-dashboard",
+  description: "An internal dashboard",
+  tags: ["internal"],
+  _meta: { ui: {} },
+};
+
+export default function internalDashboard() {
+  return "<main><h1>Internal dashboard</h1></main>";
+}
+```
+
+## Include a subset
+
+Add `include` to limit registration to matching names or tags:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  components: {
+    include: {
+      names: ["greet", "review-code"],
+      tags: ["configuration"],
+    },
+    exclude: { tags: ["internal"] },
+  },
+} satisfies XmcpConfig;
+```
+
+| Configuration                             | Behavior                                            |
+| ----------------------------------------- | --------------------------------------------------- |
+| `components` or `include` omitted         | All enabled components are eligible                 |
+| `include` provided                        | Only components matching a name or tag are eligible |
+| Both `include` and `exclude` match        | Exclusion wins                                      |
+| `include: {}` or only empty include lists | No components are included                          |
+| `exclude: {}` or only empty exclude lists | Nothing is excluded                                 |
+| `metadata.enabled: false`                 | The component stays disabled, even when included    |
+
+Selectors accept optional `names: string[]` and `tags: string[]`. Entries must
+be nonempty strings. No wildcard expansion is performed.
+
+## Registration and UI resources
+
+Excluded components are absent from MCP listings. Direct tool calls, prompt
+fetches, resource reads, and completion requests for excluded components return
+not-found errors. When an entire component category is unavailable, the SDK may
+report that its method is not found.
+
+Generated UI resources follow their owning tool: including the tool makes its
+generated UI resource available, and excluding it removes both. The generated
+resource does not need its own matching tags. Manually authored resources use
+their own metadata.
+
+Rules are applied during server setup and are the same for every client.
+Component modules are still imported and compiled. Rebuild and restart the
+server after changing the configuration in production.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+includes the excluded `internal-dashboard` tool and requests that demonstrate
+its tool and UI resource returning not-found errors.

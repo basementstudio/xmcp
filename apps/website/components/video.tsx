@@ -1,4 +1,5 @@
 "use client";
+import { PlayIcon } from "@/components/ui/site-icons";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -53,7 +54,7 @@ export function Video({
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-sm border border-brand-neutral-500"
+      className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500"
       style={{ aspectRatio }}
     >
       {!isPlaying && (
@@ -70,13 +71,7 @@ export function Video({
           className="absolute left-1/2 top-1/2 z-[2] -translate-x-1/2 -translate-y-1/2 h-14 w-20 rounded-md border border-white/10 bg-brand-neutral-400/85 transition-colors hover:bg-brand-neutral-300/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-neutral-50/70"
         >
           <span className="sr-only">Play video</span>
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="mx-auto size-10 fill-brand-white/95"
-          >
-            <path d="M8 6v12l10-6z" />
-          </svg>
+          <PlayIcon className="mx-auto" />
         </button>
       )}
       <video

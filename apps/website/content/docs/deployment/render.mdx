@@ -1,0 +1,74 @@
+---
+title: "Render"
+metadataTitle: "Render Deployment | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Deploy your xmcp MCP server to Render as a Node.js web service with automatic Git deployments and a public HTTP endpoint."
+description: "Deploy your xmcp application to Render."
+---
+
+Render can host your xmcp server as a Node.js web service, exposing your tools over Streamable HTTP.
+
+Start with an existing standalone xmcp project or create one with `pnpm create xmcp-app@latest`, choosing HTTP transport. The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport) demonstrates the server and build scripts used here.
+
+## Configure your server
+
+Set the HTTP host to `0.0.0.0` so Render can reach your server:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: {
+    host: "0.0.0.0",
+  },
+};
+
+export default config;
+```
+
+Keep your existing tools and other configuration. The default HTTP port is `3001` and the default MCP endpoint is `/mcp`.
+
+Ensure your `package.json` includes these scripts and Node.js version, then commit your project and lockfile to your Git provider:
+
+```json title="package.json"
+{
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node dist/http.js"
+  }
+}
+```
+
+The build requires the `@xmcp-dev/compiler` development dependency included by the scaffolder. Install development dependencies during the build.
+
+## Deploy a web service
+
+1. In the [Render dashboard](https://dashboard.render.com/), select **New → Web Service** and connect your Git repository.
+2. Choose the deployment branch and region, then configure the service:
+
+   | Setting           | Value                                                           |
+   | ----------------- | --------------------------------------------------------------- |
+   | Language          | Node                                                            |
+   | Build Command     | `pnpm install --frozen-lockfile --prod=false && pnpm run build` |
+   | Start Command     | `node dist/http.js`                                             |
+   | Health Check Path | `/health`                                                       |
+
+   For an npm project with a `package-lock.json`, use `npm ci --include=dev && npm run build` as the build command instead.
+
+3. Add an environment variable named `PORT` with the value `3001`, plus any variables your tools need. This overrides Render's default port to match xmcp. If you configure a different `http.port`, use that value for `PORT` and rebuild; the HTTP port is compiled into the server.
+4. Choose an instance type and select **Create Web Service**. Render builds your server and provides an `onrender.com` URL. Subsequent pushes to your connected branch deploy automatically when auto-deploy is enabled.
+
+Your MCP endpoint is `https://<your-service>.onrender.com/mcp`. If you customized `http.endpoint`, use that path instead. Add this URL to an [MCP client](/docs/getting-started/connecting) to list and call your tools.
+
+You can also check that the server is running with:
+
+```bash
+curl https://<your-service>.onrender.com/health
+```
+
+Free web services [spin down after inactivity](https://render.com/docs/free#spinning-down-on-idle), so an MCP client's first request may need to wait for the service to wake up. Choose a paid instance if your server needs to remain available without that startup delay.
+
+Learn more in Render's [web service documentation](https://render.com/docs/web-services).

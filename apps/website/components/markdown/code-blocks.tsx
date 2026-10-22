@@ -10,21 +10,18 @@ import bash from "@shikijs/langs/bash";
 import json from "@shikijs/langs/json";
 import tsx from "@shikijs/langs/tsx";
 import sql from "@shikijs/langs/sql";
-import { CopyButton } from "../ui/copy-button";
-import {
-  ComponentProps,
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { CodeBlock } from "../codeblock";
+import { ComponentProps, createContext, useContext } from "react";
 import { cn } from "../../utils/cn";
-import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import {
+  XMCP_SHIKI_THEME_NAME,
+  xmcpAyuDarkTheme,
+  xmcpLightTheme,
+} from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [js, ts, bash, json, tsx, sql],
-  themes: [xmcpAyuDarkTheme],
+  themes: [xmcpAyuDarkTheme, xmcpLightTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -49,19 +46,14 @@ export function Code({
 
   const lang = className?.split("-")[1];
 
-  let theme = "none";
-
-  if (lang && lang !== "bash") {
-    theme = XMCP_SHIKI_THEME_NAME;
-  }
-
   const codeHTML = highlighter.codeToHtml(children, {
-    theme,
+    themes: { light: xmcpLightTheme.name!, dark: XMCP_SHIKI_THEME_NAME },
+    defaultColor: false,
     lang: lang || "typescript",
   });
   return (
-    <code
-      className={`${className} [&>pre]:p-0 [&>pre]:!bg-transparent [&_*]:!text-sm`}
+    <section
+      className={className}
       dangerouslySetInnerHTML={{ __html: codeHTML }}
       {...props}
     />
@@ -75,40 +67,31 @@ export function Pre({
   children: React.ReactNode;
   className?: string;
 }) {
-  const [codeText, setCodeText] = useState("");
-  const [hasLanguage, setHasLanguage] = useState(false);
-  const preRef = useRef<HTMLPreElement>(null);
-
-  useEffect(() => {
-    if (preRef.current) {
-      const codeElement = preRef.current.querySelector("code");
-      if (codeElement) {
-        setCodeText(codeElement.textContent || "");
-
-        const className = codeElement.className || "";
-        const hasLangClass =
-          className.includes("language-") &&
-          !className.includes("language-text");
-        setHasLanguage(hasLangClass);
-      }
-    }
-  }, [children]);
+  const nodes = React.Children.toArray(children);
+  const code = nodes.length === 1 ? nodes[0] : undefined;
+  const source = React.isValidElement<{ children?: React.ReactNode }>(code)
+    ? code.props.children
+    : undefined;
+  // Reserve the final command height in the server HTML, before hydration.
+  // CodeBlock still observes rendered source for tab and content changes.
+  const singleLine =
+    typeof source === "string" &&
+    source.trimEnd().length > 0 &&
+    !source.trimEnd().includes("\n");
 
   return (
-    <pre
-      ref={preRef}
-      className={cn(
-        "my-8 border relative w-full max-w-full overflow-x-auto bg-black p-4 [&_span]:!font-mono",
-        className
-      )}
-      style={{ borderColor: "#333" }}
+    <CodeBlock
+      className={cn("not-fumadocs-codeblock", className)}
+      data-single-line={singleLine ? "" : undefined}
+      language={
+        React.isValidElement<{ className?: string }>(code)
+          ? code.props.className?.match(/language-([\w-]+)/)?.[1]
+          : undefined
+      }
     >
       <preContext.Provider value={{ editor: true }}>
         {children}
       </preContext.Provider>
-      {hasLanguage && (
-        <CopyButton text={codeText} className="absolute top-3.5 right-6" />
-      )}
-    </pre>
+    </CodeBlock>
   );
 }

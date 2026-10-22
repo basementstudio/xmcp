@@ -5,7 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
+  DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -45,32 +45,41 @@ export function LogoContextMenu({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative">
+    <div
+      className="relative shrink-0"
+      onKeyDown={(event) => {
+        if (
+          event.key === "ContextMenu" ||
+          (event.shiftKey && event.key === "F10")
+        ) {
+          event.preventDefault();
+          setOpen(true);
+        }
+      }}
+    >
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild disabled>
           <div onContextMenu={handleContextMenu}>{children}</div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-brand-neutral-600 text-[0.625rem] uppercase border border-brand-neutral-400 text-brand-neutral-100 fixed -top-3 left-2">
-          <DropdownMenuItem
-            className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
-            onClick={(e) => {
-              e.preventDefault();
-              handleCopyLogo();
+        <DropdownMenuPortal>
+          <DropdownMenuContent
+            className="site-logo-menu"
+            align="start"
+            sideOffset={12}
+            collisionPadding={16}
+            onCloseAutoFocus={(event) => {
+              // The anchor remains a home link, rather than a menu button.
+              event.preventDefault();
             }}
           >
-            Copy Logo
-          </DropdownMenuItem>
-          <DropdownMenuSeparator className="border-brand-neutral-400 border-t border-dashed" />
-          <DropdownMenuItem
-            className="w-full text-2xs cursor-pointer p-1.5 hover:bg-brand-neutral-500 whitespace-nowrap hover:text-brand-white transition-colors duration-200"
-            onClick={(e) => {
-              e.preventDefault();
-              handleDownloadLogo();
-            }}
-          >
-            Download Logo
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+            <DropdownMenuItem onSelect={handleCopyLogo}>
+              Copy logo
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleDownloadLogo}>
+              Download logo
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenuPortal>
       </DropdownMenu>
     </div>
   );

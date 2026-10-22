@@ -77,7 +77,7 @@ function descopeRouter(
         issuer: issuerURL,
         authorization_endpoint: `${issuerURL}/oauth2/v1/authorize`,
         token_endpoint: `${issuerURL}/oauth2/v1/token`,
-        jwks_uri: `https://api.descope.com/${projectId}/.well-known/jwks.json`,
+        jwks_uri: `${new URL(issuerURL).origin}/${projectId}/.well-known/jwks.json`,
         response_types_supported: ["code"],
         grant_types_supported: ["authorization_code", "refresh_token"],
         code_challenge_methods_supported: ["S256"],
@@ -135,12 +135,10 @@ function descopeMiddleware(sdk: ReturnType<typeof Descope>): RequestHandler {
           "WWW-Authenticate",
           `${WWW_AUTH_BASE}, error="invalid_token"`
         );
-        res
-          .status(401)
-          .json({
-            error: "server_error",
-            error_description: "Authentication processing failed",
-          });
+        res.status(401).json({
+          error: "server_error",
+          error_description: "Authentication processing failed",
+        });
       });
   };
 }
@@ -154,6 +152,7 @@ export function descopeProvider(config: DescopeConfig): Middleware {
   const sdk = Descope({
     projectId,
     managementKey: config.managementKey,
+    baseUrl: new URL(config.issuerURL).origin,
   });
 
   const router = descopeRouter(config, projectId);

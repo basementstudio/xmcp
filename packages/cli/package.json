@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/cli",
   "description": "Official xmcp developer CLI",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -40,11 +40,12 @@
     "dev": "tsc -w -p tsconfig.json",
     "clean": "rm -rf dist",
     "pretest": "pnpm run build",
-    "test": "tsx --test __tests__/*.test.ts"
+    "test": "node --import tsx --test __tests__/*.test.ts src/utils/__tests__/*.test.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/client": "^2.3.0",
     "bundle-require": "^5.1.0",
-    "xmcp": "latest",
+    "xmcp": "workspace:^",
     "zod": "^4.0.10"
   },
   "devDependencies": {

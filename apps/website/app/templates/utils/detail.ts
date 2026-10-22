@@ -1,4 +1,4 @@
-import type { TemplateItem } from "./github";
+import type { TemplateItem } from "./content";
 
 export function stripLeadingHeading(markdown: string) {
   const lines = markdown.split("\n");

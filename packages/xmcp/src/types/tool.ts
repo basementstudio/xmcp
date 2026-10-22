@@ -1,3 +1,4 @@
+import type { ComponentMetadata } from "./component";
 import { z } from "zod/v3";
 import type { ZodType as ZodTypeV4, infer as inferV4 } from "zod";
 import type {
@@ -22,7 +23,7 @@ export interface ToolAnnotations {
   [key: string]: any;
 }
 
-export interface ToolMetadata {
+export interface ToolMetadata extends ComponentMetadata {
   /** Unique identifier for the tool */
   name: string;
   /** Human-readable description */

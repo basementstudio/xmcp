@@ -4,6 +4,14 @@ export type {
   WebMiddleware,
   WebMiddlewareContext,
 } from "./types/middleware";
+export type {
+  McpMiddleware,
+  McpMiddlewareContext,
+  McpMiddlewareMethod,
+  McpMiddlewareNext,
+  McpMiddlewareResult,
+  McpToolMetadata,
+} from "./types/mcp-middleware";
 dotenv.config();
 
 export type {
@@ -17,16 +25,23 @@ export type {
   SampleResult,
 } from "./types/tool";
 export type { McpClientInfo } from "./types/client-info";
-export type { PromptMetadata } from "./types/prompt";
-export type { ResourceMetadata } from "./types/resource";
+export type {
+  PromptMetadata,
+  PromptMessage,
+  GetPromptResult,
+} from "./types/prompt";
+export type { ResourceMetadata, ResourceCompletions } from "./types/resource";
 export type { UIMetadata } from "./types/ui-meta";
 
-export type { XmcpConfigInputSchema as XmcpConfig } from "./config";
+export type { XmcpConfigInputSchema as XmcpConfig } from "./config/index";
 import "./types/declarations";
 export { apiKeyAuthMiddleware } from "./auth/api-key";
 export { jwtAuthMiddleware } from "./auth/jwt";
 
 export { createContext } from "./utils/context";
+export { image, audio, embeddedResource } from "./runtime/utils/content";
+export { getRequestContext } from "./runtime/contexts/request-context";
+export type { RequestContext } from "./runtime/contexts/request-context";
 
 export {
   completable,
@@ -50,7 +65,7 @@ export {
   listSTDIOClientTools,
   callSTDIOClientTool,
   disconnectSTDIOClient,
-} from "./client";
+} from "./client/index";
 export type {
   HttpClient,
   StdioClient,
@@ -61,7 +76,7 @@ export type {
   HttpClientConfig,
   StdioClientConfig,
 } from "./client/types";
-export type { StdioClientConnection, StdioClientOptions } from "./client";
+export type { StdioClientConnection, StdioClientOptions } from "./client/index";
 export type {
   CustomHeaders,
   CustomHeader,

@@ -1,3 +1,4 @@
+import githubLight from "@shikijs/themes/github-light";
 import ayuDark from "@shikijs/themes/ayu-dark";
 
 const COLOR_REPLACEMENTS: Record<string, string> = {
@@ -26,3 +27,5 @@ export const xmcpAyuDarkTheme = {
       : rule.settings,
   })),
 };
+
+export const xmcpLightTheme = githubLight;

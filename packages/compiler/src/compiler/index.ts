@@ -1,3 +1,4 @@
+import { isFetchAdapter } from "./runtime-target";
 import { rspack } from "@rspack/core";
 import { getRspackConfig } from "./get-bundler-config";
 import chalk from "chalk";
@@ -172,36 +173,47 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     });
   }
 
-  // if adapter is not enabled, handle middleware
-  if (!xmcpConfig.experimental?.adapter) {
-    // handle middleware
-    watcher.watch("./src/middleware.ts", {
-      onAdd: async () => {
-        compilerContext.setContext({
-          hasMiddleware: true,
-        });
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-      onUnlink: async () => {
-        compilerContext.setContext({
-          hasMiddleware: false,
-        });
-        if (compilerStarted) {
-          await generateCode();
-        }
-      },
-    });
-  }
+  // Every transport loads the named MCP middleware export. Adapters continue
+  // to leave the default HTTP middleware export to their host application.
+  watcher.watch("./src/middleware.ts", {
+    onAdd: async () => {
+      compilerContext.setContext({
+        hasMiddleware: true,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+    onUnlink: async () => {
+      compilerContext.setContext({
+        hasMiddleware: false,
+      });
+      if (compilerStarted) {
+        await generateCode();
+      }
+    },
+  });
 
   // start compiler
   watcher.onReady(async () => {
     let firstBuild = true;
     compilerStarted = true;
 
-    // delete existing runtime folder
-    deleteSync(runtimeFolderPath);
+    // Host servers start alongside the watcher after an initial adapter build.
+    // Keep that output importable until the first development compilation emits
+    // its replacement; deleting it here races fast hosts such as Hono on Node.
+    if (
+      mode === "development" &&
+      isFetchAdapter(xmcpConfig) &&
+      fs.existsSync(runtimeFolderPath)
+    ) {
+      for (const entry of fs.readdirSync(runtimeFolderPath)) {
+        if (entry !== "adapter")
+          deleteSync(path.join(runtimeFolderPath, entry));
+      }
+    } else {
+      deleteSync(runtimeFolderPath);
+    }
     createFolder(runtimeFolderPath);
 
     // Generate all code (including client bundles) BEFORE bundler runs
@@ -359,7 +371,11 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         }
       }
 
-      if (mode === "development" && platforms.cloudflare) {
+      if (
+        mode === "development" &&
+        platforms.cloudflare &&
+        !isFetchAdapter(xmcpConfig)
+      ) {
         try {
           await buildCloudflareOutput({ log: firstBuild });
         } catch (error) {

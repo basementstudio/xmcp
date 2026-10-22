@@ -3,8 +3,8 @@ import { Children, type ComponentProps, type ReactElement } from "react";
 import { highlight } from "fumadocs-core/highlight";
 import type { BundledLanguage } from "shiki";
 import { getMDXComponents } from "@/components/mdx-components";
-import { CodeBlock } from "@/components/codeblock";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { ArticleCodeBlock } from "@/components/codeblock";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 const BROKEN_INTERNAL_LINK_RE = /\/docs\/integrations\/chatgpt\b/;
 
@@ -19,8 +19,7 @@ function stripBrokenInternalLinks(source: string): string {
   );
   return inlineReplaced.replace(
     /^\s{0,3}\[([^\]]+)\]:\s+(.+)$/gm,
-    (match, _, url: string) =>
-      BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match
+    (match, _, url: string) => (BROKEN_INTERNAL_LINK_RE.test(url) ? "" : match)
   );
 }
 
@@ -28,28 +27,24 @@ async function renderHighlightedCodeBlock(code: string, lang: string) {
   try {
     return await highlight(code, {
       lang: lang as BundledLanguage,
-      theme: xmcpAyuDarkTheme,
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
+      // Match docs: shared code-block styles own the background.
+      defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
   } catch {
     return await highlight(code, {
       lang: "plaintext",
-      theme: xmcpAyuDarkTheme,
+      themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
+      // Match docs: shared code-block styles own the background.
+      defaultColor: false,
       components: {
         pre: ({ ref, ...props }) => (
-          <CodeBlock ref={ref} data-line-numbers {...props}>
-            <pre className="!text-[12px] [&_*]:!text-[12px]">
-              {props.children}
-            </pre>
-          </CodeBlock>
+          <ArticleCodeBlock ref={ref} {...props} language={lang} />
         ),
       },
     });
@@ -62,11 +57,7 @@ async function ReadmePre(props: ComponentProps<"pre">) {
   const content = codeProps.children;
 
   if (typeof content !== "string") {
-    return (
-      <CodeBlock>
-        <pre>{props.children}</pre>
-      </CodeBlock>
-    );
+    return <ArticleCodeBlock>{props.children}</ArticleCodeBlock>;
   }
 
   let lang =
@@ -91,8 +82,9 @@ function ReadmeImg(props: ComponentProps<"img">) {
       src={src}
       alt={props.alt ?? ""}
       loading="lazy"
+      decoding="async"
       referrerPolicy={isRemote ? "no-referrer" : undefined}
-      className="inline-block max-w-full h-auto rounded-xs"
+      className="inline-block max-w-full h-auto rounded-lg"
     />
   );
 }

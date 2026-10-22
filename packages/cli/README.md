@@ -1,13 +1,182 @@
 # @xmcp-dev/cli
 
-CLI tool for generating typed clients and scaffolding xmcp primitives.
+CLI tool for inspecting MCP servers, installing client configs, generating typed clients, and scaffolding xmcp primitives.
 
 ## Usage
 
 ```bash
 npx @xmcp-dev/cli generate [options]
 npx @xmcp-dev/cli create <tool|resource|prompt> [name] [options]
+npx @xmcp-dev/cli inspect <url|client-name> [--json]
+npx @xmcp-dev/cli list <url|client-name> [--json]
+npx @xmcp-dev/cli list --json --stdio <command> [args...]
+npx @xmcp-dev/cli import-openapi ./openapi.json [--operations getPet,listPets]
+
+npx @xmcp-dev/cli install <url|client-name> [--client cursor|claude-desktop] [--config <path>]
+
+npx @xmcp-dev/cli call <url|client-name> <tool> [--arg key=value]
+npx @xmcp-dev/cli read-resource <url|client-name> <uri>
+npx @xmcp-dev/cli get-prompt <url|client-name> <prompt> [--arg key=value]
 ```
+
+## Inspecting servers
+
+`inspect` reports server identity, the negotiated protocol version, capabilities,
+and instructions. `list` retrieves tools, prompts, resources, and resource
+templates, including their metadata and schemas in JSON mode. List methods follow
+the server's pagination; unadvertised capabilities appear as empty arrays.
+
+```bash
+npx @xmcp-dev/cli inspect http://localhost:3001/mcp
+npx @xmcp-dev/cli list http://localhost:3001/mcp --json
+npx @xmcp-dev/cli inspect context7 --clients src/clients.ts --json
+npx @xmcp-dev/cli list --json --stdio node ./dist/stdio.js
+```
+
+Client names use the same configuration loader as `generate`: by default it
+searches `src/clients.ts`, then `clients.ts`. Use `-c, --clients <path>` for a
+different file. Configured HTTP headers and STDIO command, args, environment,
+working directory, and stderr settings are preserved.
+
+Put CLI options **before `--stdio`**. Everything after its executable is passed
+unchanged to that subprocess, including `--help`, `--json`, and quoted arguments.
+Direct STDIO commands run from the current directory.
+
+`--json` writes one JSON object plus a newline. Inspection uses the keys
+`serverInfo`, `protocolVersion`, `capabilities`, and `instructions`; listing uses
+`tools`, `prompts`, `resources`, and `resourceTemplates`. Normal output is a
+readable summary. Stdout contains results only; config/dependency logs and errors
+go to stderr. A configuration, connection, or listing failure exits nonzero and
+writes no partial result. Both commands close the managed connection before
+printing, including on failure, and STDIO cleanup stops the spawned server.
+
+The commands automatically negotiate modern or legacy MCP. They query metadata
+without invoking tools, reading resource contents, or rendering prompts.
+
+## Importing OpenAPI
+
+Generate ordinary xmcp GET tools from a local OpenAPI 3.0/3.1 JSON document:
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json
+npx @xmcp-dev/cli import-openapi ./openapi.json --operations getPet,listPets --out src/tools/api
+npx @xmcp-dev/cli import-openapi ./openapi.json --base-url https://api.example.com/v1
+```
+
+All GET operations are selected by default. `--operations` selects exact
+`operationId` values, or `GET /path/{parameter}` when an ID is absent. Tool names
+use filename normalization; colliding names fail. `--out` defaults to `src/tools`.
+Existing `.ts`/`.tsx` files are never overwritten, and all selected inputs are
+validated before writing. The command does not connect to the API.
+
+Supported inputs include scalar path/query parameters, scalar query arrays with
+form/explode serialization, local parameter/schema references, and common scalar
+constraints. Generated handlers preserve the server's base path, encode inputs,
+forward MCP cancellation to fetch, return response text, and surface unsuccessful
+HTTP statuses as tool errors. Response schemas are not converted or validated.
+
+Unsupported constructs fail clearly: request bodies, headers/cookies, credentials,
+object/nullable/composed schemas, unsupported schema keywords/formats, external or
+recursive references, and non-default serialization styles. Server variables and
+relative URLs require an explicit `--base-url`. Generation supports JSON only.
+
+See [the import guide](https://xmcp.dev/docs/guides/import-openapi) for the exact
+subset and `examples/openapi-import` for a runnable local API and generated tool.
+
+## Installing client configs
+
+`install` prints one `mcpServers` JSON document to stdout. It never connects to
+the server or launches the STDIO command. Without `--client` or `--config`, it
+only prints JSON. Named clients use the same `--clients` source file as discovery.
+
+```sh
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project
+npx @xmcp-dev/cli install http://localhost:3001/mcp --name my-project --client cursor --dry-run
+npx @xmcp-dev/cli install local --clients src/clients.ts --client cursor --config .cursor/mcp.json
+npx @xmcp-dev/cli install --name my-project --client claude-desktop --stdio node /absolute/path/dist/stdio.js
+```
+
+- `--client cursor` writes `~/.cursor/mcp.json` on macOS, Linux, and Windows.
+- `--client claude-desktop` writes `~/Library/Application Support/Claude/claude_desktop_config.json`
+  on macOS or `%APPDATA%\Claude\claude_desktop_config.json` on Windows. Use `--config`
+  on other systems or when the default path cannot be determined.
+- `--config <path>` overrides the destination; without `--client`, it uses the
+  generic format. `--clients` selects the input definitions, `--config` the output.
+- `--name` overrides the entry name; defaults are the named client, URL hostname,
+  or `stdio` for a direct command. Hostname placeholders use `server` for naming.
+- `--dry-run` prints the proposed merged JSON without writing files or directories.
+- `--replace` permits replacing a conflicting entry of the same name. It is also
+  required when previewing a replacement. Identical entries leave the file untouched.
+
+Writes preserve unrelated keys and replace the file via a temporary file and
+rename. Invalid JSON or an invalid `mcpServers` object is rejected, even with
+`--replace`. Status messages and config-module diagnostics go to stderr; failures
+exit nonzero without a JSON result. New files use owner-only permissions on POSIX;
+existing file permissions and symlinks are preserved.
+
+HTTP entries contain `url` and optional `headers`. STDIO entries contain `command`,
+`args`, and optional `env`/`cwd`. Claude Desktop's local config accepts STDIO entries;
+for HTTP, explicitly supply a bridge such as `--stdio npx -y mcp-remote <url>`.
+Claude Desktop entries with `cwd` are rejected: use absolute paths or a launch script.
+Put all install options before `--stdio`.
+
+Literal `${ENV}` strings are copied unchanged. Header definitions using `env: "TOKEN"`
+become `${TOKEN}` in generic output and `${env:TOKEN}` for Cursor; environment values
+are never read by the installer. Interpolation support depends on the receiving
+client. A TypeScript config still executes when loaded, so a `process.env.TOKEN`
+expression in that file supplies its evaluated value; use literal strings to
+retain references. Installation does not install npm packages or start servers.
+
+See `examples/external-clients` for a runnable preview.
+
+## Calling tools, reading resources, and rendering prompts
+
+The execution commands share the connection and config options above. They
+always print the complete MCP result as JSON, preserving content blocks,
+structured content, prompt messages, resource contents, and metadata. `--json`
+is accepted for consistency but is optional.
+
+```sh
+npx @xmcp-dev/cli call http://localhost:3001/mcp greet --arg name=Ada
+npx @xmcp-dev/cli call local add --arg a=2 --arg b=3
+npx @xmcp-dev/cli call local add --args-file args.json
+printf '{"a":2,"b":3}\n' | npx @xmcp-dev/cli call local add --stdin
+npx @xmcp-dev/cli read-resource local 'config://app'
+npx @xmcp-dev/cli get-prompt local team-greeting --arg department=engineering --arg name=Ada
+npx @xmcp-dev/cli call add --arg a=2 --arg b=3 --stdio node ./dist/stdio.js
+```
+
+For STDIO, omit the connection target and put the tool/prompt name or resource
+URI before `--stdio`; everything after the executable belongs to the server.
+`read-resource` takes a complete URI, including resolved template parameters,
+and does not accept argument options.
+
+For `call` and `get-prompt`, choose one input source:
+
+- Repeat `--arg key=value`. Tool values parse as JSON when possible, otherwise
+  as literal strings. Quote a JSON string to preserve a numeric-looking string:
+  `--arg 'id="123"'`. Prompt `--arg` values always remain literal strings.
+- `--args-file path` reads a JSON object. Nested objects and arrays are preserved.
+- `--stdin` or `--args-file -` reads a JSON object from stdin. Piped stdin is also
+  read automatically when no argument option is present; empty automatic stdin
+  means no arguments. Explicit stdin requires a nonempty JSON object.
+
+Input sources cannot be mixed, and duplicate `--arg` keys are rejected. Prompt
+JSON values must be strings. Tools are validated against their advertised JSON
+Schema before invocation; prompts validate required names and string values.
+Both catalogs follow pagination when resolving the selected component.
+
+| Exit code | Meaning                                                | Stdout                     |
+| --------- | ------------------------------------------------------ | -------------------------- |
+| `0`       | Successful operation                                   | Complete JSON result       |
+| `1`       | Tool returned `isError: true`                          | Complete JSON error result |
+| `1`       | Config, connection, server, or unknown-component error | Empty                      |
+| `2`       | Invalid CLI options, JSON, argument file, or arguments | Empty                      |
+
+Diagnostics go to stderr. Connections and STDIO subprocesses close on success,
+tool errors, validation errors, and protocol errors. Tools that request client
+interaction still require a client with the appropriate handlers; these commands
+do not configure sampling or elicitation handlers.
 
 ## Scaffolding
 

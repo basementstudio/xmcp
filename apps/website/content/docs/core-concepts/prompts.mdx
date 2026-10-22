@@ -73,6 +73,65 @@ export default function reviewCode({ code }: InferSchema<typeof schema>) {
   videos.
 </Callout>
 
+## Multi-message prompts
+
+Return a `PromptMessage[]` to provide a conversation, such as examples followed
+by a new question. Each message must have a `user` or `assistant` role and a
+content object. xmcp validates every message and preserves their order and roles.
+`metadata.role` only applies when returning a single content object, string, or
+number; its default remains `assistant`.
+
+```typescript title="src/prompts/classify-sentiment.ts"
+import { z } from "zod";
+import type { InferSchema, PromptMessage } from "xmcp";
+
+export const schema = {
+  text: z.string().describe("The text to classify"),
+};
+
+export default function classifySentiment({
+  text,
+}: InferSchema<typeof schema>): PromptMessage[] {
+  return [
+    { role: "user", content: { type: "text", text: "Classify: I love it" } },
+    { role: "assistant", content: { type: "text", text: "positive" } },
+    { role: "user", content: { type: "text", text: "Classify: I dislike it" } },
+    { role: "assistant", content: { type: "text", text: "negative" } },
+    { role: "user", content: { type: "text", text: `Classify: ${text}` } },
+  ];
+}
+```
+
+Return a full `GetPromptResult` when you also need a description or result
+metadata. Both types are available from `xmcp`, and async handlers can return
+either shape.
+
+```typescript
+import type { GetPromptResult } from "xmcp";
+
+export default function welcome(): GetPromptResult {
+  return {
+    description: "Start a conversation",
+    messages: [
+      { role: "user", content: { type: "text", text: "Introduce yourself" } },
+      {
+        role: "assistant",
+        content: { type: "text", text: "Hello! How can I help?" },
+      },
+    ],
+    _meta: { source: "welcome-template" },
+  };
+}
+```
+
+Messages can contain text, images, audio, resource links, or embedded resources.
+An invalid result throws an error identifying the field, such as
+`messages.1.role`. Empty message arrays are allowed. Full results retain their
+description and metadata.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+includes a runnable `classify-sentiment` prompt and a request to try it.
+
 ## References
 
 ### Schema (optional)
@@ -92,14 +151,56 @@ The metadata object provides:
 - **Name**: Unique identifier for the prompt
 - **Title**: Human-readable title for the prompt
 - **Description**: Brief explanation of what the prompt does
-- **Role**: The role of the prompt in the conversation. Can be either `user` or `assistant`.
+- **Role**: The role for single content, string, or number returns. Can be either `user` or `assistant`; defaults to `assistant`. Message arrays and full results use each message's explicit role.
+
+### Icons, tags, and availability
+
+`PromptMetadata` accepts optional `icons`, `tags`, and `enabled` fields:
+
+```typescript
+import type { PromptMetadata } from "xmcp";
+
+export const metadata: PromptMetadata = {
+  name: "review-code",
+  title: "Review Code",
+  description: "An example prompt",
+  icons: [
+    {
+      src: "https://example.com/icon.png",
+      mimeType: "image/png",
+      sizes: ["48x48"],
+      theme: "dark",
+    },
+  ],
+  tags: ["example"],
+  enabled: true,
+};
+```
+
+Icons are forwarded to MCP clients. Each icon requires `src` (a URL or data URI)
+and may include `mimeType`, `sizes`, and `theme` (`"light"` or `"dark"`).
+Tags appear in listings under `_meta["xmcp/tags"]`; other metadata is preserved.
+When both `tags` and `_meta["xmcp/tags"]` are supplied, `tags` takes precedence.
+Tags alone do not change availability. Use
+[component visibility rules](/docs/configuration/components) to include or exclude
+components by name or tag in `xmcp.config.ts`.
+
+Prompts are enabled by default. Set `enabled: false` to skip registration: the
+prompt is absent from `prompts/list`, and `prompts/get` returns a not-found error.
+Custom `metadata._meta` values are also exposed in `prompts/list`.
+
+Availability is evaluated during server setup; modules are still imported.
+Rebuild and restart the server after changing metadata in production.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+demonstrates icons, tags, and a disabled experimental tool.
 
 ### Implementation (required)
 
 The default export function that performs the actual work.
 
 - **Parameters**: Automatically typed from your schema using the built-in `InferSchema`.
-- **Returns**: MCP-compatible response with content type.
+- **Returns**: A string, number, content object, `PromptMessage[]`, or full `GetPromptResult`.
 - **Async**: Supports async operations for API calls, file I/O, etc.
 
 ## Troubleshooting

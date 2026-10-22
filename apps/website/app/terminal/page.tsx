@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { codeToHtml } from "shiki";
 import { cn } from "../../utils/cn";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { Button } from "@/components/ui/button";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 function EditableTerminal({
   code,
@@ -17,12 +18,24 @@ function EditableTerminal({
   const [highlightedCode, setHighlightedCode] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const pendingSelection = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (pendingSelection.current === null) return;
+    textareaRef.current?.setSelectionRange(
+      pendingSelection.current,
+      pendingSelection.current
+    );
+    pendingSelection.current = null;
+  }, [code]);
+
   useEffect(() => {
+    let cancelled = false;
     const highlightCode = async () => {
       try {
         const html = await codeToHtml(code, {
           lang: "typescript",
-          theme: xmcpAyuDarkTheme,
+          themes: { light: xmcpLightTheme, dark: xmcpAyuDarkTheme },
+          defaultColor: false,
           transformers: [
             {
               pre(node) {
@@ -36,14 +49,17 @@ function EditableTerminal({
             },
           ],
         });
-        setHighlightedCode(html);
+        if (!cancelled) setHighlightedCode(html);
       } catch (error) {
         console.error("Shiki highlighting failed:", error);
-        setHighlightedCode(`<pre><code>${code}</code></pre>`);
+        if (!cancelled) setHighlightedCode("");
       }
     };
 
     highlightCode();
+    return () => {
+      cancelled = true;
+    };
   }, [code]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -54,59 +70,44 @@ function EditableTerminal({
       const end = textarea.selectionEnd;
 
       const newValue = code.substring(0, start) + "  " + code.substring(end);
+      pendingSelection.current = start + 2;
       onCodeChange(newValue);
-
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-      }, 0);
     }
   };
 
   return (
-    <div id="terminal-output" className="mb-4">
+    <div id="terminal-output" className="w-full min-w-0">
       <div
         className={cn(
-          "border relative bg-black min-w-[600px] overflow-hidden",
+          "terminal-playground-editor relative w-full min-w-0 overflow-hidden",
           className
         )}
-        style={{ borderColor: "#333" }}
       >
         <textarea
           ref={textareaRef}
           value={code}
           onChange={(e) => onCodeChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="absolute inset-0 w-full h-full p-4 font-mono text-sm bg-transparent text-transparent caret-white resize-none focus:outline-none z-10"
+          className="terminal-playground-code absolute inset-0 w-full h-full p-4 bg-transparent text-transparent resize-none focus:outline-none z-10"
+          aria-label="TypeScript code"
           placeholder=""
           spellCheck={false}
-          style={{
-            lineHeight: "24px",
-            fontSize: "14px",
-            fontFamily:
-              "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
-            whiteSpace: "pre",
-            wordWrap: "break-word",
-            tabSize: 2,
-          }}
         />
 
         <div
-          className="p-4 pointer-events-none [&_.shiki-pre]:!bg-transparent [&_.shiki-pre]:!p-0 [&_.shiki-pre]:!m-0 [&_.shiki-code]:!font-mono [&_.shiki-code]:!text-sm"
+          className="terminal-playground-code p-4 pointer-events-none [&_.shiki-pre]:!bg-transparent [&_.shiki-pre]:!p-0 [&_.shiki-pre]:!m-0"
           style={{
-            whiteSpace: "pre",
+            whiteSpace: "pre-wrap",
             wordWrap: "break-word",
           }}
         >
-          <div
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
-            style={{
-              lineHeight: "24px",
-              fontSize: "14px",
-              fontFamily:
-                "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace",
-              tabSize: 2,
-            }}
-          />
+          <div>
+            {highlightedCode ? (
+              <div dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+            ) : (
+              code
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -149,20 +150,20 @@ server.listen(3000, () => {
   };
 
   return (
-    <main id="main-content" className="min-h-screen bg-transparent py-12">
-      <h1 className="sr-only">Terminal playground</h1>
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex flex-col gap-8 max-w-none">
-          <div className="flex justify-center">
+    <main id="main-content" className="site-page-grid site-page-stack">
+      <header className="site-stack">
+        <h1 className="display">Terminal playground</h1>
+        <p>Edit a TypeScript snippet and save it as an image.</p>
+      </header>
+      <div className="site-stack">
+        <div className="site-stack">
+          <div className="min-w-0">
             <EditableTerminal code={code} onCodeChange={setCode} />
           </div>
 
-          <button
-            onClick={downloadAsImage}
-            className="w-[200px] mx-auto bg-white text-black py-3 px-4 font-medium hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm uppercase"
-          >
-            Download as Image
-          </button>
+          <Button onClick={downloadAsImage} className="self-start">
+            Download image
+          </Button>
         </div>
       </div>
     </main>

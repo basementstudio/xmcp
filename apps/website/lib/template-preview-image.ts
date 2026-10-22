@@ -20,6 +20,7 @@ const PROVIDER_FALLBACKS: Record<string, string> = {
   react: "/templates/react.svg",
   scalekit: "/templates/scalekit.svg",
   tailwind: "/templates/tailwind.svg",
+  typescript: "/templates/typescript.svg",
   workos: "/templates/workos.svg",
 };
 
@@ -82,4 +83,19 @@ export function resolveTemplatePreviewImage({
     isFallback: true,
     isNextJsFallback: fallbackSrc === NEXTJS_FALLBACK_SRC,
   };
+}
+
+/** Keep arbitrary template-hosted images working without broadening the optimizer allowlist. */
+export function shouldBypassImageOptimization(src: string): boolean {
+  if (/\.svg(?:[?#]|$)/i.test(src)) return true;
+  if (src.startsWith("/") && !src.startsWith("//")) return false;
+  try {
+    const url = new URL(src);
+    return ![
+      "raw.githubusercontent.com",
+      "avatars.githubusercontent.com",
+    ].includes(url.hostname);
+  } catch {
+    return true;
+  }
 }

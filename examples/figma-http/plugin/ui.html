@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { margin: 20px; font: 13px/1.5 system-ui, sans-serif; color: var(--figma-color-text, #222); background: var(--figma-color-bg, #fff); }
+      h1 { font-size: 16px; margin: 0 0 8px; }
+      label, input { display: block; }
+      input { box-sizing: border-box; width: 100%; padding: 8px; margin: 6px 0 12px; }
+      button { padding: 7px 12px; cursor: pointer; }
+      #status { overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>
+    <h1>xmcp · Figma</h1>
+    <p>Connect this page to your local xmcp server. Connected clients can create and edit design nodes.</p>
+    <form id="connect-form">
+      <label for="key">Plugin secret (FIGMA_BRIDGE_KEY)</label>
+      <input id="key" type="password" required autocomplete="off" />
+      <button id="connect" type="submit">Connect</button>
+      <button id="disconnect" type="button" disabled>Disconnect</button>
+    </form>
+    <p id="status" role="status">Start the local server, then connect.</p>
+    <script>
+      const endpoint = "http://127.0.0.1:3001/figma";
+      const status = document.getElementById("status");
+      const connect = document.getElementById("connect");
+      const disconnect = document.getElementById("disconnect");
+      let controller;
+      let context;
+      let pending;
+
+      function stop(message) {
+        controller?.abort();
+        status.textContent = message;
+      }
+      window.onmessage = (event) => {
+        if (event.source !== parent) return;
+        const message = event.data.pluginMessage;
+        if (message?.type === "context") context = message.info;
+        if (message?.type === "page-changed") {
+          stop("Page changed. Reconnect to work on the new page.");
+          parent.postMessage({ pluginMessage: { type: "context" } }, "*");
+        }
+        if (message?.type === "result" && pending?.id === message.id) pending.resolve(message.result);
+      };
+      parent.postMessage({ pluginMessage: { type: "context" } }, "*");
+      disconnect.onclick = () => stop("Disconnected. A command already executing may still complete.");
+      window.addEventListener("pagehide", () => controller?.abort());
+
+      document.getElementById("connect-form").onsubmit = async (event) => {
+        event.preventDefault();
+        if (!context || controller) return;
+        controller = new AbortController();
+        const signal = controller.signal;
+        const info = { ...context, sessionId: crypto.randomUUID() };
+        const headers = { "Content-Type": "application/json", "x-figma-bridge-key": document.getElementById("key").value };
+        connect.disabled = true;
+        disconnect.disabled = false;
+        const request = async (path, body) => {
+          const response = await fetch(`${endpoint}/${path}`, { method: "POST", headers, body: JSON.stringify(body), signal });
+          if (!response.ok) throw new Error(`Bridge returned HTTP ${response.status}. Check the key and whether another plugin is connected.`);
+          return response;
+        };
+        try {
+          while (!signal.aborted) {
+            status.textContent = `Connecting / waiting: ${info.documentName} · ${info.pageName}. Use figma-status to confirm readiness.`;
+            const response = await request("poll", info);
+            if (response.status === 204) continue;
+            const command = await response.json();
+            status.textContent = `Running ${command.operation}…`;
+            const result = await new Promise((resolve, reject) => {
+              const abort = () => { pending = undefined; reject(new Error("Disconnected")); };
+              pending = { id: command.id, resolve(value) { signal.removeEventListener("abort", abort); pending = undefined; resolve(value); } };
+              signal.addEventListener("abort", abort, { once: true });
+              if (signal.aborted) { abort(); return; }
+              parent.postMessage({ pluginMessage: { type: "command", command } }, "*");
+            });
+            await request("result", { sessionId: info.sessionId, id: command.id, result });
+          }
+        } catch (error) {
+          if (!signal.aborted) status.textContent = `${error.message} Reconnect manually; inspect the file before retrying a write.`;
+        } finally {
+          controller = undefined;
+          pending = undefined;
+          connect.disabled = false;
+          disconnect.disabled = true;
+        }
+      };
+    </script>
+  </body>
+</html>

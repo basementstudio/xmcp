@@ -5,7 +5,7 @@ import { compilerContext } from "./compiler-context";
 // this prevents the tools from being an async function that needs to resolve first, instead it just returns the array
 
 export function generateToolsExportCode(): string {
-  const { toolPaths } = compilerContext.getContext();
+  const { toolPaths, xmcpConfig } = compilerContext.getContext();
 
   const importStatements = Array.from(toolPaths)
     .map((p, index) => {
@@ -29,7 +29,9 @@ export function generateToolsExportCode(): string {
     })
     .join(",\n  ");
 
+  const inferSchemas = !!xmcpConfig?.experimental?.inferToolSchemas;
   return `import { z } from "zod";
+${inferSchemas ? 'import { withInferredSchema } from "./inferred-tools.js";' : ""}
 
 ${importStatements}
 
@@ -47,7 +49,7 @@ export async function getTools() {
 
   for (const toolData of toolsData) {
     const { path, name: defaultName, module } = toolData;
-    const { default: handler, metadata, schema, outputSchema } = module;
+    const { default: handler, metadata, schema, outputSchema } = ${inferSchemas ? "withInferredSchema(module, path)" : "module"};
 
     const toolConfig = {
       name: defaultName,

@@ -45,3 +45,6 @@ xmcp-adapter
 # xmcp
 .xmcp
 xmcp-env.d.ts
+
+# Build-time GitHub release snapshot
+/.generated/

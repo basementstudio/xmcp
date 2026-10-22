@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 import { forwardRef } from "react";
 import { track } from "@vercel/analytics";
 
-interface AnimatedLinkProps
-  extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
+interface AnimatedLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
   children: React.ReactNode;
   className?: string;
@@ -40,20 +39,15 @@ export const AnimatedLink = forwardRef<HTMLAnchorElement, AnimatedLinkProps>(
     return (
       <Link
         href={href}
+        // The homepage preloads WebGL assets; do not fetch them on unrelated pages.
+        prefetch={href === "/" ? false : undefined}
         ref={ref}
         {...props}
-        className={cn("relative group", className)}
+        className={cn("link-underline-group", className)}
+        data-active={isActive || undefined}
         onClick={handleClick}
       >
-        {children}
-        <div
-          className={cn(
-            "absolute bottom-0 left-0 right-0 h-px bg-white transition-transform duration-200 ease-out",
-            "scale-x-0 origin-right",
-            "group-hover:scale-x-100 group-hover:origin-left",
-            isActive && "scale-x-100 origin-left"
-          )}
-        />
+        <span className="link-underline-label">{children}</span>
       </Link>
     );
   }

@@ -1,0 +1,55 @@
+---
+title: "Profound"
+metadataTitle: "Usage with Profound | xmcp Documentation"
+publishedAt: "2026-10-22"
+summary: "Query Profound categories, visibility metrics, and citation reports from xmcp tools."
+description: "Build an authenticated xmcp integration with Profound's AI search analytics REST API."
+---
+
+Use Profound's REST API inside xmcp tools to bring AI search analytics into your workflows. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/profound-http) uses Node's built-in `fetch`, with read-only tools for category discovery, visibility, and domain citations.
+
+## Configure access
+
+Profound currently documents API keys as an [Enterprise feature](https://docs.tryprofound.com/rest-api/authentication). Create a personal key in **Settings → Account → API Keys**, then configure the server:
+
+```bash
+PROFOUND_API_KEY=your-profound-api-key
+MCP_API_KEY=your-separate-client-secret
+```
+
+The provider key follows its owner's organization memberships. Clients send the separate MCP secret in `x-api-key` on every request. The example forwards only the provider key to Profound using `X-API-Key`; it never asks clients to pass provider credentials as tool arguments.
+
+This is a shared account example for trusted clients. Organization filters select data but do not replace your application's authorization policy.
+
+## Available tools
+
+| Tool                        | Purpose                                                                                  |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| `list-profound-categories`  | Discover category IDs and their organizations, optionally filtered by `organizationIds`. |
+| `query-profound-visibility` | Query v2 visibility metrics, with optional exact `assets` names.                         |
+| `query-profound-citations`  | Query v2 domain citation metrics.                                                        |
+
+After discovery, call either report tool with:
+
+```json
+{
+  "categoryId": "your-category-uuid",
+  "dates": { "start": "2026-10-01", "end": "2026-10-07" },
+  "scope": "owned",
+  "limit": 10
+}
+```
+
+Choose dates where your category has data. Both tools default to owned assets/domains; use `scope: "all"` for broader comparisons. Add `groupBy: ["date"]` and `interval: "day"`, `"week"`, or `"month"` for a time series. Results are returned as JSON in text content, preserving the provider's `info` and `data` fields.
+
+## Pagination and dates
+
+Each report call fetches one page, with a maximum `limit` of 50. Pass `info.next_cursor` as `cursor` on the next call, keeping the remaining arguments unchanged. A null cursor ends pagination. The example does not silently fetch additional pages.
+
+The [v2 report API](https://docs.tryprofound.com/rest-api/reports/reports-v2-overview) uses inclusive date-only bounds in Profound's Eastern Time reporting calendar. The tools validate calendar dates and date order, then forward them unchanged. Metric values are also returned unchanged; see Profound's [visibility](https://docs.tryprofound.com/rest-api/reports/query-visibility-v2) and [citation](https://docs.tryprofound.com/rest-api/reports/query-citations-v2) definitions before interpreting them.
+
+## Errors and testing
+
+Missing or invalid MCP credentials return HTTP 401. Provider failures return `isError: true` with the HTTP status, without raw provider error bodies. Rate-limit responses include numeric `Retry-After` values when available. Provider requests have a 30-second timeout and no automatic retries.
+
+The example builds without credentials. Its tests mock provider requests, and a built-server smoke test verifies authentication and tool execution. Follow the [README](https://github.com/basementstudio/xmcp/tree/main/examples/profound-http#run) for setup and runnable category/report requests.

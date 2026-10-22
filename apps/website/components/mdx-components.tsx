@@ -1,3 +1,6 @@
+import { ContentTable } from "./markdown/table";
+import { ArticleCodeBlock } from "./codeblock";
+import { headingComponents } from "./markdown/headings";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import { TerminalPrompt } from "./terminal/terminal-prompt";
@@ -10,9 +13,21 @@ import { McpConnect } from "./mcp-connect";
 import { OAuthPlugins } from "./oauth-plugins";
 import { MonetizationPlugins } from "./monetization-plugins";
 
-export function getMDXComponents(components?: MDXComponents): MDXComponents {
+// Every article uses the same 700px column and 20px mobile gutters.
+const DOCS_IMAGE_SIZES = "(min-width: 740px) 700px, calc(100vw - 40px)";
+export const BLOG_IMAGE_SIZES = DOCS_IMAGE_SIZES;
+
+export function getMDXComponents(
+  components?: MDXComponents,
+  imageSizes = DOCS_IMAGE_SIZES
+): MDXComponents {
+  const MdxImage = defaultMdxComponents.img!;
   return {
     ...defaultMdxComponents,
+    ...headingComponents,
+    pre: ArticleCodeBlock,
+    table: ContentTable,
+    img: (props) => <MdxImage sizes={imageSizes} {...props} />,
     TerminalPrompt,
     TerminalTabs,
     ConceptBoxes,

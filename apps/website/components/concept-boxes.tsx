@@ -14,12 +14,12 @@ export function ConceptBox({ title, description, href }: ConceptBoxProps) {
       href={href}
       className={cn(
         "flex flex-col gap-2 p-4 !no-underline",
-        "border border-white/20 rounded-xs",
+        "border border-white/20 rounded-lg",
         "transition-colors duration-200 hover:!opacity-100 hover:border-white/40"
       )}
     >
-      <h3 className="text-base font-semibold text-brand-white !m-0">{title}</h3>
-      <p className="text-sm text-brand-neutral-200 !m-0">{description}</p>
+      <h3 className="site-card-title !m-0">{title}</h3>
+      <p className="site-card-description !m-0">{description}</p>
     </Link>
   );
 }

@@ -1,35 +1,41 @@
 import {
-  RspackOptions,
-  ProvidePlugin,
-  DefinePlugin,
   BannerPlugin,
-  NormalModuleReplacementPlugin,
+  DefinePlugin,
   IgnorePlugin,
+  NormalModuleReplacementPlugin,
   optimize,
+  ProvidePlugin,
   type ResolveAlias,
+  RspackOptions,
 } from "@rspack/core";
+import fs from "fs";
 import path from "path";
+import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
+
+import { compilerContext } from "@/compiler/compiler-context";
 import {
-  distOutputPath,
+  isFetchAdapter,
+  isVercelFunctionBuild,
+} from "@/compiler/runtime-target";
+import { XmcpConfigOutputSchema } from "@/runtime-config";
+import {
   adapterOutputPath,
   cloudflareOutputPath,
+  distOutputPath,
   runtimeFolderPath,
 } from "@/utils/constants";
-import { compilerContext } from "@/compiler/compiler-context";
-import { XmcpConfigOutputSchema } from "@/runtime-config";
+
 import { getEntries } from "./get-entries";
-import { isVercelFunctionBuild } from "@/compiler/runtime-target";
+import { getExternals } from "./get-externals";
 import { getInjectedVariables } from "./get-injected-variables";
-import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 import {
   CreateTypeDefinitionPlugin,
   EmitPackageJsonTypePlugin,
   InjectRuntimePlugin,
   readClientBundlesFromDisk,
 } from "./plugins";
-import { getExternals } from "./get-externals";
-import { TsCheckerRspackPlugin } from "ts-checker-rspack-plugin";
-import fs from "fs";
+import { SchemaInferencePlugin } from "./plugins/schema-inference";
+import { resolveTsconfigPathsToAlias } from "./resolve-tsconfig-paths";
 
 /** Reads the project's package.json "type" field to infer the output format */
 function projectPrefersEsm(projectFolder: string): boolean {
@@ -51,14 +57,15 @@ export function getRspackConfig(
   const { mode, platforms } = compilerContext.getContext();
 
   const isCloudflare = !!platforms.cloudflare;
-  // ESM output only applies to the plain node server builds: Cloudflare is
-  // already ESM, and adapter output is consumed by the host framework's
-  // own module pipeline.
+  const isFetch = isFetchAdapter(xmcpConfig);
+  // Plain Node servers follow the application module type. Fetch adapters and
+  // Workers always emit ESM so their host bundlers can follow named exports.
   const projectIsEsm = projectPrefersEsm(processFolder);
   const isEsmOutput =
     !isCloudflare && !xmcpConfig.experimental?.adapter && projectIsEsm;
-  // Nothing xmcp writes into .xmcp is strict ESM: the prebuilt runtimes are
-  // CommonJS bundles and the generated files are meant to be re-bundled. An
+  const emitModule = isCloudflare || isEsmOutput || isFetch;
+  // Existing Node runtimes are CommonJS, while the generated import registry
+  // uses ESM syntax. Parse both when the host app declares ESM. An
   // application package.json with "type": "module" would otherwise put the
   // whole folder under strict ESM parsing. Cloudflare is left alone: its
   // prebuilt worker is genuinely ESM and is its own entry.
@@ -72,17 +79,19 @@ export function getRspackConfig(
       }
     : {};
 
-  const outputPath = isCloudflare
-    ? cloudflareOutputPath
-    : xmcpConfig.experimental?.adapter
-      ? adapterOutputPath
-      : distOutputPath;
+  const outputPath =
+    isCloudflare && !isFetch
+      ? cloudflareOutputPath
+      : xmcpConfig.experimental?.adapter
+        ? adapterOutputPath
+        : distOutputPath;
 
-  const outputFilename = isCloudflare
-    ? "worker.js"
-    : xmcpConfig.experimental?.adapter
-      ? "index.js"
-      : "[name].js";
+  const outputFilename =
+    isCloudflare && !isFetch
+      ? "worker.js"
+      : xmcpConfig.experimental?.adapter
+        ? "index.js"
+        : "[name].js";
 
   const nodeBuiltins = [
     "assert",
@@ -143,12 +152,18 @@ export function getRspackConfig(
   const config: RspackOptions = {
     mode,
     watch: mode === "development",
-    devtool: mode === "development" ? "eval-cheap-module-source-map" : false,
+    // Workers reject eval(), and the host needs to process the adapter module.
+    devtool:
+      mode === "development"
+        ? isFetch
+          ? "source-map"
+          : "eval-cheap-module-source-map"
+        : false,
     output: {
       filename: outputFilename,
       path: outputPath,
       globalObject: "globalThis",
-      ...(isCloudflare || isEsmOutput
+      ...(emitModule
         ? {
             library: { type: "module" },
             chunkFormat: "module",
@@ -172,20 +187,26 @@ export function getRspackConfig(
       },
     },
     target: isCloudflare ? "webworker" : "node",
-    externals: isCloudflare
-      ? { async_hooks: "async_hooks" }
-      : getExternals(isEsmOutput),
+    externals:
+      isCloudflare && !isFetch
+        ? { async_hooks: "async_hooks" }
+        : getExternals(isEsmOutput),
     // The node externals preset emits require() for builtins even in module
     // output; disable it for ESM so getExternals handles builtins through
-    // externalsType node-commonjs (createRequire) instead.
-    ...(isEsmOutput
+    // externalsType node-commonjs (createRequire) instead. Fetch adapters keep
+    // native imports for Vite to resolve on either deployment target.
+    ...(isFetch
       ? {
-          externalsType: "node-commonjs" as const,
-          externalsPresets: { node: false },
+          externalsType: "module" as const,
+          externalsPresets: { node: false, web: false },
         }
-      : {}),
-    experiments:
-      isCloudflare || isEsmOutput ? { outputModule: true } : undefined,
+      : isEsmOutput
+        ? {
+            externalsType: "node-commonjs" as const,
+            externalsPresets: { node: false },
+          }
+        : {}),
+    experiments: emitModule ? { outputModule: true } : undefined,
     resolve: {
       // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
       // validator through the "workerd" exports condition.
@@ -224,10 +245,17 @@ export function getRspackConfig(
       // keep server bundles self-contained instead of emitting async chunks.
       new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
       new InjectRuntimePlugin(),
-      isEsmOutput ? new EmitPackageJsonTypePlugin("module") : null,
-      // Adapter output is CommonJS; pin it so host apps with
+      xmcpConfig.experimental?.inferToolSchemas
+        ? new SchemaInferencePlugin(
+            processFolder,
+            runtimeFolderPath,
+            () => compilerContext.getContext().toolPaths
+          )
+        : null,
+      isEsmOutput || isFetch ? new EmitPackageJsonTypePlugin("module") : null,
+      // Existing adapters emit CommonJS; pin them so host apps with
       // "type": "module" don't parse index.js as ESM.
-      xmcpConfig.experimental?.adapter
+      xmcpConfig.experimental?.adapter && !isFetch
         ? new EmitPackageJsonTypePlugin("commonjs")
         : null,
       new CreateTypeDefinitionPlugin(),

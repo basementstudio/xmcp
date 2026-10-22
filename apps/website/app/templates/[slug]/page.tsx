@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
-  fetchTemplateBySlug,
-  fetchTemplateReadme,
-  fetchTemplates,
-} from "@/app/templates/utils/github";
+  getTemplateBySlug,
+  getTemplateReadme,
+  getTemplates,
+} from "@/app/templates/utils/content";
 import {
   formatRepositoryLabel,
   humanizeMetadataName,
@@ -23,7 +23,10 @@ import { RelatedTemplates } from "@/components/templates/detail/related-items";
 import { TemplateReadmeContent } from "@/components/templates/detail/readme-content";
 import { TemplateDetailSidebar } from "@/components/templates/detail/sidebar";
 import { SITE_URL } from "@/lib/base-url";
-import { resolveTemplatePreviewImage } from "@/lib/template-preview-image";
+import {
+  resolveTemplatePreviewImage,
+  shouldBypassImageOptimization,
+} from "@/lib/template-preview-image";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBreadcrumbSchema,
@@ -39,7 +42,7 @@ type TemplateDetailPageProps = {
 };
 
 export async function generateStaticParams() {
-  const items = await fetchTemplates();
+  const items = getTemplates();
   return items.map((item) => ({ slug: item.slug }));
 }
 
@@ -47,7 +50,7 @@ export async function generateMetadata(
   props: TemplateDetailPageProps
 ): Promise<Metadata> {
   const params = await props.params;
-  const template = await fetchTemplateBySlug(params.slug);
+  const template = getTemplateBySlug(params.slug);
 
   if (!template) {
     return {
@@ -110,14 +113,14 @@ export default async function TemplateDetailPage(
   props: TemplateDetailPageProps
 ) {
   const params = await props.params;
-  const items = await fetchTemplates();
+  const items = getTemplates();
   const template = items.find((item) => item.slug === params.slug) ?? null;
 
   if (!template) {
     notFound();
   }
 
-  const readmeContent = await fetchTemplateReadme(template);
+  const readmeContent = getTemplateReadme(template);
   const moreTemplates = rankRelatedItems(template, items);
   const deployOptions = buildDeployOptions(template);
   const pageUrl = `${SITE_URL}/templates/${template.slug}`;
@@ -145,10 +148,7 @@ Add a README.md to this template to show content here.`;
   const bodyContent = stripLeadingHeading(readmeContent ?? fallbackReadme);
 
   return (
-    <main
-      id="main-content"
-      className="max-w-[1200px] w-full mx-auto px-4 py-12 md:py-16 space-y-10"
-    >
+    <main id="main-content" className="site-page-grid site-page-stack">
       <JsonLd
         data={[
           getBreadcrumbSchema(
@@ -179,50 +179,36 @@ Add a README.md to this template to show content here.`;
           demoUrl={template.demoUrl}
           replitUrl={template.replitUrl}
           deployOptions={deployOptions}
+          logo={
+            previewImage.isFallback
+              ? {
+                  src: previewImage.src,
+                  tinted: previewImage.src !== "/templates/fallback.svg",
+                }
+              : undefined
+          }
         />
 
-        <div className="relative w-full overflow-hidden rounded-xs border border-brand-neutral-500">
-          <div className="aspect-[16/8] relative">
-            {!previewImage.isFallback ? (
+        {/* Only real screenshots get a preview panel; provider logos sit beside
+            the title instead of filling a large empty frame. */}
+        {!previewImage.isFallback && (
+          <div className="relative w-full overflow-hidden rounded-lg border border-brand-neutral-500 bg-surface-raised">
+            <div className="relative aspect-[16/8]">
               <Image
                 src={previewImage.src}
                 alt={`${template.name} preview`}
+                unoptimized={shouldBypassImageOptimization(previewImage.src)}
                 fill
-                sizes="100vw"
+                sizes="(min-width: 740px) 700px, calc(100vw - 40px)"
                 className="object-cover"
-                priority
-              />
-            ) : (
-              <Image
-                src={previewImage.src}
-                alt={`${template.name} preview`}
-                fill
-                sizes="100vw"
-                unoptimized
-                className={
-                  previewImage.isNextJsFallback
-                    ? "object-contain [object-position:center_70%] scale-90"
-                    : "object-contain [object-position:center_70%]"
-                }
-                priority
-              />
-            )}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-90">
-              <Image
-                src="/textures/text5.png"
-                alt=""
-                aria-hidden
-                fill
-                sizes="100vw"
-                className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)] mix-blend-plus-lighter opacity-100"
-                priority={false}
+                preload
               />
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="site-stack">
         <TemplateDetailSidebar
           template={template}
           repositoryLabel={repositoryLabel}
@@ -232,7 +218,7 @@ Add a README.md to this template to show content here.`;
           xShareUrl={xShareUrl}
         />
 
-        <section className="lg:col-span-9 space-y-6 pl-8 border-l border-brand-neutral-500">
+        <section className="space-y-6 min-w-0">
           <TemplateReadmeContent source={bodyContent} />
         </section>
       </div>

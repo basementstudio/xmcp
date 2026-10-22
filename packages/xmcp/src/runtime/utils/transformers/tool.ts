@@ -93,7 +93,9 @@ function headersFromWebRequest(
   return headers;
 }
 
-function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
+export function resolveToolClientInfo(
+  ctx: ServerContext
+): ToolExtraArguments["clientInfo"] {
   // 2026-07-28 requests carry client identity in the per-request _meta
   // envelope; earlier eras fall back to the x-mcp-client-* headers or the
   // initialize handshake capture.
@@ -121,6 +123,11 @@ function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
     }
   }
 
+  return clientInfo;
+}
+
+function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
+  const clientInfo = resolveToolClientInfo(ctx);
   const requestHeaders = headersFromWebRequest(ctx.http?.req);
 
   return {

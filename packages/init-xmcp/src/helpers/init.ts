@@ -1,3 +1,10 @@
+import {
+  assertFetchRouteAvailable,
+  createFetchRoute,
+  getFetchRoute,
+  isFetchFramework,
+  isRoutedFetchFramework,
+} from "./create-fetch-route.js";
 import { generateConfig } from "./generate-config.js";
 import { install } from "./install.js";
 import { updatePackageJson } from "./update-package.js";
@@ -10,7 +17,14 @@ import { createPrompt } from "./create-prompt.js";
 import { createResources } from "./create-resources.js";
 import { createNestJsModule } from "./create-nestjs-module.js";
 
+import {
+  assertTanstackRouteAvailable,
+  createTanstackRoute,
+  getTanstackRoute,
+} from "./create-tanstack-route.js";
+
 interface InitOptions {
+  cloudflare?: boolean;
   projectRoot: string;
   framework: Framework;
   toolsPath: string | undefined;
@@ -31,15 +45,37 @@ export async function init(options: InitOptions) {
     routePath,
     packageManager,
     version,
+    cloudflare,
   } = options;
 
-  generateConfig(projectRoot, framework, toolsPath, promptsPath, resourcesPath);
+  if (framework === "tanstack" && routePath) {
+    assertTanstackRouteAvailable(projectRoot, routePath);
+  }
+  const hasFetchRoute = isRoutedFetchFramework(framework);
+  if (hasFetchRoute && routePath) {
+    assertFetchRouteAvailable(projectRoot, framework, routePath);
+  }
+  const endpoint =
+    framework === "tanstack" && routePath
+      ? getTanstackRoute(projectRoot, routePath).endpoint
+      : hasFetchRoute && routePath
+        ? getFetchRoute(projectRoot, framework, routePath).endpoint
+        : undefined;
+  generateConfig(
+    projectRoot,
+    framework,
+    toolsPath,
+    promptsPath,
+    resourcesPath,
+    endpoint
+  );
 
   await install(projectRoot, packageManager, version);
 
-  updatePackageJson(projectRoot);
+  updatePackageJson(projectRoot, { framework, cloudflare });
 
-  updateTsConfig(projectRoot);
+  // Fetch routes use relative imports. Preserve host-generated paths and includes.
+  if (!isFetchFramework(framework)) updateTsConfig(projectRoot);
 
   updateGitignore(projectRoot);
 
@@ -57,6 +93,14 @@ export async function init(options: InitOptions) {
 
   if (framework === "nextjs" && routePath) {
     createRoute(projectRoot, routePath);
+  }
+
+  if (framework === "tanstack" && routePath) {
+    createTanstackRoute(projectRoot, routePath);
+  }
+
+  if (hasFetchRoute && routePath) {
+    createFetchRoute(projectRoot, framework, routePath);
   }
 
   if (framework === "nestjs") {

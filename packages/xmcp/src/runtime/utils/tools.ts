@@ -1,14 +1,20 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
-import { ToolFile } from "./server";
-import { rawShapeToStandardSchema, RawShape } from "./schema-compat";
+
+import { getX402Registry, isPaidHandler } from "@/plugins/x402";
+import type { McpMiddleware } from "@/types/mcp-middleware";
 import { ToolMetadata } from "@/types/tool";
-import { transformToolHandler } from "./transformers/tool";
-import { isReactFile } from "./react";
+
+import { toMcpMetadata } from "./component-metadata";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { wrapToolWithMiddleware } from "./mcp-middleware";
+import { isReactFile } from "./react";
+import { RawShape, rawShapeToStandardSchema } from "./schema-compat";
+import { ToolFile } from "./server";
+import type { McpToolHandler } from "./transformers/tool";
+import { transformToolHandler } from "./transformers/tool";
 import { flattenMeta, hasUIMeta } from "./ui/flatten-meta";
 import { splitUIMetaNested } from "./ui/split-meta";
-import { isPaidHandler, getX402Registry } from "@/plugins/x402";
 
 /** Validates if a value is a valid Zod schema object */
 export function isZodRawShape(value: unknown): value is ZodRawShape {
@@ -43,7 +49,8 @@ export function ensureAnnotations(
 /** Loads tools and injects them into the server */
 export function addToolsToServer(
   server: McpServer,
-  toolModules: Map<string, ToolFile>
+  toolModules: Map<string, ToolFile>,
+  middleware: readonly McpMiddleware[] = []
 ): McpServer {
   toolModules.forEach((toolModule, path) => {
     const defaultName = pathToName(path);
@@ -58,6 +65,8 @@ export function addToolsToServer(
     if (typeof metadata === "object" && metadata !== null) {
       Object.assign(toolConfig, metadata);
     }
+
+    if (toolConfig.enabled === false) return;
 
     // Register paid tools in x402 registry if plugin is installed
     if (isPaidHandler(handler)) {
@@ -91,9 +100,7 @@ export function addToolsToServer(
     // Make sure tools has annotations with a title
     ensureAnnotations(toolConfig);
 
-    if (toolConfig._meta === undefined) {
-      toolConfig._meta = {};
-    }
+    toolConfig._meta = { ...toMcpMetadata(toolConfig)._meta };
 
     const isReact = isReactFile(path);
 
@@ -170,13 +177,25 @@ export function addToolsToServer(
           })
         : undefined,
       annotations: toolConfig.annotations,
+      icons: toolConfig.icons,
       _meta: flattenedToolMeta, // Use flattened metadata for MCP protocol
     };
 
     server.registerTool(
       toolConfig.name,
       toolConfigFormatted,
-      transformedHandler as never
+      wrapToolWithMiddleware(
+        transformedHandler as McpToolHandler,
+        {
+          name: toolConfig.name,
+          description: toolConfigFormatted.description,
+          annotations: toolConfigFormatted.annotations,
+          icons: toolConfigFormatted.icons,
+          tags: toolConfig.tags,
+          _meta: toolConfigFormatted._meta,
+        },
+        middleware
+      ) as never
     );
   });
 

@@ -1,0 +1,8 @@
+node_modules/
+.xmcp/
+.svelte-kit/
+.wrangler/
+dist/
+build/
+xmcp-env.d.ts
+.dev.vars

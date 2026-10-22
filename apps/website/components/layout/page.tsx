@@ -1,15 +1,12 @@
 "use client";
 
 import { type ComponentProps, type ReactNode, useMemo } from "react";
-import {
-  AnchorProvider,
-  type TOCItemType,
-  useActiveAnchors,
-} from "fumadocs-core/toc";
+import { AnchorProvider, type TOCItemType } from "fumadocs-core/toc";
 import { cn } from "../../lib/cn";
 import { useTreeContext } from "fumadocs-ui/contexts/tree";
 import { usePathname } from "fumadocs-core/framework";
 import type * as PageTree from "fumadocs-core/page-tree";
+import { TableOfContents } from "./table-of-contents";
 import { NavigationLink } from "./navigation-link";
 
 export interface DocsPageProps {
@@ -22,27 +19,18 @@ export interface DocsPageProps {
 export function DocsPage({ toc = [], pageActions, ...props }: DocsPageProps) {
   return (
     <AnchorProvider toc={toc}>
-      <article className="flex w-full min-w-0 flex-col max-w-[860px] h-full mt-8">
-        <div className="flex flex-1 flex-col w-full max-w-[860px] gap-6 px-4 py-8 pt-0 md:px-8 md:mx-auto">
+      <article className="site-article">
+        <div className="site-article-content">
           {props.children}
           <Footer />
         </div>
       </article>
       {(toc.length > 0 || pageActions) && (
-        <div className="sticky top-34 w-[286px] shrink-0 h-[calc(100dvh-96px)] p-4 pt-0 overflow-auto max-xl:hidden mt-8">
-          {toc.length > 0 && (
-            <>
-              <p className="text-sm text-brand-white mb-2 font-medium">
-                On this page
-              </p>
-              <div className="flex flex-col pb-4 border-b border-white/20 max-h-2/3 overflow-y-auto sidebar-scrollbar">
-                {toc.map((item) => (
-                  <TocItem key={item.url} item={item} />
-                ))}
-              </div>
-            </>
+        <div className="site-page-toc docs-toc">
+          {toc.length > 0 && <TableOfContents toc={toc} />}
+          {pageActions && (
+            <div className="site-page-actions">{pageActions}</div>
           )}
-          {pageActions && <div className="mt-4">{pageActions}</div>}
         </div>
       )}
     </AnchorProvider>
@@ -62,10 +50,7 @@ export function DocsDescription(props: ComponentProps<"p">) {
   if (props.children === undefined) return null;
 
   return (
-    <p
-      {...props}
-      className={cn("text-lg text-brand-neutral-50 pb-4", props.className)}
-    >
+    <p {...props} className={cn("site-description", props.className)}>
       {props.children}
     </p>
   );
@@ -73,31 +58,9 @@ export function DocsDescription(props: ComponentProps<"p">) {
 
 export function DocsTitle(props: ComponentProps<"h1">) {
   return (
-    <h1
-      {...props}
-      className={cn("text-3xl font-medium text-white", props.className)}
-    >
+    <h1 {...props} className={cn("site-page-title", props.className)}>
       {props.children}
     </h1>
-  );
-}
-
-function TocItem({ item }: { item: TOCItemType }) {
-  const isActive = useActiveAnchors().includes(item.url.slice(1));
-
-  return (
-    <a
-      href={item.url}
-      className={cn(
-        "text-sm text-brand-neutral-100 py-1",
-        isActive && "text-brand-white font-medium"
-      )}
-      style={{
-        paddingLeft: Math.max(0, item.depth - 2) * 16,
-      }}
-    >
-      {item.title}
-    </a>
   );
 }
 
@@ -132,7 +95,7 @@ function Footer() {
   }, [flatten, pathname]);
 
   return (
-    <div className="flex flex-row justify-between gap-4 items-stretch mt-8">
+    <div className="site-card-grid mt-8">
       {previous ? (
         <NavigationLink item={previous} direction="previous" />
       ) : (

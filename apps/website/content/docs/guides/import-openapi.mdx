@@ -1,0 +1,99 @@
+---
+title: "Import an OpenAPI API"
+metadataTitle: "Import OpenAPI | xmcp Documentation"
+publishedAt: "2026-10-08"
+summary: "Generate xmcp GET tools from an OpenAPI 3.0 or 3.1 JSON document."
+description: "Import selected GET operations with validated path and query parameters into ordinary xmcp tool files."
+---
+
+Generate tools from a local OpenAPI JSON file:
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json
+```
+
+The command writes one TypeScript file per GET operation into `src/tools`.
+Each file exports a Zod schema, tool metadata, and a handler using `fetch`.
+Build and run your project as usual; no importer runtime or wrapper is needed.
+
+## Select operations and the API URL
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json --operations getPet,listPets --out src/tools/pets
+```
+
+`--operations` accepts comma-separated, case-sensitive `operationId` values.
+Without this flag, all GET operations are selected; other methods are skipped.
+For an operation without an ID, use its method and path, for example
+`--operations 'GET /pets/{id}'`. Unknown selectors and explicitly selected
+non-GET operations fail.
+
+Tool names and filenames use the existing filename normalization: lowercase,
+with punctuation replaced by hyphens. For example, `get-pet` produces
+`get-pet.ts`; an operation without an ID at `GET /pets/{id}` produces
+`get-pets-id.ts`. Collisions fail instead of silently replacing a tool.
+
+The API URL comes from the first server declared on the operation, path, or
+document, in that order. Override it when the spec uses a relative URL, server
+variables, or another deployment:
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json --base-url https://api.example.com/v1
+```
+
+The base path is retained: `/pets/{id}` becomes `/v1/pets/{id}` in this example.
+The URL must be absolute HTTP(S), without embedded credentials, query, or fragment.
+The importer reads the local document; it does not fetch specs, references, or API data.
+
+## Supported inputs
+
+- OpenAPI 3.0.x and 3.1.x JSON documents.
+- GET operations without request bodies or authentication requirements.
+- Required scalar path parameters using `simple` serialization.
+- Required or optional scalar query parameters and arrays of scalars using `form`
+  serialization. Arrays support both repeated keys (`explode: true`, the default)
+  and comma-separated values (`explode: false`).
+- String, number, integer, and boolean schemas; scalar enums; numeric bounds and
+  `multipleOf`; string length and pattern constraints; array length constraints.
+- Numeric formats `int32`, `int64`, `float`, and `double`. Integer inputs use
+  JavaScript's safe integer range; `int32` adds its narrower bounds.
+- Local `#/...` references for parameter and schema definitions, including JSON
+  Pointer escaping. Recursive and external references are rejected.
+- Path-level parameters, with operation-level overrides by name and location.
+
+Path and query values are percent-encoded separately. Optional values are omitted
+only when absent, so `0` and `false` are sent correctly. Array separators stay
+distinct from encoded commas inside values. Path values `.` and `..` are rejected
+because URL normalization would change the target route.
+
+Input names become top-level tool arguments. A name shared by a path parameter
+and a query parameter is rejected. Schema descriptions are preserved; annotations
+such as examples and defaults do not supply runtime values. Omitted query
+parameters let the API apply its own defaults.
+
+This subset follows the [OpenAPI parameter serialization rules](https://spec.openapis.org/oas/v3.0.4.html#parameter-object).
+The importer rejects unsupported selected inputs rather than weakening their
+schemas. These include object/nested-array inputs, unions, nullable inputs,
+unsupported formats or schema keywords, header/cookie parameters, custom styles,
+`allowReserved`, and `allowEmptyValue`. Request bodies, credentials, callbacks,
+path-item references, and custom schema dialects are also unsupported.
+
+Use `--operations` to import supported operations from a larger document.
+Response schemas are not converted or validated. Generated handlers return the
+response body as MCP text, including JSON text, and throw a tool error for
+non-success HTTP statuses. The MCP request's cancellation signal is forwarded
+to `fetch`.
+
+## Review and build the generated files
+
+Every selected operation and destination is checked before files are created.
+Existing `.ts` or `.tsx` tools are never overwritten. Use another output directory
+to regenerate, compare the files, and apply the changes you want.
+
+```sh
+npx @xmcp-dev/cli import-openapi ./openapi.json --out generated-preview
+pnpm build
+```
+
+The [OpenAPI import example](https://github.com/basementstudio/xmcp/tree/main/examples/openapi-import)
+includes a small spec, its generated tool, and a local API that runs without credentials.

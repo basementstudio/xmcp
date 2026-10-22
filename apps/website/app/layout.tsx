@@ -1,12 +1,13 @@
 import "./globals.css";
+import { PersistentHero } from "@/components/home/hero/persistent-hero";
 import { Analytics } from "@vercel/analytics/next";
-import { Toolbar } from "basehub/next-toolbar";
 import { Footer } from "../components/layout/footer";
 import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, EB_Garamond } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,14 +15,25 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/seo/json-ld";
 import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
-import {
-  getOrganizationSchema,
-  getWebSiteSchema,
-} from "@/lib/structured-data";
+import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
 
-const geistSans = Geist({
+const siteSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const siteDisplay = localFont({
+  src: "./fonts/Adhesion-Regular.woff2",
+  variable: "--font-display",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+});
+
+const siteSerif = EB_Garamond({
+  variable: "--font-editorial-serif",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -102,13 +114,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // RootProvider's next-themes script sets theme attributes before hydration.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#000000" />
+        <meta
+          name="theme-color"
+          content="#fdfdfc"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#000000"
+          media="(prefers-color-scheme: dark)"
+        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
+        className={`${siteSans.variable} ${siteDisplay.variable} ${siteSerif.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <a
           href="#main-content"
@@ -120,6 +142,7 @@ export default function RootLayout({
           data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />
         <RootProvider
+          theme={{ defaultTheme: "system", enableSystem: true }}
           search={{
             SearchDialog: DefaultSearchDialog,
             options: {
@@ -134,13 +157,14 @@ export default function RootLayout({
             },
           }}
         >
-          <Header />
-          {children}
-          <Prefooter />
-          <Footer />
-          <Toaster />
+          <PersistentHero>
+            <Header />
+            {children}
+            <Prefooter />
+            <Footer />
+            <Toaster />
+          </PersistentHero>
         </RootProvider>
-        <Toolbar />
         <WebMCPProvider />
         <Analytics />
         <SpeedInsights />

@@ -1,0 +1,35 @@
+---
+title: "Sentry"
+metadataTitle: "Sentry | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Sentry integration for xmcp servers."
+description: "Configure Sentry with xmcp middleware and runnable examples."
+---
+
+Trace tool calls, prompt retrieval, and resource reads through one MCP middleware. `@xmcp-dev/sentry` uses your initialized Sentry Node SDK and isolates tags between concurrent operations.
+
+```sh
+pnpm add @xmcp-dev/sentry @sentry/node
+```
+
+```ts title="src/middleware.ts"
+import * as Sentry from "@sentry/node";
+import { sentryMiddleware } from "@xmcp-dev/sentry";
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 0.1,
+  defaultIntegrations: false,
+});
+export const mcp = sentryMiddleware({ sentry: Sentry });
+```
+
+This is manual instrumentation and works in xmcp's bundled HTTP and STDIO servers. If your application already initializes Sentry, pass that same SDK instance and retain its configuration. For automatic instrumentation of other libraries, follow [Sentry's initialization guidance](https://docs.sentry.io/platforms/javascript/guides/node/) before starting the server; do not also instrument these MCP operations with Sentry's MCP wrapper, which would produce duplicate spans.
+
+Each execution round produces a `mcp.server` span with the MCP method and `xmcp.outcome`: success, error, cancellation, or input required. Returned `isError` results create a generic error event; thrown exceptions are captured with their original stack. Cancellation and intermediate input-required results do not create error events. Discovery bypasses instrumentation. Register Sentry first in the `mcp` array to include application middleware denials.
+
+The middleware adds no arguments, results, request headers, user identity, or resource URIs. Original exceptions can contain sensitive messages or stack data: configure Sentry's `beforeSend` and application error handling to scrub those where needed. Other Sentry integrations and settings can collect additional data independently.
+
+Telemetry failures preserve the original operation result or exception and never execute the handler again. Delivery uses the application's Sentry SDK buffer. On serverless hosts, arrange for `Sentry.flush()` through the platform's request-lifetime hook; on shutdown flush before exiting. The middleware does not flush the shared buffer per tool call.
+
+See the [runnable Sentry example](https://github.com/basementstudio/xmcp/tree/main/examples/sentry-http).

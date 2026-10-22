@@ -1,0 +1,118 @@
+---
+title: "Nuxt"
+metadataTitle: "Usage with Nuxt | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Serve MCP tools, prompts, and resources from Nuxt on Node.js or Cloudflare Workers."
+description: "Integrate xmcp’s stateless Fetch handler with Nuxt, including automatic setup and deployment."
+---
+
+The Nuxt adapter serves MCP inside your existing application. It generates `.xmcp/adapter/index.js`, an ESM module exporting `xmcpHandler(request, options?)`, which returns a standard `Response`.
+
+## Automatic setup
+
+Inside your existing TypeScript Nuxt app:
+
+```bash
+npx init-xmcp@latest --yes
+```
+
+Initialization creates `xmcp.config.ts`, sample tools, prompts, and resources, and `server/routes/mcp.ts`. It prepends adapter builds to existing host scripts and preserves your TypeScript and hosting configuration. Use `--route-path server/routes/api` to choose a different route directory, or `--skip-route` to integrate the handler yourself. Existing route files are preserved and reported as conflicts before configuration changes. The component flags `--skip-tools`, `--skip-prompts`, and `--skip-resources` work independently.
+
+The default endpoint is `/mcp`. `--route-path server/routes/api` creates `/api/mcp`; `--route-path server/api` also creates `/api/mcp`. Custom server roots may require adjusting `http.endpoint` to the public URL. Nuxt's generated server auto-imports provide `defineEventHandler` and `toWebRequest`.
+
+Add the following to your existing `nuxt.config.ts`. Nitro must bundle the generated adapter during development so it can resolve and watch the adapter’s application imports:
+
+```typescript title="nuxt.config.ts"
+export default defineNuxtConfig({
+  nitro: {
+    externals: { inline: [/\.xmcp\//] },
+  },
+});
+```
+
+Keep any existing inline entries. The initializer prints this step and leaves your Nuxt configuration intact. The same setting is required for manual setup below.
+
+Workers mode is inferred from `wrangler` or `@cloudflare/vite-plugin`. You can select it explicitly with `npx init-xmcp@latest --cf`. If multiple hosting targets are installed, check the generated scripts and remove `--cf` for Node builds. Initialization configures xmcp’s build only; retain your framework’s deployment setup.
+
+## Manual setup
+
+```bash
+pnpm add xmcp zod
+pnpm add -D @xmcp-dev/compiler
+```
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: { endpoint: "/mcp" },
+  experimental: { adapter: "nuxt" },
+  paths: { tools: "./src/tools", prompts: false, resources: false },
+  // The host build checks application types after the adapter exists.
+  typescript: { skipTypeCheck: true },
+};
+export default config;
+```
+
+Set discovery paths for prompts and resources to directories when you need them. Add a tool like the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-nuxt), then run `pnpm exec xmcp build` before importing the adapter.
+
+```typescript title="server/routes/mcp.ts"
+import { xmcpHandler } from "../../.xmcp/adapter/index.js";
+
+export default defineEventHandler((event) => xmcpHandler(toWebRequest(event)));
+```
+
+The relative import preserves your existing aliases. Adjust it if you move the route. Import the adapter only in server modules. See [Nuxt's routing documentation](https://nuxt.com/docs/4.x/directory-structure/server) for the host route conventions.
+
+## Development and Node builds
+
+```json
+{
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & nuxt dev)",
+    "build": "xmcp build && nuxt build"
+  }
+}
+```
+
+The initial adapter build must finish before the host loads your routes. During development, xmcp updates discovery when handler files are added or removed, while the host processes their application imports. Keep `.xmcp/` ignored by Git and retain your host’s type-check command in CI. `skipTypeCheck` only disables xmcp’s separate check.
+
+The example uses Nuxt 4 with Nitro 2. Its Node build starts with `node .output/server/index.mjs`. Keep tools and their dependencies on the server; importing Vue application composables into Nitro handlers is not supported by Nuxt.
+
+## Cloudflare Workers
+
+Use Nitro’s `cloudflare_module` preset for your host build, and `--cf` for xmcp:
+
+```bash
+pnpm exec xmcp build --cf
+NITRO_PRESET=cloudflare_module pnpm exec nuxt build
+pnpm exec wrangler dev
+```
+
+Set Wrangler’s entry to `.output/server/index.mjs`, its assets directory to `.output/public`, and enable `nodejs_compat`. The [example](https://github.com/basementstudio/xmcp/tree/main/examples/with-nuxt) includes the full configuration and `build:cf`, `preview:cf`, and `deploy:cf` scripts. Nuxt development runs in Node; validate the production bundle locally in workerd before deployment. See [Nitro’s Cloudflare guide](https://nitro.build/deploy/providers/cloudflare).
+
+In adapter mode, `xmcp build --cf` emits an importable Workers runtime in `.xmcp/adapter`. It does not generate a standalone Worker or overwrite your Wrangler configuration. Your tools and their dependencies must also support Workers. Stop development processes before changing targets because both targets share the adapter output directory.
+
+## Authentication and CORS
+
+Verify credentials in Nuxt’s Nitro server middleware. Once verified, pass MCP authentication information to the adapter:
+
+```typescript
+return xmcpHandler(request, {
+  authInfo: {
+    token: verifiedToken,
+    clientId: verifiedClientId,
+    scopes: verifiedScopes,
+  },
+});
+```
+
+These variables come from your application’s authentication step. The option forwards verified data to MCP handlers as `extra.authInfo`; it does not validate tokens. Reject unauthorized requests before invoking xmcp.
+
+Handle browser CORS and `OPTIONS` in the host, including the MCP headers required by your clients. Return the adapter’s `Response` directly to preserve streaming. Do not consume the original request body in earlier middleware.
+
+## Stateless requests
+
+Every request receives a fresh MCP server and isolated request context. No initialization state or identity is cached across requests. Clients must repeat authentication and client metadata on each request, using modern protocol metadata or the legacy `x-mcp-client-name` and `x-mcp-client-version` headers.
+
+Protocol validation and method handling remain with the SDK. Forwarding GET and DELETE does not enable persistent sessions.

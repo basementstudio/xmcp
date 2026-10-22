@@ -1,0 +1,60 @@
+---
+title: "Coinbase"
+metadataTitle: "Coinbase | xmcp Documentation"
+publishedAt: "2026-10-05"
+summary: "Coinbase agent payments integration for xmcp servers."
+description: "Configure Coinbase agent payments with xmcp middleware and runnable examples."
+---
+
+Accept x402 payments for selected MCP tools and let a Coinbase-managed agent wallet buy those calls. `@xmcp-dev/coinbase` registers paid tool names centrally through HTTP middleware; tools keep ordinary xmcp handlers.
+
+```sh
+pnpm add @xmcp-dev/coinbase @x402/express @x402/core @x402/evm @coinbase/cdp-sdk
+```
+
+```ts title="src/middleware.ts"
+import { coinbasePayments } from "@xmcp-dev/coinbase";
+import { x402ResourceServer } from "@x402/core/server";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { createCdpFacilitatorClient } from "@coinbase/cdp-sdk/x402";
+
+const server = new x402ResourceServer(createCdpFacilitatorClient()).register(
+  "eip155:84532",
+  new ExactEvmScheme()
+);
+
+export default coinbasePayments({
+  server,
+  tools: {
+    report: {
+      accepts: {
+        scheme: "exact",
+        network: "eip155:84532",
+        payTo: process.env.PAY_TO!,
+        price: "$0.01",
+        extra: { paymentFlow: "upfront" },
+      },
+      description: "Generate a report",
+      mimeType: "application/json",
+    },
+  },
+});
+```
+
+The network is Base Sepolia testnet. Set CDP API credentials and a receiving wallet address. The seller does not need a private key for that receiving address. The [example](https://github.com/basementstudio/xmcp/tree/main/examples/coinbase-http) initializes lazily so its build needs no credentials.
+
+Only `tools/call` requests for named paid tools enter the x402 payment middleware. Initialize, discovery, and unlisted tools are free. Batches are rejected to prevent one payment authorizing multiple operations. This integration runs before tool schema validation, so include only stable, well-defined tool routes in your paid map.
+
+## Give an agent a wallet and spending limits
+
+The example buyer uses `CdpX402Client` with a named managed wallet. Its payment-aware fetch is passed to an MCP HTTP client. It accepts only the configured recipient, Base Sepolia, and testnet USDC, with a maximum of 0.01 USDC per payment and 0.05 USDC over 24 hours. It refuses redirects and only calls the fixed demo MCP endpoint. Wallet secrets stay in environment variables; only public wallet addresses are printed.
+
+Run the example's address command to provision/retrieve the managed wallet, fund it yourself with testnet USDC, then run the buyer. No funding, mainnet transfers, trading, or unrestricted send-money tool is included. Coinbase's [client configuration](https://docs.cdp.coinbase.com/x402/buyer/client-configuration) documents managed wallets and spending controls. The default cumulative ledger is process-local and resets on restart: production needs a durable budget and enforcement suitable for concurrent replicas, plus wallet-side policies. Do not describe the demo's local cap as a global account spending limit.
+
+## Transport and settlement
+
+This is x402 **over HTTP**: unpaid tool requests receive HTTP 402 and payment-required headers; the buyer's fetch signs and retries. Clients need x402-aware HTTP transport. It does not implement the separate MCP-native `_meta["x402/payment"]` exchange, and is not a drop-in server for every Agentic Wallet MCP client. STDIO and Fetch-only adapters are outside this integration's scope. Existing `@xmcp-dev/x402` APIs are unchanged.
+
+The official x402 middleware owns payment verification and settlement, including response handling. The example selects `paymentFlow: "upfront"`: settlement must succeed before the tool runs. A later schema-validation failure, tool error, or cancellation does not automatically refund that payment. A verified authorization and a settled payment are different states; delivery, refunds, failed-tool charging, and retries must follow your product's policy and the configured x402 flow. Use read-only or idempotent paid tools until that policy is established. The example report has no external side effects.
+
+For agents buying from an existing catalog, [Coinbase Bazaar's MCP flow](https://docs.cdp.coinbase.com/x402/buyer/mcp-payments) is a separate supported path. [Agentic Wallet](https://docs.cdp.coinbase.com/agentic-wallet/cli/quickstart) offers a user-facing wallet and spending controls; its CLI requires Node 24+, independently of xmcp's Node 22 runtime.

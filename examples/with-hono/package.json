@@ -1,0 +1,28 @@
+{
+  "name": "hono-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "xmcp build && (xmcp dev & node --watch --import tsx src/server.ts)",
+    "build": "xmcp build && tsc --noEmit && esbuild src/server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server.js",
+    "start": "node dist/server.js",
+    "dev:cf": "xmcp build --cf && (xmcp dev --cf & wrangler dev)",
+    "build:cf": "xmcp build --cf && tsc --noEmit && wrangler deploy --dry-run --outdir dist/worker",
+    "deploy:cf": "xmcp build --cf && wrangler deploy"
+  },
+  "dependencies": {
+    "hono": "^4.12.34",
+    "@hono/node-server": "^1.19.15",
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "wrangler": "^4.147.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "esbuild": "^0.28.1"
+  }
+}

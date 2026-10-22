@@ -30,9 +30,6 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
-        hostname: "assets.basehub.com",
-      },
-      {
         hostname: "raw.githubusercontent.com",
       },
       {
@@ -76,6 +73,11 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         { source: "/", has: acceptsMarkdown, destination: "/index.md" },
         { source: "/blog", has: acceptsMarkdown, destination: "/blog.md" },
+        {
+          source: "/changelog",
+          has: acceptsMarkdown,
+          destination: "/changelog.md",
+        },
         {
           source: "/templates",
           has: acceptsMarkdown,

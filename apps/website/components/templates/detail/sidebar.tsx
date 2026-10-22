@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { TemplateShareActions } from "@/components/templates/share-actions";
 import { Tag } from "@/components/ui/tag";
@@ -21,25 +21,25 @@ export function TemplateDetailSidebar({
   xShareUrl: string;
 }) {
   return (
-    <aside className="lg:col-span-3 space-y-8">
-      <InfoCard label="GitHub Repo">
+    <dl className="template-details">
+      <InfoCard label="Repository">
         <Link
           href={template.repositoryUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
+          className="text-brand-neutral-50 link-underline hover:text-brand-white"
         >
           {repositoryLabel}
         </Link>
       </InfoCard>
 
       {(template.demoUrl || template.websiteUrl) && (
-        <InfoCard label="Website link">
+        <InfoCard label="Website">
           <Link
             href={template.demoUrl || template.websiteUrl!}
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-brand-white text-brand-neutral-50 underline underline-offset-2"
+            className="hover:text-brand-white text-brand-neutral-50 link-underline"
           >
             {template.demoUrl || template.websiteUrl}
           </Link>
@@ -47,12 +47,12 @@ export function TemplateDetailSidebar({
       )}
 
       {template.replitUrl && (
-        <InfoCard label="Remix on Replit">
+        <InfoCard label="Replit">
           <Link
             href={template.replitUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-brand-neutral-50 underline underline-offset-2 hover:text-brand-white"
+            className="text-brand-neutral-50 link-underline hover:text-brand-white"
           >
             {template.replitUrl}
           </Link>
@@ -69,11 +69,7 @@ export function TemplateDetailSidebar({
                 <Tag
                   key={tag}
                   text={tag}
-                  href={
-                    isValid
-                      ? `/templates/category/${slug}`
-                      : undefined
-                  }
+                  href={isValid ? `/templates/category/${slug}` : undefined}
                   interactive={isValid}
                   className="bg-brand-neutral-600"
                 />
@@ -90,15 +86,15 @@ export function TemplateDetailSidebar({
           xShareUrl={xShareUrl}
         />
       </InfoCard>
-    </aside>
+    </dl>
   );
 }
 
 function InfoCard({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-xs tracking-wide text-brand-neutral-100">{label}</p>
-      <div className="text-sm text-brand-white leading-relaxed">{children}</div>
+    <div className="template-details-row">
+      <dt>{label}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }

@@ -2,9 +2,11 @@
   "title": "Core Concepts",
   "pages": [
     "tools",
+    "request-context",
     "prompts",
     "resources",
     "middlewares",
+    "mcp-apps",
     "css",
     "external-clients"
   ],

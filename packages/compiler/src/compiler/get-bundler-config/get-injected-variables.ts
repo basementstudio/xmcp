@@ -1,17 +1,20 @@
 import { XmcpConfigOutputSchema } from "@/runtime-config";
+import { getResolvedHttpConfig } from "@/runtime-config";
+
 import { compilerContext } from "../compiler-context";
 import {
+  injectAdapterVariables,
   injectCorsVariables,
   InjectedVariables,
   injectHttpVariables,
+  injectObservabilityVariables,
+  injectComponentsVariables,
   injectPathsVariables,
+  injectServerInfoVariables,
   injectStdioVariables,
   injectTemplateVariables,
-  injectServerInfoVariables,
-  injectAdapterVariables,
   injectTypescriptVariables,
 } from "../config/injection";
-import { getResolvedHttpConfig } from "@/runtime-config";
 
 /**
  * The XMCP runtime uses variables that are not defined by default.
@@ -42,5 +45,7 @@ export function getInjectedVariables(
     ...serverInfoVariables,
     ...adapterVariables,
     ...typescriptVariables,
+    ...injectObservabilityVariables(xmcpConfig),
+    ...injectComponentsVariables(xmcpConfig),
   };
 }

@@ -1,14 +1,10 @@
 "use client";
 
-import { useMemo, useState, useDeferredValue } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import type { TemplateItem } from "@/app/templates/utils/github";
+import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
-import { tagClassName } from "@/components/ui/tag";
-import { Input } from "@/components/ui/input";
-import { Icons } from "@/components/icons";
+import { formatTag, tagClassName } from "@/components/ui/tag";
 import { cn } from "@/utils/cn";
 import { TemplateCard } from "./card";
 
@@ -25,8 +21,6 @@ export function TemplatesListing({
   categories,
   currentCategory,
 }: TemplatesListingProps) {
-  const [query, setQuery] = useState("");
-  const deferredQuery = useDeferredValue(query);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -34,35 +28,18 @@ export function TemplatesListing({
   const currentPage =
     Number.isFinite(pageParam) && pageParam >= 1 ? pageParam : 1;
 
-  const normalizedQuery = deferredQuery.trim().toLowerCase();
-
-  const filtered = useMemo(() => {
-    if (normalizedQuery.length === 0) return templates;
-    return templates.filter((item) => {
-      const haystack = [
-        item.name,
-        item.description,
-        item.category ?? "",
-        ...(item.tags ?? []),
-      ]
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [templates, normalizedQuery]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const totalPages = Math.max(1, Math.ceil(templates.length / ITEMS_PER_PAGE));
   const effectivePage = Math.min(currentPage, totalPages);
-  const pageItems = filtered.slice(
+  const pageItems = templates.slice(
     (effectivePage - 1) * ITEMS_PER_PAGE,
     effectivePage * ITEMS_PER_PAGE
   );
 
-  const pageStart = filtered.length
+  const pageStart = templates.length
     ? (effectivePage - 1) * ITEMS_PER_PAGE + 1
     : 0;
-  const pageEnd = filtered.length
-    ? Math.min(effectivePage * ITEMS_PER_PAGE, filtered.length)
+  const pageEnd = templates.length
+    ? Math.min(effectivePage * ITEMS_PER_PAGE, templates.length)
     : 0;
 
   const chipHref = (category: string) =>
@@ -71,52 +48,21 @@ export function TemplatesListing({
     target <= 1 ? pathname : `${pathname}?page=${target}`;
 
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="relative col-span-12 mb-4 md:mb-8">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-28 h-[460px] sm:-top-32 sm:h-[520px] z-0 [mask-image:radial-gradient(ellipse_at_center,black_52%,transparent_100%)] [mask-repeat:no-repeat] [mask-size:100%_100%]"
-        >
-          <div className="absolute left-1/2 top-20 h-[180px] w-[300px] -translate-x-1/2 rounded-full bg-[#D9D9D9] opacity-20 blur-[110px] md:h-[240px] md:w-[380px] md:opacity-24 md:blur-[130px]" />
-          <Image
-            src="/textures/text6.png"
-            alt=""
-            aria-hidden
-            width={1217}
-            height={956}
-            priority
-            className="pointer-events-none select-none absolute left-1/2 top-[-40px] h-auto w-[560px] -translate-x-1/2 rotate-[-64.61deg] opacity-16 mix-blend-plus-lighter md:top-[-80px] md:w-[720px] md:opacity-20"
-          />
-        </div>
-
-        <div className="relative z-10 flex flex-col items-center justify-center max-w-[640px] w-full mx-auto gap-4 pt-10 pb-8 sm:pt-14 sm:pb-10">
-          <h1 className="display text-center text-balance z-10 text-gradient">
-            Templates
-          </h1>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[560px] lg:col-span-5 mt-auto text-center">
+    <div className="site-listing">
+      <div className="listing-intro">
+        <p className="eyebrow">The starting points / Templates</p>
+        <div>
+          <h1 className="display">Templates</h1>
+          <p className="listing-description">
             Quickstart guides and templates to get you started with xmcp with
             real-world implementations and best practices.
           </p>
-          <label htmlFor="templates-search" className="sr-only">
-            Search
-          </label>
-          <div className="relative w-full max-w-[520px]">
-            <Icons.search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-brand-neutral-300" />
-            <Input
-              id="templates-search"
-              type="text"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search templates"
-              className="h-auto rounded-xs border-brand-neutral-400 bg-brand-black p-2 pl-10 text-sm text-brand-neutral-200 shadow-none placeholder:text-brand-neutral-200 transition-colors duration-200 ease-in-out hover:bg-white/10 focus-visible:ring-0"
-            />
-          </div>
         </div>
       </div>
 
       <div className="col-span-12 flex flex-col gap-8">
         <div className="flex flex-col gap-4 max-w-[920px] w-full mx-auto">
-          <div className="flex flex-col items-center gap-2 min-w-0 md:flex-row md:justify-center md:gap-4">
+          <div className="flex flex-col items-start gap-2 min-w-0">
             <h2 className="text-sm font-medium text-brand-neutral-100 tracking-wide shrink-0">
               Filter by category
             </h2>
@@ -147,7 +93,7 @@ export function TemplatesListing({
                         tagClassName({ interactive: true, selected: isActive })
                       )}
                     >
-                      {category}
+                      {formatTag(category)}
                     </Link>
                   );
                 })}
@@ -157,21 +103,25 @@ export function TemplatesListing({
         </div>
 
         <div className="min-h-[60vh] flex flex-col gap-6">
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.length > 0 ? (
-              pageItems.map((item) => (
-                <TemplateCard key={item.slug} {...item} />
+          <section className="site-card-grid">
+            {templates.length > 0 ? (
+              pageItems.map((item, index) => (
+                <TemplateCard
+                  key={item.slug}
+                  {...item}
+                  loading={index < 3 ? "eager" : "lazy"}
+                />
               ))
             ) : (
               <div className="col-span-full text-center py-12">
                 <p className="text-brand-neutral-200 text-sm">
-                  No templates found for the current search and filters.
+                  No templates found in this category.
                 </p>
               </div>
             )}
           </section>
 
-          {filtered.length > ITEMS_PER_PAGE && (
+          {templates.length > ITEMS_PER_PAGE && (
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
               <div className="justify-self-start">
                 {effectivePage > 1 ? (
@@ -179,7 +129,7 @@ export function TemplatesListing({
                     href={pageHref(effectivePage - 1)}
                     aria-label="Go to previous page"
                     scroll={false}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                    className="px-3 py-1.5 text-xs uppercase tracking-wide rounded-md border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                   >
                     Previous
                   </Link>
@@ -195,7 +145,7 @@ export function TemplatesListing({
                 </span>
                 <span className="hidden md:inline"> • </span>
                 <span className="block md:inline">
-                  Showing {pageStart}-{pageEnd} of {filtered.length}
+                  Showing {pageStart}-{pageEnd} of {templates.length}
                 </span>
               </p>
 
@@ -205,7 +155,7 @@ export function TemplatesListing({
                     href={pageHref(effectivePage + 1)}
                     aria-label="Go to next page"
                     scroll={false}
-                    className="px-3 py-1.5 text-xs uppercase tracking-wide border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
+                    className="px-3 py-1.5 text-xs uppercase tracking-wide rounded-md border border-dashed transition-colors duration-200 border-brand-neutral-300 text-brand-neutral-100 hover:text-brand-white hover:border-solid hover:border-brand-neutral-300 hover:bg-brand-neutral-600"
                   >
                     Next
                   </Link>

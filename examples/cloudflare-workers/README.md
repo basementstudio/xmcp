@@ -64,6 +64,23 @@ npx wrangler deploy
 
 ## Notes
 
+`src/tools/media-preview.ts` uses `image()` and `embeddedResource()` from
+`xmcp/cloudflare` to return binary and text content without Node APIs. Call it
+after starting the local preview:
+
+```sh
+curl http://localhost:8787/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"media-preview","arguments":{}}}'
+```
+
+The response contains a base64 PNG image block and an embedded text resource.
+`audio(bytes, mimeType)` is available from the same entry. Use `xmcp/node` file
+helpers only in Node applications; Workers should get bytes from bindings or
+Web APIs such as `fetch()`.
+
 - The `--cf` flag builds a Cloudflare Workers-native bundle
 - All Node.js APIs are bundled into the worker (no external dependencies)
 - React component bundles are inlined at compile time
