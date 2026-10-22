@@ -733,7 +733,7 @@ body .hero-specimen + figure.shiki {
 .hero-mock-stats {
   display: grid;
   /* Keep metric positions independent of the selected tool and its figures. */
-  grid-template-columns: minmax(0, 1fr) 6ch minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 7ch minmax(0, 1fr);
   gap: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--site-rule);
@@ -742,9 +742,12 @@ body .hero-specimen + figure.shiki {
   min-width: 0;
 }
 .hero-mock-stats .hero-mock-muted {
+  white-space: nowrap;
+}
+/* Only variable tool names can truncate; the metric labels stay readable. */
+.hero-mock-stats > span:first-child .hero-mock-muted {
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .hero-mock-figure {
   font-size: 19px;
@@ -887,6 +890,8 @@ a.hero-mock-run:hover {
 }
 .hero-scene-size {
   width: 100%;
+  /* Keep the tool and middleware rows visible when the frame gets narrow. */
+  min-height: 460px;
   aspect-ratio: 350 / 243;
 }
 /* Give the inverted scene an explicit backdrop inside its fixed layer. */

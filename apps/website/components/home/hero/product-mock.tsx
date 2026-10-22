@@ -23,6 +23,7 @@ const middleware = [
   ["auth", "Better Auth", "/docs/integrations/better-auth"],
   ["rate-limit", "Upstash", "/docs/integrations/upstash"],
   ["paywall", "Commet", "/docs/integrations/commet"],
+  ["email", "Resend", "/docs/integrations/resend"],
   ["logging", "JSON", "/docs/configuration/observability"],
 ];
 
