@@ -29,13 +29,14 @@ export const FOOTER_DUST_CONTROLS: DustControls = {
   mouseRadius: 0.35,
 };
 
-// Cover artwork needs finer rows than isolated logos to retain small lettering.
+// Wider gaps and longer dashes keep the horizontal texture visible at card size.
 export const BLOG_DUST_CONTROLS: DustControls = {
   ...CARD_DUST_CONTROLS,
-  rows: 100,
-  segments: 280,
-  size: 0.6,
-  brightness: 0.7,
+  rows: 48,
+  segments: 140,
+  size: 1.1,
+  dash: 1.5,
+  brightness: 0.85,
   vignette: 0.2,
   mouseForce: 0.4,
 };
