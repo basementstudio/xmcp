@@ -1,8 +1,7 @@
 import { ContentCard } from "@/components/ui/content-card";
-import Image from "next/image";
+import { BlogArtwork } from "./artwork";
 import { type BlogPost } from "../../utils/blog";
 import { Tag } from "../ui/tag";
-import { getBlogImageProps } from "@/lib/blog-images";
 
 interface BlogHeroProps {
   featuredPost: BlogPost;
@@ -18,13 +17,11 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
       horizontal
       media={
         image ? (
-          <Image
-            {...getBlogImageProps(image)}
+          <BlogArtwork
+            src={image}
             alt={featuredPost.title}
-            fill
             sizes="(min-width: 768px) 350px, (min-width: 740px) 700px, calc(100vw - 40px)"
             preload
-            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-brand-neutral-200 text-sm">

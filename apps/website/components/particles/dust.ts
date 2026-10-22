@@ -29,6 +29,18 @@ export const FOOTER_DUST_CONTROLS: DustControls = {
   mouseRadius: 0.35,
 };
 
+// Wider gaps and longer dashes keep the horizontal texture visible at card size.
+export const BLOG_DUST_CONTROLS: DustControls = {
+  ...CARD_DUST_CONTROLS,
+  rows: 48,
+  segments: 140,
+  size: 1.1,
+  dash: 1.5,
+  brightness: 0.85,
+  vignette: 0.2,
+  mouseForce: 0.4,
+};
+
 export const DUST_UNIFORM_BYTES = 96;
 
 export type DustRendererOptions = {
