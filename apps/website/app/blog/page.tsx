@@ -11,6 +11,8 @@ import {
   getBreadcrumbSchema,
 } from "@/lib/structured-data";
 import { SITE_URL } from "@/lib/base-url";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-static";
 
@@ -54,6 +56,9 @@ export default function BlogPage() {
   const regularPosts = featuredPost
     ? posts.filter((post: BlogPost) => post.slug !== featuredPost.slug)
     : posts;
+  // Two rows in the two-column card grid; the archive stays compact below.
+  const cardPosts = regularPosts.slice(0, 4);
+  const archivePosts = regularPosts.slice(4);
 
   return (
     <main id="main-content" className="site-page-grid">
@@ -81,7 +86,7 @@ export default function BlogPage() {
         {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
         <div className="site-card-grid">
-          {regularPosts.map((post: BlogPost, index: number) => (
+          {cardPosts.map((post: BlogPost, index: number) => (
             <BlogCard
               key={post.slug}
               post={post}
@@ -96,6 +101,36 @@ export default function BlogPage() {
             </p>
           )}
         </div>
+
+        {archivePosts.length > 0 && (
+          <ul className="blog-post-list" aria-label="More posts">
+            {archivePosts.map((post) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="blog-post-row link-underline-group"
+                >
+                  <span className="blog-post-date">
+                    {post.date && (
+                      <time dateTime={post.date}>
+                        {new Date(post.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          timeZone: "UTC",
+                        })}
+                      </time>
+                    )}
+                  </span>
+                  <h2>
+                    <span className="link-underline-label">{post.title}</span>
+                  </h2>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </main>
   );
