@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import type { Metadata } from "next";
 import { ReleaseNotes } from "@/components/changelog/release-notes";
 import { SITE_URL } from "@/lib/base-url";
@@ -22,13 +23,13 @@ export const metadata: Metadata = {
     description,
     url: `${SITE_URL}/changelog`,
     type: "website",
-    images: "/xmcp-og.png",
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title,
     description,
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 

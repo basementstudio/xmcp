@@ -1,10 +1,11 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import { Metadata } from "next";
 import Link from "next/link";
 import { FAQ_ITEMS } from "@/content/faq";
 import { JsonLd } from "@/components/seo/json-ld";
 import { AccordionItem } from "@/components/ui/accordion-item";
 import { getBreadcrumbSchema, getFaqSchema } from "@/lib/structured-data";
-import { getBaseUrl, SITE_URL } from "@/lib/base-url";
+import { SITE_URL } from "@/lib/base-url";
 
 export const dynamic = "force-static";
 
@@ -13,7 +14,6 @@ const DESCRIPTION =
   "Answers to common questions about xmcp: what it is, how to create a project, tools, resources and prompts, transports, framework adapters, authentication, deployment, and monetization.";
 
 const FAQ_URL = `${SITE_URL}/faq`;
-const baseUrl = getBaseUrl();
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -31,21 +31,13 @@ export const metadata: Metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: `${baseUrl}/xmcp-og.png`,
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: {
-      url: `${baseUrl}/xmcp-og.png`,
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 

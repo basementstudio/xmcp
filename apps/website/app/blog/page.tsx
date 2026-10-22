@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import {
   getListedBlogPosts,
   getFeaturedBlogPost,
@@ -34,18 +35,14 @@ export const metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
     description:
       "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 
