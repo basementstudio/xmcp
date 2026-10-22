@@ -9,12 +9,13 @@ const emailId = "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794";
 // The child process cannot reach Resend: all SDK requests use this fake fetch.
 const preload = `globalThis.fetch = async (input, init) => {
   const request = new Request(input, init);
+  if (request.url === "https://api.resend.com/inboxes?limit=20" && request.method === "GET") return Response.json({ object: "list", has_more: false, data: [{ id: "${emailId}", email_address: "support@example.com" }] });
   if (request.url !== "https://api.resend.com/emails" || request.method !== "POST") throw new Error("Unexpected provider request");
   return Response.json({ id: "${emailId}" });
 };`;
 
 test(
-  "the built server authenticates requests and executes send-email with a mocked SDK response",
+  "the built server authenticates, discovers inbox tools, validates inputs, and executes mocked SDK requests",
   { timeout: TEST_TIMEOUT_MS },
   async (context) => {
     const child = spawn(
@@ -56,7 +57,18 @@ test(
         reject(new Error(`Server exited: ${code}. ${errors}`))
       );
     });
-    const call = (key: string) =>
+    const call = (
+      key: string,
+      method = "tools/call",
+      params: Record<string, unknown> = {
+        name: "send-email",
+        arguments: {
+          to: "delivered@resend.dev",
+          subject: "Mock test",
+          text: "Not sent",
+        },
+      }
+    ) =>
       fetch(endpoint, {
         method: "POST",
         signal: AbortSignal.timeout(TEST_TIMEOUT_MS),
@@ -68,30 +80,64 @@ test(
         body: JSON.stringify({
           jsonrpc: "2.0",
           id: 1,
-          method: "tools/call",
-          params: {
-            name: "send-email",
-            arguments: {
-              to: "delivered@resend.dev",
-              subject: "Mock test",
-              text: "Not sent",
-            },
-          },
+          method,
+          params,
         }),
       });
     assert.equal((await call("wrong")).status, 401);
     const response = await call("test-client-key");
     assert.equal(response.status, 200);
     const text = await response.text();
-    const data = JSON.parse(
-      text.startsWith("{")
-        ? text
-        : text
-            .split("\n")
-            .find((line) => line.startsWith("data: "))!
-            .slice(6)
-    );
+    const decode = (text: string) =>
+      JSON.parse(
+        text.startsWith("{")
+          ? text
+          : text
+              .split("\n")
+              .find((line) => line.startsWith("data: "))!
+              .slice(6)
+      );
+    const data = decode(text);
     assert.equal(data.result.isError, undefined);
     assert.deepEqual(JSON.parse(data.result.content[0].text), { id: emailId });
+    const list = decode(
+      await (await call("test-client-key", "tools/list", {})).text()
+    );
+    const names = list.result.tools.map((tool: { name: string }) => tool.name);
+    for (const name of [
+      "create-inbox",
+      "get-inbox",
+      "list-inboxes",
+      "list-inbox-threads",
+      "get-inbox-thread",
+      "list-inbox-emails",
+      "create-inbox-reply-draft",
+      "get-inbox-draft",
+      "send-inbox-draft",
+      "reply-inbox-email",
+    ])
+      assert(names.includes(name), name);
+    const inboxCall = { name: "list-inboxes", arguments: {} };
+    assert.equal((await call("wrong", "tools/call", inboxCall)).status, 401);
+    const inboxes = decode(
+      await (await call("test-client-key", "tools/call", inboxCall)).text()
+    );
+    assert.equal(inboxes.result.isError, undefined);
+    assert.equal(
+      JSON.parse(inboxes.result.content[0].text).data[0].email_address,
+      "support@example.com"
+    );
+    const invalid = decode(
+      await (
+        await call("test-client-key", "tools/call", {
+          name: "get-inbox",
+          arguments: { inboxId: "../other" },
+        })
+      ).text()
+    );
+    assert(
+      invalid.error || invalid.result?.isError,
+      "invalid IDs must be rejected"
+    );
   }
 );
