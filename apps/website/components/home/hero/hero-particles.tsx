@@ -19,6 +19,10 @@ export default function HeroParticles({ active }: { active: boolean }) {
           texture={PICTURE}
           width={900}
           height={625}
+          // The static folds look unlike the live dashes, so swapping one for
+          // the other read as a flicker on reload; the scene fades in instead.
+          showLoadingArtwork={false}
+          fadeIn
         >
           {(props) => (
             <DustScene
