@@ -30,17 +30,20 @@ These are the default values. Override only what you need to customize.
 
 ### Subscription streams
 
-Clients on protocol revision 2026-07-28 can open a `subscriptions/listen`
-stream to receive list-changed notifications. The stream is long lived by
-design: it stays open, sending keepalive frames, until the client goes away.
+Clients using protocol revision `2026-07-28` can open a `subscriptions/listen`
+stream for list-changed notifications. When the server supports the requested
+notifications, the stream stays open until the client disconnects or the handler
+closes it. Keepalive frames do not impose a stream lifetime limit.
 
-`maxSubscriptions` caps how many of those streams one server instance holds
-open at once, so a horizontally scaled deployment allows that many per instance
-rather than in total. Once the cap is reached, a further `subscriptions/listen`
-is refused in band with a JSON-RPC error instead of being served. It defaults to
-the MCP SDK's own limit; set it to `0` to refuse every subscription:
+`http.maxSubscriptions` accepts a nonnegative integer and limits concurrent
+subscription streams per HTTP handler instance. Each process, worker isolate,
+or serverless instance has its own limit; this is not a deployment-wide quota.
+Omitting the option preserves the MCP SDK's default. Set it to `0` to refuse
+all subscription streams:
 
 ```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
 const config: XmcpConfig = {
   http: {
     maxSubscriptions: 0,
@@ -50,18 +53,23 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-Turn subscriptions off when your server runs on a platform that caps how long a
-single request may last, such as a serverless function. There, a held-open
-stream cannot outlive the invocation: it is killed when the limit is reached,
-after billing the whole window.
+The option applies to standalone HTTP, Vercel, Cloudflare, and the Express,
+Fastify, NestJS, Next.js, Hono, and SvelteKit adapters. It does not change STDIO
+or disable SSE used by ordinary tool calls and progress notifications.
 
-A refused client receives no list-changed notifications and has to ask for the
-list again on its own initiative. That costs a stateless server nothing, because
-it builds its tools, prompts and resources per request and answers every
-`tools/list` from the current one. Note that the server still advertises its
-`listChanged` capabilities when it is refusing subscriptions, and that the
-refusal reads as `Subscription limit reached` whether the cap is `0` or merely
-full.
+When the cap is reached, the SDK returns HTTP `200` with JSON-RPC error `-32603`,
+`Subscription limit reached`, before acknowledging the subscription. A positive
+limit bounds the number of streams, not how long an accepted stream stays open.
+Closing a stream frees its slot.
+
+For a server with a fixed component roster on a platform with request duration
+limits, consider disabling subscriptions to avoid holding an invocation open.
+Clients must request lists again as needed instead of relying on notifications.
+Those list requests still execute normally and consume resources. The setting
+does not change the server's advertised `listChanged` capabilities.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport#subscription-streams)
+sets the limit to `0` and includes a runnable request demonstrating the refusal.
 
 ### CORS
 

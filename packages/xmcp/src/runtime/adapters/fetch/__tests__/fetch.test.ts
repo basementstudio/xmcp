@@ -8,6 +8,7 @@ import type { ToolExtraArguments } from "@/types/tool";
 
 const globals = globalThis as Record<string, unknown>;
 Object.assign(globals, {
+  HTTP_CONFIG: {},
   SERVER_INFO: { name: "fetch-test", version: "1.0.0" },
   IS_CLOUDFLARE: false,
   INJECTED_CLIENT_BUNDLES: undefined,
@@ -212,6 +213,37 @@ describe("Fetch adapter", () => {
       )
     );
     assert.equal(resource.result.contents[0].text, "Resource content");
+  });
+
+  it("allows a subscription when maxSubscriptions is omitted", async (context) => {
+    const response = await xmcpHandler(
+      request(
+        "subscriptions/listen",
+        {
+          _meta: {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {},
+            "io.modelcontextprotocol/clientInfo": {
+              name: "modern",
+              version: "1",
+            },
+          },
+          notifications: { toolsListChanged: true },
+        },
+        {
+          "mcp-protocol-version": "2026-07-28",
+          "mcp-method": "subscriptions/listen",
+        }
+      )
+    );
+    context.after(async () => {
+      await response.body?.cancel();
+    });
+    assert.equal(response.status, 200);
+    assert.match(
+      response.headers.get("content-type") ?? "",
+      /text\/event-stream/
+    );
   });
 
   it("lets the SDK validate malformed JSON without consuming its request body", async () => {

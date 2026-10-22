@@ -1,10 +1,12 @@
+import dotenv from "dotenv";
+
+import type { CorsConfig, ResolvedHttpConfig, TemplateConfig } from "@/config";
+import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
+import { processProviders, Provider } from "@/runtime/middlewares/utils";
+import { Middleware } from "@/types/middleware";
+
 import { createServer } from "../../utils/server";
 import { StatelessStreamableHTTPTransport } from "./stateless-streamable-http";
-import { Middleware } from "@/types/middleware";
-import type { CorsConfig, ResolvedHttpConfig, TemplateConfig } from "@/config";
-import { Provider, processProviders } from "@/runtime/middlewares/utils";
-import { httpTransportContextProvider } from "@/runtime/contexts/http-transport-context";
-import dotenv from "dotenv";
 dotenv.config();
 
 // by the time this is run, the config is already parsed and injected as object

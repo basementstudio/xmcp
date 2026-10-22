@@ -1,18 +1,20 @@
+import { randomUUID } from "node:crypto";
+
+import { toNodeHandler } from "@modelcontextprotocol/node";
+import { createMcpHandler } from "@modelcontextprotocol/server";
 import {
   Injectable,
   Logger,
-  OnModuleInit,
   OnModuleDestroy,
+  OnModuleInit,
 } from "@nestjs/common";
 import { Request, Response } from "express";
-import { createMcpHandler } from "@modelcontextprotocol/server";
-import { toNodeHandler } from "@modelcontextprotocol/node";
-import { createServer } from "@/runtime/utils/server";
-import { setHeaders } from "@/runtime/transports/http/cors";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
-import { randomUUID } from "node:crypto";
+
 import type { CorsConfig } from "@/config";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { setHeaders } from "@/runtime/transports/http/cors";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import { createServer } from "@/runtime/utils/server";
 
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 

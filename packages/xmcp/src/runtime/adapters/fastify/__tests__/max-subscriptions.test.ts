@@ -1,6 +1,10 @@
-import { describe, it, before } from "node:test";
 import assert from "node:assert";
+import { before, describe, it } from "node:test";
+
 import Fastify from "fastify";
+
+// Bound regressions that accidentally leave a subscription stream open.
+const TEST_TIMEOUT_MS = 5_000;
 
 // A separate file from fastify.test.ts because HTTP_CONFIG is captured when the
 // adapter module is evaluated: the two suites need different values for it, and
@@ -20,6 +24,7 @@ g["HTTP_CORS_CONFIG"] = {
   credentials: false,
   maxAge: 86400,
 };
+g["INJECTED_MIDDLEWARE"] = undefined;
 g["INJECTED_TOOLS"] = {};
 g["INJECTED_PROMPTS"] = {};
 g["INJECTED_RESOURCES"] = {};
@@ -39,7 +44,6 @@ const MODERN_META = {
 };
 
 describe("http.maxSubscriptions", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let xmcpHandler!: (req: any, reply: any) => Promise<void>;
 
   before(async () => {
@@ -48,43 +52,46 @@ describe("http.maxSubscriptions", () => {
     });
   });
 
-  it("refuses subscriptions/listen in band when the cap is 0", async () => {
-    const app = Fastify();
-    app.post("/mcp", xmcpHandler);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/mcp",
-      headers: {
-        ...HEADERS,
-        "mcp-protocol-version": "2026-07-28",
-        "mcp-method": "subscriptions/listen",
-      },
-      payload: {
-        jsonrpc: "2.0",
-        id: 1,
-        method: "subscriptions/listen",
-        params: {
-          _meta: MODERN_META,
-          notifications: { toolsListChanged: true },
+  it(
+    "refuses subscriptions/listen in band when the cap is 0",
+    { timeout: TEST_TIMEOUT_MS },
+    async (context) => {
+      const app = Fastify({ forceCloseConnections: true });
+      const controller = new AbortController();
+      context.after(async () => {
+        controller.abort();
+        await app.close();
+      });
+      app.post("/mcp", xmcpHandler);
+      const address = await app.listen({ host: "127.0.0.1", port: 0 });
+      // Real fetch exposes response headers before the body ends, so losing the
+      // passthrough fails immediately instead of hanging app.inject on an SSE body.
+      const response = await fetch(`${address}/mcp`, {
+        method: "POST",
+        signal: AbortSignal.any([controller.signal, context.signal]),
+        headers: {
+          ...HEADERS,
+          "mcp-protocol-version": "2026-07-28",
+          "mcp-method": "subscriptions/listen",
         },
-      },
-    });
-
-    // Refused before the acknowledgment, so this is a single JSON response
-    // rather than the SSE stream an uncapped server would hold open.
-    assert.strictEqual(response.statusCode, 200);
-    assert.ok(
-      !(response.headers["content-type"] as string).includes(
-        "text/event-stream"
-      ),
-      "a refused subscription must not open a stream"
-    );
-    const body = JSON.parse(response.body) as {
-      error: { code: number; message: string };
-    };
-    assert.strictEqual(body.error.code, -32603);
-    // Named so the assertion cannot pass on an unrelated internal error.
-    assert.match(body.error.message, /Subscription limit reached/);
-  });
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "subscriptions/listen",
+          params: {
+            _meta: MODERN_META,
+            notifications: { toolsListChanged: true },
+          },
+        }),
+      });
+      assert.strictEqual(response.status, 200);
+      assert.ok(
+        !response.headers.get("content-type")?.includes("text/event-stream"),
+        "a refused subscription must not open a stream"
+      );
+      const body = await response.json();
+      assert.strictEqual(body.error.code, -32603);
+      assert.match(body.error.message, /Subscription limit reached/);
+    }
+  );
 });

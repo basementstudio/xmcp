@@ -1,16 +1,17 @@
 import {
+  type AuthInfo,
   createMcpHandler,
   preloadSchemas,
-  type AuthInfo,
 } from "@modelcontextprotocol/server";
-import { createServer } from "@/runtime/utils/server";
+
 import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
-import homeTemplate from "../../templates/home";
+import { createServer } from "@/runtime/utils/server";
+import type { WebMiddleware, WebMiddlewareContext } from "@/types/middleware";
 
+import homeTemplate from "../../templates/home";
 import { addCorsHeaders, handleCorsPreflightRequest } from "./cors";
 import type { Env, ExecutionContext } from "./types";
-import type { WebMiddleware, WebMiddlewareContext } from "@/types/middleware";
 
 const httpConfig = HTTP_CONFIG as {
   port: number;
@@ -28,8 +29,7 @@ const templateConfig = TEMPLATE_CONFIG as {
 };
 
 const middleware = INJECTED_MIDDLEWARE as
-  | (() => Promise<{ default?: WebMiddleware | WebMiddleware[] }>)
-  | undefined;
+  (() => Promise<{ default?: WebMiddleware | WebMiddleware[] }>) | undefined;
 
 let resolvedMiddlewarePromise: Promise<WebMiddleware[]> | null = null;
 
