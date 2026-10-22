@@ -20,6 +20,7 @@ const PROVIDER_FALLBACKS: Record<string, string> = {
   react: "/templates/react.svg",
   scalekit: "/templates/scalekit.svg",
   tailwind: "/templates/tailwind.svg",
+  typescript: "/templates/typescript.svg",
   workos: "/templates/workos.svg",
 };
 

@@ -38,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function TelemetryPage() {
   return (
-    <main id="main-content" className="flex w-full justify-center px-4 lg:px-8">
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={getBreadcrumbSchema(
           [
@@ -48,7 +48,7 @@ export default function TelemetryPage() {
           SITE_URL
         )}
       />
-      <article className="flex w-full max-w-[860px] flex-col gap-6 py-16">
+      <article className="site-article-content">
         <header className="flex flex-col gap-4">
           <h1 className="display font-medium text-white">Telemetry</h1>
           <p>

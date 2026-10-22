@@ -16,36 +16,33 @@ const PROVIDER_MAP = {
 
 type MappedProvider = keyof typeof PROVIDER_MAP;
 
-type DeployProviderConfig = {
-  label: string;
-  buildHref: (template: TemplateItem) => string;
-};
+// Every provider in the docs' Deployment section, in the same order. Vercel
+// and Alpic clone the template directly; Replit uses the template's own remix
+// link when it has one. The rest have no clone URL, so they open the docs guide.
+const DEPLOY_PROVIDERS = [
+  "vercel",
+  "cloudflare",
+  "alpic",
+  "replit",
+  "railway",
+  "render",
+] as const satisfies readonly MappedProvider[];
 
-const DEPLOY_PROVIDER_CONFIG = {
-  vercel: {
-    label: PROVIDER_MAP.vercel,
-    buildHref: buildVercelCloneUrl,
-  },
-  alpic: {
-    label: PROVIDER_MAP.alpic,
-    buildHref: buildAlpicCloneUrl,
-  },
-} satisfies Record<"vercel" | "alpic", DeployProviderConfig>;
+const guide = (provider: MappedProvider) => `/docs/deployment/${provider}`;
 
 export function buildDeployOptions(template: TemplateItem): DeployOption[] {
-  const options: DeployOption[] = Object.entries(DEPLOY_PROVIDER_CONFIG).map(
-    ([provider, config]) => ({
-      label: config.label,
-      href: config.buildHref(template),
-      provider: provider as keyof typeof DEPLOY_PROVIDER_CONFIG,
-    })
-  );
-
-  options.push({
-    label: "Replit",
-    href: template.replitUrl ?? "#",
-    provider: "replit",
-    disabled: !template.replitUrl,
+  const options: DeployOption[] = DEPLOY_PROVIDERS.map((provider) => {
+    const label = PROVIDER_MAP[provider];
+    if (provider === "vercel") {
+      return { label, provider, href: buildVercelCloneUrl(template) };
+    }
+    if (provider === "alpic") {
+      return { label, provider, href: buildAlpicCloneUrl(template) };
+    }
+    if (provider === "replit" && template.replitUrl) {
+      return { label, provider, href: template.replitUrl };
+    }
+    return { label, provider, href: guide(provider), guide: true };
   });
 
   if (template.deployUrl) {

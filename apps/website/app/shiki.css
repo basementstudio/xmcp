@@ -6,13 +6,13 @@
 }
 
 .shiki:not(.not-fumadocs-codeblock *) {
-  code span {
+  code span[style*="--shiki-"] {
     color: var(--shiki-light);
   }
 }
 
 .dark .shiki:not(.not-fumadocs-codeblock *) {
-  code span {
+  code span[style*="--shiki-"] {
     color: var(--shiki-dark);
   }
 }
@@ -40,14 +40,13 @@
 
   [data-line-numbers] .line& {
     counter-increment: line;
-    padding-left: calc(var(--padding-left) + 6 * var(--spacing));
   }
 
   [data-line-numbers] .line&::after {
     position: absolute;
     content: counter(line);
     color: var(--color-brand-neutral-300);
-    @apply top-0 left-3;
+    top: 0;
   }
 
   .diff&::before {

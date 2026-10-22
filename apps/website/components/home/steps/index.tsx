@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { cn } from "@/lib/cn";
-import gsap from "gsap";
+import { useMemo } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import ts from "@shikijs/langs/typescript";
 import bash from "@shikijs/langs/bash";
+import { CodeBlock } from "@/components/codeblock";
+import { AccordionItem } from "@/components/ui/accordion-item";
 import { CopyButton } from "@/components/ui/copy-button";
-import { XMCP_SHIKI_THEME_NAME, xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { AnimatedShell, type ShellLine } from "./animated-shell";
+import {
+  XMCP_SHIKI_THEME_NAME,
+  xmcpAyuDarkTheme,
+  xmcpLightTheme,
+} from "@/lib/shiki-theme";
 
 const highlighter = createHighlighterCoreSync({
   langs: [ts, bash],
-  themes: [xmcpAyuDarkTheme],
+  themes: [xmcpAyuDarkTheme, xmcpLightTheme],
   engine: createJavaScriptRegexEngine(),
 });
 
@@ -22,21 +27,76 @@ const steps = [
     title: "Create a new xmcp app",
     type: "command" as const,
     command: "npx create-xmcp-app@latest",
-    output: `? What is your project named? my-server
-? Select a package manager: pnpm
-? Select the transport you want to use: HTTP (runs on a server)
-? Select components to initialize:
-  ◉ Tools
-  ◉ Prompts
-  ◉ Resources
-
-✔ Creating a new xmcp app in ...
-✔ Your xmcp app is ready
-
-Next steps:
-  cd my-server
-  pnpm dev
-`,
+    output: [
+      {
+        text: "? What is your project named? ",
+        hint: "(my-xmcp-app)",
+        answer: "my-server",
+        typed: true,
+      },
+      {
+        text: "? Select a template: ",
+        hint: "(Use arrow keys)",
+        choices: [
+          "Default (Standard MCP server)",
+          "MCP App (React widgets for ext-apps)",
+          "MCP App with UI kit (components and JSON renderer)",
+        ],
+        pick: 0,
+        answer: "Default (Standard MCP server)",
+        waitBefore: "prompt",
+      },
+      {
+        text: "? Select a package manager: ",
+        hint: "(Use arrow keys)",
+        choices: ["npm", "yarn", "pnpm", "bun"],
+        pick: 2,
+        answer: "pnpm",
+        waitBefore: "prompt",
+      },
+      {
+        text: "? Select the transport you want to use: ",
+        hint: "(Use arrow keys)",
+        choices: [
+          "HTTP (runs on a server)",
+          "STDIO (runs on the user's machine)",
+        ],
+        pick: 0,
+        answer: "HTTP (runs on a server)",
+        waitBefore: "prompt",
+      },
+      {
+        text: "? Select components to initialize: ",
+        hint: "(Press <space> to select, <enter> to proceed)",
+        choices: ["Tools", "Prompts", "Resources"],
+        checkbox: true,
+        answer: "Tools, Prompts, Resources",
+        waitBefore: "prompt",
+      },
+      { text: "" },
+      {
+        text: "Creating a new xmcp app in ",
+        answer: "/Users/you/my-server.",
+        tone: "path",
+      },
+      { text: "" },
+      {
+        text: "? Ok to continue? ",
+        hint: "(Y/n)",
+        answer: "Yes",
+        waitBefore: "prompt",
+      },
+      {
+        text: "✔ Your xmcp app is ready",
+        pending: "Creating your xmcp app...",
+        waitBefore: "work",
+        tone: "success",
+      },
+      { text: "" },
+      { text: "Next steps:" },
+      { text: "  cd my-server", tone: "command" },
+      { text: "  pnpm dev", tone: "command" },
+    ] satisfies ShellLine[],
   },
   {
     id: 2,
@@ -88,17 +148,23 @@ export default async function getWeather({
     title: "Deploy your server",
     type: "command" as const,
     command: "vc deploy",
-    output: `Vercel CLI 37.0.0
-Inspect: https://vercel.com/...
-Production: https://my-server.vercel.app
-
-Deployment Summary:
-  • Environment: Production
-  • Region: iad1
-  • Build Time: 12s
-  • Status: Ready
-
-Your MCP server is live!`,
+    output: [
+      { text: "Vercel CLI 37.0.0" },
+      { text: "Inspect: https://vercel.com/...", waitBefore: "prompt" },
+      { text: "Production: https://my-server.vercel.app", waitBefore: "work" },
+      { text: "" },
+      { text: "Deployment Summary:" },
+      { text: "  • Environment: Production" },
+      { text: "  • Region: iad1" },
+      { text: "  • Build Time: 12s" },
+      { text: "  • Status: Ready" },
+      { text: "" },
+      {
+        text: "Your MCP server is live!",
+        waitBefore: "prompt",
+        tone: "success",
+      },
+    ] satisfies ShellLine[],
   },
 ];
 
@@ -106,7 +172,7 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
   const highlightedContent = useMemo(() => {
     if (step.type === "file") {
       return highlighter.codeToHtml(step.content, {
-        theme: XMCP_SHIKI_THEME_NAME,
+        themes: { light: xmcpLightTheme.name!, dark: XMCP_SHIKI_THEME_NAME },
         lang: "typescript",
         defaultColor: false,
         transformers: [
@@ -130,326 +196,45 @@ const Terminal = ({ step }: { step: (typeof steps)[0] }) => {
 
   if (step.type === "file") {
     return (
-      <div className="bg-black border border-brand-neutral-400 rounded-lg overflow-hidden w-full min-h-[350px]">
-        <div className="flex items-center gap-2 h-9.5 border-b px-4 border-brand-neutral-400 text-brand-neutral-100">
-          <span className="flex-1 truncate text-sm font-mono">
-            {step.filename}
-          </span>
-          <CopyButton text={step.content} className="size-6 top-0 -right-2" />
-        </div>
-        <div className="py-4 font-mono text-[13px] overflow-auto [&>pre]:!bg-transparent [&>pre]:p-0 [&>pre]:m-0 [&_*]:!text-[13px] [&_*]:!leading-relaxed">
-          <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
-        </div>
-      </div>
+      <CodeBlock title={step.filename} className="not-fumadocs-codeblock">
+        <div dangerouslySetInnerHTML={{ __html: highlightedContent || "" }} />
+      </CodeBlock>
     );
   }
 
   return (
-    <div className="bg-black border border-brand-neutral-400 rounded-lg overflow-hidden w-full min-h-[350px]">
-      <div className="p-4 font-mono text-[13px] flex flex-col gap-3 overflow-auto">
-        <div className="flex items-center gap-2">
-          <span className="text-green-400">$</span>
-          <span className="text-zinc-100">{step.command}</span>
+    <CodeBlock
+      language="shell"
+      Actions={({ className }) => (
+        <div className={className}>
+          <CopyButton text={step.command} label />
         </div>
-        <pre className="text-zinc-400 whitespace-pre-wrap leading-relaxed">
-          {step.output}
-        </pre>
-      </div>
-    </div>
+      )}
+    >
+      <AnimatedShell command={step.command} output={step.output} />
+    </CodeBlock>
   );
 };
 
-const StepContent = ({ stepId }: { stepId: number }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const terminalRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
-  const previousStepRef = useRef(stepId);
-  const isAnimatingRef = useRef(false);
-  const currentAnimationRef = useRef<gsap.core.Timeline | null>(null);
-
-  useEffect(() => {
-    steps.forEach((step) => {
-      const terminal = terminalRefs.current[step.id];
-      if (!terminal) return;
-
-      const isActive = step.id === stepId;
-
-      if (isActive) {
-        gsap.set(terminal, {
-          y: 0,
-          x: 0,
-          scale: 1,
-          opacity: 1,
-          zIndex: 10,
-          display: "flex",
-          transformOrigin: "center center",
-        });
-      } else {
-        gsap.set(terminal, {
-          display: "none",
-          opacity: 0,
-        });
-      }
-    });
-  }, [stepId]);
-
-  useEffect(() => {
-    if (stepId === previousStepRef.current) return;
-
-    const currentTerminal = terminalRefs.current[stepId];
-    const previousTerminal = terminalRefs.current[previousStepRef.current];
-
-    if (!currentTerminal) {
-      return;
-    }
-
-    // kill any existing animation
-    if (currentAnimationRef.current) {
-      currentAnimationRef.current.kill();
-      currentAnimationRef.current = null;
-
-      // ensure all terminals except the current one are hidden
-      if (previousTerminal) {
-        gsap.set(previousTerminal, {
-          opacity: 0,
-          display: "none",
-        });
-      }
-    }
-
-    previousStepRef.current = stepId;
-
-    if (!previousTerminal) {
-      gsap.set(currentTerminal, {
-        display: "flex",
-        y: 0,
-        x: 0,
-        scale: 1,
-        opacity: 1,
-        zIndex: 10,
-      });
-
-      steps.forEach((step) => {
-        const terminal = terminalRefs.current[step.id];
-        if (terminal && step.id !== stepId) {
-          gsap.set(terminal, { display: "none" });
-        }
-      });
-
-      return;
-    }
-
-    isAnimatingRef.current = true;
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        isAnimatingRef.current = false;
-
-        // Hide all non-active terminals after animation
-        steps.forEach((step) => {
-          const terminal = terminalRefs.current[step.id];
-          if (!terminal) return;
-
-          if (step.id !== stepId) {
-            gsap.set(terminal, { display: "none" });
-          }
-        });
-
-        currentAnimationRef.current = null;
-      },
-    });
-
-    currentAnimationRef.current = tl;
-
-    // Set up the current terminal for animation
-    gsap.set(currentTerminal, {
-      display: "flex",
-      zIndex: 10,
-    });
-
-    tl.to(
-      previousTerminal,
-      {
-        scale: 0.98,
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
-      },
-      0
-    ).fromTo(
-      currentTerminal,
-      {
-        y: 60,
-        scale: 1,
-        opacity: 0,
-      },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 0.5,
-        ease: "power2.out",
-      },
-      0.1
-    );
-  }, [stepId]);
-
-  useEffect(() => {
-    return () => {
-      if (currentAnimationRef.current) {
-        currentAnimationRef.current.kill();
-        currentAnimationRef.current = null;
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full flex items-center justify-center"
-    >
+export const HomeSteps = () => (
+  <section id="getting-started" className="editorial-section home-steps">
+    <div className="editorial-section-head">
+      <h2>Getting started</h2>
+      <span aria-hidden="true">III</span>
+    </div>
+    <p>From a new project to a running server in four steps.</p>
+    <div className="editorial-steps">
       {steps.map((step) => (
-        <div
+        <AccordionItem
           key={step.id}
-          ref={(el) => {
-            terminalRefs.current[step.id] = el;
-          }}
-          data-step={step.id}
-          className="absolute top-0 left-0 w-full h-full flex items-center justify-center"
-          style={{
-            transformOrigin: "center center",
-            display: step.id === stepId ? "flex" : "none",
-            opacity: step.id === stepId ? 1 : 0,
-          }}
+          name="getting-started"
+          index={step.id}
+          title={step.title}
+          open={step.id === 1}
         >
           <Terminal step={step} />
-        </div>
+        </AccordionItem>
       ))}
     </div>
-  );
-};
-
-export const HomeSteps = () => {
-  const [selectedStep, setSelectedStep] = useState(1);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const resumeTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleStepChange = (newStep: number) => {
-    setSelectedStep(newStep);
-    setIsAutoPlaying(false);
-
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = null;
-    }
-    if (resumeTimerRef.current) {
-      clearTimeout(resumeTimerRef.current);
-    }
-
-    resumeTimerRef.current = setTimeout(() => {
-      setIsAutoPlaying(true);
-    }, 5000);
-  };
-
-  useEffect(() => {
-    if (!isAutoPlaying) return;
-
-    autoPlayTimerRef.current = setInterval(() => {
-      setSelectedStep((current) => {
-        const nextStep = current >= steps.length ? 1 : current + 1;
-        return nextStep;
-      });
-    }, 5000);
-
-    return () => {
-      if (autoPlayTimerRef.current) {
-        clearInterval(autoPlayTimerRef.current);
-        autoPlayTimerRef.current = null;
-      }
-    };
-  }, [isAutoPlaying]);
-
-  useEffect(() => {
-    return () => {
-      if (autoPlayTimerRef.current) {
-        clearInterval(autoPlayTimerRef.current);
-      }
-      if (resumeTimerRef.current) {
-        clearTimeout(resumeTimerRef.current);
-      }
-    };
-  }, []);
-
-  return (
-    <div className="w-full py-8 md:py-16 col-span-12 relative">
-      <div className="hidden md:block absolute left-0 top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-[#333333] to-transparent" />
-
-      <div className="md:hidden flex flex-col gap-12 md:gap-8">
-        <div className="flex flex-col gap-2 md:px-4">
-          <h2 className="heading-2 text-gradient">
-            From zero to prod in seconds
-          </h2>
-        </div>
-
-        {steps.map((step) => (
-          <div key={step.id} className="flex flex-col gap-4">
-            <div className="md:px-4 flex items-start">
-              <h3 className="text-[1.25rem] text-brand-white text-balance">
-                {step.title}
-              </h3>
-            </div>
-            <div className="w-full">
-              <Terminal step={step} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="hidden md:flex gap-12 flex-1">
-        <div className="flex-1 flex flex-col relative">
-          <div className="flex flex-col gap-2 lg:gap-4 px-4 py-8 relative">
-            <h2 className="text-4xl">From zero to prod in seconds</h2>
-
-            <div className="absolute bottom-0 left-0 h-[1px] w-full bg-gradient-to-r from-[#333333] to-transparent" />
-          </div>
-
-          <div className="relative py-8">
-            <div className="flex flex-col gap-4 relative">
-              {steps.map((step) => (
-                <button
-                  key={step.id}
-                  onClick={() => handleStepChange(step.id)}
-                  className="flex items-start gap-6 text-left transition-all group cursor-pointer"
-                >
-                  <div
-                    className={cn(
-                      "absolute -left-4 mt-2 size-4 pr-4 flex items-center justify-center text-base flex-shrink-0 transition-all duration-200 ease-in-out border-r border-brand-neutral-300 text-brand-neutral-200 group-hover:text-brand-neutral-50 group-hover:border-brand-neutral-50 opacity-0 md:hidden xl:flex",
-                      selectedStep === step.id &&
-                        "text-brand-white border-brand-white xl:opacity-100"
-                    )}
-                  >
-                    {step.id}
-                  </div>
-
-                  <div className="pt-1 pl-4">
-                    <h3
-                      className={cn(
-                        "text-base text-brand-neutral-200 transition-all group-hover:text-brand-neutral-50",
-                        selectedStep === step.id && "text-brand-white"
-                      )}
-                    >
-                      {step.title}
-                    </h3>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-visible flex items-center justify-center">
-          <StepContent stepId={selectedStep} />
-        </div>
-      </div>
-    </div>
-  );
-};
+  </section>
+);

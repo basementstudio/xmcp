@@ -1,30 +1,28 @@
-import { Tag } from "../../ui/tag";
-import Image, { type StaticImageData } from "next/image";
-import Feature1 from "./feature-1.jpg";
-import Feature2 from "./feature-2.jpg";
-import Feature3 from "./feature-3.jpg";
-import Feature4 from "./feature-4.jpg";
-import Feature5 from "./feature-5.jpg";
-import Feature6 from "./feature-6.jpg";
+import type { ComponentType } from "react";
+import { ContentCard } from "@/components/ui/content-card";
+import {
+  AdapterSchematic,
+  ConfigurationSchematic,
+  IntegrationsSchematic,
+  MiddlewareSchematic,
+  RoutingSchematic,
+  TransportSchematic,
+} from "./schematics";
 
 export const HomeFeatures = () => {
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <Tag text="Features" />
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <h2 className="heading-2 text-balance col-span-12 lg:col-span-4 mt-auto text-gradient">
-            The complete stack to ship an MCP server
-          </h2>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
-            Everything you need to set up fast, customize with ease, and plug
-            directly into your apps.
-          </p>
-        </div>
+    <div id="features" className="editorial-section home-features">
+      <div className="editorial-section-head">
+        <h2>The framework</h2>
+        <span aria-hidden="true">II</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
-        {cards.map((card, index) => (
-          <Card key={index} {...card} />
+      <p className="editorial-section-intro">
+        Everything you need to set up fast, customize with ease, and connect
+        your apps.
+      </p>
+      <div className="site-card-grid">
+        {cards.map((card) => (
+          <Card key={card.href} {...card} />
         ))}
       </div>
     </div>
@@ -32,67 +30,66 @@ export const HomeFeatures = () => {
 };
 
 interface CardProps {
-  asset: StaticImageData;
+  schematic: ComponentType;
   title: string;
   description: string;
+  href: string;
 }
 
-const Card = ({ asset, title, description }: CardProps) => {
+const Card = ({
+  schematic: Schematic,
+  title,
+  description,
+  href,
+}: CardProps) => {
   return (
-    <div className="flex flex-col items-start justify-center p-4 rounded-lg border border-brand-neutral-500 max-h-[360px] h-full">
-      <div className="flex items-center justify-center w-full gap-2 mb-4">
-        <Image
-          src={asset}
-          alt={title}
-          className="mx-auto mix-blend-lighten bg-brand-black"
-          width={245}
-          height={200}
-          sizes="245px"
-          placeholder="blur"
-        />
-      </div>
-      <h3 className="text-brand-white mt-auto text-lg">{title}</h3>
-      <p className="text-brand-neutral-100 pt-1">{description}</p>
-    </div>
+    <ContentCard href={href} media={<Schematic />}>
+      <h3 className="site-card-title">{title}</h3>
+      <p className="site-card-description">{description}</p>
+    </ContentCard>
   );
 };
 
 const cards = [
   {
-    asset: Feature1,
+    schematic: RoutingSchematic,
     title: "File System Routing",
+    href: "/docs/getting-started/project-structure",
     description:
       "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
-    asset: Feature2,
+    schematic: IntegrationsSchematic,
     title: "Integrations",
+    href: "/docs/integrations/better-auth",
     description:
       "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
-    asset: Feature3,
+    schematic: MiddlewareSchematic,
     title: "Middlewares",
+    href: "/docs/core-concepts/middlewares",
     description:
       "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
-    asset: Feature4,
+    schematic: ConfigurationSchematic,
     title: "Extensible Configuration",
+    href: "/docs/configuration/custom-directories",
     description:
       "Customize every aspect of your MCP server with flexible configuration options.",
   },
-
   {
-    asset: Feature5,
+    schematic: TransportSchematic,
     title: "Multiple Transport Support",
+    href: "/docs/configuration/transports",
     description:
       "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
-
   {
-    asset: Feature6,
+    schematic: AdapterSchematic,
     title: "Plug & play to your apps",
+    href: "/docs/adapters/nextjs",
     description:
       "Initialize xmcp directly in your existing Next.js or Express projects with one command.",
   },

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import React from "react";
+import { ContentTable } from "./table";
 import { Code, Pre } from "./code-blocks";
 import { Callout } from "../ui/callout";
 import { Quote } from "../ui/quote";
@@ -60,7 +61,7 @@ function createHeading(level: number) {
     // Don't create anchor links for h1 titles
     if (level === 1) {
       return (
-        <ElementTag className="uppercase relative" {...props}>
+        <ElementTag className="relative" {...props}>
           <div id={slug} className="absolute pointer-none:"></div>
           <span>{children}</span>
         </ElementTag>
@@ -68,9 +69,9 @@ function createHeading(level: number) {
     }
 
     return (
-      <ElementTag className="uppercase relative" {...props}>
+      <ElementTag className="relative" {...props}>
         <div id={slug} className="absolute -top-[10rem] pointer-none:"></div>
-        <a href={`#${slug}`} className="uppercase font-mono">
+        <a href={`#${slug}`} className="font-sans">
           <div className="anchor" />
           <span>{children}</span>
         </a>
@@ -93,6 +94,7 @@ const components = {
   // p: (props: { children: React.ReactNode }) => <p {...props} />,
   Image: RoundedImage,
   a: CustomLink,
+  table: ContentTable,
   code: Code,
   pre: Pre,
   Callout,

@@ -1,6 +1,6 @@
 import { Tag } from "@/components/ui/tag";
 import { BlogPost, getListedBlogPosts } from "@/utils/blog";
-import Link from "fumadocs-core/link";
+import { ContentCard } from "@/components/ui/content-card";
 import Image from "next/image";
 import { getBlogImageProps } from "@/lib/blog-images";
 
@@ -12,25 +12,15 @@ const TEXTURE_IMAGES = [
 ];
 
 export const HomeBlog = () => {
-  const posts = getListedBlogPosts().slice(0, 3);
+  const posts = getListedBlogPosts().slice(0, 4);
 
   return (
-    <div className="col-span-full grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
-            <Tag text="Blog" className="w-fit" />
-            <h2 className="heading-2 text-balance mt-auto text-gradient">
-              Guides & changelogs
-            </h2>
-          </div>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto">
-            Learn, build, and stay up to date with the latest guides,
-            changelogs, and insights to make the most of your MCP server.
-          </p>
-        </div>
+    <div id="from-the-blog" className="editorial-section home-blog">
+      <div className="editorial-section-head">
+        <h2>From the blog</h2>
+        <span aria-hidden="true">IV</span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[20px] col-span-12">
+      <div className="site-card-grid">
         {posts.map((post) => (
           <BlogCard key={post.slug} post={post} />
         ))}
@@ -42,7 +32,7 @@ export const HomeBlog = () => {
 export const BlogCard = ({
   post,
   loading = "lazy",
-  sizes = "(min-width: 1200px) 376px, (min-width: 768px) calc((100vw - 72px) / 3), (min-width: 640px) calc((100vw - 52px) / 2), calc(100vw - 32px)",
+  sizes = "(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)",
 }: {
   post: BlogPost;
   loading?: "eager" | "lazy";
@@ -61,61 +51,52 @@ export const BlogCard = ({
     ];
 
   return (
-    <Link
-      key={post.slug}
+    <ContentCard
       href={`/blog/${post.slug}`}
-      className="text-left group relative overflow-visible h-full block"
+      media={
+        texture ? (
+          <Image
+            {...getBlogImageProps(texture)}
+            alt={post.title}
+            fill
+            className="object-cover"
+            sizes={sizes}
+            loading={loading}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+            <span className="text-gray-500 text-sm uppercase tracking-wide">
+              {post.category}
+            </span>
+          </div>
+        )
+      }
     >
-      <div className="relative rounded-lg overflow-hidden border group-hover:bg-black h-full min-h-[16rem] w-full flex flex-col border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200">
-        <div className="w-full aspect-video border-b border-brand-neutral-500 group-hover:border-brand-neutral-300 transition-colors duration-200 overflow-hidden relative">
-          {texture ? (
-            <Image
-              {...getBlogImageProps(texture)}
-              alt={post.title}
-              fill
-              className="object-cover"
-              sizes={sizes}
-              loading={loading}
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-              <span className="text-gray-500 text-sm uppercase tracking-wide">
-                {post.category}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-4 p-4">
-          <div className="flex items-center justify-between">
-            <Tag text={post.category} />
-            {post.date && (
-              <time
-                dateTime={post.date}
-                className="text-xs text-brand-neutral-50 uppercase tracking-wide"
-              >
-                {new Date(post.date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </time>
-            )}
-          </div>
-
-          <h3 className="text-base md:text-[1.125rem] text-brand-white leading-tight mt-auto">
-            {post.title}
-          </h3>
-
-          <div className="flex-1 flex flex-col justify-between">
-            {post.description && (
-              <p className="text-sm text-brand-neutral-100 leading-relaxed line-clamp-3">
-                {post.description}
-              </p>
-            )}
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Tag text={post.category} />
+        {post.date && (
+          <time
+            dateTime={post.date}
+            className="text-xs text-brand-neutral-50 tracking-wide"
+          >
+            {new Date(post.date).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </time>
+        )}
       </div>
-    </Link>
+
+      <h3 className="site-card-title">{post.title}</h3>
+
+      <div className="flex-1 flex flex-col justify-between">
+        {post.description && (
+          <p className="site-card-description line-clamp-3">
+            {post.description}
+          </p>
+        )}
+      </div>
+    </ContentCard>
   );
 };
