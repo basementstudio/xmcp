@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <main id="main-content" className="site-page-grid site-not-found">
       <section
-        className="flex min-h-[75svh] flex-col items-center justify-center gap-8 py-16 text-center"
+        className="flex flex-col items-center justify-center gap-[clamp(12px,3dvh,32px)] text-center"
         aria-labelledby="not-found-title"
       >
         <PrefooterArtwork />

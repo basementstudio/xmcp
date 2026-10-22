@@ -916,9 +916,20 @@ a.hero-mock-run:hover {
   padding-block: var(--site-section-gap);
   text-align: center;
 }
-/* The 404 already uses this artwork above its recovery links. */
-body:has(.site-not-found) .site-prefooter {
+/* Keep error recovery in one viewport, without the marketing footer. */
+body:has(.site-not-found) :is(.site-prefooter, .site-footer) {
   display: none;
+}
+body .site-not-found {
+  /* Fill the body's remaining height, including the mobile header's border. */
+  flex: 1;
+  padding-block: 24px;
+  align-content: center;
+}
+.site-not-found .prefooter-particles > div {
+  width: clamp(48px, 16dvh, 127px);
+  height: auto;
+  aspect-ratio: 127 / 154;
 }
 body .site-prefooter .site-page-title {
   margin: 0;
