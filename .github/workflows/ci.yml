@@ -70,6 +70,9 @@ jobs:
       - run: pnpm --filter resend-http typecheck
       - run: pnpm --filter resend-http test
       - run: pnpm --filter resend-http test:smoke
+      - run: pnpm --filter paper-stdio exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter paper-stdio typecheck
+      - run: pnpm --filter paper-stdio test
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit
