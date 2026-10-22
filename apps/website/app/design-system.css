@@ -537,8 +537,10 @@ body .prose h2 {
   align-items: center;
   gap: 14px;
   margin-block: 48px 20px;
-  font-size: 16px;
-  line-height: var(--site-body-leading);
+  /* Content headings step up from the 14px body, staying well under the 40px
+     page title: h2 18px, h3 16px, h4 and below at body size. */
+  font-size: 18px;
+  line-height: 26px;
   font-weight: 550;
 }
 
@@ -549,6 +551,11 @@ body .prose :is(h3, h4, h5, h6) {
   text-transform: none;
   font-size: var(--site-body-size);
   line-height: var(--site-body-leading);
+}
+/* After the shared h3–h6 rule, so h3 keeps its step up. */
+body .prose h3 {
+  font-size: 16px;
+  line-height: 24px;
 }
 body .docs-mobile-navigation {
   padding: 0;
