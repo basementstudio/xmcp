@@ -26,6 +26,7 @@ export function ParticleViewport({
   height,
   deferred = false,
   showLoadingArtwork = true,
+  fadeIn = false,
   children,
 }: {
   className: string;
@@ -34,6 +35,8 @@ export function ParticleViewport({
   height: number;
   deferred?: boolean;
   showLoadingArtwork?: boolean;
+  /** Ease the scene in once its first frame is ready, instead of popping in. */
+  fadeIn?: boolean;
   children: (props: ParticleSceneProps) => ReactNode;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -105,7 +108,7 @@ export function ParticleViewport({
       )}
       {enabled && nearby && !failed && (
         <div
-          className={`absolute inset-0 ${showLoadingArtwork && !ready ? "opacity-0" : ""}`}
+          className={`absolute inset-0 ${fadeIn ? "particle-fade" : ""} ${(showLoadingArtwork || fadeIn) && !ready ? "opacity-0" : ""}`}
         >
           <ErrorBoundary fallback={null} onError={onError}>
             {children({ active: visible && pageVisible, onReady, onError })}

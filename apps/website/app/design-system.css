@@ -206,6 +206,15 @@ body a[target="_blank"] * {
   width: 12px;
   height: 12px;
 }
+/* Particle scenes that fade in once their first frame is ready. */
+.particle-fade {
+  transition: opacity 700ms var(--site-ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .particle-fade {
+    transition: none;
+  }
+}
 /* Line schematics in the homepage feature cards. */
 .feature-schematic {
   width: 120px;
