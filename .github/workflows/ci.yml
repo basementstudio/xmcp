@@ -73,6 +73,10 @@ jobs:
       - run: pnpm --filter paper-stdio exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter paper-stdio typecheck
       - run: pnpm --filter paper-stdio test
+      - run: pnpm --filter figma-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter figma-http typecheck
+      - run: pnpm --filter figma-http test
+      - run: pnpm --filter figma-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit

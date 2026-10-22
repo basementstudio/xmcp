@@ -74,6 +74,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/clerk": Icons.clerk,
   "/docs/integrations/commet": Icons.commet,
   "/docs/integrations/descope": Icons.descope,
+  "/docs/integrations/figma": LayersIcon,
   "/docs/integrations/paper": FileTextIcon,
   "/docs/integrations/polar": Icons.polar,
   "/docs/integrations/resend": PaperPlaneIcon,
