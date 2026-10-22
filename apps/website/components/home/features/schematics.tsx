@@ -1,19 +1,26 @@
-import type { CSSProperties, ReactNode, SVGProps } from "react";
+"use client";
+
+import {
+  createContext,
+  useContext,
+  type ReactNode,
+  type SVGProps,
+} from "react";
+import { Easing, interpolate } from "remotion";
 import { Icons } from "@/components/icons";
 
-// Line drawings for the feature tiles, all in one vocabulary: 14px Lucide icons
-// (the docs' icon set) stroked at 1px, faint solid lines for structure, dotted
-// lines for data flow, and small dots that light when data arrives. Strokes use
-// currentColor and the site's faint/muted tokens, so they follow the theme.
-// Motion is CSS-only and shares one cycle (see `.feature-schematic` in
-// design-system.css):
-// - `pulse` paths carry a short segment from start to end of the path.
-// - `lit` shapes fill when a pulse arrives and empty again before the next one.
-// Both take `--delay`; a `lit` shape with the same delay as a pulse lights up
-// as that pulse arrives. Negative delays start partway through the cycle.
-
-type Vars = Record<`--${string}`, string | number>;
-const vars = (values: Vars) => values as CSSProperties;
+// Keep the existing Lucide line drawings sharp at any size. Remotion supplies
+// time to the animated primitives; a null time renders their static artwork.
+export const SchematicTime = createContext<number | null>(null);
+const FLOW_SECONDS = 2.4;
+const DETAIL_SECONDS = 3.6;
+// Both cycles meet here, so even staggered paths join seamlessly on repeat.
+export const SCHEMATIC_SECONDS = 7.2;
+const flowEase = Easing.bezier(0.45, 0, 0.25, 1);
+const detailEase = Easing.bezier(0.32, 0.72, 0, 1);
+const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+const phase = (time: number, delay: number, duration: number) =>
+  ((((time - delay) % duration) + duration) % duration) / duration;
 
 function Schematic({
   children,
@@ -34,36 +41,58 @@ function Schematic({
 }
 
 function Pulse({ d, delay = 0 }: { d: string; delay?: number }) {
+  const time = useContext(SchematicTime);
+  const progress = time === null ? 0 : phase(time, delay, FLOW_SECONDS);
   return (
     <path
       d={d}
       pathLength={100}
       className="pulse"
-      style={vars({ "--delay": `${delay}s` })}
+      style={{
+        strokeDashoffset: interpolate(progress, [0, 0.36], [12, -100], {
+          ...clamp,
+          easing: flowEase,
+        }),
+        opacity:
+          time === null
+            ? 0
+            : interpolate(progress, [0, 0.04, 0.36, 0.4, 1], [0, 1, 1, 0, 0]),
+      }}
     />
   );
 }
 
-/** Shape props that fill on arrival; `rest` keeps it filled without motion. */
-const lit = (delay: number, rest = false) => ({
-  className: "lit",
-  style: vars({ "--delay": `${delay}s`, "--rest": rest ? 1 : 0 }),
-});
-
-/** The dot that lights where a pulse arrives. */
+/** The dot lights as a pulse reaches its endpoint, then settles before repeat. */
 function Arrival({
   x,
   y,
   delay,
-  rest,
+  rest = false,
 }: {
   x: number;
   y: number;
   delay: number;
   rest?: boolean;
 }) {
+  const time = useContext(SchematicTime);
+  const resting = rest ? 1 : 0;
   return (
-    <circle cx={x} cy={y} r={1.5} stroke="currentColor" {...lit(delay, rest)} />
+    <circle
+      cx={x}
+      cy={y}
+      r={1.5}
+      stroke="currentColor"
+      fill="currentColor"
+      fillOpacity={
+        time === null
+          ? resting
+          : interpolate(
+              phase(time, delay, FLOW_SECONDS),
+              [0, 0.32, 0.38, 0.82, 0.94, 1],
+              [resting, resting, 1, 1, resting, resting]
+            )
+      }
+    />
   );
 }
 
@@ -256,31 +285,46 @@ const settings = [
   [59, 62, 22, -1.7],
 ];
 
-/** One config file driving settings, each drifting between two values. */
+function Setting({
+  y,
+  value,
+  shift,
+  delay,
+}: {
+  y: number;
+  value: number;
+  shift: number;
+  delay: number;
+}) {
+  const time = useContext(SchematicTime);
+  const drift =
+    time === null
+      ? 0
+      : interpolate(
+          phase(time, delay, DETAIL_SECONDS),
+          [0, 0.15, 0.5, 0.65, 1],
+          [0, 0, shift, shift, 0],
+          { easing: detailEase }
+        );
+  const position = value + drift;
+  return (
+    <g>
+      <path d={`M26 ${y}h6`} className="faint" />
+      <path d={`M32 ${y}H108`} className="faint dotted" />
+      <path d={`M32 ${y}H${position}`} stroke="currentColor" />
+      <circle cx={position} cy={y} r={2.5} className="fill" />
+    </g>
+  );
+}
+
+/** The track and knob share one position, so they never drift apart. */
 export function ConfigurationSchematic() {
   return (
     <Schematic>
       <Icon glyph="fileCode" x={4} y={33} />
       <path d="M20 40h6M26 20v39" className="faint" />
       {settings.map(([y, value, shift, delay]) => (
-        <g
-          key={y}
-          style={vars({
-            "--shift": shift,
-            "--length": value - 32,
-            "--delay": `${delay}s`,
-          })}
-        >
-          <path d={`M26 ${y}h6`} className="faint" />
-          <path d={`M32 ${y}H108`} className="faint dotted" />
-          <path
-            d={`M32 ${y}H108`}
-            pathLength={76}
-            stroke="currentColor"
-            className="track"
-          />
-          <circle cx={value} cy={y} r={2.5} className="knob fill" />
-        </g>
+        <Setting key={y} y={y} value={value} shift={shift} delay={delay} />
       ))}
     </Schematic>
   );
@@ -316,6 +360,34 @@ const code = [
   [50, 10],
 ];
 
+function CodeLine({
+  y,
+  length,
+  delay,
+}: {
+  y: number;
+  length: number;
+  delay: number;
+}) {
+  const time = useContext(SchematicTime);
+  const drawn =
+    time === null
+      ? 1
+      : interpolate(
+          phase(time, delay, DETAIL_SECONDS),
+          [0, 0.3, 0.8, 0.95, 1],
+          [0, 1, 1, 0, 0]
+        );
+  return (
+    <path
+      d={`M87 ${y}h${length}`}
+      pathLength={1}
+      className="faint"
+      strokeDasharray={`${drawn} 1`}
+    />
+  );
+}
+
 /** The docs' Next.js and Express marks plugging xmcp into an existing app. */
 export function AdapterSchematic() {
   return (
@@ -335,14 +407,18 @@ export function AdapterSchematic() {
       <Arrival x={64.5} y={40} delay={0} />
       <Icon glyph="box" x={68} y={33} />
       {code.map(([y, length], i) => (
-        <path
-          key={y}
-          d={`M87 ${y}h${length}`}
-          pathLength={1}
-          className="faint type"
-          style={vars({ "--delay": `${i * 0.18}s` })}
-        />
+        <CodeLine key={y} y={y} length={length} delay={i * 0.18} />
       ))}
     </Schematic>
   );
 }
+
+export const schematics = {
+  routing: RoutingSchematic,
+  integrations: IntegrationsSchematic,
+  middleware: MiddlewareSchematic,
+  configuration: ConfigurationSchematic,
+  transport: TransportSchematic,
+  adapter: AdapterSchematic,
+};
+export type SchematicKind = keyof typeof schematics;

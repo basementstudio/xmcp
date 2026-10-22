@@ -194,6 +194,25 @@ body a[target="_blank"] * {
   cursor: alias;
 }
 /* Template detail: provider logo tile and a compact details list. */
+.site-card-media:has(.template-particle-art) {
+  isolation: isolate;
+  background: var(--site-card);
+}
+.template-particle-art {
+  width: 160px;
+  max-width: 70%;
+  background: #000;
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}
+.dark .template-particle-art {
+  filter: none;
+  mix-blend-mode: screen;
+}
+.template-particle-image {
+  width: 100%;
+  aspect-ratio: 1;
+}
 .template-logo-tile {
   display: grid;
   flex: none;
@@ -269,9 +288,15 @@ body a[target="_blank"] * {
   }
 }
 /* Line schematics in the homepage feature cards. */
+.feature-illustration {
+  width: 160px;
+  max-width: 80%;
+  aspect-ratio: 3 / 2;
+  pointer-events: none;
+}
 .feature-schematic {
-  width: 120px;
-  height: 80px;
+  width: 100%;
+  height: 100%;
   overflow: visible;
   stroke-linecap: square;
 }
@@ -295,9 +320,8 @@ body a[target="_blank"] * {
   fill: var(--site-muted);
   stroke: none;
 }
-/* Shared motion cycle; see schematics.tsx for how delays line up. */
+/* Remotion owns timing; CSS only supplies theme and hover colors. */
 .feature-schematic {
-  --cycle: 2.4s;
   --pulse: var(--site-muted);
 }
 .site-content-card:hover .feature-schematic,
@@ -308,103 +332,6 @@ body a[target="_blank"] * {
   stroke: var(--pulse);
   stroke-width: 1.5;
   stroke-dasharray: 12 100;
-  stroke-dashoffset: 12;
-  opacity: 0;
-  transition: stroke 300ms var(--site-ease);
-}
-.feature-schematic .lit {
-  fill: currentColor;
-  fill-opacity: var(--rest, 0);
-}
-.feature-schematic .track {
-  stroke-dasharray: var(--length) 200;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .feature-schematic .pulse {
-    animation: schematic-pulse var(--cycle) var(--delay, 0s) infinite
-      cubic-bezier(0.45, 0, 0.25, 1);
-  }
-  .feature-schematic .lit {
-    animation: schematic-lit var(--cycle) var(--delay, 0s) infinite;
-  }
-  .feature-schematic .track {
-    animation: schematic-track calc(var(--cycle) * 1.5) var(--delay, 0s)
-      infinite var(--site-ease);
-  }
-  .feature-schematic .knob {
-    animation: schematic-knob calc(var(--cycle) * 1.5) var(--delay, 0s) infinite
-      var(--site-ease);
-  }
-  .feature-schematic .type {
-    animation: schematic-type calc(var(--cycle) * 1.5) var(--delay, 0s) infinite;
-  }
-}
-@keyframes schematic-pulse {
-  0% {
-    stroke-dashoffset: 12;
-    opacity: 0;
-  }
-  4% {
-    opacity: 1;
-  }
-  36% {
-    stroke-dashoffset: -100;
-    opacity: 1;
-  }
-  40%,
-  100% {
-    stroke-dashoffset: -100;
-    opacity: 0;
-  }
-}
-@keyframes schematic-lit {
-  0%,
-  32% {
-    fill-opacity: var(--rest, 0);
-  }
-  38%,
-  82% {
-    fill-opacity: 1;
-  }
-  94%,
-  100% {
-    fill-opacity: var(--rest, 0);
-  }
-}
-@keyframes schematic-track {
-  0%,
-  15%,
-  100% {
-    stroke-dasharray: var(--length) 200;
-  }
-  50%,
-  65% {
-    stroke-dasharray: calc(var(--length) + var(--shift)) 200;
-  }
-}
-@keyframes schematic-knob {
-  0%,
-  15%,
-  100% {
-    transform: none;
-  }
-  50%,
-  65% {
-    transform: translateX(calc(var(--shift) * 1px));
-  }
-}
-@keyframes schematic-type {
-  0% {
-    stroke-dasharray: 0 1;
-  }
-  30%,
-  80% {
-    stroke-dasharray: 1 1;
-  }
-  95%,
-  100% {
-    stroke-dasharray: 0 1;
-  }
 }
 .site-page-toc {
   display: none;

@@ -1,13 +1,6 @@
-import type { ComponentType } from "react";
 import { ContentCard } from "@/components/ui/content-card";
-import {
-  AdapterSchematic,
-  ConfigurationSchematic,
-  IntegrationsSchematic,
-  MiddlewareSchematic,
-  RoutingSchematic,
-  TransportSchematic,
-} from "./schematics";
+import { FeatureIllustration } from "./feature-illustration";
+import type { SchematicKind } from "./schematics";
 
 export const HomeFeatures = () => {
   return (
@@ -30,64 +23,59 @@ export const HomeFeatures = () => {
 };
 
 interface CardProps {
-  schematic: ComponentType;
+  schematic: SchematicKind;
   title: string;
   description: string;
   href: string;
 }
 
-const Card = ({
-  schematic: Schematic,
-  title,
-  description,
-  href,
-}: CardProps) => {
+const Card = ({ schematic, title, description, href }: CardProps) => {
   return (
-    <ContentCard href={href} media={<Schematic />}>
+    <ContentCard href={href} media={<FeatureIllustration kind={schematic} />}>
       <h3 className="site-card-title">{title}</h3>
       <p className="site-card-description">{description}</p>
     </ContentCard>
   );
 };
 
-const cards = [
+const cards: CardProps[] = [
   {
-    schematic: RoutingSchematic,
+    schematic: "routing",
     title: "File System Routing",
     href: "/docs/getting-started/project-structure",
     description:
       "Automatically register tools, prompts, and resources with zero configuration.",
   },
   {
-    schematic: IntegrationsSchematic,
+    schematic: "integrations",
     title: "Integrations",
     href: "/docs/integrations/better-auth",
     description:
       "Secure access with Better Auth's integration and monetize with Polar.",
   },
   {
-    schematic: MiddlewareSchematic,
+    schematic: "middleware",
     title: "Middlewares",
     href: "/docs/core-concepts/middlewares",
     description:
       "Add authentication, logging, or custom logic to intercept and process requests and responses.",
   },
   {
-    schematic: ConfigurationSchematic,
+    schematic: "configuration",
     title: "Extensible Configuration",
     href: "/docs/configuration/custom-directories",
     description:
       "Customize every aspect of your MCP server with flexible configuration options.",
   },
   {
-    schematic: TransportSchematic,
+    schematic: "transport",
     title: "Multiple Transport Support",
     href: "/docs/configuration/transports",
     description:
       "Build and deploy servers with HTTP or STDIO transport protocols out of the box.",
   },
   {
-    schematic: AdapterSchematic,
+    schematic: "adapter",
     title: "Plug & play to your apps",
     href: "/docs/adapters/nextjs",
     description:

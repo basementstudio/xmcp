@@ -1,10 +1,4 @@
-<svg width="177" height="110" viewBox="0 0 177 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_33_169)">
-<path d="M64.7168 10.6449L10.6447 64.717L34.9626 72.9719L52.3901 55.5444L79.4455 64.7285L98.6659 45.5081L71.6105 36.324L89.0348 18.8997L64.7168 10.6449ZM98.6659 45.5081L122.371 53.5591L103.147 72.7826L79.4392 64.7348L62.0181 82.1559L111.566 98.9753L165.635 44.9063L116.087 28.0869L98.6659 45.5081Z" fill="#333333"/>
-</g>
-<defs>
-<clipPath id="clip0_33_169">
-<rect width="106.578" height="106.578" fill="white" transform="matrix(0.94693 0.321439 -0.707107 0.707107 75.3619 0)"/>
-</clipPath>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<!-- Front-facing mark shared with components/icons.tsx. White on transparent for the particle texture. -->
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" x="32" width="192" y="32" height="192"><path d="M0 3.39014V20.6101H5.783V15.0601H12.217V8.93914H5.783V3.39014H0ZM12.217 8.93914L17.855 8.94014V15.0621H12.217V20.6101H24V3.39114H12.217V8.93914Z" fill="#fff"></path></svg>
 </svg>

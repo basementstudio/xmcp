@@ -4,6 +4,7 @@ import Image from "next/image";
 import { cn } from "../../utils/cn";
 import type { TemplateItem } from "@/app/templates/utils/content";
 import { Tag } from "@/components/ui/tag";
+import ParticleImage from "@/components/particles/image";
 import {
   resolveTemplatePreviewImage,
   shouldBypassImageOptimization,
@@ -38,6 +39,8 @@ export function TemplateCard({
   const { name, description } = item;
   const displayName = name.replace(/-/g, " ").replace(/\s+/g, " ").trim();
   const previewImage = resolveTemplatePreviewImage(item);
+  const isProviderLogo =
+    previewImage.isFallback && previewImage.src !== "/templates/fallback.svg";
   const category =
     (!isGenericLabel(item.category) ? item.category : undefined) ??
     item.tags?.find((tag) => !isGenericLabel(tag)) ??
@@ -55,21 +58,28 @@ export function TemplateCard({
       rel={isExternal ? "noopener noreferrer" : undefined}
       className={cn(isExternal ? "cursor-alias" : "cursor-pointer", className)}
       media={
-        <Image
-          src={previewImage.src}
-          alt={`${displayName} preview`}
-          width={1200}
-          height={630}
-          sizes="(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)"
-          unoptimized={shouldBypassImageOptimization(previewImage.src)}
-          className={cn(
-            "h-full w-full object-contain p-5",
-            previewImage.isFallback &&
-              previewImage.src !== "/templates/fallback.svg" &&
-              "template-provider-art"
-          )}
-          loading={loading}
-        />
+        isProviderLogo ? (
+          <div className="template-particle-art">
+            <ParticleImage
+              src={previewImage.src}
+              width={256}
+              height={256}
+              className="template-particle-image"
+              preset="footer"
+            />
+          </div>
+        ) : (
+          <Image
+            src={previewImage.src}
+            alt={`${displayName} preview`}
+            width={1200}
+            height={630}
+            sizes="(min-width: 740px) 338px, (min-width: 640px) calc((100vw - 64px) / 2), calc(100vw - 40px)"
+            unoptimized={shouldBypassImageOptimization(previewImage.src)}
+            className="h-full w-full object-contain p-5"
+            loading={loading}
+          />
+        )
       }
     >
       <h3 className="site-card-title">{displayName}</h3>
