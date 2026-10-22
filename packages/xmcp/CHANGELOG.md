@@ -1,5 +1,19 @@
 # xmcp
 
+## 1.9.0
+
+### Minor Changes
+
+- a0f4654: Add optional `http.maxSubscriptions` to limit concurrent subscription streams
+  per HTTP handler across standalone HTTP, Vercel, Cloudflare, and all HTTP
+  adapters. Set it to `0` to reject `subscriptions/listen` before opening a stream;
+  omitting it preserves the SDK default. This does not limit stream duration or
+  change ordinary requests, tool-call streaming, or STDIO behavior.
+
+### Patch Changes
+
+- d3d89ce: Refresh the package README with current positioning, a tool example, and the full set of integrations, adapters and deployment targets.
+
 ## 1.8.0
 
 ### Minor Changes
