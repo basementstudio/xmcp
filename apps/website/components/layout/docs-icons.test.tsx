@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
 import { renderToStaticMarkup } from "react-dom/server";
+
 import { DocsPageIcon, sidebarIcons } from "./docs-icons";
 
 test("every docs page has an intentional sidebar icon", () => {
@@ -14,7 +16,10 @@ test("every docs page has an intentional sidebar icon", () => {
     const slug = file.replace(/\.mdx$/, "").replace(/(^|\/)index$/, "");
     const url = `/docs${slug ? `/${slug}` : ""}`;
     assert(sidebarIcons[url], `Missing sidebar icon: ${url}`);
-    assert.match(renderToStaticMarkup(<DocsPageIcon item={{ url }} />), /<svg/);
+    assert.match(
+      renderToStaticMarkup(<DocsPageIcon item={{ url }} />),
+      /<(?:svg|img)\b/
+    );
   }
 });
 

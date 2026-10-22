@@ -1,5 +1,5 @@
 import { type ComponentType, useId } from "react";
-import { Icons } from "../icons";
+
 import {
   ArchiveIcon,
   AvatarIcon,
@@ -24,9 +24,12 @@ import {
   MagnifyingGlassIcon,
   PaperPlaneIcon,
   PersonIcon,
-  TokensIcon,
   TimerIcon,
+  TokensIcon,
 } from "@/components/ui/site-icons";
+
+import { Icons } from "../icons";
+import { IntegrationIcons } from "./integration-icons";
 
 export const sidebarIcons: Partial<
   Record<string, ComponentType<{ className?: string; id?: string }>>
@@ -74,11 +77,11 @@ export const sidebarIcons: Partial<
   "/docs/integrations/clerk": Icons.clerk,
   "/docs/integrations/commet": Icons.commet,
   "/docs/integrations/descope": Icons.descope,
-  "/docs/integrations/figma": LayersIcon,
-  "/docs/integrations/paper": FileTextIcon,
+  "/docs/integrations/figma": IntegrationIcons.figma,
+  "/docs/integrations/paper": IntegrationIcons.paper,
   "/docs/integrations/polar": Icons.polar,
-  "/docs/integrations/profound": BarChartIcon,
-  "/docs/integrations/resend": PaperPlaneIcon,
+  "/docs/integrations/profound": IntegrationIcons.profound,
+  "/docs/integrations/resend": IntegrationIcons.resend,
   "/docs/integrations/scalekit": Icons.scalekit,
   "/docs/integrations/sentry": BarChartIcon,
   "/docs/integrations/supabase": Icons.supabase,
