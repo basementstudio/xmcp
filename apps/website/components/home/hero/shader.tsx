@@ -1,5 +1,5 @@
 import { HeroSlot } from "./persistent-hero";
-import { ProductMock } from "./product-mock";
+import { ProductMock } from "./dashboard-player";
 
 export default function Shader() {
   return (
