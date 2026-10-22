@@ -1,5 +1,6 @@
 import { ContentCard } from "@/components/ui/content-card";
 import { BlogArtwork } from "./artwork";
+import { getBlogImageProps } from "@/lib/blog-images";
 import { type BlogPost } from "../../utils/blog";
 import { Tag } from "../ui/tag";
 
@@ -18,7 +19,7 @@ export function BlogHero({ featuredPost }: BlogHeroProps) {
       media={
         image ? (
           <BlogArtwork
-            src={image}
+            image={getBlogImageProps(image)}
             alt={featuredPost.title}
             sizes="(min-width: 768px) 350px, (min-width: 740px) 700px, calc(100vw - 40px)"
             preload

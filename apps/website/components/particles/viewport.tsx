@@ -28,6 +28,8 @@ export function ParticleViewport({
   showLoadingArtwork = true,
   fadeIn = false,
   fallback,
+  prepare = false,
+  onReady: onArtworkReady,
   children,
 }: {
   className: string;
@@ -40,6 +42,9 @@ export function ParticleViewport({
   fadeIn?: boolean;
   /** Preserve optimized, full-bleed artwork when a picture needs its own layout. */
   fallback?: ReactNode;
+  /** Prepare one frame offscreen, then pause until the artwork is visible. */
+  prepare?: boolean;
+  onReady?: () => void;
   children: (props: ParticleSceneProps) => ReactNode;
 }) {
   const container = useRef<HTMLDivElement>(null);
@@ -51,7 +56,10 @@ export function ParticleViewport({
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
   const [fallbackSource, setFallbackSource] = useState(texture);
-  const onReady = useCallback(() => setReady(true), []);
+  const onReady = useCallback(() => {
+    setReady(true);
+    onArtworkReady?.();
+  }, [onArtworkReady]);
   const onError = useCallback(() => setFailed(true), []);
 
   useEffect(() => {
@@ -111,6 +119,9 @@ export function ParticleViewport({
             unoptimized
             crossOrigin="anonymous"
             loading={deferred ? "lazy" : "eager"}
+            onLoad={() => {
+              if (reducedMotion || failed) onArtworkReady?.();
+            }}
             // Keep the original asset as an independent fallback if the new texture fails.
             onError={() =>
               setFallbackSource(texture.replace(/\.webp$/, ".png"))
@@ -118,12 +129,16 @@ export function ParticleViewport({
             className={`absolute inset-0 m-auto h-[90%] w-[90%] object-contain ${ready && !failed ? "invisible" : ""}`}
           />
         ))}
-      {enabled && nearby && !failed && (
+      {enabled && (nearby || prepare) && !failed && (
         <div
           className={`absolute inset-0 ${fadeIn ? "particle-fade" : ""} ${(showLoadingArtwork || fadeIn) && !ready ? "opacity-0" : ""}`}
         >
           <ErrorBoundary fallback={null} onError={onError}>
-            {children({ active: visible && pageVisible, onReady, onError })}
+            {children({
+              active: (visible || (prepare && !ready)) && pageVisible,
+              onReady,
+              onError,
+            })}
           </ErrorBoundary>
         </div>
       )}

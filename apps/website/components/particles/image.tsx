@@ -25,6 +25,7 @@ export default function ParticleImage({
   preset = "card",
   fallback,
   fadeIn = false,
+  prepare = false,
 }: {
   src: string;
   width: number;
@@ -33,6 +34,7 @@ export default function ParticleImage({
   preset?: keyof typeof PRESETS;
   fallback?: ReactNode;
   fadeIn?: boolean;
+  prepare?: boolean;
 }) {
   return (
     <ParticleViewport
@@ -43,6 +45,7 @@ export default function ParticleImage({
       deferred
       fallback={fallback}
       fadeIn={fadeIn}
+      prepare={prepare}
     >
       {(props) => (
         <Suspense fallback={null}>
