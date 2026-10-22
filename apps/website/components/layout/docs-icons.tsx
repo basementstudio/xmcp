@@ -77,6 +77,7 @@ export const sidebarIcons: Partial<
   "/docs/integrations/figma": LayersIcon,
   "/docs/integrations/paper": FileTextIcon,
   "/docs/integrations/polar": Icons.polar,
+  "/docs/integrations/profound": BarChartIcon,
   "/docs/integrations/resend": PaperPlaneIcon,
   "/docs/integrations/scalekit": Icons.scalekit,
   "/docs/integrations/sentry": BarChartIcon,

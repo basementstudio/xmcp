@@ -77,6 +77,10 @@ jobs:
       - run: pnpm --filter figma-http typecheck
       - run: pnpm --filter figma-http test
       - run: pnpm --filter figma-http test:smoke
+      - run: pnpm --filter profound-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter profound-http typecheck
+      - run: pnpm --filter profound-http test
+      - run: pnpm --filter profound-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit
