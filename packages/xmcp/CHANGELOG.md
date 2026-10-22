@@ -1,5 +1,16 @@
 # xmcp
 
+## 1.8.0
+
+### Minor Changes
+
+- 516fc7a: Expose current-request SDK authentication through `RequestContext.authInfo` and MCP middleware, including listing operations, without retaining authentication across requests.
+- ad824fe: Expose a read-only registered tool metadata snapshot on `tools/call` MCP middleware as `ctx.tool.metadata`, with normalized `_meta` matching discovery results for shared authorization policies.
+
+### Patch Changes
+
+- 798942d: Update `@modelcontextprotocol/server` to 2.3.0.
+
 ## 1.7.2
 
 ### Patch Changes
