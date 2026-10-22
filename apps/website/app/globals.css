@@ -563,9 +563,12 @@ body a:is(:hover, :focus-visible),
   transition: color 200ms ease-out;
 }
 
-/* Body-copy links read grey with a faint underline, so they stand apart from
-   the surrounding text by more than color; hover brings them up to ink. */
-body .prose :is(p, li, td) a:not(:has(img)) {
+/* Text links everywhere (body copy and standalone .link-underline links) read
+   grey with a faint underline, so they stand apart from surrounding text by more
+   than color; hover brings them up to ink. Heading permalinks keep the heading
+   style. */
+body .prose :is(p, li, td) a:not(:has(img)),
+body a.link-underline:not(:is(h1, h2, h3, h4, h5, h6) a) {
   color: var(--site-text);
   text-decoration: underline;
   text-decoration-color: var(--site-faint);
@@ -575,7 +578,12 @@ body .prose :is(p, li, td) a:not(:has(img)) {
     color 200ms ease-out,
     text-decoration-color 200ms ease-out;
 }
-body .prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible) {
+body .prose :is(p, li, td) a:not(:has(img)):is(:hover, :focus-visible),
+body
+  a.link-underline:not(:is(h1, h2, h3, h4, h5, h6) a):is(
+    :hover,
+    :focus-visible
+  ) {
   color: var(--site-ink);
   text-decoration-color: var(--site-muted);
 }
