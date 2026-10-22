@@ -2,7 +2,18 @@
 
 import type { ComponentType, Ref, RefAttributes, SVGAttributes } from "react";
 import { useEffect, useRef } from "react";
-import { Circle, TriangleAlert, Info, Trash2 } from "lucide-react";
+import {
+  Activity,
+  AppWindow,
+  Circle,
+  FileInput,
+  Fingerprint,
+  KeyRound,
+  ScanLine,
+  TriangleAlert,
+  Info,
+  Trash2,
+} from "lucide-react";
 import { bindIconInteraction, type IconAnimation } from "./icon-interaction";
 import { AlignLeftIcon as AnimatedAlignLeftIcon } from "./lucide-animated/align-left";
 import { ArchiveIcon as AnimatedArchiveIcon } from "./lucide-animated/archive";
@@ -108,6 +119,12 @@ function staticIcon(
 }
 
 export const ArchiveIcon = siteIcon(AnimatedArchiveIcon, "ArchiveIcon");
+export const ActivityIcon = staticIcon(Activity, "ActivityIcon");
+export const AppWindowIcon = staticIcon(AppWindow, "AppWindowIcon");
+export const FingerprintIcon = staticIcon(Fingerprint, "FingerprintIcon");
+export const KeyRoundIcon = staticIcon(KeyRound, "KeyRoundIcon");
+export const FileInputIcon = staticIcon(FileInput, "FileInputIcon");
+export const ScanLineIcon = staticIcon(ScanLine, "ScanLineIcon");
 export const ArrowLeftIcon = siteIcon(AnimatedArrowLeftIcon, "ArrowLeftIcon");
 export const ArrowRightIcon = siteIcon(
   AnimatedArrowRightIcon,

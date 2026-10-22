@@ -35,6 +35,26 @@ test("unknown pages have a fallback and page-provided icons take precedence", ()
   assert.equal((explicit.match(/<svg/g) ?? []).length, 1);
 });
 
+test("each docs page has a distinct icon shape", () => {
+  const shapes = new Map<string, string>();
+  for (const [url, Icon] of Object.entries(sidebarIcons)) {
+    assert(Icon);
+    const html = renderToStaticMarkup(<Icon />);
+    // Compare geometry, not component names: aliases can render the same glyph.
+    const shape = (
+      html.match(
+        /<(?:path|rect|circle|line|polyline|polygon|ellipse)\b[^>]*>/g
+      ) ?? []
+    ).join("");
+    assert(shape, `Missing icon geometry: ${url}`);
+    assert(
+      !shapes.has(shape),
+      `${url} repeats the icon for ${shapes.get(shape)}`
+    );
+    shapes.set(shape, url);
+  }
+});
+
 test("repeated brand icons use distinct mask IDs in desktop and mobile navigation", () => {
   const html = renderToStaticMarkup(
     <>
