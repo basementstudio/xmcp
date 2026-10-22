@@ -16,10 +16,7 @@ test("every docs page has an intentional sidebar icon", () => {
     const slug = file.replace(/\.mdx$/, "").replace(/(^|\/)index$/, "");
     const url = `/docs${slug ? `/${slug}` : ""}`;
     assert(sidebarIcons[url], `Missing sidebar icon: ${url}`);
-    assert.match(
-      renderToStaticMarkup(<DocsPageIcon item={{ url }} />),
-      /<(?:svg|img)\b/
-    );
+    assert.match(renderToStaticMarkup(<DocsPageIcon item={{ url }} />), /<svg/);
   }
 });
 
