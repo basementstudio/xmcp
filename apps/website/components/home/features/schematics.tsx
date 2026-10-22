@@ -154,9 +154,6 @@ const glyphs = {
       <path d="m7 11 2-2-2-2M11 13h4" />
     </>
   ),
-  box: (
-    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16ZM3.3 7l8.7 5 8.7-5M12 22V12" />
-  ),
 };
 
 /** A Lucide glyph placed in schematic units, stroked at 1px like the lines. */
@@ -330,8 +327,8 @@ export function ConfigurationSchematic() {
   );
 }
 
-const http = "M24 40C42 40 44 20 64 20H86";
-const stdio = "M24 40C42 40 44 60 64 60H86";
+const http = "M24 40H44V20H86";
+const stdio = "M24 40H44V60H86";
 
 /** One server reaching clients over HTTP (the web) and STDIO (a local shell). */
 export function TransportSchematic() {
@@ -350,14 +347,14 @@ export function TransportSchematic() {
   );
 }
 
-// Both framework routes merge and enter the app window, where xmcp docks.
-const nextApp = "M25 20H30Q38 20 38 28V34Q38 40 46 40H62";
-const expressApp = "M25 60H30Q38 60 38 52V46Q38 40 46 40H62";
+// Orthogonal framework routes merge at the app's input, beside its code lines.
+const nextApp = "M25 20H38V40H62";
+const expressApp = "M25 60H38V40H62";
 const code = [
-  [32, 20],
-  [38, 14],
-  [44, 18],
-  [50, 10],
+  [32, 34],
+  [38, 24],
+  [44, 30],
+  [50, 20],
 ];
 
 function CodeLine({
@@ -380,7 +377,7 @@ function CodeLine({
         );
   return (
     <path
-      d={`M87 ${y}h${length}`}
+      d={`M72 ${y}h${length}`}
       pathLength={1}
       className="faint"
       strokeDasharray={`${drawn} 1`}
@@ -399,13 +396,12 @@ export function AdapterSchematic() {
       <Pulse d={nextApp} />
       <Pulse d={expressApp} delay={1.2} />
       {/* The window is structure, so it takes the muted tone, not the ink. */}
-      <rect x={60.5} y={14.5} width={52} height={51} rx={3} className="frame" />
+      <rect x={60.5} y={14.5} width={52} height={51} rx={1} className="frame" />
       <path d="M61 22h51" className="faint" />
       {[65, 69, 73].map((x) => (
         <circle key={x} cx={x} cy={18.25} r={1} className="muted" />
       ))}
       <Arrival x={64.5} y={40} delay={0} />
-      <Icon glyph="box" x={68} y={33} />
       {code.map(([y, length], i) => (
         <CodeLine key={y} y={y} length={length} delay={i * 0.18} />
       ))}
