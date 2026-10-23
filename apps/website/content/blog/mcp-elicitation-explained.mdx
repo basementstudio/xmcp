@@ -1,9 +1,10 @@
 ---
 title: "MCP Elicitation: How AI Agents Ask Users for Input Mid-Task"
-description: "Elicitation is an MCP primitive that lets a server pause a tool call and ask the user a structured question — without routing the request through the AI model. Here's how it works and when to use it."
-summary: "Elicitation is an MCP primitive that lets a server pause a tool call and ask the user a structured question — without routing the request through the AI model. Here's how it works and when to use it."
+description: "Learn how MCP elicitation requests user input during a tool call, which clients can handle it, and how to validate responses in an xmcp server."
+summary: "Learn how MCP elicitation requests user input during a tool call, which clients can handle it, and how to validate responses in an xmcp server."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -15,7 +16,7 @@ Most MCP tool calls are simple: the AI client calls a tool, the server runs it, 
 
 Elicitation lets your MCP server pause a tool call and send a structured question directly to the user, bypassing the AI model entirely. The user answers, the answer goes back to your tool, and execution continues.
 
-The key difference from ordinary tool output: elicitation is a server-to-user request, not a server-to-model response. The model never sees the question or the answer — it just receives the final tool result.
+The key difference from ordinary tool output: elicitation is a server-to-user request, not a server-to-model response. The client controls presentation and what reaches model context; elicitation is not a guarantee that answers stay hidden from the model.
 
 ## The flow
 
@@ -34,13 +35,14 @@ Without elicitation, your only option is to return an error or partial result an
 
 Elicitation is the right primitive when:
 
-- **The tool needs input that the AI provably doesn't have** — a confirmation code, a PIN, a choice between options that requires human judgment
+- **The tool needs input that the AI provably doesn't have** — a choice between options or clarification that requires human judgment
 - **You need structured input** — a form with typed fields, not a free-text response parsed by the AI
 - **You want to bypass the AI's interpretation** — asking the user directly avoids the model paraphrasing or misinterpreting the question
 
 Common examples:
+
 - Confirming a destructive action ("Delete all records for customer X?")
-- Entering credentials or verification codes mid-flow
+- Opening a secure external flow when credentials are required; never request passwords or access tokens in an elicitation form
 - Choosing between ambiguous options when the AI doesn't have enough context to decide
 
 ## When not to use elicitation
@@ -53,17 +55,17 @@ Also avoid elicitation for information the AI already has or can infer from cont
 
 Elicitation requires the MCP client to implement the `elicitation/create` method. As of mid-2026, support is shipping across major clients but is not yet universal. Your server should handle the case where the client doesn't support elicitation — either by degrading gracefully (returning a prompt to the AI) or by returning a clear error.
 
-Check for client support in the `initialize` response capabilities before calling elicitation.
+Check the client's advertised capabilities during initialization. Form and URL modes have different requirements; follow the [elicitation specification](https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation). In stateless HTTP, do not recover client capabilities from a hidden session cache.
 
 ## Elicitation vs prompts
 
 Both elicitation and [MCP prompts](/blog/mcp-tools-vs-resources-vs-prompts) involve structured user interaction, but they're different:
 
-| | Elicitation | Prompts |
-| --- | --- | --- |
-| Triggered by | Your tool, mid-execution | The user, before execution |
-| Who sees it | The user directly (not the AI) | The AI model (as input) |
-| Purpose | Gather specific input to continue a task | Give the user a structured way to start a task |
+|              | Elicitation                              | Prompts                                        |
+| ------------ | ---------------------------------------- | ---------------------------------------------- |
+| Triggered by | Your tool, mid-execution                 | The user, before execution                     |
+| Who sees it  | User-facing UI controlled by the client  | The AI model (as input)                        |
+| Purpose      | Gather specific input to continue a task | Give the user a structured way to start a task |
 
 Prompts are for starting a task. Elicitation is for unblocking a task already in progress.
 
@@ -71,4 +73,4 @@ Prompts are for starting a task. Elicitation is for unblocking a task already in
 
 - **[MCP Tools vs Resources vs Prompts](/blog/mcp-tools-vs-resources-vs-prompts)** — understand all three MCP primitives.
 - **[What Are MCP Clients?](/blog/what-are-mcp-clients)** — which clients support advanced MCP features.
-- **[Core concepts](/docs/core-concepts)** — xmcp documentation for tools, resources, and prompts.
+- **[Core concepts](/docs/core-concepts/tools)** — xmcp documentation for tools, resources, and prompts.

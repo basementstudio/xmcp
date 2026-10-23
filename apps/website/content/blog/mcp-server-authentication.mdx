@@ -1,9 +1,10 @@
 ---
 title: "How to Add Authentication to Your MCP Server"
-description: "A practical guide to securing MCP server tools with OAuth 2.0 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
-summary: "A practical guide to securing MCP server tools with OAuth 2.0 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
+description: "A practical guide to securing MCP server tools with OAuth 2.1 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
+summary: "A practical guide to securing MCP server tools with OAuth 2.1 — and how xmcp's auth plugins (Better Auth, Clerk, Auth0, WorkOS, Scalekit) make it straightforward."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -15,10 +16,10 @@ This guide explains how MCP authentication works and how xmcp handles it.
 
 ## How MCP authentication works
 
-The MCP spec delegates authentication to the **transport layer**. For HTTP transports (which is what most remote MCP servers use), that means OAuth 2.0. The flow looks like this:
+The MCP spec delegates authentication to the **transport layer**. For HTTP transports (which is what most remote MCP servers use), that means OAuth 2.1. The flow looks like this:
 
 1. The MCP client (Claude, Cursor, etc.) tries to connect to your server.
-2. Your server responds with a `401 Unauthorized` and a `WWW-Authenticate` header pointing to your authorization server.
+2. Your server responds with a `401 Unauthorized` and a `WWW-Authenticate` header pointing to protected-resource metadata that identifies the authorization server.
 3. The client initiates an OAuth flow — the user authenticates and grants access.
 4. The client sends subsequent requests with a Bearer token in the `Authorization` header.
 5. Your server validates the token on each request before executing any tool.
@@ -33,51 +34,44 @@ This is the gap xmcp's auth plugins fill.
 
 ## Auth plugins in xmcp
 
-xmcp ships plugins for five auth providers. Each one wires up the OAuth flow — discovery metadata, token validation, redirect handling — without requiring you to build or manage an authorization server.
+xmcp offers provider-specific authentication integrations. Each has its own configuration and validation behavior; choose one that matches your identity system and follow its setup guide.
 
 The available plugins are:
 
-| Plugin | Provider |
-| --- | --- |
+| Plugin                  | Provider                              |
+| ----------------------- | ------------------------------------- |
 | `@xmcp-dev/better-auth` | Better Auth (self-hosted, PostgreSQL) |
-| `@xmcp-dev/clerk` | Clerk |
-| `@xmcp-dev/auth0` | Auth0 |
-| `@xmcp-dev/workos` | WorkOS |
-| `@xmcp-dev/scalekit` | Scalekit |
+| `@xmcp-dev/clerk`       | Clerk                                 |
+| `@xmcp-dev/auth0`       | Auth0                                 |
+| `@xmcp-dev/workos`      | WorkOS                                |
+| `@xmcp-dev/scalekit`    | Scalekit                              |
 
 You pick the one that matches your auth infrastructure. If you don't have existing auth infrastructure and want full control, Better Auth is the self-hosted option. If you want managed auth, Clerk, Auth0, WorkOS, and Scalekit are all supported.
 
 ## A quick example with Better Auth
 
-Install the plugin and your chosen database adapter:
+Install the provider and PostgreSQL dependencies:
 
 ```bash
-npm install @xmcp-dev/better-auth better-auth @auth/pg-adapter pg
+pnpm add @xmcp-dev/better-auth pg
+pnpm add -D @types/pg
 ```
 
-Add it to your `xmcp.config.ts`:
+Configure HTTP in `xmcp.config.ts`, then register the provider as middleware:
 
-```typescript title="xmcp.config.ts"
-import { type XmcpConfig } from "xmcp";
-import { betterAuthPlugin } from "@xmcp-dev/better-auth";
+```typescript title="src/middleware.ts"
+import { betterAuthProvider } from "@xmcp-dev/better-auth";
+import { Pool } from "pg";
 
-const config: XmcpConfig = {
-  http: true,
-  plugins: [
-    betterAuthPlugin({
-      database: {
-        connectionString: process.env.DATABASE_URL!,
-      },
-    }),
-  ],
-};
-
-export default config;
+export default betterAuthProvider({
+  database: new Pool({ connectionString: process.env.DATABASE_URL }),
+  baseURL: process.env.BETTER_AUTH_BASE_URL!,
+  secret: process.env.BETTER_AUTH_SECRET!,
+  providers: { emailAndPassword: { enabled: true } },
+});
 ```
 
-That's the server side. The plugin handles the OAuth metadata endpoint, token validation, and auth error responses. Your tools receive a validated identity on every call without any additional plumbing.
-
-See the [Better Auth integration guide](/blog/better-auth-integration) for the full setup, including database schema and client-side configuration.
+Set these environment variables and create the required database tables before starting the server. Use the [Better Auth setup](/docs/integrations/better-auth) and [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/better-auth-http) for the complete configuration.
 
 ## What authenticated tools look like
 
@@ -89,10 +83,10 @@ Once auth is configured, your tool handlers can access the authenticated user's 
 - **Want managed auth, fast setup?** → Clerk or Auth0.
 - **Enterprise SSO / B2B?** → WorkOS or Scalekit.
 
-All five work with the same plugin pattern in `xmcp.config.ts`. You can swap providers by swapping the plugin import.
+Provider APIs are not interchangeable. Review the [integration catalog](/docs/integrations) for each provider’s middleware, environment variables, and identity helpers. Authentication establishes identity; your tools must still enforce access to the requested records.
 
 ## Next steps
 
 - **[Better Auth integration guide](/blog/better-auth-integration)** — complete setup with database and client configuration.
 - **[Securing Your MCP Server](/blog/securing-your-mcp-server)** — broader security considerations beyond auth.
-- **[Authentication docs](/docs/guides/authentication)** — full reference for all five auth plugins.
+- **[Authentication docs](/docs/guides/authentication)** — authentication approaches and provider setup.

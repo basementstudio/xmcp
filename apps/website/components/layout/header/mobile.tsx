@@ -105,6 +105,20 @@ export const MobileMenu = () => {
                 </AnimatedLink>
               </div>
               <AnimatedLink
+                href="/guides"
+                className="text-white text-lg"
+                onClick={handleLinkClick}
+              >
+                Guides
+              </AnimatedLink>
+              <AnimatedLink
+                href="/docs/integrations"
+                className="text-white text-lg"
+                onClick={handleLinkClick}
+              >
+                Integrations
+              </AnimatedLink>
+              <AnimatedLink
                 href="/changelog"
                 className="text-white text-lg"
                 onClick={handleLinkClick}

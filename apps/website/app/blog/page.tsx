@@ -76,7 +76,12 @@ export default function BlogPage() {
           <p className="eyebrow">The field notes / Blog</p>
           <h1 className="display">Blog</h1>
           <p className="listing-description">
-            Read the latest updates, guides, and insights about xmcp.
+            Read the latest updates and engineering notes about xmcp. For
+            tutorials and comparisons, explore the{" "}
+            <Link href="/guides" className="underline">
+              MCP guides
+            </Link>
+            .
           </p>
         </div>
 

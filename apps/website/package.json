@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint .",
     "changelog:refresh": "node scripts/fetch-releases.mjs",
-    "test:changelog": "node --test scripts/fetch-releases.test.mjs"
+    "test:changelog": "node --test scripts/fetch-releases.test.mjs",
+    "test:seo": "node --experimental-strip-types --test scripts/seo.test.mjs",
+    "test:seo:smoke": "node scripts/seo-smoke.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",

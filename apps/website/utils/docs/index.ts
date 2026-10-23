@@ -3,6 +3,8 @@ import fsPromises from "fs/promises";
 import path from "path";
 import { parseFrontmatter } from "@/utils/frontmatter";
 import { source } from "@/lib/source";
+import { getLLMText } from "@/lib/get-llm-text";
+import { docsSearchTitle } from "@/lib/seo";
 
 export function cleanId(id: string) {
   return id.replace(/^\/docs\/?/, "").replace(/-\d+$/, "");
@@ -14,7 +16,10 @@ export async function getPageContent(slugs: string[]) {
 
   const filePath = slugs.length ? `${slugs.join("/")}.mdx` : "index.mdx";
   const docsDir = path.join(process.cwd(), "content/docs");
-  const mdxPath = path.join(docsDir, filePath);
+  const directPath = path.join(docsDir, filePath);
+  const mdxPath = fs.existsSync(directPath)
+    ? directPath
+    : path.join(docsDir, ...slugs, "index.mdx");
 
   const resolvedPath = path.resolve(mdxPath);
   const resolvedDocsDir = path.resolve(docsDir);
@@ -23,7 +28,10 @@ export async function getPageContent(slugs: string[]) {
   }
 
   try {
-    const content = await fsPromises.readFile(mdxPath, "utf-8");
+    const content =
+      page.url === "/docs/integrations"
+        ? await getLLMText(page)
+        : await fsPromises.readFile(mdxPath, "utf-8");
 
     return {
       title: page.data.title,
@@ -56,6 +64,7 @@ export interface DocsPage {
 
 export interface DocsMetadata {
   readonly title: string;
+  readonly searchTitle: string;
   readonly description: string;
   readonly summary: string | undefined;
   readonly ogImageUrl: string;
@@ -68,10 +77,13 @@ export const DOCS_DIRECTORY = path.join(process.cwd(), "content/docs");
  * to extract all frontmatter fields including custom ones like summary.
  */
 export function getDocsPageBySlug(slug: string[] | undefined): DocsPage | null {
-  const slugPath = slug ? slug.join("/") : "index";
-  const filePath = path.join(DOCS_DIRECTORY, `${slugPath}.mdx`);
+  const slugPath = slug?.length ? slug.join("/") : "index";
+  const filePath = [
+    path.join(DOCS_DIRECTORY, `${slugPath}.mdx`),
+    path.join(DOCS_DIRECTORY, slugPath, "index.mdx"),
+  ].find((candidate) => fs.existsSync(candidate));
 
-  if (!fs.existsSync(filePath)) {
+  if (!filePath) {
     return null;
   }
 
@@ -104,6 +116,10 @@ export function getDocsMetadata(
 
   return {
     title: page.data.title,
+    searchTitle: docsSearchTitle(
+      page.data.title,
+      docsPage?.data.metadataTitle ?? page.data.metadataTitle
+    ),
     description: docsPage?.description ?? page.data.description ?? "",
     summary: docsPage?.summary,
     ogImageUrl: `${baseUrl}/api/og/docs/${slugPath}`,

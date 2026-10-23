@@ -13,7 +13,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "xmcp — The TypeScript MCP framework",
   description:
-    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   alternates: {
     canonical: "https://xmcp.dev",
     types: {

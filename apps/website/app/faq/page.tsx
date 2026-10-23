@@ -9,7 +9,7 @@ import { SITE_URL } from "@/lib/base-url";
 
 export const dynamic = "force-static";
 
-const TITLE = "FAQ - xmcp";
+const TITLE = "MCP and xmcp FAQ: Setup, Clients, Auth, and Deployment";
 const DESCRIPTION =
   "Answers to common questions about xmcp: what it is, how to create a project, tools, resources and prompts, transports, framework adapters, authentication, deployment, and monetization.";
 

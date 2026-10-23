@@ -13,6 +13,7 @@ const linkGroups = [
     id: "footer-build",
     links: [
       { label: "Documentation", href: "/docs" },
+      { label: "Integrations", href: "/docs/integrations" },
       { label: "Installation", href: "/docs/getting-started/installation" },
       { label: "MCP tools", href: "/docs/core-concepts/tools" },
       { label: "Authentication", href: "/docs/guides/authentication" },
@@ -23,6 +24,7 @@ const linkGroups = [
     title: "Explore",
     id: "footer-explore",
     links: [
+      { label: "Guides", href: "/guides" },
       { label: "Blog", href: "/blog" },
       { label: "Showcase", href: "/showcase" },
       { label: "Changelog", href: "/changelog" },

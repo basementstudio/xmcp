@@ -174,10 +174,14 @@ export function getAllBlogPosts(): BlogPost[] {
 
 /**
  * Listed posts only — excludes "ghost" articles (`unlisted: true`), which still
- * render and stay in the sitemap but must not surface in any on-site listing.
+ * render and stay in the sitemap and guides hub, but not the curated blog feed.
  */
 export function getListedBlogPosts(): BlogPost[] {
   return getAllBlogPosts().filter((post) => !post.unlisted);
+}
+
+export function getGuidePosts(): BlogPost[] {
+  return getAllBlogPosts().filter((post) => post.category === "guides");
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | null {

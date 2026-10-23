@@ -64,9 +64,7 @@ export async function GET() {
     scanned.push(section.entries.join("\n"));
   }
 
-  // Deliberately includes unlisted "ghost" posts: they are hidden from
-  // on-site listings but published for search and answer engines, and this
-  // index is their machine-facing discovery channel.
+  // Include published guides even when they are outside the curated blog feed.
   scanned.push("## Blog");
   scanned.push(
     getAllBlogPosts()
@@ -101,6 +99,8 @@ export async function GET() {
   scanned.push("## Pages");
   scanned.push(
     [
+      "- [MCP guides](/guides): tutorials, comparisons, and troubleshooting",
+      "- [Integrations](/docs/integrations): service connections, authentication, and payments",
       "- [Changelog](/changelog): stable xmcp releases and release notes",
       "- [Showcase](/showcase): community MCP servers built with xmcp",
       "- [Telemetry](/telemetry): what anonymous telemetry xmcp collects and how to opt out",

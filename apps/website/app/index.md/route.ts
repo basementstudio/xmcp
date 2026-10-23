@@ -20,6 +20,9 @@ npx create-xmcp-app@latest
 
 ## Key pages
 
+- [MCP guides](${SITE_URL}/guides): tutorials, framework comparisons, and troubleshooting
+- [Integrations](${SITE_URL}/docs/integrations): service connections, auth, and payments
+
 - [Documentation](${SITE_URL}/docs): guides for getting started, configuration, authentication, adapters, and deployment
 - [Blog](${SITE_URL}/blog): guides, release notes, and engineering articles
 - [Templates](${SITE_URL}/templates): production-ready MCP server templates to fork and deploy

@@ -2,6 +2,7 @@
 title: "Securing Your MCP Server"
 description: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
 summary: "A practical guide to authentication for MCP servers: when you need it, how it works, and which approach fits your use case."
+lastModified: "2026-10-23"
 category: "guides"
 date: "2026-01-22"
 order: 9
@@ -40,16 +41,19 @@ export const metadata: ToolMetadata = {
   description: "Update a deal's stage in the CRM",
 };
 
-export default async function updateDeal({ dealId, stage }: InferSchema<typeof schema>) {
+export default async function updateDeal({
+  dealId,
+  stage,
+}: InferSchema<typeof schema>) {
   // RBAC handles permission checking automatically
   // Only users with 'tool:update-deal' permission reach this code
-  
+
   // Update the deal...
   return `Deal ${dealId} updated to ${stage}`;
 }
 ```
 
-Sales reps authenticate and gain access to query tools, which have no permission restrictions. When a rep attempts to use `update-deal`, the server checks for the permission, finds it missing from their token, and returns an error. Managers have the permission assigned through their role and can access the tool.
+Sales reps authenticate and gain access to query tools, which have no permission restrictions. When a rep attempts to use `update-deal`, the server checks for the permission, finds it missing from their assigned permissions, and returns an error. Managers have the permission assigned through their role and can access the tool.
 
 This example demonstrates authentication (signing in), authorization (the tool permission restricted to managers), and the rationale for choosing this setup for a remote team requiring role-based access.
 
@@ -73,7 +77,7 @@ Not every server requires complex authorization. For small teams where all users
 
 MCP uses OAuth 2.1 with specific requirements suited to client environments.
 
-MCP clients — Claude Desktop, Cursor, command-line tools, and custom applications — are desktop applications and CLIs running on user machines. Unlike backend servers that can securely store client secrets, these applications can be decompiled, inspected, and reverse-engineered. Embedded secrets cannot be considered confidential.
+MCP clients include desktop applications, CLIs, and hosted services. Desktop applications and CLIs run on user machines. Unlike backend servers that can securely store client secrets, these applications can be decompiled, inspected, and reverse-engineered. Embedded secrets cannot be considered confidential.
 
 MCP also supports resource indicators. When requesting a token, the client specifies the target MCP server. The token becomes bound to that server. Tokens obtained for one server cannot be used against another, preventing token confusion attacks.
 
@@ -87,7 +91,7 @@ xmcp provides three authentication methods depending on the requirements of your
 
 OAuth plugins provide the complete solution for servers that require user identification. They include login flows, session management, and per-user access control. xmcp provides plugins that manage OAuth complexity, allowing development to focus on tool implementation.
 
-xmcp supports four providers, each suited to different use cases:
+Choose a supported provider based on your identity system:
 
 <OAuthPlugins />
 
@@ -97,7 +101,7 @@ All providers handle OAuth flows, token management, and session handling. After 
 
 API keys are appropriate when user identity is not required, only verification that requests originate from an authorized source. This approach suits server-to-server communication, internal tools, and scenarios where both endpoints are controlled.
 
-```typescript title="middleware.ts"
+```typescript title="src/middleware.ts"
 import { apiKeyAuthMiddleware } from "xmcp";
 
 export default apiKeyAuthMiddleware({
@@ -114,7 +118,7 @@ The client includes the key with each request, and the server validates it. No r
 
 For systems that already issue JWTs, xmcp can validate tokens without managing login flows. The MCP server validates tokens issued by the existing authentication system.
 
-```typescript title="middleware.ts"
+```typescript title="src/middleware.ts"
 import { jwtAuthMiddleware } from "xmcp";
 
 export default jwtAuthMiddleware({
@@ -124,6 +128,8 @@ export default jwtAuthMiddleware({
 ```
 
 JWTs contain claims about the user identity, roles, and permissions. Tools can read these claims for authorization decisions. Authentication occurs externally; the MCP server enforces access based on the validated token.
+
+The Auth0 example assumes the [Auth0 provider setup](/docs/integrations/auth0), including access to its Management API. Tool permissions do not replace checks that a user may access a particular customer record. Start from the [authentication templates](/templates/category/authentication) and test both allowed and denied requests.
 
 ## References
 
