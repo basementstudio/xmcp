@@ -12,11 +12,9 @@ deployment: "guides"
 
 Ask Grok questions and research the web or X with source citations.
 
-| Tool                   | Purpose                                          |
-| ---------------------- | ------------------------------------------------ |
-| `ask-grok`             | Answer a single question without search.         |
-| `search-web-with-grok` | Research the web and return available citations. |
-| `search-x-with-grok`   | Research X posts and return available citations. |
+- **`ask-grok`**: Answer a single question without search.
+- **`search-web-with-grok`**: Research the web and return available citations.
+- **`search-x-with-grok`**: Research X posts and return available citations.
 
 ## Provider access
 

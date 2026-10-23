@@ -12,11 +12,9 @@ deployment: "guides"
 
 Read account mentions and publish explicitly requested X posts or replies.
 
-| Tool              | Purpose                                              |
-| ----------------- | ---------------------------------------------------- |
-| `get-x-profile`   | Identify the account authorized by the server token. |
-| `list-x-mentions` | Read one page of mentions for that account.          |
-| `publish-x-post`  | Publish text as a new post or reply.                 |
+- **`get-x-profile`**: Identify the account authorized by the server token.
+- **`list-x-mentions`**: Read one page of mentions for that account.
+- **`publish-x-post`**: Publish text as a new post or reply.
 
 ## Provider access
 
