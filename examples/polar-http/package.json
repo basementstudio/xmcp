@@ -14,7 +14,7 @@
   "dependencies": {
     "xmcp": "workspace:*",
     "@xmcp-dev/polar": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "keywords": [
     "monetization",

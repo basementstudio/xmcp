@@ -46,7 +46,7 @@
     "@modelcontextprotocol/client": "^2.3.0",
     "bundle-require": "^5.1.0",
     "xmcp": "workspace:^",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^22.19.2",

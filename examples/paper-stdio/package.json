@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
+    "zod": "^4.6.6",
     "@modelcontextprotocol/client": "^2.2.0"
   },
   "devDependencies": {

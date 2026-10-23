@@ -10,7 +10,7 @@
     "@sentry/node": "^11.4.0",
     "@xmcp-dev/sentry": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*",

@@ -10,7 +10,7 @@
     "@supabase/supabase-js": "^2.117.2",
     "@xmcp-dev/supabase": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*",
