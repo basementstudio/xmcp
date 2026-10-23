@@ -9,7 +9,8 @@ description: "Publish your xmcp server to Smithery for distribution and observab
 [Smithery](https://smithery.ai) is the largest open marketplace for MCP servers. Publishing your xmcp server to Smithery makes it discoverable to other developers and gives you access to distribution analytics.
 
 <Callout type="info">
-    Smithery is a registry, not a hosting provider. You need to deploy your server yourself before publishing it.
+  Smithery is a registry, not a hosting provider. You need to deploy your server
+  yourself before publishing it.
 </Callout>
 
 ## HTTP Servers
@@ -17,10 +18,13 @@ description: "Publish your xmcp server to Smithery for distribution and observab
 For servers using Streamable HTTP transport, Smithery Gateway acts as a proxy to your deployed server.
 
 1. Deploy your xmcp server to a hosting provider (e.g. [Vercel](/docs/deployment/vercel), [Cloudflare](/docs/deployment/cloudflare))
-2. Go to [smithery.ai/new](https://smithery.ai/new)
-3. Enter your server's public HTTPS URL
-4. Complete the publishing flow
+2. Publish your server's public HTTPS URL with the Smithery CLI, replacing the URL and namespace with your own:
 
+   ```bash
+   smithery mcp publish "https://your-server.com/mcp" -n @your-org/your-server
+   ```
+
+See the [Smithery publishing guide](https://smithery.ai/docs/build/publish) for requirements and configuration options.
 
 ## Stdio Servers
 

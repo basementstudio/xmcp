@@ -14,6 +14,65 @@ editing any of these files goes through a pull request and deployment.
 No CMS account or token is needed. Templates continue to use the
 [`xmcp-dev/templates`](https://github.com/xmcp-dev/templates) repository.
 
+## IndexNow
+
+The `IndexNow` GitHub Actions workflow notifies participating search engines after
+a successful Vercel production deployment of the website. It always crawls
+`https://xmcp.dev`, ignores preview/failed deployments, and serializes submissions.
+The public verification file `78fb4b06761ad122f270142e229a307c.txt` must be deployed
+before submissions can succeed. Its token proves control of the domain; it is
+not an account credential and requires no GitHub or Vercel secret.
+
+From the repository root, using Node 22 and pnpm:
+
+```bash
+pnpm --filter website test:indexnow
+pnpm --filter website indexnow:dry-run
+pnpm --filter website indexnow:submit
+```
+
+Dry runs print the URLs that would be submitted, never POST or write a baseline,
+and work before the verification file is deployed. Submission verifies the live
+key, reads the production sitemap, and fingerprints HTML text, metadata, links,
+images and structured data. Runtime scripts, CSS and build identifiers are
+excluded. The first run submits all sitemap pages, including intentionally
+unlisted blog posts; subsequent runs notify only added or changed pages.
+Missing sitemap entries are checked for redirects, 404/410, or explicit noindex
+before being reported as removals. Still-indexable pages remain tracked.
+
+Local runs store their baseline in ignored `.indexnow/snapshot.json`. To use a
+different baseline, append `--snapshot /absolute/path/to/snapshot.json` to either
+command. Local state is separate from the workflow's state; running the local
+submission command without a baseline submits the full sitemap again.
+
+The workflow restores the latest retained `indexnow-snapshot` artifact from a
+successful run of the same workflow and retains each new baseline for 90 days.
+Even a successful run with no changes refreshes the artifact. Missing or expired
+artifacts start a fresh baseline and resubmit current sitemap pages; removed URLs
+from an expired baseline cannot be recovered. A dry run never publishes state.
+
+Crawl, key-verification, malformed-state and submission errors fail the run without
+advancing the baseline. After resolving the error, use **Actions → IndexNow → Run
+workflow**, select `main`, and leave **dry_run** enabled to inspect changes. Disable
+it to submit. A partially accepted batch may be repeated on retry. Use manual
+dispatch for recovery against current production, including when deployment
+events were missed. Network requests have a 30-second timeout and the crawl uses
+four workers to limit load on production.
+
+An IndexNow `200` means URLs were received; `202` means receipt with key validation
+pending. Both advance the submission baseline. Other responses fail: check the key
+for `403`, URL ownership/format for `400`/`422`, and rerun later for `429` or server
+errors. Receipt does not guarantee indexing. See the
+[IndexNow protocol](https://www.indexnow.org/documentation).
+
+After the first production deployment, confirm the verification URL returns the
+token, inspect the workflow's initial submission count and artifact, then run it
+again against unchanged content and expect zero notifications. The initial
+sitemap submission covers the 62 URLs in the October 10, 2026 audit. An internal
+link audit found none of those URLs orphaned; intentionally unlisted blog posts
+remain unlisted. The website and commands above are the runnable example; no
+framework API or separate example is needed.
+
 ## Changelog
 
 `/changelog` and `/changelog.md` display stable framework releases from
