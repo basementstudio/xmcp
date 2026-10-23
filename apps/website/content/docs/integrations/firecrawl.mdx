@@ -1,0 +1,70 @@
+---
+title: "Firecrawl"
+metadataTitle: "Usage with Firecrawl | xmcp Documentation"
+publishedAt: "2026-10-23"
+summary: "Scrape pages, extract structured facts, and discover site URLs from xmcp tools."
+description: "Build an authenticated xmcp integration with Firecrawl's web scraping REST API."
+---
+
+Use Firecrawl inside xmcp tools to give agents access to web page content. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/firecrawl-http) uses Node's built-in `fetch` with Firecrawl's REST API, without an additional SDK.
+
+## Configure access
+
+Create an API key in your [Firecrawl dashboard](https://www.firecrawl.dev/app), then configure the server:
+
+```bash
+FIRECRAWL_API_KEY=your-firecrawl-api-key
+MCP_API_KEY=your-separate-client-secret
+```
+
+Clients connect to the example's HTTP MCP endpoint with `x-api-key` on every request. The server forwards only the provider key to `https://api.firecrawl.dev` as a Bearer token. Follow the [example setup](https://github.com/basementstudio/xmcp/tree/main/examples/firecrawl-http#run) to install, build, and start it with Node 22 and pnpm.
+
+This example shares one Firecrawl account with trusted clients. Calls consume that account's credits and send the requested URLs and extraction instructions to Firecrawl. Add per-user authorization and quotas if your application needs them.
+
+## Available tools
+
+| Tool                   | Purpose                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| `scrape-page`          | Return a page as Markdown, with available metadata.               |
+| `extract-page-summary` | Extract title, description, headings, and topics using JSON mode. |
+| `map-site`             | Discover site URLs, optionally ordered by relevance to a query.   |
+
+Call `scrape-page` with:
+
+```json
+{
+  "url": "https://example.com",
+  "onlyMainContent": true
+}
+```
+
+The [scrape API](https://docs.firecrawl.dev/api-reference/endpoint/scrape) returns `data.markdown` and optional `data.metadata` inside a `success: true` envelope. The tool returns that JSON in MCP text content. `onlyMainContent` defaults to `true`; set it to `false` to include navigation and footers. URLs must use HTTP(S) without embedded credentials.
+
+## Extract structured page facts
+
+Call `extract-page-summary` with the same `url`, without `onlyMainContent`. It uses [Firecrawl JSON mode](https://docs.firecrawl.dev/features/llm-extract) with a schema for `title`, `description`, `headings`, and `topics`. Results appear in `data.json`; missing titles/descriptions are nullable, and missing headings/topics use empty arrays.
+
+These fields are model-generated and need review against the source. The example extracts page facts without assigning SEO scores. An agent can use it alongside the [Profound integration](/docs/integrations/profound) to inspect cited pages and compare their content with your own.
+
+## Map a site
+
+Call `map-site` with:
+
+```json
+{
+  "url": "https://example.com",
+  "search": "pricing",
+  "limit": 20,
+  "includeSubdomains": false
+}
+```
+
+The [map API](https://docs.firecrawl.dev/api-reference/endpoint/map) returns `links` containing URLs and optional titles/descriptions. `search` is optional and orders results by relevance, rather than strictly filtering them. The example defaults to 20 results and excludes subdomains; `limit` accepts 1–100.
+
+Mapping does not return every page's content. Choose a discovered URL and call `scrape-page` explicitly. No background crawls or follow-up scrapes run automatically.
+
+## Errors and testing
+
+Missing or incorrect MCP credentials return HTTP 401. Provider failures return `isError: true`, with HTTP status codes when available and no raw provider error bodies. Rate-limit errors include numeric `Retry-After` values when supplied. Requests time out after 75 seconds, allowing Firecrawl's default scrape budget plus network overhead; set your MCP client's timeout accordingly. There are no automatic retries.
+
+The example builds without credentials. Its tests mock provider requests, and its built-server smoke test checks initialization, discovery, authentication, and all three tools. Follow the [README walkthrough](https://github.com/basementstudio/xmcp/tree/main/examples/firecrawl-http#scrape-a-page) for a live request with your own key.

@@ -81,6 +81,22 @@ jobs:
       - run: pnpm --filter profound-http typecheck
       - run: pnpm --filter profound-http test
       - run: pnpm --filter profound-http test:smoke
+      - run: pnpm --filter browserbase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter browserbase-http typecheck
+      - run: pnpm --filter browserbase-http test
+      - run: pnpm --filter browserbase-http test:smoke
+      - run: pnpm --filter firecrawl-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter firecrawl-http typecheck
+      - run: pnpm --filter firecrawl-http test
+      - run: pnpm --filter firecrawl-http test:smoke
+      - run: pnpm --filter linear-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter linear-http typecheck
+      - run: pnpm --filter linear-http test
+      - run: pnpm --filter linear-http test:smoke
+      - run: pnpm --filter github-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter github-http typecheck
+      - run: pnpm --filter github-http test
+      - run: pnpm --filter github-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit
