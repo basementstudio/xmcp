@@ -8,6 +8,8 @@ const GLOBAL_FALLBACK_SRC = "/templates/fallback.svg";
 const NEXTJS_FALLBACK_SRC = "/templates/nextjs.svg";
 
 const PROVIDER_FALLBACKS: Record<string, string> = {
+  x: "/templates/x.svg",
+  grok: "/templates/grok.svg",
   browserbase: "/templates/browserbase.svg",
   firecrawl: "/templates/firecrawl.svg",
   github: "/templates/github.svg",

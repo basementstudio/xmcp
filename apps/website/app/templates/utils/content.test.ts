@@ -143,6 +143,8 @@ test("integration starters resolve to runnable workspace sources and their own l
     "github",
     "linear",
     "resend",
+    "x",
+    "grok",
     "paper",
   ]) {
     const template = getTemplateBySlug(provider);
@@ -181,6 +183,8 @@ test("deployment actions respect local-only and workspace starters without chang
     "github",
     "linear",
     "resend",
+    "x",
+    "grok",
   ]) {
     const template = getTemplateBySlug(provider);
     assert(template);

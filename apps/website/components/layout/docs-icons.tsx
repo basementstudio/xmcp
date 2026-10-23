@@ -87,6 +87,8 @@ export const sidebarIcons: Partial<
   "/docs/integrations/figma": IntegrationIcons.figma,
   "/docs/integrations/browserbase": IntegrationIcons.browserbase,
   "/docs/integrations/firecrawl": IntegrationIcons.firecrawl,
+  "/docs/integrations/x": IntegrationIcons.x,
+  "/docs/integrations/grok": IntegrationIcons.grok,
   "/docs/integrations/github": IntegrationIcons.github,
   "/docs/integrations/linear": IntegrationIcons.linear,
   "/docs/integrations/paper": IntegrationIcons.paper,

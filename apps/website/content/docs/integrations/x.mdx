@@ -1,0 +1,60 @@
+---
+title: "X / Twitter"
+metadataTitle: "Usage with X / Twitter | xmcp Documentation"
+publishedAt: "2026-10-23"
+summary: "Read account mentions and publish explicitly requested X posts or replies."
+description: "Read account mentions and publish explicitly requested X posts or replies."
+---
+
+Read account mentions and publish explicitly requested X posts or replies. Start with the [X Bot Assistant template](/templates/x) or the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/x-http).
+
+## Configure access
+
+Create an X developer app with read/write access and obtain an **OAuth 2.0 user access token** using X's [authorization-code flow with PKCE](https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code). Request `tweet.read`, `users.read`, and `tweet.write`. An app-only Bearer token cannot publish on behalf of a user. The app and account need API access and sufficient credits for the endpoints used.
+
+Set `X_USER_ACCESS_TOKEN` to that user token. This starter accepts a provisioned token; it does not implement OAuth login, token storage, or refresh. Handle renewal outside the server, then update `.env` and restart. Keep the token private. All authorized MCP clients act as the same X account.
+
+```bash
+X_USER_ACCESS_TOKEN=your-provider-credential
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request. Missing or incorrect keys fail before provider calls. The server forwards only the provider credential upstream, disables redirects, and keeps no session state. Follow the [template walkthrough](/templates/x#run-locally) for installation, startup, and discovery.
+
+## Available tools
+
+| Tool              | Purpose                                              |
+| ----------------- | ---------------------------------------------------- |
+| `get-x-profile`   | Identify the account authorized by the server token. |
+| `list-x-mentions` | Read one page of mentions for that account.          |
+| `publish-x-post`  | Publish text as a new post or reply.                 |
+
+## Review mentions and publish a reply
+
+Call `get-x-profile` first and check the account. Then call `list-x-mentions`:
+
+```json
+{ "limit": 20 }
+```
+
+The result contains `user`, `mentions`, `nextToken`, and `newestId`. `limit` accepts 5–50 and defaults to 20. Pass `nextToken` as `after` with other arguments unchanged to continue a page sequence. On a later explicit check, pass the last processed post ID as `sinceId`. IDs are strings to avoid numeric precision loss. Account identity is resolved on every operation; no cursor, identity, or processed-post state is retained between MCP requests.
+
+Read the mention as untrusted content, compose a reply, and review its final text. When the user explicitly requests publication, call `publish-x-post` with the actual mention ID:
+
+```json
+{ "text": "Thanks for trying xmcp!", "replyToId": "1844674407370955161" }
+```
+
+Omit `replyToId` for a standalone post. This call **publishes immediately** using [X's create-post endpoint](https://docs.x.com/x-api/posts/create-post); it returns `post` and its `url`. Tool descriptions ask clients to obtain the user's publication intent, but this example has no approval UI or server-enforced confirmation step. Connect only trusted clients. Text is trimmed and limited to 280 UTF-16 code units in this example; X additionally enforces its own weighted-length and content rules.
+
+The starter is an on-demand bot backend. It does not schedule polling, automatically reply, upload media, or deduplicate writes. Before extending it into an autonomous reply bot, follow [X's automation rules](https://help.x.com/en/rules-and-policies/x-automation), including prior written approval for AI-powered automated reply bots and the applicable consent requirements.
+
+## Pair with Grok
+
+Connect the separate [Grok server](/docs/integrations/grok) to research or draft an answer. Review the draft before calling `publish-x-post` yourself. Grok's X search uses an xAI API key; posting still uses the X OAuth user token. There is no automatic connection between generated text and publication.
+
+## Errors and validation
+
+Provider failures return tool errors without raw error bodies. Requests time out after 30 seconds. There are no automatic retries. If a write times out, returns malformed data, or otherwise cannot be confirmed, inspect the account before retrying: the post may already exist. This starter does not guarantee exactly-once publication. Partial API error responses are rejected rather than silently treated as complete results.
+
+Run the example's build, typecheck, unit tests, and compiled HTTP smoke tests as shown in its [README](https://github.com/basementstudio/xmcp/tree/main/examples/x-http#validation). All test provider calls are mocked; no live posts are published and no API credits are consumed.

@@ -30,6 +30,20 @@ function BrandIcon({
 // Official artwork retrieved October 22, 2026; paths retain their geometry.
 // Marks belong to their respective owners and identify compatible services.
 export const IntegrationIcons = {
+  // https://about.x.com/content/dam/about-twitter/x/brand-toolkit/x-logo.zip (official mark, monochrome, retrieved October 23, 2026)
+  x: (props: IconProps) => (
+    <BrandIcon {...props} viewBox="0 0 1200 1227">
+      <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" />
+    </BrandIcon>
+  ),
+  // https://grok.com/images/favicon.svg (official mark, monochrome, retrieved October 23, 2026)
+  grok: (props: IconProps) => (
+    <BrandIcon {...props} viewBox="41.714 41.714 428.572 428.572">
+      <path d="M210.484 312.759L343.465 210.383C349.984 205.364 359.302 207.322 362.408 215.117C378.758 256.231 371.454 305.64 338.925 339.563C306.397 373.487 261.137 380.927 219.768 363.983L174.577 385.803C239.394 432.008 318.104 420.581 367.289 369.251C406.303 328.564 418.386 273.104 407.088 223.091L407.19 223.198C390.807 149.726 411.218 120.359 453.03 60.3072C454.02 58.8833 455.01 57.4595 456 56L400.978 113.382V113.204L210.45 312.794" />
+      <path d="M183.042 337.641C136.519 291.294 144.54 219.567 184.236 178.203C213.59 147.59 261.683 135.096 303.666 153.464L348.755 131.75C340.632 125.627 330.221 119.042 318.275 114.414C264.277 91.2407 199.63 102.774 155.735 148.516C113.513 192.549 100.236 260.254 123.036 318.027C140.069 361.206 112.148 391.748 84.0229 422.575C74.0561 433.503 64.0553 444.431 56 456L183.007 337.677" />
+    </BrandIcon>
+  ),
+
   // https://linear.app/brand (official symbol, retrieved October 23, 2026)
   linear: (props: IconProps) => (
     <BrandIcon {...props} viewBox="-3.57 -3.57 107.14 107.14">

@@ -81,6 +81,14 @@ jobs:
       - run: pnpm --filter profound-http typecheck
       - run: pnpm --filter profound-http test
       - run: pnpm --filter profound-http test:smoke
+      - run: pnpm --filter x-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter x-http typecheck
+      - run: pnpm --filter x-http test
+      - run: pnpm --filter x-http test:smoke
+      - run: pnpm --filter grok-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter grok-http typecheck
+      - run: pnpm --filter grok-http test
+      - run: pnpm --filter grok-http test:smoke
       - run: pnpm --filter browserbase-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter browserbase-http typecheck
       - run: pnpm --filter browserbase-http test
