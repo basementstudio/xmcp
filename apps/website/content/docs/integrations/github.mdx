@@ -8,6 +8,8 @@ description: "Build an authenticated, read-only xmcp integration with GitHub's R
 
 Give agents repository context with the [runnable GitHub example](https://github.com/basementstudio/xmcp/tree/main/examples/github-http). Its three tools use Node's built-in `fetch` and GitHub's REST API. They do not modify files, comment, or merge pull requests.
 
+Start from the [GitHub MCP server template](/templates/github) for setup instructions and a runnable workflow.
+
 ## Configure access
 
 Create a fine-grained token scoped to the repositories you want to expose. Grant **Pull requests: read** for PR tools and **Contents: read** for file reads, following GitHub's [pull request](https://docs.github.com/en/rest/pulls/pulls) and [contents](https://docs.github.com/en/rest/repos/contents) documentation.

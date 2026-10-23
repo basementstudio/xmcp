@@ -85,6 +85,8 @@ jobs:
       - run: pnpm --filter browserbase-http typecheck
       - run: pnpm --filter browserbase-http test
       - run: pnpm --filter browserbase-http test:smoke
+      - name: Validate integration template catalog
+        run: pnpm --filter browserbase-http exec tsx --tsconfig ../../apps/website/tsconfig.json --test ../../apps/website/app/templates/utils/content.test.ts
       - run: pnpm --filter firecrawl-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter firecrawl-http typecheck
       - run: pnpm --filter firecrawl-http test
