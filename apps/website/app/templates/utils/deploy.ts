@@ -31,8 +31,13 @@ const DEPLOY_PROVIDERS = [
 const guide = (provider: MappedProvider) => `/docs/deployment/${provider}`;
 
 export function buildDeployOptions(template: TemplateItem): DeployOption[] {
+  if (template.deployment === "none") return [];
+
   const options: DeployOption[] = DEPLOY_PROVIDERS.map((provider) => {
     const label = PROVIDER_MAP[provider];
+    if (template.deployment === "guides") {
+      return { label, provider, href: guide(provider), guide: true };
+    }
     if (provider === "vercel") {
       return { label, provider, href: buildVercelCloneUrl(template) };
     }

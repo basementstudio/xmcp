@@ -81,6 +81,32 @@ jobs:
       - run: pnpm --filter profound-http typecheck
       - run: pnpm --filter profound-http test
       - run: pnpm --filter profound-http test:smoke
+      - run: pnpm --filter x-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter x-http typecheck
+      - run: pnpm --filter x-http test
+      - run: pnpm --filter x-http test:smoke
+      - run: pnpm --filter grok-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter grok-http typecheck
+      - run: pnpm --filter grok-http test
+      - run: pnpm --filter grok-http test:smoke
+      - run: pnpm --filter browserbase-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter browserbase-http typecheck
+      - run: pnpm --filter browserbase-http test
+      - run: pnpm --filter browserbase-http test:smoke
+      - name: Validate integration template catalog
+        run: pnpm --filter browserbase-http exec tsx --tsconfig ../../apps/website/tsconfig.json --test ../../apps/website/app/templates/utils/content.test.ts
+      - run: pnpm --filter firecrawl-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter firecrawl-http typecheck
+      - run: pnpm --filter firecrawl-http test
+      - run: pnpm --filter firecrawl-http test:smoke
+      - run: pnpm --filter linear-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter linear-http typecheck
+      - run: pnpm --filter linear-http test
+      - run: pnpm --filter linear-http test:smoke
+      - run: pnpm --filter github-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter github-http typecheck
+      - run: pnpm --filter github-http test
+      - run: pnpm --filter github-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit

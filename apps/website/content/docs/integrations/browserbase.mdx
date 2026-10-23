@@ -1,0 +1,65 @@
+---
+title: "Browserbase"
+metadataTitle: "Usage with Browserbase | xmcp Documentation"
+publishedAt: "2026-10-23"
+summary: "Create, inspect, and release Browserbase browser sessions through xmcp tools."
+description: "Build an authenticated xmcp integration for managing Browserbase cloud browser sessions."
+---
+
+Manage cloud browser sessions with the [runnable Browserbase example](https://github.com/basementstudio/xmcp/tree/main/examples/browserbase-http). It uses Node's built-in `fetch` and Browserbase's session API, with no additional SDK dependency.
+
+The example covers session lifecycle management. Use trusted Playwright, Puppeteer, or Stagehand code for navigation, screenshots, and page interaction, following Browserbase's [automation quickstart](https://docs.browserbase.com/welcome/quickstarts/playwright). MCP results contain session metadata and a dashboard link; connection URLs and signing keys are deliberately omitted.
+
+Start from the [Browserbase MCP server template](/templates/browserbase) for setup instructions and a runnable workflow.
+
+## Configure access
+
+Create a Browserbase API key in your [dashboard](https://www.browserbase.com/), then configure:
+
+```bash
+BROWSERBASE_API_KEY=your-browserbase-key
+# Optional: inferred from the API key when omitted.
+BROWSERBASE_PROJECT_ID=
+MCP_API_KEY=your-separate-client-secret
+```
+
+Clients send the separate `MCP_API_KEY` as `x-api-key` on every request. Only the provider key is sent to `https://api.browserbase.com`, through `X-BB-API-Key`. The server does not follow redirects.
+
+All clients share the provider key's session access, including release permissions. A session ID selects a resource; it does not establish per-user ownership. Use trusted clients and an appropriately scoped provider key.
+
+## Available tools
+
+| Tool                      | Purpose                                           |
+| ------------------------- | ------------------------------------------------- |
+| `create-browser-session`  | Start a billable browser session.                 |
+| `get-browser-session`     | Read session status, expiry, region, and project. |
+| `release-browser-session` | Request that the session close.                   |
+
+Call `create-browser-session` with:
+
+```json
+{
+  "timeoutSeconds": 60,
+  "keepAlive": false
+}
+```
+
+The timeout defaults to **300 seconds**, with an example-specific range of **60–3,600 seconds** to bound forgotten sessions. Browserbase plan limits also apply. `keepAlive` defaults to `false`; enabling it requires a paid plan and lets the session survive automation disconnects. See Browserbase's [keep alive documentation](https://docs.browserbase.com/platform/browser/long-sessions/keep-alive).
+
+The JSON text result contains `session` metadata and a `dashboardUrl`. Use `session.id` with `get-browser-session` or `release-browser-session`:
+
+```json
+{
+  "sessionId": "the-session-uuid"
+}
+```
+
+Release can interrupt active automation and should be called when the work finishes, including after failures. It sends `status: "REQUEST_RELEASE"` to Browserbase. The response may still show `RUNNING`; check the status again or use the dashboard to confirm a terminal state. The example does not claim billing has stopped until the provider completes the session.
+
+## Run and test
+
+Follow the [README](https://github.com/basementstudio/xmcp/tree/main/examples/browserbase-http#run) for Node 22/pnpm setup and a runnable create → inspect → release walkthrough.
+
+Provider errors return MCP tool errors without raw response bodies. Requests time out after 30 seconds and are not retried automatically. After an uncertain write failure, check the dashboard before retrying: a session may already have been created or released.
+
+Tests mock all provider calls, use no browser minutes, and cover both MCP 2025-03-26 and 2026-07-28. Live account permissions, billing, and browser automation require your own credentials.
