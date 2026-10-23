@@ -21,11 +21,15 @@ Use this file for `apps/website/**`.
 - Each `.mdx` in `content/blog/` becomes a post at `/blog/<filename>`. Frontmatter
   fields are defined in `source.config.ts` (the `blog` schema) and read by
   `utils/blog/index.ts`.
-- Set `unlisted: true` in a post's frontmatter to publish a **ghost article**: it is
-  fully rendered and kept in `sitemap.xml` (so search engines index it) but hidden
-  from every on-site listing — the `/blog` index, the home page strip, and the
-  featured slot. Use it for SEO landing pages that should be discoverable via search
-  but not linked from site navigation. See `content/blog/what-is-an-mcp-server.mdx`.
+- Set `unlisted: true` to keep a post out of the curated `/blog` feed, home
+  strip, and featured slot. Published posts remain in the sitemap; that permits
+  discovery but does not guarantee indexing. Guides (including unlisted posts)
+  appear in `/guides` and may be linked from relevant pages.
+- Use `metadataTitle` for an optional complete docs search title; visible titles
+  remain independent. Set `lastModified: "YYYY-MM-DD"` only after a substantive
+  content update. Do not refresh dates for builds or cosmetic changes.
+- Integration docs automatically appear in `/docs/integrations`, its Markdown
+  mirror, and the sitemap. The hub uses the same content source as the docs.
 
 ## Checks
 

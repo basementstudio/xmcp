@@ -4,6 +4,7 @@ description: "A troubleshooting checklist for when your MCP server won't connect
 summary: "A troubleshooting checklist for when your MCP server won't connect in Claude Desktop — transport mismatches, the mcp-remote bridge, STDIO logging, CORS, and config file mistakes."
 category: "guides"
 date: "2026-06-19"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -23,7 +24,7 @@ For an HTTP server, confirm it responds at its endpoint (default `http://localho
 
 ## 1. Use the `mcp-remote` bridge for HTTP servers
 
-This is the single most common cause. **Claude Desktop does not connect to HTTP MCP servers directly.** If you give it a plain `url`, it won't work.
+Distinguish local command-based configuration from [remote connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp). Claude supports hosted MCP connectors; a local HTTP server can use a bridge in the command-based desktop configuration.
 
 For an HTTP (Streamable HTTP) server, you bridge it with the `mcp-remote` adapter, which translates Claude's local STDIO expectation into an HTTP connection:
 
@@ -38,7 +39,7 @@ For an HTTP (Streamable HTTP) server, you bridge it with the `mcp-remote` adapte
 }
 ```
 
-Note this is different from Cursor, which *does* take a `url` directly:
+Note this is different from Cursor, which _does_ take a `url` directly:
 
 ```json
 {
@@ -107,7 +108,7 @@ A relative path like `./dist/stdio.js` will silently fail to launch.
 
 ## 5. CORS for HTTP servers
 
-If your HTTP server is reachable but rejects the connection, CORS may be blocking the request. xmcp lets you configure CORS on the HTTP transport, including the MCP-specific headers clients send:
+For browser-based clients, check CORS if the browser blocks an otherwise successful HTTP request. Native clients and command-line bridges are not subject to browser CORS enforcement. xmcp lets you configure CORS on the HTTP transport, including the MCP-specific headers clients send:
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
@@ -134,10 +135,10 @@ Claude Desktop reads its config at startup. After any change to `claude_desktop_
 
 ## 7. Validate the JSON
 
-A trailing comma or missing brace in `claude_desktop_config.json` makes the whole file invalid, and every server silently disappears. Paste it into a JSON validator if servers vanished after an edit.
+A trailing comma or missing brace in `claude_desktop_config.json` makes the whole file invalid, and every server silently disappears. Validate it locally if servers vanished after an edit; configuration can contain credentials.
 
 ## Still stuck?
 
-Work down the list in order — most failures are #1 (missing `mcp-remote` bridge) or #2 (STDIO logging). If your HTTP server connects but drops with a "Session not found" error after a redeploy, that's a different, transport-level issue covered in [MCP "Session not found" (HTTP 404): Causes & Fixes](/blog/mcp-session-not-found-error).
+Work down the list and check the client's error output before changing server settings. If your HTTP server connects but drops with a "Session not found" error after a redeploy, that's a different, transport-level issue covered in [MCP "Session not found" (HTTP 404): Causes & Fixes](/blog/mcp-session-not-found-error).
 
 For the full connection reference, see the [connecting docs](/docs/getting-started/connecting). If you're just getting started, the [build guide](/blog/build-mcp-server-typescript) walks through a working setup end to end.

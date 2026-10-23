@@ -1,9 +1,10 @@
 ---
-title: "MCP \"Session not found\" (HTTP 404): Causes & Fixes"
+title: 'MCP "Session not found" (HTTP 404): Causes & Fixes'
 description: "Why MCP clients get an HTTP 404 'Session not found' after an MCP server restarts or redeploys, what's actually happening with the Mcp-Session-Id, and how a stateless server design avoids it."
 summary: "Why MCP clients get an HTTP 404 'Session not found' after an MCP server restarts or redeploys, what's actually happening with the Mcp-Session-Id, and how a stateless server design avoids it."
 category: "guides"
 date: "2026-06-19"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -39,13 +40,13 @@ The result is the classic "it works until I redeploy, then everyone has to recon
 
 If you're stuck on a stateful server, the client-side fix is to detect the `404` (or specifically the "Session not found" response), drop the stale session ID, and re-issue the MCP `initialize` handshake to obtain a fresh session. Many MCP clients now do this automatically; if you're writing a custom client, this is the behavior to implement.
 
-This works, but it's a workaround — every restart still causes a reconnect storm.
+Reinitialization is appropriate when the server requires sessions. Retry side-effecting tool calls only when you can establish whether the original call completed.
 
-## Fix 2: Run a stateless server (the real fix)
+## Fix 2: Run a stateless server (an architectural option)
 
 The structural fix is to not keep per-client session state on the server at all. If there's no in-memory session, there's no session to lose on restart, and there's no session ID to go stale.
 
-This is how **xmcp's HTTP transport works by default — it's strictly stateless.** Each request carries everything the server needs to handle it; the server never relies on memory from a previous request. A redeploy or a cold start is invisible to clients because there was never a session pinned to a specific instance.
+This is how **xmcp's HTTP transport works by default — it's strictly stateless.** Each request carries everything the server needs to handle it; the server never relies on memory from a previous request. A restart does not invalidate a stored MCP session because no such session is retained. Requests can still fail during a deployment or time out; handle retries according to the operation’s side effects.
 
 Enabling it is just the standard HTTP transport:
 
@@ -78,4 +79,4 @@ That's the whole bargain: by refusing to hide state on the server, a stateless s
 
 `Session not found` is a stateful-HTTP failure mode, not a bug in your tools. You can patch around it by making clients re-initialize, but the clean answer is a **stateless server** that has no per-client memory to lose. That's the model xmcp uses, which is also what makes it deploy cleanly to serverless.
 
-For more on how the transports differ, see [MCP Transports Explained](/blog/mcp-server-transports-explained), and for connection problems that show up *before* you ever get a session, see [Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection).
+For more on how the transports differ, see [MCP Transports Explained](/blog/mcp-server-transports-explained), and for connection problems that show up _before_ you ever get a session, see [Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection).

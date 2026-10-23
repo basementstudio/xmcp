@@ -11,14 +11,14 @@ import {
 import { SITE_URL } from "@/lib/base-url";
 
 export const metadata: Metadata = {
-  title: "Showcase - xmcp",
+  title: "MCP Server Examples and Community Showcase | xmcp",
   description:
     "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
   alternates: {
     canonical: "https://xmcp.dev/showcase",
   },
   openGraph: {
-    title: "Showcase - xmcp",
+    title: "MCP Server Examples and Community Showcase | xmcp",
     description:
       "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
     url: "https://xmcp.dev/showcase",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Showcase - xmcp",
+    title: "MCP Server Examples and Community Showcase | xmcp",
     description:
       "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
     images: DEFAULT_TWITTER_IMAGE,

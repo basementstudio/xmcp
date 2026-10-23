@@ -1,4 +1,4 @@
-import { blogSource, source } from "./source";
+import { blogSource, source, getIntegrationPages } from "./source";
 import type { InferPageType } from "fumadocs-core/source";
 
 const OAUTH_PLUGINS_MD = [
@@ -25,6 +25,14 @@ const MCP_CLIENTS_MD = [
 
 function expandComponents(md: string): string {
   return md
+    .replace(/<IntegrationList\s*\/>/g, () =>
+      getIntegrationPages()
+        .map(
+          (page) =>
+            `- [${page.data.title}](${page.url}): ${page.data.description ?? ""}`
+        )
+        .join("\n")
+    )
     .replace(/<OAuthPlugins\s*\/>/g, OAUTH_PLUGINS_MD)
     .replace(/<MonetizationPlugins\s*\/>/g, MONETIZATION_PLUGINS_MD)
     .replace(/<McpConnect[^/]*\/>/g, `Supported clients:\n\n${MCP_CLIENTS_MD}`);

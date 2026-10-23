@@ -6,6 +6,7 @@ import type { TemplateItem } from "@/app/templates/utils/content";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { formatTag, tagClassName } from "@/components/ui/tag";
 import { cn } from "@/utils/cn";
+import type { CategoryCopy } from "@/app/templates/utils/category-copy";
 import { TemplateCard } from "./card";
 
 const ITEMS_PER_PAGE = 12;
@@ -14,12 +15,14 @@ interface TemplatesListingProps {
   templates: TemplateItem[];
   categories: string[];
   currentCategory: string | null;
+  introduction?: CategoryCopy;
 }
 
 export function TemplatesListing({
   templates,
   categories,
   currentCategory,
+  introduction,
 }: TemplatesListingProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -52,11 +55,29 @@ export function TemplatesListing({
       <div className="listing-intro">
         <p className="eyebrow">The starting points / Templates</p>
         <div>
-          <h1 className="display">Templates</h1>
+          <h1 className="display">
+            {introduction?.title ?? "MCP server templates"}
+          </h1>
           <p className="listing-description">
-            Quickstart guides and templates to get you started with xmcp with
-            real-world implementations and best practices.
+            {introduction?.description ??
+              "Start a TypeScript MCP server with runnable templates for authentication, web frameworks, payments, and interactive apps."}
           </p>
+          {introduction && (
+            <>
+              <p className="listing-description">
+                {introduction.prerequisites}
+              </p>
+              <ul className="flex flex-wrap gap-4 text-sm">
+                {introduction.links.map((link) => (
+                  <li key={link.href}>
+                    <Link className="underline" href={link.href}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </div>
 

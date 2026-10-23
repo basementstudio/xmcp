@@ -4,6 +4,7 @@ description: "A step-by-step guide to building a Model Context Protocol (MCP) se
 summary: "A step-by-step guide to building a Model Context Protocol (MCP) server in TypeScript with xmcp: scaffold a project, write your first tool, run it locally, and connect it to Claude or Cursor."
 category: "guides"
 date: "2026-06-19"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -42,7 +43,7 @@ You'll be prompted for a project name, a template, a package manager, a transpor
 ? Select components to initialize: Tools, Prompts, Resources
 ```
 
-Pick **HTTP** as the transport for this guide — it's what you'll deploy remotely, and it's the easiest to test in a browser. (We'll cover the difference between HTTP and STDIO in [MCP Transports Explained](/blog/mcp-server-transports-explained).)
+Pick **HTTP** as the transport for this guide — it's what you'll deploy remotely, and it can be tested with MCP Inspector. (We'll cover the difference between HTTP and STDIO in [MCP Transports Explained](/blog/mcp-server-transports-explained).)
 
 The CLI creates a folder, installs dependencies, and gives you a [file-based project structure](/docs/getting-started/project-structure):
 
@@ -60,7 +61,7 @@ The key idea: **you don't register tools manually**. Drop a file in `src/tools/`
 
 ## Step 2: Understand a tool file
 
-Open `src/tools/greet.ts`. A tool is just a file with up to three exports:
+Create or open `src/tools/greet.ts`. A tool is just a file with up to three exports:
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
@@ -172,7 +173,7 @@ Now point an MCP client at your server.
 }
 ```
 
-**Claude Desktop** doesn't connect to HTTP servers natively yet, so you bridge it with the `mcp-remote` adapter:
+For a **local HTTP server** configured through Claude Desktop's command-based configuration, use the `mcp-remote` bridge. Hosted servers can instead use [Claude's remote connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp):
 
 ```json
 {
@@ -187,7 +188,7 @@ Now point an MCP client at your server.
 
 Restart the client, and your `greet` and `current-time` tools show up. Ask Claude "what time is it in Tokyo?" and it will call your tool.
 
-If the server doesn't appear, see [Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection) — connection issues almost always come down to transport, the `mcp-remote` bridge, or CORS.
+If the server doesn't appear, see [Fix: MCP Server Won't Connect in Claude Desktop](/blog/fix-mcp-server-claude-desktop-connection) — connection issues can involve startup failures, authentication, transport configuration, or client settings.
 
 ## Step 6: Build for production
 

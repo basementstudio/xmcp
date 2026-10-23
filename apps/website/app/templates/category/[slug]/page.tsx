@@ -5,6 +5,7 @@ import { getTemplates } from "@/app/templates/utils/content";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 import { humanizeMetadataName } from "@/app/templates/utils/detail";
+import { getCategoryCopy } from "@/app/templates/utils/category-copy";
 import { TemplatesListing } from "@/components/templates/listing";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
@@ -48,8 +49,9 @@ export async function generateMetadata(
   }
 
   const label = humanizeMetadataName(match);
-  const title = `${label} templates - xmcp`;
-  const description = `Browse ${label} templates built with xmcp — production-ready MCP servers showcasing authentication, transports, monetization, and integrations you can fork and deploy.`;
+  const copy = getCategoryCopy(params.slug, label);
+  const title = `${copy.title} | xmcp`;
+  const description = copy.description;
   const canonical = `${SITE_URL}/templates/category/${params.slug}`;
 
   return {
@@ -118,6 +120,7 @@ export default async function CategoryPage(props: CategoryPageProps) {
         templates={filtered}
         categories={categories}
         currentCategory={params.slug}
+        introduction={getCategoryCopy(params.slug, label)}
       />
     </main>
   );

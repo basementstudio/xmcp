@@ -64,6 +64,15 @@ export function HomeHero({ version }: { version?: string }) {
           </span>
         </p>
       </div>
+      <p className="editorial-section-intro">
+        <Link className="underline" href="/blog/build-mcp-server-typescript">
+          Build your first TypeScript MCP server
+        </Link>
+        {" · "}
+        <Link className="underline" href="/blog/best-mcp-server-frameworks">
+          Compare MCP frameworks
+        </Link>
+      </p>
       <Shader />
       <Pre>
         <Code className="language-bash">npx create-xmcp-app@latest</Code>

@@ -4,91 +4,47 @@ description: "A focused comparison of xmcp and Vercel's mcp-handler — two very
 summary: "A focused comparison of xmcp and Vercel's mcp-handler — two very different takes on MCP in TypeScript. One is a standalone framework; the other bolts MCP onto an existing Next.js or Nuxt app."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
 ---
 
-If you're building an MCP server in TypeScript and you're anywhere near the Vercel ecosystem, you've probably encountered both `mcp-handler` and xmcp. They're not competing for the same job. Understanding the difference takes about five minutes.
+xmcp and mcp-handler can both expose MCP tools from an existing application. The main choice is how you want to organize and build those tools, rather than whether your server must be a separate service.
 
-## The short answer
+## Compare the integration model
 
-| | xmcp | mcp-handler |
-| --- | --- | --- |
-| Shape | Standalone MCP framework | Adapter for Next.js / Nuxt |
-| Use case | New standalone MCP server | Add MCP to an existing app |
-| Tool definition | File-based (`src/tools/`) | Imperative, in a route handler |
-| Scaffolding CLI | `create-xmcp-app` | — |
-| Auth plugins | Better Auth, Clerk, Auth0, WorkOS, Scalekit | — |
-| Monetization | x402, Polar | — |
-| Deploy | Zero-config `vc deploy` | Through existing Next.js deploy |
-| Transports | STDIO + Streamable HTTP | Streamable HTTP + SSE |
+| Concern              | xmcp                                 | mcp-handler                         |
+| -------------------- | ------------------------------------ | ----------------------------------- |
+| Organization         | Tool, resource, and prompt files     | Registration inside an HTTP handler |
+| Existing application | Framework adapters                   | Fetch-compatible handler            |
+| Standalone process   | HTTP and STDIO builds                | Application supplies the HTTP host  |
+| Authentication       | Provider integrations and middleware | Bearer-token verification helpers   |
 
-## What mcp-handler is
+The current [mcp-handler documentation](https://github.com/vercel-labs/mcp-handler) describes v2, installed as `mcp-handler`. Its registration and transport options differ from v1; use the migration guide instead of old `@vercel/mcp-adapter` or SSE/Redis snippets.
 
-`mcp-handler` is Vercel's official adapter that adds an MCP endpoint to an **existing Next.js 13+ or Nuxt 3+ application**. You define tools with Zod schemas inside an API route, and the handler wires up Streamable HTTP (with an optional Redis integration for SSE resumability).
+## Choose xmcp for file-based organization
 
-```typescript title="app/api/[transport]/route.ts"
-import { createMcpHandler } from "@vercel/mcp-adapter";
-
-const handler = createMcpHandler(
-  (server) => {
-    server.tool("hello", { name: z.string() }, async ({ name }) => ({
-      content: [{ type: "text", text: `Hello, ${name}!` }],
-    }));
-  }
-);
-
-export { handler as GET, handler as POST };
-```
-
-The key word is "existing." If your MCP capabilities naturally belong inside a Next.js app you're already running — shared auth session, shared database connection, same deployment — this adapter is the natural fit. You're not standing up a new service; you're adding a route.
-
-**Choose mcp-handler when:** you already have a Next.js or Nuxt app and want to expose MCP tools from within it without running a separate server.
-
-## What xmcp is
-
-xmcp is a standalone MCP framework. Its defining feature is **file-based discovery**: drop a file in `src/tools/` and it becomes a tool — no central registry, no `server.tool()` calls, no boilerplate.
+A tool can be a self-contained TypeScript file:
 
 ```typescript title="src/tools/greet.ts"
 import { z } from "zod";
-import { type InferSchema } from "xmcp";
+import type { InferSchema } from "xmcp";
 
-export const schema = {
-  name: z.string().describe("The name of the user to greet"),
-};
+export const schema = { name: z.string().describe("Name to greet") };
+export const metadata = { name: "greet", description: "Greet someone by name" };
 
-export const metadata = {
-  name: "greet",
-  description: "Greet the user",
-};
-
-export default async function greet({ name }: InferSchema<typeof schema>) {
+export default function greet({ name }: InferSchema<typeof schema>) {
   return `Hello, ${name}!`;
 }
 ```
 
-The same file-based convention extends to resources and prompts. xmcp also brings a batteries-included setup that mcp-handler doesn't: five auth plugins, two monetization integrations, and `vc deploy` that works out of the box without any framework-level configuration in your Next.js app.
+Use the [Next.js adapter](/docs/adapters/nextjs) when tools belong with your web application, or create a standalone project when it needs its own deployment. The same file-based workflow applies to resources and prompts.
 
-**Choose xmcp when:** you're building a standalone MCP server — one that exists on its own, not as a feature of an existing app.
+## Choose around ownership and deployment
 
-## The deployment story
+A request-handler approach fits teams that want MCP registration next to existing HTTP routing. File discovery fits teams that want separate modules for each capability and a compiler-managed build. In either case, keep authorization and business logic in code you can test independently.
 
-Both deploy to Vercel. The difference is what you're deploying.
+Test an authenticated tool with your target client before choosing. Verify denied requests, input validation, and production hosting behavior. Neither framework removes the need to configure identity providers or protect access to your data.
 
-With mcp-handler, your MCP endpoint is part of your Next.js app. The deploy is the same one you already do. The MCP route lives at a path like `/api/mcp`.
-
-With xmcp, you run `vc deploy` from your xmcp project root. It's a standalone deployment — its own Vercel project, its own URL. That separation is useful when your MCP server serves multiple products or clients, or when you don't have a Next.js app to begin with.
-
-## How to decide
-
-- **You have a Next.js or Nuxt app and want to add MCP tools to it?** Use `mcp-handler`. It's the right tool for that job.
-- **You're building a standalone MCP server from scratch, or you need auth plugins / monetization / file-based DX?** Use xmcp.
-
-The two can also coexist: an xmcp server for your standalone MCP service, and `mcp-handler` inside a Next.js app that reuses some of the same business logic.
-
-## Next steps
-
-- **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — full from-scratch walkthrough with xmcp.
-- **[xmcp v1](/blog/xmcp-v1)** — what shipped in v1: the compiler/runtime split, MCP 2026-07-28, and how to upgrade.
-- **[Authentication docs](/docs/guides/authentication)** — how xmcp auth plugins work.
+Start with [xmcp templates](/templates), the [integration catalog](/docs/integrations), or the [full framework comparison](/blog/best-mcp-server-frameworks).

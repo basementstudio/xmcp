@@ -1,6 +1,7 @@
 ---
 title: "Polar"
 metadataTitle: "Usage with Polar | xmcp Documentation"
+lastModified: "2026-10-23"
 publishedAt: "2025-07-06"
 summary: "Add paywalls and license-key gating to your xmcp MCP tools with the Polar integration, including subscription tiers and per-tool usage tracking."
 description: "Add paywalls and track tool usage with license keys using Polar"
@@ -57,9 +58,9 @@ import { PolarProvider } from "@xmcp-dev/polar";
 
 export const polar = PolarProvider.getInstance({
   type: "sandbox", // or "production"
-  token: process.env.POLAR_TOKEN,
-  organizationId: process.env.POLAR_ORGANIZATION_ID,
-  productId: process.env.POLAR_PRODUCT_ID,
+  token: process.env.POLAR_TOKEN!,
+  organizationId: process.env.POLAR_ORGANIZATION_ID!,
+  productId: process.env.POLAR_PRODUCT_ID!,
 });
 ```
 
@@ -80,8 +81,8 @@ interface Configuration {
 - `productId` - Your Polar product ID
 
 <Callout variant="info">
-  License keys must be provided in the `license-key` header. This header name is
-  not customizable.
+  These examples read the license key from the `license-key` header and pass it
+  explicitly to the provider.
 </Callout>
 
 ## License Key Validation
@@ -91,8 +92,12 @@ Validate license keys in your tools using the `validateLicenseKey` method:
 ```typescript
 import { headers } from "xmcp/headers";
 
-const licenseKey = headers()["license-key"];
-const response = await polar.validateLicenseKey(licenseKey);
+const value = headers()["license-key"];
+const licenseKey = typeof value === "string" ? value : "";
+const response = await polar.validateLicenseKey(licenseKey, {
+  name: "tool_call_event",
+  metadata: { tool_name: "my-tool", calls: 1 },
+});
 ```
 
 ### Response Object
@@ -117,7 +122,7 @@ if (!response.valid) {
 }
 ```
 
-This automatically prompts users with the checkout URL when the license key is invalid.
+The returned message can include a checkout URL. Return it before executing protected work; this does not automatically open checkout in the client.
 
 ## Usage Tracking
 
@@ -152,13 +157,14 @@ import { headers } from "xmcp/headers";
 
 export const polar = PolarProvider.getInstance({
   type: "production",
-  token: process.env.POLAR_TOKEN,
-  organizationId: process.env.POLAR_ORGANIZATION_ID,
-  productId: process.env.POLAR_PRODUCT_ID,
+  token: process.env.POLAR_TOKEN!,
+  organizationId: process.env.POLAR_ORGANIZATION_ID!,
+  productId: process.env.POLAR_PRODUCT_ID!,
 });
 
 export default async function protectedTool() {
-  const licenseKey = headers()["license-key"];
+  const value = headers()["license-key"];
+  const licenseKey = typeof value === "string" ? value : "";
 
   const response = await polar.validateLicenseKey(licenseKey, {
     name: "tool_call_event",

@@ -6,8 +6,8 @@ import { estimateTokens } from "../../lib/estimate-tokens";
 export const revalidate = false;
 
 // "Complete content in one file", as advertised by /llms.txt and /index.md:
-// every docs page followed by every blog post (including unlisted ghosts,
-// which are published for answer engines).
+// every docs page followed by every published blog post, including guides
+// outside the curated blog feed.
 export async function GET() {
   const docs = await Promise.all(source.getPages().map(getLLMText));
   const posts = await Promise.all(blogSource.getPages().map(getBlogLLMText));

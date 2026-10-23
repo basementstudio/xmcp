@@ -1,27 +1,28 @@
 ---
 title: "MCP Server: Python vs TypeScript (Which Should You Use?)"
-description: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and why TypeScript is the stronger default for most teams."
-summary: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and why TypeScript is the stronger default for most teams."
+description: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and how to choose for your team."
+summary: "Both Python and TypeScript have official MCP SDKs. Here's how they compare on type safety, ecosystem, tooling, and the path to production — and how to choose for your team."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
 ---
 
-Both Python and TypeScript have first-party MCP SDKs maintained by Anthropic. Either can build a working MCP server. The choice comes down to your team's existing skills, your integration targets, and how much infrastructure you want to manage.
+Both Python and TypeScript have first-party MCP SDKs in the Model Context Protocol project. Either can build a working MCP server. The choice comes down to your team's existing skills, your integration targets, and how much infrastructure you want to manage.
 
 ## At a glance
 
-| | Python | TypeScript |
-| --- | --- | --- |
-| Official SDK | `mcp` (PyPI) | `@modelcontextprotocol/sdk` (npm) |
-| Type safety | Optional (mypy, pyright) | Built-in |
-| Data science libraries | Native (pandas, numpy, scikit-learn) | Via bindings or API calls |
-| Server frameworks | FastAPI, Flask, FastMCP-python | xmcp, mcp-handler, FastMCP |
-| Auth plugin ecosystem | Manual | Better Auth, Clerk, Auth0, WorkOS, Scalekit (via xmcp) |
-| Vercel zero-config deploy | No | Yes (via xmcp) |
-| Best for | Data pipelines, ML integration, rapid prototyping | Production servers, type-safe tooling, JS/TS teams |
+|                        | Python                                            | TypeScript                                             |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------ |
+| Official SDK           | `mcp` (PyPI)                                      | `@modelcontextprotocol/server` / `client` (v2)         |
+| Type safety            | Optional (mypy, pyright)                          | Built-in                                               |
+| Data science libraries | Native (pandas, numpy, scikit-learn)              | Via bindings or API calls                              |
+| Server frameworks      | FastAPI, Flask, FastMCP-python                    | xmcp, mcp-handler, FastMCP                             |
+| Auth options           | SDK integrations and FastMCP providers            | Better Auth, Clerk, Auth0, WorkOS, Scalekit (via xmcp) |
+| Deployment             | Depends on runtime and framework                  | xmcp includes a Vercel deployment path                 |
+| Best for               | Data pipelines, ML integration, rapid prototyping | Production servers, type-safe tooling, JS/TS teams     |
 
 ## When Python makes sense
 
@@ -29,23 +30,17 @@ Python is the right choice when your tools are deeply integrated with the data s
 
 Python also wins for rapid prototyping when you don't need the type guarantees. The `mcp` SDK is mature, FastMCP has a Python variant, and the iteration loop is fast.
 
-**Use Python when:** your tools are data science code, your team is primarily Python, or you're building a quick internal tool with no auth or deployment requirements.
+**Use Python when:** your tools are data science code, your team is primarily Python, or your existing backend services already run in Python.
 
 ## When TypeScript makes sense
 
-TypeScript is the default for most production MCP servers. A few reasons:
+TypeScript is a practical choice when your application and services already use JavaScript or TypeScript. xmcp lets you reuse Zod schemas and typed handlers, and offers [framework adapters](/docs/adapters/nextjs) and [provider integrations](/docs/integrations).
 
-**The ecosystem is ahead.** Tools like xmcp, mcp-handler, and the Stainless MCP generator are TypeScript-first. The auth plugin ecosystem (Better Auth, Clerk, Auth0, WorkOS, Scalekit) exists only on the TypeScript side. Vercel's zero-config MCP deployment is TypeScript-native.
+Python also supports typed schemas and authentication. For example, [Python FastMCP documents authentication providers](https://gofastmcp.com/servers/auth/authentication). Choose based on the libraries, deployment environment, and maintenance skills your team needs rather than assuming one language cannot support production requirements.
 
-**Type safety matters for tool schemas.** MCP tool inputs are validated against JSON Schema at runtime. TypeScript lets you define those schemas with Zod and get compile-time type checking on your handler — Python's equivalent requires more manual effort to keep types and schemas in sync.
+## Measure your workload
 
-**Deployment is simpler.** A TypeScript MCP server built with xmcp deploys to Vercel with no configuration. Python servers typically need a container, a runtime like Railway or ECS, or manual serverless wrapping.
-
-**Use TypeScript when:** you're building a standalone production server, you need auth or monetization, or your team already works in JavaScript/TypeScript.
-
-## Performance doesn't matter here
-
-A common concern is startup time — Python is slower to start than Node.js, and Go is faster than both. For MCP servers, this is mostly irrelevant. MCP clients launch servers on demand and keep them running; the marginal startup difference (50–300ms) is imperceptible in an interactive AI workflow. Don't pick a language for MCP server performance.
+Startup time, memory, and concurrency depend on dependencies, hosting, and tool behavior. Benchmark representative calls in the intended deployment. Remote API latency may dominate a lightweight tool, while local computation may make runtime choice significant.
 
 ## The xmcp shortcut
 
@@ -66,7 +61,7 @@ export const metadata = {
 
 export default async function analyze({ data }: InferSchema<typeof schema>) {
   const parsed = JSON.parse(data);
-  return { rows: parsed.length };
+  return { structuredContent: { rows: parsed.length } };
 }
 ```
 

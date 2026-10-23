@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
+import { IntegrationList } from "@/components/integration-list";
 import { PageActions } from "@/components/page-actions";
 import { SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
@@ -39,13 +40,20 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const crumbs: BreadcrumbItem[] = [
     { name: "Home", url: "/" },
     { name: "Docs", url: "/docs" },
-    ...slugSegments.map((_, index) => ({
-      name:
-        index === slugSegments.length - 1
-          ? displayTitle
-          : titleize(slugSegments[index]),
-      url: `/docs/${slugSegments.slice(0, index + 1).join("/")}`,
-    })),
+    ...slugSegments.flatMap((_, index) => {
+      const segments = slugSegments.slice(0, index + 1);
+      // Section folders without an index are not public pages.
+      if (!source.getPage(segments)) return [];
+      return [
+        {
+          name:
+            index === slugSegments.length - 1
+              ? displayTitle
+              : titleize(slugSegments[index]),
+          url: `/docs/${segments.join("/")}`,
+        },
+      ];
+    }),
   ];
   const structuredData = [
     ...(meta ? [getTechArticleSchema(meta, params.slug, SITE_URL)] : []),
@@ -70,6 +78,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
+            IntegrationList,
           })}
         />
       </DocsBody>
@@ -88,7 +97,7 @@ export async function generateMetadata(
   const meta = getDocsMetadata(params.slug, SITE_URL);
   if (!meta) notFound();
 
-  const title = meta.title + " | xmcp Documentation";
+  const title = meta.searchTitle;
   const description = meta.summary ?? meta.description;
   const slugPath = params.slug?.join("/") ?? "";
   const canonical = slugPath

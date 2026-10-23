@@ -9,6 +9,7 @@ export const revalidate = false;
 export function GET() {
   const lines = [
     "# xmcp Blog",
+    `For tutorials and comparisons, browse [MCP guides](${SITE_URL}/guides).`,
     "> Guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
   ];
 

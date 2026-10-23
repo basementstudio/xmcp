@@ -35,6 +35,7 @@ export const Header = () => (
           <DocumentationNavigation tree={source.pageTree} />
           <AnimatedLink href="/templates">Templates</AnimatedLink>
           <AnimatedLink href="/showcase">Showcase</AnimatedLink>
+          <AnimatedLink href="/guides">Guides</AnimatedLink>
           <AnimatedLink href="/blog">Blog</AnimatedLink>
           <AnimatedLink href="/changelog">Changelog</AnimatedLink>
           <AnimatedLink href="/faq">FAQ</AnimatedLink>

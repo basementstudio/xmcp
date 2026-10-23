@@ -13,9 +13,9 @@ export const dynamic = "force-static";
 export const revalidate = 1800; // 30 minutes
 
 export const metadata: Metadata = {
-  title: "Templates - xmcp",
+  title: "TypeScript MCP Server Templates | xmcp",
   description:
-    "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
+    "Start a TypeScript MCP server with runnable templates for authentication, Next.js and Express adapters, payments, and interactive apps.",
   alternates: {
     canonical: `${SITE_URL}/templates`,
     types: {
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Templates - xmcp",
+    title: "TypeScript MCP Server Templates | xmcp",
     description:
-      "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
+      "Start a TypeScript MCP server with runnable templates for authentication, Next.js and Express adapters, payments, and interactive apps.",
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Templates - xmcp",
+    title: "TypeScript MCP Server Templates | xmcp",
     description:
-      "Explore templates to get started with xmcp. Learn from real-world implementations and best practices.",
+      "Start a TypeScript MCP server with runnable templates for authentication, Next.js and Express adapters, payments, and interactive apps.",
     images: {
       url: `${SITE_URL}/api/og/templates`,
       width: 1200,

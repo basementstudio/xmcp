@@ -18,6 +18,8 @@ export const docs = defineDocs({
     },
     schema: frontmatterSchema.extend({
       displayTitle: z.string().optional(),
+      metadataTitle: z.string().optional(),
+      lastModified: z.string().date().optional(),
     }),
   },
 });
@@ -37,6 +39,7 @@ export const blog = defineDocs({
       textureImage: z.string().optional(),
       authors: z.array(z.string()).optional(),
       date: z.string().optional(),
+      lastModified: z.string().date().optional(),
       summary: z.string().optional(),
     }),
   },

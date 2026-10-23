@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "xmcp — The TypeScript MCP framework",
   description:
-    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   keywords: [
     "xmcp",
     "MCP",
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     title: "xmcp — The TypeScript MCP framework",
     description:
-      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+      "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   },
   twitter: {
     card: "summary_large_image",
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
     creator: "@xmcp_dev",
     title: "xmcp — The TypeScript MCP framework",
     description:
-      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+      "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
     images: DEFAULT_TWITTER_IMAGE,
   },
   manifest: "/site.webmanifest",
@@ -142,7 +142,8 @@ export default function RootLayout({
                 ["Configuration", "/docs/configuration/custom-directories"],
                 ["Core Concepts", "/docs/core-concepts/tools"],
                 ["Authentication", "/docs/authentication/api-key"],
-                ["Integrations", "/docs/adapters/nextjs"],
+                ["Integrations", "/docs/integrations"],
+                ["MCP guides", "/guides"],
                 ["Deployment", "/docs/deployment/vercel"],
               ],
             },
