@@ -24,12 +24,6 @@ export function ActionCard({ label, icon, onClick, href }: ActionCardProps) {
         />
       </span>
       <span className="site-card-title relative z-10 min-w-0">{label}</span>
-      <span
-        aria-hidden="true"
-        className="absolute -right-2 top-1/2 -translate-y-1/2 text-brand-neutral-600 pointer-events-none"
-      >
-        <IconComponent className="size-12" />
-      </span>
     </span>
   );
 
