@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
+    "zod": "^4.6.6",
     "astro": "^7.3.5",
     "@astrojs/node": "^11.1.6",
     "@astrojs/cloudflare": "^14.3.3"

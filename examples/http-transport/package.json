@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*"

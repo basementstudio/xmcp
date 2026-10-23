@@ -28,7 +28,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
+    "zod": "^4.6.6",
     "@xmcp-dev/cli": "workspace:*",
     "@xmcp-dev/upstash": "workspace:*"
   }

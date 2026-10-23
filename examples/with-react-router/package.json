@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
+    "zod": "^4.6.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "^8.4.0",
