@@ -14,6 +14,32 @@ editing any of these files goes through a pull request and deployment.
 No CMS account or token is needed. Templates continue to use the
 [`xmcp-dev/templates`](https://github.com/xmcp-dev/templates) repository.
 
+## 404 explorations
+
+Visit a missing route such as `/404` to compare four interactive concepts:
+`/404#04` (Lost context), `/404#07` (Out of orbit), `/404#08` (Submerged), and
+`/404#09` (Code rain). The selector also supports Left/Right, Home, and End.
+These remain real not-found responses; the selector is for choosing the final
+design in this branch. The website itself is the runnable example.
+
+Lost context reuses the Code rain 404 — the same field of moving horizontal
+dashes — centered and drawn as ink that follows the site theme; the pointer
+pushes the dashes. The other concepts keep their monochrome dark artwork within
+the site layout. Out of orbit builds an extruded, wireframe 404 from the shared
+bitmap that you drag to turn; rotation is clamped and eases back so the number
+stays readable (arrow keys nudge it; R recenters). On wide layouts it sits to the
+right of the copy and sways gently when untouched, tunable from Scene controls. Submerged reveals a
+hidden, centered 404 through waves (click, Space, or Enter sends a ripple; R
+clears the water). Code rain bends around the pointer. Open Scene controls for tuning and
+pause controls. Reduced-motion preferences freeze ambient water motion, hold the
+Lost context dashes still, and initially pause the code rain. Recovery links
+remain available if graphics cannot initialize.
+
+The renderers in `components/not-found/renderers/` are ported from the local
+`x-404` exploration. Only the active renderer is loaded; switching concepts
+releases its GPU resources, animation frames, and listeners. The X is served
+locally from `public/404/x.glb`; no additional dependency or remote asset is needed.
+
 ## Changelog
 
 `/changelog` and `/changelog.md` display stable framework releases from
