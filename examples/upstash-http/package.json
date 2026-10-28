@@ -12,7 +12,7 @@
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*",

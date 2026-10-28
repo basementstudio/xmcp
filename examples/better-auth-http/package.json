@@ -16,7 +16,7 @@
     "@xmcp-dev/better-auth": "workspace:*",
     "pg": "^8.16.3",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*",

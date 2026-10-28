@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
+    "zod": "^4.6.6",
     "nuxt": "^4.6.2",
     "vue": "^3.5.40"
   },
