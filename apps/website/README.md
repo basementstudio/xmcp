@@ -474,8 +474,13 @@ Import common UI icons from `components/ui/site-icons.tsx`. It maps the site's
 existing icon names to [Lucide Animated](https://lucide-animated.com/) components
 at 15 × 15px. Provider glyphs retain their artwork and the same `site-icon` size.
 Keep illustrations and wordmarks at their intended size; keep button hit areas
-large enough for touch. Information, warning, trash, and status-dot glyphs use
-static Lucide equivalents where the animated collection has no matching icon.
+large enough for touch. Warning, trash, and status-dot glyphs use static Lucide
+equivalents where the animated collection has no matching icon.
+
+`components/ui/docs-animated-icons.tsx` adds local, single-play motion to the
+existing Lucide artwork for Server Info, Observability, Schema Inference,
+Request Context, MCP Apps, OAuth, and Import OpenAPI. These use the same wrapper
+and animation handles as the vendored icons. Brand logos remain static.
 
 The vendored components in `components/ui/lucide-animated` retain the author's
 paths, variants, and timings, using the existing `framer-motion` dependency.
@@ -483,13 +488,19 @@ See that directory's README and MIT license for provenance and local adaptations
 `icon-interaction.ts` connects their animation handles to the nearest button or
 link's hover and keyboard focus. Touch, disabled controls, and reduced-motion
 preferences do not trigger hover animations. Loading spinners keep their existing
-loading behavior. Cleanup resets icons immediately, including when reduced motion
-is enabled during an animation. There is no global transform applied to icons.
+loading behavior. Enabling reduced motion immediately resets icons; unmount
+cleanup removes interaction listeners without calling unmounted animation
+controls. There is no global transform applied to icons.
 
 Run `pnpm --filter website dev` and open `/` and
 `/docs/getting-started/installation`. Hover and keyboard-focus search, theme,
 GitHub, sidebar links, and code-copy buttons. Check both themes, the 15px sizing,
 copy feedback, and reduced-motion behavior.
+
+For the seven locally animated docs icons, hover the full sidebar link and
+keyboard-focus it in desktop and mobile navigation. Leave and re-enter to check
+replay, navigate between pages, and enable reduced motion during playback to
+check the immediate reset. The docs site is the runnable example.
 
 ## Persistent homepage scene
 
