@@ -30,6 +30,7 @@ export function registerMatrix(kinds: FixtureKind[]) {
               ...BASE_CAPABILITIES,
               "stateless-http",
               "openapi-import",
+              "openapi-request",
             ],
           });
         });
