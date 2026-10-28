@@ -65,7 +65,7 @@ jobs:
       - run: pnpm --filter @xmcp-dev/x402 build
       - run: pnpm --filter @xmcp-dev/x402 test
       - run: pnpm --filter paid-http-transport exec node ../../packages/xmcp/dist/cli.js build
-      - run: pnpm --filter paid-http-transport exec tsc --noEmit
+      - run: pnpm --filter xmcp exec tsc --noEmit -p ../../examples/x402-http/tsconfig.json
       - run: pnpm --filter resend-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter resend-http typecheck
       - run: pnpm --filter resend-http test
