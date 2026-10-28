@@ -11,7 +11,7 @@ export const dynamic = "force-static";
 
 const TITLE = "MCP and xmcp FAQ: Setup, Clients, Auth, and Deployment";
 const DESCRIPTION =
-  "Answers to common questions about xmcp: what it is, how to create a project, tools, resources and prompts, transports, framework adapters, authentication, deployment, and monetization.";
+  "Answers about building MCP servers with xmcp and AI coding assistants, choosing a framework, creating tools, authentication, transports, and deployment.";
 
 const FAQ_URL = `${SITE_URL}/faq`;
 
@@ -65,6 +65,13 @@ export default function FaqPage() {
             with xmcp. For the full reference, head to the{" "}
             <Link href="/docs" className="text-brand-white link-underline">
               documentation
+            </Link>
+            , or read our guide to{" "}
+            <Link
+              href="/blog/ai-tools-for-building-mcp-servers"
+              className="text-brand-white link-underline"
+            >
+              choosing an AI tool for building MCP servers
             </Link>
             .
           </p>

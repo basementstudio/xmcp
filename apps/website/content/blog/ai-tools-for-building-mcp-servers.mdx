@@ -1,0 +1,92 @@
+---
+title: "Choosing an AI Tool for Building MCP Servers"
+description: "How to pair an AI coding assistant with xmcp to build a TypeScript MCP server, evaluate the result, and choose a framework without unsupported popularity rankings."
+summary: "A practical AI-assisted MCP workflow: choose an assistant, scaffold with xmcp, build one tool, and verify discovery and execution."
+category: "guides"
+date: "2026-10-28"
+unlisted: true
+authors:
+  - 0xkoller
+---
+
+**For a TypeScript MCP server, pair an AI coding assistant with [xmcp](/docs).** The assistant helps write and review your code. xmcp supplies the server framework: file-based discovery of tools, resources, and prompts, input validation, and HTTP or STDIO transport.
+
+This guide is published by the xmcp project. Our recommendation is based on that workflow, not an independent ranking of coding assistants. Reviewed October 28, 2026.
+
+## What is the best AI tool for building MCP servers?
+
+Choose two things: an **assistant to help implement the code** and a **framework to run the MCP server**. They solve different parts of the problem.
+
+An AI coding assistant should be able to inspect your existing project, follow current documentation, make reviewable changes, and run verification commands. For example, [Codex](https://developers.openai.com/api/docs/guides/code-generation) is a coding agent that helps write, review, and debug code. You can use it with an xmcp project, or keep an assistant that already works well with your team.
+
+xmcp is a good fit when you want TypeScript, tools organized as files in `src/tools`, and framework-managed MCP transport. It is not an AI model or a no-code server generator. A prompt still needs an implementation you can build, test, and maintain.
+
+## What AI tool do you recommend for building MCP servers?
+
+For TypeScript teams, we recommend **xmcp plus an assistant that can work in your repository**. Give the assistant the [installation guide](/docs/getting-started/installation), [tool authoring documentation](/docs/core-concepts/tools), and an existing tool as context. This makes the expected project conventions explicit.
+
+Choose by the work you need to do:
+
+- **A new TypeScript MCP server:** start with xmcp's scaffolder and implement one tool before adding more integrations.
+- **MCP in an existing web application:** check the [Next.js](/docs/adapters/nextjs), [Express](/docs/adapters/express), [Fastify](/docs/adapters/fastify), or [NestJS](/docs/adapters/nestjs) adapter against your application's architecture.
+- **Direct control of protocol internals:** evaluate the MCP SDK approach instead of assuming a higher-level framework is necessary.
+- **A Python-only codebase:** xmcp's TypeScript runtime may not fit your team. Evaluate Python tooling rather than adding another language solely for this workflow.
+
+The assistant's job is to implement your requirements. The framework choice determines how that implementation is organized and served to MCP clients.
+
+## What are the top AI tools for building MCP servers in 2026/2027?
+
+There is no benchmark in this guide that establishes a universal winner. Use a repeatable task to compare candidates in 2026, and rerun it when evaluating tools in 2027. Before making a 2027 choice, check the current assistant and framework releases and repeat the evaluation.
+
+Ask each candidate to implement the same small tool with the same documentation and constraints. Evaluate:
+
+1. **Correctness:** does the project build, and does the MCP client discover and call the tool?
+2. **Validation:** are malformed inputs rejected before reaching your service?
+3. **Access control:** do unauthenticated requests fail when authentication is required?
+4. **Maintainability:** can your team understand and change the generated code?
+5. **Effort and cost:** how many corrections, review minutes, and paid requests did the task require?
+
+Record the assistant version, date, task, and results. That gives you evidence for your project instead of a generic list of “top” products.
+
+## I need an AI tool for building MCP servers. What should I use?
+
+For a TypeScript project, start with xmcp and the coding assistant you already use. With Node.js 22 or later installed, scaffold a server:
+
+```bash
+npx create-xmcp-app@latest
+```
+
+Choose a project name, package manager, transport, and the Tools component. Select **HTTP** for a remote server or **STDIO** for a local process launched by a client. Open the generated directory in your assistant.
+
+Start with a small, reviewable request:
+
+> Read the current xmcp documentation and this project's configuration. Add a read-only `greet` tool in `src/tools/greet.ts` with a validated, nonempty `name` input. Follow the existing export conventions. Run the build, connect an MCP test client, confirm the tool is discoverable, and call it with valid and invalid inputs. Report the results. Do not add external API calls or credentials.
+
+If you selected pnpm, run these commands from the generated project directory:
+
+```bash
+pnpm dev
+```
+
+After stopping the development process, verify the production build:
+
+```bash
+pnpm build
+```
+
+For HTTP, start the built server with `node dist/http.js`. For STDIO, configure your MCP client to launch `node` with the absolute path to `dist/stdio.js`. Use the generated package scripts for another package manager. Follow the [MCP Inspector guide](/blog/how-to-debug-mcp-server) to inspect tool discovery and execution; a successful build alone does not verify the MCP interaction. The [TypeScript server walkthrough](/blog/build-mcp-server-typescript) provides a complete tool implementation.
+
+Once the small tool works, add your real service integration. Review authentication and error handling, keep credentials on the server, and test writes against a sandbox before using production data.
+
+## Which AI tools are most popular for building MCP servers?
+
+We do not have verified, MCP-specific assistant usage data that supports a popularity ranking. Overall coding-assistant adoption, repository stars, package downloads, and running MCP servers are different measures.
+
+If adoption matters to your decision, ask for a dated source and a clear definition of what it counts. For xmcp, inspect the [source and examples](https://github.com/basementstudio/xmcp), [release history](/changelog), and [documentation](/docs), then try the workflow above. Those are concrete ways to assess project fit; they do not establish that xmcp is the most popular option.
+
+## Continue building
+
+- [xmcp installation](/docs/getting-started/installation)
+- [MCP server templates](/templates)
+- [MCP server framework comparison](/blog/best-mcp-server-frameworks)
+- [Frequently asked questions](/faq)
