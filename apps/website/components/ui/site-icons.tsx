@@ -2,18 +2,16 @@
 
 import type { ComponentType, Ref, RefAttributes, SVGAttributes } from "react";
 import { useEffect, useRef } from "react";
+import { Circle, TriangleAlert, Trash2 } from "lucide-react";
 import {
-  Activity,
-  AppWindow,
-  Circle,
-  FileInput,
-  Fingerprint,
-  KeyRound,
-  ScanLine,
-  TriangleAlert,
-  Info,
-  Trash2,
-} from "lucide-react";
+  ActivityIcon as AnimatedActivityIcon,
+  AppWindowIcon as AnimatedAppWindowIcon,
+  FileInputIcon as AnimatedFileInputIcon,
+  FingerprintIcon as AnimatedFingerprintIcon,
+  InfoIcon as AnimatedInfoIcon,
+  KeyRoundIcon as AnimatedKeyRoundIcon,
+  ScanLineIcon as AnimatedScanLineIcon,
+} from "./docs-animated-icons";
 import { bindIconInteraction, type IconAnimation } from "./icon-interaction";
 import { AlignLeftIcon as AnimatedAlignLeftIcon } from "./lucide-animated/align-left";
 import { ArchiveIcon as AnimatedArchiveIcon } from "./lucide-animated/archive";
@@ -71,8 +69,12 @@ type AnimatedIcon = ComponentType<
   } & RefAttributes<IconAnimation>
 >;
 
-// Preserve the site's SVG interface and layout while using the upstream motion.
-function siteIcon(Icon: AnimatedIcon, name: string) {
+// Preserve the site's SVG interface and layout with shared animation handles.
+function siteIcon(
+  Icon: AnimatedIcon,
+  name: string,
+  library = "lucide-animated"
+) {
   return function SiteIcon({ className, ...props }: IconProps) {
     const svg = useRef<SVGSVGElement>(null);
     const animation = useRef<IconAnimation>(null);
@@ -87,7 +89,7 @@ function siteIcon(Icon: AnimatedIcon, name: string) {
         ref={animation}
         svgRef={svg}
         data-icon={name}
-        data-icon-library="lucide-animated"
+        data-icon-library={library}
         size={15}
         width={15}
         height={15}
@@ -119,12 +121,36 @@ function staticIcon(
 }
 
 export const ArchiveIcon = siteIcon(AnimatedArchiveIcon, "ArchiveIcon");
-export const ActivityIcon = staticIcon(Activity, "ActivityIcon");
-export const AppWindowIcon = staticIcon(AppWindow, "AppWindowIcon");
-export const FingerprintIcon = staticIcon(Fingerprint, "FingerprintIcon");
-export const KeyRoundIcon = staticIcon(KeyRound, "KeyRoundIcon");
-export const FileInputIcon = staticIcon(FileInput, "FileInputIcon");
-export const ScanLineIcon = staticIcon(ScanLine, "ScanLineIcon");
+export const ActivityIcon = siteIcon(
+  AnimatedActivityIcon,
+  "ActivityIcon",
+  "lucide"
+);
+export const AppWindowIcon = siteIcon(
+  AnimatedAppWindowIcon,
+  "AppWindowIcon",
+  "lucide"
+);
+export const FingerprintIcon = siteIcon(
+  AnimatedFingerprintIcon,
+  "FingerprintIcon",
+  "lucide"
+);
+export const KeyRoundIcon = siteIcon(
+  AnimatedKeyRoundIcon,
+  "KeyRoundIcon",
+  "lucide"
+);
+export const FileInputIcon = siteIcon(
+  AnimatedFileInputIcon,
+  "FileInputIcon",
+  "lucide"
+);
+export const ScanLineIcon = siteIcon(
+  AnimatedScanLineIcon,
+  "ScanLineIcon",
+  "lucide"
+);
 export const ArrowLeftIcon = siteIcon(AnimatedArrowLeftIcon, "ArrowLeftIcon");
 export const ArrowRightIcon = siteIcon(
   AnimatedArrowRightIcon,
@@ -216,5 +242,9 @@ export const ExclamationTriangleIcon = staticIcon(
   TriangleAlert,
   "ExclamationTriangleIcon"
 );
-export const InfoCircledIcon = staticIcon(Info, "InfoCircledIcon");
+export const InfoCircledIcon = siteIcon(
+  AnimatedInfoIcon,
+  "InfoCircledIcon",
+  "lucide"
+);
 export const TrashIcon = staticIcon(Trash2, "TrashIcon");
