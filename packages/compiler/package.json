@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx --watch --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
     "build": "cross-env NODE_ENV=production tsx --tsconfig ./bundler.tsconfig.json ./bundler/index.ts",
-    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts src/compiler/get-bundler-config/__tests__/*.test.ts src/compiler/schema-inference/__tests__/*.test.ts",
+    "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts src/compiler/get-bundler-config/__tests__/*.test.ts src/compiler/schema-inference/__tests__/*.test.ts src/compiler/skills/__tests__/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -49,7 +49,8 @@
     "is-wsl": "^3.1.0",
     "json5": "^2.2.3",
     "memfs": "^4.51.1",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "yaml": "^2.8.3"
   },
   "peerDependencies": {
     "xmcp": "workspace:>=1.0.0",

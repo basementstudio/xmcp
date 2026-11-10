@@ -9,6 +9,16 @@ function pathToIdentifier(path: string): string {
 }
 
 export function generateImportCode(): string {
+  const { skills } = compilerContext.getContext();
+
+  // Skill files are embedded as data on every target: there is no module to
+  // import, and Cloudflare Workers has no filesystem to read them from later.
+  return `${generateModuleImportCode()}
+export const skills = ${JSON.stringify(skills ?? [])};
+`;
+}
+
+function generateModuleImportCode(): string {
   const {
     toolPaths,
     promptPaths,

@@ -1,0 +1,119 @@
+---
+title: "Skills"
+metadataTitle: "Skills | xmcp Documentation"
+publishedAt: "2026-11-10"
+summary: "Serve Agent Skills from your xmcp MCP server — drop standard skill directories into src/skills and xmcp publishes them through the MCP Skills extension."
+description: "Skills are directories of instructions and supporting files that teach an agent how to use your server, served through the MCP Skills extension."
+---
+
+`xmcp` automatically detects [Agent Skills](https://agentskills.io/) under the `/src/skills/` directory and serves them through the [MCP Skills extension](https://modelcontextprotocol.io/extensions/skills) (`io.modelcontextprotocol/skills`). This path can be configured in your `xmcp.config.ts` file.
+
+Skills ship the instructions for using your server together with the server itself. A client that supports the extension lists them, shows them to the user, and loads one when a task calls for it.
+
+## Directory structure
+
+Each skill is a directory containing a `SKILL.md` file, plus any supporting files it refers to. They are plain files: there is nothing to export and no wrapper to write.
+
+```
+src/skills/
+└── release-notes/
+    ├── SKILL.md              # Required: frontmatter + instructions
+    └── references/
+        └── TEMPLATE.md       # Optional supporting files
+```
+
+`SKILL.md` starts with YAML frontmatter followed by the instructions in Markdown:
+
+```markdown title="src/skills/release-notes/SKILL.md"
+---
+name: release-notes
+description: Draft release notes from the changes merged since a release tag. Use when the user asks for a changelog or a summary of what shipped.
+license: MIT
+---
+
+# Release notes
+
+1. Call the `list-merged-changes` tool with the previous release tag.
+2. Group the changes by type: features first, then fixes.
+3. Write the notes using the layout in `references/TEMPLATE.md`.
+```
+
+The frontmatter follows the [Agent Skills specification](https://agentskills.io/specification):
+
+- `name` is required and must equal the directory name. Use at most 64 lowercase letters, numbers and single hyphens, without a leading or trailing hyphen.
+- `description` is required and can be up to 1024 characters. Say what the skill does and when to use it.
+- Any other field, such as `license` or `metadata`, is published unchanged.
+
+## What gets served
+
+When at least one skill exists, the server:
+
+- Declares `capabilities.extensions["io.modelcontextprotocol/skills"]`.
+- Answers `skills/list` with an entry for every skill, and `skills/get` with the entry for one `SKILL.md` URI.
+- Registers every file as a resource, so `resources/list` and `resources/read` work for them like for any other resource.
+
+Files are addressed as `skill://<skill-name>/<file-path>`:
+
+| File                                             | Resource URI                                   |
+| ------------------------------------------------ | ---------------------------------------------- |
+| `src/skills/release-notes/SKILL.md`              | `skill://release-notes/SKILL.md`               |
+| `src/skills/release-notes/references/TEMPLATE.md` | `skill://release-notes/references/TEMPLATE.md` |
+
+Each entry carries the skill's frontmatter and a complete list of its files with their SHA-256 digest and size, which clients use to verify what they read:
+
+```json
+{
+  "uri": "skill://release-notes/SKILL.md",
+  "frontmatter": {
+    "name": "release-notes",
+    "description": "Draft release notes from the changes merged since a release tag. Use when the user asks for a changelog or a summary of what shipped.",
+    "license": "MIT"
+  },
+  "resources": [
+    {
+      "uri": "skill://release-notes/SKILL.md",
+      "digest": "sha256:…",
+      "size": 412
+    },
+    {
+      "uri": "skill://release-notes/references/TEMPLATE.md",
+      "digest": "sha256:…",
+      "size": 83
+    }
+  ]
+}
+```
+
+Servers without skills are unchanged: the capability, the two methods and the `skill://` resources only exist when a skill does.
+
+## Supporting files
+
+A skill can hold any files in any subdirectories. Text files (valid UTF-8) are served as `text` and everything else as a base64 `blob`, so the bytes a client receives always match the published digest. `SKILL.md` is served as `text/markdown`; other files get a MIME type from their extension.
+
+Files and directories whose name starts with a dot are ignored. A `SKILL.md` in a subdirectory of a skill is served as a supporting file of that skill, not as a separate skill.
+
+## Build-time validation
+
+Skills are read, validated and embedded into the bundle at build time, so they are served without filesystem access on every target, including Cloudflare Workers. The build fails with a message naming the problem when:
+
+- A skill directory has no `SKILL.md`, or a file sits directly in the skills directory.
+- `SKILL.md` has no frontmatter, or the frontmatter is not valid YAML.
+- `name` is missing, differs from the directory name, or breaks the naming rules.
+- `description` is missing or too long.
+- A skill has more than 512 files or more than 16 MiB in total, the limits clients are required to support.
+
+In development, `xmcp dev` picks up added, removed and edited skill files. An invalid skill is reported in the terminal and the last valid skills stay served until it is fixed.
+
+## Visibility and middleware
+
+Skills follow the name rules of the [components](/docs/configuration/components) configuration: a skill whose name is excluded is not served, and when `include` is set a skill is served only if `include.names` lists it. Skills have no tags.
+
+Skill files are read through `resources/read`, so [MCP middleware](/docs/core-concepts/middlewares) for that method applies to them. `skills/list` and `skills/get` do not run through MCP middleware.
+
+## Not supported yet
+
+- `resources/directory/read`: the server does not declare `directoryRead`. Each entry already lists every file of its skill.
+- Skills nested under an organizational prefix, such as `skill://acme/billing/refunds/SKILL.md`.
+- Skills whose content is generated at request time.
+
+See the runnable [skills example](https://github.com/basementstudio/xmcp/tree/main/examples/skills-http) for a server with one skill and curl requests for each method.

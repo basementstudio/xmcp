@@ -35,6 +35,7 @@ import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
+import { compileSkills, SkillValidationError } from "./skills/compile-skills";
 const { version: COMPILER_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -45,7 +46,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
+  const { mode, toolPaths, promptPaths, resourcePaths, skillPaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
@@ -169,6 +170,39 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         if (compilerStarted) {
           await generateCode({ rebuildClientBundles: false });
         }
+      },
+    });
+  }
+
+  // handle skills
+  // The default skills directory is optional, so projects without skills
+  // build unchanged. Only an explicitly configured path has to exist.
+  const configuredSkillsPath = getResolvedPathsConfig(xmcpConfig).skills;
+  const skillsPath =
+    typeof xmcpConfig.paths?.skills === "string"
+      ? isValidPath(configuredSkillsPath, "skills")
+      : (configuredSkillsPath ?? undefined);
+
+  if (skillsPath) {
+    compilerContext.setContext({ skillsPath });
+    const regenerateSkills = async () => {
+      if (compilerStarted) {
+        await generateCode({
+          rebuildClientBundles: false,
+          rebuildSkills: true,
+        });
+      }
+    };
+    // Skills are plain files of any type, not modules.
+    watcher.watch(`${skillsPath}/**/*`, {
+      onAdd: async (filePath) => {
+        addWatchedPath(skillPaths, filePath);
+        await regenerateSkills();
+      },
+      onChange: regenerateSkills,
+      onUnlink: async (filePath) => {
+        removeWatchedPath(skillPaths, filePath);
+        await regenerateSkills();
       },
     });
   }
@@ -454,9 +488,15 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
  */
 async function generateCode({
   rebuildClientBundles = true,
+  rebuildSkills = false,
 }: {
   rebuildClientBundles?: boolean;
+  rebuildSkills?: boolean;
 } = {}) {
+  if (rebuildSkills || compilerContext.getContext().skills === undefined) {
+    compilerContext.setContext({ skills: buildSkills() });
+  }
+
   const { clientBundles: currentClientBundles } = compilerContext.getContext();
   const clientBundles =
     rebuildClientBundles || currentClientBundles === undefined
@@ -485,6 +525,33 @@ async function generateCode({
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.js"), toolsCode);
     const typesCode = generateToolsTypesCode();
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
+  }
+}
+
+/**
+ * Compiles the skills directory. An invalid skill fails a production build;
+ * in development the last valid skills keep being served until it is fixed.
+ */
+function buildSkills() {
+  const { mode, skillsPath, skillPaths, skills } = compilerContext.getContext();
+  if (!skillsPath) return [];
+
+  try {
+    return compileSkills(skillsPath, skillPaths);
+  } catch (error) {
+    if (mode === "production") {
+      if (!(error instanceof SkillValidationError)) throw error;
+      console.error(chalk.red.bold(error.message));
+      process.exit(1);
+    }
+    // A file removed between its watcher event and this read is not an
+    // error: its own unlink event compiles the skills again.
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.error(
+        chalk.red.bold(error instanceof Error ? error.message : String(error))
+      );
+    }
+    return skills ?? [];
   }
 }
 

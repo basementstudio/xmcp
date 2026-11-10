@@ -5,6 +5,7 @@
     "request-context",
     "prompts",
     "resources",
+    "skills",
     "middlewares",
     "mcp-apps",
     "css",

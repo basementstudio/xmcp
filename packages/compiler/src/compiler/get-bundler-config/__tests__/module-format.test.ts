@@ -47,6 +47,7 @@ function buildConfig(
       toolPaths: new Set(),
       promptPaths: new Set(),
       resourcePaths: new Set(),
+      skillPaths: new Set(),
       hasMiddleware: false,
       xmcpConfig,
     },

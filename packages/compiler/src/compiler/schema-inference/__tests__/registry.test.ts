@@ -15,6 +15,7 @@ function generate(enabled: boolean, cloudflare = false) {
       toolPaths: new Set(["src/tools/greet.ts"]),
       promptPaths: new Set(),
       resourcePaths: new Set(),
+      skillPaths: new Set(),
       hasMiddleware: false,
       xmcpConfig: { experimental: { inferToolSchemas: enabled } },
     },

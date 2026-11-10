@@ -19,6 +19,7 @@ import {
   reportResourceLoadIssues,
 } from "./resource-loader";
 import { addResourcesToServer } from "./resources";
+import { addSkillsToServer } from "./skills";
 import { loadToolModules, reportToolLoadIssues } from "./tool-loader";
 import { addToolsToServer } from "./tools";
 import { UserPromptHandler } from "./transformers/prompt";
@@ -60,6 +61,10 @@ export const injectedResources = INJECTED_RESOURCES as Record<
   () => Promise<ResourceFile>
 >;
 
+// Older compilers do not inject skills.
+export const injectedSkills =
+  typeof INJECTED_SKILLS === "undefined" ? [] : (INJECTED_SKILLS ?? []);
+
 export const INJECTED_CONFIG = SERVER_INFO as Implementation & {
   instructions?: string;
 };
@@ -97,6 +102,12 @@ export async function configureServer(
     addResourcesToServer(
       server,
       filterComponents(resourceModules, components),
+      executionLogger?.registerResource
+    );
+    addSkillsToServer(
+      server,
+      injectedSkills,
+      components,
       executionLogger?.registerResource
     );
   });

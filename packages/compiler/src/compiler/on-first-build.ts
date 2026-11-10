@@ -25,11 +25,12 @@ export function onFirstBuild(xmcpConfig: XmcpConfigOutputSchema) {
 }
 
 function logBuildSummary() {
-  const { toolPaths, promptPaths, resourcePaths } =
+  const { toolPaths, promptPaths, resourcePaths, skills } =
     compilerContext.getContext();
   const toolsCount = toolPaths.size;
   const promptsCount = promptPaths.size;
   const resourcesCount = resourcePaths.size;
+  const skillsCount = skills?.length ?? 0;
 
   const parts: string[] = [];
   if (toolsCount > 0) {
@@ -43,6 +44,12 @@ function logBuildSummary() {
   if (resourcesCount > 0) {
     parts.push(
       `${chalk.bold(resourcesCount)} resource${resourcesCount !== 1 ? "s" : ""}`
+    );
+  }
+
+  if (skillsCount > 0) {
+    parts.push(
+      `${chalk.bold(skillsCount)} skill${skillsCount !== 1 ? "s" : ""}`
     );
   }
 
