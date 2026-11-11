@@ -8,6 +8,7 @@ import { ToolMetadata } from "@/types/tool";
 import { filterComponents } from "./component-visibility";
 import { createExecutionLogger } from "./execution-logger";
 import { uIResourceRegistry } from "./ext-apps-registry";
+import { normalizeAuthorize } from "./mcp-authorization";
 import {
   normalizeMcpMiddleware,
   registerWithMcpMiddleware,
@@ -75,6 +76,7 @@ export async function configureServer(
   // Shared setup also serves STDIO and adapters that do not mount HTTP middleware.
   const middlewareModule = await INJECTED_MIDDLEWARE?.();
   const middleware = normalizeMcpMiddleware(middlewareModule?.mcp);
+  const authorize = normalizeAuthorize(middlewareModule?.authorize);
   // Older compilers do not inject this optional feature flag.
   const executionLogger =
     typeof OBSERVABILITY_CONFIG !== "undefined" && OBSERVABILITY_CONFIG.enabled
@@ -87,19 +89,24 @@ export async function configureServer(
   const components =
     typeof COMPONENTS_CONFIG === "undefined" ? undefined : COMPONENTS_CONFIG;
 
-  registerWithMcpMiddleware(server, middleware, () => {
-    addToolsToServer(
-      server,
-      filterComponents(toolModules, components),
-      middleware
-    );
-    addPromptsToServer(server, filterComponents(promptModules, components));
-    addResourcesToServer(
-      server,
-      filterComponents(resourceModules, components),
-      executionLogger?.registerResource
-    );
-  });
+  registerWithMcpMiddleware(
+    server,
+    middleware,
+    () => {
+      addToolsToServer(
+        server,
+        filterComponents(toolModules, components),
+        middleware
+      );
+      addPromptsToServer(server, filterComponents(promptModules, components));
+      addResourcesToServer(
+        server,
+        filterComponents(resourceModules, components),
+        executionLogger?.registerResource
+      );
+    },
+    authorize
+  );
   return server;
 }
 

@@ -5,6 +5,10 @@ export type {
   WebMiddlewareContext,
 } from "./types/middleware";
 export type {
+  McpAuthorize,
+  McpAuthorizeComponent,
+  McpAuthorizeOperation,
+  McpComponentMetadata,
   McpMiddleware,
   McpMiddlewareContext,
   McpMiddlewareMethod,
