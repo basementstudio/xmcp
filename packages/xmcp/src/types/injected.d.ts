@@ -20,6 +20,7 @@ declare const INJECTED_MIDDLEWARE:
       mcp?:
         | import("./mcp-middleware").McpMiddleware
         | import("./mcp-middleware").McpMiddleware[];
+      authorize?: import("./mcp-middleware").McpAuthorize;
       default?:
         | import("./middleware").Middleware
         | import("./middleware").Middleware[]

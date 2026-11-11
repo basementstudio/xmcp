@@ -5,6 +5,7 @@ import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
 import { MIDDLEWARE_LIFECYCLE_FILES } from "../fixtures/middleware-lifecycle.js";
 import { MCP_MIDDLEWARE_FILES } from "../fixtures/mcp-middleware.js";
 import { OPERATION_MIDDLEWARE_FILES } from "../fixtures/operation-middleware.js";
+import { AUTHORIZATION_FILES } from "../fixtures/authorization.js";
 import { MULTI_MESSAGE_PROMPT_FILES } from "../fixtures/multi-message-prompts.js";
 import { RESOURCE_COMPLETION_FILES } from "../fixtures/resource-completion.js";
 import { MEDIA_CONTENT_FILES } from "../fixtures/media-content.js";
@@ -25,6 +26,7 @@ export const DEFAULT_FILES: Record<string, string> = {
   ...MCP_MIDDLEWARE_FILES,
   ...MIDDLEWARE_LIFECYCLE_FILES,
   ...OPERATION_MIDDLEWARE_FILES,
+  ...AUTHORIZATION_FILES,
   ...MULTI_MESSAGE_PROMPT_FILES,
   ...RESOURCE_COMPLETION_FILES,
   ...MEDIA_CONTENT_FILES,

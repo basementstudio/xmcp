@@ -5,6 +5,7 @@ import type {
 } from "@modelcontextprotocol/server";
 
 import type {
+  McpAuthorize,
   McpMiddleware,
   McpMiddlewareContext,
   McpMiddlewareResult,
@@ -15,6 +16,11 @@ import {
   getRequestContext,
   withRequestContext,
 } from "../contexts/request-context";
+import {
+  createAuthorizationMiddleware,
+  createComponentRegistry,
+  recordComponents,
+} from "./mcp-authorization";
 import {
   type McpToolHandler,
   resolveToolClientInfo,
@@ -132,37 +138,77 @@ type RequestHandler = (
  * while registering components, then restore it even if registration fails.
  * This retains SDK catalog/URI/completion behavior and runs the chain once,
  * including ResourceTemplate list/read/complete callbacks and generated UI resources.
+ *
+ * An `authorize` policy runs before user middleware. Its tools/call check wraps
+ * the SDK handler itself, so a denied tool is rejected before argument
+ * validation, exactly like an unknown tool.
  */
 export function registerWithMcpMiddleware(
   server: McpServer,
   middleware: readonly McpMiddleware[],
-  register: () => void
+  register: () => void,
+  authorize?: McpAuthorize
 ): void {
   const protocol = server.server;
   const original = protocol.setRequestHandler;
-  const run = createMiddlewareRunner(middleware);
+  const registry = authorize ? createComponentRegistry() : undefined;
+  const authorization =
+    authorize && registry
+      ? createAuthorizationMiddleware(authorize, registry)
+      : undefined;
+  const run = createMiddlewareRunner(
+    authorization ? [authorization, ...middleware] : middleware
+  );
+  const authorizeToolCall = authorization
+    ? createMiddlewareRunner([authorization])
+    : undefined;
   protocol.setRequestHandler = ((
     method: string,
     ...registration: unknown[]
   ) => {
-    if (
-      requestMethods.has(method as RequestMethod) &&
-      registration.length === 1 &&
-      typeof registration[0] === "function"
-    ) {
+    if (registration.length === 1 && typeof registration[0] === "function") {
       const handler = registration[0] as RequestHandler;
-      registration[0] = (
-        request: RequestTypeMap[RequestMethod],
-        ctx: ServerContext
-      ) =>
-        run({ method: request.method, params: request.params ?? {} }, ctx, () =>
-          handler(request, ctx)
-        );
+      if (requestMethods.has(method as RequestMethod)) {
+        registration[0] = (
+          request: RequestTypeMap[RequestMethod],
+          ctx: ServerContext
+        ) =>
+          run(
+            { method: request.method, params: request.params ?? {} },
+            ctx,
+            () => handler(request, ctx)
+          );
+      } else if (method === "tools/call" && authorizeToolCall && registry) {
+        registration[0] = (
+          request: RequestTypeMap["tools/call"],
+          ctx: ServerContext
+        ) => {
+          const tool = registry.tools.get(request.params.name);
+          // Unknown tools keep the SDK's own error.
+          if (!tool) return handler(request as never, ctx);
+          return authorizeToolCall(
+            {
+              method: "tools/call",
+              params: {
+                name: request.params.name,
+                arguments: request.params.arguments ?? {},
+              },
+              tool: { metadata: tool.metadata },
+            },
+            ctx,
+            () => handler(request as never, ctx)
+          );
+        };
+      }
     }
     Reflect.apply(original, protocol, [method, ...registration]);
   }) as typeof original;
   try {
-    register();
+    if (registry) {
+      recordComponents(server, registry, snapshotMetadata, register);
+    } else {
+      register();
+    }
   } finally {
     protocol.setRequestHandler = original;
   }

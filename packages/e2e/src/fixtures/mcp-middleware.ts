@@ -22,6 +22,7 @@ const inner: McpMiddleware = async (ctx, next) => {
   return result;
 };
 export const mcp = [operations, ...lifecycle, outer, inner];
+export { authorize } from "./authorization-policy";
 `,
   "src/tools/middleware-echo.ts": `import { getRequestContext } from "xmcp";
 import { z } from "zod";

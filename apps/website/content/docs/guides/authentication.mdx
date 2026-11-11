@@ -38,6 +38,54 @@ OAuth handles both authentication and authorization through tokens and scopes. F
 
 [JSON Web Tokens](/docs/authentication/jwt) are self-contained tokens that carry user claims like identity and roles. They're useful when you manage authentication externally and want to pass verified user information to your MCP server.
 
+## Authorize components
+
+Once a request is authenticated, export an `authorize` policy from `src/middleware.ts` to decide which tools, prompts, resources, and resource templates each caller can see and use:
+
+```typescript title="src/middleware.ts"
+import { type McpAuthorize } from "xmcp";
+
+export const authorize: McpAuthorize = (ctx, component, operation) => {
+  // Anyone may discover admin tools; only admins may run them.
+  if (component.metadata.tags?.includes("admin") && operation !== "list") {
+    return ctx.authInfo?.scopes.includes("admin") ?? false;
+  }
+  return true;
+};
+```
+
+```typescript title="src/tools/delete-user.ts"
+export const metadata = {
+  name: "delete-user",
+  description: "Delete a user account",
+  tags: ["admin"],
+};
+```
+
+The policy receives:
+
+- `ctx`: the [MCP middleware context](/docs/core-concepts/middlewares#mcp-middleware), including `method`, `params`, verified `authInfo`, `clientInfo`, and HTTP headers when present.
+- `component`: `{ type, name, metadata }`. `type` is `"tool"`, `"prompt"`, `"resource"` (with `uri`), or `"resourceTemplate"` (with `uriTemplate`). `metadata` is the frozen registered view, with `tags`, `_meta`, and the descriptive fields. Tool metadata matches `ctx.tool.metadata`.
+- `operation`: `"list"` for every catalog, `"call"` for tool calls, `"get"` for prompts, `"read"` for resource reads, and `"complete"` for completion.
+
+Only an explicit `true` allows access; any other value denies. The policy may be async. If it throws, the request fails with that error.
+
+When the policy denies a component:
+
+| Request                                                                    | Result                                                                                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list` | The component is omitted. Resources listed by a template follow that template.                                                              |
+| `tools/call`                                                               | `Tool <name> not found`, the same protocol error as an unknown tool. The check runs before argument validation, and the handler never runs. |
+| `prompts/get`                                                              | `Prompt <name> not found`.                                                                                                                  |
+| `resources/read`                                                           | `Resource not found: <uri>`, matching static URIs first and then templates, as the SDK does.                                                |
+| `completion/complete`                                                      | An empty completion; prompt and template completers do not run.                                                                             |
+
+Because denial matches the error for a missing component, callers cannot use it to discover hidden components. UI resources generated for [MCP Apps](/docs/core-concepts/mcp-apps) tools are authorized as their owning tool, with operation `"list"` or `"read"`.
+
+`authorize` runs before the `mcp` middleware chain, so denied requests never reach your middleware or handlers. It runs on HTTP, STDIO, and the adapters. Authentication data comes only from the current request, so stateless HTTP keeps no per-client state. On STDIO, `ctx.authInfo` is absent unless you supply it. When `authorize` is not exported, behavior is unchanged.
+
+Supply verified authentication through your HTTP integration; see [request-context authentication](/docs/core-concepts/request-context#authentication). The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) shows a scope-based policy for tools and resources.
+
 ## How MCP authentication works
 
 MCP authentication is built on OAuth 2.1 with mandatory PKCE (Proof Key for Code Exchange). PKCE is a security extension that protects the authorization flow. This makes authentication secure even for public clients like desktop apps and CLI tools that are not designed for persistent secret storage.
@@ -51,7 +99,6 @@ When an MCP client first connects to an authenticated server, it needs to discov
 #### Resource Discovery
 
 The client starts by fetching the Protected Resource Metadata from `/.well-known/oauth-protected-resource`. This document tells the client which authorization server handles authentication for this MCP server.
-
 
 #### Authorization Server Discovery
 
@@ -130,6 +177,7 @@ Scopes define what an access token is allowed to do. They act as permissions tha
 When a client initiates authentication, it requests specific scopes like `read`, `write`, or `admin`. The authorization server includes the granted scopes in the access token. Your MCP server can then check these scopes before allowing certain operations.
 
 Scopes are particularly useful when:
+
 - Different clients need different permission levels
 - You want to limit what third-party integrations can do
 - Users should be able to grant partial access to their account
