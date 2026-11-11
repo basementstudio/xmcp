@@ -1,4 +1,14 @@
-import { lstat, mkdir, open, readFile, rm } from "node:fs/promises";
+import {
+  chmod,
+  link,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { resolve } from "node:path";
 import { buildOpenApiTools, type OpenApiOptions } from "../utils/openapi.js";
 
@@ -6,6 +16,7 @@ export interface ImportOpenApiOptions extends OpenApiOptions {
   file?: string;
   out?: string;
   help: boolean;
+  overwrite?: boolean;
 }
 
 export function parseImportOpenApiOptions(
@@ -15,7 +26,10 @@ export function parseImportOpenApiOptions(
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--help" || arg === "-h") options.help = true;
-    else if (["--operations", "--base-url", "--out", "-o"].includes(arg)) {
+    else if (arg === "--overwrite") options.overwrite = true;
+    else if (
+      ["--operations", "--base-url", "--auth-env", "--out", "-o"].includes(arg)
+    ) {
       const value = args[++index];
       if (!value?.trim() || value.startsWith("-"))
         throw new Error(`${arg} requires a value.`);
@@ -27,6 +41,7 @@ export function parseImportOpenApiOptions(
           );
         options.operations = [...(options.operations ?? []), ...ids];
       } else if (arg === "--base-url") options.baseUrl = value;
+      else if (arg === "--auth-env") options.authEnv = value;
       else options.out = value;
     } else if (arg.startsWith("-")) throw new Error(`Unknown option ${arg}.`);
     else if (options.file) throw new Error("Expected one OpenAPI JSON file.");
@@ -52,38 +67,58 @@ export async function runImportOpenApi(
   }
   const tools = buildOpenApiTools(input, options);
   const directory = resolve(options.out ?? "src/tools");
-  // Validate every operation and destination before creating any files.
+  // Validate every operation and destination before writing. Never follow symlinks.
+  const replacements = new Map<string, number>();
   for (const tool of tools)
     for (const extension of ["ts", "tsx"]) {
       const destination = resolve(directory, `${tool.name}.${extension}`);
-      const exists = await lstat(destination).then(
-        () => true,
+      const existing = await lstat(destination).catch(
         (error: NodeJS.ErrnoException) => {
           if (error.code !== "ENOENT") throw error;
-          return false;
+          return undefined;
         }
       );
-      if (exists)
+      if (!existing) continue;
+      if (!options.overwrite)
         throw new Error(
-          `Refusing to overwrite ${destination}. Choose another --out directory.`
+          `Refusing to overwrite ${destination}. Use --overwrite to replace generated .ts files.`
         );
+      if (extension !== "ts" || !existing.isFile())
+        throw new Error(
+          `Cannot overwrite ${destination}: only regular .ts files can be replaced.`
+        );
+      replacements.set(destination, existing.mode);
     }
   await mkdir(directory, { recursive: true });
+  // Stage every file before publishing. Each replacement is an atomic rename on
+  // the same filesystem, so a write failure never truncates an existing tool.
+  const staging = await mkdtemp(resolve(directory, ".xmcp-import-"));
   const created: string[] = [];
+  const destinations = tools.map((tool) =>
+    resolve(directory, `${tool.name}.ts`)
+  );
   try {
-    for (const tool of tools) {
-      const destination = resolve(directory, `${tool.name}.ts`);
-      const handle = await open(destination, "wx");
-      created.push(destination);
-      try {
-        await handle.writeFile(tool.content, "utf8");
-      } finally {
-        await handle.close();
+    for (const [index, tool] of tools.entries()) {
+      const staged = resolve(staging, `${tool.name}.ts`);
+      await writeFile(staged, tool.content, "utf8");
+      const mode = replacements.get(destinations[index]);
+      if (mode !== undefined) await chmod(staged, mode);
+    }
+    for (const [index, tool] of tools.entries()) {
+      const staged = resolve(staging, `${tool.name}.ts`);
+      const destination = destinations[index];
+      if (replacements.has(destination)) await rename(staged, destination);
+      else {
+        // link refuses a destination created since preflight, unlike rename.
+        await link(staged, destination);
+        created.push(destination);
       }
     }
   } catch (error) {
     await Promise.all(created.map((path) => rm(path, { force: true })));
     throw error;
+  } finally {
+    await rm(staging, { recursive: true, force: true });
   }
-  return created;
+  return destinations;
 }
