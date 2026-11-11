@@ -80,9 +80,11 @@ absent. Headers use raw text; path/query values are percent-encoded independentl
 
 `--auth-env` names the environment variable holding the complete Authorization
 value (for example `Bearer ...`). Generated handlers read it on every call;
-credentials never become tool inputs or generated literals. The flag applies to
-all selected operations. HTTP basic/bearer and Authorization API-key security are
-supported; OAuth flows and other API-key locations are not.
+credentials never become tool inputs or generated literals. Each operation's
+security decides its use: required security always sends it, optional security
+(`{}` alternative) sends it only when set, and public operations never read it.
+HTTP basic/bearer and Authorization API-key security are supported; OAuth flows
+and other API-key locations are not.
 
 Unsupported constructs fail clearly: non-JSON bodies, cookies, object parameters,
 nullable/composed schemas, unsupported schema keywords/formats, external or

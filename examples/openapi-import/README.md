@@ -36,12 +36,11 @@ The preview directory is outside tool discovery. Repeating the command refuses
 to overwrite files. To explicitly replace them:
 
 ```sh
-pnpm exec xmcp-dev-cli import-openapi openapi.json --operations get-pet --out generated-preview --overwrite
-pnpm exec xmcp-dev-cli import-openapi openapi.json --operations update-pet --auth-env PET_API_AUTH --out generated-preview --overwrite
+pnpm exec xmcp-dev-cli import-openapi openapi.json --operations get-pet,update-pet --auth-env PET_API_AUTH --out generated-preview --overwrite
 ```
 
-Import public and authenticated operations separately: `--auth-env` applies to
-all operations selected in that invocation. Use `--out src/tools --overwrite`
+Only `update-pet` declares bearer security, so only it reads `PET_API_AUTH`;
+the public `get-pet` never sends the credential. Use `--out src/tools --overwrite`
 instead to regenerate the checked-in files, replacing any manual edits.
 
 The importer supports OpenAPI 3.0/3.1 JSON, GET/POST/PUT/PATCH/DELETE, scalar

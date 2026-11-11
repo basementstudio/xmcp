@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "api": "node api.mjs",
-    "generate": "xmcp-dev-cli import-openapi openapi.json --operations get-pet --out generated-preview && xmcp-dev-cli import-openapi openapi.json --operations update-pet --auth-env PET_API_AUTH --out generated-preview",
+    "generate": "xmcp-dev-cli import-openapi openapi.json --operations get-pet,update-pet --auth-env PET_API_AUTH --out generated-preview",
     "build": "xmcp build",
     "dev": "xmcp dev",
     "start": "node dist/http.js"

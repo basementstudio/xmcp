@@ -171,11 +171,13 @@ export async function prepareOpenApiFixture() {
     assert.deepEqual(await readdir(join(directory, "tools")), [
       "import-user.ts",
     ]);
+    // One run mixes an authenticated and a public operation; only the former
+    // may read the credential.
     const requestArgs = [
       "import-openapi",
       "openapi.json",
       "--operations",
-      "import-update-user",
+      "import-update-user,import-optional-body",
       "--auth-env",
       "XMCP_E2E_OPENAPI_AUTH",
       "--out",
@@ -206,19 +208,6 @@ export async function prepareOpenApiFixture() {
       "request-overwrite"
     );
     assert.equal(replaced.code, 0, replaced.stderr);
-    const optional = await runDeveloperCli(
-      [
-        "import-openapi",
-        "openapi.json",
-        "--operations",
-        "import-optional-body",
-        "--out",
-        "tools",
-      ],
-      directory,
-      "optional-import"
-    );
-    assert.equal(optional.code, 0, optional.stderr);
     const files: Record<string, string> = {
       "openapi.json": source,
       // Change the server's environment after compilation and between calls.

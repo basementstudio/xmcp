@@ -225,23 +225,25 @@ function requestBody(
   return code + (body.required === true ? "" : ".optional()");
 }
 
-function validateSecurity(
+type AuthMode = "none" | "optional" | "required";
+
+/** Decides per operation whether generated code sends the --auth-env credential. */
+function authMode(
   document: JsonObject,
   operation: JsonObject,
   authEnv: string | undefined,
   label: string
-) {
+): AuthMode {
   const security = operation.security ?? document.security ?? [];
   if (!Array.isArray(security))
     throw new Error(`${label}: security must be an array.`);
   const alternatives = security.map((value) =>
     object(value, `${label} security requirement`)
   );
-  if (
-    !alternatives.length ||
-    alternatives.some((value) => !Object.keys(value).length)
-  )
-    return;
+  // Public operations never receive the credential, even when --auth-env is set.
+  if (!alternatives.length) return "none";
+  const anonymous = alternatives.some((value) => !Object.keys(value).length);
+  if (anonymous && !authEnv) return "none";
   const components = object(document.components ?? {}, `${label} components`);
   const schemes = object(
     components.securitySchemes ?? {},
@@ -265,6 +267,7 @@ function validateSecurity(
         String(scheme.name).toLowerCase() === "authorization")
     );
   });
+  if (anonymous) return supported ? "optional" : "none";
   if (!supported)
     throw new Error(
       `${label}: only HTTP basic/bearer or Authorization API-key security is supported.`
@@ -273,6 +276,7 @@ function validateSecurity(
     throw new Error(
       `${label}: authenticated operations require --auth-env with the environment variable holding the full Authorization value.`
     );
+  return "required";
 }
 
 function template(
@@ -283,7 +287,7 @@ function template(
   params: Parameter[],
   method: string,
   body: string | undefined,
-  authEnv: string | undefined
+  auth: { mode: AuthMode; env?: string }
 ): string {
   const shape = [...params, ...(body ? [{ name: "body", code: body }] : [])]
     .map((param) => `  ${JSON.stringify(param.name)}: ${param.code},`)
@@ -354,11 +358,14 @@ ${query}
   }
 ${headers}
 ${
-  authEnv
-    ? `  const authorization = process.env[${JSON.stringify(authEnv)}];
-  if (!authorization?.trim()) throw new Error(${JSON.stringify(`Missing Authorization environment variable ${authEnv}.`)});
+  auth.mode === "required"
+    ? `  const authorization = process.env[${JSON.stringify(auth.env)}];
+  if (!authorization?.trim()) throw new Error(${JSON.stringify(`Missing Authorization environment variable ${auth.env}.`)});
   setHeader("Authorization", authorization);`
-    : ""
+    : auth.mode === "optional"
+      ? `  const authorization = process.env[${JSON.stringify(auth.env)}];
+  if (authorization?.trim()) setHeader("Authorization", authorization);`
+      : ""
 }
 ${body ? `  if (args.body !== undefined) setHeader("Content-Type", "application/json");` : ""}
   const response = await fetch(url, { method: ${JSON.stringify(method.toUpperCase())}, headers, ${body ? "body: args.body === undefined ? undefined : JSON.stringify(args.body), " : ""}signal: getRequestContext().signal });
@@ -448,7 +455,7 @@ export function buildOpenApiTools(
         throw new Error(`${label}: unsupported path template.`);
       if (op.callbacks !== undefined)
         throw new Error(`${label}: callbacks are unsupported.`);
-      validateSecurity(document, op, options.authEnv, label);
+      const auth = authMode(document, op, options.authEnv, label);
       const body = requestBody(document, op, method, label);
       const name = toFileSafeName(id);
       if (
@@ -476,16 +483,10 @@ export function buildOpenApiTools(
       return {
         name,
         operation: label,
-        content: template(
-          name,
-          description,
-          path,
-          base,
-          params,
-          method,
-          body,
-          options.authEnv
-        ),
+        content: template(name, description, path, base, params, method, body, {
+          mode: auth,
+          env: options.authEnv,
+        }),
       };
     });
   if (!tools.length)

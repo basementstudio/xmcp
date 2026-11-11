@@ -116,29 +116,44 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
   );
   whenSupported(
     "openapi-request",
-    "omits absent JSON bodies and preserves a false scalar body",
+    "omits absent JSON bodies, preserves a false scalar body and never sends credentials to public operations",
     async ({ client }) => {
-      for (const body of [undefined, false]) {
-        const result = await client.callTool(
+      // The public operation was imported with --auth-env; a set credential
+      // must still not reach it.
+      const setAuth = (value?: string) =>
+        client.callTool(
           {
-            name: "import-optional-body",
-            arguments: {
-              id: "optional",
-              ...(body === undefined ? {} : { body }),
-            },
+            name: "import-set-auth",
+            arguments: value === undefined ? {} : { value },
           },
           REQUEST_OPTIONS
         );
-        assert.notEqual(result.isError, true);
-        assert.ok(result.content[0]?.type === "text");
-        assert.deepEqual(JSON.parse(result.content[0].text), {
-          method: "PATCH",
-          path: "/v1/users/optional",
-          query: "",
-          headers:
-            body === undefined ? {} : { contentType: "application/json" },
-          ...(body === undefined ? {} : { body }),
-        });
+      await setAuth("Bearer must-not-reach-public-operation");
+      try {
+        for (const body of [undefined, false]) {
+          const result = await client.callTool(
+            {
+              name: "import-optional-body",
+              arguments: {
+                id: "optional",
+                ...(body === undefined ? {} : { body }),
+              },
+            },
+            REQUEST_OPTIONS
+          );
+          assert.notEqual(result.isError, true);
+          assert.ok(result.content[0]?.type === "text");
+          assert.deepEqual(JSON.parse(result.content[0].text), {
+            method: "PATCH",
+            path: "/v1/users/optional",
+            query: "",
+            headers:
+              body === undefined ? {} : { contentType: "application/json" },
+            ...(body === undefined ? {} : { body }),
+          });
+        }
+      } finally {
+        await setAuth();
       }
     }
   );

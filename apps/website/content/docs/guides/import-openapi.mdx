@@ -123,11 +123,19 @@ PET_API_AUTH='Bearer local-example-token' pnpm start
 `--auth-env` names an environment variable containing the **complete Authorization
 header value**, including `Bearer` or `Basic` when needed. The generated handler
 reads it on every call. The credential is never read during generation or exposed
-as a tool argument. Missing or empty values fail before the API request.
+as a tool argument.
 
-The flag adds Authorization to every selected tool, even if the spec does not
-require authentication. Import public operations in a separate command when they
-should not send credentials. Incoming MCP client credentials are not forwarded.
+Each operation's effective security decides whether its tool uses the credential,
+so public and authenticated operations can be imported in one command:
+
+- **Required** (every alternative names a scheme): Authorization is always sent.
+  Missing or empty values fail before the API request.
+- **Optional** (an empty `{}` alternative is listed): Authorization is sent only
+  when the variable is set; otherwise the request is anonymous.
+- **Public** (no requirement, or `security: []`): the tool never reads the
+  variable or sends Authorization.
+
+Incoming MCP client credentials are not forwarded.
 
 Supported security requirements are HTTP basic/bearer and API-key schemes using
 the `Authorization` header. At least one alternative must be supported; requirements

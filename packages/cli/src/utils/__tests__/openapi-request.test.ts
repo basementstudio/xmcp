@@ -250,14 +250,26 @@ test("security requirements respect operation overrides, anonymous alternatives 
   Object.assign(input, { security: [{ bearer: [] }] });
   assert.throws(() => buildOpenApiTools(input, selection), /--auth-env/);
   const options = { ...selection, authEnv: "XMCP_TEST_AUTHORIZATION" };
-  assert.match(
-    buildOpenApiTools(input, options)[0].content,
-    /process.env\["XMCP_TEST_AUTHORIZATION"\]/
-  );
+  const generated = () => buildOpenApiTools(input, options)[0].content;
+  assert.match(generated(), /process.env\["XMCP_TEST_AUTHORIZATION"\]/);
+  assert.match(generated(), /Missing Authorization environment variable/);
+  // Public operations never read or send the credential, even with --auth-env.
   Object.assign(input.paths["/pets"].post, { security: [] });
   assert.equal(buildOpenApiTools(input, selection).length, 1);
+  assert.doesNotMatch(generated(), /process\.env|Authorization/);
+  // Anonymous alternatives send the credential only when it is set.
   Object.assign(input.paths["/pets"].post, { security: [{ bearer: [] }, {}] });
-  assert.equal(buildOpenApiTools(input, selection).length, 1);
+  assert.doesNotMatch(
+    buildOpenApiTools(input, selection)[0].content,
+    /process\.env/
+  );
+  assert.match(generated(), /if \(authorization\?\.trim\(\)\) setHeader/);
+  assert.doesNotMatch(generated(), /Missing Authorization/);
+  Object.assign(input.components.securitySchemes, {
+    query: { type: "apiKey", in: "query", name: "token" },
+  });
+  Object.assign(input.paths["/pets"].post, { security: [{ query: [] }, {}] });
+  assert.doesNotMatch(generated(), /process\.env/);
   Object.assign(input.paths["/pets"].post, { security: [{ bearer: [] }] });
   for (const scheme of [
     { type: "http", scheme: "Basic" },
