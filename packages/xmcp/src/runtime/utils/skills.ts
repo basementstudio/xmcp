@@ -93,7 +93,7 @@ export function addSkillsToServer(
       const name =
         index === 0
           ? frontmatter.name
-          : decodeURIComponent(uri.slice(skillRoot.length));
+          : `${frontmatter.name}/${decodeURIComponent(uri.slice(skillRoot.length))}`;
       const content =
         text !== undefined
           ? { uri, mimeType, text }

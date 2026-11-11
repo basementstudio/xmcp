@@ -180,13 +180,47 @@ describe("compileSkills", () => {
   });
 
   it("rejects names that break the Agent Skills naming rules", () => {
-    for (const name of ["PDF", "-pdf", "pdf-", "pdf--tools", "a".repeat(65)]) {
+    for (const name of [
+      "PDF",
+      "-pdf",
+      "pdf-",
+      "pdf--tools",
+      "a".repeat(65),
+      // Not a valid URI authority either.
+      "pdf tools",
+    ]) {
       assertInvalid(
         {
           [`src/skills/${name}/SKILL.md`]: `---\nname: ${name}\ndescription: D\n---\n`,
         },
         /is not a valid skill name/
       );
+    }
+  });
+
+  it("rejects a SKILL.md that starts with a byte order mark", () => {
+    assertInvalid(
+      { "src/skills/pdf-processing/SKILL.md": `\uFEFF${SKILL_MD}` },
+      /starts with a byte order mark/
+    );
+  });
+
+  it("accepts an absolute or dot-relative skills path", () => {
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "xmcp-skills-"));
+    try {
+      const filePath = path.join(cwd, "src/skills/pdf-processing/SKILL.md");
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, SKILL_MD);
+      const files = ["src/skills/pdf-processing/SKILL.md"];
+
+      for (const skillsPath of [
+        path.join(cwd, "src/skills"),
+        "./src/skills/",
+      ]) {
+        assert.equal(compileSkills(skillsPath, files, cwd).length, 1);
+      }
+    } finally {
+      fs.rmSync(cwd, { recursive: true, force: true });
     }
   });
 

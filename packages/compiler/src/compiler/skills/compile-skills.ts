@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { isDeepStrictEqual } from "util";
 import { parse as parseYaml } from "yaml";
+import { toProjectRelativePath } from "../watcher-recovery";
 
 /**
  * Build-time compilation of the skills directory for the MCP Skills extension
@@ -84,10 +85,6 @@ const MIME_TYPES: Record<string, string> = {
   ".zip": "application/zip",
 };
 
-function normalize(value: string): string {
-  return value.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "");
-}
-
 /**
  * Decodes bytes as text only when re-encoding yields the same bytes, so the
  * text a client receives hashes to the published digest. A byte order mark is
@@ -117,6 +114,12 @@ function parseFrontmatter(
   location: string,
   problems: string[]
 ): CompiledSkill["frontmatter"] | undefined {
+  if (text.startsWith("\uFEFF")) {
+    problems.push(
+      `${location} starts with a byte order mark. Save it as UTF-8 without a BOM`
+    );
+    return undefined;
+  }
   const match = FRONTMATTER_PATTERN.exec(text);
   if (!match) {
     problems.push(
@@ -171,13 +174,6 @@ function validateFrontmatter(
     problems.push(
       `${location} frontmatter name "${name}" must equal its directory name "${directoryName}"`
     );
-  } else if (
-    name.length > MAX_SKILL_NAME_LENGTH ||
-    !SKILL_NAME_PATTERN.test(name)
-  ) {
-    problems.push(
-      `${location} name "${name}" is not a valid skill name: use at most ${MAX_SKILL_NAME_LENGTH} lowercase letters, numbers and single hyphens, without a leading or trailing hyphen`
-    );
   }
 
   if (typeof description !== "string" || description.trim().length === 0) {
@@ -201,12 +197,14 @@ export function compileSkills(
   filePaths: Iterable<string>,
   cwd: string = process.cwd()
 ): CompiledSkill[] {
-  const root = normalize(skillsPath);
+  // Watched files are project-relative, so an absolute or "./" skills path
+  // has to be compared in the same form.
+  const root = toProjectRelativePath(path.resolve(cwd, skillsPath), cwd);
   const problems: string[] = [];
   const filesBySkill = new Map<string, string[]>();
 
   for (const rawPath of filePaths) {
-    const filePath = normalize(rawPath);
+    const filePath = toProjectRelativePath(rawPath, cwd);
     if (!filePath.startsWith(`${root}/`)) continue;
     const [directoryName, ...rest] = filePath.slice(root.length + 1).split("/");
     if (rest.length === 0) {
@@ -226,6 +224,17 @@ export function compileSkills(
     const location = `${directory}/${SKILL_FILE_NAME}`;
     const relativePaths = filesBySkill.get(directoryName)!.sort();
 
+    // The directory name is the skill name and the URI authority, so it is
+    // checked before any URI is built from it.
+    if (
+      directoryName.length > MAX_SKILL_NAME_LENGTH ||
+      !SKILL_NAME_PATTERN.test(directoryName)
+    ) {
+      problems.push(
+        `${directory} is not a valid skill name: use at most ${MAX_SKILL_NAME_LENGTH} lowercase letters, numbers and single hyphens, without a leading or trailing hyphen`
+      );
+      continue;
+    }
     if (!relativePaths.includes(SKILL_FILE_NAME)) {
       problems.push(`${directory} has no ${SKILL_FILE_NAME}`);
       continue;
