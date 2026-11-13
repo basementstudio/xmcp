@@ -187,7 +187,7 @@ MCP clients register themselves through dynamic client registration and must sen
 
 ## Upgrading from `@xmcp-dev/better-auth` 1.0
 
-Version 1.1 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it:
+Version 2.0 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it:
 
 1. Run this script on your database. It drops the 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
 
