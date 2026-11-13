@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import type { NextFunction, Request, Response } from "express";
 import {
   blake2b,
   isValidNanoAddress,
   nanoAddressToPublicKey,
+  nanoOrderCommitment,
   publicKeyToNanoAddress,
   verifyNanoPayment,
   type NanoRpc,
@@ -38,6 +42,7 @@ interface MockBlock {
   confirmed?: string;
   subtype?: string;
   localTimestamp?: number;
+  representative?: string;
 }
 
 /** Mocked node RPC: a send block and the previous block in the payer's chain */
@@ -64,6 +69,7 @@ function mockRpc(block: MockBlock): NanoRpc & { calls: string[] } {
           previous: block.previous,
           balance,
           link_as_account: block.destination ?? WALLET,
+          representative: block.representative ?? PAYER,
         },
       };
     }
@@ -272,12 +278,12 @@ test("rejects: replay of a block that already paid", async () => {
 
 // --- Through the provider middleware ---
 
-function encodePayment(blockHash: string): string {
+function encodePayment(blockHash: string, orderId?: string): string {
   return Buffer.from(
     JSON.stringify({
       x402Version: 2,
       accepted: { scheme: "exact", network: "nano:mainnet" },
-      payload: { blockHash },
+      payload: orderId ? { blockHash, orderId } : { blockHash },
     })
   ).toString("base64");
 }
@@ -419,4 +425,86 @@ test("x402Provider rejects a nano default network without a nano wallet", () => 
       }),
     /Invalid Nano address/
   );
+});
+
+test("requireBinding offers an order id and accepts only a block bound to it", async () => {
+  x402Registry.register("nano-tool", { network: "nano", price: 0.01 });
+  const middleware = (block: MockBlock) =>
+    x402Provider({
+      wallet: WALLET,
+      nano: { rpc: mockRpc(block), requireBinding: true },
+    });
+
+  const offer = await callTool(
+    middleware({ hash: newHash(), previous: newHash(), sent: 0n }),
+    undefined
+  );
+  const [accepts] = offer.body.result.structuredContent.accepts;
+  assert.equal(accepts.extra.binding, "xno-binding/v1/rep");
+  assert.match(accepts.extra.orderId, /^[0-9a-f]{32}$/);
+  const orderId: string = accepts.extra.orderId;
+
+  const bound = {
+    hash: newHash(),
+    previous: newHash(),
+    sent: BigInt(PRICE_RAW),
+    representative: await nanoOrderCommitment(orderId, WALLET, PRICE_RAW),
+  };
+
+  const withoutOrder = await callTool(
+    middleware(bound),
+    encodePayment(bound.hash)
+  );
+  assert.equal(withoutOrder.nextCalled, false);
+  assert.equal(
+    withoutOrder.body.result.structuredContent.error,
+    "Nano payment needs the orderId of its 402 offer"
+  );
+
+  const otherOrder = await callTool(
+    middleware(bound),
+    encodePayment(bound.hash, "ffffffffffffffffffffffffffffffff")
+  );
+  assert.equal(otherOrder.nextCalled, false);
+  assert.equal(
+    otherOrder.body.result.structuredContent.error,
+    "Nano block is not bound to this order"
+  );
+
+  const paid = await callTool(
+    middleware(bound),
+    encodePayment(bound.hash, orderId)
+  );
+  assert.equal(paid.nextCalled, true);
+  assert.equal(paid.paymentContext?.transactionHash, bound.hash);
+});
+
+test("nano.claimsFile refuses a block that paid before a restart", async () => {
+  x402Registry.register("nano-tool", { network: "nano", price: 0.01 });
+  const dir = mkdtempSync(join(tmpdir(), "xmcp-nano-"));
+  try {
+    const claimsFile = join(dir, "claims.txt");
+    const block = {
+      hash: newHash(),
+      previous: newHash(),
+      sent: BigInt(PRICE_RAW),
+    };
+    const start = () =>
+      x402Provider({
+        wallet: WALLET,
+        nano: { rpc: mockRpc(block), claimsFile },
+      });
+
+    const paid = await callTool(start(), encodePayment(block.hash));
+    assert.equal(paid.nextCalled, true);
+
+    const afterRestart = await callTool(start(), encodePayment(block.hash));
+    assert.equal(afterRestart.nextCalled, false);
+    assert.equal(
+      afterRestart.body.result.structuredContent.error,
+      "Nano block has already been used"
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

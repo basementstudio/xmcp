@@ -183,8 +183,35 @@ payer publishes a send block to `nano.wallet` and sends its hash as
 accepts it when it is a confirmed send of at least the price to `nano.wallet`
 that has not paid for an earlier call. No key is held and nothing is broadcast.
 
-The block hash is a bearer proof, and used hashes are kept in memory, so they
-are forgotten on restart and not shared between instances.
+By default the block hash is a bearer proof, and used hashes are kept in
+memory, so they are forgotten on restart and not shared between instances.
+Two opt-in settings close those gaps:
+
+```typescript
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  nano: {
+    wallet: process.env.X402_NANO_WALLET,
+    // Append every used block hash to this file (flushed before the call runs)
+    claimsFile: "/var/lib/my-server/nano-claims.txt",
+    // Bind each payment to one 402 offer
+    requireBinding: true,
+  },
+});
+```
+
+- `claimsFile`: each block hash that pays for a call is appended to the file
+  and flushed to disk before the tool runs, and the file is read back on
+  start, so a block is still refused after a restart. A hash released because
+  the tool failed is removed again. One file belongs to one server process.
+- `requireBinding`: the 402 offer carries `extra.binding: "xno-binding/v1/rep"`
+  and a fresh random `extra.orderId`. The payer sets the representative of its
+  send block to the order commitment, the `nano_` encoding of
+  `SHA-256("xno-binding/v1/rep|" + orderId + "|" + payTo + "|" + amount)` with
+  `amount` in raw, sends exactly the price, and pays with
+  `payload: { blockHash, orderId }`. A block seen on the public ledger then
+  cannot be presented by anyone who does not hold its order id, and one block
+  pays for one order.
 
 ## License
 
