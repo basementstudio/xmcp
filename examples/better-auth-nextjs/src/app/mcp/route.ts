@@ -1,9 +1,9 @@
 import { xmcpHandler } from "@xmcp/adapter";
-import { withMcpAuth } from "better-auth/plugins";
-import { auth } from "@/lib/auth";
+import { requireMcpAuth } from "@better-auth/mcp";
+import { auth, mcpResource } from "@/lib/auth";
 
-const handler = withMcpAuth(auth, (req) => {
-  return xmcpHandler(req);
+const handler = requireMcpAuth(auth, (request) => xmcpHandler(request), {
+  resource: mcpResource,
 });
 
 export { handler as GET, handler as POST };
