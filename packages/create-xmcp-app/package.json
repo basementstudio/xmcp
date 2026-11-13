@@ -43,14 +43,14 @@
   },
   "dependencies": {
     "chalk": "^6.0.1",
-    "commander": "catalog:",
+    "commander": "^11.1.0",
     "fs-extra": "^11.4.1",
     "inquirer": "^14.3.0",
-    "ora": "catalog:",
+    "ora": "^7.0.1",
     "tar": "^7.5.23"
   },
   "devDependencies": {
-    "@types/fs-extra": "catalog:",
+    "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^10.0.0",
     "@types/node": "^26.6.6",
     "@types/ora": "^3.2.0",

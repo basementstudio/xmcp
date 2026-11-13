@@ -6,36 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@types/content-type':
-      specifier: ^1.1.9
-      version: 1.1.9
-    '@types/fs-extra':
-      specifier: ^11.0.4
-      version: 11.0.4
-    chokidar:
-      specifier: ^3.6.0
-      version: 3.6.0
-    commander:
-      specifier: ^11.1.0
-      version: 11.1.0
-    content-type:
-      specifier: ^1.0.5
-      version: 1.0.5
-    cross-env:
-      specifier: ^7.0.3
-      version: 7.0.3
-    json5:
-      specifier: ^2.2.3
-      version: 2.2.3
-    ora:
-      specifier: ^7.0.1
-      version: 7.0.1
-    tsx:
-      specifier: ^4.19.4
-      version: 4.23.15
-    typescript:
-      specifier: ^5.8.3
-      version: 5.9.3
     zod:
       specifier: ^3.25.76
       version: 3.25.76
@@ -1365,7 +1335,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       typescript:
         specifier: ^5.9.3
@@ -1418,7 +1388,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
       tsx:
-        specifier: 'catalog:'
+        specifier: ^4.19.4
         version: 4.23.15
       typescript:
         specifier: ^5.9.3
@@ -1648,7 +1618,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       typescript:
         specifier: ^5.9.3
@@ -1703,7 +1673,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       typescript:
         specifier: ^5.9.3
@@ -1743,7 +1713,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       svelte:
         specifier: ^5.57.3
@@ -1960,7 +1930,7 @@ importers:
         specifier: ^1.4.9
         version: 1.4.9
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/node':
         specifier: ^26.6.6
@@ -1972,16 +1942,16 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       chokidar:
-        specifier: 'catalog:'
+        specifier: ^3.6.0
         version: 3.6.0
       ci-info:
         specifier: ^4.5.0
         version: 4.5.0
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       del:
         specifier: ^9.0.1
@@ -2002,7 +1972,7 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       json5:
-        specifier: 'catalog:'
+        specifier: ^2.2.3
         version: 2.2.3
       memfs:
         specifier: ^4.80.1
@@ -2017,7 +1987,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       fs-extra:
         specifier: ^11.4.1
@@ -2026,14 +1996,14 @@ importers:
         specifier: ^14.3.0
         version: 14.3.0(@types/node@26.6.6)
       ora:
-        specifier: 'catalog:'
+        specifier: ^7.0.1
         version: 7.0.1
       tar:
         specifier: ^7.5.23
         version: 7.5.23
     devDependencies:
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/inquirer':
         specifier: ^10.0.0
@@ -2147,7 +2117,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       fs-extra:
         specifier: ^11.4.1
@@ -2156,11 +2126,11 @@ importers:
         specifier: ^14.3.0
         version: 14.3.0(@types/node@26.6.6)
       ora:
-        specifier: 'catalog:'
+        specifier: ^7.0.1
         version: 7.0.1
     devDependencies:
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/inquirer':
         specifier: ^10.0.0
@@ -2246,7 +2216,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       fs-extra:
         specifier: ^11.4.1
@@ -2593,7 +2563,7 @@ importers:
         specifier: ^19.3.1
         version: 19.3.1(react@19.3.1)
       typescript:
-        specifier: 'catalog:'
+        specifier: ^5.8.3
         version: 5.9.3
       vitest:
         specifier: ^5.1.0
@@ -2636,13 +2606,13 @@ importers:
         specifier: ^1.4.9
         version: 1.4.9
       '@types/content-type':
-        specifier: 'catalog:'
+        specifier: ^1.1.9
         version: 1.1.9
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
       '@types/fs-extra':
-        specifier: 'catalog:'
+        specifier: ^11.0.4
         version: 11.0.4
       '@types/jsonwebtoken':
         specifier: ^9.0.10
@@ -2663,19 +2633,19 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1
       chokidar:
-        specifier: 'catalog:'
+        specifier: ^3.6.0
         version: 3.6.0
       ci-info:
         specifier: ^4.5.0
         version: 4.5.0
       commander:
-        specifier: 'catalog:'
+        specifier: ^11.1.0
         version: 11.1.0
       content-type:
-        specifier: 'catalog:'
+        specifier: ^1.0.5
         version: 1.0.5
       cross-env:
-        specifier: 'catalog:'
+        specifier: ^7.0.3
         version: 7.0.3
       del:
         specifier: ^9.0.1
@@ -2705,7 +2675,7 @@ importers:
         specifier: ^6.2.17
         version: 6.2.17
       json5:
-        specifier: 'catalog:'
+        specifier: ^2.2.3
         version: 2.2.3
       jsonwebtoken:
         specifier: ^9.0.3

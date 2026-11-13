@@ -21,7 +21,7 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "cross-env": "catalog:",
+    "cross-env": "^7.0.3",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.3.14",
     "wrangler": "^4.161.0"

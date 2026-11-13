@@ -23,7 +23,7 @@
     "@astrojs/check": "^0.9.12",
     "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "cross-env": "catalog:",
+    "cross-env": "^7.0.3",
     "typescript": "^5.9.3",
     "wrangler": "^4.161.0"
   }
