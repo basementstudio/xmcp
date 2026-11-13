@@ -25,6 +25,9 @@
     "test:config": "node --import tsx --test src/compiler/config/__tests__/*.test.ts src/compiler/get-bundler-config/__tests__/*.test.ts src/compiler/schema-inference/__tests__/*.test.ts src/compiler/skills/__tests__/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=22.12"
+  },
   "dependencies": {
     "@rspack/core": "^2.3.2",
     "postcss-loader": "^8.2.1",
