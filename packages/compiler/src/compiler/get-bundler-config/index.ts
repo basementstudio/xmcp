@@ -177,7 +177,7 @@ export function getRspackConfig(
               library: { type: "commonjs2", export: "default" },
             }
           : {
-              libraryTarget: "commonjs2",
+              library: { type: "commonjs2" },
             }),
       clean: {
         keep:
@@ -206,7 +206,6 @@ export function getRspackConfig(
             externalsPresets: { node: false },
           }
         : {}),
-    experiments: emitModule ? { outputModule: true } : undefined,
     resolve: {
       // The MCP SDK's runtime shims pick the workerd-compatible JSON Schema
       // validator through the "workerd" exports condition.
