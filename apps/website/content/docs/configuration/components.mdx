@@ -92,6 +92,11 @@ generated UI resource available, and excluding it removes both. The generated
 resource does not need its own matching tags. Manually authored resources use
 their own metadata.
 
+[Skills](/docs/core-concepts/skills) follow the name rules: an excluded skill is
+absent from `skills/list` and its files cannot be read. Skills have no tags, so
+tag rules never match them: when `include` is set, list a skill in
+`include.names` to keep serving it.
+
 Rules are applied during server setup and are the same for every client.
 Component modules are still imported and compiled. Rebuild and restart the
 server after changing the configuration in production.

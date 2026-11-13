@@ -1,0 +1,23 @@
+{
+  "name": "skills-http",
+  "private": true,
+  "type": "module",
+  "description": "Serve Agent Skills from an xmcp server with the MCP Skills extension",
+  "keywords": [
+    "skills",
+    "resources",
+    "http"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}

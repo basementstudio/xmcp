@@ -56,6 +56,7 @@ export type ResolvedPathsConfig = {
   tools: string | null;
   prompts: string | null;
   resources: string | null;
+  skills: string | null;
 };
 
 export function getResolvedPathsConfig(
@@ -67,6 +68,7 @@ export function getResolvedPathsConfig(
       tools: DEFAULT_PATHS.tools,
       prompts: DEFAULT_PATHS.prompts,
       resources: DEFAULT_PATHS.resources,
+      skills: DEFAULT_PATHS.skills,
     };
   }
 
@@ -74,6 +76,7 @@ export function getResolvedPathsConfig(
     tools: DEFAULT_PATHS.tools,
     prompts: DEFAULT_PATHS.prompts,
     resources: DEFAULT_PATHS.resources,
+    skills: DEFAULT_PATHS.skills,
   };
 
   // Handle tools path
@@ -97,6 +100,13 @@ export function getResolvedPathsConfig(
       : null;
   } else if (typeof userPaths.resources === "string") {
     resolvedPaths.resources = userPaths.resources;
+  }
+
+  // Handle skills path
+  if (typeof userPaths.skills === "boolean") {
+    resolvedPaths.skills = userPaths.skills ? DEFAULT_PATHS.skills : null;
+  } else if (typeof userPaths.skills === "string") {
+    resolvedPaths.skills = userPaths.skills;
   }
 
   return resolvedPaths;

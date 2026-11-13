@@ -17,7 +17,7 @@ import dotenv from "dotenv";
 import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";
-import { greenCheck } from "@/utils/cli-icons";
+import { greenCheck, yellowArrow } from "@/utils/cli-icons";
 import {
   telemetry,
   TelemetryEventName,
@@ -30,11 +30,19 @@ import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
 import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
-import { getResolvedPathsConfig } from "@/runtime-config";
+import {
+  getResolvedPathsConfig,
+  type XmcpConfigOutputSchema,
+} from "@/runtime-config";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
+import {
+  compileSkills,
+  SKILL_FILE_NAME,
+  SkillValidationError,
+} from "./skills/compile-skills";
 const { version: COMPILER_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -45,7 +53,7 @@ export interface CompileOptions {
 }
 
 export async function compile({ onBuild }: CompileOptions = {}) {
-  const { mode, toolPaths, promptPaths, resourcePaths, platforms } =
+  const { mode, toolPaths, promptPaths, resourcePaths, skillPaths, platforms } =
     compilerContext.getContext();
   const startTime = Date.now();
   let compilerStarted = false;
@@ -169,6 +177,38 @@ export async function compile({ onBuild }: CompileOptions = {}) {
         if (compilerStarted) {
           await generateCode({ rebuildClientBundles: false });
         }
+      },
+    });
+  }
+
+  // handle skills
+  // The default skills directory is optional, so projects without skills
+  // build unchanged. Only an explicitly configured path has to exist.
+  const configuredSkillsPath = getResolvedPathsConfig(xmcpConfig).skills;
+  const skillsPath = hasExplicitSkillsPath(xmcpConfig)
+    ? isValidPath(configuredSkillsPath, "skills")
+    : (configuredSkillsPath ?? undefined);
+
+  if (skillsPath) {
+    compilerContext.setContext({ skillsPath });
+    const regenerateSkills = async () => {
+      if (compilerStarted) {
+        await generateCode({
+          rebuildClientBundles: false,
+          rebuildSkills: true,
+        });
+      }
+    };
+    // Skills are plain files of any type, not modules.
+    watcher.watch(`${skillsPath}/**/*`, {
+      onAdd: async (filePath) => {
+        addWatchedPath(skillPaths, filePath);
+        await regenerateSkills();
+      },
+      onChange: regenerateSkills,
+      onUnlink: async (filePath) => {
+        removeWatchedPath(skillPaths, filePath);
+        await regenerateSkills();
       },
     });
   }
@@ -454,9 +494,15 @@ async function buildClientBundles(): Promise<Map<string, string> | undefined> {
  */
 async function generateCode({
   rebuildClientBundles = true,
+  rebuildSkills = false,
 }: {
   rebuildClientBundles?: boolean;
+  rebuildSkills?: boolean;
 } = {}) {
+  if (rebuildSkills || compilerContext.getContext().skills === undefined) {
+    compilerContext.setContext({ skills: buildSkills() });
+  }
+
   const { clientBundles: currentClientBundles } = compilerContext.getContext();
   const clientBundles =
     rebuildClientBundles || currentClientBundles === undefined
@@ -486,6 +532,57 @@ async function generateCode({
     const typesCode = generateToolsTypesCode();
     writeFileIfChanged(path.join(runtimeFolderPath, "tools.d.ts"), typesCode);
   }
+}
+
+/**
+ * Compiles the skills directory. An invalid skill fails a production build;
+ * in development the last valid skills keep being served until it is fixed.
+ */
+function buildSkills() {
+  const { mode, skillsPath, skillPaths, skills, xmcpConfig } =
+    compilerContext.getContext();
+  if (!skillsPath) return [];
+
+  const nonSkillEntries: string[] = [];
+  try {
+    const compiledSkills = compileSkills(
+      skillsPath,
+      skillPaths,
+      process.cwd(),
+      hasExplicitSkillsPath(xmcpConfig)
+        ? undefined
+        : (entry) => nonSkillEntries.push(entry)
+    );
+    warnAboutNonSkillEntries(skillsPath, nonSkillEntries);
+    return compiledSkills;
+  } catch (error) {
+    if (mode === "production") {
+      if (!(error instanceof SkillValidationError)) throw error;
+      console.error(chalk.red.bold(error.message));
+      process.exit(1);
+    }
+    // A file removed between its watcher event and this read is not an
+    // error: its own unlink event compiles the skills again.
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      console.error(
+        chalk.red.bold(error instanceof Error ? error.message : String(error))
+      );
+    }
+    return skills ?? [];
+  }
+}
+
+function hasExplicitSkillsPath(xmcpConfig?: XmcpConfigOutputSchema) {
+  return typeof xmcpConfig?.paths?.skills === "string";
+}
+
+function warnAboutNonSkillEntries(skillsPath: string, entries: string[]) {
+  if (entries.length === 0) return;
+  console.warn(
+    `${yellowArrow} Skipped what is not a skill in ${skillsPath} (a skill is a directory with a ${SKILL_FILE_NAME}):
+${entries.map((entry) => `  - ${entry}`).join("\n")}
+  Move skills to ${skillsPath}/<skill-name>/${SKILL_FILE_NAME}, or set paths.skills to false in xmcp.config.ts if this directory is not for skills.`
+  );
 }
 
 function writeFileIfChanged(filePath: string, content: string) {
