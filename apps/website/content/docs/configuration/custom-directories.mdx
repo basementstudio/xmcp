@@ -14,7 +14,7 @@ const config: XmcpConfig = {
     tools: "src/tools",
     prompts: "src/prompts",
     resources: "src/resources",
-    skills: "src/skills",
+    skills: true,
   },
 };
 
@@ -39,7 +39,9 @@ export default config;
 
 ## Skills directory
 
-The [skills](/docs/core-concepts/skills) directory is optional. With the default path, a project without a `src/skills` directory builds as usual and serves no skills. Set `skills` to a custom path to read skills from there, in which case the directory has to exist, or to `false` to ignore the directory.
+The [skills](/docs/core-concepts/skills) directory is optional. With the default, `skills: true`, `xmcp` reads `src/skills` when it exists: every directory there with a `SKILL.md` is served as a skill, and any other file or directory is skipped with a warning. A project without a `src/skills` directory builds as usual and serves no skills.
+
+Setting `skills` to a path, including `"src/skills"`, makes the directory required: it has to exist, and the build fails for any entry in it that is not a valid skill. Set `skills` to `false` to ignore the directory.
 
 ## Troubleshooting
 
