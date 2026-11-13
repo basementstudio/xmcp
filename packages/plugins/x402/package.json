@@ -34,15 +34,15 @@
     "test": "node --import tsx --test test/*.test.cts"
   },
   "dependencies": {
-    "@x402/core": "^2.1.0",
+    "@x402/core": "^2.31.0",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^22.19.2",
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "xmcp": "workspace:*",
-    "tsx": "^4.21.0"
+    "xmcp": "workspace:*"
   },
   "peerDependencies": {
     "xmcp": ">=1.0.0"

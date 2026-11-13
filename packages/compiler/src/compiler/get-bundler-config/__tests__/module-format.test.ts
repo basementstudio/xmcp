@@ -87,9 +87,9 @@ describe("adapter output module format", () => {
     for (const projectType of ["module", "commonjs", undefined] as const) {
       const config = buildConfig(adapterConfig, { projectType });
 
-      assert.strictEqual(
-        config.output?.libraryTarget,
-        "commonjs2",
+      assert.deepStrictEqual(
+        config.output?.library,
+        { type: "commonjs2" },
         `adapter output should be CommonJS for a "${projectType}" project`
       );
       assert.deepStrictEqual(
@@ -121,7 +121,7 @@ describe("plain server output module format", () => {
     ]);
 
     const cjs = buildConfig(httpConfig, { projectType: "commonjs" });
-    assert.strictEqual(cjs.output?.libraryTarget, "commonjs2");
+    assert.deepStrictEqual(cjs.output?.library, { type: "commonjs2" });
     assert.deepStrictEqual(
       emittedPackageJsonTypes(cjs.plugins as unknown[]),
       []
@@ -191,15 +191,10 @@ describe("vercel function output", () => {
         platforms: { vercel: true },
       });
 
-      assert.strictEqual(
-        config.output?.libraryTarget,
-        "commonjs2",
-        `adapter output should stay CommonJS for a "${projectType}" project`
-      );
-      assert.strictEqual(
+      assert.deepStrictEqual(
         config.output?.library,
-        undefined,
-        `adapter output should not unwrap a default export for a "${projectType}" project`
+        { type: "commonjs2" },
+        `adapter output should stay CommonJS without unwrapping a default export for a "${projectType}" project`
       );
       assert.deepStrictEqual(
         Object.keys(config.entry as Record<string, string>),

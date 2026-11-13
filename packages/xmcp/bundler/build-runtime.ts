@@ -194,7 +194,6 @@ const cloudflareConfig: RspackOptions = {
   // AsyncLocalStorage is provided by workerd (nodejs_compat); the user build
   // keeps it external as well.
   externals: { async_hooks: "async_hooks" },
-  experiments: { outputModule: true },
   output: {
     filename: "[name].js",
     path: runtimeOutputPath,
@@ -267,7 +266,6 @@ const vercelConfig: RspackOptions = {
   target: "node",
   externalsPresets: { node: true },
   externals: config.externals,
-  experiments: { outputModule: true },
   output: {
     filename: "[name].js",
     path: runtimeOutputPath,

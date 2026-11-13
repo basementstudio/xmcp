@@ -51,7 +51,7 @@ for (const kind of ["http", "stdio"] as const) {
           import { upstashRateLimit } from "@xmcp-dev/upstash";
           export const mcp = upstashRateLimit({
             limiter: { limit: async (key, options) => {
-              const response = await fetch(${JSON.stringify(url)}, { method: "POST", body: JSON.stringify({ key, rate: options.rate }) });
+              const response = await fetch(${JSON.stringify(url)}, { method: "POST", body: JSON.stringify({ key, rate: options?.rate }) });
               return { ...await response.json(), pending: Promise.resolve() };
             } },
             // Fixed server-side identity is sufficient for this transport test.

@@ -21,19 +21,19 @@
     "test": "node --import tsx --test test/*.test.ts"
   },
   "peerDependencies": {
+    "@x402/core": "^2.28.0",
     "@x402/express": "^2.28.0",
-    "xmcp": "^1.6.0",
-    "@x402/core": "^2.28.0"
+    "xmcp": "^1.6.0"
   },
   "devDependencies": {
-    "xmcp": "workspace:*",
-    "@types/node": "^22.19.2",
+    "@types/node": "^22.20.5",
+    "@x402/core": "^2.31.0",
+    "@x402/evm": "^2.31.0",
+    "@x402/express": "^2.31.0",
+    "express": "^5.3.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "tsx": "^4.21.0",
-    "@x402/express": "^2.28.0",
-    "@x402/core": "^2.28.0",
-    "@x402/evm": "^2.28.0",
-    "express": "^4.22.1"
+    "xmcp": "workspace:*"
   },
   "repository": {
     "type": "git",

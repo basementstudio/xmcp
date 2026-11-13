@@ -39,17 +39,17 @@
     "test": "node --import tsx --test test/*.test.cts"
   },
   "dependencies": {
-    "@descope/node-sdk": "^2.6.0",
-    "express": "^4.22.1"
+    "@descope/node-sdk": "^2.22.0",
+    "express": "^5.3.0"
   },
   "peerDependencies": {
     "xmcp": ">=1.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^22.0.0",
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.5.0",
-    "tsx": "^4.21.0",
     "xmcp": "workspace:*"
   }
 }
