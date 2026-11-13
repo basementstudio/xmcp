@@ -90,7 +90,7 @@ export function betterAuthRouter(
     res.json(config);
   });
 
-  router.all("/api/auth/*", toNodeHandler(betterAuthInstance));
+  router.all("/api/auth/{*any}", toNodeHandler(betterAuthInstance));
 
   // serve index.html for auth routes in development so react router can handle them
   const serveAuthHtml = (_req: Request, res: Response) => {
