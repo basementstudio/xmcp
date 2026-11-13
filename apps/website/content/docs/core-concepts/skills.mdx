@@ -96,7 +96,7 @@ Files and directories whose name starts with a dot are ignored. A `SKILL.md` in 
 
 Skills are read, validated and embedded into the bundle at build time, so they are served without filesystem access on every target, including Cloudflare Workers. The build fails with a message naming the problem when:
 
-- A skill directory has no `SKILL.md`, or a file sits directly in the skills directory.
+- A skill directory has no `SKILL.md`, or a file sits directly in the skills directory, when `paths.skills` is set to a path. With the default, these entries are skipped with a warning instead, so a `src/skills` directory used for other code does not break the build.
 - `SKILL.md` has no frontmatter, starts with a byte order mark, or the frontmatter is not valid YAML.
 - `name` is missing, differs from the directory name, or breaks the naming rules.
 - `description` is missing or too long.

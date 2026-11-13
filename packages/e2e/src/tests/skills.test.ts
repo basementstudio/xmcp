@@ -82,7 +82,7 @@ test(
   }
 );
 
-for (const [name, files, message] of [
+for (const [name, files, message, configFragment] of [
   [
     "a name that does not match its directory",
     {
@@ -90,13 +90,20 @@ for (const [name, files, message] of [
         "---\nname: another-name\ndescription: Mismatched\n---\n",
     },
     /frontmatter name "another-name" must equal its directory name "fixture-skill"/,
+    undefined,
   ],
   [
-    "a skill directory without SKILL.md",
+    "a skill directory without SKILL.md in an explicit skills path",
     { "src/skills/incomplete/references/guide.md": "# Guide\n" },
     /src\/skills\/incomplete has no SKILL\.md/,
+    'paths: { skills: "src/skills" },',
   ],
-] satisfies [string, FixtureSpec["files"], RegExp][]) {
+] satisfies [
+  string,
+  FixtureSpec["files"],
+  RegExp,
+  FixtureSpec["configFragment"],
+][]) {
   test(
     `fails the build for ${name}`,
     { timeout: FIXTURE_TIMEOUT_MS },
@@ -107,6 +114,7 @@ for (const [name, files, message] of [
           kind: "http",
           moduleType: "module",
           files,
+          configFragment,
         });
         await fixture.dispose();
       } catch (error) {

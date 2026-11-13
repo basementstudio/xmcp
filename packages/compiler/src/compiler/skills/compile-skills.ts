@@ -195,7 +195,8 @@ function validateFrontmatter(
 export function compileSkills(
   skillsPath: string,
   filePaths: Iterable<string>,
-  cwd: string = process.cwd()
+  cwd: string = process.cwd(),
+  onNonSkillEntry?: (entry: string) => void
 ): CompiledSkill[] {
   // Watched files are project-relative, so an absolute or "./" skills path
   // has to be compared in the same form.
@@ -208,6 +209,10 @@ export function compileSkills(
     if (!filePath.startsWith(`${root}/`)) continue;
     const [directoryName, ...rest] = filePath.slice(root.length + 1).split("/");
     if (rest.length === 0) {
+      if (onNonSkillEntry) {
+        onNonSkillEntry(filePath);
+        continue;
+      }
       problems.push(
         `${filePath} is not inside a skill directory. Move it to ${root}/<skill-name>/`
       );
@@ -223,6 +228,10 @@ export function compileSkills(
     const directory = `${root}/${directoryName}`;
     const location = `${directory}/${SKILL_FILE_NAME}`;
     const relativePaths = filesBySkill.get(directoryName)!.sort();
+    if (onNonSkillEntry && !relativePaths.includes(SKILL_FILE_NAME)) {
+      onNonSkillEntry(directory);
+      continue;
+    }
 
     // The directory name is the skill name and the URI authority, so it is
     // checked before any URI is built from it.

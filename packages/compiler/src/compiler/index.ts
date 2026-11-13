@@ -17,7 +17,7 @@ import dotenv from "dotenv";
 import { generateEnvCode } from "./generate-env-code";
 import { Watcher } from "@/utils/file-watcher";
 import { onFirstBuild } from "./on-first-build";
-import { greenCheck } from "@/utils/cli-icons";
+import { greenCheck, yellowArrow } from "@/utils/cli-icons";
 import {
   telemetry,
   TelemetryEventName,
@@ -30,12 +30,19 @@ import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
 import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
-import { getResolvedPathsConfig } from "@/runtime-config";
+import {
+  getResolvedPathsConfig,
+  type XmcpConfigOutputSchema,
+} from "@/runtime-config";
 import { pathToToolName } from "./utils/path-utils";
 import { transpileClientComponent } from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
-import { compileSkills, SkillValidationError } from "./skills/compile-skills";
+import {
+  compileSkills,
+  SKILL_FILE_NAME,
+  SkillValidationError,
+} from "./skills/compile-skills";
 const { version: COMPILER_VERSION } = require("../../package.json");
 dotenv.config();
 
@@ -178,10 +185,9 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   // The default skills directory is optional, so projects without skills
   // build unchanged. Only an explicitly configured path has to exist.
   const configuredSkillsPath = getResolvedPathsConfig(xmcpConfig).skills;
-  const skillsPath =
-    typeof xmcpConfig.paths?.skills === "string"
-      ? isValidPath(configuredSkillsPath, "skills")
-      : (configuredSkillsPath ?? undefined);
+  const skillsPath = hasExplicitSkillsPath(xmcpConfig)
+    ? isValidPath(configuredSkillsPath, "skills")
+    : (configuredSkillsPath ?? undefined);
 
   if (skillsPath) {
     compilerContext.setContext({ skillsPath });
@@ -533,11 +539,22 @@ async function generateCode({
  * in development the last valid skills keep being served until it is fixed.
  */
 function buildSkills() {
-  const { mode, skillsPath, skillPaths, skills } = compilerContext.getContext();
+  const { mode, skillsPath, skillPaths, skills, xmcpConfig } =
+    compilerContext.getContext();
   if (!skillsPath) return [];
 
+  const nonSkillEntries: string[] = [];
   try {
-    return compileSkills(skillsPath, skillPaths);
+    const compiledSkills = compileSkills(
+      skillsPath,
+      skillPaths,
+      process.cwd(),
+      hasExplicitSkillsPath(xmcpConfig)
+        ? undefined
+        : (entry) => nonSkillEntries.push(entry)
+    );
+    warnAboutNonSkillEntries(skillsPath, nonSkillEntries);
+    return compiledSkills;
   } catch (error) {
     if (mode === "production") {
       if (!(error instanceof SkillValidationError)) throw error;
@@ -553,6 +570,19 @@ function buildSkills() {
     }
     return skills ?? [];
   }
+}
+
+function hasExplicitSkillsPath(xmcpConfig?: XmcpConfigOutputSchema) {
+  return typeof xmcpConfig?.paths?.skills === "string";
+}
+
+function warnAboutNonSkillEntries(skillsPath: string, entries: string[]) {
+  if (entries.length === 0) return;
+  console.warn(
+    `${yellowArrow} Skipped what is not a skill in ${skillsPath} (a skill is a directory with a ${SKILL_FILE_NAME}):
+${entries.map((entry) => `  - ${entry}`).join("\n")}
+  Move skills to ${skillsPath}/<skill-name>/${SKILL_FILE_NAME}, or set paths.skills to false in xmcp.config.ts if this directory is not for skills.`
+  );
 }
 
 function writeFileIfChanged(filePath: string, content: string) {
