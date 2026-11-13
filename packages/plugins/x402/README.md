@@ -202,8 +202,10 @@ export default x402Provider({
 
 - `claimsFile`: each block hash that pays for a call is appended to the file
   and flushed to disk before the tool runs, and the file is read back on
-  start, so a block is still refused after a restart. A hash released because
-  the tool failed is removed again. One file belongs to one server process.
+  start, so a block is still refused after a restart. When the tool fails, a
+  release line is appended and the block can pay again. The file is compacted
+  to the live claims on start, and while running once released lines
+  outnumber them. One file belongs to one server process.
 - `requireBinding`: the 402 offer carries `extra.binding: "xno-binding/v1/rep"`
   and a fresh random `extra.orderId`. The payer sets the representative of its
   send block to the order commitment, the `nano_` encoding of

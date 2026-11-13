@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -8,12 +8,15 @@ import type { NextFunction, Request, Response } from "express";
 import {
   blake2b,
   isValidNanoAddress,
+  isValidNanoOrderId,
   nanoAddressToPublicKey,
   nanoOrderCommitment,
+  newNanoOrderId,
   publicKeyToNanoAddress,
   verifyNanoPayment,
   type NanoRpc,
 } from "../src/nano.js";
+import { createNanoFileStore } from "../src/nano-store.js";
 import { priceToAtomicUnits } from "../src/verify.js";
 import { payment, x402Provider } from "../src/index.js";
 import { x402Registry } from "../src/registry.js";
@@ -507,4 +510,179 @@ test("nano.claimsFile refuses a block that paid before a restart", async () => {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+// --- Order binding (verifier) ---
+
+const ORDER_ID = "0f1e2d3c4b5a69788796a5b4c3d2e1f0";
+
+async function boundBlock(
+  orderId: string,
+  sent = BigInt(PRICE_RAW)
+): Promise<MockBlock> {
+  return {
+    hash: newHash(),
+    previous: newHash(),
+    sent,
+    representative: await nanoOrderCommitment(orderId, WALLET, PRICE_RAW),
+  };
+}
+
+test("the order commitment matches the xno-binding v1 test vector", async () => {
+  assert.equal(
+    await nanoOrderCommitment(
+      "order-0001",
+      OTHER,
+      (RAW_PER_XNO / 20n).toString()
+    ),
+    "nano_33q9dassq66es6mcay83n5kypqgpzjikr9bkc9ope9xch1borfphgehj4ozj"
+  );
+});
+
+test("order ids are opaque, URL-safe and at least 128 bits long", () => {
+  const id = newNanoOrderId();
+  assert.match(id, /^[0-9a-f]{32}$/);
+  assert.notEqual(id, newNanoOrderId());
+  assert.equal(isValidNanoOrderId(id), true);
+  assert.equal(isValidNanoOrderId("order-0001"), false);
+  assert.equal(isValidNanoOrderId(`${ORDER_ID}|x`), false);
+  assert.equal(isValidNanoOrderId(42), false);
+});
+
+test("rejects: a bound order whose block has a plain or no representative", async () => {
+  const unbound = { ...(await boundBlock(ORDER_ID)), representative: PAYER };
+  assert.deepEqual(await verify(unbound, { orderId: ORDER_ID }), {
+    valid: false,
+    error: "Nano block is not bound to this order",
+  });
+
+  const missing = await boundBlock(ORDER_ID);
+  const withRepresentative = mockRpc(missing);
+  const withoutRepresentative = async (body: Record<string, string>) => {
+    const info = (await withRepresentative(body)) as {
+      contents?: Record<string, unknown>;
+    };
+    if (info.contents) delete info.contents.representative;
+    return info;
+  };
+  const result = await verify(missing, {
+    orderId: ORDER_ID,
+    rpc: withoutRepresentative,
+  });
+  assert.equal(result.valid, false);
+});
+
+test("rejects: a bound payment that is not exactly the price", async () => {
+  const over = await boundBlock(ORDER_ID, BigInt(PRICE_RAW) + 1n);
+  assert.deepEqual(await verify(over, { orderId: ORDER_ID }), {
+    valid: false,
+    error: `Nano payment must be exactly ${PRICE_RAW} raw, ${BigInt(PRICE_RAW) + 1n} raw sent`,
+  });
+  const short = await boundBlock(ORDER_ID, BigInt(PRICE_RAW) - 1n);
+  assert.equal((await verify(short, { orderId: ORDER_ID })).valid, false);
+});
+
+test("rejects: a malformed order id before calling the node", async () => {
+  const block = await boundBlock(ORDER_ID);
+  const rpc = mockRpc(block);
+  const result = await verify(block, { rpc, orderId: "short" });
+  assert.deepEqual(result, { valid: false, error: "Invalid Nano order id" });
+  assert.equal(rpc.calls.length, 0);
+});
+
+// --- Claims file ---
+
+function withClaimsFile(run: (path: string) => void): void {
+  const dir = mkdtempSync(join(tmpdir(), "xmcp-nano-claims-"));
+  try {
+    run(join(dir, "claims.txt"));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("a released claim is appended as a tombstone and compacted on open", () => {
+  withClaimsFile((path) => {
+    const store = createNanoFileStore(path);
+    const kept = newHash();
+    const released = newHash();
+    store.add(kept);
+    store.add(released);
+    store.add(released);
+    store.delete(released);
+    assert.equal(store.has(released), false);
+    // Releasing appends one line instead of rewriting the file
+    assert.equal(
+      readFileSync(path, "utf8"),
+      `${kept}\n${released}\n-${released}\n`
+    );
+
+    const reopened = createNanoFileStore(path);
+    assert.equal(reopened.has(kept), true);
+    assert.equal(reopened.has(released), false);
+    assert.equal(readFileSync(path, "utf8"), `${kept}\n`);
+
+    // A released block can be claimed again, and that claim survives a restart
+    reopened.add(released);
+    assert.equal(createNanoFileStore(path).has(released), true);
+  });
+});
+
+test("a release followed by a new claim of the same block keeps it claimed", () => {
+  withClaimsFile((path) => {
+    const hash = newHash();
+    writeFileSync(path, `${hash}\n-${hash}\n${hash}\n`);
+    assert.equal(createNanoFileStore(path).has(hash), true);
+    assert.equal(readFileSync(path, "utf8"), `${hash}\n`);
+  });
+});
+
+test("a line cut short by a crash is dropped, a damaged line is an error", () => {
+  withClaimsFile((path) => {
+    const kept = newHash();
+    writeFileSync(path, `${kept}\n${newHash().slice(0, 20)}`);
+    const store = createNanoFileStore(path);
+    assert.equal(store.has(kept), true);
+    assert.equal(readFileSync(path, "utf8"), `${kept}\n`);
+
+    const next = newHash();
+    store.add(next);
+    assert.equal(readFileSync(path, "utf8"), `${kept}\n${next}\n`);
+
+    // A torn tombstone leaves the block claimed
+    writeFileSync(path, `${kept}\n-${kept.slice(0, 30)}`);
+    assert.equal(createNanoFileStore(path).has(kept), true);
+
+    for (const damaged of ["not-a-hash", `-${"ab".repeat(32)}`, "-"]) {
+      writeFileSync(path, `${kept}\n${damaged}\n`);
+      assert.throws(
+        () => createNanoFileStore(path),
+        /line 2 is not a block hash/
+      );
+    }
+    assert.throws(() => store.add("abc"), /not an upper-case block hash/);
+  });
+});
+
+test("the claims log is compacted while running once releases pile up", () => {
+  withClaimsFile((path) => {
+    const store = createNanoFileStore(path);
+    const kept = newHash();
+    store.add(kept);
+    const reused = newHash();
+    let longest = 0;
+    for (let i = 0; i < 5000; i += 1) {
+      store.add(reused);
+      store.delete(reused);
+      if (i % 50 === 0) {
+        longest = Math.max(longest, readFileSync(path, "utf8").length);
+      }
+    }
+    // 4096 released lines of 65 or 66 bytes, plus the live claim
+    assert.ok(longest < 4100 * 66, `log grew to ${longest} bytes`);
+    assert.equal(store.has(reused), false);
+    const reopened = createNanoFileStore(path);
+    assert.equal(reopened.has(kept), true);
+    assert.equal(reopened.has(reused), false);
+  });
 });
