@@ -12,7 +12,7 @@
     "deploy:cf": "xmcp build --cf && wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.12.34",
+    "hono": "^4.13.16",
     "@hono/node-server": "^1.19.15",
     "xmcp": "workspace:*",
     "zod": "^4.0.10"

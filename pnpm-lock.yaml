@@ -279,7 +279,7 @@ importers:
         version: 5.0.0
       xmcp:
         specifier: latest
-        version: 1.8.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
+        version: 1.9.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13)
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -1401,10 +1401,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.19.15
-        version: 1.19.15(hono@4.12.34)
+        version: 1.19.15(hono@4.13.16)
       hono:
-        specifier: ^4.12.34
-        version: 4.12.34
+        specifier: ^4.13.16
+        version: 4.13.16
       xmcp:
         specifier: workspace:*
         version: link:../../packages/xmcp
@@ -2592,7 +2592,7 @@ importers:
         version: 2.3.1
       '@modelcontextprotocol/node':
         specifier: ^2.0.0
-        version: 2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.12.34)
+        version: 2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.13.16)
       '@modelcontextprotocol/server':
         specifier: ^2.3.0
         version: 2.3.1
@@ -3121,8 +3121,8 @@ packages:
     resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/runtime@7.29.10':
-    resolution: {integrity: sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA==}
+  '@babel/runtime@7.29.14':
+    resolution: {integrity: sha512-Y5tqevQaUAZhhj82BpYMNC1ssvLQTVAfwKdm8iy8qwmhvC2/CpcAu8OC+QEtjM7pMk7knx83u1Qj8gzkicyelw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.28.6':
@@ -8895,8 +8895,8 @@ packages:
     resolution: {integrity: sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==}
     engines: {node: '>=4'}
 
-  auth0@4.37.1:
-    resolution: {integrity: sha512-o9ca0P+hHSUbiwOSFW+DS2GmCA5c6T6E1UJZhWcgKmjAI2Aid16wLzY4/y+XNFb7Im1rM+wQc5YkkNZuTy5FOw==}
+  auth0@4.37.2:
+    resolution: {integrity: sha512-NRs0Qp9KsbrVIT+ysk8TOi4YbdIhtHqRl83Q6QRzncoiUjlmKr6YbyJ5TQf+UJ9Vb6iCAlQmi5MGeJ7m5iNW9Q==}
     engines: {node: '>=18'}
 
   auth0@5.2.0:
@@ -8930,6 +8930,7 @@ packages:
 
   axios-retry@4.5.0:
     resolution: {integrity: sha512-aR99oXhpEDGo0UuAlYcn2iGRds30k366Zfa05XWScR9QaQD4JYiP3/1Qt1u7YlefUOK+cn0CcwoL1oefavQUlQ==}
+    deprecated: axios-retry is no longer maintained. See https://github.com/softonic/axios-retry for alternatives.
     peerDependencies:
       axios: 1.18.0
 
@@ -9010,6 +9011,11 @@ packages:
 
   baseline-browser-mapping@2.11.30:
     resolution: {integrity: sha512-YJs6Pz17RMNv8HoyKREtCY38E3BV1nPkWVmIb+XN1uHC1Vqt3KZCH/uJH9ZKRoiKb/icZ6tvehyee6RZNbFfRA==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
+  baseline-browser-mapping@2.11.37:
+    resolution: {integrity: sha512-QYph+vfurmaxhNwi9FprfmtkT5cx2Keg8FzZ0vnjO8ukscIybVyZGMFwdllKGlTI6qyU8ck43OM9UXh+IFJihQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -9237,6 +9243,9 @@ packages:
 
   caniuse-lite@1.0.30001819:
     resolution: {integrity: sha512-LFUqIIAwpzsIuevnKnsR9qnStBcgzPShTX61lBwN9uFkkf8o8zLiebEjbW8AYtZiF+1YKDWfdt/pWDtMuG8Xwg==}
+
+  caniuse-lite@1.0.30001826:
+    resolution: {integrity: sha512-wTB+9tIbLro/BCXwLuNV1meHE4L9dS6dArMDwgYfNBPMYScqClHyGunhkCSDtHhe/69Xl0sHlKgBVZ+fNsYtWA==}
 
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
@@ -10965,6 +10974,10 @@ packages:
     resolution: {integrity: sha512-GqXJqY/xJkJmuloTrnV1ZEXG3fqte+VjkUqoRNZXcrUidiUOP4fMSIHHY4tsqZBK++kVyWmt/AAfSUuy57/eSA==}
     engines: {node: '>=16.9.0'}
 
+  hono@4.13.16:
+    resolution: {integrity: sha512-AOLOEhvrV+iH92xXCnFr/5+3KjPKcI3xP63XJtX5spAnkznPdHijlIsUTpi7/9EhWqrTCekw5c5zh1K+YsVw7A==}
+    engines: {node: '>=16.9.0'}
+
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
@@ -11068,6 +11081,7 @@ packages:
   image-size@2.0.2:
     resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
     engines: {node: '>=16.x'}
+    deprecated: Use latest 2.x please
     hasBin: true
 
   immediate@3.0.6:
@@ -12419,6 +12433,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-emoji@1.11.0:
     resolution: {integrity: sha512-wo2DpQkQp7Sjm2A0cq+sN7EHKO6Sl0ctXeBdFZrL9T9+UywORbufTcTZxom8YqpLQt/FqNMUkOpkZrJVYSKD3A==}
@@ -14473,8 +14488,8 @@ packages:
   undici-types@6.29.1:
     resolution: {integrity: sha512-8ewZRMhr1pEZVOUITV/cBrtH8iz6juS76jNqam5zXA1LQuTjM5CcidoAEIp8u+3OJc7EWKfMhW7CBD2xJJVh4A==}
 
-  undici-types@7.30.1:
-    resolution: {integrity: sha512-4CNTj7RmIepmiez9hX5pJzYLi5bv1ZBA6puqC3qYyqluB8zu5uygFc+4iG5Nmcx3fg+6bPFxuEbCrxTa7Yqy3A==}
+  undici-types@7.30.2:
+    resolution: {integrity: sha512-Vx15rZHtDo7X+sZVzcecz08ooRvEa0cjSs8z85v/jRRf81BT1m9eaoMI4gxvaNwgQg2IgkfjJ45dMpKrSl0zEQ==}
 
   undici@7.29.0:
     resolution: {integrity: sha512-IDxfleLmmbSskfWSUATiN1nfn2rDuvnMOqb5CWR92iIfojA0Ud+ulOAAEQ57LPr9rWmsreUyf5lwyao+7GNNVw==}
@@ -15489,8 +15504,8 @@ packages:
     resolution: {integrity: sha512-c16PKLIRxBYpR3jSWsdS7SFp0COm5SOQdiFjY818dYFHJbMGuLBszpF07LBWmOS1uzrHa9VGdynsEgoeKy0oOQ==}
     engines: {node: '>=20'}
 
-  xmcp@1.8.0:
-    resolution: {integrity: sha512-2snD6e88oaLsQHtx9Rgb0e2iV2gB3df9W+5EhRz/QePgVNaCBYg9dFqcS31t3Pf7PL0AcOLcI9QfnSm/IpBQgg==}
+  xmcp@1.9.0:
+    resolution: {integrity: sha512-tu6W+p6DLwXPfCaPJH/nezcaKlVQX6feROX3cjO6IdbRcFht3c5X5fgREdIkSdvwdpzfZQoNGyDBKc8hNosDng==}
     hasBin: true
     peerDependencies:
       '@modelcontextprotocol/client': ^2.2.0
@@ -16229,7 +16244,7 @@ snapshots:
 
   '@babel/runtime@7.28.4': {}
 
-  '@babel/runtime@7.29.10': {}
+  '@babel/runtime@7.29.14': {}
 
   '@babel/template@7.28.6':
     dependencies:
@@ -17145,6 +17160,10 @@ snapshots:
     dependencies:
       hono: 4.12.34
 
+  '@hono/node-server@1.19.15(hono@4.13.16)':
+    dependencies:
+      hono: 4.13.16
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -17833,12 +17852,12 @@ snapshots:
     dependencies:
       zod: 4.6.5
 
-  '@modelcontextprotocol/node@2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.12.34)':
+  '@modelcontextprotocol/node@2.0.0(@modelcontextprotocol/server@2.3.1)(hono@4.13.16)':
     dependencies:
-      '@hono/node-server': 1.19.15(hono@4.12.34)
+      '@hono/node-server': 1.19.15(hono@4.13.16)
       '@modelcontextprotocol/server': 2.3.1
     optionalDependencies:
-      hono: 4.12.34
+      hono: 4.13.16
 
   '@modelcontextprotocol/sdk@1.31.0(@cfworker/json-schema@4.1.1)(zod@4.1.13)':
     dependencies:
@@ -20828,7 +20847,7 @@ snapshots:
       '@solana/errors': 5.5.1(typescript@5.9.3)
       '@solana/rpc-spec': 5.5.1(typescript@5.9.3)
       '@solana/rpc-spec-types': 5.5.1(typescript@5.9.3)
-      undici-types: 7.30.1
+      undici-types: 7.30.2
     optionalDependencies:
       typescript: 5.9.3
 
@@ -21727,7 +21746,7 @@ snapshots:
   '@testing-library/dom@10.4.2':
     dependencies:
       '@babel/code-frame': 7.29.7
-      '@babel/runtime': 7.29.10
+      '@babel/runtime': 7.29.14
       '@types/aria-query': 5.0.4
       aria-query: 5.3.0
       dom-accessibility-api: 0.5.16
@@ -23349,7 +23368,7 @@ snapshots:
 
   attr-accept@2.2.5: {}
 
-  auth0@4.37.1:
+  auth0@4.37.2:
     dependencies:
       jose: 4.15.9
       undici-types: 6.29.1
@@ -23357,7 +23376,7 @@ snapshots:
 
   auth0@5.2.0:
     dependencies:
-      auth0-legacy: auth0@4.37.1
+      auth0-legacy: auth0@4.37.2
       jose: 4.15.9
       uuid: 11.1.1
 
@@ -23461,6 +23480,9 @@ snapshots:
   base64-js@1.5.1: {}
 
   baseline-browser-mapping@2.11.30: {}
+
+  baseline-browser-mapping@2.11.37:
+    optional: true
 
   basic-auth@2.0.1:
     dependencies:
@@ -23726,6 +23748,9 @@ snapshots:
   caniuse-lite@1.0.30001760: {}
 
   caniuse-lite@1.0.30001819: {}
+
+  caniuse-lite@1.0.30001826:
+    optional: true
 
   ccount@2.0.1: {}
 
@@ -25767,6 +25792,8 @@ snapshots:
 
   hono@4.12.34: {}
 
+  hono@4.13.16: {}
+
   hookable@5.5.3: {}
 
   hookable@6.1.2: {}
@@ -27400,8 +27427,8 @@ snapshots:
     dependencies:
       '@next/env': 16.3.6
       '@swc/helpers': 0.5.23
-      baseline-browser-mapping: 2.11.30
-      caniuse-lite: 1.0.30001819
+      baseline-browser-mapping: 2.11.37
+      caniuse-lite: 1.0.30001826
       postcss: 8.5.23
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -30576,7 +30603,7 @@ snapshots:
 
   undici-types@6.29.1: {}
 
-  undici-types@7.30.1: {}
+  undici-types@7.30.2: {}
 
   undici@7.29.0: {}
 
@@ -31937,7 +31964,7 @@ snapshots:
       is-wsl: 3.1.1
       powershell-utils: 0.2.1
 
-  xmcp@1.8.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
+  xmcp@1.9.0(@modelcontextprotocol/client@2.3.1)(@modelcontextprotocol/server@2.3.1)(jose@6.2.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(zod@4.1.13):
     dependencies:
       zod: 4.1.13
     optionalDependencies:
