@@ -10,14 +10,14 @@
     "test:smoke": "node --import tsx --test tests/http.smoke.cts"
   },
   "dependencies": {
-    "resend": "^6.34.1",
+    "resend": "^6.38.0",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "@types/node": "^22.19.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
   }
 }

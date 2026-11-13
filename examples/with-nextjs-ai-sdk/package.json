@@ -15,25 +15,25 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.68",
-    "@ai-sdk/react": "^3.0.199",
-    "ai": "^6.0.197",
-    "next": "^16.4.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "@ai-sdk/openai": "^4.0.117",
+    "@ai-sdk/react": "^4.0.176",
+    "ai": "^7.0.172",
+    "next": "^16.4.6",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@xmcp-dev/compiler": "workspace:*",
-    "@eslint/eslintrc": "^3.3.3",
-    "@tailwindcss/postcss": "^4.1.17",
-    "@types/node": "^22.19.2",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.1",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4.1.17",
-    "typescript": "^5.9.3"
+    "eslint": "^10.14.0",
+    "eslint-config-next": "16.4.6",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^7.0.2"
   }
 }

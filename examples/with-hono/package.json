@@ -12,17 +12,17 @@
     "deploy:cf": "xmcp build --cf && wrangler deploy"
   },
   "dependencies": {
-    "hono": "^4.12.34",
-    "@hono/node-server": "^1.19.15",
+    "@hono/node-server": "^2.1.8",
+    "hono": "^4.13.18",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "@types/node": "^22.19.2",
-    "wrangler": "^4.147.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.161.0"
   }
 }

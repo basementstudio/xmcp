@@ -21,10 +21,10 @@
     "install:preview": "xmcp-dev-cli install local --clients discovery.clients.ts --client cursor --config .cursor/mcp.json --dry-run"
   },
   "dependencies": {
+    "@playwright/mcp": "^0.0.85",
     "@xmcp-dev/cli": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
-    "@playwright/mcp": "^0.0.49"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*"

@@ -8,15 +8,15 @@
     "start": "node --env-file=.env dist/http.js"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.2.1",
+    "@upstash/redis": "^1.41.0",
     "@xmcp-dev/upstash": "workspace:*",
-    "@upstash/ratelimit": "^2.2.0",
-    "@upstash/redis": "^1.39.0",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "@types/node": "^22.19.2",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
