@@ -1,5 +1,11 @@
 # @xmcp-dev/compiler
 
+## 1.10.2
+
+### Patch Changes
+
+- 6e13b56: The compiler now runs on Rspack 2, which is ESM-only, so xmcp requires Node.js 22.12 or later. Configs passed to the `bundler` hook receive Rspack 2 options. The Better Auth plugin bundles its sign-in UI, so React and React Router are no longer installed as runtime dependencies.
+
 ## 1.10.1
 
 ### Patch Changes

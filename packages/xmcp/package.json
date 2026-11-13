@@ -1,7 +1,7 @@
 {
   "name": "xmcp",
   "description": "The TypeScript MCP framework",
-  "version": "1.10.1",
+  "version": "1.10.2",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
