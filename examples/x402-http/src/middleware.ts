@@ -12,5 +12,8 @@ export default x402Provider({
   nano: {
     wallet: process.env.X402_NANO_WALLET,
     rpc: process.env.X402_NANO_RPC,
+    // Keep used Nano block hashes across restarts when a path is given
+    claimsFile: process.env.X402_NANO_CLAIMS_FILE,
+    requireBinding: process.env.X402_NANO_REQUIRE_BINDING === "true",
   },
 });
