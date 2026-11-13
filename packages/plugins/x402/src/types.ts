@@ -7,6 +7,11 @@ import type {
 } from "@x402/core/types";
 import { z } from "zod";
 import { DEFAULT_FACILITATOR_URL } from "./constants.js";
+import {
+  isValidNanoAddress,
+  type NanoPaymentStore,
+  type NanoRpc,
+} from "./nano.js";
 
 export type PaymentRequirements = PaymentRequirementsV2 | PaymentRequirementsV1;
 
@@ -41,6 +46,26 @@ export const x402ConfigSchema = z.object({
   wallet: z.string(),
   facilitator: z.string().url().optional().default(DEFAULT_FACILITATOR_URL),
   debug: z.boolean().optional().default(false),
+  /**
+   * Nano (XNO) settings, used by tools on the `nano` network. Nano payments
+   * are verified directly against a Nano node instead of a facilitator.
+   */
+  nano: z
+    .object({
+      /** `nano_` address that receives XNO. Falls back to `wallet`. */
+      wallet: z
+        .string()
+        .refine(isValidNanoAddress, "Invalid Nano address")
+        .optional(),
+      /** Nano node RPC URL, or a function that performs the RPC call */
+      rpc: z
+        .union([
+          z.string().url(),
+          z.custom<NanoRpc>((value) => typeof value === "function"),
+        ])
+        .optional(),
+    })
+    .optional(),
   defaults: z
     .object({
       price: z.number().min(0).optional().default(0.01),
@@ -57,6 +82,8 @@ export interface X402ToolContext {
   toolName: string;
   toolOptions: X402ToolOptions;
   config: X402Config;
+  /** Nano block hashes already used to pay for a call */
+  nanoBlocks?: NanoPaymentStore;
 }
 
 /**

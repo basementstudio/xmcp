@@ -1,3 +1,4 @@
+import { sitemapDate } from "@/lib/seo";
 import type { BlogPost } from "@/utils/blog";
 import type { DocsMetadata } from "@/utils/docs";
 
@@ -51,7 +52,7 @@ export function getSoftwareApplicationSchema(baseUrl: string) {
     "@type": "SoftwareApplication",
     name: ORG_NAME,
     description:
-      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+      "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
     url: baseUrl,
     applicationCategory: "DeveloperApplication",
     operatingSystem: "Node.js",
@@ -185,6 +186,9 @@ export function getBlogPostingSchema(post: BlogPost, baseUrl: string) {
     url,
     mainEntityOfPage: url,
     ...(post.date ? { datePublished: post.date } : {}),
+    ...(sitemapDate(post.data.lastModified)
+      ? { dateModified: sitemapDate(post.data.lastModified) }
+      : {}),
     author: post.authors.map((author) => ({
       "@type": "Person",
       name: author.name,
@@ -201,7 +205,7 @@ export function getTechArticleSchema(
   baseUrl: string
 ) {
   const slugPath = slug?.join("/") ?? "";
-  const url = absolute(baseUrl, `/docs/${slugPath}`);
+  const url = absolute(baseUrl, slugPath ? `/docs/${slugPath}` : "/docs");
 
   return {
     "@context": "https://schema.org",

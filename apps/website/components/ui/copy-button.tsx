@@ -4,83 +4,64 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "../../utils/cn";
 import { Icons } from "../icons";
 
-export const CopyButton = ({
+// Leave the success/error message long enough to read, then allow another copy.
+const COPY_FEEDBACK_MS = 2000;
+
+export function CopyButton({
   text,
   className,
+  label = false,
 }: {
-  text: string;
+  text: string | (() => string);
   className?: string;
-}) => {
-  const [copied, setCopied] = useState(false);
-
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastCopiedRef = useRef<number>(0);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  const handleCopy = async () => {
-    try {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      lastCopiedRef.current = Date.now();
-
-      timeoutRef.current = setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (err) {
-      console.error("Failed to copy text:", err);
-    }
-  };
-
-  return (
-    <div
-      className={cn("relative grid justify-items-center", className)}
-      onMouseEnter={() => {
-        if (copied && Date.now() - lastCopiedRef.current > 500) {
-          setCopied(false);
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-          }
-        }
-      }}
-    >
-      <button
-        className={cn(
-          "absolute size-6 grid place-items-center z-20 cursor-pointer transition-all duration-300 group"
-        )}
-        onClick={handleCopy}
-        aria-label="Copy to clipboard"
-      >
-        <div className="relative size-full grid place-items-center">
-          <Icons.check
-            className={cn(
-              "absolute size-4 w-auto transition-all duration-300 will-change-transform [&_path]:fill-white",
-              copied
-                ? "opacity-100 scale-100 animate-in fade-in"
-                : "opacity-0 scale-30 animate-out fade-out"
-            )}
-          />
-          <Icons.copy
-            className={cn(
-              "absolute size-4 transition-all duration-300 will-change-transform [&_path]:fill-white/50 group-hover:[&_path]:fill-white",
-              copied
-                ? "opacity-0 scale-30 animate-out fade-out"
-                : "opacity-100 scale-100 animate-in fade-in"
-            )}
-          />
-        </div>
-      </button>
-    </div>
+  label?: boolean;
+}) {
+  const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timeout.current) clearTimeout(timeout.current);
+    },
+    []
   );
-};
+
+  async function copy() {
+    if (timeout.current) clearTimeout(timeout.current);
+    try {
+      await navigator.clipboard.writeText(
+        typeof text === "function" ? text() : text
+      );
+      setStatus("copied");
+    } catch {
+      setStatus("error");
+    }
+    timeout.current = setTimeout(() => setStatus("idle"), COPY_FEEDBACK_MS);
+  }
+
+  const message =
+    status === "copied"
+      ? "Copied"
+      : status === "error"
+        ? "Copy failed"
+        : "Copy";
+  return (
+    <button
+      type="button"
+      className={cn("site-copy", label && "site-copy-label", className)}
+      onClick={copy}
+      aria-label={status === "idle" ? "Copy to clipboard" : message}
+      title={message}
+    >
+      {label ? (
+        <span>{message}</span>
+      ) : status === "copied" ? (
+        <Icons.check className="size-4" />
+      ) : (
+        <Icons.copy className="size-4" />
+      )}
+      <span className="sr-only" role="status">
+        {status !== "idle" ? message : ""}
+      </span>
+    </button>
+  );
+}

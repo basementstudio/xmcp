@@ -1,16 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+
+import { Client } from "@modelcontextprotocol/client";
 import {
   CLIENT_INFO_META_KEY,
-  McpServer,
   InMemoryTransport,
-  ResourceTemplate,
   inputRequired,
+  McpServer,
+  ResourceTemplate,
   type ServerContext,
 } from "@modelcontextprotocol/server";
-import { Client } from "@modelcontextprotocol/client";
 import { z } from "zod/v3";
+
 import type { McpMiddleware } from "@/types/mcp-middleware";
+
 import { getRequestContext } from "../../contexts/request-context";
 import {
   normalizeMcpMiddleware,
@@ -41,7 +44,7 @@ test("middleware runs in order and shares one request scope with the tool and as
       getRequestContext().set("value", "from tool");
       return "result";
     }),
-    "example",
+    { name: "example", description: "Test tool" },
     [
       async (context, next) => {
         trace.push("first before");
@@ -88,7 +91,7 @@ test("middleware can return a result without calling later middleware or the too
   };
   const handler = wrapToolWithMiddleware(
     () => assert.fail("tool ran"),
-    "example",
+    { name: "example", description: "Test tool" },
     [() => result, () => assert.fail("later middleware ran")]
   );
   assert.strictEqual(await handler({}, serverContext()), result);
@@ -101,7 +104,7 @@ for (const source of ["middleware", "tool"] as const) {
       () => {
         throw error;
       },
-      "example",
+      { name: "example", description: "Test tool" },
       [
         (context, next) => {
           assert.strictEqual(context.signal, getRequestContext().signal);
@@ -129,7 +132,7 @@ for (const concurrent of [false, true]) {
         calls++;
         return { content: [] };
       },
-      "example",
+      { name: "example", description: "Test tool" },
       [
         async (_context, next) => {
           if (concurrent) return (await Promise.all([next(), next()]))[0];
@@ -293,7 +296,7 @@ test("passes interim input requests and opaque state through middleware without 
       { count: z.number() },
       "multi-round"
     ),
-    "multi-round",
+    { name: "multi-round", description: "Test tool" },
     [passthrough, passthrough]
   );
   const result = await handler({}, serverContext());
@@ -343,7 +346,7 @@ for (const alreadyAborted of [false, true]) {
         extra.signal.throwIfAborted();
         return "unreachable";
       }),
-      "cancelled",
+      { name: "cancelled", description: "Test tool" },
       [observer("outer"), observer("inner")]
     );
     if (alreadyAborted) controller.abort(reason);

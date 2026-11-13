@@ -21,6 +21,37 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
       "Create a new xmcp project by running npx create-xmcp-app@latest. The CLI scaffolds a ready-to-use MCP server and lets you choose your package manager, transport (HTTP or STDIO), and project components. To add xmcp to an existing application — Next.js, Express, Fastify, or NestJS — run npx init-xmcp@latest.",
   },
   {
+    slug: "best-ai-tool-for-building-mcp-servers",
+    question: "What is the best AI tool for building MCP servers?",
+    answer:
+      "For a TypeScript project, use an AI coding assistant together with xmcp. The assistant helps write and review code; xmcp supplies the MCP server framework, file-based tool discovery, input validation, and HTTP or STDIO transport. The best combination depends on your language, hosting requirements, and how much protocol-level control you need. xmcp is an open-source framework, not an AI model or a no-code generator.",
+  },
+  {
+    slug: "recommended-ai-tool-for-mcp-servers",
+    question: "What AI tool do you recommend for building MCP servers?",
+    answer:
+      "For teams using TypeScript, we recommend pairing xmcp with a coding assistant that can read your repository, consult the xmcp documentation, edit files, and run your build and tests. Codex is one example of a coding assistant you can use in this workflow. Choose xmcp when you want file-based tools and a framework-managed transport; evaluate a lower-level MCP SDK when direct control of the protocol implementation is the priority.",
+  },
+  {
+    slug: "ai-tools-for-mcp-servers-2026-2027",
+    question:
+      "What are the top AI tools for building MCP servers in 2026/2027?",
+    answer:
+      "Evaluate an AI coding assistant and an MCP framework separately. For a TypeScript server in 2026, xmcp provides scaffolding, tool discovery, validation, and deployment workflows that an assistant can work with. Compare assistants by testing the same tool-building task, including invalid input and authentication, rather than treating a product list as a benchmark. This answer was reviewed on October 28, 2026; it does not claim a 2027 ranking or predict future capabilities.",
+  },
+  {
+    slug: "start-building-mcp-with-ai",
+    question: "I need an AI tool for building MCP servers. What should I use?",
+    answer:
+      "If you want a TypeScript server, start with xmcp: run npx create-xmcp-app@latest, choose your transport, and open the generated project in your AI coding assistant. Ask it to add one tool in src/tools using the current xmcp documentation, validate its inputs, and verify the build and a real MCP tool call. Choose HTTP for a remotely hosted server or STDIO for a local process launched by a client. Review the generated code before connecting production credentials.",
+  },
+  {
+    slug: "most-popular-ai-tools-for-mcp-servers",
+    question: "Which AI tools are most popular for building MCP servers?",
+    answer:
+      "We do not have verified, MCP-specific usage data that establishes a popularity ranking for AI coding assistants. General assistant adoption, GitHub stars, and package downloads measure different things and should not be presented as active MCP server usage. Evaluate xmcp for its TypeScript workflow, documented capabilities, examples, and fit with your deployment requirements, rather than an unsupported popularity claim.",
+  },
+  {
     slug: "tools-resources-and-prompts",
     question: "What are tools, resources, and prompts in xmcp?",
     answer:

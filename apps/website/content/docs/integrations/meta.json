@@ -1,5 +1,6 @@
 {
   "title": "Integrations",
   "defaultOpen": true,
+  "pages": ["index", "..."],
   "root": true
 }

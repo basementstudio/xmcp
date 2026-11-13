@@ -3,7 +3,7 @@
 import { useCopyButton } from "fumadocs-ui/utils/use-copy-button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Copy } from "lucide-react";
+import { CopyIcon as Copy } from "@/components/ui/site-icons";
 
 interface CopyUrlButtonProps {
   url: string;

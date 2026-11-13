@@ -60,6 +60,7 @@ export function PageActions({
         })}`,
         icon: (
           <svg
+            className="site-icon"
             role="img"
             viewBox="0 0 24 24"
             fill="currentColor"
@@ -77,6 +78,7 @@ export function PageActions({
         })}`,
         icon: (
           <svg
+            className="site-icon"
             fill="currentColor"
             role="img"
             viewBox="0 0 24 24"
@@ -99,7 +101,7 @@ export function PageActions({
         )}
         onClick={onClick}
       >
-        <span className="relative inline-flex items-center justify-center size-3">
+        <span className="relative inline-flex items-center justify-center size-[15px]">
           <Icons.markdown
             className={cn(
               "absolute inset-0 transition-opacity duration-200",

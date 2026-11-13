@@ -1,5 +1,36 @@
 # xmcp
 
+## 1.9.0
+
+### Minor Changes
+
+- a0f4654: Add optional `http.maxSubscriptions` to limit concurrent subscription streams
+  per HTTP handler across standalone HTTP, Vercel, Cloudflare, and all HTTP
+  adapters. Set it to `0` to reject `subscriptions/listen` before opening a stream;
+  omitting it preserves the SDK default. This does not limit stream duration or
+  change ordinary requests, tool-call streaming, or STDIO behavior.
+
+### Patch Changes
+
+- d3d89ce: Refresh the package README with current positioning, a tool example, and the full set of integrations, adapters and deployment targets.
+
+## 1.8.0
+
+### Minor Changes
+
+- 516fc7a: Expose current-request SDK authentication through `RequestContext.authInfo` and MCP middleware, including listing operations, without retaining authentication across requests.
+- ad824fe: Expose a read-only registered tool metadata snapshot on `tools/call` MCP middleware as `ctx.tool.metadata`, with normalized `_meta` matching discovery results for shared authorization policies.
+
+### Patch Changes
+
+- 798942d: Update `@modelcontextprotocol/server` to 2.3.0.
+
+## 1.7.2
+
+### Patch Changes
+
+- f42dd7d: Allow static resources to return `inputRequired` results so clients can supply input before reading their contents.
+
 ## 1.7.1
 
 ### Patch Changes
@@ -110,8 +141,10 @@
 
 - Split the development compiler into `@xmcp-dev/compiler`. Existing `xmcp dev`,
   `xmcp build`, and `xmcp create` scripts continue to work through a small shim,
-  but projects must install the matching compiler version as a development
-  dependency: `npm i -D @xmcp-dev/compiler@0.8.0`.
+  but projects need a matching compiler as a development dependency.
+  `@xmcp-dev/compiler@0.8.0` is unavailable on npm. Follow the
+  [current installation guide](https://xmcp.dev/docs/getting-started/installation)
+  to upgrade to a supported runtime/compiler pair.
 - Production installs no longer include Rspack or TypeScript. Built HTTP and
   stdio artifacts remain self-contained and can run without `node_modules`.
 - Added the `xmcp/config` export so compiler validation uses the config schema

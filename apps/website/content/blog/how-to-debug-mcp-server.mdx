@@ -4,12 +4,13 @@ description: "MCP servers fail silently in ways that REST APIs don't. Here's how
 summary: "MCP servers fail silently in ways that REST APIs don't. Here's how to use the MCP Inspector to test tools, catch protocol errors, and diagnose the most common issues."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
 ---
 
-Debugging an MCP server is different from debugging a REST API. There's no browser tab to open, no curl command that directly tests a tool call. The primary tool is the **MCP Inspector** — a browser-based debugger maintained by Anthropic that gives you a live view of everything your server is doing.
+Debugging an MCP server is different from debugging a REST API. HTTP requests can be inspected with ordinary network tools, but MCP Inspector provides a convenient interface for initialization, discovery, and tool calls. The [official Inspector](https://github.com/modelcontextprotocol/inspector) helps isolate protocol errors from application errors.
 
 ## Start with MCP Inspector
 
@@ -29,7 +30,7 @@ Replace `node build/index.js` with however you start your server. The Inspector 
 For HTTP servers, pass the URL instead:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+npx @modelcontextprotocol/inspector http://localhost:3001/mcp
 ```
 
 ## The most common silent failure: writing to stdout
@@ -49,7 +50,7 @@ console.error("Tool called:", name);
 process.stderr.write(`Tool called: ${name}\n`);
 ```
 
-This is the #1 cause of "my MCP server works in isolation but fails in Claude Desktop."
+This can cause "my MCP server works in isolation but fails in Claude Desktop."
 
 ## Common errors and what they mean
 
@@ -60,7 +61,7 @@ Your server sent something to stdout that isn't valid JSON-RPC. Check for `conso
 The client is calling a method your server doesn't implement. Usually happens when the client tries a transport feature (like `resources/list`) that your server doesn't expose.
 
 **Tool call returns `undefined`**
-Your tool handler returned `undefined` instead of a string or object. MCP tool results must be non-null — return an empty string or `{ success: true }` instead.
+Your tool handler returned `undefined` instead of a string or object. MCP tool results must be non-null — return an empty string or a valid MCP content result instead.
 
 **Connection closes immediately**
 Your server process is crashing on startup. Run it directly (`node build/index.js`) and check stderr for the actual error before wrapping it in Inspector.
@@ -73,13 +74,13 @@ If you're using xmcp, run the dev server for a live-reloading development enviro
 pnpm dev
 ```
 
-xmcp routes all internal logs to stderr by default, so the stdio stream is clean. Use the Inspector against the HTTP transport during development:
+For STDIO, enable `stdio: { silent: true }` to redirect console methods to stderr; do not write application output directly to stdout. Use the Inspector against the HTTP transport during development:
 
 ```bash
-npx @modelcontextprotocol/inspector http://localhost:3000/mcp
+npx @modelcontextprotocol/inspector http://localhost:3001/mcp
 ```
 
-For tool-level issues, add temporary `console.error()` calls in your tool handler — they'll show up in Inspector's notifications pane without touching the protocol stream.
+For tool-level issues, add temporary `console.error()` calls in your tool handler — inspect stderr or the server terminal; console output is not automatically an MCP logging notification.
 
 ## Testing tool inputs systematically
 

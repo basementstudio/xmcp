@@ -21,37 +21,61 @@
 </a>
 </div>
 
-## The TypeScript MCP Framework
+## The TypeScript MCP framework
 
-`xmcp` is a framework for building and shipping MCP servers with TypeScript. Designed with DX in mind, it streamlines development and lowers the barrier to entry for anyone looking to create and deploy powerful tools on top of the Model Context Protocol ecosystem.
+Build and ship MCP servers with the code you already know. Give AI applications access to your tools, data, and workflows. Write TypeScript functions; `xmcp` handles the protocol, validation, and transport.
 
-## Getting Started
+## Getting started
 
-Bootstrap your first `xmcp` application with:
+Create a new `xmcp` app:
 
 ```bash
 npx create-xmcp-app@latest
 ```
 
-or initialize `xmcp` on an existing Next.js or Express project with:
+Or add `xmcp` to an existing project:
 
 ```bash
 npx init-xmcp@latest
 ```
 
+A tool is a file. Export a schema, metadata, and a function, and `xmcp` registers it:
+
+```typescript
+// src/tools/greet.ts
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  name: z.string().describe("The name of the user to greet"),
+};
+
+export const metadata = {
+  name: "greet",
+  description: "Greet the user",
+};
+
+export default async function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
 ## Features
 
-⊹ **File System Routing** - Tools and prompts are auto-registered from a `tools` and `prompts` directory\
-⊹ **Hot Reloading** - Instant development feedback\
-⊹ **Middlewares** - Toolkit for shipping authentication and custom middlewares\
-⊹ **Extensible Configuration** - Customizable configuration for your MCP server\
-⊹ **Deploy Anywhere** - Flexible deployment across any platform\
-⊹ **Vercel Support** - Zero-configuration deployment with Vercel
+⊹ **File system routing** - Tools, prompts, and resources register automatically from their directories, with zero configuration\
+⊹ **Middlewares** - Add authentication, logging, rate limits, or custom logic to every request\
+⊹ **Transports** - Serve over HTTP or STDIO from the same code\
+⊹ **Integrations** - Authentication with Better Auth, Clerk, Auth0, WorkOS, Descope, Scalekit and Supabase; monetization with Polar, Commet and x402\
+⊹ **Adapters** - Run inside Next.js, Express, NestJS, Fastify, Hono, TanStack Start, Nuxt, SvelteKit, React Router or Astro\
+⊹ **MCP Apps** - Ship interactive React widgets alongside your tools\
+⊹ **Deploy anywhere** - Vercel, Cloudflare, Alpic, Replit, Railway, Render, or any Node.js host\
+⊹ **Hot reloading** - Instant feedback while you develop
 
 ## Learn more
 
 ⊹ Visit [xmcp.dev](https://xmcp.dev) to learn more about the project.\
-⊹ Visit [xmcp.dev/docs](https://xmcp.dev/docs) to view the full documentation.
+⊹ Read the [documentation](https://xmcp.dev/docs) for guides and API reference.\
+⊹ Start from a [template](https://xmcp.dev/templates).
 
 ## Security
 

@@ -8,7 +8,7 @@ import {
   rehypeCode,
   rehypeCodeDefaultOptions,
 } from "fumadocs-core/mdx-plugins";
-import { xmcpAyuDarkTheme } from "@/lib/shiki-theme";
+import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -18,6 +18,8 @@ export const docs = defineDocs({
     },
     schema: frontmatterSchema.extend({
       displayTitle: z.string().optional(),
+      metadataTitle: z.string().optional(),
+      lastModified: z.string().date().optional(),
     }),
   },
 });
@@ -37,6 +39,7 @@ export const blog = defineDocs({
       textureImage: z.string().optional(),
       authors: z.array(z.string()).optional(),
       date: z.string().optional(),
+      lastModified: z.string().date().optional(),
       summary: z.string().optional(),
     }),
   },
@@ -50,10 +53,18 @@ export default defineConfig({
       langs: ["ts", "js", "html", "tsx", "jsx", "json", "mdx", "bash", "shell"],
       inline: "tailing-curly-colon",
       themes: {
-        light: xmcpAyuDarkTheme,
+        light: xmcpLightTheme,
         dark: xmcpAyuDarkTheme,
       },
-      transformers: [...(rehypeCodeDefaultOptions.transformers ?? [])],
+      transformers: [
+        ...(rehypeCodeDefaultOptions.transformers ?? []),
+        {
+          name: "code-language-label",
+          pre(node) {
+            node.properties["data-language"] = this.options.lang;
+          },
+        },
+      ],
     },
     rehypePlugins: [rehypeCode],
   },

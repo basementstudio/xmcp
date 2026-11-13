@@ -1,11 +1,14 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import "./globals.css";
+import { PersistentHero } from "@/components/home/hero/persistent-hero";
 import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "../components/layout/footer";
 import { Header } from "../components/layout/header";
 import { Metadata } from "next";
 import { RootProvider } from "fumadocs-ui/provider";
 import DefaultSearchDialog from "@/components/search/search-default";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, EB_Garamond } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import { Prefooter } from "@/components/layout/prefooter";
 import { Toaster } from "@/components/ui/toaster";
@@ -15,9 +18,23 @@ import { WebMCPProvider } from "@/components/ai/webmcp-provider";
 import { SITE_URL } from "@/lib/base-url";
 import { getOrganizationSchema, getWebSiteSchema } from "@/lib/structured-data";
 
-const geistSans = Geist({
+const siteSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const siteDisplay = localFont({
+  src: "./fonts/Adhesion-Regular.woff2",
+  variable: "--font-display",
+  weight: "400",
+  style: "normal",
+  display: "swap",
+});
+
+const siteSerif = EB_Garamond({
+  variable: "--font-editorial-serif",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -29,7 +46,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "xmcp — The TypeScript MCP framework",
   description:
-    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   keywords: [
     "xmcp",
     "MCP",
@@ -57,18 +74,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     siteName: "xmcp",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-      alt: "xmcp — The TypeScript MCP framework",
-    },
+    images: DEFAULT_OG_IMAGE,
     url: "https://xmcp.dev",
     type: "website",
     locale: "en_US",
     title: "xmcp — The TypeScript MCP framework",
     description:
-      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+      "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   },
   twitter: {
     card: "summary_large_image",
@@ -76,13 +88,8 @@ export const metadata: Metadata = {
     creator: "@xmcp_dev",
     title: "xmcp — The TypeScript MCP framework",
     description:
-      "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-      alt: "xmcp — The TypeScript MCP framework",
-    },
+      "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
+    images: DEFAULT_TWITTER_IMAGE,
   },
   manifest: "/site.webmanifest",
   appleWebApp: {
@@ -102,10 +109,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#000000" />
+        <meta
+          name="theme-color"
+          content="#fdfdfc"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#000000"
+          media="(prefers-color-scheme: dark)"
+        />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
+        className={`${siteSans.variable} ${siteDisplay.variable} ${siteSerif.variable} ${geistMono.variable} antialiased min-h-[100dvh] flex flex-col`}
       >
         <a
           href="#main-content"
@@ -117,6 +133,7 @@ export default function RootLayout({
           data={[getOrganizationSchema(SITE_URL), getWebSiteSchema(SITE_URL)]}
         />
         <RootProvider
+          theme={{ defaultTheme: "system", enableSystem: true }}
           search={{
             SearchDialog: DefaultSearchDialog,
             options: {
@@ -125,17 +142,20 @@ export default function RootLayout({
                 ["Configuration", "/docs/configuration/custom-directories"],
                 ["Core Concepts", "/docs/core-concepts/tools"],
                 ["Authentication", "/docs/authentication/api-key"],
-                ["Integrations", "/docs/adapters/nextjs"],
+                ["Integrations", "/docs/integrations"],
+                ["MCP guides", "/guides"],
                 ["Deployment", "/docs/deployment/vercel"],
               ],
             },
           }}
         >
-          <Header />
-          {children}
-          <Prefooter />
-          <Footer />
-          <Toaster />
+          <PersistentHero>
+            <Header />
+            {children}
+            <Prefooter />
+            <Footer />
+            <Toaster />
+          </PersistentHero>
         </RootProvider>
         <WebMCPProvider />
         <Analytics />

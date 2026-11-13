@@ -28,6 +28,49 @@ export default config;
 
 These are the default values. Override only what you need to customize.
 
+### Subscription streams
+
+Clients using protocol revision `2026-07-28` can open a `subscriptions/listen`
+stream for list-changed notifications. When the server supports the requested
+notifications, the stream stays open until the client disconnects or the handler
+closes it. Keepalive frames do not impose a stream lifetime limit.
+
+`http.maxSubscriptions` accepts a nonnegative integer and limits concurrent
+subscription streams per HTTP handler instance. Each process, worker isolate,
+or serverless instance has its own limit; this is not a deployment-wide quota.
+Omitting the option preserves the MCP SDK's default. Set it to `0` to refuse
+all subscription streams:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: {
+    maxSubscriptions: 0,
+  },
+};
+
+export default config;
+```
+
+The option applies to standalone HTTP, Vercel, Cloudflare, and the Express,
+Fastify, NestJS, Next.js, Hono, and SvelteKit adapters. It does not change STDIO
+or disable SSE used by ordinary tool calls and progress notifications.
+
+When the cap is reached, the SDK returns HTTP `200` with JSON-RPC error `-32603`,
+`Subscription limit reached`, before acknowledging the subscription. A positive
+limit bounds the number of streams, not how long an accepted stream stays open.
+Closing a stream frees its slot.
+
+For a server with a fixed component roster on a platform with request duration
+limits, consider disabling subscriptions to avoid holding an invocation open.
+Clients must request lists again as needed instead of relying on notifications.
+Those list requests still execute normally and consume resources. The setting
+does not change the server's advertised `listChanged` capabilities.
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport#subscription-streams)
+sets the limit to `0` and includes a runnable request demonstrating the refusal.
+
 ### CORS
 
 CORS (Cross-Origin Resource Sharing) middleware that can be configured to control cross-origin requests.

@@ -34,6 +34,7 @@ The exported `RequestContext` type contains:
 
 | Field          | Meaning                                                                                                                                          |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `authInfo`     | Optional verified authentication from the SDK for the current request; the same object as tool handler `extra.authInfo`.                         |
 | `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. For tools, uses the same identity as `extra.clientInfo`.     |
 | `http.id`      | xmcp's generated HTTP request ID. This is separate from the JSON-RPC message ID.                                                                 |
 | `http.headers` | A read-only copy of the current HTTP headers. Values can be strings, arrays of strings, or `undefined`. Standard HTTP header keys are lowercase. |
@@ -42,6 +43,16 @@ The exported `RequestContext` type contains:
 `http` is absent on STDIO. Check that it exists before using HTTP-specific data. Client information can be absent on either transport when the client does not supply it.
 
 The context object, client information, HTTP details, and header arrays are frozen. The methods below manage separate request-local values; they do not modify this metadata or change handler arguments. The cancellation signal remains live: pass it to operations such as `fetch(url, { signal })` or check `signal.throwIfAborted()` during work. Cancellation delivery follows the underlying transport's behavior.
+
+## Authentication
+
+`context.authInfo` exposes the SDK's current-request authentication, including `clientId`, `scopes`, and provider-specific `extra` data. It is also available in MCP middleware as `ctx.authInfo`, including `tools/list`. It is absent when the integration does not supply authentication and on STDIO. Stateless HTTP requests must authenticate each request; an earlier request does not establish an identity for later calls.
+
+An authentication integration must supply verified `req.auth` for Express, or `authInfo` through the Fetch adapter's options. This field does not verify tokens or infer identity from headers. The built-in API-key helper only validates the key, and the JWT helper populates `req.user`; neither automatically supplies SDK `authInfo`.
+
+The `authInfo` property is read-only, but its value is the original SDK object and is not frozen or cloned. Treat it as read-only. Do not return or log the whole object: it includes the access token.
+
+See the [middleware example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) for verified demo credentials and per-caller tool filtering. Filtering discovery alone does not authorize direct tool calls; enforce the call too.
 
 ## Request-local values
 

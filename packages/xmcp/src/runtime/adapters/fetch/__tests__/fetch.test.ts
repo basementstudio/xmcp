@@ -1,14 +1,29 @@
-import { before, describe, it } from "node:test";
 import assert from "node:assert/strict";
-import type { ToolExtraArguments } from "@/types/tool";
+import { before, describe, it } from "node:test";
+
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
+import { getRequestContext } from "@/runtime/contexts/request-context";
+import type { McpMiddleware } from "@/types/mcp-middleware";
+import type { ToolExtraArguments } from "@/types/tool";
 
 const globals = globalThis as Record<string, unknown>;
 Object.assign(globals, {
+  HTTP_CONFIG: {},
   SERVER_INFO: { name: "fetch-test", version: "1.0.0" },
   IS_CLOUDFLARE: false,
   INJECTED_CLIENT_BUNDLES: undefined,
-  INJECTED_MIDDLEWARE: undefined,
+  INJECTED_MIDDLEWARE: async () => ({
+    mcp: (async (ctx, next) => {
+      const auth = ctx.authInfo;
+      assert.strictEqual(getRequestContext().authInfo, auth);
+      const result = await next();
+      assert.strictEqual(getRequestContext().authInfo, auth);
+      return {
+        ...result,
+        _meta: { ...result._meta, caller: auth?.clientId ?? null },
+      };
+    }) satisfies McpMiddleware,
+  }),
   INJECTED_TOOLS: {
     "src/tools/identity.ts": async () => ({
       metadata: {
@@ -18,6 +33,7 @@ Object.assign(globals, {
       schema: {},
       default: async (_args: unknown, extra: ToolExtraArguments) => {
         await Promise.resolve();
+        assert.strictEqual(getRequestContext().authInfo, extra.authInfo);
         return JSON.stringify({
           header: getHttpRequestContext().headers["x-test-request"],
           client: extra.clientInfo?.name,
@@ -115,6 +131,7 @@ describe("Fetch adapter", () => {
         );
         assert.equal(response.status, 200);
         const result = await body(response);
+        assert.equal(result.result._meta.caller, name);
         assert.deepEqual(JSON.parse(result.result.content[0].text), {
           header: name,
           client: name,
@@ -122,6 +139,21 @@ describe("Fetch adapter", () => {
         });
       })
     );
+  });
+
+  it("exposes current auth to listing middleware without retaining it for later requests", async () => {
+    await Promise.all(
+      ["alice", "bob"].map(async (name) => {
+        const result = await body(
+          await xmcpHandler(request("tools/list"), {
+            authInfo: { token: name, clientId: name, scopes: ["read"] },
+          })
+        );
+        assert.equal(result.result._meta.caller, name);
+      })
+    );
+    const anonymous = await body(await xmcpHandler(request("tools/list")));
+    assert.equal(anonymous.result._meta.caller, null);
   });
 
   it("supports modern discovery and tools without session state", async () => {
@@ -181,6 +213,37 @@ describe("Fetch adapter", () => {
       )
     );
     assert.equal(resource.result.contents[0].text, "Resource content");
+  });
+
+  it("allows a subscription when maxSubscriptions is omitted", async (context) => {
+    const response = await xmcpHandler(
+      request(
+        "subscriptions/listen",
+        {
+          _meta: {
+            "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities": {},
+            "io.modelcontextprotocol/clientInfo": {
+              name: "modern",
+              version: "1",
+            },
+          },
+          notifications: { toolsListChanged: true },
+        },
+        {
+          "mcp-protocol-version": "2026-07-28",
+          "mcp-method": "subscriptions/listen",
+        }
+      )
+    );
+    context.after(async () => {
+      await response.body?.cancel();
+    });
+    assert.equal(response.status, 200);
+    assert.match(
+      response.headers.get("content-type") ?? "",
+      /text\/event-stream/
+    );
   });
 
   it("lets the SDK validate malformed JSON without consuming its request body", async () => {

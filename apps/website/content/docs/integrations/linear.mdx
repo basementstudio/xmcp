@@ -1,0 +1,61 @@
+---
+title: "Linear"
+metadataTitle: "Usage with Linear | xmcp Documentation"
+publishedAt: "2026-10-23"
+summary: "Discover teams, read issues, and create Linear issues through xmcp tools."
+description: "Build an authenticated xmcp server for Linear's GraphQL API."
+---
+
+Connect agents to Linear with the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/linear-http). It uses Node's built-in `fetch` and [Linear's GraphQL API](https://linear.app/developers/graphql).
+
+Start from the [Linear MCP server template](/templates/linear) for setup instructions and a runnable workflow.
+
+## Configure access
+
+Create a personal API key in Linear's **Settings → Security & access**, then configure:
+
+```bash
+LINEAR_API_KEY=your-personal-api-key
+MCP_API_KEY=your-separate-client-secret
+```
+
+Clients send `x-api-key` on every request to the example's HTTP MCP endpoint. The server sends the Linear personal key in `Authorization` without a Bearer prefix. All clients share its workspace permissions, including issue creation. Use this example with trusted clients; team filters do not replace per-user authorization. For a multi-user application, implement an appropriate [OAuth flow](https://linear.app/developers/oauth-2-0-authentication).
+
+## Available tools
+
+| Tool                  | Purpose                                     |
+| --------------------- | ------------------------------------------- |
+| `list-linear-teams`   | Discover team UUIDs, names, and short keys. |
+| `list-linear-issues`  | Read a page of issues for a team UUID.      |
+| `create-linear-issue` | Create an issue when the user requests it.  |
+
+Start with `list-linear-teams({ limit: 10 })`, then call `list-linear-issues` with a returned team UUID:
+
+```json
+{
+  "teamId": "your-team-uuid",
+  "limit": 20
+}
+```
+
+Both list tools return JSON in text content with `nodes` and `pageInfo` under `teams` or `issues`. They default to 20 results, accept 1–50, and never fetch additional pages automatically. When `pageInfo.hasNextPage` is true, pass `pageInfo.endCursor` as `after`, keeping other arguments unchanged. Archived issues are excluded by default.
+
+## Create an issue from a finding
+
+An agent can inspect a page with the [Firecrawl integration](/docs/integrations/firecrawl), review the findings, and then create a Linear issue when asked:
+
+```json
+{
+  "teamId": "your-team-uuid",
+  "title": "Review pricing-page content",
+  "description": "## Finding\nDescribe the finding and link to the source."
+}
+```
+
+`create-linear-issue` is explicitly marked as a write that is not idempotent. It returns the created issue's ID, identifier, title, and URL. The example uses GraphQL variables for all input and leaves unspecified issue settings to Linear's defaults.
+
+## Errors and testing
+
+Provider HTTP failures, GraphQL errors (even with HTTP 200 or partial data), and unsuccessful mutations return tool errors without raw provider error bodies. Requests time out after 30 seconds and are never retried automatically. If creation times out or returns an uncertain error, check Linear before retrying to avoid duplicate issues.
+
+The [README](https://github.com/basementstudio/xmcp/tree/main/examples/linear-http#run) includes setup with Node 22 and pnpm, runnable discovery requests, and credential-free tests. All provider calls, including creation, are mocked in tests. HTTP smoke tests cover both MCP 2025-03-26 and 2026-07-28.

@@ -1,7 +1,7 @@
 {
   "name": "@xmcp-dev/x402",
   "description": "x402 payment protocol integration for xmcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -30,7 +30,8 @@
   ],
   "scripts": {
     "dev": "tsc --watch",
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsc",
+    "test": "node --import tsx --test test/*.test.cts"
   },
   "dependencies": {
     "@x402/core": "^2.1.0",
@@ -40,7 +41,8 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.2",
     "typescript": "^5.9.3",
-    "xmcp": "workspace:*"
+    "xmcp": "workspace:*",
+    "tsx": "^4.21.0"
   },
   "peerDependencies": {
     "xmcp": ">=1.0.0"

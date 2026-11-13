@@ -7,6 +7,7 @@ export type Capability =
   | "cli-discovery"
   | "openapi-import"
   | "cli-install"
+  | "openapi-request"
   | "managed-client"
   | "managed-client-interactive"
   | "component-visibility"

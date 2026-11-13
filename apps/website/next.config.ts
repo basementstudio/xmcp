@@ -73,6 +73,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         { source: "/", has: acceptsMarkdown, destination: "/index.md" },
         { source: "/blog", has: acceptsMarkdown, destination: "/blog.md" },
+        { source: "/guides", has: acceptsMarkdown, destination: "/guides.md" },
         {
           source: "/changelog",
           has: acceptsMarkdown,

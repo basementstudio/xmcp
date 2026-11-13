@@ -17,6 +17,8 @@ const templateSchema = z.object({
   websiteUrl: url.optional(),
   demoUrl: url.optional(),
   deployUrl: url.optional(),
+  // Workspace examples need setup guides; local desktop starters cannot be hosted.
+  deployment: z.enum(["clone", "guides", "none"]).optional(),
   replitUrl: url.optional(),
   previewUrl: text.optional(),
 });

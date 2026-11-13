@@ -9,4 +9,8 @@ export default x402Provider({
     currency: "USDC",
     network: "base-sepolia",
   },
+  nano: {
+    wallet: process.env.X402_NANO_WALLET,
+    rpc: process.env.X402_NANO_RPC,
+  },
 });

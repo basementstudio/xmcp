@@ -1,6 +1,6 @@
 # @xmcp-dev/x402
 
-x402 payment protocol plugin for xmcp. Add paid tools with USDC on Base.
+x402 payment protocol plugin for xmcp. Add paid tools with USDC on Base, or XNO on Nano.
 
 ## Installation
 
@@ -118,6 +118,10 @@ interface X402Config {
   wallet: string;
   facilitator?: string;
   debug?: boolean;
+  nano?: {
+    wallet?: string; // nano_ address, falls back to `wallet`
+    rpc?: string; // default: https://rpc.nano.to
+  };
   defaults?: {
     price?: number;
     currency?: string;
@@ -154,10 +158,33 @@ interface X402PaymentContext {
 
 ## Networks
 
-| Network | USDC Address |
-|---------|--------------|
-| `base` | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
-| `base-sepolia` | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+| Network | Asset |
+|---------|-------|
+| `base` | USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
+| `base-sepolia` | USDC `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
+| `nano` | XNO (`nano:mainnet`) |
+
+### Nano (XNO)
+
+```typescript
+// src/middleware.ts
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  nano: { wallet: process.env.X402_NANO_WALLET },
+});
+
+// src/tools/word-count.ts - 0.001 XNO per call
+export default paid({ network: "nano", price: 0.001 }, handler);
+```
+
+On `nano`, `price` is in XNO (no USD conversion). There is no facilitator: the
+payer publishes a send block to `nano.wallet` and sends its hash as
+`payload.blockHash`. The plugin reads the block from the Nano node RPC and
+accepts it when it is a confirmed send of at least the price to `nano.wallet`
+that has not paid for an earlier call. No key is held and nothing is broadcast.
+
+The block hash is a bearer proof, and used hashes are kept in memory, so they
+are forgotten on restart and not shared between instances.
 
 ## License
 

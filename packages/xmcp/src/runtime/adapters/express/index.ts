@@ -1,18 +1,21 @@
-import { Request, Response } from "express";
-import { createMcpHandler } from "@modelcontextprotocol/server";
-import { toNodeHandler } from "@modelcontextprotocol/node";
-import { createServer } from "@/runtime/utils/server";
-import { setHeaders } from "@/runtime/transports/http/cors";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
-import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+
+import { toNodeHandler } from "@modelcontextprotocol/node";
+import { createMcpHandler } from "@modelcontextprotocol/server";
+import { Request, Response } from "express";
+
 import type { CorsConfig } from "@/config";
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
+import { setHeaders } from "@/runtime/transports/http/cors";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import { createServer } from "@/runtime/utils/server";
 
 const httpConfig = HTTP_CONFIG as {
   port: number;
   host: string;
   bodySizeLimit: number;
   endpoint: string;
+  maxSubscriptions?: number;
   debug: boolean;
 };
 const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
@@ -22,6 +25,7 @@ const corsConfig = HTTP_CORS_CONFIG as CorsConfig;
 // stateless fallback.
 const mcpHandler = createMcpHandler(createServer, {
   legacy: "stateless",
+  maxSubscriptions: httpConfig.maxSubscriptions,
   onerror: httpConfig.debug
     ? (error) => console.error("[HTTP-server] MCP handler error:", error)
     : undefined,

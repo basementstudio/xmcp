@@ -1,21 +1,28 @@
 import { type ComponentType, useId } from "react";
-import { Icons } from "../icons";
+
 import {
+  ActivityIcon,
+  AppWindowIcon,
   ArchiveIcon,
   AvatarIcon,
   BarChartIcon,
   CardStackPlusIcon,
   ChatBubbleIcon,
   ColorWheelIcon,
+  CodeIcon,
+  Component2Icon,
   CubeIcon,
   DownloadIcon,
   FileTextIcon,
+  FileInputIcon,
+  FingerprintIcon,
   GlobeIcon,
   GroupIcon,
   HomeIcon,
   IdCardIcon,
   InfoCircledIcon,
   LayersIcon,
+  KeyRoundIcon,
   LightningBoltIcon,
   Link2Icon,
   ListBulletIcon,
@@ -23,10 +30,12 @@ import {
   MagicWandIcon,
   MagnifyingGlassIcon,
   PaperPlaneIcon,
-  PersonIcon,
+  ScanLineIcon,
   TokensIcon,
-  TimerIcon,
-} from "@radix-ui/react-icons";
+} from "@/components/ui/site-icons";
+
+import { Icons } from "../icons";
+import { IntegrationIcons } from "./integration-icons";
 
 export const sidebarIcons: Partial<
   Record<string, ComponentType<{ className?: string; id?: string }>>
@@ -40,10 +49,11 @@ export const sidebarIcons: Partial<
   "/docs/configuration/custom-directories": ArchiveIcon,
   "/docs/configuration/bundler": CubeIcon,
   "/docs/configuration/telemetry": BarChartIcon,
-  "/docs/configuration/observability": BarChartIcon,
-  "/docs/configuration/components": LayersIcon,
-  "/docs/core-concepts/request-context": IdCardIcon,
-  "/docs/core-concepts/mcp-apps": CubeIcon,
+  "/docs/configuration/observability": ActivityIcon,
+  "/docs/configuration/components": Component2Icon,
+  "/docs/configuration/schema-inference": ScanLineIcon,
+  "/docs/core-concepts/request-context": FingerprintIcon,
+  "/docs/core-concepts/mcp-apps": AppWindowIcon,
   "/docs/core-concepts/tools": LightningBoltIcon,
   "/docs/core-concepts/prompts": ChatBubbleIcon,
   "/docs/core-concepts/resources": FileTextIcon,
@@ -52,7 +62,7 @@ export const sidebarIcons: Partial<
   "/docs/core-concepts/external-clients": GlobeIcon,
   "/docs/authentication/api-key": LockClosedIcon,
   "/docs/authentication/jwt": TokensIcon,
-  "/docs/authentication/oauth": PersonIcon,
+  "/docs/authentication/oauth": KeyRoundIcon,
   "/docs/adapters/tanstack": Icons.tanstack,
   "/docs/adapters/nextjs": Icons.nextjs,
   "/docs/adapters/nestjs": Icons.nestjs,
@@ -74,19 +84,30 @@ export const sidebarIcons: Partial<
   "/docs/integrations/clerk": Icons.clerk,
   "/docs/integrations/commet": Icons.commet,
   "/docs/integrations/descope": Icons.descope,
+  "/docs/integrations/figma": IntegrationIcons.figma,
+  "/docs/integrations/browserbase": IntegrationIcons.browserbase,
+  "/docs/integrations/firecrawl": IntegrationIcons.firecrawl,
+  "/docs/integrations/x": IntegrationIcons.x,
+  "/docs/integrations/grok": IntegrationIcons.grok,
+  "/docs/integrations/github": IntegrationIcons.github,
+  "/docs/integrations/linear": IntegrationIcons.linear,
+  "/docs/integrations/paper": IntegrationIcons.paper,
   "/docs/integrations/polar": Icons.polar,
+  "/docs/integrations/profound": IntegrationIcons.profound,
+  "/docs/integrations/resend": IntegrationIcons.resend,
   "/docs/integrations/scalekit": Icons.scalekit,
-  "/docs/integrations/sentry": BarChartIcon,
+  "/docs/integrations/sentry": IntegrationIcons.sentry,
   "/docs/integrations/supabase": Icons.supabase,
   "/docs/integrations/billing": Icons.stripe,
   "/docs/integrations/coinbase": Icons.coinbase,
-  "/docs/integrations/upstash": TimerIcon,
+  "/docs/integrations/upstash": IntegrationIcons.upstash,
   "/docs/integrations/workos": Icons.workos,
   "/docs/integrations/x402": Icons.x402,
   "/docs/discoverability/smithery": MagnifyingGlassIcon,
   "/docs/discoverability/mcp-server-card": IdCardIcon,
   "/docs/guides/ui-rendering": MagicWandIcon,
-  "/docs/guides/xmcp-mcp-server": MagicWandIcon,
+  "/docs/guides/import-openapi": FileInputIcon,
+  "/docs/guides/xmcp-mcp-server": CodeIcon,
   "/docs/guides/authentication": AvatarIcon,
   "/docs/guides/roll-out-to-a-team": GroupIcon,
   "/docs/guides/monetization": CardStackPlusIcon,
@@ -102,7 +123,7 @@ export function DocsPageIcon({
   return (
     <span
       aria-hidden="true"
-      className="shrink-0 text-brand-neutral-100 [&_svg]:size-4"
+      className="shrink-0 text-brand-neutral-100 site-icon-slot"
     >
       {item.icon ?? <Icon id={iconId} />}
     </span>

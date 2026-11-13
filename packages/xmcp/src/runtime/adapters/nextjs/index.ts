@@ -1,15 +1,19 @@
-import { createMcpHandler } from "@modelcontextprotocol/server";
-import { initializeMcpServer } from "./handler/server-lifecycle";
-import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { randomUUID } from "node:crypto";
+
+import { createMcpHandler } from "@modelcontextprotocol/server";
+
+import { httpRequestContextProvider } from "@/runtime/contexts/http-request-context";
 import { setHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+
+import { initializeMcpServer } from "./handler/server-lifecycle";
 
 // A fresh McpServer is built per request; no state survives between requests.
 // 2026-07-28 traffic is served natively, 2025-era traffic through the SDK's
 // stateless fallback.
 const mcpHandler = createMcpHandler(initializeMcpServer, {
   legacy: "stateless",
+  maxSubscriptions: HTTP_CONFIG.maxSubscriptions,
 });
 
 /**
@@ -53,12 +57,12 @@ export async function xmcpHandler(request: Request): Promise<Response> {
 
 // Re-export auth types and handlers
 export {
-  withAuth,
+  type AuthConfig,
+  type OAuthProtectedResourceMetadata,
   resourceMetadataHandler,
   resourceMetadataOptions,
   type VerifyToken,
-  type AuthConfig,
-  type OAuthProtectedResourceMetadata,
+  withAuth,
 } from "./auth";
 
 /**

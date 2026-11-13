@@ -4,6 +4,7 @@ description: "MCP servers can expose three types of capabilities: tools, resourc
 summary: "MCP servers can expose three types of capabilities: tools, resources, and prompts. They're not interchangeable — each one is controlled by a different actor and used for a different purpose."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -13,13 +14,13 @@ MCP servers expose three types of capabilities: **tools**, **resources**, and **
 
 ## The short answer
 
-| | Tools | Resources | Prompts |
-| --- | --- | --- | --- |
-| Controlled by | The AI model | The host application | The user |
-| Side effects | Yes — intended to act | No — read-only | No — just text |
-| Invoked | Automatically by the LLM | Loaded by the client app | Explicitly by the user |
-| Examples | Send email, run query, call API | File contents, database record, docs | `/summarize`, `/review-pr`, slash commands |
-| xmcp directory | `src/tools/` | `src/resources/` | `src/prompts/` |
+|                | Tools                           | Resources                            | Prompts                                    |
+| -------------- | ------------------------------- | ------------------------------------ | ------------------------------------------ |
+| Controlled by  | The AI model                    | The host application                 | The user                                   |
+| Side effects   | Yes — intended to act           | No — read-only                       | No — message templates                     |
+| Invoked        | Automatically by the LLM        | Loaded by the client app             | Explicitly by the user                     |
+| Examples       | Send email, run query, call API | File contents, database record, docs | `/summarize`, `/review-pr`, slash commands |
+| xmcp directory | `src/tools/`                    | `src/resources/`                     | `src/prompts/`                             |
 
 The key question for any capability: **who should decide when this is used?**
 
@@ -28,6 +29,7 @@ The key question for any capability: **who should decide when this is used?**
 Tools are functions the AI model can call autonomously based on the conversation. When a user says "check the weather in Tokyo," the model decides to call your `get_weather` tool — the user never explicitly invokes it.
 
 Use a tool when:
+
 - The capability performs an action or has side effects (writing data, calling an API, sending a message)
 - The model should be able to discover and use it automatically based on context
 - The output feeds back into the conversation
@@ -47,9 +49,13 @@ export const metadata = {
   description: "Send an email to an address",
 };
 
-export default async function sendEmail({ to, subject, body }: InferSchema<typeof schema>) {
+export default async function sendEmail({
+  to,
+  subject,
+  body,
+}: InferSchema<typeof schema>) {
   // send the email
-  return { sent: true };
+  return "Email sent";
 }
 ```
 
@@ -60,13 +66,13 @@ Resources are read-only data sources that a client application loads into contex
 Think of resources as the "what the AI can read" layer, not the "what the AI can do" layer. They have stable URIs and are fetched by address.
 
 Use a resource when:
+
 - You're exposing static or semi-static data (a file, a config, a knowledge base entry)
 - The content should be readable but not modified
 - The client application — not the model — decides when to load it
 
-```typescript title="src/resources/company-docs.ts"
+```typescript title="src/resources/(docs)/company/handbook.ts"
 export const metadata = {
-  uri: "docs://company/handbook",
   name: "Company Handbook",
   description: "The employee handbook",
   mimeType: "text/markdown",
@@ -82,21 +88,30 @@ export default async function companyDocs() {
 Prompts are reusable, parameterized instruction templates that users invoke explicitly — like slash commands in Slack or Claude's `/` menu. The model doesn't call prompts autonomously; the user picks one and fills in any parameters.
 
 Use a prompt when:
+
 - You want to give users a structured, repeatable way to kick off a task
 - The interaction is user-initiated, not model-initiated
 - You're standardizing how a common task is described to the model
 
 ```typescript title="src/prompts/review-code.ts"
-export const metadata = {
-  name: "review_code",
-  description: "Review a code snippet for issues",
-  arguments: [
-    { name: "language", description: "Programming language", required: true },
-    { name: "code", description: "The code to review", required: true },
-  ],
+import { z } from "zod";
+import type { InferSchema, PromptMetadata } from "xmcp";
+
+export const schema = {
+  language: z.string().describe("Programming language"),
+  code: z.string().describe("Code to review"),
 };
 
-export default function reviewCode({ language, code }: { language: string; code: string }) {
+export const metadata: PromptMetadata = {
+  name: "review_code",
+  description: "Review a code snippet for issues",
+  role: "user",
+};
+
+export default function reviewCode({
+  language,
+  code,
+}: InferSchema<typeof schema>) {
   return `Review this ${language} code for bugs, security issues, and style problems:\n\n\`\`\`${language}\n${code}\n\`\`\``;
 }
 ```
@@ -128,4 +143,4 @@ No manual registration. xmcp discovers and registers everything at build time.
 
 - **[What Is an MCP Server?](/blog/what-is-an-mcp-server)** — the full primer on MCP.
 - **[How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript)** — scaffold a project with tools, resources, and prompts.
-- **[Core concepts](/docs/core-concepts)** — the xmcp docs for each primitive.
+- **[Core concepts](/docs/core-concepts/tools)** — the xmcp docs for each primitive.

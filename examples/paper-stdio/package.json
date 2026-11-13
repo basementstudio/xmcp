@@ -1,0 +1,22 @@
+{
+  "name": "paper-stdio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node --env-file=.env dist/stdio.js",
+    "test": "node --import tsx --test tests/*.test.cts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "@modelcontextprotocol/client": "^2.2.0"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

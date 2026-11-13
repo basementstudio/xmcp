@@ -2,122 +2,43 @@ import { getAllBlogPosts } from "../utils/blog";
 import type { MetadataRoute } from "next";
 import { source } from "@/lib/source";
 import { SITE_URL } from "@/lib/base-url";
+import { sitemapDate, uniqueSitemap } from "@/lib/seo";
 import { getTemplates } from "@/app/templates/utils/content";
 import { collectUniqueCategories } from "@/app/templates/utils/categories";
 import { slugifyCategory } from "@/app/templates/utils/slug";
 
 export const baseUrl = SITE_URL;
-
 export const revalidate = 1800;
 
-const toDay = (date: Date): string => date.toISOString().split("T")[0];
-
-export default async function sitemap() {
-  const url = (path: string): string => new URL(path, baseUrl).toString();
-
-  const blogPosts = getAllBlogPosts();
-
-  // Most recent content dates, used so top-level routes reflect real updates
-  // instead of always showing today's date.
-  const latestBlog = blogPosts
-    .map((post) => post.date)
-    .filter((date): date is string => Boolean(date))
-    .sort()
-    .at(-1);
-  const latestDoc = source
-    .getPages()
-    .map((page) => page.data.lastModified)
-    .filter(Boolean)
-    .map((date) => new Date(date as string | Date).getTime())
-    .sort((a, b) => a - b)
-    .at(-1);
-
-  const lastModifiedFor = (route: string): string => {
-    if (route === "/blog" || route === "") {
-      return latestBlog ?? toDay(new Date());
-    }
-    if (route === "/docs") {
-      return latestDoc ? toDay(new Date(latestDoc)) : toDay(new Date());
-    }
-    return toDay(new Date());
-  };
-
-  const topLevelPriority: Record<string, number> = {
-    "": 1,
-    "/docs": 0.9,
-    "/blog": 0.9,
-    "/changelog": 0.8,
-    "/templates": 0.8,
-    "/showcase": 0.7,
-    "/faq": 0.7,
-    "/telemetry": 0.5,
-  };
-
-  const routes: MetadataRoute.Sitemap[number][] = [
-    "",
-    "/docs",
-    "/blog",
-    "/templates",
-    "/showcase",
-    "/faq",
-    "/telemetry",
-  ].map((route) => ({
-    url: url(route),
-    lastModified: lastModifiedFor(route),
-    changeFrequency: "weekly",
-    priority: topLevelPriority[route],
-  }));
-
-  // Add blog posts to sitemap
-  const blogRoutes = blogPosts.map((post) => ({
-    url: url(`/blog/${post.slug}`),
-    lastModified: post.date
-      ? new Date(post.date).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
-
-  const docRoutes = source.getPages().flatMap((page) => {
-    const { lastModified } = page.data;
-
-    return {
-      url: url(page.url),
-      lastModified: lastModified ? new Date(lastModified) : undefined,
-      changeFrequency: "weekly",
-      priority: 0.5,
-    } as MetadataRoute.Sitemap[number];
-  });
-
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const url = (path: string) => new URL(path, baseUrl).toString();
   const templates = getTemplates();
-
-  // Template content has no publication dates; omit lastModified instead of
-  // changing it on every rebuild.
-  const templateRoutes: MetadataRoute.Sitemap[number][] = templates.map(
-    (template) => ({
+  // Collections have no reliable editorial modification date. Omit it rather
+  // than implying that a rebuild or an unrelated publication updated them.
+  return uniqueSitemap([
+    ...[
+      "/",
+      "/blog",
+      "/guides",
+      "/templates",
+      "/showcase",
+      "/faq",
+      "/telemetry",
+      "/changelog",
+    ].map((path) => ({ url: url(path) })),
+    ...getAllBlogPosts().map((post) => ({
+      url: url(`/blog/${post.slug}`),
+      lastModified: sitemapDate(post.data.lastModified),
+    })),
+    ...source.getPages().map((page) => ({
+      url: url(page.url),
+      lastModified: sitemapDate(page.data.lastModified),
+    })),
+    ...templates.map((template) => ({
       url: url(`/templates/${template.slug}`),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    })
-  );
-
-  const templateCategoryRoutes: MetadataRoute.Sitemap[number][] =
-    collectUniqueCategories(templates).map((category) => ({
+    })),
+    ...collectUniqueCategories(templates).map((category) => ({
       url: url(`/templates/category/${slugifyCategory(category)}`),
-      changeFrequency: "weekly",
-      priority: 0.6,
-    }));
-
-  return [
-    ...routes,
-    {
-      url: url("/changelog"),
-      changeFrequency: "weekly",
-      priority: topLevelPriority["/changelog"],
-    } as MetadataRoute.Sitemap[number],
-    ...blogRoutes,
-    ...docRoutes,
-    ...templateRoutes,
-    ...templateCategoryRoutes,
-  ];
+    })),
+  ]);
 }

@@ -102,13 +102,58 @@ The first function enters first and receives the result last. `await next()` run
 
 Always check `ctx.method` before accessing operation-specific parameters. Existing middleware that assumes every request is a tool call should begin with `if (ctx.method !== "tools/call") return next();`.
 
-`ctx` also includes `clientInfo`, `http`, `signal`, `set`, `get`, `progress`, and `log` from [request context](/docs/core-concepts/request-context). `getRequestContext()` works before and after `next()`, and inside prompt, resource, and completion callbacks. Local values last for one operation and are isolated from concurrent requests. HTTP metadata is absent on STDIO.
+`ctx` also includes `authInfo`, `clientInfo`, `http`, `signal`, `set`, `get`, `progress`, and `log` from [request context](/docs/core-concepts/request-context). `getRequestContext()` works before and after `next()`, and inside prompt, resource, and completion callbacks. Local values last for one operation and are isolated from concurrent requests. HTTP metadata is absent on STDIO.
 
 Middleware receives normalized MCP results from `next()`. Return the result format for the current method; string and number shorthand belongs in component handlers. Check the result shape before accessing method-specific fields. Exceptions retain SDK behavior: tools produce tool-error results, while reads, prompts, completion, and listings reject with protocol errors. Invalid `mcp` exports or a failed middleware import prevent server setup from completing.
 
 Tool middleware runs after the SDK resolves the tool and validates its input. Other methods are wrapped at SDK request-handler registration, before component lookup or callbacks. Resource template reads, template listing callbacks, and completion callbacks share that same chain and request scope. Only methods installed by the registered components are available. Initialization, ping, notifications, and unknown methods are unaffected.
 
 Keep output-schema requirements intact when changing a tool result, and preserve interim `inputRequired` results when passing through multi-round tools.
+
+### Registered tool metadata
+
+After narrowing `ctx.method` to `"tools/call"`, `ctx.tool.metadata` is always available. Its exported type is `McpToolMetadata`: resolved `name` and `description`, optional `annotations`, `icons`, `tags`, and `_meta`. Defaults are applied, and `_meta` matches `tools/list`, including `"xmcp/tags"` and flattened UI keys such as `"ui/resourceUri"`. Resource-only UI settings are excluded. This is the registered view, not the tool module's original `ToolMetadata` export.
+
+The metadata is a snapshot taken at registration. Plain objects and arrays are copied and frozen without freezing the original tool export or SDK configuration. Treat all metadata as read-only. `tool` is absent on other middleware methods and is not a field of `getRequestContext()`.
+
+Use the same metadata policy to filter discovery and authorize direct calls:
+
+```typescript title="src/middleware.ts"
+import { type McpMiddleware, type RequestContext } from "xmcp";
+
+function canCall(
+  meta: Readonly<Record<string, unknown>> | undefined,
+  authInfo: RequestContext["authInfo"]
+): boolean {
+  const required = meta?.["demo/requires"];
+  if (required === undefined) return true;
+  return (
+    Array.isArray(required) &&
+    required.every(
+      (scope) => typeof scope === "string" && authInfo?.scopes.includes(scope)
+    )
+  );
+}
+
+export const mcp: McpMiddleware = async (ctx, next) => {
+  if (
+    ctx.method === "tools/call" &&
+    !canCall(ctx.tool.metadata._meta, ctx.authInfo)
+  ) {
+    return { isError: true, content: [{ type: "text", text: "Forbidden" }] };
+  }
+  const result = await next();
+  if (ctx.method === "tools/list" && Array.isArray(result.tools)) {
+    return {
+      ...result,
+      tools: result.tools.filter((tool) => canCall(tool._meta, ctx.authInfo)),
+    };
+  }
+  return result;
+};
+```
+
+Declare `_meta: { "demo/requires": ["greet"] }` in the protected tool's metadata. Supply verified authentication through your HTTP integration; see [request-context authentication](/docs/core-concepts/request-context#authentication). Tools with no policy remain available, while malformed policies deny access. The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) includes demo credentials and requests for both permitted and restricted callers.
 
 ### Filter discovery and deny direct access
 

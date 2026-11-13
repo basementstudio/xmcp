@@ -1,7 +1,10 @@
 import { XmcpConfig } from "xmcp";
 
 const config: XmcpConfig = {
-  http: true,
+  http: {
+    // This example uses a fixed component roster and does not need subscriptions.
+    maxSubscriptions: 0,
+  },
   components: {
     exclude: { tags: ["internal"] },
   },

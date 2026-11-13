@@ -1,6 +1,8 @@
 import {
+  InputRequiredResult,
   ReadResourceResult,
   ServerContext,
+  isInputRequiredResult,
 } from "@modelcontextprotocol/server";
 import { ZodRawShape } from "zod/v3";
 import {
@@ -14,7 +16,11 @@ import {
 export type UserResourceHandler = (
   args: ZodRawShape,
   extra?: ServerContext
-) => ReadResourceResult | string | Promise<ReadResourceResult | string>;
+) =>
+  | ReadResourceResult
+  | InputRequiredResult
+  | string
+  | Promise<ReadResourceResult | InputRequiredResult | string>;
 
 /**
  * Type for the transformed handler that the MCP server expects (direct resources)
@@ -22,7 +28,10 @@ export type UserResourceHandler = (
 export type McpResourceHandler = (
   uri: URL,
   extra: ServerContext
-) => ReadResourceResult | Promise<ReadResourceResult>;
+) =>
+  | ReadResourceResult
+  | InputRequiredResult
+  | Promise<ReadResourceResult | InputRequiredResult>;
 
 /**
  * Transforms a user's resource handler into an MCP-compatible handler.
@@ -54,7 +63,7 @@ export function transformResourceHandler(
   return async (
     uri: URL,
     extra: ServerContext
-  ): Promise<ReadResourceResult> => {
+  ): Promise<ReadResourceResult | InputRequiredResult> => {
     // extract and validate parameters from the actual URI using the template and schema
     const parameters = extractParametersFromUri(uri.href, resourceInfo, schema);
 
@@ -63,6 +72,10 @@ export function transformResourceHandler(
     // only await if it's actually a promise
     if (response instanceof Promise) {
       response = await response;
+    }
+
+    if (isInputRequiredResult(response)) {
+      return response;
     }
 
     // transform string response to ReadResourceResult
@@ -94,7 +107,7 @@ export function transformResourceHandler(
               : String(response);
 
       throw new Error(
-        `Resource handler must return a ReadResourceResult or string. ` +
+        `Resource handler must return a ReadResourceResult, InputRequiredResult, or string. ` +
           `Got ${responseType}: ${responseValue}\n\n` +
           `Expected ReadResourceResult format:\n` +
           `{\n` +

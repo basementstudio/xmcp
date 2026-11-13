@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import { Metadata } from "next";
 import { ShowcaseCards } from "@/components/showcase/cards";
 import { ShowcaseSubmissionCard } from "@/components/showcase/submission-card";
@@ -10,32 +11,28 @@ import {
 import { SITE_URL } from "@/lib/base-url";
 
 export const metadata: Metadata = {
-  title: "Showcase - xmcp",
+  title: "MCP Server Examples and Community Showcase | xmcp",
   description:
     "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
   alternates: {
     canonical: "https://xmcp.dev/showcase",
   },
   openGraph: {
-    title: "Showcase - xmcp",
+    title: "MCP Server Examples and Community Showcase | xmcp",
     description:
       "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
     url: "https://xmcp.dev/showcase",
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Showcase - xmcp",
+    title: "MCP Server Examples and Community Showcase | xmcp",
     description:
       "Browse production-ready MCP servers built by the xmcp community and submit your own server to be featured in the showcase alongside other developers building AI tooling.",
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 
@@ -43,10 +40,7 @@ export default function ShowcasePage() {
   const mcps = getShowcaseItems();
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           getShowcaseItemListSchema(mcps, SITE_URL),
@@ -59,12 +53,11 @@ export default function ShowcasePage() {
           ),
         ]}
       />
-      <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-        <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
-          <h1 className="display text-center text-balance z-10 text-gradient">
-            Community MCP servers
-          </h1>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto text-center">
+      <div className="site-listing">
+        <div className="listing-intro">
+          <p className="eyebrow">Made with xmcp / Showcase</p>
+          <h1 className="display">Community MCP servers</h1>
+          <p className="listing-description">
             Explore the first wave of production-ready MCP servers built by
             developers worldwide.
           </p>

@@ -11,6 +11,34 @@ pnpm start
 
 The server listens at `http://localhost:3001/mcp`.
 
+## Subscription streams
+
+This example sets `http.maxSubscriptions: 0` because its component roster is
+fixed. With the server running, a modern subscription request is refused before
+opening a long-lived stream:
+
+```sh
+curl --max-time 10 -i http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: subscriptions/listen' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"subscriptions/listen","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"subscription-example","version":"1.0.0"}},"notifications":{"toolsListChanged":true}}}'
+```
+
+Expect HTTP `200` with JSON-RPC error `-32603` and message `Subscription limit
+reached`. The curl timeout bounds the demonstration if the option is removed;
+it is not a server-side subscription lifetime limit.
+
+Ordinary list/tool calls and tool progress streaming still work. Set a positive
+integer to allow that many concurrent subscriptions per HTTP handler, or omit
+the field to use the SDK default. Rebuild and restart after changing the config.
+The limit applies independently to each process or serverless instance. It does
+not stop an accepted stream from reaching a serverless platform's duration limit.
+
+The same config is used by `pnpm exec xmcp build --vercel`, which produces
+`dist/vercel.js` for the platform to invoke. No Vercel-specific default is applied.
+
 ## Multi-message prompts
 
 `src/prompts/classify-sentiment.ts` returns a full prompt result with two example

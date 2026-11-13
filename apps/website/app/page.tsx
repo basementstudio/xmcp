@@ -3,19 +3,17 @@ import { HomeHero } from "@/components/home/hero";
 import { HomeFeatures } from "@/components/home/features";
 import { HomeSteps } from "@/components/home/steps";
 import { HomeBlog } from "@/components/home/blog";
-import { HomeTestimonials } from "@/components/home/testimonials";
 import { getLatestVersion } from "@/lib/get-version";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getSoftwareApplicationSchema } from "@/lib/structured-data";
 import { SITE_URL } from "@/lib/base-url";
-import { preload } from "react-dom";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "xmcp — The TypeScript MCP framework",
   description:
-    "xmcp is the TypeScript framework for building, shipping, and scaling Model Context Protocol servers — tools, prompts, resources, auth, transports, and monetization out of the box.",
+    "Build MCP servers in TypeScript with file-based tools, Zod validation, authentication integrations, and HTTP or STDIO transports. Start with xmcp.",
   alternates: {
     canonical: "https://xmcp.dev",
     types: {
@@ -25,24 +23,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  // Match TextureLoader's anonymous image request so it reuses this download.
-  preload("/xmcp.webp", {
-    as: "image",
-    crossOrigin: "anonymous",
-    fetchPriority: "high",
-  });
   const version = await getLatestVersion();
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid home-page">
       <JsonLd data={getSoftwareApplicationSchema(SITE_URL)} />
       <HomeHero version={version} />
       <HomeFeatures />
       <HomeSteps />
-      <HomeTestimonials />
       <HomeBlog />
     </main>
   );

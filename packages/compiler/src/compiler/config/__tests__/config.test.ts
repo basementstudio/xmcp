@@ -49,6 +49,23 @@ describe("Config System - Zod Defaults", () => {
     }
   });
 
+  it("accepts nonnegative subscription limits and preserves the SDK default", () => {
+    assert.equal(getResolvedHttpConfig(true)?.maxSubscriptions, undefined);
+    for (const maxSubscriptions of [0, 1, 32]) {
+      const parsed = configSchema.parse({ http: { maxSubscriptions } });
+      assert.equal(
+        getResolvedHttpConfig(parsed.http)?.maxSubscriptions,
+        maxSubscriptions
+      );
+    }
+    for (const maxSubscriptions of [-1, 0.5, NaN, Infinity, "0", null]) {
+      assert.equal(
+        configSchema.safeParse({ http: { maxSubscriptions } }).success,
+        false
+      );
+    }
+  });
+
   it("should apply template defaults", () => {
     const parsed = configSchema.parse({ template: {} });
     const resolved = getResolvedTemplateConfig(parsed);
@@ -243,6 +260,26 @@ describe("Config System - Injection Functions", () => {
     const config = JSON.parse(variables.HTTP_CONFIG!);
     assert.equal(config.port, 3001);
     assert.equal(config.debug, true); // mode === "development"
+  });
+
+  it("should omit maxSubscriptions from HTTP variables when it is unset", () => {
+    const variables = injectHttpVariables(true, "development");
+    const config = JSON.parse(variables.HTTP_CONFIG!);
+
+    assert.equal("maxSubscriptions" in config, false);
+  });
+
+  it("should inject maxSubscriptions when set, including zero", () => {
+    for (const maxSubscriptions of [0, 3]) {
+      const variables = injectHttpVariables(
+        { maxSubscriptions },
+        "development"
+      );
+      assert.equal(
+        JSON.parse(variables.HTTP_CONFIG!).maxSubscriptions,
+        maxSubscriptions
+      );
+    }
   });
 
   it("should not inject HTTP variables when http is false", () => {

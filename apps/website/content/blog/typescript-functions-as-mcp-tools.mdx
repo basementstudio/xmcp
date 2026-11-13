@@ -1,0 +1,124 @@
+---
+title: "From TypeScript functions to MCP tools"
+description: "Reuse typed functions as MCP tools with experimental schema inference in xmcp. Generate input validation from TypeScript and JSDoc, and keep explicit schemas where you need them."
+summary: "An existing function, a one-line export, and runtime validation generated from the types you already maintain."
+category: "guides"
+date: "2026-10-14"
+textureImage: "/textures/text5.png"
+---
+
+You already have a TypeScript function that does the work. To expose it as an MCP tool, you also need to describe its inputs to the client and validate the values that arrive at runtime.
+
+With experimental schema inference, xmcp can generate that input schema from your function's types and JSDoc. The function stays ordinary TypeScript; a file in `src/tools` makes it available through MCP.
+
+This guide follows the repository's [inferred tool schemas example](https://github.com/basementstudio/xmcp/tree/main/examples/inferred-tool-schemas), which includes both inferred and explicit schemas.
+
+## Start with a function you can call directly
+
+Keep the implementation in your application's library code. Give the input a named interface, describe its fields, and add the constraints the tool needs.
+
+```typescript title="src/lib/greet.ts"
+export interface GreetingInput {
+  /** The name of the person to greet.
+   * @minLength 1
+   * @maxLength 80
+   */
+  name: string;
+  /** Language of the greeting. Defaults to English in the handler. */
+  language?: "en" | "es";
+}
+
+/** Greet a person in English or Spanish. */
+export function greet({ name, language = "en" }: GreetingInput) {
+  return `${language === "es" ? "Hola" : "Hello"}, ${name}!`;
+}
+```
+
+Other application code can still call `greet({ name: "Ada" })` directly. There is no MCP-specific wrapper around the function.
+
+## Enable inference explicitly
+
+Schema inference is experimental and disabled by default. Enable it in your xmcp configuration:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  stdio: true,
+  paths: { tools: "./src/tools", prompts: false, resources: false },
+  experimental: { inferToolSchemas: true },
+} satisfies XmcpConfig;
+```
+
+Keep `strict` or `strictNullChecks` enabled in your `tsconfig.json` so nullable inputs retain their meaning. Keep Zod installed too: inference generates Zod validation at build time, and that validation runs on the server.
+
+Now expose the function through a tool file:
+
+```typescript title="src/tools/greet.ts"
+export { greet as default } from "../lib/greet";
+```
+
+xmcp resolves the imported function and its input type. The function's JSDoc supplies the tool description, and property comments supply the field descriptions. You can still provide `metadata.description` to override the inferred description.
+
+## Check what the client can send
+
+The generated schema describes a required `name` string and an optional `language` with two accepted values. The length tags also become runtime constraints.
+
+| Input                            | Result                                             |
+| -------------------------------- | -------------------------------------------------- |
+| `{"name":"Ada","language":"es"}` | Returns `Hola, Ada!`                               |
+| `{"name":"Ada"}`                 | Returns `Hello, Ada!`                              |
+| `{"name":42}`                    | Rejected before the handler runs                   |
+| `{"name":""}`                    | Rejected by the minimum length constraint          |
+| `{"name":"Ada","language":"fr"}` | Rejected because the language must be `en` or `es` |
+
+The default language belongs to the function. Inference does not evaluate that default or advertise it as a schema default; the handler applies it when `language` is omitted.
+
+TypeScript checking alone does not validate requests from an MCP client. The generated schema provides that runtime boundary.
+
+## Keep explicit schemas where they help
+
+You can adopt inference one tool at a time. An explicit `schema` export takes precedence for that tool, including an empty schema.
+
+For example, this tool continues to use Zod directly:
+
+```typescript title="src/tools/validate-email.ts"
+import type { InferSchema } from "xmcp";
+import { z } from "zod";
+
+export const schema = {
+  email: z.string().email().describe("An email address to validate."),
+};
+
+export default function validateEmail({ email }: InferSchema<typeof schema>) {
+  return `Valid email: ${email}`;
+}
+```
+
+Inference also supports an email format through a JSDoc tag. Explicit schemas remain useful for custom refinements, coercion, transforms, and schema defaults that go beyond the supported tags.
+
+Unsupported types, such as recursive structures or `Date`, fail the build with a source location. Use an explicit schema for those tools. Inference covers tool inputs; it does not infer output schemas, prompts, or resources.
+
+## Run the example
+
+Use Node.js 22 and pnpm. From a checkout of the xmcp repository, run:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter inferred-tool-schemas build
+pnpm --filter inferred-tool-schemas start
+```
+
+Connect an MCP client to `http://127.0.0.1:3001/mcp`, then call `greet` with the inputs above. The same example includes `validate-email` and a `book` tool with numeric bounds, string patterns, and format validation.
+
+For development, stop the production server and run:
+
+```bash
+pnpm --filter inferred-tool-schemas dev
+```
+
+Editing the imported types or supported property tags regenerates the input schemas during development. You can keep the function, its descriptions, and its basic constraints together as the tool evolves.
+
+See the [schema inference reference](/docs/configuration/schema-inference) for the supported types and tags, and the [tools guide](/docs/core-concepts/tools) for metadata, output schemas, and other response formats.

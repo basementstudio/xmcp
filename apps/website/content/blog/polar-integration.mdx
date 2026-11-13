@@ -1,6 +1,7 @@
 ---
 title: "Integrating Polar with xmcp"
 description: "Learn how to add paywalls and track per-tool usage with Polar license keys in xmcp — gating tools, subscriptions, and metered billing for MCP servers."
+lastModified: "2026-10-23"
 category: "guides"
 date: "2025-09-26"
 order: 2
@@ -28,9 +29,9 @@ import { PolarProvider } from "@xmcp-dev/polar";
 
 export const polar = PolarProvider.getInstance({
   type: "sandbox", // or "production", depending on your environment
-  token: process.env.POLAR_TOKEN,
-  organizationId: process.env.POLAR_ORGANIZATION_ID,
-  productId: process.env.POLAR_PRODUCT_ID,
+  token: process.env.POLAR_TOKEN!,
+  organizationId: process.env.POLAR_ORGANIZATION_ID!,
+  productId: process.env.POLAR_PRODUCT_ID!,
 });
 ```
 
@@ -46,7 +47,7 @@ interface Configuration {
 ```
 
 - If `type` is not set, it will default to "production". This affects the token used to authenticate.
-- The license key should be provided in the `license-key` header. This is not customizable.
+- This example reads the license key from the `license-key` header and passes it to the provider explicitly.
 
 On [polar.sh](https://polar.sh/), create a new product with your desired payment configuration and add the "license key" benefit to the product. You can also add a "meter credit" benefit to the product to track tool usage, and limit the usage of the key.
 
@@ -56,8 +57,14 @@ To paywall a tool, you can use the `validateLicenseKey` method to validate the l
 Remember you can use the `xmcp/headers` utility to access the headers of the request and intercept this value.
 
 ```typescript
-const licenseKey = headers()["license-key"];
-const response = await polar.validateLicenseKey(licenseKey);
+import { headers } from "xmcp/headers";
+
+const value = headers()["license-key"];
+const licenseKey = typeof value === "string" ? value : "";
+const response = await polar.validateLicenseKey(licenseKey, {
+  name: "tool_call_event",
+  metadata: { tool_name: "my-tool", calls: 1 },
+});
 ```
 
 The response object will look like this:
@@ -82,7 +89,7 @@ This will prompt the user to the checkout URL in case the license key is invalid
 
 ## Usage Tracking
 
-To track usage we recommend setting a "meter credit" benefit to the product with the following configuration:
+Configure a meter and a meter-credit benefit for the product before using usage tracking. Match the event name and metadata to that meter.
 
 Then you can pass an event object to the `validateLicenseKey` method to track usage.
 
@@ -96,6 +103,8 @@ const response = await polar.validateLicenseKey(licenseKey, event);
 ```
 
 The event object metadata can have any type of string or number as values.
+
+Run the [Polar HTTP example](https://github.com/basementstudio/xmcp/tree/main/examples/polar-http) with sandbox credentials to test accepted and denied calls before enabling payments.
 
 ## Conclusion
 

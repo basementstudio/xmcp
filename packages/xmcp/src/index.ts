@@ -10,6 +10,7 @@ export type {
   McpMiddlewareMethod,
   McpMiddlewareNext,
   McpMiddlewareResult,
+  McpToolMetadata,
 } from "./types/mcp-middleware";
 dotenv.config();
 

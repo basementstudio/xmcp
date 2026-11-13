@@ -1,3 +1,4 @@
+import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER_IMAGE } from "@/lib/social-image";
 import {
   getListedBlogPosts,
   getFeaturedBlogPost,
@@ -11,6 +12,8 @@ import {
   getBreadcrumbSchema,
 } from "@/lib/structured-data";
 import { SITE_URL } from "@/lib/base-url";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export const dynamic = "force-static";
 
@@ -32,18 +35,14 @@ export const metadata = {
     siteName: "xmcp",
     type: "website",
     locale: "en_US",
-    images: {
-      url: "/xmcp-og.png",
-      width: 1200,
-      height: 630,
-    },
+    images: DEFAULT_OG_IMAGE,
   },
   twitter: {
     card: "summary_large_image",
     title: "xmcp Blog - MCP Guides, Releases, and Engineering Notes",
     description:
       "Read xmcp guides, release notes, and engineering articles about building TypeScript MCP servers and production-ready agent tools.",
-    images: "/xmcp-og.png",
+    images: DEFAULT_TWITTER_IMAGE,
   },
 };
 
@@ -54,12 +53,12 @@ export default function BlogPage() {
   const regularPosts = featuredPost
     ? posts.filter((post: BlogPost) => post.slug !== featuredPost.slug)
     : posts;
+  // Two rows in the two-column card grid; the archive stays compact below.
+  const cardPosts = regularPosts.slice(0, 4);
+  const archivePosts = regularPosts.slice(4);
 
   return (
-    <main
-      id="main-content"
-      className="grid grid-cols-12 gap-[20px] max-w-[1200px] w-full mx-auto px-4"
-    >
+    <main id="main-content" className="site-page-grid">
       <JsonLd
         data={[
           getBlogCollectionSchema(posts, SITE_URL),
@@ -72,26 +71,29 @@ export default function BlogPage() {
           ),
         ]}
       />
-      <div className="col-span-full grid grid-cols-12 gap-y-8 py-8 md:py-16">
-        <div className="flex flex-col items-center justify-center max-w-[720px] w-full mx-auto gap-4 col-span-12 mb-8">
-          <h1 className="display text-center text-balance z-10 text-gradient">
-            Blog
-          </h1>
-          <p className="text-brand-neutral-100 text-base col-span-12 max-w-[650px] lg:col-span-5 mt-auto text-center">
-            Read the latest updates, guides, and insights about xmcp.
+      <div className="site-listing">
+        <div className="listing-intro">
+          <p className="eyebrow">The field notes / Blog</p>
+          <h1 className="display">Blog</h1>
+          <p className="listing-description">
+            Read the latest updates and engineering notes about xmcp. For
+            tutorials and comparisons, explore the{" "}
+            <Link href="/guides" className="underline">
+              MCP guides
+            </Link>
+            .
           </p>
         </div>
 
         {featuredPost && <BlogHero featuredPost={featuredPost} />}
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 col-span-12">
-          {regularPosts.map((post: BlogPost, index: number) => (
+        <div className="site-card-grid">
+          {cardPosts.map((post: BlogPost, index: number) => (
             <BlogCard
               key={post.slug}
               post={post}
-              // The first desktop row is visible below the featured post.
-              loading={index < 3 ? "eager" : "lazy"}
-              sizes="(min-width: 1200px) 368px, (min-width: 1024px) calc((100vw - 96px) / 3), (min-width: 768px) calc((100vw - 64px) / 2), calc(100vw - 32px)"
+              // The first row is visible below the featured post.
+              loading={index < 2 ? "eager" : "lazy"}
             />
           ))}
 
@@ -101,6 +103,36 @@ export default function BlogPage() {
             </p>
           )}
         </div>
+
+        {archivePosts.length > 0 && (
+          <ul className="blog-post-list" aria-label="More posts">
+            {archivePosts.map((post) => (
+              <li key={post.slug}>
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="blog-post-row link-underline-group"
+                >
+                  <span className="blog-post-date">
+                    {post.date && (
+                      <time dateTime={post.date}>
+                        {new Date(post.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          timeZone: "UTC",
+                        })}
+                      </time>
+                    )}
+                  </span>
+                  <h2>
+                    <span className="link-underline-label">{post.title}</span>
+                  </h2>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </main>
   );

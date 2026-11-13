@@ -1,4 +1,3 @@
-import { Tag } from "@/components/ui/tag";
 import { getTestimonials, type Testimonial } from "@/utils/content";
 import { TestimonialsCarousel } from "./carousel";
 import Image from "next/image";
@@ -8,16 +7,10 @@ export function HomeTestimonials() {
   const testimonials = getTestimonials();
 
   return (
-    <div className="col-span-12 grid grid-cols-12 gap-[20px] py-8 md:py-16">
-      <div className="flex flex-col items-start justify-center col-span-12 lg:col-span-9 lg:col-start-2 w-full mx-auto mb-8 gap-3">
-        <div className="grid grid-cols-12 lg:grid-cols-9 gap-2 lg:gap-8 w-full">
-          <div className="flex flex-col gap-3 col-span-12 lg:col-span-4">
-            <Tag text="Testimonials" className="w-fit" />
-            <h2 className="heading-2 text-balance mt-auto text-gradient">
-              Loved by developers
-            </h2>
-          </div>
-        </div>
+    <div id="community" className="editorial-section home-testimonials">
+      <div className="editorial-section-head">
+        <h2>Built with xmcp</h2>
+        <span aria-hidden="true">IV</span>
       </div>
       <TestimonialsCarousel>
         {testimonials.map((testimonial) => (

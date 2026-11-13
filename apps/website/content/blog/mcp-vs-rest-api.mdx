@@ -4,6 +4,7 @@ description: "MCP servers and REST APIs both expose functionality over a network
 summary: "MCP servers and REST APIs both expose functionality over a network — but they're designed for different clients. Here's when to build each one, and when you need both."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -13,14 +14,14 @@ MCP servers and REST APIs look similar on the surface — both expose functional
 
 ## The short answer
 
-| | REST API | MCP Server |
-| --- | --- | --- |
-| Designed for | Human developers, browser clients, mobile apps | AI agents, LLM clients (Claude, Cursor, Copilot) |
-| Discovery | OpenAPI spec, docs, human reads it | Automatic — client calls `tools/list` at connect time |
-| Statefulness | Stateless by default | Session-aware (context persists across calls) |
-| Interface | HTTP verbs + JSON | MCP protocol (tools, resources, prompts) |
-| Auth model | API keys, JWTs, OAuth | OAuth 2.1, same tokens your REST API uses |
-| When to build | Your users are developers or apps | Your tools should be callable by AI clients |
+|               | REST API                                       | MCP Server                                            |
+| ------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| Designed for  | Human developers, browser clients, mobile apps | AI agents, LLM clients (Claude, Cursor, Copilot)      |
+| Discovery     | OpenAPI spec, docs, human reads it             | Automatic — client calls `tools/list` at connect time |
+| Statefulness  | Stateless by default                           | Session-aware (context persists across calls)         |
+| Interface     | HTTP verbs + JSON                              | MCP protocol (tools, resources, prompts)              |
+| Auth model    | API keys, JWTs, OAuth                          | OAuth 2.1, same tokens your REST API uses             |
+| When to build | Your users are developers or apps              | Your tools should be callable by AI clients           |
 
 ## What a REST API is for
 
@@ -72,9 +73,11 @@ export const metadata = {
   description: "Look up an order by ID",
 };
 
-export default async function getOrder({ orderId }: InferSchema<typeof schema>) {
+export default async function getOrder({
+  orderId,
+}: InferSchema<typeof schema>) {
   // call your existing REST API or database here
-  return { id: orderId, status: "shipped" };
+  return { structuredContent: { id: orderId, status: "shipped" } };
 }
 ```
 

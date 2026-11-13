@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<!-- Official paper mark; geometry and source documented in components/layout/integration-icons.tsx. White on transparent for the particle texture. -->
+<svg x="24" y="24" width="208" height="208" viewBox="-0.75 -0.75 22.5 22.5" fill="#fff"><path d="M3 0H21V13H13V3H3ZM0 3H3V13H13V21H0Z" /></svg>
+</svg>

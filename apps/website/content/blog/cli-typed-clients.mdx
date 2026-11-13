@@ -1,6 +1,7 @@
 ---
 title: "Connect to external MCPs and make their tools yours"
 description: "Generate fully typed TypeScript MCP clients from remote HTTP servers or STDIO packages with one xmcp command, with autocomplete for tools and prompts."
+lastModified: "2026-10-23"
 category: "guides"
 date: "2025-12-11"
 order: 7
@@ -10,7 +11,7 @@ authors:
   - 0xkoller
 ---
 
-xmcp now let's you generate tools for external clients.
+xmcp generates typed clients for external MCP servers, so your tools can call them from TypeScript.
 
 ## Add your clients
 
@@ -37,12 +38,12 @@ export const clients: ClientConnections = {
 
 #### Adding HTTP clients
 
-For HTTP clients, this is the type you have to follow:
+HTTP map entries accept the following configuration (the map key supplies the default name):
 
 ```typescript title="src/clients.ts"
-export type HttpClientDefinition = {
-  type: "http";
-  name: string;
+export type HttpClientConfig = {
+  type?: "http";
+  name?: string;
   url: string;
   headers?: CustomHeaders;
 };
@@ -50,14 +51,14 @@ export type HttpClientDefinition = {
 
 #### Adding STDIO clients
 
-For STDIO clients, this is the type you have to follow:
+STDIO map entries accept either an npm package or a command configuration:
 
 ```typescript title="src/clients.ts"
-export type StdioClientDefinition = {
-  type: "stdio";
-  name: string;
-  command: string;
-  args: string[];
+export type StdioClientConfig = {
+  type?: "stdio";
+  name?: string;
+  command?: string;
+  args?: string[];
   npm?: string;
   npmArgs?: string[];
   env?: Record<string, string>;
@@ -113,41 +114,11 @@ export default async function handler({ url }: InferSchema<typeof schema>) {
 }
 ```
 
-## Get Library Docs
+## Follow the generated API
 
-```typescript
-// src/tools/get-library-docs.ts
-import { InferSchema, type ToolMetadata } from "xmcp";
-import { generatedClients } from "../generated/client.index";
-import { z } from "zod";
+Remote servers can change their tool names and schemas. Regenerate after an upstream update and inspect `src/generated/client.index.ts` before copying a call from an older tutorial. The generated methods and argument types reflect the server you connected to at generation time.
 
-export const schema = {
-  libraryName: z.string().describe("The name of the library to get docs for"),
-};
-
-// Define tool metadata
-export const metadata: ToolMetadata = {
-  name: "get-library-docs",
-  description: "Get the docs for a library",
-};
-
-// Tool implementation
-export default async function handler({
-  libraryName,
-}: InferSchema<typeof schema>) {
-  const libraryDocs = await generatedClients.context.getLibraryDocs({
-    context7CompatibleLibraryID: libraryName,
-  });
-
-  const result = (libraryDocs.content as any)[0].text;
-
-  return `Library docs: ${result}`;
-}
-```
-
-<Callout variant="info" icon="info" title="Autocomplete">
-  Autocomplete is available for the tools and their arguments, for easier usage.
-</Callout>
+Keep HTTP credentials in environment variables, as in the Context7 configuration above. Handle each returned content type explicitly rather than assuming every result has a text item at index zero. See the [client documentation](/docs/core-concepts/external-clients) for supported connections.
 
 ## Build and run the example
 

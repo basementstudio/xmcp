@@ -1,5 +1,11 @@
 # @xmcp-dev/ui
 
+## 0.1.1
+
+### Patch Changes
+
+- 4c6ba8e: Update `@modelcontextprotocol/client` to 2.3.0.
+
 ## 0.1.0
 
 ### Minor Changes

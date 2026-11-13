@@ -1,32 +1,35 @@
+import { randomUUID } from "node:crypto";
+
 import {
-  McpServer,
+  NodeMcpRequestHandler,
+  toNodeHandler,
+} from "@modelcontextprotocol/node";
+import {
   createMcpHandler,
   McpHttpHandler,
+  McpServer,
 } from "@modelcontextprotocol/server";
-import {
-  toNodeHandler,
-  NodeMcpRequestHandler,
-} from "@modelcontextprotocol/node";
-import express, { Express, Request, Response, NextFunction } from "express";
+import express, { Express, NextFunction, Request, Response } from "express";
 import http from "http";
-import { randomUUID } from "node:crypto";
-import { HttpTransportOptions } from "./base-streamable-http";
-import homeTemplate from "../../templates/home";
-import { greenCheck } from "@/runtime/utils/terminal";
-import { findAvailablePort } from "@/runtime/utils/port-utils";
-import { cors } from "./cors";
-import { Provider } from "@/runtime/middlewares/utils";
+
+import type { CorsConfig } from "@/config/schemas";
 import {
   httpRequestContextProvider,
   setHttpRequestContext,
 } from "@/runtime/contexts/http-request-context";
+import { Provider } from "@/runtime/middlewares/utils";
+import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
+import { findAvailablePort } from "@/runtime/utils/port-utils";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
 } from "@/runtime/utils/request-tool-names";
-import type { CorsConfig } from "@/config/schemas";
+import { greenCheck } from "@/runtime/utils/terminal";
+
+import homeTemplate from "../../templates/home";
+import { HttpTransportOptions } from "./base-streamable-http";
+import { cors } from "./cors";
 import { DEFAULT_CORS_CONFIG } from "./cors/defaults";
-import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 
 // Global type declarations for tool name context
 declare global {
@@ -71,6 +74,7 @@ export class StatelessStreamableHTTPTransport {
     this.mcpHandler = createMcpHandler(() => this.createServerFn(), {
       legacy: "stateless",
       onerror: (error) => this.log("MCP handler error:", error),
+      maxSubscriptions: this.options.maxSubscriptions,
     });
     this.nodeMcpHandler = toNodeHandler(this.mcpHandler, {
       onerror: (error) =>

@@ -4,6 +4,7 @@ description: "An MCP server is only half the picture — here's a guide to the c
 summary: "An MCP server is only half the picture — here's a guide to the clients (Claude Desktop, Cursor, GitHub Copilot, and others) that connect to MCP servers, and how each one works."
 category: "guides"
 date: "2026-06-30"
+lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
@@ -24,7 +25,7 @@ Each client has its own configuration format for adding MCP servers, but the con
 
 ## Claude Desktop
 
-**Transport support:** STDIO and HTTP (via `mcp-remote` bridge)
+**Connection options:** local STDIO configuration, remote connectors, or a local HTTP bridge
 
 Claude Desktop is Anthropic's native desktop client and has one of the earliest MCP integrations. You configure servers in its `claude_desktop_config.json`:
 
@@ -39,7 +40,7 @@ Claude Desktop is Anthropic's native desktop client and has one of the earliest 
 }
 ```
 
-For HTTP servers, Claude Desktop doesn't connect natively yet — you bridge it with the `mcp-remote` adapter:
+A command-based local configuration can bridge to an HTTP server with `mcp-remote`:
 
 ```json
 {
@@ -52,7 +53,7 @@ For HTTP servers, Claude Desktop doesn't connect natively yet — you bridge it 
 }
 ```
 
-Claude in the web and Claude.ai are separate from Claude Desktop and have their own integration surface (currently limited to Anthropic-verified integrations).
+Claude also supports [custom remote MCP connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp). Use that setup for hosted endpoints; it is separate from local command-based configuration.
 
 ## Cursor
 
@@ -74,9 +75,7 @@ STDIO servers use the same `command` / `args` pattern as Claude Desktop. Cursor 
 
 ## GitHub Copilot
 
-**Transport support:** Streamable HTTP (via Extensions)
-
-GitHub Copilot supports MCP through its Extensions platform. Tools connected via MCP appear in Copilot Chat in VS Code, Visual Studio, and GitHub.com. The integration is configured at the extension level rather than in a local config file.
+In VS Code, configure MCP servers through `mcp.json` or the **MCP: Add Server** command. STDIO and HTTP connections are supported. Follow the [VS Code MCP documentation](https://code.visualstudio.com/docs/agent-customization/mcp-servers); other Copilot surfaces have their own setup and capability limits.
 
 ## Windsurf
 
@@ -94,9 +93,7 @@ The MCP ecosystem is growing quickly. Other clients with MCP support include:
 
 ## What this means for your server
 
-Because all of these clients speak the same protocol, an xmcp server deployed to Vercel works with all of them. You configure the connection once per client (URL or command), and the client handles the rest — tool discovery, schema rendering, and calling your handlers.
-
-The only thing that varies is transport: HTTP for remote servers (Claude via bridge, Cursor natively, Copilot via Extensions) and STDIO for local servers running on the user's machine.
+MCP provides a shared protocol, but clients differ in supported transports, authorization flows, and optional capabilities. Test your tools with each target client instead of assuming identical behavior. Use the [connection reference](/docs/getting-started/connecting) and a [runnable template](/templates) to establish a working baseline.
 
 ## Next steps
 

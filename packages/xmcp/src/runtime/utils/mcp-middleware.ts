@@ -1,20 +1,23 @@
 import type {
+  McpServer,
+  RequestTypeMap,
+  ServerContext,
+} from "@modelcontextprotocol/server";
+
+import type {
   McpMiddleware,
   McpMiddlewareContext,
   McpMiddlewareResult,
+  McpToolMetadata,
 } from "@/types/mcp-middleware";
-import type {
-  McpServer,
-  ServerContext,
-  RequestTypeMap,
-} from "@modelcontextprotocol/server";
+
 import {
   getRequestContext,
   withRequestContext,
 } from "../contexts/request-context";
 import {
-  resolveToolClientInfo,
   type McpToolHandler,
+  resolveToolClientInfo,
 } from "./transformers/tool";
 
 export function normalizeMcpMiddleware(value: unknown): McpMiddleware[] {
@@ -32,7 +35,9 @@ export function normalizeMcpMiddleware(value: unknown): McpMiddleware[] {
 function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
   const chain = [...middleware];
   return (
-    operation: Pick<McpMiddlewareContext, "method" | "params">,
+    operation: Pick<McpMiddlewareContext, "method" | "params"> & {
+      readonly tool?: { readonly metadata: McpToolMetadata };
+    },
     ctx: ServerContext,
     handler: () => McpMiddlewareResult | Promise<McpMiddlewareResult>
   ) =>
@@ -40,7 +45,7 @@ function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
       if (chain.length === 0) return handler();
       const context: McpMiddlewareContext = Object.freeze({
         ...getRequestContext(),
-        method: operation.method,
+        ...operation,
         params: Object.freeze({ ...operation.params }),
       }) as McpMiddlewareContext;
       let lastIndex = -1;
@@ -58,16 +63,51 @@ function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
     });
 }
 
+/** Copy JSON-like metadata so freezing the view never freezes registration inputs. */
+function snapshotMetadata<T>(
+  value: T,
+  seen = new WeakMap<object, unknown>()
+): T {
+  if (value === null || typeof value !== "object") return value;
+  const prototype = Object.getPrototypeOf(value);
+  if (
+    !Array.isArray(value) &&
+    prototype !== Object.prototype &&
+    prototype !== null
+  ) {
+    return value;
+  }
+  if (seen.has(value)) return seen.get(value) as T;
+  const copy = Array.isArray(value) ? [] : Object.create(prototype);
+  seen.set(value, copy);
+  for (const [key, item] of Object.entries(value)) {
+    Object.defineProperty(copy, key, {
+      value: snapshotMetadata(item, seen),
+      enumerable: true,
+      configurable: true,
+      writable: true,
+    });
+  }
+  return Object.freeze(copy) as T;
+}
+
 /** Tool middleware stays inside SDK input/output validation and tool-error handling. */
 export function wrapToolWithMiddleware(
   handler: McpToolHandler,
-  name: string,
+  metadata: McpToolMetadata,
   middleware: readonly McpMiddleware[]
 ): McpToolHandler {
   const run = createMiddlewareRunner(middleware);
+  const tool = Object.freeze({ metadata: snapshotMetadata(metadata) });
   return (args, ctx) =>
-    run({ method: "tools/call", params: { name, arguments: args } }, ctx, () =>
-      handler(args, ctx)
+    run(
+      {
+        method: "tools/call",
+        params: { name: tool.metadata.name, arguments: args },
+        tool,
+      },
+      ctx,
+      () => handler(args, ctx)
     ) as ReturnType<McpToolHandler>;
 }
 

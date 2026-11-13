@@ -1,0 +1,68 @@
+---
+title: "GitHub"
+metadataTitle: "Usage with GitHub | xmcp Documentation"
+publishedAt: "2026-10-23"
+summary: "Read GitHub pull requests and repository files through xmcp tools."
+description: "Build an authenticated, read-only xmcp integration with GitHub's REST API."
+---
+
+Give agents repository context with the [runnable GitHub example](https://github.com/basementstudio/xmcp/tree/main/examples/github-http). Its three tools use Node's built-in `fetch` and GitHub's REST API. They do not modify files, comment, or merge pull requests.
+
+Start from the [GitHub MCP server template](/templates/github) for setup instructions and a runnable workflow.
+
+## Configure access
+
+Create a fine-grained token scoped to the repositories you want to expose. Grant **Pull requests: read** for PR tools and **Contents: read** for file reads, following GitHub's [pull request](https://docs.github.com/en/rest/pulls/pulls) and [contents](https://docs.github.com/en/rest/repos/contents) documentation.
+
+```bash
+GITHUB_TOKEN=your-github-token
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `x-api-key` on every request. The server sends only the provider token to `https://api.github.com` as a Bearer token, with API version `2026-03-10`. It does not follow redirects or external download URLs. All clients share the token's repository access; `owner` and `repo` are selectors, not per-user authorization.
+
+## Available tools
+
+| Tool                   | Purpose                                                |
+| ---------------------- | ------------------------------------------------------ |
+| `list-pull-requests`   | List a page of PRs, newest created first.              |
+| `get-pull-request`     | Inspect the description, refs, SHAs, and merge status. |
+| `read-repository-file` | Read one UTF-8 text file at a branch, tag, or commit.  |
+
+Call `list-pull-requests` with:
+
+```json
+{
+  "owner": "basementstudio",
+  "repo": "xmcp",
+  "state": "open",
+  "limit": 20
+}
+```
+
+The JSON text result contains `pullRequests` and `nextPage`. State defaults to `open`; `closed` and `all` are also supported. `limit` accepts 1–50 and defaults to 20. Pass a non-null `nextPage` as `page` with the other arguments unchanged. Pagination is explicit.
+
+## Read PR details and files
+
+Use `get-pull-request` with `owner`, `repo`, and a `number` from the list. It returns metadata and description, not review comments, checks, or diffs. `mergeable: null` is preserved when GitHub has not finished determining mergeability.
+
+Call `read-repository-file` with:
+
+```json
+{
+  "owner": "basementstudio",
+  "repo": "xmcp",
+  "path": "README.md",
+  "ref": "main"
+}
+```
+
+The response includes the path, file blob SHA, GitHub URL, and decoded content. Omit `ref` for the default branch or use a commit SHA for a stable snapshot. For a fork PR, select the repository from `head.repo.full_name` and use `head.sha`; deleted forks may have no repository metadata.
+
+The example limits files to 100,000 bytes and rejects directories, submodules, binary data, and invalid UTF-8. It does not traverse the repository or retrieve download URLs automatically. GitHub may resolve in-repository symlinks to their target files.
+
+## Errors and testing
+
+Provider failures return tool errors with status codes, without raw error bodies. Numeric `Retry-After` values are included for HTTP 403/429 when supplied. Requests time out after 30 seconds with no automatic retries. Use the current repository owner/name after a rename, because redirects are disabled.
+
+Follow the [README](https://github.com/basementstudio/xmcp/tree/main/examples/github-http#run) for Node 22/pnpm setup and runnable requests. Tests mock provider calls and cover both MCP 2025-03-26 and 2026-07-28. Live repository permissions require your own token.
