@@ -278,8 +278,8 @@ importers:
         specifier: ^5.2.0
         version: 5.2.0
       xmcp:
-        specifier: ^1.9.0
-        version: 1.9.0(@modelcontextprotocol/client@2.4.0)(@modelcontextprotocol/server@2.4.0)(jose@6.2.17)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(zod@4.6.7)
+        specifier: latest
+        version: 1.10.0(@modelcontextprotocol/client@2.4.0)(@modelcontextprotocol/server@2.4.0)(jose@6.2.17)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(zod@4.6.7)
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -14623,8 +14623,8 @@ packages:
     resolution: {integrity: sha512-c16PKLIRxBYpR3jSWsdS7SFp0COm5SOQdiFjY818dYFHJbMGuLBszpF07LBWmOS1uzrHa9VGdynsEgoeKy0oOQ==}
     engines: {node: '>=20'}
 
-  xmcp@1.9.0:
-    resolution: {integrity: sha512-tu6W+p6DLwXPfCaPJH/nezcaKlVQX6feROX3cjO6IdbRcFht3c5X5fgREdIkSdvwdpzfZQoNGyDBKc8hNosDng==}
+  xmcp@1.10.0:
+    resolution: {integrity: sha512-hp7i+M2S5vBMWJlL1JAiqeW6mVlF04SCrWOO6EalCOGxd2v2Wm5SU1MKlpPF58vLWeeGDrdRPgfBU4RqTuRhrQ==}
     hasBin: true
     peerDependencies:
       '@modelcontextprotocol/client': ^2.2.0
@@ -29923,7 +29923,7 @@ snapshots:
       is-wsl: 3.1.1
       powershell-utils: 0.2.1
 
-  xmcp@1.9.0(@modelcontextprotocol/client@2.4.0)(@modelcontextprotocol/server@2.4.0)(jose@6.2.17)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(zod@4.6.7):
+  xmcp@1.10.0(@modelcontextprotocol/client@2.4.0)(@modelcontextprotocol/server@2.4.0)(jose@6.2.17)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(zod@4.6.7):
     dependencies:
       zod: 4.6.7
     optionalDependencies:
