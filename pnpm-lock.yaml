@@ -2188,15 +2188,6 @@ importers:
       express:
         specifier: ^5.3.0
         version: 5.3.0
-      react:
-        specifier: ^19.3.1
-        version: 19.3.1
-      react-dom:
-        specifier: ^19.3.1
-        version: 19.3.1(react@19.3.1)
-      react-router:
-        specifier: ^8.5.1
-        version: 8.5.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
       '@types/better-sqlite3':
         specifier: ^9.6.0
@@ -2234,6 +2225,15 @@ importers:
       postcss:
         specifier: 8.5.32
         version: 8.5.32
+      react:
+        specifier: ^19.3.1
+        version: 19.3.1
+      react-dom:
+        specifier: ^19.3.1
+        version: 19.3.1(react@19.3.1)
+      react-router:
+        specifier: ^8.5.1
+        version: 8.5.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       tailwindcss:
         specifier: ^3.4.18
         version: 3.4.19(tsx@4.23.15)(yaml@2.8.3)

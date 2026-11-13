@@ -154,6 +154,9 @@
     "typescript": "^5.9.3",
     "zod-to-json-schema": "^3.25.2"
   },
+  "engines": {
+    "node": ">=22.12"
+  },
   "peerDependencies": {
     "@modelcontextprotocol/client": "^2.2.0",
     "@modelcontextprotocol/server": "^2.3.0",
