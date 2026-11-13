@@ -48,17 +48,16 @@
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
   "dependencies": {
-    "better-auth": "1.7.23",
+    "better-auth": "1.6.22",
     "express": "^5.3.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router": "^8.5.1",
-    "react-router-dom": "^7.18.5"
+    "react-router": "^8.5.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/express": "^5.0.6",
-    "@types/node": "^26.6.6",
+    "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -68,7 +67,7 @@
     "cross-env": "^7.0.3",
     "fs-extra": "^11.4.1",
     "postcss": "8.5.32",
-    "tailwindcss": "^4.3.5",
+    "tailwindcss": "^3.4.18",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "vite": "^8.3.8",

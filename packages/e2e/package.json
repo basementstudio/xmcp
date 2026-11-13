@@ -15,7 +15,7 @@
     "@nestjs/common": "^12.5.0",
     "@nestjs/core": "^12.5.0",
     "@nestjs/platform-express": "^12.5.0",
-    "@types/node": "^26.6.6",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.3.0",
     "@xmcp-dev/cli": "workspace:*",
     "@xmcp-dev/compiler": "workspace:*",

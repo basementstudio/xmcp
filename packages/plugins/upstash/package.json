@@ -31,7 +31,7 @@
     "xmcp": "^1.6.0"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
+    "@types/node": "^22.20.5",
     "@upstash/ratelimit": "^2.2.1",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
