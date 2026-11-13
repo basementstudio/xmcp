@@ -255,7 +255,7 @@ MCP clients register themselves through dynamic client registration and must sen
 
 ## Upgrading from 1.0
 
-`@xmcp-dev/better-auth` 2.0 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it, run this script on your database. It drops the Better Auth 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
+`@xmcp-dev/better-auth` 2.0 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it, update `xmcp` to 1.10.3 or later, which serves the consent page on Vercel, then run this script on your database. It drops the Better Auth 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
 
 ```sql
 drop table "oauthAccessToken";

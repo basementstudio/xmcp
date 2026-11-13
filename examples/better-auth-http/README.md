@@ -187,7 +187,8 @@ MCP clients register themselves through dynamic client registration and must sen
 
 Version 2.0 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it:
 
-1. Run this script on your database. It drops the 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
+1. Update `xmcp` to 1.10.3 or later. Earlier versions don't serve the new consent page on Vercel, so sign-in never finishes there.
+2. Run this script on your database. It drops the 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
 
 ```sql
 drop table "oauthAccessToken";
@@ -227,5 +228,5 @@ create index "oauthConsent_userId_idx" on "oauthConsent" ("userId");
 create unique index "oauthClientResource_clientId_resourceId_uidx" on "oauthClientResource" ("clientId", "resourceId");
 ```
 
-2. Reconnect your MCP clients. Clients registered with the old plugin and their tokens are removed, so each client registers again and the user approves it on the consent page.
-3. If your tools read `session.refreshToken` or `session.refreshTokenExpiresAt` from `getBetterAuthSession()`, remove those reads. The session is now built from the access token and no longer includes them.
+3. Reconnect your MCP clients. Clients registered with the old plugin and their tokens are removed, so each client registers again and the user approves it on the consent page.
+4. If your tools read `session.refreshToken` or `session.refreshTokenExpiresAt` from `getBetterAuthSession()`, remove those reads. The session is now built from the access token and no longer includes them.
