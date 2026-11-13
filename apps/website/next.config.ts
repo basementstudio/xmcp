@@ -55,6 +55,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/docs/discoverability/smithery",
+        destination: "/docs/discoverability/mcp-server-card",
+        permanent: true,
+      },
+      {
         source: "/blog/xmcp-vs-fastmcp-vs-mcp-sdk",
         destination: "/blog/xmcp-v1",
         permanent: true,
