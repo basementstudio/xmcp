@@ -12,7 +12,7 @@
   "dependencies": {
     "resend": "^6.38.0",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

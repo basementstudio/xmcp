@@ -24,7 +24,7 @@
     "@playwright/mcp": "^0.0.85",
     "@xmcp-dev/cli": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*"

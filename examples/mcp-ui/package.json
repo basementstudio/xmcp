@@ -19,7 +19,7 @@
   "dependencies": {
     "@mcp-ui/server": "^6.1.0",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*"

@@ -19,7 +19,7 @@
     "react-dom": "^19.3.1",
     "react-router": "^8.5.1",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.69.1",

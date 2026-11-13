@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^8.0.2",

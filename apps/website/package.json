@@ -80,7 +80,7 @@
     "three": "^0.178.0",
     "unist-util-visit": "^5.2.0",
     "xmcp": "latest",
-    "zod": "^4.6.7",
+    "zod": "^4.6.6",
     "zustand": "^5.1.0"
   },
   "devDependencies": {

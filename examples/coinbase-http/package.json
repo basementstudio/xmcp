@@ -16,7 +16,7 @@
     "@x402/fetch": "^2.31.0",
     "@xmcp-dev/coinbase": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

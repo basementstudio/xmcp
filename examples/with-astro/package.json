@@ -17,7 +17,7 @@
     "@astrojs/node": "^11.1.12",
     "astro": "^7.4.11",
     "xmcp": "workspace:*",
-    "zod": "^4.6.7"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
