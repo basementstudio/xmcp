@@ -13,10 +13,6 @@ permissions:
   contents: read
   actions: read
 
-concurrency:
-  group: indexnow-production
-  cancel-in-progress: false
-
 jobs:
   submit:
     if: >-
@@ -27,6 +23,9 @@ jobs:
       github.event.deployment_status.environment == 'Production' &&
       github.event.deployment_status.creator.login == 'vercel[bot]' &&
       startsWith(github.event.deployment_status.environment_url, 'https://xmcp-website-')))
+    concurrency:
+      group: indexnow-production
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

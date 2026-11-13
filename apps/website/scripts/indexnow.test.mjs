@@ -389,7 +389,11 @@ test("workflow restores only retained snapshots from successful runs, across pag
     findBaseline(github, context, core),
     /GitHub unavailable/
   );
-  assert.equal(workflow.concurrency["cancel-in-progress"], false);
+  assert.equal(workflow.concurrency, undefined);
+  assert.deepEqual(workflow.jobs.submit.concurrency, {
+    group: "indexnow-production",
+    "cancel-in-progress": false,
+  });
   const upload = workflow.jobs.submit.steps.find((step) =>
     step.uses?.startsWith("actions/upload-artifact@")
   );
