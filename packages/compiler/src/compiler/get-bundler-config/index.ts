@@ -333,6 +333,10 @@ export function getRspackConfig(
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "resources",
     ],
+    INJECTED_SKILLS: [
+      path.resolve(processFolder, ".xmcp/import-map.js"),
+      "skills",
+    ],
     INJECTED_MIDDLEWARE: [
       path.resolve(processFolder, ".xmcp/import-map.js"),
       "middleware",

@@ -323,6 +323,9 @@ importers:
       glslify-loader:
         specifier: ^2.0.0
         version: 2.0.0
+      hast-util-from-html:
+        specifier: 2.0.3
+        version: 2.0.3
       prettier:
         specifier: ^3.10.1
         version: 3.10.1
@@ -1182,6 +1185,19 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  examples/skills-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.0.10
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/stdio-transport:
     dependencies:
       xmcp:
@@ -1980,6 +1996,9 @@ importers:
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+      yaml:
+        specifier: ^2.8.3
+        version: 2.9.1
 
   packages/create-xmcp-app:
     dependencies:
@@ -2080,6 +2099,9 @@ importers:
       xmcp:
         specifier: workspace:*
         version: link:../xmcp
+      yaml:
+        specifier: ^2.8.3
+        version: 2.9.1
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -9325,6 +9347,10 @@ packages:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
     engines: {node: '>=0.12'}
 
+  entities@6.0.1:
+    resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
+    engines: {node: '>=0.12'}
+
   entities@7.0.1:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
     engines: {node: '>=0.12'}
@@ -10218,8 +10244,8 @@ packages:
   hast-util-from-html-isomorphic@2.0.0:
     resolution: {integrity: sha512-zJfpXq44yff2hmE0XmwEOzdWin5xwH+QIhMLOScpX91e/NSGPsAzNCvLQDIEPyO2TXi+lBmU6hjLIhV8MwP2kw==}
 
-  hast-util-from-html@2.1.0:
-    resolution: {integrity: sha512-873p9AuH93gBnATbH8rU3YvjTKxyrIeWd/M9tiLMzn3G82Os0xhQurctfnbYUSrDXoyjbJGpJ2qmTpefMw7ZaQ==}
+  hast-util-from-html@2.0.3:
+    resolution: {integrity: sha512-CUSRHXyKjzHov8yKsQjGOElXy/3EKpyX56ELnkHH34vDVw1N1XSQ1ZcAvTyAPtGqLTuKP/uxM+aLkSPqF/EtMw==}
 
   hast-util-from-parse5@8.0.4:
     resolution: {integrity: sha512-Yq7XlXor0Cpb71sI2E0zpv8QxQ5a6rfhDEETk4bcgrFX2SvJAY2PHocWwFtL6U9qyfiyByW3wZ6sZEfP2kW81g==}
@@ -11805,6 +11831,9 @@ packages:
 
   parse5-parser-stream@8.1.1:
     resolution: {integrity: sha512-hMcVbbUJcQmP8rURWUdYrT1flRiBiBVjq/RYGguJpDUgIXSqdYKlE0CxthmdMWoSlBAuL5bUBa73g0pttSy7Hw==}
+
+  parse5@7.3.0:
+    resolution: {integrity: sha512-IInvU7fabl34qmi9gY8XOVxhYyMyuH2xUNpb2q8/Y+7552KlejkRvqvD19nMoUW/uQGGbqNpA6Tufu5FL5BZgw==}
 
   parse5@8.1.1:
     resolution: {integrity: sha512-EcR/6WDcU7b2N3vQSxKALCk9lXGtUMQxXio008OEMBE0kavu/7JLfBEeFPzi43nMqVDSbEn3QCK+BMCc9zO//w==}
@@ -22049,6 +22078,8 @@ snapshots:
 
   entities@4.5.0: {}
 
+  entities@6.0.1: {}
+
   entities@7.0.1: {}
 
   entities@9.0.0: {}
@@ -23242,15 +23273,15 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.5
       hast-util-from-dom: 5.0.1
-      hast-util-from-html: 2.1.0
+      hast-util-from-html: 2.0.3
       unist-util-remove-position: 5.0.0
 
-  hast-util-from-html@2.1.0:
+  hast-util-from-html@2.0.3:
     dependencies:
       '@types/hast': 3.0.5
       devlop: 1.1.0
       hast-util-from-parse5: 8.0.4
-      parse5: 8.1.1
+      parse5: 7.3.0
       vfile: 6.0.3
       vfile-message: 4.0.4
 
@@ -25748,6 +25779,10 @@ snapshots:
   parse5-parser-stream@8.1.1:
     dependencies:
       parse5: 8.1.1
+
+  parse5@7.3.0:
+    dependencies:
+      entities: 6.0.1
 
   parse5@8.1.1:
     dependencies:

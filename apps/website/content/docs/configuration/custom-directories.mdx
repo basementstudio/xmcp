@@ -2,11 +2,11 @@
 title: "Custom Directories"
 metadataTitle: "Custom Directories | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Customize where xmcp looks for tools, prompts, and resources — relocate the default directories or add multiple source paths for your MCP server."
-description: "Customize where xmcp looks for tools, prompts, and resources."
+summary: "Customize where xmcp looks for tools, prompts, resources, and skills — relocate the default directories or add multiple source paths for your MCP server."
+description: "Customize where xmcp looks for tools, prompts, resources, and skills."
 ---
 
-Customize where `xmcp` looks for tools, prompts, and resources by configuring the `paths` option. If not specified, these are the defaults:
+Customize where `xmcp` looks for tools, prompts, resources, and skills by configuring the `paths` option. If not specified, these are the defaults:
 
 ```typescript title="xmcp.config.ts"
 const config: XmcpConfig = {
@@ -14,6 +14,7 @@ const config: XmcpConfig = {
     tools: "src/tools",
     prompts: "src/prompts",
     resources: "src/resources",
+    skills: true,
   },
 };
 
@@ -36,6 +37,12 @@ const config: XmcpConfig = {
 export default config;
 ```
 
+## Skills directory
+
+The [skills](/docs/core-concepts/skills) directory is optional. With the default, `skills: true`, `xmcp` reads `src/skills` when it exists: every directory there with a `SKILL.md` is served as a skill, and any other file or directory is skipped with a warning. A project without a `src/skills` directory builds as usual and serves no skills.
+
+Setting `skills` to a path, including `"src/skills"`, makes the directory required: it has to exist, and the build fails for any entry in it that is not a valid skill. Set `skills` to `false` to ignore the directory.
+
 ## Troubleshooting
 
-If you delete a directory without updating the config, `xmcp` will throw an error and prompt you to update it.
+If you delete the tools, prompts, or resources directory without updating the config, `xmcp` will throw an error and prompt you to update it.
