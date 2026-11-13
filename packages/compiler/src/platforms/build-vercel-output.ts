@@ -112,7 +112,7 @@ async function buildVercelOutput() {
       },
       // auth routes should serve the static index.html for client-side routing
       {
-        src: "^/auth/(sign-in|callback/.*|index\\.html)?$",
+        src: "^/auth/(sign-in|consent|callback/.*|index\\.html)?$",
         dest: "/auth/index.html",
       },
       // rest of the endpoints
