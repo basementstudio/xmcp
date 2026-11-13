@@ -3,7 +3,7 @@
   "type": "module",
   "dependencies": {
     "fastmcp": "4.16.5",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "esbuild": "0.28.2"
