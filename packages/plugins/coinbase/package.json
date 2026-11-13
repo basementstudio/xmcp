@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/coinbase",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Coinbase x402 HTTP payments for xmcp",
   "license": "MIT",
   "type": "module",
