@@ -13482,6 +13482,10 @@ packages:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
 
+  tapable@2.3.4:
+    resolution: {integrity: sha512-NHFiWnAbMJxNNpBwiO7jJVGDuqMxT9/oV8v57RR+fgBQShkJil5inGD8/xWy0hjLyHQyX1tu27QANhlz3KBqCg==}
+    engines: {node: '>=6'}
+
   tar-stream@3.2.2:
     resolution: {integrity: sha512-+8NeqHRjQWH9nYlwo2gamAMImZCVzI4UoEgDpWorBt9OEfppiZn+uSkskzQKPWIZyji/C8fpWO7u69G0DX0tbg==}
 
@@ -23674,7 +23678,7 @@ snapshots:
       node-abort-controller: 3.1.1
       schema-utils: 3.3.0
       semver: 7.8.6
-      tapable: 2.3.3
+      tapable: 2.3.4
       typescript: 5.9.3
       webpack: 5.104.1
     optional: true
@@ -28179,6 +28183,8 @@ snapshots:
 
   tapable@2.3.3: {}
 
+  tapable@2.3.4: {}
+
   tar-stream@3.2.2(bare-buffer@3.7.2):
     dependencies:
       b4a: 1.9.0
@@ -28435,7 +28441,7 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       enhanced-resolve: 5.27.0
-      tapable: 2.3.3
+      tapable: 2.3.4
       tsconfig-paths: 4.2.0
     optional: true
 
@@ -29574,7 +29580,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1)
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(webpack@5.104.1)
       watchpack: 2.6.4
       webpack-sources: 3.7.0
@@ -29616,7 +29622,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1(esbuild@0.28.1))
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(esbuild@0.28.1)(webpack@5.104.1(esbuild@0.28.1))
       watchpack: 2.6.4
       webpack-sources: 3.7.0
@@ -29658,7 +29664,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1(esbuild@0.28.1)(lightningcss@1.33.0))
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(esbuild@0.28.1)(lightningcss@1.33.0)(webpack@5.104.1(esbuild@0.28.1)(lightningcss@1.33.0))
       watchpack: 2.6.4
       webpack-sources: 3.7.0
@@ -29699,7 +29705,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1(esbuild@0.28.1)(postcss@8.5.32))
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(esbuild@0.28.1)(postcss@8.5.32)(webpack@5.104.1(esbuild@0.28.1)(postcss@8.5.32))
       watchpack: 2.6.4
       webpack-sources: 3.7.0
@@ -29741,7 +29747,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.32))
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.32)(webpack@5.104.1(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.32))
       watchpack: 2.6.4
       webpack-sources: 3.7.0
@@ -29783,7 +29789,7 @@ snapshots:
       mime-types: 2.1.35
       neo-async: 2.6.2
       schema-utils: 4.8.3(webpack@5.104.1(postcss@8.5.32))
-      tapable: 2.3.3
+      tapable: 2.3.4
       terser-webpack-plugin: 5.6.1(postcss@8.5.32)(webpack@5.104.1(postcss@8.5.32))
       watchpack: 2.6.4
       webpack-sources: 3.7.0
