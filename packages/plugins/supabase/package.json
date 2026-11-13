@@ -28,7 +28,7 @@
     "@supabase/supabase-js": "^2.119.0",
     "@types/node": "^26.6.6",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "xmcp": "workspace:*"
   },
   "repository": {

@@ -151,7 +151,7 @@
     "rxjs": "^7.8.2",
     "ts-checker-rspack-plugin": "^1.8.0",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "zod-to-json-schema": "^3.25.2"
   },
   "peerDependencies": {

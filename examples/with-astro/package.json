@@ -24,7 +24,7 @@
     "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
     "cross-env": "catalog:",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "wrangler": "^4.161.0"
   }
 }

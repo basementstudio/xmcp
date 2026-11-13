@@ -45,7 +45,7 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "express": "^5.3.0",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "xmcp": "workspace:*"
   },
   "peerDependencies": {

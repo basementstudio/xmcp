@@ -25,7 +25,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
     "@xmcp-dev/compiler": "workspace:*",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "vite": "^8.3.8",
     "wrangler": "^4.161.0"
   }

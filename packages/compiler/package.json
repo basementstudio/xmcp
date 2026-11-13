@@ -29,7 +29,7 @@
     "@rspack/core": "^2.3.2",
     "postcss-loader": "^8.2.1",
     "ts-checker-rspack-plugin": "^1.8.0",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/async-retry": "^1.4.9",

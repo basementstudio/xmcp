@@ -22,7 +22,7 @@
     "@xmcp-dev/compiler": "workspace:*",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "wrangler": "^4.161.0"
   }
 }

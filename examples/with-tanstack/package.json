@@ -25,7 +25,7 @@
     "@vitejs/plugin-react": "^6.3.0",
     "@xmcp-dev/compiler": "workspace:*",
     "nitro": "3.0.261103-rc",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "vite": "^8.3.8"
   }
 }

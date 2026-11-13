@@ -55,6 +55,6 @@
     "@types/node": "^26.6.6",
     "@types/ora": "^3.2.0",
     "@types/tar": "^7.0.87",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   }
 }

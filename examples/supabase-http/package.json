@@ -15,6 +15,6 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@xmcp-dev/compiler": "workspace:*",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   }
 }

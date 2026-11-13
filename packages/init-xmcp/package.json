@@ -52,7 +52,7 @@
     "@types/fs-extra": "catalog:",
     "@types/inquirer": "^10.0.0",
     "@types/node": "^26.6.6",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
