@@ -10,7 +10,10 @@
     "changelog:refresh": "node scripts/fetch-releases.mjs",
     "test:changelog": "node --test scripts/fetch-releases.test.mjs",
     "test:seo": "node --experimental-strip-types --test scripts/seo.test.mjs",
-    "test:seo:smoke": "node scripts/seo-smoke.mjs"
+    "test:seo:smoke": "node scripts/seo-smoke.mjs",
+    "indexnow:dry-run": "node scripts/indexnow.mjs --dry-run",
+    "indexnow:submit": "node scripts/indexnow.mjs",
+    "test:indexnow": "node --test scripts/indexnow.test.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.68",
@@ -81,6 +84,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "hast-util-from-html": "2.0.3",
     "@eslint/eslintrc": "^3.3.3",
     "@next/eslint-plugin-next": "^16.2.6",
     "@tailwindcss/postcss": "^4.1.17",
