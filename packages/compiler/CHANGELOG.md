@@ -1,5 +1,11 @@
 # @xmcp-dev/compiler
 
+## 1.10.1
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
 ## 1.10.0
 
 ## 1.9.0

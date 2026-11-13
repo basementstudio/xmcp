@@ -1,5 +1,11 @@
 # @xmcp-dev/commet
 
+## 1.0.1
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
 ## 1.0.0
 
 ### Patch Changes
