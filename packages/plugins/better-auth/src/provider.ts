@@ -7,13 +7,15 @@ import {
   Request,
   Response,
 } from "express";
-import { mcp } from "better-auth/plugins";
+import { jwt } from "better-auth/plugins";
+import { mcp, requireMcpAuth } from "@better-auth/mcp";
+import { oauthProviderAuthServerMetadata } from "@better-auth/oauth-provider";
 import path from "path";
 import express from "express";
-import { betterAuthContextProvider } from "./context.js";
+import { betterAuthContextProvider, setBetterAuthContext } from "./context.js";
 import { fileURLToPath } from "url";
 import { Middleware } from "xmcp";
-import { BetterAuthConfig } from "./types.js";
+import { BetterAuthConfig, BetterAuthSession } from "./types.js";
 import { processProvidersResponse } from "./utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,11 +23,18 @@ const __dirname = path.dirname(__filename);
 
 const authUiPath = path.join(__dirname, "auth-ui");
 
+type AccessTokenClaims = Parameters<Parameters<typeof requireMcpAuth>[1]>[1];
+
+function getMcpResource(auth: BetterAuthConfig): string {
+  return new URL("/mcp", auth.baseURL).href;
+}
+
 function getBetterAuthInstance(auth: BetterAuthConfig): any {
   const betterAuthInstance = betterAuth({
     database: auth.database,
     baseURL: auth.baseURL,
     secret: auth.secret,
+    disabledPaths: ["/token"],
     ...(auth.providers?.emailAndPassword?.enabled && {
       emailAndPassword: auth.providers.emailAndPassword,
     }),
@@ -38,7 +47,17 @@ function getBetterAuthInstance(auth: BetterAuthConfig): any {
         },
       },
     }),
-    plugins: [mcp({ loginPage: "/auth/sign-in" })],
+    plugins: [
+      jwt({ disableSettingJwtHeader: true }),
+      mcp({
+        loginPage: "/auth/sign-in",
+        consentPage: "/auth/consent",
+        resource: getMcpResource(auth),
+        allowDynamicClientRegistration: true,
+        allowUnauthenticatedClientRegistration: true,
+        clientRegistrationDefaultApplicationType: "infer",
+      }),
+    ],
   });
 
   return betterAuthInstance;
@@ -52,7 +71,7 @@ export function betterAuthProvider(auth: BetterAuthConfig): Middleware {
   const betterAuthInstance = getBetterAuthInstance(auth);
 
   return {
-    middleware: betterAuthMiddleware(betterAuthInstance),
+    middleware: betterAuthMiddleware(betterAuthInstance, auth),
     router: betterAuthRouter(betterAuthInstance, auth),
   };
 }
@@ -94,10 +113,11 @@ export function betterAuthRouter(
 
   // serve index.html for auth routes in development so react router can handle them
   const serveAuthHtml = (_req: Request, res: Response) => {
-    res.sendFile(path.join(authUiPath, "index.html"));
+    res.sendFile("index.html", { root: authUiPath });
   };
 
   router.get("/auth/sign-in", serveAuthHtml);
+  router.get("/auth/consent", serveAuthHtml);
 
   // email callback to handle verify email redirect
   /*   if (authConfig.providers?.emailAndPassword) {
@@ -109,14 +129,21 @@ export function betterAuthRouter(
     router.get("/auth/callback/google", serveAuthHtml);
   }
 
-  router.get("/.well-known/oauth-authorization-server", async (_req, res) => {
-    try {
-      const config = await betterAuthInstance.api.getMcpOAuthConfig();
-      res.json(config);
-    } catch (error) {
-      res.status(500).json({ error: "Failed to get OAuth config" });
-    }
-  });
+  router.get(
+    [
+      "/.well-known/oauth-authorization-server",
+      "/.well-known/oauth-authorization-server/api/auth",
+    ],
+    toNodeHandler(oauthProviderAuthServerMetadata(betterAuthInstance))
+  );
+
+  router.get(
+    [
+      "/.well-known/oauth-protected-resource",
+      "/.well-known/oauth-protected-resource/mcp",
+    ],
+    toNodeHandler(betterAuthInstance)
+  );
 
   // serve auth ui static assets AFTER specific routes
   router.use("/auth", express.static(authUiPath));
@@ -125,45 +152,69 @@ export function betterAuthRouter(
 }
 
 export function betterAuthMiddleware(
-  betterAuthInstance: BetterAuthInstanceWithMcp
+  betterAuthInstance: BetterAuthInstanceWithMcp,
+  authConfig: BetterAuthConfig
 ): RequestHandler {
+  const resource = getMcpResource(authConfig);
+
   return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.path.startsWith("/mcp")) {
       next();
       return;
     }
 
+    const request = new globalThis.Request(
+      new URL(req.originalUrl, authConfig.baseURL),
+      { method: req.method, headers: fromNodeHeaders(req.headers) }
+    );
+
+    let session: BetterAuthSession | undefined;
+
+    const verifyMcpRequest = requireMcpAuth(
+      betterAuthInstance,
+      async (verifiedRequest, accessTokenClaims) => {
+        session = toBetterAuthSession(verifiedRequest, accessTokenClaims);
+        return new globalThis.Response(null, { status: 204 });
+      },
+      { resource }
+    );
+
     try {
-      const config = await betterAuthInstance.api.getMcpOAuthConfig();
+      const challenge = await verifyMcpRequest(request);
 
-      // get session
-      const session = await betterAuthInstance.api.getMcpSession({
-        headers: fromNodeHeaders(req.headers),
-      });
-
-      if (!session) {
-        // return oauth authorization server config
-        res.status(401).json(config);
+      if (session) {
+        setBetterAuthContext({ session });
+        next();
         return;
       }
 
-      // session is valid, proceed to next middleware
-      next();
-    } catch (error) {
-      // on auth error, return authorization server config
-      try {
-        const config = await betterAuthInstance.api.getMcpOAuthConfig();
-        res.status(401).json(config);
-      } catch (configError) {
-        res.status(500).json({
-          jsonrpc: "2.0",
-          error: {
-            code: -32603,
-            message: "Authentication required but OAuth config unavailable",
-          },
-          id: null,
-        });
-      }
+      res.status(challenge.status);
+      challenge.headers.forEach((value, key) => res.setHeader(key, value));
+      res.send(await challenge.text());
+    } catch {
+      res.status(500).json({
+        jsonrpc: "2.0",
+        error: {
+          code: -32603,
+          message: "Failed to verify the MCP access token",
+        },
+        id: null,
+      });
     }
+  };
+}
+
+function toBetterAuthSession(
+  request: globalThis.Request,
+  claims: AccessTokenClaims
+): BetterAuthSession {
+  const authorization = request.headers.get("authorization") ?? "";
+
+  return {
+    accessToken: authorization.replace(/^(Bearer|DPoP)\s+/i, ""),
+    accessTokenExpiresAt: new Date((claims.exp ?? 0) * 1000),
+    clientId: String(claims.azp),
+    userId: claims.sub ?? "",
+    scopes: typeof claims.scope === "string" ? claims.scope : "",
   };
 }

@@ -109,3 +109,11 @@ export type BetterAuthConfig = {
     };
   };
 };
+
+export type BetterAuthSession = {
+  accessToken: string;
+  accessTokenExpiresAt: Date;
+  clientId: string;
+  userId: string;
+  scopes: string;
+};

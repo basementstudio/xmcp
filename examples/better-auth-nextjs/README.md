@@ -22,10 +22,10 @@ This example demonstrates how to integrate Better Auth with xmcp in a Next.js ap
 3. **Set up the database:**
 
    ```bash
-   npx @better-auth/cli generate
+   npx auth migrate
    ```
 
-   This will output a file with the database schema, which you can then use to create your database tables. <- this has to be done manually or with an ORM.
+   This creates the Better Auth tables, including the JWT and MCP tables, in your database.
 
 4. **Start the development server:**
    ```bash
@@ -34,13 +34,13 @@ This example demonstrates how to integrate Better Auth with xmcp in a Next.js ap
 
 ## How It Works
 
-The MCP server is protected with Better Auth authentication. The key integration is in `src/app/mcp/route.ts`:
+The MCP server is protected with the Better Auth [MCP plugin](https://www.better-auth.com/docs/plugins/mcp). The key integration is in `src/app/mcp/route.ts`:
 
 ```typescript
-import { withMcpAuth } from "better-auth/plugins";
+import { requireMcpAuth } from "@better-auth/mcp";
 
-const handler = withMcpAuth(auth, (req) => {
-  return xmcpHandler(req);
+const handler = requireMcpAuth(auth, (request) => xmcpHandler(request), {
+  resource: mcpResource,
 });
 ```
 
@@ -50,17 +50,19 @@ This ensures all MCP requests are authenticated before being processed.
 
 1. Connecting from a client to the MCP server will trigger the authentication flow.
 2. Users visit `/login` to authenticate
-3. Better Auth handles OAuth and email/password authentication
+3. Users approve the MCP client on `/consent`
 4. You can now access the MCP server tools
 
 ## Project Structure
 
 - `src/app/mcp/route.ts` - Protected MCP endpoint
 - `src/app/login/page.tsx` - Login page
+- `src/app/consent/page.tsx` - Consent page
 - `src/app/api/auth/[...all]/route.ts` - Auth API routes
 - `src/lib/auth.ts` - Better Auth configuration (database, plugins, etc.)
 - `src/lib/auth-client.ts` - Better Auth client (for the login page)
-- `src/app/.well-known/oauth-authorization-server/route.ts` - OAuth Authorization Server
+- `src/app/.well-known/oauth-authorization-server/[[...issuer]]/route.ts` - OAuth Authorization Server metadata
+- `src/app/.well-known/oauth-protected-resource/[[...resource]]/route.ts` - OAuth Protected Resource metadata
 - `src/tools/` - Your MCP tools (example: `greet.ts`)
 
 ## Learn More

@@ -14,6 +14,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@better-auth/mcp": "^1.7.23",
+    "@better-auth/oauth-provider": "^1.7.23",
     "better-auth": "^1.7.23",
     "next": "16.4.6",
     "pg": "^8.23.1",
