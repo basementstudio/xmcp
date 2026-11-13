@@ -1,5 +1,11 @@
 # @xmcp-dev/compiler
 
+## 1.10.3
+
+### Patch Changes
+
+- 8b54291: Vercel builds now serve the auth UI at `/auth/consent`, the consent page the Better Auth plugin uses.
+
 ## 1.10.2
 
 ### Patch Changes
