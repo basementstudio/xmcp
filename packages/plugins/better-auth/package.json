@@ -48,7 +48,9 @@
     "preview:ui": "cd ui && vite preview --config ./vite.config.mjs"
   },
   "dependencies": {
-    "better-auth": "1.6.22",
+    "@better-auth/mcp": "1.7.23",
+    "@better-auth/oauth-provider": "1.7.23",
+    "better-auth": "1.7.23",
     "express": "^5.3.0"
   },
   "devDependencies": {
