@@ -1,0 +1,443 @@
+body .site-not-found.error-explorations {
+  width: calc(100% - 40px);
+  max-width: var(--site-column);
+  margin-inline: auto;
+  padding-block: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.error-scene {
+  --error-ground: #090909;
+  position: relative;
+  isolation: isolate;
+  min-height: 570px;
+  height: min(680px, calc(100svh - 210px));
+  border: 1px solid var(--site-rule);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--error-ground);
+  color: #eee;
+  color-scheme: dark;
+}
+
+.error-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.error-art canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: pan-y;
+}
+.error-scene-07 canvas,
+.error-scene-08 canvas {
+  touch-action: none;
+}
+.error-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #090909f2, #090909b3 25%, #09090900 52%),
+    linear-gradient(0deg, #090909d9, #09090900 22%, #09090900 85%, #09090999);
+}
+
+.error-scene-top,
+.error-scene-bottom {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+.error-scene-top {
+  top: 25px;
+  pointer-events: none;
+}
+.error-scene-top,
+.error-eyebrow,
+.error-instruction,
+.error-selector > p {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+}
+.error-scene-top {
+  color: #aaa;
+}
+.error-render-status {
+  text-align: right;
+  color: #888;
+}
+.error-copy {
+  position: absolute;
+  top: 45%;
+  left: 6%;
+  transform: translateY(-38%);
+  width: 340px;
+  max-width: 42%;
+  pointer-events: none;
+}
+.error-eyebrow {
+  color: #aaa;
+  margin-bottom: 22px;
+}
+.error-copy h1 {
+  font-family: var(--font-display), serif;
+  font-size: clamp(38px, 4.3vw, 57px);
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -2px;
+  text-wrap: balance;
+  margin-bottom: 18px;
+  color: #eee;
+}
+.error-copy .listing-description {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+  pointer-events: auto;
+}
+.error-actions a {
+  min-height: 44px;
+  font-size: 12px;
+  padding: 10px 15px;
+}
+.error-actions a:first-child {
+  background: #eee;
+  color: #090909;
+  border-color: #eee;
+  gap: 20px;
+}
+.error-actions a:first-child:hover {
+  background: #d5d5d5;
+}
+.error-actions a:last-child {
+  color: #eee;
+  border-color: #555;
+}
+.error-actions a:last-child:hover {
+  background: #ffffff12;
+}
+.error-explorations :is(a, button, summary, input, canvas):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+.error-art canvas:focus-visible {
+  outline-offset: -6px;
+}
+.error-scene-bottom {
+  bottom: 24px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.error-instruction {
+  max-width: 310px;
+  color: #aaa;
+  text-wrap: balance;
+}
+.error-controls {
+  pointer-events: auto;
+  position: relative;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.error-controls summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #090909e6;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.error-controls summary::-webkit-details-marker {
+  display: none;
+}
+.error-controls[open] summary span {
+  transform: rotate(45deg);
+}
+.error-controls-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  padding: 18px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #111;
+  display: grid;
+  gap: 14px;
+}
+.error-range {
+  display: grid;
+  gap: 10px;
+}
+.error-range input {
+  width: 100%;
+  accent-color: #ddd;
+  min-height: 24px;
+}
+.error-controls-panel button {
+  border: 1px solid #555;
+  border-radius: 5px;
+  min-height: 40px;
+  padding: 8px;
+  cursor: pointer;
+}
+.error-controls-panel button:hover {
+  background: #ffffff12;
+}
+.error-readout {
+  font-size: 10px;
+  color: #aaa;
+}
+.error-scene .ocean-error {
+  position: absolute;
+  z-index: 2;
+  right: 24px;
+  top: 70px;
+  width: min(300px, calc(100% - 48px));
+  padding: 16px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #111;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.error-selector {
+  padding: 18px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.error-selector > p {
+  color: var(--site-muted);
+  flex-shrink: 0;
+}
+.error-selector > p span {
+  color: var(--site-faint);
+}
+.error-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.error-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  min-height: 44px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--site-muted);
+}
+.error-tabs button span {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  color: var(--site-faint);
+}
+.error-tabs button:hover {
+  color: var(--site-ink);
+  background: var(--site-well);
+}
+.error-tabs button[aria-selected="true"] {
+  color: var(--site-ink);
+  border-color: var(--site-rule);
+  background: var(--site-card);
+}
+
+/* The 404 ripple is centered, so Submerged anchors its copy to the lower-left
+   and darkens the bottom of the scene to keep the text legible over the water. */
+.error-scene-08 .error-copy {
+  top: auto;
+  bottom: 92px;
+  transform: none;
+  width: 380px;
+  max-width: calc(100% - 48px);
+}
+.error-scene-08 .error-art::after {
+  background: linear-gradient(
+    0deg,
+    #090909f2,
+    #090909cc 20%,
+    #09090900 48%,
+    #09090900 85%,
+    #09090999
+  );
+}
+
+.error-scene-04 {
+  --error-ground: var(--site-ground);
+  background: var(--site-ground);
+  color: var(--site-ink);
+  color-scheme: inherit;
+}
+.error-scene-04 .error-art {
+  top: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(660px, 100%);
+  height: 240px;
+}
+.error-scene-04 .error-art::after {
+  display: none;
+}
+.error-scene-04 .error-copy {
+  top: 335px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  max-width: calc(100% - 48px);
+  text-align: center;
+}
+.error-scene-04 .error-copy h1 {
+  color: var(--site-ink);
+  font-size: clamp(32px, 4vw, 44px);
+}
+.error-scene-04 .error-eyebrow {
+  display: none;
+}
+.error-scene-04 .listing-description {
+  color: var(--site-muted);
+  max-width: 340px;
+  margin-inline: auto;
+}
+.error-scene-04 .error-actions {
+  justify-content: center;
+  margin-top: 20px;
+}
+.error-scene-04 .error-actions a:first-child {
+  background: var(--site-ink);
+  border-color: var(--site-ink);
+  color: var(--site-ground);
+}
+.error-scene-04 .error-actions a:last-child {
+  color: var(--site-ink);
+  border-color: var(--site-rule);
+}
+.error-scene-04 .error-scene-top,
+.error-scene-04 .error-instruction,
+.error-scene-04 .error-render-status {
+  color: var(--site-muted);
+}
+.error-scene-04 .error-scene-bottom {
+  justify-content: center;
+}
+.error-scene-04 .error-instruction {
+  max-width: none;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  body .site-not-found.error-explorations {
+    padding-block: 16px;
+  }
+  .error-scene {
+    height: 730px;
+    min-height: 730px;
+  }
+  .error-art::after {
+    background: linear-gradient(0deg, #090909fa, #090909e6 32%, #09090900 62%);
+  }
+  .error-scene-top,
+  .error-scene-bottom {
+    left: 20px;
+    right: 20px;
+    gap: 12px;
+  }
+  .error-scene-top {
+    top: 20px;
+    font-size: 8px;
+  }
+  .error-render-status {
+    max-width: 45%;
+  }
+  .error-copy {
+    top: auto;
+    bottom: 125px;
+    left: 24px;
+    transform: none;
+    width: 340px;
+    max-width: calc(100% - 48px);
+  }
+  .error-copy h1 {
+    font-size: 42px;
+    max-width: 320px;
+  }
+  .error-eyebrow {
+    margin-bottom: 14px;
+  }
+  .error-actions {
+    margin-top: 20px;
+    gap: 8px;
+  }
+  .error-actions a {
+    padding-inline: 12px;
+  }
+  .error-instruction {
+    font-size: 9px;
+    max-width: 180px;
+  }
+  .error-controls summary {
+    gap: 12px;
+    font-size: 10px;
+    padding-inline: 10px;
+  }
+  .error-controls-panel {
+    width: 235px;
+  }
+  .error-selector {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .error-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  .error-tabs button {
+    justify-content: flex-start;
+  }
+  .error-scene-04 {
+    height: 590px;
+    min-height: 590px;
+  }
+  .error-scene-04 .error-art {
+    top: 80px;
+    height: 200px;
+  }
+  .error-scene-04 .error-copy {
+    top: 320px;
+    bottom: auto;
+  }
+  .error-scene-04 .error-copy h1 {
+    margin-inline: auto;
+  }
+  .error-scene-04 .error-instruction {
+    font-size: 9px;
+  }
+}
