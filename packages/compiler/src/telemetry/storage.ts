@@ -1,4 +1,4 @@
-import { randomBytes, createHash, BinaryLike } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import {
   readFileSync,
   writeFileSync,
@@ -189,7 +189,7 @@ export class TelemetryStorage {
    * Create a one-way hash with salt.
    * This ensures the hash is truly one-way and prevents dictionary attacks.
    */
-  oneWayHash(payload: BinaryLike): string {
+  oneWayHash(payload: string | NodeJS.ArrayBufferView): string {
     const hash = createHash("sha256");
 
     // Always prepend the payload value with salt. This ensures the hash is truly

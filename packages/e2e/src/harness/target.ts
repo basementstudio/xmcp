@@ -19,6 +19,7 @@ export type Capability =
   | "resources"
   | "templates"
   | "resource-completion"
+  | "skills"
   | "input-required"
   | "request-context"
   | "request-helpers"
@@ -52,6 +53,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "resources",
   "templates",
   "resource-completion",
+  "skills",
   "input-required",
   "request-context",
   "request-helpers",

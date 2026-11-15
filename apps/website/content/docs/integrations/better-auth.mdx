@@ -46,7 +46,7 @@ Install the Better Auth plugin and PostgreSQL dependencies:
 
 ## Database Setup
 
-Better Auth requires a PostgreSQL database with specific tables for user management, sessions, and OAuth applications.
+Better Auth requires a PostgreSQL database with specific tables for user management, sessions, signing keys, and OAuth clients and tokens.
 
 <Callout variant="info">
   We recommend [Neon](https://neon.tech/) for easy PostgreSQL setup, especially
@@ -56,96 +56,48 @@ Better Auth requires a PostgreSQL database with specific tables for user managem
 Run the following SQL script to create the necessary tables:
 
 ```sql
--- User table for storing user information
-CREATE TABLE "user" (
-  "id" text NOT NULL PRIMARY KEY,
-  "name" text NOT NULL,
-  "email" text NOT NULL UNIQUE,
-  "emailVerified" boolean NOT NULL,
-  "image" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
+create table "user" ("id" text not null primary key, "name" text not null, "email" text not null unique, "emailVerified" boolean not null, "image" text, "createdAt" timestamptz default CURRENT_TIMESTAMP not null, "updatedAt" timestamptz default CURRENT_TIMESTAMP not null);
 
--- Session table for managing user sessions
-CREATE TABLE "session" (
-  "id" text NOT NULL PRIMARY KEY,
-  "expiresAt" timestamp NOT NULL,
-  "token" text NOT NULL UNIQUE,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL,
-  "ipAddress" text,
-  "userAgent" text,
-  "userId" text NOT NULL REFERENCES "user" ("id")
-);
+create table "session" ("id" text not null primary key, "expiresAt" timestamptz not null, "token" text not null unique, "createdAt" timestamptz default CURRENT_TIMESTAMP not null, "updatedAt" timestamptz not null, "ipAddress" text, "userAgent" text, "userId" text not null references "user" ("id") on delete cascade);
 
--- Account table for OAuth and local authentication
-CREATE TABLE "account" (
-  "id" text NOT NULL PRIMARY KEY,
-  "accountId" text NOT NULL,
-  "providerId" text NOT NULL,
-  "userId" text NOT NULL REFERENCES "user" ("id"),
-  "accessToken" text,
-  "refreshToken" text,
-  "idToken" text,
-  "accessTokenExpiresAt" timestamp,
-  "refreshTokenExpiresAt" timestamp,
-  "scope" text,
-  "password" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
+create table "account" ("id" text not null primary key, "accountId" text not null, "providerId" text not null, "userId" text not null references "user" ("id") on delete cascade, "accessToken" text, "refreshToken" text, "idToken" text, "accessTokenExpiresAt" timestamptz, "refreshTokenExpiresAt" timestamptz, "scope" text, "password" text, "createdAt" timestamptz default CURRENT_TIMESTAMP not null, "updatedAt" timestamptz not null);
 
--- Verification table for email verification and password resets
-CREATE TABLE "verification" (
-  "id" text NOT NULL PRIMARY KEY,
-  "identifier" text NOT NULL,
-  "value" text NOT NULL,
-  "expiresAt" timestamp NOT NULL,
-  "createdAt" timestamp,
-  "updatedAt" timestamp
-);
+create table "verification" ("id" text not null primary key, "identifier" text not null, "value" text not null, "expiresAt" timestamptz not null, "createdAt" timestamptz default CURRENT_TIMESTAMP not null, "updatedAt" timestamptz default CURRENT_TIMESTAMP not null);
 
--- OAuth application table for OAuth provider functionality
-CREATE TABLE "oauthApplication" (
-  "id" text NOT NULL PRIMARY KEY,
-  "name" text NOT NULL,
-  "icon" text,
-  "metadata" text,
-  "clientId" text NOT NULL UNIQUE,
-  "clientSecret" text,
-  "redirectURLs" text NOT NULL,
-  "type" text NOT NULL,
-  "disabled" boolean,
-  "userId" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
+create table "jwks" ("id" text not null primary key, "publicKey" text not null, "privateKey" text not null, "createdAt" timestamptz not null, "expiresAt" timestamptz, "alg" text, "crv" text);
 
--- OAuth access token table
-CREATE TABLE "oauthAccessToken" (
-  "id" text NOT NULL PRIMARY KEY,
-  "accessToken" text NOT NULL UNIQUE,
-  "refreshToken" text NOT NULL UNIQUE,
-  "accessTokenExpiresAt" timestamp NOT NULL,
-  "refreshTokenExpiresAt" timestamp NOT NULL,
-  "clientId" text NOT NULL,
-  "userId" text,
-  "scopes" text NOT NULL,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
+create table "oauthClient" ("id" text not null primary key, "clientId" text not null unique, "clientSecret" text, "clientDiscoveryId" text, "disabled" boolean, "skipConsent" boolean, "enableEndSession" boolean, "subjectType" text, "scopes" jsonb, "clientCredentialsScopes" jsonb, "userId" text references "user" ("id") on delete cascade, "createdAt" timestamptz, "updatedAt" timestamptz, "name" text, "uri" text, "icon" text, "contacts" jsonb, "tos" text, "policy" text, "softwareId" text, "softwareVersion" text, "softwareStatement" text, "redirectUris" jsonb not null, "postLogoutRedirectUris" jsonb, "backchannelLogoutUri" text, "backchannelLogoutSessionRequired" boolean, "tokenEndpointAuthMethod" text, "applicationType" text, "jwks" text, "jwksUri" text, "grantTypes" jsonb, "responseTypes" jsonb, "requirePKCE" boolean, "dpopBoundAccessTokens" boolean, "referenceId" text, "metadata" jsonb);
 
--- OAuth consent table for managing user consent
-CREATE TABLE "oauthConsent" (
-  "id" text NOT NULL PRIMARY KEY,
-  "clientId" text NOT NULL,
-  "userId" text NOT NULL,
-  "scopes" text NOT NULL,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL,
-  "consentGiven" boolean NOT NULL
-);
+create table "oauthResource" ("id" text not null primary key, "identifier" text not null unique, "name" text not null, "accessTokenTtl" integer, "refreshTokenTtl" integer, "signingAlgorithm" text, "signingKeyId" text, "allowedScopes" jsonb, "customClaims" jsonb, "dpopBoundAccessTokensRequired" boolean, "disabled" boolean, "createdAt" timestamptz, "updatedAt" timestamptz, "policyVersion" integer, "metadata" jsonb);
+
+create table "oauthClientResource" ("id" text not null primary key, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "resourceId" text not null references "oauthResource" ("identifier") on delete cascade, "metadata" jsonb, "createdAt" timestamptz);
+
+create table "oauthRefreshToken" ("id" text not null primary key, "token" text not null unique, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "sessionId" text references "session" ("id") on delete set null, "userId" text not null references "user" ("id") on delete cascade, "referenceId" text, "authorizationCodeId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "expiresAt" timestamptz not null, "createdAt" timestamptz not null, "revoked" timestamptz, "rotatedAt" timestamptz, "rotationReplayResponse" text, "rotationReplayExpiresAt" timestamptz, "authTime" timestamptz, "confirmation" jsonb, "scopes" jsonb not null);
+
+create table "oauthAccessToken" ("id" text not null primary key, "token" text not null unique, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "sessionId" text references "session" ("id") on delete set null, "userId" text references "user" ("id") on delete cascade, "referenceId" text, "authorizationCodeId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "refreshId" text references "oauthRefreshToken" ("id") on delete cascade, "expiresAt" timestamptz not null, "createdAt" timestamptz not null, "revoked" timestamptz, "confirmation" jsonb, "scopes" jsonb not null);
+
+create table "oauthConsent" ("id" text not null primary key, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "userId" text references "user" ("id") on delete cascade, "referenceId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "scopes" jsonb not null, "createdAt" timestamptz not null, "updatedAt" timestamptz not null);
+
+create table "oauthClientAssertion" ("id" text not null primary key, "expiresAt" timestamptz not null);
+
+create index "session_userId_idx" on "session" ("userId");
+create index "account_userId_idx" on "account" ("userId");
+create index "verification_identifier_idx" on "verification" ("identifier");
+create index "oauthClient_userId_idx" on "oauthClient" ("userId");
+create index "oauthClientResource_clientId_idx" on "oauthClientResource" ("clientId");
+create index "oauthClientResource_resourceId_idx" on "oauthClientResource" ("resourceId");
+create index "oauthRefreshToken_clientId_idx" on "oauthRefreshToken" ("clientId");
+create index "oauthRefreshToken_sessionId_idx" on "oauthRefreshToken" ("sessionId");
+create index "oauthRefreshToken_userId_idx" on "oauthRefreshToken" ("userId");
+create index "oauthRefreshToken_authorizationCodeId_idx" on "oauthRefreshToken" ("authorizationCodeId");
+create index "oauthAccessToken_clientId_idx" on "oauthAccessToken" ("clientId");
+create index "oauthAccessToken_sessionId_idx" on "oauthAccessToken" ("sessionId");
+create index "oauthAccessToken_userId_idx" on "oauthAccessToken" ("userId");
+create index "oauthAccessToken_authorizationCodeId_idx" on "oauthAccessToken" ("authorizationCodeId");
+create index "oauthAccessToken_refreshId_idx" on "oauthAccessToken" ("refreshId");
+create index "oauthConsent_clientId_idx" on "oauthConsent" ("clientId");
+create index "oauthConsent_userId_idx" on "oauthConsent" ("userId");
+create unique index "oauthClientResource_clientId_resourceId_uidx" on "oauthClientResource" ("clientId", "resourceId");
 ```
 
 <Callout variant="info">
@@ -282,6 +234,8 @@ export default async function getUserProfile() {
 }
 ```
 
+The session contains `userId`, `clientId`, `scopes` (space-separated), `accessToken` and `accessTokenExpiresAt`.
+
 <Callout variant="warning">
   `getBetterAuthSession` will throw an error if called outside of a
   `betterAuthProvider` middleware context.
@@ -295,7 +249,58 @@ The authentication UI is automatically generated and available at:
 http://host:port/auth/sign-in
 ```
 
-This page handles both sign-in and sign-up functionality based on your provider configuration.
+This page handles both sign-in and sign-up functionality based on your provider configuration. After signing in, users approve each MCP client once on the consent page at `http://host:port/auth/consent`.
+
+MCP clients register themselves through dynamic client registration and must send the `resource` parameter (`<baseURL>/mcp`) when they request a token, as the MCP authorization spec requires. The plugin serves `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` for discovery.
+
+## Upgrading from 1.0
+
+`@xmcp-dev/better-auth` 2.0 runs on Better Auth 1.7, which moves the MCP plugin to `@better-auth/mcp` and replaces the OAuth tables. Before deploying it, update `xmcp` to 1.10.3 or later, which serves the consent page on Vercel, then run this script on your database. It drops the Better Auth 1.6 OAuth tables and creates the 1.7 ones; user, session and account data is kept.
+
+```sql
+drop table "oauthAccessToken";
+drop table "oauthConsent";
+drop table "oauthApplication";
+
+create table "jwks" ("id" text not null primary key, "publicKey" text not null, "privateKey" text not null, "createdAt" timestamptz not null, "expiresAt" timestamptz, "alg" text, "crv" text);
+
+create table "oauthClient" ("id" text not null primary key, "clientId" text not null unique, "clientSecret" text, "clientDiscoveryId" text, "disabled" boolean, "skipConsent" boolean, "enableEndSession" boolean, "subjectType" text, "scopes" jsonb, "clientCredentialsScopes" jsonb, "userId" text references "user" ("id") on delete cascade, "createdAt" timestamptz, "updatedAt" timestamptz, "name" text, "uri" text, "icon" text, "contacts" jsonb, "tos" text, "policy" text, "softwareId" text, "softwareVersion" text, "softwareStatement" text, "redirectUris" jsonb not null, "postLogoutRedirectUris" jsonb, "backchannelLogoutUri" text, "backchannelLogoutSessionRequired" boolean, "tokenEndpointAuthMethod" text, "applicationType" text, "jwks" text, "jwksUri" text, "grantTypes" jsonb, "responseTypes" jsonb, "requirePKCE" boolean, "dpopBoundAccessTokens" boolean, "referenceId" text, "metadata" jsonb);
+
+create table "oauthResource" ("id" text not null primary key, "identifier" text not null unique, "name" text not null, "accessTokenTtl" integer, "refreshTokenTtl" integer, "signingAlgorithm" text, "signingKeyId" text, "allowedScopes" jsonb, "customClaims" jsonb, "dpopBoundAccessTokensRequired" boolean, "disabled" boolean, "createdAt" timestamptz, "updatedAt" timestamptz, "policyVersion" integer, "metadata" jsonb);
+
+create table "oauthClientResource" ("id" text not null primary key, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "resourceId" text not null references "oauthResource" ("identifier") on delete cascade, "metadata" jsonb, "createdAt" timestamptz);
+
+create table "oauthRefreshToken" ("id" text not null primary key, "token" text not null unique, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "sessionId" text references "session" ("id") on delete set null, "userId" text not null references "user" ("id") on delete cascade, "referenceId" text, "authorizationCodeId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "expiresAt" timestamptz not null, "createdAt" timestamptz not null, "revoked" timestamptz, "rotatedAt" timestamptz, "rotationReplayResponse" text, "rotationReplayExpiresAt" timestamptz, "authTime" timestamptz, "confirmation" jsonb, "scopes" jsonb not null);
+
+create table "oauthAccessToken" ("id" text not null primary key, "token" text not null unique, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "sessionId" text references "session" ("id") on delete set null, "userId" text references "user" ("id") on delete cascade, "referenceId" text, "authorizationCodeId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "refreshId" text references "oauthRefreshToken" ("id") on delete cascade, "expiresAt" timestamptz not null, "createdAt" timestamptz not null, "revoked" timestamptz, "confirmation" jsonb, "scopes" jsonb not null);
+
+create table "oauthConsent" ("id" text not null primary key, "clientId" text not null references "oauthClient" ("clientId") on delete cascade, "userId" text references "user" ("id") on delete cascade, "referenceId" text, "resources" jsonb, "requestedUserInfoClaims" jsonb, "scopes" jsonb not null, "createdAt" timestamptz not null, "updatedAt" timestamptz not null);
+
+create table "oauthClientAssertion" ("id" text not null primary key, "expiresAt" timestamptz not null);
+
+create index "oauthClient_userId_idx" on "oauthClient" ("userId");
+create index "oauthClientResource_clientId_idx" on "oauthClientResource" ("clientId");
+create index "oauthClientResource_resourceId_idx" on "oauthClientResource" ("resourceId");
+create index "oauthRefreshToken_clientId_idx" on "oauthRefreshToken" ("clientId");
+create index "oauthRefreshToken_sessionId_idx" on "oauthRefreshToken" ("sessionId");
+create index "oauthRefreshToken_userId_idx" on "oauthRefreshToken" ("userId");
+create index "oauthRefreshToken_authorizationCodeId_idx" on "oauthRefreshToken" ("authorizationCodeId");
+create index "oauthAccessToken_clientId_idx" on "oauthAccessToken" ("clientId");
+create index "oauthAccessToken_sessionId_idx" on "oauthAccessToken" ("sessionId");
+create index "oauthAccessToken_userId_idx" on "oauthAccessToken" ("userId");
+create index "oauthAccessToken_authorizationCodeId_idx" on "oauthAccessToken" ("authorizationCodeId");
+create index "oauthAccessToken_refreshId_idx" on "oauthAccessToken" ("refreshId");
+create index "oauthConsent_clientId_idx" on "oauthConsent" ("clientId");
+create index "oauthConsent_userId_idx" on "oauthConsent" ("userId");
+create unique index "oauthClientResource_clientId_resourceId_uidx" on "oauthClientResource" ("clientId", "resourceId");
+```
+
+Clients registered with the old plugin and their tokens are removed, so each MCP client registers again and the user approves it on the consent page.
+
+<Callout variant="warning">
+  The session returned by `getBetterAuthSession` is now built from the verified
+  access token and no longer includes `refreshToken` or `refreshTokenExpiresAt`.
+</Callout>
 
 ## Next Steps
 

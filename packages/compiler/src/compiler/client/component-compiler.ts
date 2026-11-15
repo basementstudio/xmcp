@@ -166,7 +166,6 @@ export class ClientComponentCompiler {
       entry: virtualEntries,
       target: "web",
       experiments: {
-        outputModule: true,
         css: true,
       },
       output: {

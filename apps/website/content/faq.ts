@@ -104,7 +104,7 @@ export const FAQ_ITEMS: readonly FaqItem[] = [
     question:
       "How do I make my xmcp server discoverable to LLMs and registries?",
     answer:
-      "The xmcp docs site exposes /llms.txt (a markdown index) and /llms-full.txt (full documentation) for LLM consumption, and xmcp servers can be published to the Smithery registry for distribution.",
+      "The xmcp docs site exposes /llms.txt (a markdown index) and /llms-full.txt (full documentation) for LLM consumption, and xmcp servers automatically serve an MCP Server Card at /.well-known/mcp/server-card.json so agent discovery tools can find them.",
   },
   {
     slug: "open-source",

@@ -7,14 +7,14 @@
     "start": "node --env-file=.env dist/http.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.117.2",
+    "@supabase/supabase-js": "^2.119.0",
     "@xmcp-dev/supabase": "workspace:*",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "@xmcp-dev/compiler": "workspace:*",
-    "@types/node": "^22.19.2",
     "typescript": "^5.9.3"
   }
 }

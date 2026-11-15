@@ -1,22 +1,22 @@
 export const OPERATION_MIDDLEWARE_FILES = {
-  "src/operation-middleware.ts": `import { type McpMiddleware } from "xmcp";
+  "src/operation-middleware.ts": `import { type McpMiddleware, type McpMiddlewareResult } from "xmcp";
 export const operations: McpMiddleware = async (ctx, next) => {
   switch (ctx.method) {
     case "tools/list": {
       const result = await next();
-      return { ...result, tools: (result.tools as { name: string }[]).filter((item) => item.name !== "middleware-denied") };
+      return { ...result, tools: (result.tools as { name: string }[]).filter((item) => item.name !== "middleware-denied") } as McpMiddlewareResult;
     }
     case "prompts/list": {
       const result = await next();
-      return { ...result, prompts: (result.prompts as { name: string }[]).filter((item) => item.name !== "operation-denied") };
+      return { ...result, prompts: (result.prompts as { name: string }[]).filter((item) => item.name !== "operation-denied") } as McpMiddlewareResult;
     }
     case "resources/list": {
       const result = await next();
-      return { ...result, resources: (result.resources as { uri: string }[]).filter((item) => item.uri !== "operation://denied") };
+      return { ...result, resources: (result.resources as { uri: string }[]).filter((item) => item.uri !== "operation://denied") } as McpMiddlewareResult;
     }
     case "resources/templates/list": {
       const result = await next();
-      return { ...result, resourceTemplates: (result.resourceTemplates as { name: string }[]).filter((item) => item.name !== "operation-denied-template") };
+      return { ...result, resourceTemplates: (result.resourceTemplates as { name: string }[]).filter((item) => item.name !== "operation-denied-template") } as McpMiddlewareResult;
     }
     case "resources/read":
       if (new URL(ctx.params.uri).href.startsWith("operation://denied")) throw new Error("Read denied by middleware");

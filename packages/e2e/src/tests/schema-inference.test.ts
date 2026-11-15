@@ -24,6 +24,7 @@ for (const kind of ["http", "stdio", "nextjs"] as const) {
               .filter(
                 ([file, contents]) =>
                   file.startsWith("src/tools/") &&
+                  typeof contents === "string" &&
                   !contents.includes("export const schema")
               )
               .map(([file, contents]) => [

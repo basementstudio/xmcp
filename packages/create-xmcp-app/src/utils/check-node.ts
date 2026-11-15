@@ -5,13 +5,13 @@ import chalk from "chalk";
  */
 export function checkNodeVersion(): void {
   const nodeVersion = process.version;
-  const majorVersion = parseInt(nodeVersion.slice(1).split(".")[0]);
+  const [major, minor] = process.versions.node.split(".").map(Number);
 
-  if (majorVersion < 22) {
+  if (major < 22 || (major === 22 && minor < 12)) {
     console.error(
       chalk.red(`❌ Node.js version ${nodeVersion} is not supported.`)
     );
-    console.error(chalk.red(`xmcp requires Node.js 22 or higher.`));
+    console.error(chalk.red(`xmcp requires Node.js 22.12 or higher.`));
     console.error(
       chalk.yellow(`Please upgrade your Node.js version and try again.`)
     );

@@ -1,6 +1,7 @@
 import { CompilerMode } from ".";
 import { createContext } from "../utils/context";
 import { XmcpConfigOutputSchema } from "@/runtime-config";
+import type { CompiledSkill } from "./skills/compile-skills";
 
 interface CompilerContext {
   /** The mode of the compiler. */
@@ -20,6 +21,12 @@ interface CompilerContext {
   promptPaths: Set<string>;
   /** The paths to the resources. */
   resourcePaths: Set<string>;
+  /** The skills directory, when skills are enabled. */
+  skillsPath?: string;
+  /** The paths to every file in the skills directory. */
+  skillPaths: Set<string>;
+  /** The last valid compilation of the skills directory. */
+  skills?: CompiledSkill[];
   /** Whether the middleware is enabled. */
   hasMiddleware: boolean;
   /** The parsed config. */
@@ -36,7 +43,11 @@ export const compilerContext = createContext<CompilerContext>({
 export const compilerContextProvider = async (
   initialValue: Omit<
     CompilerContext,
-    "toolPaths" | "promptPaths" | "resourcePaths" | "hasMiddleware"
+    | "toolPaths"
+    | "promptPaths"
+    | "resourcePaths"
+    | "skillPaths"
+    | "hasMiddleware"
   >,
   callback: () => void
 ) => {
@@ -46,6 +57,7 @@ export const compilerContextProvider = async (
       toolPaths: new Set(),
       promptPaths: new Set(),
       resourcePaths: new Set(),
+      skillPaths: new Set(),
       hasMiddleware: false,
     },
     () => Promise.resolve(callback())
