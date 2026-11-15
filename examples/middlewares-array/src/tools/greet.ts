@@ -22,10 +22,6 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  return {
-    content: [{ type: "text", text: `Hello, ${name}!` }],
-    _meta: {
-      authorizedCaller: getRequestContext().get<string>("example.caller"),
-    },
-  };
+  const caller = getRequestContext().get<string>("example.caller");
+  return `Hello, ${name}! Authorized caller: ${caller}.`;
 }

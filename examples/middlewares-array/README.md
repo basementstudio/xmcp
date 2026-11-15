@@ -21,7 +21,7 @@ curl -i http://localhost:3001/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"greet","arguments":{"name":"Ada"}}}'
 ```
 
-The response contains `Hello, Ada!`, `_meta: { "tool": "greet", "caller": "reader", "authorizedCaller": "reader" }`, and the
+The response contains `Hello, Ada! Authorized caller: reader.`, `_meta: { "tool": "greet", "caller": "reader" }`, and the
 `x-example: middlewares-array` header. Change `Ada` to `blocked` to exercise the
 short-circuit response. Omit the API key to exercise HTTP authentication.
 
@@ -113,6 +113,7 @@ request bodies with the curl command above:
 
 On tool calls the policy stores the verified client ID with `ctx.set()`. The
 MCP middleware reads it into `_meta.caller`, and the handler reads the same value
-through `getRequestContext()` into `_meta.authorizedCaller`. These values are local
+through `getRequestContext()` into the greeting string. xmcp wraps that string
+in the MCP response. These values are local
 to the current request. The policy sees raw tool arguments; the middleware and
 handler see SDK-validated arguments.
