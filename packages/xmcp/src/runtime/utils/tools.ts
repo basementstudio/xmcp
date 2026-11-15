@@ -9,7 +9,12 @@ import { toMcpMetadata } from "./component-metadata";
 import { uIResourceRegistry } from "./ext-apps-registry";
 import { wrapToolWithMiddleware } from "./mcp-middleware";
 import { isReactFile } from "./react";
-import { RawShape, rawShapeToStandardSchema } from "./schema-compat";
+import {
+  assertObjectInputSchema,
+  isStandardFieldSchema,
+  type ToolSchemaInput,
+  toolSchemaToStandardSchema,
+} from "./schema-compat";
 import { ToolFile } from "./server";
 import type { McpToolHandler } from "./transformers/tool";
 import { transformToolHandler } from "./transformers/tool";
@@ -76,23 +81,28 @@ export function addToolsToServer(
       }
     }
 
-    // Determine the actual schema to use
-    let toolSchema: ZodRawShape = {};
-    if (isZodRawShape(schema)) {
+    // A schema is either a `{ field: zodSchema }` map or a complete schema.
+    let toolSchema: ToolSchemaInput = {};
+    if (isStandardFieldSchema(schema)) {
+      assertObjectInputSchema(schema, toolConfig.name);
       toolSchema = schema;
+    } else if (isZodRawShape(schema)) {
+      toolSchema = schema as unknown as ToolSchemaInput;
     } else if (schema !== undefined && schema !== null) {
       console.warn(
-        `Invalid schema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
+        `Invalid schema for tool "${toolConfig.name}" at ${path}. Expected a zod schema or Record<string, z.ZodType>`
       );
     }
 
-    let toolOutputSchema: ZodRawShape | undefined;
+    let toolOutputSchema: ToolSchemaInput | undefined;
     if (outputSchema !== undefined && outputSchema !== null) {
-      if (isZodRawShape(outputSchema)) {
+      if (isStandardFieldSchema(outputSchema)) {
         toolOutputSchema = outputSchema;
+      } else if (isZodRawShape(outputSchema)) {
+        toolOutputSchema = outputSchema as unknown as ToolSchemaInput;
       } else {
         throw new Error(
-          `Invalid outputSchema for tool "${toolConfig.name}" at ${path}. Expected Record<string, z.ZodType>`
+          `Invalid outputSchema for tool "${toolConfig.name}" at ${path}. Expected a zod schema or Record<string, z.ZodType>`
         );
       }
     }
@@ -168,13 +178,11 @@ export function addToolsToServer(
     const toolConfigFormatted = {
       title: toolConfig.annotations?.title,
       description: toolConfig.description,
-      // Assemble Standard Schemas per field so user schemas work regardless
-      // of which zod instance or major created them.
-      inputSchema: rawShapeToStandardSchema(toolSchema as unknown as RawShape),
+      // Assemble Standard Schemas so user schemas work regardless of which
+      // zod instance or major created them.
+      inputSchema: toolSchemaToStandardSchema(toolSchema),
       outputSchema: toolOutputSchema
-        ? rawShapeToStandardSchema(toolOutputSchema as unknown as RawShape, {
-            strict: true,
-          })
+        ? toolSchemaToStandardSchema(toolOutputSchema, { strict: true })
         : undefined,
       annotations: toolConfig.annotations,
       icons: toolConfig.icons,

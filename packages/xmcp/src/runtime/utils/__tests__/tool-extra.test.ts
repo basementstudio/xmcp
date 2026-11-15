@@ -208,6 +208,71 @@ test("transformToolHandler keeps field-map outputSchema object-only", async () =
   );
 });
 
+test("transformToolHandler wraps bare data for a complete outputSchema", async () => {
+  const tags = transformToolHandler(
+    () => ["a", "b"],
+    undefined,
+    z.array(z.string()),
+    "tags"
+  );
+  assert.deepStrictEqual(await invokeHandler(tags, "rpc-array-shorthand"), {
+    structuredContent: ["a", "b"],
+    content: [{ type: "text", text: '["a","b"]' }],
+  });
+
+  const flag = transformToolHandler(() => false, undefined, z.boolean());
+  assert.deepStrictEqual(await invokeHandler(flag, "rpc-boolean-shorthand"), {
+    structuredContent: false,
+    content: [{ type: "text", text: "false" }],
+  });
+
+  const label = transformToolHandler(() => "ready", undefined, z.string());
+  assert.deepStrictEqual(await invokeHandler(label, "rpc-string-shorthand"), {
+    content: [{ type: "text", text: "ready" }],
+    structuredContent: "ready",
+  });
+});
+
+test("transformToolHandler keeps text-only output for strings a complete outputSchema rejects", async () => {
+  const transformedHandler = transformToolHandler(
+    () => "not a number",
+    undefined,
+    z.number()
+  );
+  assert.deepStrictEqual(
+    await invokeHandler(transformedHandler, "rpc-string-fallback"),
+    { content: [{ type: "text", text: "not a number" }] }
+  );
+});
+
+test("transformToolHandler validates bare data and structuredContent against a complete outputSchema", async () => {
+  const outputSchema = z.array(z.object({ id: z.number() }));
+  await assert.rejects(
+    invokeHandler(
+      transformToolHandler(
+        () => [{ id: "1" }],
+        undefined,
+        outputSchema,
+        "list"
+      ),
+      "rpc-invalid-bare"
+    ),
+    /Tool "list" returned data that does not match outputSchema: 0\.id: /
+  );
+  await assert.rejects(
+    invokeHandler(
+      transformToolHandler(
+        () => ({ structuredContent: { id: 1 } }),
+        undefined,
+        outputSchema,
+        "list"
+      ),
+      "rpc-invalid-structured"
+    ),
+    /Tool "list" returned structuredContent that does not match outputSchema/
+  );
+});
+
 test("transformToolHandler forwards clientInfo through tool extra arguments", async () => {
   const transformedHandler = transformToolHandler((args, extra) => {
     return {

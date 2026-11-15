@@ -1,6 +1,7 @@
 import {
   CallToolResult,
   InputRequiredResult,
+  JSONValue,
   ServerContext,
   isInputRequiredResult,
   CLIENT_INFO_META_KEY,
@@ -16,20 +17,46 @@ import {
 import { elicitFromTool } from "../elicitation";
 import { sampleFromTool } from "../sampling";
 import { validateContent } from "../validators";
+import { isStandardFieldSchema, type ToolSchemaInput } from "../schema-compat";
 
-function validateAgainstOutputSchema(
-  data: Record<string, unknown>,
-  outputSchema: ZodRawShape,
+function formatIssuePath(path: ReadonlyArray<unknown> | undefined): string {
+  return (path ?? [])
+    .map((segment) =>
+      typeof segment === "object" && segment !== null && "key" in segment
+        ? String((segment as { key: unknown }).key)
+        : String(segment)
+    )
+    .join(".");
+}
+
+async function validateAgainstOutputSchema(
+  data: unknown,
+  outputSchema: ToolSchemaInput,
   toolName: string,
   errorPrefix: string
-): void {
+): Promise<void> {
+  if (isStandardFieldSchema(outputSchema)) {
+    const result = await outputSchema["~standard"].validate(data);
+    if (result.issues) {
+      const details = result.issues
+        .map((issue) => {
+          const path = formatIssuePath(issue.path);
+          return path ? `${path}: ${issue.message}` : issue.message;
+        })
+        .join("; ");
+      throw new Error(`Tool "${toolName}" ${errorPrefix}: ${details}`);
+    }
+    return;
+  }
+
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new Error(
       `Tool "${toolName}" ${errorPrefix}: expected a plain object.`
     );
   }
 
-  const outputKeys = new Set(Object.keys(outputSchema));
+  const fields = outputSchema as unknown as ZodRawShape;
+  const outputKeys = new Set(Object.keys(fields));
   const extraKeys = Object.keys(data).filter((key) => !outputKeys.has(key));
   if (extraKeys.length > 0) {
     throw new Error(
@@ -37,7 +64,7 @@ function validateAgainstOutputSchema(
     );
   }
 
-  for (const [fieldName, fieldSchema] of Object.entries(outputSchema)) {
+  for (const [fieldName, fieldSchema] of Object.entries(fields)) {
     try {
       fieldSchema.parse((data as any)[fieldName]);
     } catch (error: any) {
@@ -48,6 +75,19 @@ function validateAgainstOutputSchema(
   }
 }
 
+/** True when a handler returned a CallToolResult rather than bare data. */
+function isCallToolResultShape(response: unknown): boolean {
+  if (!response || typeof response !== "object" || Array.isArray(response)) {
+    return false;
+  }
+  return (
+    "structuredContent" in response ||
+    ("content" in response && Array.isArray((response as any).content)) ||
+    "_meta" in response ||
+    "isError" in response
+  );
+}
+
 /**
  * Type for the original tool handler that users write
  */
@@ -56,7 +96,8 @@ export type UserToolResponse =
   | InputRequiredResult
   | string
   | number
-  | Record<string, unknown>;
+  | Record<string, unknown>
+  | JSONValue;
 
 export type UserToolHandler = (
   args: ZodRawShape,
@@ -167,7 +208,7 @@ function createToolExtraArguments(ctx: ServerContext): ToolExtraArguments {
 export function transformToolHandler(
   handler: UserToolHandler,
   meta?: Record<string, any>,
-  outputSchema?: ZodRawShape,
+  outputSchema?: ToolSchemaInput,
   toolName = "unknown-tool"
 ): McpToolHandler {
   return async (
@@ -188,9 +229,39 @@ export function transformToolHandler(
       return response;
     }
 
+    // With a complete outputSchema, bare data is shorthand for
+    // `{ structuredContent: data }`. Strings and numbers that do not match
+    // keep the text-only behavior below.
+    if (
+      outputSchema &&
+      isStandardFieldSchema(outputSchema) &&
+      response !== undefined &&
+      !isCallToolResultShape(response)
+    ) {
+      if (typeof response === "string" || typeof response === "number") {
+        const result = await outputSchema["~standard"].validate(response);
+        if (!result.issues) {
+          return {
+            content: [{ type: "text", text: `${response}` }],
+            structuredContent: response,
+          };
+        }
+      } else {
+        await validateAgainstOutputSchema(
+          response,
+          outputSchema,
+          toolName,
+          "returned data that does not match outputSchema"
+        );
+        response = { structuredContent: response };
+      }
+    }
+
     if (typeof response === "string" || typeof response === "number") {
-      if (outputSchema) {
-        const outputSchemaEntries = Object.entries(outputSchema);
+      if (outputSchema && !isStandardFieldSchema(outputSchema)) {
+        const outputSchemaEntries = Object.entries(
+          outputSchema as unknown as ZodRawShape
+        );
         if (outputSchemaEntries.length === 1) {
           const [fieldName, fieldSchema] = outputSchemaEntries[0];
           try {
@@ -251,14 +322,11 @@ export function transformToolHandler(
       response &&
       typeof response === "object" &&
       !Array.isArray(response) &&
-      !("structuredContent" in response) &&
-      !("content" in response && Array.isArray((response as any).content)) &&
-      !("_meta" in response) &&
-      !("isError" in response)
+      !isCallToolResultShape(response)
     ) {
       // Validate the response against outputSchema before wrapping.
-      validateAgainstOutputSchema(
-        response as Record<string, unknown>,
+      await validateAgainstOutputSchema(
+        response,
         outputSchema,
         toolName,
         "returned data that does not match outputSchema"
@@ -384,8 +452,8 @@ export function transformToolHandler(
 
     // Validate structuredContent against outputSchema if present.
     if (outputSchema && hasStructuredContent && !isError) {
-      validateAgainstOutputSchema(
-        (response as any).structuredContent as Record<string, unknown>,
+      await validateAgainstOutputSchema(
+        (response as any).structuredContent,
         outputSchema,
         toolName,
         "returned structuredContent that does not match outputSchema"

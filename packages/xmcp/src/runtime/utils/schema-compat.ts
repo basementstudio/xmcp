@@ -208,3 +208,71 @@ export function rawShapeToStandardSchema(
     Record<string, unknown>
   > & { shape: RawShape };
 }
+
+/** A tool schema: a `{ field: schema }` map or a complete schema. */
+export type ToolSchemaInput = RawShape | StandardFieldSchema;
+
+function isRawShape(value: unknown): value is RawShape {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Object.values(value).every(isStandardFieldSchema)
+  );
+}
+
+/**
+ * Wraps a complete schema (`z.object(...)`, `z.array(...)`, a union, ...) as a
+ * Standard Schema. Validation stays with the user's schema; JSON Schema
+ * conversion reuses the per-field converter so zod v3 and zod v4 < 4.2 keep
+ * working. Object schemas expose their fields as `shape` so the SDK can still
+ * find `completable()` fields.
+ */
+export function completeSchemaToStandardSchema(
+  schema: StandardFieldSchema
+): StandardSchemaWithJSON<unknown, unknown> & { shape?: RawShape } {
+  const shape = (schema as { shape?: unknown }).shape;
+  return {
+    ...(isRawShape(shape) ? { shape } : {}),
+    "~standard": {
+      version: 1,
+      vendor: "xmcp",
+      validate: (value: unknown) => schema["~standard"].validate(value),
+      jsonSchema: {
+        input: ({ target }: { target: string }) =>
+          fieldToJsonSchema(schema, target, "input"),
+        output: ({ target }: { target: string }) =>
+          fieldToJsonSchema(schema, target, "output"),
+      },
+    },
+  } as StandardSchemaWithJSON<unknown, unknown> & { shape?: RawShape };
+}
+
+/**
+ * Converts either tool schema form for `registerTool`. `strict` only applies
+ * to field maps; complete schemas keep the strictness their author chose.
+ */
+export function toolSchemaToStandardSchema(
+  schema: ToolSchemaInput,
+  options: { strict?: boolean } = {}
+) {
+  return isStandardFieldSchema(schema)
+    ? completeSchemaToStandardSchema(schema)
+    : rawShapeToStandardSchema(schema, options);
+}
+
+/**
+ * MCP requires tool input schemas to describe objects. Reject other roots at
+ * registration so the error names the tool instead of surfacing on tools/list.
+ */
+export function assertObjectInputSchema(
+  schema: StandardFieldSchema,
+  toolName: string
+): void {
+  const { type } = fieldToJsonSchema(schema, "draft-2020-12", "input");
+  if (type !== undefined && type !== "object") {
+    throw new Error(
+      `Invalid schema for tool "${toolName}": tool input schemas must describe ` +
+        `an object, got JSON Schema type ${JSON.stringify(type)}.`
+    );
+  }
+}

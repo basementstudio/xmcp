@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
+import { z } from "zod";
 
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getRequestContext } from "@/runtime/contexts/request-context";
@@ -44,7 +45,8 @@ Object.assign(globals, {
     "src/tools/tags.ts": async () => ({
       metadata: { name: "tags", description: "List tags" },
       schema: {},
-      default: () => ({ structuredContent: ["a", "b"] }),
+      outputSchema: z.array(z.string()),
+      default: () => ["a", "b"],
     }),
   },
   INJECTED_PROMPTS: {
@@ -213,6 +215,22 @@ describe("Fetch adapter", () => {
       )
     );
     assert.deepEqual(tags.result.structuredContent, ["a", "b"]);
+    const listed = await body(
+      await xmcpHandler(
+        request(
+          "tools/list",
+          { _meta: meta },
+          {
+            "mcp-protocol-version": "2026-07-28",
+            "mcp-method": "tools/list",
+          }
+        )
+      )
+    );
+    const tagsTool = listed.result.tools.find(
+      (tool: { name: string }) => tool.name === "tags"
+    );
+    assert.equal(tagsTool.outputSchema.type, "array");
   });
 
   it("registers tools, prompts, and resources through the shared loaders", async () => {

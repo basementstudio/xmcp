@@ -270,6 +270,60 @@ test("legacy clients receive non-object structuredContent wrapped as { result }"
   assert.deepEqual(result.content, [{ type: "text", text: '["a","b"]' }]);
 });
 
+test("complete schemas register, validate, and wrap for legacy clients", async (t) => {
+  const client = await connect(
+    t,
+    {
+      "range.ts": async () => ({
+        schema: z
+          .object({ from: z.number(), to: z.number() })
+          .refine(({ from, to }) => from <= to, "from must not exceed to"),
+        outputSchema: z.array(z.number()),
+        default: ({ from, to }: { from: number; to: number }) =>
+          Array.from({ length: to - from + 1 }, (_, i) => from + i),
+      }),
+    },
+    (_ctx, next) => next()
+  );
+
+  const [tool] = (await client.listTools()).tools;
+  assert.equal(tool.inputSchema.type, "object");
+  assert.deepEqual(tool.outputSchema, {
+    type: "object",
+    properties: { result: { type: "array", items: { type: "number" } } },
+    required: ["result"],
+  });
+
+  const result = await client.callTool({
+    name: "range",
+    arguments: { from: 1, to: 3 },
+  });
+  assert.deepEqual(result.structuredContent, { result: [1, 2, 3] });
+
+  const invalid = await client.callTool({
+    name: "range",
+    arguments: { from: 3, to: 1 },
+  });
+  assert.equal(invalid.isError, true);
+  assert.match(JSON.stringify(invalid.content), /from must not exceed to/);
+});
+
+test("complete input schemas must describe objects", async (t) => {
+  await assert.rejects(
+    connect(
+      t,
+      {
+        "tags.ts": async () => ({
+          schema: z.array(z.string()),
+          default: () => "unreachable",
+        }),
+      },
+      (_ctx, next) => next()
+    ),
+    /Invalid schema for tool "tags": tool input schemas must describe an object/
+  );
+});
+
 // Compile-time guard: an un-narrowed middleware context has no tool property.
 function checkContextType(ctx: McpMiddlewareContext) {
   // @ts-expect-error Access requires a tools/call method check.

@@ -25,11 +25,12 @@ import { addToolsToServer } from "./tools";
 import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { UserToolHandler } from "./transformers/tool";
+import type { StandardFieldSchema } from "./schema-compat";
 
 export type ToolFile = {
   metadata: ToolMetadata;
-  schema: ZodRawShape;
-  outputSchema?: ZodRawShape;
+  schema: ZodRawShape | StandardFieldSchema;
+  outputSchema?: ZodRawShape | StandardFieldSchema;
   default: UserToolHandler;
 };
 

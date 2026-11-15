@@ -65,3 +65,27 @@ test("both import map forms apply inference only when enabled", () => {
     /inferred-tools|withInferredSchema/
   );
 });
+
+test("Next.js's direct registry keeps complete schemas as authored", async () => {
+  const { registry } = generate(false);
+  const code = registry.replace(/^import .*;$/gm, "").replaceAll("export ", "");
+  const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+  const inputSchema = z
+    .object({ from: z.number(), to: z.number() })
+    .refine(({ from, to }) => from <= to);
+  const outputSchema = z.array(z.string());
+  const tools = await new AsyncFunction("z", "tool0", code + "\nreturn tools;")(
+    z,
+    {
+      schema: inputSchema,
+      outputSchema,
+      default: () => ["a"],
+    }
+  );
+  assert.equal(tools.greet.inputSchema, inputSchema);
+  assert.equal(tools.greet.outputSchema, outputSchema);
+  assert.equal(
+    tools.greet.inputSchema.safeParse({ from: 2, to: 1 }).success,
+    false
+  );
+});
