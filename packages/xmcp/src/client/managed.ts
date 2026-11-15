@@ -1,29 +1,20 @@
 import {
   Client,
   StreamableHTTPClientTransport,
-  type ClientCapabilities,
-  type ClientContext,
   type ClientOptions,
   type ConnectOptions,
-  type HandlerResultTypeMap,
-  type RequestTypeMap,
 } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { CLIENT_IDENTITY } from "./index";
+import {
+  capabilitiesForHandlers,
+  type ClientHandlers,
+  registerClientHandlers,
+} from "./handlers";
 import { headersToRecord } from "./headers";
 import type { ClientDefinition } from "./types";
 
-type Handler<Method extends keyof RequestTypeMap> = (
-  request: RequestTypeMap[Method],
-  context: ClientContext
-) => HandlerResultTypeMap[Method] | Promise<HandlerResultTypeMap[Method]>;
-
-export interface ClientHandlers {
-  sampling?: Handler<"sampling/createMessage">;
-  /** Handles both form and URL elicitation requests. */
-  elicitation?: Handler<"elicitation/create">;
-  roots?: Handler<"roots/list">;
-}
+export type { ClientHandlers } from "./handlers";
 
 export interface ManagedClientOptions {
   handlers?: ClientHandlers;
@@ -41,20 +32,11 @@ export async function createClient(
   options: ManagedClientOptions = {}
 ): Promise<Client> {
   const { handlers = {} } = options;
-  const capabilities: ClientCapabilities = {};
-  if (handlers.sampling) capabilities.sampling = {};
-  if (handlers.elicitation) capabilities.elicitation = { form: {}, url: {} };
-  if (handlers.roots) capabilities.roots = {};
-
   const client = new Client(CLIENT_IDENTITY, {
-    capabilities,
+    capabilities: capabilitiesForHandlers(handlers),
     versionNegotiation: options.versionNegotiation ?? { mode: "auto" },
   });
-  if (handlers.sampling)
-    client.setRequestHandler("sampling/createMessage", handlers.sampling);
-  if (handlers.elicitation)
-    client.setRequestHandler("elicitation/create", handlers.elicitation);
-  if (handlers.roots) client.setRequestHandler("roots/list", handlers.roots);
+  registerClientHandlers(client, handlers);
 
   const transport =
     definition.type === "http"

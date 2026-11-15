@@ -8,6 +8,11 @@ import {
   type StdioServerParameters,
 } from "@modelcontextprotocol/client/stdio";
 import type { Buffer } from "node:buffer";
+import {
+  capabilitiesForHandlers,
+  type ClientHandlers,
+  registerClientHandlers,
+} from "./handlers";
 import { CustomHeaders, headersToRecord } from "./headers";
 
 const packageJson = require("../../package.json");
@@ -18,24 +23,24 @@ export const CLIENT_IDENTITY = {
   version: packageJson.version,
 };
 
-const CLIENT_CAPABILITIES = {
-  capabilities: {
-    sampling: {},
-    elicitation: {
-      form: {},
-      url: {},
-    },
-    roots: { listChanged: true },
-  },
-  // Probe server/discover at connect (protocol 2026-07-28), falling back to
-  // the classic initialize handshake against 2025-era servers.
-  versionNegotiation: { mode: "auto" },
-} as const;
+/** Creates a client that advertises only the capabilities it has handlers for. */
+function createClientWithHandlers(handlers: ClientHandlers = {}): Client {
+  const client = new Client(CLIENT_IDENTITY, {
+    capabilities: capabilitiesForHandlers(handlers),
+    // Probe server/discover at connect (protocol 2026-07-28), falling back to
+    // the classic initialize handshake against 2025-era servers.
+    versionNegotiation: { mode: "auto" },
+  });
+  registerClientHandlers(client, handlers);
+  return client;
+}
 
 interface HttpClientOptions {
   /** Full MCP server base URL — example: https://host.tld/mcp */
   url: string;
   headers?: CustomHeaders;
+  /** Sampling, elicitation, and roots handlers; only these are advertised. */
+  handlers?: ClientHandlers;
 }
 
 /**
@@ -44,8 +49,9 @@ interface HttpClientOptions {
 export async function createHTTPClient({
   url,
   headers,
+  handlers,
 }: HttpClientOptions): Promise<Client> {
-  const client = new Client(CLIENT_IDENTITY, CLIENT_CAPABILITIES);
+  const client = createClientWithHandlers(handlers);
 
   // ----- headers -----
   const headersRecord = headers
@@ -82,6 +88,8 @@ export interface StdioClientOptions extends StdioServerParameters {
    * runs with piped stderr (defaults to logging to console.error).
    */
   onStderrData?: (chunk: Buffer) => void;
+  /** Sampling, elicitation, and roots handlers; only these are advertised. */
+  handlers?: ClientHandlers;
 }
 
 export interface StdioClientConnection {
@@ -95,9 +103,9 @@ export interface StdioClientConnection {
 export async function createSTDIOClient(
   options: StdioClientOptions
 ): Promise<StdioClientConnection> {
-  const { onStderrData, ...serverParams } = options;
+  const { onStderrData, handlers, ...serverParams } = options;
 
-  const client = new Client(CLIENT_IDENTITY, CLIENT_CAPABILITIES);
+  const client = createClientWithHandlers(handlers);
 
   const transport = new StdioClientTransport({
     ...serverParams,
