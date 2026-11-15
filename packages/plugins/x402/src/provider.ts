@@ -23,7 +23,8 @@ import {
   getToolContext,
 } from "./context.js";
 import { NETWORKS } from "./constants.js";
-import { isValidNanoAddress } from "./nano.js";
+import { isValidNanoAddress, type NanoPaymentStore } from "./nano.js";
+import { createNanoFileStore } from "./nano-store.js";
 
 interface PendingSettlement {
   payload: PaymentPayload;
@@ -58,7 +59,9 @@ export function x402Provider(config: X402Config): RequestHandler {
 
 function x402Middleware(config: X402Config): RequestHandler {
   // Nano block hashes already accepted by this provider, to prevent replay
-  const nanoBlocks = new Set<string>();
+  const nanoBlocks: NanoPaymentStore = config.nano?.claimsFile
+    ? createNanoFileStore(config.nano.claimsFile)
+    : new Set<string>();
 
   return async (req: Request, res: Response, next: NextFunction) => {
     const paidToolResult = findPaidToolInRequest(req);

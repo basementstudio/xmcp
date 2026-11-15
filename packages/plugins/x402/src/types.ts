@@ -64,6 +64,19 @@ export const x402ConfigSchema = z.object({
           z.custom<NanoRpc>((value) => typeof value === "function"),
         ])
         .optional(),
+      /**
+       * File that records every block hash that paid for a call, so a block
+       * is still refused after a restart. Without it, used hashes are kept
+       * in memory only.
+       */
+      claimsFile: z.string().min(1).optional(),
+      /**
+       * Require each payment to be bound to one order (xno-binding v1): the
+       * 402 offers an `orderId`, the payer sets the send block's
+       * representative to the order commitment and sends exactly the price,
+       * and the payload carries `orderId` beside `blockHash`.
+       */
+      requireBinding: z.boolean().optional(),
     })
     .optional(),
   defaults: z
