@@ -41,6 +41,11 @@ Object.assign(globals, {
         });
       },
     }),
+    "src/tools/tags.ts": async () => ({
+      metadata: { name: "tags", description: "List tags" },
+      schema: {},
+      default: () => ({ structuredContent: ["a", "b"] }),
+    }),
   },
   INJECTED_PROMPTS: {
     "src/prompts/hello.ts": async () => ({
@@ -194,6 +199,20 @@ describe("Fetch adapter", () => {
     );
     assert.ok(called.result, JSON.stringify(called));
     assert.equal(JSON.parse(called.result.content[0].text).client, "modern");
+    const tags = await body(
+      await xmcpHandler(
+        request(
+          "tools/call",
+          { name: "tags", arguments: {}, _meta: meta },
+          {
+            "mcp-protocol-version": "2026-07-28",
+            "mcp-method": "tools/call",
+            "mcp-name": "tags",
+          }
+        )
+      )
+    );
+    assert.deepEqual(tags.result.structuredContent, ["a", "b"]);
   });
 
   it("registers tools, prompts, and resources through the shared loaders", async () => {

@@ -337,7 +337,11 @@ export function transformToolHandler(
 
     // Check if response has at least one of: content or structuredContent
     let hasContent = "content" in response && Array.isArray(response.content);
-    const hasStructuredContent = "structuredContent" in response;
+    // Any JSON value is valid structuredContent (2026-07-28); the SDK wraps
+    // non-object values as `{ result }` for legacy clients.
+    const hasStructuredContent =
+      "structuredContent" in response &&
+      (response as any).structuredContent !== undefined;
     const isError = "isError" in response && (response as any).isError === true;
 
     if (!hasContent && !hasStructuredContent && !isError) {
@@ -416,33 +420,6 @@ export function transformToolHandler(
               `All content types support an optional "_meta" object property`
           );
         }
-      }
-    }
-
-    // validate structuredContent if present
-    if (hasStructuredContent) {
-      const structuredContent = (response as any).structuredContent;
-
-      if (
-        structuredContent === null ||
-        typeof structuredContent !== "object" ||
-        Array.isArray(structuredContent)
-      ) {
-        const structuredType = Array.isArray(structuredContent)
-          ? "array"
-          : typeof structuredContent;
-
-        throw new Error(
-          `'structuredContent' must be a plain object (not an array or primitive). ` +
-            `Got ${structuredType}: ${JSON.stringify(structuredContent, null, 2)}\n\n` +
-            `Expected format:\n` +
-            `{\n` +
-            `  structuredContent: {\n` +
-            `    key: "value",\n` +
-            `    nested: { data: "here" }\n` +
-            `  }\n` +
-            `}`
-        );
       }
     }
 

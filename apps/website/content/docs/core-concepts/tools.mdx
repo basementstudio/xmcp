@@ -739,6 +739,15 @@ export default async function getUserData() {
 }
 ```
 
+`structuredContent` can be any JSON value: an object, an array, a string, a number, a boolean, or `null`.
+Clients on protocol revision 2026-07-28 receive the value as-is. Clients on earlier revisions receive non-object values wrapped as `{ "result": <value> }`, which the MCP SDK handles automatically.
+
+```typescript title="src/tools/list-tags.ts"
+export default async function listTags() {
+  return { structuredContent: ["billing", "support", "sales"] };
+}
+```
+
 `structuredContent` works without declaring `outputSchema`.
 If `outputSchema` is declared and `structuredContent` is returned, `structuredContent` must conform to it.
 If your handler returns a primitive (`string` or `number`) and `outputSchema` has exactly one field that accepts it, xmcp auto-injects it into `structuredContent` using that field.

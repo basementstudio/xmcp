@@ -167,6 +167,47 @@ test("transformToolHandler validates structured output", async () => {
   );
 });
 
+test("transformToolHandler accepts any JSON value as structuredContent", async () => {
+  for (const value of [[1, 2], "ok", 3, false, null, { nested: [] }]) {
+    const transformedHandler = transformToolHandler(() => ({
+      structuredContent: value,
+    }));
+
+    assert.deepStrictEqual(
+      await invokeHandler(transformedHandler, "rpc-json-value"),
+      {
+        structuredContent: value,
+        content: [{ type: "text", text: JSON.stringify(value) }],
+      }
+    );
+  }
+});
+
+test("transformToolHandler treats undefined structuredContent as absent", async () => {
+  const transformedHandler = transformToolHandler(() => ({
+    structuredContent: undefined,
+  }));
+
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-undefined-structured"),
+    /must return at least 'content' or 'structuredContent'/
+  );
+});
+
+test("transformToolHandler keeps field-map outputSchema object-only", async () => {
+  const transformedHandler = transformToolHandler(
+    () => ({ structuredContent: [1] }),
+    undefined,
+    { count: z.number() },
+    "count"
+  );
+
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-array-field-map"),
+    /Tool "count" returned structuredContent that does not match outputSchema: expected a plain object/
+  );
+});
+
 test("transformToolHandler forwards clientInfo through tool extra arguments", async () => {
   const transformedHandler = transformToolHandler((args, extra) => {
     return {

@@ -254,6 +254,22 @@ test("SDK lookup, input and output validation still surround tool middleware", a
   assert.equal(executions, 0);
 });
 
+test("legacy clients receive non-object structuredContent wrapped as { result }", async (t) => {
+  const client = await connect(
+    t,
+    {
+      "list.ts": async () => ({
+        default: () => ({ structuredContent: ["a", "b"] }),
+      }),
+    },
+    (_ctx, next) => next()
+  );
+
+  const result = await client.callTool({ name: "list", arguments: {} });
+  assert.deepEqual(result.structuredContent, { result: ["a", "b"] });
+  assert.deepEqual(result.content, [{ type: "text", text: '["a","b"]' }]);
+});
+
 // Compile-time guard: an un-narrowed middleware context has no tool property.
 function checkContextType(ctx: McpMiddlewareContext) {
   // @ts-expect-error Access requires a tools/call method check.
