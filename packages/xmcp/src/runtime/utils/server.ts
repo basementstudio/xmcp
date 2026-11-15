@@ -97,7 +97,7 @@ export async function configureServer(
   registerWithMcpMiddleware(
     server,
     middleware,
-    () => {
+    (authorizeSkill) => {
       addToolsToServer(
         server,
         filterComponents(toolModules, components),
@@ -113,7 +113,8 @@ export async function configureServer(
         server,
         injectedSkills,
         components,
-        executionLogger?.registerResource
+        executionLogger?.registerResource,
+        authorizeSkill
       );
     },
     authorize

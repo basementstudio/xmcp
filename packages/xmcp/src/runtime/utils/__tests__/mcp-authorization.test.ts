@@ -18,6 +18,8 @@ import type {
 
 import { uIResourceRegistry } from "../ext-apps-registry";
 import { normalizeAuthorize } from "../mcp-authorization";
+import { getRequestContext } from "../../contexts/request-context";
+import { wrapToolWithMiddleware } from "../mcp-middleware";
 import { registerWithMcpMiddleware } from "../mcp-middleware";
 
 const DENY = { "xmcp/tags": ["deny"] };
@@ -195,20 +197,31 @@ test("rejects denied direct access exactly like an unknown component", async (t)
   assert.equal(read.contents.length, 1);
 });
 
-test("returns no completions for denied prompts and templates without running completers", async (t) => {
+test("denied completions match unknown references without running completers", async (t) => {
   const { client } = await connect(t, tagPolicy);
   for (const ref of [
     { type: "ref/prompt", name: "hidden" },
     { type: "ref/resource", uri: "test://secret/{id}" },
+    { type: "ref/resource", uri: "test://hidden" },
   ] as const) {
-    const result = await client.complete({
-      ref,
-      argument: {
-        name: ref.type === "ref/prompt" ? "value" : "id",
-        value: "a",
-      },
+    const argument = {
+      name: ref.type === "ref/prompt" ? "value" : "id",
+      value: "a",
+    };
+    const unknownRef =
+      ref.type === "ref/prompt"
+        ? { type: "ref/prompt" as const, name: "missing" }
+        : { type: "ref/resource" as const, uri: "test://missing" };
+    const unknown = await rejection(
+      client.complete({ ref: unknownRef, argument })
+    );
+    assert.deepEqual(await rejection(client.complete({ ref, argument })), {
+      ...unknown,
+      message: unknown.message.replace(
+        ref.type === "ref/prompt" ? "missing" : "test://missing",
+        ref.type === "ref/prompt" ? ref.name : ref.uri
+      ),
     });
-    assert.deepEqual(result.completion, { values: [], hasMore: false });
   }
   const allowed = await client.complete({
     ref: { type: "ref/prompt", name: "open" },
@@ -279,6 +292,16 @@ test("generated UI resources follow their owning tool", async (t) => {
     server,
     [],
     () => {
+      // The SDK installs completion only when a completable component exists.
+      server.registerPrompt(
+        "completion",
+        {
+          argsSchema: z.object({
+            value: completable(z.string(), (value) => [value]),
+          }),
+        },
+        () => ({ messages: [] })
+      );
       server.registerTool("widget", { _meta: DENY }, ran);
       uIResourceRegistry.add("widget", {
         name: "widget",
@@ -308,7 +331,26 @@ test("generated UI resources follow their owning tool", async (t) => {
     client.readResource({ uri: "ui://app/widget.html" }),
     /Resource not found/
   );
-  assert.deepEqual(operations, ["list", "read"]);
+  const argument = { name: "id", value: "a" };
+  const unknown = await rejection(
+    client.complete({
+      ref: { type: "ref/resource", uri: "ui://app/missing.html" },
+      argument,
+    })
+  );
+  assert.deepEqual(
+    await rejection(
+      client.complete({
+        ref: { type: "ref/resource", uri: "ui://app/widget.html" },
+        argument,
+      })
+    ),
+    {
+      ...unknown,
+      message: unknown.message.replace("missing.html", "widget.html"),
+    }
+  );
+  assert.deepEqual(operations, ["list", "read", "complete"]);
 });
 
 test("restores registration methods and validates the export", () => {
@@ -334,4 +376,66 @@ test("restores registration methods and validates the export", () => {
     () => normalizeAuthorize({ allow: true }),
     /export authorize as a function/
   );
+});
+
+test("tool policy values reach middleware and handlers while raw inputs stay unparsed", async (t) => {
+  const server = new McpServer({ name: "scope-test", version: "1" });
+  const seen: unknown[] = [];
+  const middleware: McpMiddleware[] = [
+    async (ctx, next) => {
+      if (ctx.method === "tools/call") {
+        assert.equal(ctx.get("caller"), String(ctx.params.arguments.n));
+        assert.equal(typeof ctx.params.arguments.n, "number");
+      }
+      return next();
+    },
+  ];
+  registerWithMcpMiddleware(
+    server,
+    middleware,
+    () => {
+      server.registerTool(
+        "parsed",
+        { inputSchema: z.object({ n: z.coerce.number().default(7) }) },
+        wrapToolWithMiddleware(
+          async (args) => {
+            await Promise.resolve();
+            const caller = getRequestContext().get<string>("caller");
+            assert.equal(caller, String(args.n));
+            return { content: [{ type: "text", text: caller! }] };
+          },
+          { name: "parsed", description: "" },
+          middleware
+        ) as never
+      );
+    },
+    (ctx, _component, operation) => {
+      if (operation === "call" && ctx.method === "tools/call") {
+        assert.equal(ctx.get("caller"), undefined);
+        seen.push(ctx.params.arguments.n);
+        ctx.set("caller", String(ctx.params.arguments.n ?? 7));
+      }
+      return true;
+    }
+  );
+  const client = new Client({ name: "test", version: "1" });
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  t.after(async () => {
+    await client.close();
+    await server.close();
+  });
+  await server.connect(serverTransport);
+  await client.connect(clientTransport);
+  const results = await Promise.all(
+    ["1", "2"].map((n) => client.callTool({ name: "parsed", arguments: { n } }))
+  );
+  results.push(await client.callTool({ name: "parsed", arguments: {} }));
+  results.push(await client.callTool({ name: "parsed", arguments: {} }));
+  assert.deepEqual(
+    results.map((result) => result.content),
+    ["1", "2", "7", "7"].map((text) => [{ type: "text", text }])
+  );
+  assert.deepEqual(seen, ["1", "2", undefined, undefined]);
+  assert.throws(() => getRequestContext(), /only be used while handling/);
 });

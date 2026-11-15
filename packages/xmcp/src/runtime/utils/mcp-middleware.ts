@@ -21,6 +21,7 @@ import {
   createComponentRegistry,
   recordComponents,
 } from "./mcp-authorization";
+import type { AuthorizeSkill } from "./skills";
 import {
   type McpToolHandler,
   resolveToolClientInfo,
@@ -38,7 +39,10 @@ export function normalizeMcpMiddleware(value: unknown): McpMiddleware[] {
 }
 
 /** Share one dispatch implementation and one request scope for every operation. */
-function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
+function createMiddlewareRunner(
+  middleware: readonly McpMiddleware[],
+  reuseCurrentRequest = false
+) {
   const chain = [...middleware];
   return (
     operation: Pick<McpMiddlewareContext, "method" | "params"> & {
@@ -47,26 +51,33 @@ function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
     ctx: ServerContext,
     handler: () => McpMiddlewareResult | Promise<McpMiddlewareResult>
   ) =>
-    withRequestContext(ctx, resolveToolClientInfo(ctx), async () => {
-      if (chain.length === 0) return handler();
-      const context: McpMiddlewareContext = Object.freeze({
-        ...getRequestContext(),
-        ...operation,
-        params: Object.freeze({ ...operation.params }),
-      }) as McpMiddlewareContext;
-      let lastIndex = -1;
-      const dispatch = async (index: number): Promise<McpMiddlewareResult> => {
-        if (index <= lastIndex) {
-          throw new Error("MCP middleware next() can only be called once");
-        }
-        lastIndex = index;
-        const current = chain[index];
-        return current
-          ? current(context, () => dispatch(index + 1))
-          : handler();
-      };
-      return dispatch(0);
-    });
+    withRequestContext(
+      ctx,
+      resolveToolClientInfo(ctx),
+      async () => {
+        if (chain.length === 0) return handler();
+        const context: McpMiddlewareContext = Object.freeze({
+          ...getRequestContext(),
+          ...operation,
+          params: Object.freeze({ ...operation.params }),
+        }) as McpMiddlewareContext;
+        let lastIndex = -1;
+        const dispatch = async (
+          index: number
+        ): Promise<McpMiddlewareResult> => {
+          if (index <= lastIndex) {
+            throw new Error("MCP middleware next() can only be called once");
+          }
+          lastIndex = index;
+          const current = chain[index];
+          return current
+            ? current(context, () => dispatch(index + 1))
+            : handler();
+        };
+        return dispatch(0);
+      },
+      reuseCurrentRequest
+    );
 }
 
 /** Copy JSON-like metadata so freezing the view never freezes registration inputs. */
@@ -103,7 +114,7 @@ export function wrapToolWithMiddleware(
   metadata: McpToolMetadata,
   middleware: readonly McpMiddleware[]
 ): McpToolHandler {
-  const run = createMiddlewareRunner(middleware);
+  const run = createMiddlewareRunner(middleware, true);
   const tool = Object.freeze({ metadata: snapshotMetadata(metadata) });
   return (args, ctx) =>
     run(
@@ -146,7 +157,7 @@ type RequestHandler = (
 export function registerWithMcpMiddleware(
   server: McpServer,
   middleware: readonly McpMiddleware[],
-  register: () => void,
+  register: (authorizeSkill?: AuthorizeSkill) => void,
   authorize?: McpAuthorize
 ): void {
   const protocol = server.server;
@@ -205,7 +216,15 @@ export function registerWithMcpMiddleware(
   }) as typeof original;
   try {
     if (registry) {
-      recordComponents(server, registry, snapshotMetadata, register);
+      const authorizeSkill: AuthorizeSkill = async (ctx, uri, operation) => {
+        const component = registry.resources.get(uri);
+        return (
+          !component || (await authorize!(ctx, component, operation)) === true
+        );
+      };
+      recordComponents(server, registry, snapshotMetadata, () =>
+        register(authorizeSkill)
+      );
     } else {
       register();
     }

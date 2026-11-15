@@ -6,9 +6,23 @@ import {
 import { z } from "zod/v3";
 
 import type { ComponentsConfig } from "@/config";
+import type { McpAuthorizeContext } from "@/types/mcp-middleware";
 import type { SkillDefinition } from "@/types/skill";
 
+import {
+  getRequestContext,
+  withRequestContext,
+} from "../contexts/request-context";
+import { resolveToolClientInfo } from "./transformers/tool";
+
 import { filterComponents } from "./component-visibility";
+
+/** Internal bridge to the resource registry captured during server registration. */
+export type AuthorizeSkill = (
+  ctx: Extract<McpAuthorizeContext, { method: "skills/list" | "skills/get" }>,
+  uri: string,
+  operation: "list" | "read"
+) => Promise<boolean>;
 
 /** Identifier of the MCP Skills extension (SEP-2640). */
 export const SKILLS_EXTENSION = "io.modelcontextprotocol/skills";
@@ -65,7 +79,8 @@ export function addSkillsToServer(
   server: McpServer,
   skills: readonly SkillDefinition[],
   components?: ComponentsConfig,
-  onRegister?: (name: string, uri: string) => void
+  onRegister?: (name: string, uri: string) => void,
+  authorize?: AuthorizeSkill
 ): McpServer {
   // Skills follow the same include/exclude name rules as other components.
   const visibleSkills = [
@@ -116,33 +131,55 @@ export function addSkillsToServer(
   server.server.setRequestHandler(
     "skills/list",
     { params: listSkillsParamsSchema },
-    (params) => {
-      const start =
-        params?.cursor === undefined
-          ? 0
-          : decodeCursor(params.cursor, entries.length);
-      const end = start + SKILLS_PAGE_SIZE;
-      return {
-        skills: entries.slice(start, end),
-        ...(end < entries.length ? { nextCursor: encodeCursor(end) } : {}),
-        ...CACHE_HINT,
-      };
-    }
+    (params, ctx) =>
+      withRequestContext(ctx, resolveToolClientInfo(ctx), async () => {
+        const context = Object.freeze({
+          ...getRequestContext(),
+          method: "skills/list" as const,
+          params: Object.freeze({ ...params }),
+        });
+        // Filter before paging: cursors describe only this caller's catalog.
+        const decisions = authorize
+          ? await Promise.all(
+              entries.map((entry) => authorize(context, entry.uri, "list"))
+            )
+          : undefined;
+        const allowed = decisions
+          ? entries.filter((_, index) => decisions[index])
+          : entries;
+        const start =
+          params?.cursor === undefined
+            ? 0
+            : decodeCursor(params.cursor, allowed.length);
+        const end = start + SKILLS_PAGE_SIZE;
+        return {
+          skills: allowed.slice(start, end),
+          ...(end < allowed.length ? { nextCursor: encodeCursor(end) } : {}),
+          ...CACHE_HINT,
+        };
+      })
   );
 
   server.server.setRequestHandler(
     "skills/get",
     { params: getSkillParamsSchema },
-    ({ uri }) => {
-      const skill = entriesByUri.get(uri);
-      if (!skill) {
-        throw new ProtocolError(
-          ProtocolErrorCode.InvalidParams,
-          `No skill is served at ${uri}`
-        );
-      }
-      return { skill, ...CACHE_HINT };
-    }
+    (params, ctx) =>
+      withRequestContext(ctx, resolveToolClientInfo(ctx), async () => {
+        const { uri } = params;
+        const skill = entriesByUri.get(uri);
+        const context = Object.freeze({
+          ...getRequestContext(),
+          method: "skills/get" as const,
+          params: Object.freeze({ ...params }),
+        });
+        if (!skill || (authorize && !(await authorize(context, uri, "read")))) {
+          throw new ProtocolError(
+            ProtocolErrorCode.InvalidParams,
+            `No skill is served at ${uri}`
+          );
+        }
+        return { skill, ...CACHE_HINT };
+      })
   );
 
   return server;

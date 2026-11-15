@@ -21,7 +21,7 @@ curl -i http://localhost:3001/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"greet","arguments":{"name":"Ada"}}}'
 ```
 
-The response contains `Hello, Ada!`, `_meta: { "tool": "greet" }`, and the
+The response contains `Hello, Ada!`, `_meta: { "tool": "greet", "caller": "reader", "authorizedCaller": "reader" }`, and the
 `x-example: middlewares-array` header. Change `Ada` to `blocked` to exercise the
 short-circuit response. Omit the API key to exercise HTTP authentication.
 
@@ -89,3 +89,30 @@ The built-in API-key helper validates keys without populating `req.auth`, and
 JWT middleware sets `req.user`. This demo explicitly supplies SDK authentication
 after verification; production integrations must do the same or supply Fetch
 adapter `authInfo` options. Never send authentication tokens back in tool results.
+
+## Protected skill and policy values
+
+`greeting-guide` is available to `demo-reader`. The policy protects its entire
+`skill://greeting-guide/` prefix. With `demo-limited`, `skills/list` returns no
+skills, `skills/get` for `skill://greeting-guide/SKILL.md` returns the same error
+as an unknown skill, and `resources/read` for that URI is denied. Use these
+request bodies with the curl command above:
+
+```json
+{ "jsonrpc": "2.0", "id": 6, "method": "skills/list", "params": {} }
+```
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "skills/get",
+  "params": { "uri": "skill://greeting-guide/SKILL.md" }
+}
+```
+
+On tool calls the policy stores the verified client ID with `ctx.set()`. The
+MCP middleware reads it into `_meta.caller`, and the handler reads the same value
+through `getRequestContext()` into `_meta.authorizedCaller`. These values are local
+to the current request. The policy sees raw tool arguments; the middleware and
+handler see SDK-validated arguments.

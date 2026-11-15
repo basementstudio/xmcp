@@ -4,16 +4,38 @@ export const AUTHORIZATION_FILES = {
   "src/authorization-policy.ts": `import type { McpAuthorize } from "xmcp";
 export const authorize: McpAuthorize = (ctx, component, operation) => {
   if (operation === "call" && ctx.method !== "tools/call") throw new Error("Unexpected operation");
+  if (component.type === "resource" && component.uri.startsWith("skill://authz-hidden/")) return false;
+  if (ctx.method === "tools/call" && component.name === "authz-context") {
+    if (ctx.get("authz.raw") !== undefined) throw new Error("Leaked policy value");
+    ctx.set("authz.raw", ctx.params.arguments.n ?? "default");
+  }
   const tags = component.metadata.tags ?? [];
   if (tags.includes("authz-deny")) return false;
   if (tags.includes("authz-no-call")) return operation !== "call";
   return true;
 };
 `,
+  "src/tools/authz-context.ts": `import { getRequestContext } from "xmcp";
+import { z } from "zod";
+export const schema = { n: z.coerce.number().default(7) };
+export default async function context({ n }: { n: number }) {
+  await Promise.resolve();
+  return { structuredContent: { n, raw: getRequestContext().get("authz.raw") } };
+}
+`,
   "src/tools/authz-hidden.ts": `import { z } from "zod";
 export const schema = { n: z.number() };
 export const metadata = { name: "authz-hidden", description: "Denied tool", tags: ["authz-deny"] };
 export default function hidden() { throw new Error("Denied tool ran"); }
+`,
+  "src/skills/authz-hidden/SKILL.md": `---
+name: authz-hidden
+description: A skill hidden by the authorization policy
+---
+Secret instructions.
+`,
+  "src/tools/authz-widget.ts": `export const metadata = { name: "authz-widget", tags: ["authz-deny"], _meta: { ui: { resourceUri: "ui://app/authz-widget.html" } } };
+export default function widget() { throw new Error("Denied UI handler ran"); }
 `,
   "src/tools/authz-listed.ts": `export const metadata = { name: "authz-listed", description: "Discoverable but not callable", tags: ["authz-no-call"] };
 export default function listed() { throw new Error("Denied tool ran"); }

@@ -89,21 +89,29 @@ export type McpAuthorizeComponent =
 
 /**
  * `list` covers every catalog; `call` is tools/call, `get` is prompts/get,
- * `read` is resources/read, and `complete` is completion/complete.
+ * `read` is resources/read or skills/get, and `complete` is completion/complete.
  */
 export type McpAuthorizeOperation =
-  | "list"
-  | "call"
-  | "get"
-  | "read"
-  | "complete";
+  "list" | "call" | "get" | "read" | "complete";
+
+/** Policy context includes skill catalogs, which are not MCP middleware methods. */
+export type McpAuthorizeContext =
+  | McpMiddlewareContext
+  | (RequestContext & {
+      readonly method: "skills/list";
+      readonly params: Readonly<{ cursor?: string }>;
+    })
+  | (RequestContext & {
+      readonly method: "skills/get";
+      readonly params: Readonly<{ uri: string }>;
+    });
 
 /**
  * Optional `authorize` export from src/middleware.ts. Return false to hide a
  * component from listings and reject direct access as if it did not exist.
  */
 export type McpAuthorize = (
-  ctx: McpMiddlewareContext,
+  ctx: McpAuthorizeContext,
   component: McpAuthorizeComponent,
   operation: McpAuthorizeOperation
 ) => boolean | Promise<boolean>;

@@ -7,6 +7,7 @@ export type {
 export type {
   McpAuthorize,
   McpAuthorizeComponent,
+  McpAuthorizeContext,
   McpAuthorizeOperation,
   McpComponentMetadata,
   McpMiddleware,

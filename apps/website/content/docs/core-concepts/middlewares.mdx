@@ -136,7 +136,7 @@ export const authorize: McpAuthorize = (ctx, component) => {
 };
 ```
 
-A denied component disappears from listings, and direct access fails as if it did not exist. The same function covers tools, prompts, resources, and templates. See [authorizing components](/docs/guides/authentication#authorize-components) for the full rules. The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) includes demo credentials and requests for both permitted and restricted callers.
+A denied component disappears from listings, and direct access fails as if it did not exist. The same function covers tools, prompts, resources, templates, and skill catalogs. Unlike tool `mcp` middleware, tool-call authorization sees raw arguments before SDK validation. Values set by the policy with `ctx.set()` are shared with the tool middleware and handler. See [authorizing components](/docs/guides/authentication#authorize-components) for the full rules. The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) includes demo credentials and requests for both permitted and restricted callers.
 
 The default HTTP export retains its existing transport behavior. STDIO loads the module to read `mcp` and `authorize` but does not invoke the default HTTP middleware. Keep module-level code safe to import on both transports.
 

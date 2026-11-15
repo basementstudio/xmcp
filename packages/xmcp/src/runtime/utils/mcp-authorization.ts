@@ -201,8 +201,6 @@ function resourceComponent(
   return undefined;
 }
 
-const EMPTY_COMPLETION = { completion: { values: [], hasMore: false } };
-
 /**
  * Built-in first MCP middleware. Denied components are filtered from listings
  * and rejected with the same errors the SDK uses for unknown components, so a
@@ -267,9 +265,16 @@ export function createAuthorizationMiddleware(
             ? registry.prompts.get(ref.name)
             : ([...registry.templates.values()].find(
                 ({ component }) => component.uriTemplate === ref.uri
-              )?.component ?? registry.resources.get(ref.uri));
+              )?.component ??
+              registry.uiOwners.get(ref.uri) ??
+              registry.resources.get(ref.uri));
         if (!(await allowed(ctx, component, "complete"))) {
-          return EMPTY_COMPLETION;
+          throw new ProtocolError(
+            ProtocolErrorCode.InvalidParams,
+            ref.type === "ref/prompt"
+              ? `Prompt ${ref.name} not found`
+              : `Resource template ${ref.uri} not found`
+          );
         }
         return next();
       }

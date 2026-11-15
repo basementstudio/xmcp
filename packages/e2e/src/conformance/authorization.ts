@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { z } from "zod";
 import { REQUEST_OPTIONS } from "../harness/client-options.js";
 import {
   createConformanceChecks,
@@ -9,8 +10,12 @@ async function rejection(promise: Promise<unknown>) {
   try {
     await promise;
   } catch (error) {
-    const { code, message } = error as { code: number; message: string };
-    return { code, message };
+    const { code, message, data } = error as {
+      code: number;
+      message: string;
+      data?: unknown;
+    };
+    return { code, message, data };
   }
   assert.fail("Expected the request to be rejected");
 }
@@ -96,6 +101,7 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
           await rejection(client.readResource({ uri }, REQUEST_OPTIONS)),
           {
             ...unknownResource,
+            data: { uri },
             message: unknownResource.message.replace("authz://missing", uri),
           }
         );
@@ -104,18 +110,100 @@ export function register(getTarget: GetTarget, onFailure?: () => void) {
   );
   whenSupported(
     "authorization",
-    "returns no completions for denied prompts and templates",
+    "rejects denied completions exactly like unknown references",
     async ({ client }) => {
       for (const [ref, name] of [
         [{ type: "ref/prompt", name: "authz-hidden" }, "value"],
         [{ type: "ref/resource", uri: "authz://secret/{id}" }, "id"],
+        [{ type: "ref/resource", uri: "authz://hidden" }, "id"],
+        [{ type: "ref/resource", uri: "ui://app/authz-widget.html" }, "id"],
       ] as const) {
-        const result = await client.complete(
-          { ref, argument: { name, value: "a" } },
+        const unknownRef =
+          ref.type === "ref/prompt"
+            ? { type: "ref/prompt" as const, name: "authz-missing" }
+            : { type: "ref/resource" as const, uri: "authz://missing" };
+        const argument = { name, value: "a" };
+        const unknown = await rejection(
+          client.complete({ ref: unknownRef, argument }, REQUEST_OPTIONS)
+        );
+        assert.deepEqual(
+          await rejection(client.complete({ ref, argument }, REQUEST_OPTIONS)),
+          {
+            ...unknown,
+            message: unknown.message.replace(
+              ref.type === "ref/prompt" ? "authz-missing" : "authz://missing",
+              ref.type === "ref/prompt" ? ref.name : ref.uri
+            ),
+          }
+        );
+      }
+    }
+  );
+  whenSupported(
+    "authorization",
+    "hides denied skills from discovery and direct access",
+    async ({ client }) => {
+      const result = z.object({}).passthrough();
+      const listed = await client.request(
+        { method: "skills/list", params: {} },
+        z.object({ skills: z.array(z.object({ uri: z.string() })) }),
+        REQUEST_OPTIONS
+      );
+      assert.ok(listed.skills.length > 0);
+      assert.ok(
+        listed.skills.every(
+          (skill) => skill.uri !== "skill://authz-hidden/SKILL.md"
+        )
+      );
+      const get = (uri: string) =>
+        client.request(
+          { method: "skills/get", params: { uri } },
+          result,
           REQUEST_OPTIONS
         );
-        assert.deepEqual(result.completion.values, []);
-      }
+      const missing = await rejection(get("skill://missing/SKILL.md"));
+      assert.deepEqual(await rejection(get("skill://authz-hidden/SKILL.md")), {
+        ...missing,
+        message: missing.message.replace(
+          "skill://missing/SKILL.md",
+          "skill://authz-hidden/SKILL.md"
+        ),
+      });
+      const resources = await client.listResources({}, REQUEST_OPTIONS);
+      assert.ok(
+        resources.resources.every(
+          (resource) => resource.uri !== "skill://authz-hidden/SKILL.md"
+        )
+      );
+      await assert.rejects(
+        client.readResource(
+          { uri: "skill://authz-hidden/SKILL.md" },
+          REQUEST_OPTIONS
+        ),
+        /Resource not found/
+      );
+    }
+  );
+  whenSupported(
+    "authorization",
+    "shares policy values with tool handlers without mixing requests",
+    async ({ client }) => {
+      const results = await Promise.all(
+        ["1", "2", undefined].map((n) =>
+          client.callTool(
+            { name: "authz-context", arguments: n === undefined ? {} : { n } },
+            REQUEST_OPTIONS
+          )
+        )
+      );
+      assert.deepEqual(
+        results.map((result) => result.structuredContent),
+        [
+          { n: 1, raw: "1" },
+          { n: 2, raw: "2" },
+          { n: 7, raw: "default" },
+        ]
+      );
     }
   );
 }

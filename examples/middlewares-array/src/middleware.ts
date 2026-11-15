@@ -41,7 +41,11 @@ const stampResult: McpMiddleware = async (ctx, next) => {
   const result = await next();
   return {
     ...result,
-    _meta: { ...result._meta, tool: ctx.get<string>("example.tool") },
+    _meta: {
+      ...result._meta,
+      tool: ctx.get<string>("example.tool"),
+      caller: ctx.get<string>("example.caller"),
+    },
   };
 };
 
@@ -63,7 +67,14 @@ const checkName: McpMiddleware = (ctx, next) => {
 
 // One policy hides components from every listing and rejects direct calls,
 // prompt gets, reads and completions as if they did not exist.
-export const authorize: McpAuthorize = (ctx, component) => {
+export const authorize: McpAuthorize = (ctx, component, operation) => {
+  if (operation === "call") ctx.set("example.caller", ctx.authInfo?.clientId);
+  if (
+    component.type === "resource" &&
+    component.uri.startsWith("skill://greeting-guide/")
+  ) {
+    return ctx.authInfo?.scopes.includes("greet") ?? false;
+  }
   const required = component.metadata._meta?.["demo/requires"];
   if (required === undefined) return true;
   return (
