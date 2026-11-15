@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import {
   configureServer,
-  INJECTED_CONFIG,
+  createMcpServer,
   loadPrompts,
   loadResources,
   loadTools,
@@ -20,8 +20,7 @@ export async function initializeMcpServer(): Promise<McpServer> {
     resourceModulesPromise,
   ]);
 
-  const { instructions, ...serverInfo } = INJECTED_CONFIG;
-  const server = new McpServer(serverInfo, { instructions });
+  const server = createMcpServer();
 
   await configureServer(server, toolModules, promptModules, resourceModules);
 

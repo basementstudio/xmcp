@@ -3,6 +3,7 @@ import { z } from "zod/v3";
 
 import {
   bundlerConfigSchema,
+  cacheHintsConfigSchema,
   componentsConfigSchema,
   experimentalConfigSchema,
   httpTransportConfigSchema,
@@ -25,6 +26,7 @@ export const configSchema = z.object({
   typescript: typescriptConfigSchema.optional(),
   observability: z.object({ enabled: z.boolean() }).optional(),
   components: componentsConfigSchema.optional(),
+  cacheHints: cacheHintsConfigSchema.optional(),
 });
 
 type BundlerConfigType = { bundler?: (config: RspackOptions) => RspackOptions };
@@ -56,6 +58,7 @@ export type {
 // Re-export all types from schemas
 export type {
   BundlerConfig,
+  CacheHintsConfig,
   ComponentsConfig,
   ComponentSelector,
   CorsConfig,

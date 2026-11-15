@@ -185,3 +185,21 @@ with their `callTool` request option `onprogress`.
 The tool also calls `context.log()`, which follows the SDK's logging capability
 and level checks. xmcp's default server does not enable MCP logging, so this call
 is a no-op in the example; it does not write to stdout or stderr.
+
+## Cache hints
+
+`xmcp.config.ts` sets `cacheHints` so clients on protocol revision 2026-07-28
+may reuse the tool, prompt, and resource listings for five minutes, and
+`src/resources/(config)/app.ts` sets a one-minute `cacheHint` for its contents.
+With the server running, a modern `tools/list` request returns the hint:
+
+```sh
+curl -s http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: tools/list' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"cache-example","version":"1.0.0"}}}}'
+```
+
+Expect `"ttlMs":300000` and `"cacheScope":"private"` in the result.

@@ -8,6 +8,13 @@ const config: XmcpConfig = {
   components: {
     exclude: { tags: ["internal"] },
   },
+  // Listings never vary by caller here, so 2026-07-28 clients may reuse them
+  // for five minutes. The scope stays "private" by default.
+  cacheHints: {
+    "tools/list": { ttlMs: 300_000 },
+    "prompts/list": { ttlMs: 300_000 },
+    "resources/list": { ttlMs: 300_000 },
+  },
   typescript: {
     skipTypeCheck: true,
   },

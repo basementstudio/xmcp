@@ -12,6 +12,7 @@ export const metadata: ResourceMetadata = {
   name: "app-config",
   title: "Application Config",
   description: "Application configuration data",
+  cacheHint: { ttlMs: 60_000 },
 };
 
 export default function handler() {

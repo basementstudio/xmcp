@@ -222,6 +222,14 @@ export function injectComponentsVariables(userConfig: XmcpConfigOutputSchema) {
 
 export type ComponentsVariables = ReturnType<typeof injectComponentsVariables>;
 
+export function injectCacheHintsVariables(userConfig: XmcpConfigOutputSchema) {
+  return {
+    CACHE_HINTS_CONFIG: JSON.stringify(userConfig.cacheHints ?? {}),
+  };
+}
+
+export type CacheHintsVariables = ReturnType<typeof injectCacheHintsVariables>;
+
 export type InjectedVariables =
   | HttpVariables
   | CorsVariables
@@ -232,4 +240,5 @@ export type InjectedVariables =
   | AdapterVariables
   | TypescriptVariables
   | ComponentsVariables
+  | CacheHintsVariables
   | ReturnType<typeof injectObservabilityVariables>;

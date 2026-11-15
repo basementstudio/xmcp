@@ -49,6 +49,8 @@ declare const SERVER_INFO: import("@modelcontextprotocol/server").Implementation
 
 declare const COMPONENTS_CONFIG: import("../config").ComponentsConfig;
 
+declare const CACHE_HINTS_CONFIG: import("../config").CacheHintsConfig;
+
 // ─── DefinePlugin — runtime flags ─────────────────────────────────────────────
 
 declare const IS_CLOUDFLARE: boolean;
