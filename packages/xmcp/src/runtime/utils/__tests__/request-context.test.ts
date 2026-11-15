@@ -150,6 +150,29 @@ test("copies and freezes metadata without freezing the underlying request", asyn
   );
 });
 
+test("exposes a frozen copy of the current request's _meta on STDIO", async () => {
+  const meta = {
+    traceparent: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+    baggage: "tenant=acme",
+  };
+  const ctx = serverContext();
+  (ctx.mcpReq as { _meta?: unknown })._meta = meta;
+  await createToolHandler(() => {
+    const context = getRequestContext();
+    assert.equal(context.http, undefined);
+    assert.deepEqual(context._meta, meta);
+    assert.notStrictEqual(context._meta, meta);
+    assert.ok(Object.isFrozen(context._meta));
+    return "ok";
+  })({}, ctx);
+  assert.equal(Object.isFrozen(meta), false);
+
+  await createToolHandler(() => {
+    assert.equal(getRequestContext()._meta, undefined);
+    return "ok";
+  })({}, serverContext());
+});
+
 test("preserves the live SDK signal and clears scope after handler errors", async () => {
   const controller = new AbortController();
   const reason = new Error("cancelled");

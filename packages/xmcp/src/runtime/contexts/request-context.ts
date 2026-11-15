@@ -19,6 +19,12 @@ export interface RequestContext {
       Record<string, string | readonly string[] | undefined>
     >;
   };
+  /**
+   * The current request's `params._meta`, such as W3C trace context
+   * (`traceparent`, `tracestate`, `baggage`). It comes from this request only,
+   * on every transport. Protocol envelope keys are not included.
+   */
+  readonly _meta?: Readonly<Record<string, unknown>>;
   /** The live cancellation signal supplied by the MCP SDK. */
   readonly signal: AbortSignal;
   /** Store a value for this MCP operation, shared with its async helpers. */
@@ -77,6 +83,9 @@ export function withRequestContext<T>(
       clientInfo: clientInfo ? Object.freeze({ ...clientInfo }) : undefined,
       http,
       authInfo: ctx.http?.authInfo,
+      _meta: ctx.mcpReq._meta
+        ? Object.freeze({ ...ctx.mcpReq._meta })
+        : undefined,
       signal: ctx.mcpReq.signal,
       set(key: string | symbol, value: unknown) {
         values.set(key, value);

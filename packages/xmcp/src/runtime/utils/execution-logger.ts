@@ -1,5 +1,6 @@
 import {
   isInputRequiredResult,
+  TRACEPARENT_META_KEY,
   type ResourceTemplate,
 } from "@modelcontextprotocol/server";
 
@@ -15,10 +16,8 @@ type Status =
   | "input_required"
   | "unknown";
 
-/** Only trace identifiers are copied; baggage, tracestate and raw headers stay private. */
-function traceFields(context: McpMiddlewareContext) {
-  const parent = context.http?.headers.traceparent;
-  if (typeof parent !== "string") return {};
+function parseTraceparent(parent: unknown) {
+  if (typeof parent !== "string") return undefined;
   const match =
     /^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})(-.*)?$/.exec(
       parent
@@ -30,8 +29,21 @@ function traceFields(context: McpMiddlewareContext) {
     /^0+$/.test(match[3]) ||
     (match[1] === "00" && match[5] !== undefined)
   )
-    return {};
+    return undefined;
   return { trace: { id: match[2] }, parent: { id: match[3] } };
+}
+
+/**
+ * Only trace identifiers are copied; baggage, tracestate and raw headers stay
+ * private. MCP `_meta` trace context works on every transport and takes
+ * precedence over the HTTP `traceparent` header.
+ */
+function traceFields(context: McpMiddlewareContext) {
+  return (
+    parseTraceparent(context._meta?.[TRACEPARENT_META_KEY]) ??
+    parseTraceparent(context.http?.headers.traceparent) ??
+    {}
+  );
 }
 
 /** Internal middleware shared by all transports. No user payloads reach the sink. */

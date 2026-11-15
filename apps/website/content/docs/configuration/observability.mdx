@@ -37,7 +37,7 @@ The logs use [Elastic Common Schema field conventions](https://www.elastic.co/do
 | `xmcp.component`        | Tool/prompt name or registered resource name. Unmatched resource reads use `unknown`.        |
 | `xmcp.status`           | `success`, `failure`, `cancelled`, `input_required`, or `unknown`, present on the end event. |
 | `error.message`         | A safe summary for returned error results, thrown exceptions, or thrown cancellation.        |
-| `trace.id`, `parent.id` | Incoming W3C trace and parent IDs when a valid HTTP `traceparent` is supplied.               |
+| `trace.id`, `parent.id` | Incoming W3C trace and parent IDs when a valid `traceparent` is supplied.                    |
 
 `log.level` is `error` for failed end events and `info` otherwise. Events also identify their ECS kind (`event`), category (`api`), and type (`start` or `end`).
 
@@ -66,7 +66,7 @@ Returned `isError` results and thrown exceptions count as failures. Cancellation
 
 Execution logs exclude arguments, results, raw resource URIs, error stacks, original exception messages, credentials, and raw request headers. Resource names come from registration, so dynamic URI parameters and query strings are not logged. Error summaries distinguish an exception from an error result without copying their potentially sensitive contents. Keep component names free of secrets.
 
-Valid incoming [W3C trace context](https://www.w3.org/TR/trace-context/) contributes only trace and parent identifiers. These IDs are caller-supplied correlation data, not authentication. No baggage or tracestate is logged. Browser clients sending `traceparent` must include it in their configured CORS allowed headers. STDIO does not have HTTP trace headers.
+Valid incoming [W3C trace context](https://www.w3.org/TR/trace-context/) contributes only trace and parent identifiers. xmcp reads `traceparent` from the request's MCP `params._meta`, which works on HTTP and STDIO, and falls back to the HTTP `traceparent` header when `_meta` has no valid value. These IDs are caller-supplied correlation data, not authentication. No baggage or tracestate is logged. Browser clients sending the `traceparent` header must include it in their configured CORS allowed headers.
 
 These events do not create OpenTelemetry spans, configure an exporter, or enable MCP protocol log notifications. `getRequestContext().log()` retains its existing behavior.
 

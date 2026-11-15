@@ -227,6 +227,48 @@ test("copies only valid W3C trace identifiers", async () => {
   }
 });
 
+test("reads trace context from MCP _meta on any transport, ahead of the HTTP header", async () => {
+  const trace = "4bf92f3577b34da6a3ce929d0e0e4736";
+  const parent = "00f067aa0ba902b7";
+  const headerTrace = "0af7651916cd43dd8448eb211c80319c";
+  const headerParent = "b7ad6b7169203331";
+  const header = `00-${headerTrace}-${headerParent}-01`;
+  const cases = [
+    // STDIO: no HTTP context, trace context only in _meta.
+    { metaParent: `00-${trace}-${parent}-01`, http: false, expected: trace },
+    // _meta wins over the header.
+    { metaParent: `00-${trace}-${parent}-01`, http: true, expected: trace },
+    // An invalid _meta value falls back to the header.
+    { metaParent: "secret-invalid", http: true, expected: headerTrace },
+    { metaParent: "secret-invalid", http: false, expected: undefined },
+  ];
+  for (const { metaParent, http, expected } of cases) {
+    const logger = capture();
+    const ctx = context();
+    await logger.middleware(
+      {
+        ...ctx,
+        _meta: {
+          traceparent: metaParent,
+          tracestate: "secret-state",
+          baggage: "secret-baggage",
+        },
+        http: http
+          ? { id: "http-id", headers: { traceparent: header } }
+          : undefined,
+      },
+      async () => ({ content: [] })
+    );
+    const [event] = logger.events();
+    assert.deepEqual(event.trace, expected ? { id: expected } : undefined);
+    assert.deepEqual(
+      event.parent,
+      expected ? { id: expected === trace ? parent : headerParent } : undefined
+    );
+    assert.doesNotMatch(logger.lines.join(""), /secret-/);
+  }
+});
+
 test("sink failures and hostile result serialization leave results and exceptions intact", async () => {
   const logger = createExecutionLogger(() => {
     throw new Error("sink failed");
