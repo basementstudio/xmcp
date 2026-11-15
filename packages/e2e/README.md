@@ -1,6 +1,6 @@
 # xmcp conformance tests
 
-Private test infrastructure for compiled xmcp applications. Requires Node 22 and
+Private test infrastructure for compiled xmcp applications. Requires Node 26 and
 pnpm 10.8.1. Install workspace dependencies with `pnpm install --frozen-lockfile`.
 
 ```sh

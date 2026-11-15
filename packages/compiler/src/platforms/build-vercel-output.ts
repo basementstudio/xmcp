@@ -88,7 +88,7 @@ async function buildVercelOutput() {
 
   const vcConfig = {
     handler: "index.js",
-    runtime: "nodejs22.x",
+    runtime: "nodejs26.x",
     launcherType: "Nodejs",
     shouldAddHelpers: true,
   };
