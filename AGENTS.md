@@ -9,8 +9,8 @@ the scoped `AGENTS.md` file for any area you touch:
 
 ## Repo basics
 
-- Use Node.js 26 (recommended) and pnpm. The supported minimum is Node.js
-  22.12; `.nvmrc` and CI use Node 26.
+- Use the Node.js version pinned in `.nvmrc` and pnpm (`nvm install && nvm use`).
+  Node.js 26 is recommended; the supported minimum remains Node.js 22.12.
 - All changes target `main`. There is no `canary` branch; canary npm releases are
   cut from `main` as Changesets snapshot releases.
 - Keep PRs focused. If related work appears while editing, leave it for a
