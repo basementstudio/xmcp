@@ -77,6 +77,7 @@ export type {
   StdioClientConfig,
 } from "./client/types";
 export type { StdioClientConnection, StdioClientOptions } from "./client/index";
+export type { ClientHandlers } from "./client/handlers";
 export type {
   CustomHeaders,
   CustomHeader,
