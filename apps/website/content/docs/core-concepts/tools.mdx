@@ -804,11 +804,13 @@ export default async function listForecast() {
 }
 ```
 
-Bare arrays, objects, booleans, and `null` must match a complete
-`outputSchema`. A bare string or number becomes `structuredContent` when it
-matches, and stays text-only content when it does not. As with
-`structuredContent`, clients on earlier protocol revisions see a non-object
-`outputSchema` and its values wrapped under `result`.
+A bare value returned by a tool with a complete `outputSchema` must match it;
+a value that does not match makes the call fail with an error naming the tool.
+A matching bare string or number is also returned as plain text content. As
+with `structuredContent`, clients on earlier protocol revisions see a non-object
+`outputSchema` and its values wrapped under `result`. The
+[HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+includes both tools above.
 When `structuredContent` is returned without `content`, xmcp auto-generates a text fallback (`JSON.stringify(structuredContent)`) for compatibility with clients that only render `content`.
 
 ### Combined Response

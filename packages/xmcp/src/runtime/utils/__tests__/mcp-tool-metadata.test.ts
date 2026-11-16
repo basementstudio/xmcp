@@ -308,6 +308,25 @@ test("complete schemas register, validate, and wrap for legacy clients", async (
   assert.match(JSON.stringify(invalid.content), /from must not exceed to/);
 });
 
+test("a bare value that misses a complete outputSchema surfaces xmcp's error", async (t) => {
+  const client = await connect(
+    t,
+    {
+      "search.ts": async () => ({
+        outputSchema: z.array(z.string()),
+        default: () => "No results",
+      }),
+    },
+    (_ctx, next) => next()
+  );
+  const result = await client.callTool({ name: "search", arguments: {} });
+  assert.equal(result.isError, true);
+  assert.match(
+    JSON.stringify(result.content),
+    /Tool \\"search\\" returned data that does not match outputSchema/
+  );
+});
+
 test("complete input schemas must describe objects", async (t) => {
   await assert.rejects(
     connect(

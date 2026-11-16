@@ -230,31 +230,28 @@ export function transformToolHandler(
     }
 
     // With a complete outputSchema, bare data is shorthand for
-    // `{ structuredContent: data }`. Strings and numbers that do not match
-    // keep the text-only behavior below.
+    // `{ structuredContent: data }`. The SDK rejects any successful result
+    // without structuredContent when an outputSchema is declared, so a bare
+    // value that does not match is reported here with a clear error.
     if (
       outputSchema &&
       isStandardFieldSchema(outputSchema) &&
       response !== undefined &&
       !isCallToolResultShape(response)
     ) {
+      await validateAgainstOutputSchema(
+        response,
+        outputSchema,
+        toolName,
+        "returned data that does not match outputSchema"
+      );
       if (typeof response === "string" || typeof response === "number") {
-        const result = await outputSchema["~standard"].validate(response);
-        if (!result.issues) {
-          return {
-            content: [{ type: "text", text: `${response}` }],
-            structuredContent: response,
-          };
-        }
-      } else {
-        await validateAgainstOutputSchema(
-          response,
-          outputSchema,
-          toolName,
-          "returned data that does not match outputSchema"
-        );
-        response = { structuredContent: response };
+        return {
+          content: [{ type: "text", text: `${response}` }],
+          structuredContent: response,
+        };
       }
+      response = { structuredContent: response };
     }
 
     if (typeof response === "string" || typeof response === "number") {

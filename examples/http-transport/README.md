@@ -186,6 +186,29 @@ The tool also calls `context.log()`, which follows the SDK's logging capability
 and level checks. xmcp's default server does not enable MCP logging, so this call
 is a no-op in the example; it does not write to stdout or stderr.
 
+## Structured results
+
+Two tools show structured output from MCP 2026-07-28:
+
+- `src/tools/list-tags.ts` returns an array as `structuredContent`.
+- `src/tools/list-forecast.ts` declares a complete `z.array(...)` output schema
+  and returns the array directly.
+
+With the server running, call `list-forecast` as a modern client:
+
+```sh
+curl -s http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: tools/call' \
+  -H 'Mcp-Name: list-forecast' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list-forecast","arguments":{"days":2},"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientCapabilities":{},"io.modelcontextprotocol/clientInfo":{"name":"structured-example","version":"1.0.0"}}}}'
+```
+
+The result's `structuredContent` is the forecast array. Clients on earlier
+protocol revisions receive it as `{ "result": [...] }`.
+
 ## Cache hints
 
 `xmcp.config.ts` sets `cacheHints` so clients on protocol revision 2026-07-28

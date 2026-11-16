@@ -233,15 +233,16 @@ test("transformToolHandler wraps bare data for a complete outputSchema", async (
   });
 });
 
-test("transformToolHandler keeps text-only output for strings a complete outputSchema rejects", async () => {
+test("transformToolHandler rejects bare strings a complete outputSchema does not accept", async () => {
   const transformedHandler = transformToolHandler(
-    () => "not a number",
+    () => "No results",
     undefined,
-    z.number()
+    z.array(z.string()),
+    "search"
   );
-  assert.deepStrictEqual(
-    await invokeHandler(transformedHandler, "rpc-string-fallback"),
-    { content: [{ type: "text", text: "not a number" }] }
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-string-mismatch"),
+    /Tool "search" returned data that does not match outputSchema/
   );
 });
 
