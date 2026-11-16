@@ -24,7 +24,5 @@ export default async function search(input: InferSchema<typeof schema>) {
     input.first,
     getRequestContext().signal
   );
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(products) }],
-  };
+  return JSON.stringify(products);
 }

@@ -9,7 +9,7 @@ Each `ask-agent` call creates a new agent and MCP client, then disconnects the c
 
 ## Setup
 
-Requires Node 22 and pnpm. From the repository root:
+Requires Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

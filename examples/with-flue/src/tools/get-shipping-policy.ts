@@ -13,12 +13,5 @@ export const metadata: ToolMetadata = {
 };
 
 export default function shippingPolicy() {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: "Standard shipping takes 3–5 business days. Returns are accepted within 30 days.",
-      },
-    ],
-  };
+  return "Standard shipping takes 3–5 business days. Returns are accepted within 30 days.";
 }

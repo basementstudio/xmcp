@@ -19,5 +19,5 @@ export default async function getJobResult(input: InferSchema<typeof schema>) {
   const result = await bridge().getResult(input.jobId, {
     signal: getRequestContext().signal,
   });
-  return { content: [{ type: "text" as const, text: JSON.stringify(result) }] };
+  return JSON.stringify(result);
 }

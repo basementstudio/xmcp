@@ -8,13 +8,35 @@ description: "Connect Mastra agents to xmcp tools over Streamable HTTP with MCPC
 
 [Mastra](https://mastra.ai) agents can consume xmcp tools through `MCPClient`, and an xmcp tool can run a Mastra agent and return its text. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-mastra) does both in one process.
 
-```sh
-pnpm add @mastra/core @mastra/mcp
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @mastra/core @mastra/mcp",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @mastra/core @mastra/mcp",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @mastra/core @mastra/mcp",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @mastra/core @mastra/mcp",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 ## Give a Mastra agent xmcp tools
 
-Protect the xmcp server with a bearer token checked on every request, as in the [API key guide](/docs/authentication/api-key). Connect with [`MCPClient`](https://mastra.ai/docs/connections/mcp) and send the token through `requestInit`:
+Protect the xmcp server with a bearer token checked on every request, using the constant-time `isBearer` middleware from the [Flue guide](/docs/integrations/flue#give-a-flue-agent-xmcp-tools). Connect with [`MCPClient`](https://mastra.ai/docs/connections/mcp) and send the token through `requestInit`:
 
 ```ts title="src/connection.ts"
 import { MCPClient } from "@mastra/mcp";

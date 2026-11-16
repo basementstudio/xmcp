@@ -147,17 +147,28 @@ test("forwards abort signals", async (context) => {
 });
 
 test("validates configuration and inputs before sending", async () => {
+  const create = (config: unknown) => () =>
+    createDramatiqClient(config as Parameters<typeof createDramatiqClient>[0]);
+  assert.throws(create({ baseUrl: undefined, token: "secret" }), {
+    message: "createDramatiqClient: baseUrl is required",
+  });
+  assert.throws(create({ baseUrl: "http://bridge", token: undefined }), {
+    message: "createDramatiqClient: token is required",
+  });
+  assert.throws(create({ baseUrl: "http://bridge", token: " " }), {
+    message: "createDramatiqClient: token is required",
+  });
+  assert.throws(create({ baseUrl: "not a url", token: "secret" }), {
+    message: "createDramatiqClient: baseUrl must be a valid URL",
+  });
   for (const baseUrl of [
     "ftp://bridge",
     "http://user:pass@bridge",
     "http://bridge?x=1",
     "http://bridge#x",
   ]) {
-    assert.throws(() => createDramatiqClient({ baseUrl, token: "secret" }));
+    assert.throws(create({ baseUrl, token: "secret" }), /without credentials/);
   }
-  assert.throws(() =>
-    createDramatiqClient({ baseUrl: "http://bridge", token: " " })
-  );
   const client = createDramatiqClient({
     baseUrl: "http://bridge",
     token: "secret",

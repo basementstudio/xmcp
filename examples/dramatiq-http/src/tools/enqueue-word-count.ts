@@ -22,5 +22,5 @@ export default async function enqueueWordCount(
     { actor: "count_words", args: [input.text] },
     { signal: getRequestContext().signal }
   );
-  return { content: [{ type: "text" as const, text: JSON.stringify(job) }] };
+  return JSON.stringify(job);
 }

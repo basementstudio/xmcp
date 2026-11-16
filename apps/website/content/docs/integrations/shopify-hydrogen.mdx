@@ -8,9 +8,31 @@ description: "Mount xmcp in a React Router app that uses Shopify Hydrogen and sh
 
 Mount an xmcp server inside a React Router app that uses [Hydrogen](https://shopify.dev/docs/storefronts/hydrogen) commerce primitives. Your storefront routes and MCP tools share one server-only Storefront client. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-hydrogen) runs on Node against Shopify's tokenless [mock.shop](https://mock.shop) catalog.
 
-```sh
-pnpm add xmcp @shopify/hydrogen zod
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i xmcp @shopify/hydrogen zod",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i xmcp @shopify/hydrogen zod",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add xmcp @shopify/hydrogen zod",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add xmcp @shopify/hydrogen zod",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 ## Mount `/mcp`
 
@@ -29,15 +51,34 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-Check a bearer token on every request in the route module:
+Check a bearer token on every request in the route module. `isBearer` compares it in constant time:
+
+```ts title="src/env.ts"
+import { timingSafeEqual } from "node:crypto";
+
+/** Checks an Authorization header against `Bearer <token>` in constant time. */
+export function isBearer(
+  header: string | null | undefined,
+  token: string | undefined
+): boolean {
+  if (!header || !token?.trim()) return false;
+  const received = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return (
+    received.length === expected.length && timingSafeEqual(received, expected)
+  );
+}
+```
 
 ```ts title="app/routes/mcp.ts"
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { xmcpHandler } from "../../.xmcp/adapter/index.js";
+import { isBearer } from "../../src/env";
 
 function handle(request: Request) {
-  const key = process.env.MCP_API_KEY;
-  if (!key || request.headers.get("authorization") !== `Bearer ${key}`) {
+  if (
+    !isBearer(request.headers.get("authorization"), process.env.MCP_API_KEY)
+  ) {
     return new Response("Unauthorized", { status: 401 });
   }
   return xmcpHandler(request);
@@ -111,9 +152,7 @@ export default async function search(input: InferSchema<typeof schema>) {
     input.first,
     getRequestContext().signal
   );
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(products) }],
-  };
+  return JSON.stringify(products);
 }
 ```
 

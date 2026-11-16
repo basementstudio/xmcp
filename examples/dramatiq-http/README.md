@@ -28,7 +28,7 @@ Scheduling, cancellation, worker monitoring, and per-tenant job ownership are ou
 
 ## Setup
 
-Requires Node 22, pnpm, and either Docker or Python 3.10+ with a local Redis.
+Requires Node 26, pnpm, and either Docker or Python 3.10+ with a local Redis.
 
 ```sh
 pnpm install

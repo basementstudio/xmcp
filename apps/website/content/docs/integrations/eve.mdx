@@ -8,13 +8,35 @@ description: "Connect eve agents to xmcp tools with an MCP client connection, an
 
 [eve](https://eve.dev) agents can consume xmcp tools through an MCP client connection, and an xmcp tool can start an eve session and return its reply. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-eve) does both with one read-only tool and one agent.
 
-```sh
-pnpm add eve
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i eve",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i eve",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add eve",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add eve",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 ## Give an eve agent xmcp tools
 
-Protect the xmcp server with a bearer token checked on every request, as in the [API key guide](/docs/authentication/api-key). Then add a connection under `agent/connections/` with [`defineMcpClientConnection`](https://eve.dev/docs/connections/mcp):
+Protect the xmcp server with a bearer token checked on every request, using `isBearer` below with `apiKeyAuthMiddleware` as in the [Flue guide](/docs/integrations/flue#give-a-flue-agent-xmcp-tools). Then add a connection under `agent/connections/` with [`defineMcpClientConnection`](https://eve.dev/docs/connections/mcp):
 
 ```ts title="agent/connections/xmcp.ts"
 import { defineMcpClientConnection } from "eve/connections";
@@ -33,15 +55,34 @@ eve evaluates connection modules during `eve build`, so keep required secrets in
 
 ## Expose an eve agent as an xmcp tool
 
-Protect the eve channel with its own token:
+Protect the eve channel with its own token. `isBearer` compares the header in constant time:
+
+```ts title="src/env.ts"
+import { timingSafeEqual } from "node:crypto";
+
+/** Checks an Authorization header against `Bearer <token>` in constant time. */
+export function isBearer(
+  header: string | null | undefined,
+  token: string | undefined
+): boolean {
+  if (!header || !token?.trim()) return false;
+  const received = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return (
+    received.length === expected.length && timingSafeEqual(received, expected)
+  );
+}
+```
 
 ```ts title="agent/channels/eve.ts"
 import { eveChannel } from "eve/channels/eve";
+import { isBearer } from "../../src/env";
 
 export default eveChannel({
   auth: async (request) => {
-    const token = process.env.EVE_TOKEN;
-    if (!token || request.headers.get("authorization") !== `Bearer ${token}`) {
+    if (
+      !isBearer(request.headers.get("authorization"), process.env.EVE_TOKEN)
+    ) {
       return null;
     }
     return {

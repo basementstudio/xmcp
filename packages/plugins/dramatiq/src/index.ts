@@ -57,7 +57,19 @@ function isObject(value: unknown): value is Record<string, unknown> {
 export function createDramatiqClient(
   config: DramatiqClientConfig
 ): DramatiqClient {
-  const base = new URL(config.baseUrl);
+  // Name the missing option instead of surfacing `new URL(undefined)` errors.
+  if (typeof config.baseUrl !== "string" || !config.baseUrl.trim()) {
+    throw new Error("createDramatiqClient: baseUrl is required");
+  }
+  if (typeof config.token !== "string" || !config.token.trim()) {
+    throw new Error("createDramatiqClient: token is required");
+  }
+  let base: URL;
+  try {
+    base = new URL(config.baseUrl);
+  } catch {
+    throw new Error("createDramatiqClient: baseUrl must be a valid URL");
+  }
   if (
     !["http:", "https:"].includes(base.protocol) ||
     base.username ||
@@ -66,10 +78,9 @@ export function createDramatiqClient(
     base.hash
   ) {
     throw new Error(
-      "baseUrl must be an HTTP(S) URL without credentials, query, or fragment"
+      "createDramatiqClient: baseUrl must be an HTTP(S) URL without credentials, query, or fragment"
     );
   }
-  if (!config.token.trim()) throw new Error("A bridge token is required");
   base.pathname = `${base.pathname.replace(/\/$/, "")}/`;
 
   function request(path: string, init: RequestInit) {

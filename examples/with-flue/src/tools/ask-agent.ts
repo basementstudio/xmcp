@@ -16,6 +16,5 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function ask(input: InferSchema<typeof schema>) {
-  const text = await askAgent(input.prompt, getRequestContext().signal);
-  return { content: [{ type: "text" as const, text }] };
+  return askAgent(input.prompt, getRequestContext().signal);
 }

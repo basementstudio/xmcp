@@ -23,7 +23,5 @@ export const metadata: ToolMetadata = {
 
 export default async function get(input: InferSchema<typeof schema>) {
   const product = await getProduct(input.handle, getRequestContext().signal);
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(product) }],
-  };
+  return JSON.stringify(product);
 }

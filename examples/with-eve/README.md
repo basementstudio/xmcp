@@ -9,7 +9,7 @@ Each `ask-agent` call starts a new session. Because the connection allowlists `g
 
 ## Setup
 
-Requires Node 22 and pnpm. From the repository root:
+Requires Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

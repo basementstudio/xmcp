@@ -9,7 +9,7 @@ Each `ask-agent` call opens a new conversation. The agent's connection allowlist
 
 ## Setup
 
-Requires Node 22 and pnpm. From the repository root:
+Requires Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

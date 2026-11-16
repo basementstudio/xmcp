@@ -9,7 +9,7 @@ Both tools are read-only. Catalog requests carry no buyer context: the MCP beare
 
 ## Setup
 
-Requires Node 22 and pnpm. From the repository root:
+Requires Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

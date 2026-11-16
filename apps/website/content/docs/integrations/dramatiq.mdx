@@ -8,9 +8,31 @@ description: "Call Dramatiq actors from xmcp tools through an authenticated HTTP
 
 `@xmcp-dev/dramatiq` lets xmcp tools enqueue [Dramatiq](https://dramatiq.io) jobs and read their results. It calls a small HTTP bridge that runs next to your Python workers. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/dramatiq-http) includes the bridge, a demonstration actor, and Docker Compose for Redis and a worker.
 
-```sh
-pnpm add @xmcp-dev/dramatiq
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @xmcp-dev/dramatiq",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @xmcp-dev/dramatiq",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @xmcp-dev/dramatiq",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @xmcp-dev/dramatiq",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
 
 ## Enqueue and read jobs
 
@@ -44,7 +66,7 @@ export default async function enqueueWordCount(
     { actor: "count_words", args: [input.text] },
     { signal: getRequestContext().signal }
   );
-  return { content: [{ type: "text" as const, text: JSON.stringify(job) }] };
+  return JSON.stringify(job);
 }
 ```
 

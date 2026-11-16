@@ -25,13 +25,13 @@ export default async function enqueue(input: InferSchema<typeof schema>) {
     { actor: "count_words", args: [input.text] },
     { signal: getRequestContext().signal }
   );
-  return { content: [{ type: "text" as const, text: jobId }] };
+  return jobId;
 }
 ```
 
 ## API
 
-`createDramatiqClient({ baseUrl, token })` validates that `baseUrl` is an HTTP(S) URL without credentials, a query, or a fragment, and that `token` is not empty.
+`createDramatiqClient({ baseUrl, token })` throws an error naming the option when `baseUrl` or `token` is missing or empty, when `baseUrl` is not a valid URL, or when it is not HTTP(S) or contains credentials, a query, or a fragment.
 
 - `enqueue({ actor, args?, kwargs? }, { signal? })` sends `POST /v1/jobs` and resolves to `{ jobId }`.
 - `getResult(jobId, { signal? })` sends `GET /v1/jobs/{id}` and resolves to one of:
