@@ -1,5 +1,15 @@
 # xmcp
 
+## 1.12.0
+
+### Minor Changes
+
+- a19cc4e: Add optional `cacheHints` config and a per-resource `cacheHint` metadata field for MCP 2026-07-28 cache hints. Configured listing and read results carry the given `ttlMs` and `cacheScope`; unset methods keep the SDK defaults (`ttlMs: 0`, `cacheScope: "private"`).
+- a19cc4e: `createHTTPClient` and `createSTDIOClient` no longer advertise sampling, elicitation, and roots capabilities they cannot serve. They accept an optional `handlers` option, shared with the managed client, and advertise only the capabilities with a configured handler. `ClientHandlers` is now also exported from `xmcp`.
+- a19cc4e: Allow any JSON value in a tool's `structuredContent`, as permitted by MCP 2026-07-28. Arrays, strings, numbers, booleans, and `null` are no longer rejected; the MCP SDK wraps non-object values as `{ result }` for clients on earlier protocol revisions.
+- a19cc4e: Accept complete Zod schemas for a tool's `schema` and `outputSchema` alongside field maps. Complete output schemas can describe arrays, primitives, and unions, and tools with one can return the data directly as shorthand for `{ structuredContent: data }`. `InferSchema` infers both forms.
+- a19cc4e: Read W3C trace context from MCP request `_meta` in execution logs, so `trace.id` and `parent.id` are recorded on STDIO as well as HTTP. `_meta.traceparent` takes precedence over the HTTP `traceparent` header. `getRequestContext()` now exposes a read-only copy of the current request's `_meta`.
+
 ## 1.11.0
 
 ### Minor Changes
