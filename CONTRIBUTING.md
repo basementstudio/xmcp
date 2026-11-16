@@ -15,7 +15,7 @@ unless it is required for the current change.
 
 We use pnpm and Node 26.x.
 
-To get started, run `nvm use 22` and `pnpm install`.
+To get started, run `nvm use` and `pnpm install`.
 
 ### Develop xmcp
 
