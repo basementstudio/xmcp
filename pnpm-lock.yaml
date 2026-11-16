@@ -288,9 +288,6 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@types/react@19.3.0)(react@19.3.1)(use-sync-external-store@1.7.0(react@19.3.1))
     devDependencies:
-      '@eslint/eslintrc':
-        specifier: ^3.3.7
-        version: 3.3.7
       '@next/eslint-plugin-next':
         specifier: ^16.4.6
         version: 16.4.6(eslint@10.14.0(jiti@2.7.0))

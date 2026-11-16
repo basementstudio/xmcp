@@ -10,7 +10,7 @@ An authenticated HTTP MCP server using Linear's [GraphQL API](https://linear.app
 
 ## Run
 
-Use Node 22 and pnpm. Create a **personal API key** in Linear's **Settings → Security & access**. Choose access appropriate to your teams and intended operations. From the repository root:
+Use Node 26 and pnpm. Create a **personal API key** in Linear's **Settings → Security & access**. Choose access appropriate to your teams and intended operations. From the repository root:
 
 ```sh
 pnpm install

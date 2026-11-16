@@ -85,7 +85,6 @@
   },
   "devDependencies": {
     "hast-util-from-html": "2.0.3",
-    "@eslint/eslintrc": "^3.3.7",
     "@next/eslint-plugin-next": "^16.4.6",
     "@tailwindcss/postcss": "^4.3.5",
     "@types/hast": "^3.0.5",
