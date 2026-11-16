@@ -14,6 +14,9 @@ on:
         default: ""
         type: string
 
+env:
+  XMCP_TELEMETRY_DISABLED: "true"
+
 jobs:
   manual-build-test:
     runs-on: ubuntu-latest

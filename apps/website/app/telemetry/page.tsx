@@ -71,9 +71,10 @@ export default function TelemetryPage() {
             <p>
               We capture general usage information tied to the command you run
               so we can spot regressions: one event when an{" "}
-              <code>xmcp dev</code> session starts and one per{" "}
-              <code>xmcp build</code>. Specifically, we track the following
-              anonymously:
+              <code>xmcp dev</code> session starts, one per{" "}
+              <code>xmcp build</code>, and one when <code>create-xmcp-app</code>{" "}
+              or <code>init-xmcp</code> finishes. Specifically, we track the
+              following anonymously:
             </p>
             <ul>
               <li>
@@ -94,6 +95,12 @@ export default function TelemetryPage() {
                 custom bundler, execution logs, component filters, and official{" "}
                 <code>@xmcp-dev</code> plugins. Names of your tools, files, and
                 other dependencies are never sent.
+              </li>
+              <li>
+                <strong>Scaffolding.</strong> For <code>create-xmcp-app</code>{" "}
+                and <code>init-xmcp</code>: the template or detected framework,
+                the package manager, the options you picked, how long it took,
+                and whether it succeeded.
               </li>
               <li>
                 <strong>Performance snapshots.</strong> Duration of each run,

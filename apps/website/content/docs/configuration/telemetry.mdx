@@ -8,7 +8,7 @@ description: "A condensed version of the telemetry policy with actionable opt-ou
 
 ## What we collect (in brief)
 
-xmcp sends one anonymous event when an `xmcp dev` session starts and one per `xmcp build`: command, versions, package manager, OS, adapter/transport picks, deploy target, component counts, which framework features are on (from a fixed list), and coarse success/error signals. No code, prompts, logs, or secrets leave your machine, and every payload stays tied to a random anonymous ID rather than repository data. For the long-form policy, visit [/telemetry](/telemetry).
+xmcp sends one anonymous event when an `xmcp dev` session starts and one per `xmcp build`: command, versions, package manager, OS, adapter/transport picks, deploy target, component counts, which framework features are on (from a fixed list), and coarse success/error signals. `create-xmcp-app` and `init-xmcp` send one event when they finish, with the template or detected framework and the options you picked. No code, prompts, logs, or secrets leave your machine, and every payload stays tied to a random anonymous ID rather than repository data. For the long-form policy, visit [/telemetry](/telemetry).
 
 ## Disable telemetry per run
 
@@ -17,6 +17,7 @@ Use the environment flag in front of any command, including CI tasks:
 ```bash
 XMCP_TELEMETRY_DISABLED=true npx xmcp dev
 XMCP_TELEMETRY_DISABLED=true npx xmcp build
+XMCP_TELEMETRY_DISABLED=true npx create-xmcp-app@latest
 ```
 
 Only the literal string `true` (case-insensitive) disables telemetry, so values like `false` or `0` keep it enabled.
