@@ -9,7 +9,6 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { IntegrationList } from "@/components/integration-list";
 import { PageActions } from "@/components/page-actions";
 import { SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
@@ -40,6 +39,10 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const crumbs: BreadcrumbItem[] = [
     { name: "Home", url: "/" },
     { name: "Docs", url: "/docs" },
+    // Integration guides live under the docs, but their hub is /integrations.
+    ...(slugSegments[0] === "integrations" && slugSegments.length > 1
+      ? [{ name: "Integrations", url: "/integrations" }]
+      : []),
     ...slugSegments.flatMap((_, index) => {
       const segments = slugSegments.slice(0, index + 1);
       // Section folders without an index are not public pages.
@@ -78,7 +81,6 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           components={getMDXComponents({
             // this allows you to link to other pages with relative file paths
             a: createRelativeLink(source, page),
-            IntegrationList,
           })}
         />
       </DocsBody>
