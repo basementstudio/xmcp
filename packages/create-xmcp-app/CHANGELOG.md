@@ -1,5 +1,9 @@
 # create-xmcp-app
 
+## 1.12.1
+
+No changes in this release.
+
 ## 1.12.0
 
 ### Minor Changes

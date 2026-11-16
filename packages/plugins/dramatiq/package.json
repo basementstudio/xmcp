@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/dramatiq",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Typed HTTP client for the xmcp Dramatiq bridge",
   "license": "MIT",
   "repository": {
