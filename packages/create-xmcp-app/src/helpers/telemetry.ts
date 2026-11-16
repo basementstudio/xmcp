@@ -61,9 +61,9 @@ export function readProjectName(projectRoot: string): string {
     const packageJson = JSON.parse(
       fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8")
     );
-    return packageJson.name || path.basename(projectRoot);
+    return packageJson.name || path.resolve(projectRoot);
   } catch {
-    return path.basename(projectRoot);
+    return path.resolve(projectRoot);
   }
 }
 
