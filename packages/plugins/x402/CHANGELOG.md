@@ -1,5 +1,11 @@
 # @xmcp-dev/x402
 
+## 1.2.0
+
+### Minor Changes
+
+- 9246a41: Nano: add opt-in `nano.claimsFile` so used block hashes survive a restart, and `nano.requireBinding` to bind each payment to the order id of its 402 offer (xno-binding v1 representative commitment, exact amount).
+
 ## 1.1.1
 
 ### Patch Changes
