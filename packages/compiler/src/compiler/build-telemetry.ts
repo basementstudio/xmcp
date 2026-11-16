@@ -7,6 +7,7 @@ import {
 } from "../telemetry";
 import type { BuildEventData } from "../telemetry/events/post-payload";
 import { isTelemetryDebugEnabled } from "../telemetry/debug";
+import type { DeployTarget, PackageManager } from "./telemetry-traits";
 
 type TelemetryClient = Pick<typeof telemetry, "record" | "flushDetached">;
 
@@ -16,11 +17,17 @@ interface BaseTelemetryData {
   reactToolsCount: number;
   promptsCount: number;
   resourcesCount: number;
-  transport: TransportType;
-  adapter: AdapterType;
+  transport?: TransportType;
+  adapter?: AdapterType;
   nodeVersion: string;
   xmcpVersion: string;
+  command: CompilerCommand;
+  packageManager: PackageManager;
+  deployTarget: DeployTarget;
+  features?: string[];
 }
+
+export type CompilerCommand = "build" | "dev";
 
 export interface BuildSuccessTelemetry extends BaseTelemetryData {
   outputSize: number;
@@ -69,7 +76,7 @@ function enqueueTelemetryEvent(
     console.log("[telemetry] Tracking event", event);
   }
   client.record(event, true);
-  client.flushDetached("build");
+  client.flushDetached(event.fields.command === "dev" ? "dev" : "build");
 }
 
 export function logBuildSuccess(
@@ -78,19 +85,7 @@ export function logBuildSuccess(
 ) {
   enqueueTelemetryEvent(client, {
     eventName: TelemetryEventName.BUILD_COMPLETED,
-    fields: {
-      success: true,
-      duration: data.duration,
-      toolsCount: data.toolsCount,
-      reactToolsCount: data.reactToolsCount,
-      promptsCount: data.promptsCount,
-      resourcesCount: data.resourcesCount,
-      outputSize: data.outputSize,
-      transport: data.transport,
-      adapter: data.adapter,
-      nodeVersion: data.nodeVersion,
-      xmcpVersion: data.xmcpVersion,
-    },
+    fields: { success: true, ...data },
   });
 }
 
@@ -100,19 +95,16 @@ export function logBuildFailure(
 ) {
   enqueueTelemetryEvent(client, {
     eventName: TelemetryEventName.BUILD_FAILED,
-    fields: {
-      success: false,
-      duration: data.duration,
-      errorPhase: data.errorPhase,
-      errorType: data.errorType,
-      toolsCount: data.toolsCount,
-      reactToolsCount: data.reactToolsCount,
-      promptsCount: data.promptsCount,
-      resourcesCount: data.resourcesCount,
-      transport: data.transport,
-      adapter: data.adapter,
-      nodeVersion: data.nodeVersion,
-      xmcpVersion: data.xmcpVersion,
-    },
+    fields: { success: false, ...data },
+  });
+}
+
+export function logDevStarted(
+  data: BaseTelemetryData,
+  client: TelemetryClient = telemetry
+) {
+  enqueueTelemetryEvent(client, {
+    eventName: TelemetryEventName.DEV_STARTED,
+    fields: { success: true, ...data },
   });
 }

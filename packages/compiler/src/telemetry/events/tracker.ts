@@ -220,6 +220,8 @@ export class TelemetryTracker {
       return;
     }
 
+    this.storage.notify();
+
     try {
       mkdirSync(this.distDir, { recursive: true });
       const eventsFilePath = path.join(this.distDir, "_events.json");

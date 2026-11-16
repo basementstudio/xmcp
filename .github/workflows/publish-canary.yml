@@ -18,6 +18,9 @@ concurrency:
   group: publish-canary
   cancel-in-progress: false
 
+env:
+  XMCP_TELEMETRY_DISABLED: "true"
+
 jobs:
   publish-canary:
     runs-on: ubuntu-latest

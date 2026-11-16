@@ -14,6 +14,9 @@ on:
       - "pnpm-lock.yaml"
       - "package.json"
 
+env:
+  XMCP_TELEMETRY_DISABLED: "true"
+
 jobs:
   analyze-bundle:
     runs-on: ubuntu-latest

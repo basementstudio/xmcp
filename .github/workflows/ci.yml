@@ -8,6 +8,7 @@ env:
   # Set this to 'true' to skip CLI tests in CI
   # Can be overridden in repository settings or workflow dispatch
   SKIP_CLI_TESTS: true
+  XMCP_TELEMETRY_DISABLED: "true"
 
 jobs:
   schema-inference-windows:
