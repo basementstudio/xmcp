@@ -5,6 +5,7 @@ import type {
 } from "@modelcontextprotocol/server";
 
 import type {
+  McpAuthorize,
   McpMiddleware,
   McpMiddlewareContext,
   McpMiddlewareResult,
@@ -15,6 +16,12 @@ import {
   getRequestContext,
   withRequestContext,
 } from "../contexts/request-context";
+import {
+  createAuthorizationMiddleware,
+  createComponentRegistry,
+  recordComponents,
+} from "./mcp-authorization";
+import type { AuthorizeSkill } from "./skills";
 import {
   type McpToolHandler,
   resolveToolClientInfo,
@@ -32,7 +39,10 @@ export function normalizeMcpMiddleware(value: unknown): McpMiddleware[] {
 }
 
 /** Share one dispatch implementation and one request scope for every operation. */
-function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
+function createMiddlewareRunner(
+  middleware: readonly McpMiddleware[],
+  reuseCurrentRequest = false
+) {
   const chain = [...middleware];
   return (
     operation: Pick<McpMiddlewareContext, "method" | "params"> & {
@@ -41,26 +51,33 @@ function createMiddlewareRunner(middleware: readonly McpMiddleware[]) {
     ctx: ServerContext,
     handler: () => McpMiddlewareResult | Promise<McpMiddlewareResult>
   ) =>
-    withRequestContext(ctx, resolveToolClientInfo(ctx), async () => {
-      if (chain.length === 0) return handler();
-      const context: McpMiddlewareContext = Object.freeze({
-        ...getRequestContext(),
-        ...operation,
-        params: Object.freeze({ ...operation.params }),
-      }) as McpMiddlewareContext;
-      let lastIndex = -1;
-      const dispatch = async (index: number): Promise<McpMiddlewareResult> => {
-        if (index <= lastIndex) {
-          throw new Error("MCP middleware next() can only be called once");
-        }
-        lastIndex = index;
-        const current = chain[index];
-        return current
-          ? current(context, () => dispatch(index + 1))
-          : handler();
-      };
-      return dispatch(0);
-    });
+    withRequestContext(
+      ctx,
+      resolveToolClientInfo(ctx),
+      async () => {
+        if (chain.length === 0) return handler();
+        const context: McpMiddlewareContext = Object.freeze({
+          ...getRequestContext(),
+          ...operation,
+          params: Object.freeze({ ...operation.params }),
+        }) as McpMiddlewareContext;
+        let lastIndex = -1;
+        const dispatch = async (
+          index: number
+        ): Promise<McpMiddlewareResult> => {
+          if (index <= lastIndex) {
+            throw new Error("MCP middleware next() can only be called once");
+          }
+          lastIndex = index;
+          const current = chain[index];
+          return current
+            ? current(context, () => dispatch(index + 1))
+            : handler();
+        };
+        return dispatch(0);
+      },
+      reuseCurrentRequest
+    );
 }
 
 /** Copy JSON-like metadata so freezing the view never freezes registration inputs. */
@@ -97,7 +114,7 @@ export function wrapToolWithMiddleware(
   metadata: McpToolMetadata,
   middleware: readonly McpMiddleware[]
 ): McpToolHandler {
-  const run = createMiddlewareRunner(middleware);
+  const run = createMiddlewareRunner(middleware, true);
   const tool = Object.freeze({ metadata: snapshotMetadata(metadata) });
   return (args, ctx) =>
     run(
@@ -132,37 +149,85 @@ type RequestHandler = (
  * while registering components, then restore it even if registration fails.
  * This retains SDK catalog/URI/completion behavior and runs the chain once,
  * including ResourceTemplate list/read/complete callbacks and generated UI resources.
+ *
+ * An `authorize` policy runs before user middleware. Its tools/call check wraps
+ * the SDK handler itself, so a denied tool is rejected before argument
+ * validation, exactly like an unknown tool.
  */
 export function registerWithMcpMiddleware(
   server: McpServer,
   middleware: readonly McpMiddleware[],
-  register: () => void
+  register: (authorizeSkill?: AuthorizeSkill) => void,
+  authorize?: McpAuthorize
 ): void {
   const protocol = server.server;
   const original = protocol.setRequestHandler;
-  const run = createMiddlewareRunner(middleware);
+  const registry = authorize ? createComponentRegistry() : undefined;
+  const authorization =
+    authorize && registry
+      ? createAuthorizationMiddleware(authorize, registry)
+      : undefined;
+  const run = createMiddlewareRunner(
+    authorization ? [authorization, ...middleware] : middleware
+  );
+  const authorizeToolCall = authorization
+    ? createMiddlewareRunner([authorization])
+    : undefined;
   protocol.setRequestHandler = ((
     method: string,
     ...registration: unknown[]
   ) => {
-    if (
-      requestMethods.has(method as RequestMethod) &&
-      registration.length === 1 &&
-      typeof registration[0] === "function"
-    ) {
+    if (registration.length === 1 && typeof registration[0] === "function") {
       const handler = registration[0] as RequestHandler;
-      registration[0] = (
-        request: RequestTypeMap[RequestMethod],
-        ctx: ServerContext
-      ) =>
-        run({ method: request.method, params: request.params ?? {} }, ctx, () =>
-          handler(request, ctx)
-        );
+      if (requestMethods.has(method as RequestMethod)) {
+        registration[0] = (
+          request: RequestTypeMap[RequestMethod],
+          ctx: ServerContext
+        ) =>
+          run(
+            { method: request.method, params: request.params ?? {} },
+            ctx,
+            () => handler(request, ctx)
+          );
+      } else if (method === "tools/call" && authorizeToolCall && registry) {
+        registration[0] = (
+          request: RequestTypeMap["tools/call"],
+          ctx: ServerContext
+        ) => {
+          const tool = registry.tools.get(request.params.name);
+          // Unknown tools keep the SDK's own error.
+          if (!tool) return handler(request as never, ctx);
+          return authorizeToolCall(
+            {
+              method: "tools/call",
+              params: {
+                name: request.params.name,
+                arguments: request.params.arguments ?? {},
+              },
+              tool: { metadata: tool.metadata },
+            },
+            ctx,
+            () => handler(request as never, ctx)
+          );
+        };
+      }
     }
     Reflect.apply(original, protocol, [method, ...registration]);
   }) as typeof original;
   try {
-    register();
+    if (registry) {
+      const authorizeSkill: AuthorizeSkill = async (ctx, uri, operation) => {
+        const component = registry.resources.get(uri);
+        return (
+          !component || (await authorize!(ctx, component, operation)) === true
+        );
+      };
+      recordComponents(server, registry, snapshotMetadata, () =>
+        register(authorizeSkill)
+      );
+    } else {
+      register();
+    }
   } finally {
     protocol.setRequestHandler = original;
   }

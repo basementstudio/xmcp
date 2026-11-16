@@ -54,9 +54,9 @@ When at least one skill exists, the server:
 
 Files are addressed as `skill://<skill-name>/<file-path>`:
 
-| File                                             | Resource URI                                   |
-| ------------------------------------------------ | ---------------------------------------------- |
-| `src/skills/release-notes/SKILL.md`              | `skill://release-notes/SKILL.md`               |
+| File                                              | Resource URI                                   |
+| ------------------------------------------------- | ---------------------------------------------- |
+| `src/skills/release-notes/SKILL.md`               | `skill://release-notes/SKILL.md`               |
 | `src/skills/release-notes/references/TEMPLATE.md` | `skill://release-notes/references/TEMPLATE.md` |
 
 Each entry carries the skill's frontmatter and a complete list of its files with their SHA-256 digest and size, which clients use to verify what they read:
@@ -108,7 +108,7 @@ In development, `xmcp dev` picks up added, removed and edited skill files. An in
 
 Skills follow the name rules of the [components](/docs/configuration/components) configuration: a skill whose name is excluded is not served, and when `include` is set a skill is served only if `include.names` lists it. Skills have no tags.
 
-Skill files are read through `resources/read`, so [MCP middleware](/docs/core-concepts/middlewares) for that method applies to them. `skills/list` and `skills/get` do not run through MCP middleware.
+Skill files are read through `resources/read`, so [MCP middleware](/docs/core-concepts/middlewares) for that method applies to them. `skills/list` and `skills/get` do not run through MCP middleware. They do apply the [authorization policy](/docs/guides/authentication#authorize-components) to each skill's `SKILL.md` resource, using operation `"list"` and `"read"`, respectively. Denied skills are omitted before pagination, and a denied get matches an unknown skill. Protect the full `skill://<name>/` prefix in your policy to restrict every file as well.
 
 ## Not supported yet
 

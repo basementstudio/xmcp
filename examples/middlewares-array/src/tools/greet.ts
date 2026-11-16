@@ -1,4 +1,4 @@
-import { type InferSchema, type ToolMetadata } from "xmcp";
+import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { z } from "zod";
 
 // Define the schema for tool parameters
@@ -22,5 +22,6 @@ export const metadata: ToolMetadata = {
 
 // Tool implementation
 export default async function greet({ name }: InferSchema<typeof schema>) {
-  return `Hello, ${name}!`;
+  const caller = getRequestContext().get<string>("example.caller");
+  return `Hello, ${name}! Authorized caller: ${caller}.`;
 }

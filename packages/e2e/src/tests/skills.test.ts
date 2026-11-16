@@ -145,7 +145,9 @@ test(
         "worker/tools/ping.ts": `export const metadata = { name: "ping", description: "Reply with pong" };
 export default function ping() { return "pong"; }
 `,
-        "src/middleware.ts": "export {};\n",
+        // Keep the portable policy so the shared denied skill stays hidden.
+        "src/middleware.ts":
+          'export { authorize } from "./authorization-policy";\n',
       },
       configFragment: `paths: { tools: "worker/tools", prompts: false, resources: false },
         typescript: { skipTypeCheck: true },`,
@@ -193,6 +195,24 @@ export default function ping() { return "pong"; }
     assert.deepEqual(
       resources.map(({ uri }) => uri),
       SKILL_URIS
+    );
+    await assert.rejects(
+      client.request(
+        {
+          method: "skills/get",
+          params: { uri: "skill://authz-hidden/SKILL.md" },
+        },
+        anyResult,
+        REQUEST_OPTIONS
+      ),
+      /No skill is served at skill:\/\/authz-hidden\/SKILL.md/
+    );
+    await assert.rejects(
+      client.readResource(
+        { uri: "skill://authz-hidden/SKILL.md" },
+        REQUEST_OPTIONS
+      ),
+      /Resource not found/
     );
     for (const { uri, digest, size } of resources) {
       const [content] = (await client.readResource({ uri }, REQUEST_OPTIONS))
