@@ -10,7 +10,7 @@
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "next": "16.4.6",

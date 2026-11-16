@@ -22,7 +22,7 @@ Install [Paper Desktop](https://paper.design/docs/mcp), open a design file, and 
 
 ## Run locally
 
-Use Node 26 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
+Use Node.js 26 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/basementstudio/xmcp.git
@@ -55,7 +55,7 @@ Configure a local MCP client with absolute paths:
 }
 ```
 
-Use an absolute Node 26 executable path if your client cannot find `node`. Call `list-paper-tools` with `{}`, read the returned server instructions and schemas, then set `PAPER_ALLOWED_TOOLS` to the exact tool names needed. Restart the server after changing `.env`. Call `call-paper-tool` with `name` and `arguments` matching discovery. Enabled design tools can edit or delete content. This starter requires a local Paper Desktop session and has no hosted HTTP endpoint.
+Use an absolute Node.js 26 executable path if your client cannot find `node`. Call `list-paper-tools` with `{}`, read the returned server instructions and schemas, then set `PAPER_ALLOWED_TOOLS` to the exact tool names needed. Restart the server after changing `.env`. Call `call-paper-tool` with `name` and `arguments` matching discovery. Enabled design tools can edit or delete content. This starter requires a local Paper Desktop session and has no hosted HTTP endpoint.
 
 ## Validate and customize
 

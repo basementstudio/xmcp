@@ -1,4 +1,3 @@
-
 <div align="center">
 
   <a href="https://xmcp.dev">
@@ -12,7 +11,6 @@
 <a href="https://basement.studio"><img alt="xmcp logo" src="https://img.shields.io/badge/MADE%20BY%20basement.studio-000000.svg?style=for-the-badge&labelColor=000"></a>
 <a href="https://www.npmjs.com/package/xmcp"><img alt="NPM version" src="https://img.shields.io/npm/v/xmcp.svg?style=for-the-badge&labelColor=000000"></a>
 <a href="https://github.com/basementstudio/xmcp/blob/main/license.md"><img alt="License" src="https://img.shields.io/npm/l/xmcp.svg?style=for-the-badge&labelColor=000000"></a>
-
 
 </div>
 <div align="center">
@@ -84,3 +82,7 @@ If you believe you have found a security vulnerability, we encourage you to let 
 We will investigate all legitimate reports and do our best to quickly fix the problem.
 
 Please report any vulnerabilities in our open source repositories to [security@xmcp.dev](mailto:security@xmcp.dev).
+
+### Node.js module compatibility
+
+The `xmcp` root entry supports both CommonJS `require("xmcp")` and native ESM named imports, including `import { createContext } from "xmcp"` used by provider plugins. Production `xmcp build` exits with a nonzero status on compilation errors, so deployment scripts stop before starting an invalid build.

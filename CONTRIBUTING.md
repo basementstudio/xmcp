@@ -13,9 +13,9 @@ unless it is required for the current change.
 
 ### Repository Setup
 
-We use pnpm and Node 26.x.
+We recommend Node.js 26 and pnpm. The supported minimum is Node.js 22.12.
 
-To get started, run `nvm use` and `pnpm install`.
+To get started, run `nvm install && nvm use`, then `pnpm install`. This selects the repository's pinned Node.js version.
 
 ### Develop xmcp
 

@@ -24,7 +24,7 @@ Sending tools send real email and consume quota. Review recipients and saved dra
 
 ## Run locally
 
-Use Node 26 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
+Use Node.js 26 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/basementstudio/xmcp.git

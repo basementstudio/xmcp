@@ -1,7 +1,7 @@
 # TanStack with xmcp
 
 A React TanStack app with a stateless MCP endpoint at `/mcp`.
-Requires Node 22.12+ and pnpm. From the repository root, run `pnpm install` and
+Node.js 26 is recommended. This example requires Node.js 22.12 or later and pnpm. From the repository root, run `pnpm install` and
 `pnpm build` first to build the local framework and compiler.
 
 ```sh

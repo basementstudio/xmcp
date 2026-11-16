@@ -1,7 +1,7 @@
 # SvelteKit + xmcp
 
 A minimal SvelteKit application with an MCP endpoint at `/mcp` and a `greet` tool.
-Uses local workspace packages. Requires Node 22.17+ and the repository's pnpm 10.8.1.
+Uses local workspace packages. Node.js 26 is recommended. This example requires Node.js 22.17 or later and the repository's pnpm 10.8.1.
 
 From the repository root:
 

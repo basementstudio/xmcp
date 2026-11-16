@@ -186,34 +186,49 @@ export class InjectRuntimePlugin {
 
 export class CreateTypeDefinitionPlugin {
   apply(compiler: Compiler) {
-    let hasRun = false;
-    compiler.hooks.afterEmit.tap(
+    const xmcpConfig = getXmcpConfig();
+    if (!xmcpConfig.experimental?.adapter) return;
+
+    let typeDefinitionContent = "";
+    if (isFetchAdapter(xmcpConfig)) {
+      typeDefinitionContent = fetchTypeDefinition;
+    } else if (xmcpConfig.experimental.adapter === "nextjs") {
+      typeDefinitionContent = nextJsTypeDefinition;
+    } else if (xmcpConfig.experimental.adapter === "express") {
+      typeDefinitionContent = expressTypeDefinition;
+    } else if (xmcpConfig.experimental.adapter === "nestjs") {
+      typeDefinitionContent = nestJsTypeDefinition;
+    } else if (xmcpConfig.experimental.adapter === "fastify") {
+      typeDefinitionContent = fastifyTypeDefinition;
+    }
+
+    // Host files may import the adapter during the first production type check.
+    compiler.hooks.beforeCompile.tap("CreateTypeDefinitionPlugin", () => {
+      const declarationPath = path.join(adapterOutputPath, "index.d.ts");
+      // Avoid invalidating the host watcher when the declarations are unchanged.
+      if (
+        !fs.existsSync(declarationPath) ||
+        fs.readFileSync(declarationPath, "utf8") !== typeDefinitionContent
+      ) {
+        fs.outputFileSync(declarationPath, typeDefinitionContent);
+      }
+    });
+    // Emit it as an asset too, so output cleaning and rebuilds retain the types.
+    compiler.hooks.thisCompilation.tap(
       "CreateTypeDefinitionPlugin",
-      (_compilationParams) => {
-        if (hasRun) return;
-        hasRun = true;
-
-        const xmcpConfig = getXmcpConfig();
-
-        // Manually type the .xmcp/adapter/index.js file using a .xmcp/adapter/index.d.ts file
-        if (xmcpConfig.experimental?.adapter) {
-          let typeDefinitionContent = "";
-          if (isFetchAdapter(xmcpConfig)) {
-            typeDefinitionContent = fetchTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter === "nextjs") {
-            typeDefinitionContent = nextJsTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter === "express") {
-            typeDefinitionContent = expressTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter === "nestjs") {
-            typeDefinitionContent = nestJsTypeDefinition;
-          } else if (xmcpConfig.experimental?.adapter === "fastify") {
-            typeDefinitionContent = fastifyTypeDefinition;
+      (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: "CreateTypeDefinitionPlugin",
+            stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+          },
+          () => {
+            compilation.emitAsset(
+              "index.d.ts",
+              new sources.RawSource(typeDefinitionContent)
+            );
           }
-          fs.writeFileSync(
-            path.join(adapterOutputPath, "index.d.ts"),
-            typeDefinitionContent
-          );
-        }
+        );
       }
     );
   }

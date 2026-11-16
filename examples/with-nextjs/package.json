@@ -11,7 +11,7 @@
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.104",

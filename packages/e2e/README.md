@@ -1,7 +1,7 @@
 # xmcp conformance tests
 
-Private test infrastructure for compiled xmcp applications. Requires Node 26 and
-pnpm 10.8.1. Install workspace dependencies with `pnpm install --frozen-lockfile`.
+Private test infrastructure for compiled xmcp applications. Node.js 26 is
+recommended; the tests require Node.js 22.12 or later and pnpm 10.8.1. Install workspace dependencies with `pnpm install --frozen-lockfile`.
 
 ```sh
 pnpm run test:unit

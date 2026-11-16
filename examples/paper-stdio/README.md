@@ -4,7 +4,7 @@ A local STDIO xmcp server that discovers and calls Paper Design tools through `x
 
 ## Run
 
-Install [Paper Desktop](https://paper.design/docs/mcp), open a design file, and copy the absolute Paper CLI path from its MCP panel. From the repository root, using Node 26 and pnpm:
+Install [Paper Desktop](https://paper.design/docs/mcp), open a design file, and copy the absolute Paper CLI path from its MCP panel. From the repository root, using Node.js 26 and pnpm:
 
 ```sh
 pnpm install
@@ -31,7 +31,7 @@ Configure your MCP client to run the built server locally:
 }
 ```
 
-Use Node 26's absolute executable path if your client cannot find `node`. You can also run `pnpm --filter paper-stdio start` from the repository root; STDIO waits for an MCP client, so it is not an interactive terminal prompt.
+Use Node.js 26's absolute executable path if your client cannot find `node`. You can also run `pnpm --filter paper-stdio start` from the repository root; STDIO waits for an MCP client, so it is not an interactive terminal prompt.
 
 1. Call `list-paper-tools` with `{}`. It returns the installed Paper version's tools, input schemas, server instructions, and an `allowed` flag. Read these instructions before calling design tools.
 2. Set `PAPER_ALLOWED_TOOLS` in `.env` to a comma-separated list of exact tool names you want to expose. Restart the xmcp server after changing `.env`.

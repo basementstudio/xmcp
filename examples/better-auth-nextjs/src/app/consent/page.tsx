@@ -1,17 +1,21 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import { useEffect, useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Consent() {
-  const [clientId, setClientId] = useState("");
-  const [scopes, setScopes] = useState<string[]>([]);
+  return (
+    <Suspense fallback={<p>Loading authorization request…</p>}>
+      <ConsentRequest />
+    </Suspense>
+  );
+}
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setClientId(params.get("client_id") ?? "");
-    setScopes((params.get("scope") ?? "").split(" ").filter(Boolean));
-  }, []);
+function ConsentRequest() {
+  const params = useSearchParams();
+  const clientId = params.get("client_id") ?? "";
+  const scopes = (params.get("scope") ?? "").split(" ").filter(Boolean);
 
   return (
     <div className="flex flex-col gap-4 p-4">

@@ -31,7 +31,11 @@ function getConfig() {
   const config: RspackOptions = {
     name: "main",
     entry: {
-      index: path.join(srcPath, "index.ts"),
+      index: {
+        import: path.join(srcPath, "index.ts"),
+        // Provider plugins use named imports from native Node ESM.
+        library: { type: "commonjs-static" },
+      },
       client: {
         import: path.join(srcPath, "client.ts"),
         library: { type: "commonjs-static" },
@@ -50,6 +54,8 @@ function getConfig() {
     devtool: mode === "production" ? false : "source-map",
     target: "node",
     externalsPresets: { node: true },
+    // Entries with static CommonJS exports cannot use UMD wrapper parameters.
+    externalsType: "commonjs",
     externals: {
       zod: "zod",
       "zod/v3": "zod/v3",

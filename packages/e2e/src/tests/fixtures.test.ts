@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
+import { readFile, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { runCommand } from "../harness/process.js";
 import { test } from "node:test";
 import { REQUEST_OPTIONS } from "../harness/client-options.js";
 import { FIXTURE_TIMEOUT_MS } from "../harness/constants.js";
-import { createFixture } from "../harness/fixture.js";
+import { createFixture, REPO_ROOT } from "../harness/fixture.js";
 import type { Target } from "../harness/target.js";
 import { startHttpTarget } from "../harness/targets/http.js";
 
@@ -115,3 +118,112 @@ test(
     passed = true;
   }
 );
+
+test(
+  "production compilation reports a failing exit code for type errors",
+  { timeout: FIXTURE_TIMEOUT_MS },
+  async (context) => {
+    const fixture = await createFixture({ kind: "http", moduleType: "module" });
+    context.after(() => fixture.dispose());
+    await writeFile(
+      join(fixture.directory, "src/tools/broken.ts"),
+      "export default function broken(): string { return 123; }\n"
+    );
+    await assert.rejects(
+      runCommand(
+        process.execPath,
+        [join(REPO_ROOT, "packages/xmcp/dist/cli.js"), "build"],
+        fixture.directory,
+        join(fixture.directory, "failed-build.log")
+      ),
+      /failed \(1\).*TS2322/s
+    );
+  }
+);
+
+test(
+  "the published root supports native ESM named imports and CommonJS",
+  { timeout: FIXTURE_TIMEOUT_MS },
+  async (context) => {
+    const fixture = await createFixture({ kind: "http", moduleType: "module" });
+    context.after(() => fixture.dispose());
+    await writeFile(
+      join(fixture.directory, "imports.mjs"),
+      `
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import { createContext, getRequestContext } from "xmcp";
+const cjs = createRequire(import.meta.url)("xmcp");
+assert.equal(typeof createContext, "function");
+assert.equal(typeof getRequestContext, "function");
+assert.equal(createContext, cjs.createContext);
+`
+    );
+    await runCommand(
+      process.execPath,
+      ["imports.mjs"],
+      fixture.directory,
+      join(fixture.directory, "imports.log")
+    );
+  }
+);
+
+for (const kind of ["express", "fastify", "nestjs", "nextjs"] as const) {
+  test(
+    `${kind} type-checks host adapter imports on clean and repeated builds`,
+    { timeout: FIXTURE_TIMEOUT_MS },
+    async (context) => {
+      const exportName = kind === "nestjs" ? "XmcpController" : "xmcpHandler";
+      const fixture = await createFixture({
+        kind,
+        moduleType: "commonjs",
+        files: {
+          "src/host.ts": `import { ${exportName} } from "@xmcp/adapter";\nexport const handler = ${exportName};\n`,
+          "tsconfig.json": JSON.stringify({
+            compilerOptions: {
+              target: "ES2022",
+              module: "ESNext",
+              moduleResolution: "Bundler",
+              strict: true,
+              esModuleInterop: true,
+              skipLibCheck: true,
+              noEmit: true,
+              paths: { "@xmcp/*": ["./.xmcp/*"] },
+            },
+            include: ["src/**/*.ts", "xmcp.config.ts"],
+          }),
+        },
+      });
+      context.after(() => fixture.dispose());
+      const projectDirectory =
+        kind === "nextjs" ? join(fixture.directory, "mcp") : fixture.directory;
+      const declaration = join(projectDirectory, ".xmcp/adapter/index.d.ts");
+      assert.match(await readFile(declaration, "utf8"), new RegExp(exportName));
+      // A clean generated directory must work again without cached declarations.
+      await rm(join(projectDirectory, ".xmcp"), {
+        recursive: true,
+        force: true,
+      });
+      await runCommand(
+        process.execPath,
+        [join(REPO_ROOT, "packages/xmcp/dist/cli.js"), "build"],
+        projectDirectory,
+        join(fixture.directory, "clean-rebuild.log")
+      );
+      assert.match(await readFile(declaration, "utf8"), new RegExp(exportName));
+      await writeFile(
+        join(projectDirectory, "src/host.ts"),
+        `import { ${exportName} } from "@xmcp/adapter";\nconst handler: number = ${exportName};\n`
+      );
+      await assert.rejects(
+        runCommand(
+          process.execPath,
+          [join(REPO_ROOT, "packages/xmcp/dist/cli.js"), "build"],
+          projectDirectory,
+          join(fixture.directory, "invalid-host.log")
+        ),
+        /failed \(1\).*TS2322/s
+      );
+    }
+  );
+}

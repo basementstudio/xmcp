@@ -71,7 +71,7 @@ Build the adapter first, then run the xmcp watcher alongside your host developme
 
 The xmcp watcher updates discovery when tools, prompts, or resources are added or removed. The host processes their TypeScript and framework imports. Keep `.xmcp/` ignored by Git. Run xmcp before your application's production build and retain the host's type checking; `skipTypeCheck` only disables xmcp's separate check.
 
-The runnable example uses SvelteKit 3 with configuration in `vite.config.ts` and requires Node 22.17+. Initialization also recognizes existing SvelteKit 2 projects and leaves their configuration intact.
+The runnable example uses SvelteKit 3 with configuration in `vite.config.ts` and requires Node.js 22.17 or later; Node.js 26 is recommended. Initialization also recognizes existing SvelteKit 2 projects and leaves their configuration intact.
 
 For Node production, use [SvelteKit's Node adapter](https://svelte.dev/docs/kit/adapter-node). Run `xmcp build && vite build && svelte-check`, then start the generated server with `node build`. Keep the MCP endpoint server-rendered; it cannot be served by a static-only deployment.
 

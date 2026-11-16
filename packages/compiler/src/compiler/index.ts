@@ -417,6 +417,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
         // Track failed build (only in production)
         if (mode === "production") {
+          process.exitCode = 1;
           const statsJson = stats?.toJson({
             all: false,
             errors: true,

@@ -100,7 +100,7 @@ with-nestjs/
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 26 recommended; minimum 22.12
 - pnpm (recommended) or npm
 
 ## Installation
@@ -445,3 +445,7 @@ This allows AI assistants using MCP to interact with the same user data that's a
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [class-validator](https://github.com/typestack/class-validator)
 - [@nestjs/config](https://docs.nestjs.com/techniques/configuration)
+
+## Build validation
+
+Use Node.js 26 (recommended; minimum 22.12) and pnpm. Run `pnpm build` in this directory. The xmcp compiler writes adapter declarations before checking application types, including on a clean checkout. The host build or `tsc --noEmit` also validates the application against the generated adapter.

@@ -1,6 +1,6 @@
 # xmcp website
 
-Use Node 26 and pnpm. From the repository root:
+Use Node.js 26 and pnpm. From the repository root:
 
 ```bash
 pnpm install
@@ -23,7 +23,7 @@ The public verification file `78fb4b06761ad122f270142e229a307c.txt` must be depl
 before submissions can succeed. Its token proves control of the domain; it is
 not an account credential and requires no GitHub or Vercel secret.
 
-From the repository root, using Node 26 and pnpm:
+From the repository root, using Node.js 26 and pnpm:
 
 ```bash
 pnpm --filter website test:indexnow
@@ -182,7 +182,7 @@ Single-line source scrolls horizontally below the header, including after tab
 changes. Header space is reserved in server HTML to avoid hydration shifts.
 Run the language checks with
 `node --experimental-strip-types --test apps/website/lib/code-language.test.mjs`
-from the repository root (Node 26).
+from the repository root (Node.js 26).
 Markdown commands receive their single-line layout in the server HTML so the
 homepage install block does not shrink and move content when JavaScript loads.
 
@@ -430,7 +430,7 @@ Page icons live in `components/layout/docs-icons.tsx`. Add a mapping when adding
 a docs page; unmapped pages use a document icon and explicit page icons take
 precedence. Check `/docs`, a deep link, and mobile navigation after changes.
 
-Run the sidebar tree regression checks with Node 26:
+Run the sidebar tree regression checks with Node.js 26:
 
 ```bash
 pnpm --filter website exec node --experimental-strip-types --test scripts/docs-sidebar.test.mjs

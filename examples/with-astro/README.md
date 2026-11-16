@@ -1,7 +1,7 @@
 # Astro + xmcp
 
 A minimal application with an MCP endpoint at `/mcp` and a `greet` tool.
-Requires Node 22.12+ and the repository’s pnpm 10.8.1; xmcp packages use workspace dependencies.
+Node.js 26 is recommended. This example requires Node.js 22.12 or later and the repository’s pnpm 10.8.1; xmcp packages use workspace dependencies.
 
 From the repository root:
 

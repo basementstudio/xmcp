@@ -104,7 +104,7 @@ Keep your host application's build command and run xmcp first:
 
 The initial build generates the adapter before Vite loads your routes. The xmcp watcher updates discovery as handlers are added or removed; TanStack compiles application modules and their imports. Keep `.xmcp/` in `.gitignore` and run both builds in CI.
 
-For a Node production server, configure your TanStack hosting integration, such as Nitro, as described in the [TanStack hosting guide](https://tanstack.com/start/latest/docs/framework/react/guide/hosting). The [Node example](https://github.com/basementstudio/xmcp/tree/main/examples/with-tanstack) includes a complete Vite/Nitro configuration and a `start` command. The examples require Node 22.12 or newer.
+For a Node production server, configure your TanStack hosting integration, such as Nitro, as described in the [TanStack hosting guide](https://tanstack.com/start/latest/docs/framework/react/guide/hosting). The [Node example](https://github.com/basementstudio/xmcp/tree/main/examples/with-tanstack) includes a complete Vite/Nitro configuration and a `start` command. Node.js 26 is recommended; the examples require Node.js 22.12 or newer.
 
 ## Cloudflare Workers
 
