@@ -1,0 +1,25 @@
+{
+  "name": "with-mastra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "xmcp build",
+    "start": "node --env-file=.env dist/http.js",
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "node --import tsx --test tests/http.smoke.ts",
+    "consume": "node --env-file=.env --import tsx scripts/consume.ts"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.0.10",
+    "@mastra/core": "1.83.0",
+    "@mastra/mcp": "2.9.0"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*",
+    "@types/node": "^22.19.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "ai": "7.0.162"
+  }
+}

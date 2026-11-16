@@ -1,0 +1,129 @@
+---
+title: "Mastra"
+metadataTitle: "Usage with Mastra | xmcp Documentation"
+publishedAt: "2026-11-15"
+summary: "Give Mastra agents xmcp tools with MCPClient, and expose a Mastra agent as an xmcp tool."
+description: "Connect Mastra agents to xmcp tools over Streamable HTTP with MCPClient, and run a Mastra agent from an xmcp tool."
+---
+
+[Mastra](https://mastra.ai) agents can consume xmcp tools through `MCPClient`, and an xmcp tool can run a Mastra agent and return its text. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-mastra) does both in one process.
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @mastra/core @mastra/mcp",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @mastra/core @mastra/mcp",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @mastra/core @mastra/mcp",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @mastra/core @mastra/mcp",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Give a Mastra agent xmcp tools
+
+Protect the xmcp server with a bearer token checked on every request, using the constant-time `isBearer` middleware from the [Flue guide](/docs/integrations/flue#give-a-flue-agent-xmcp-tools). Connect with [`MCPClient`](https://mastra.ai/docs/connections/mcp) and send the token through `requestInit`:
+
+```ts title="src/connection.ts"
+import { MCPClient } from "@mastra/mcp";
+
+export const SHIPPING_TOOL = "xmcp_get-shipping-policy";
+
+export function shippingClient() {
+  return new MCPClient({
+    id: `xmcp-shipping-${crypto.randomUUID()}`,
+    servers: {
+      xmcp: {
+        url: new URL(process.env.MCP_URL!),
+        requestInit: {
+          headers: { Authorization: `Bearer ${process.env.MCP_API_KEY}` },
+        },
+      },
+    },
+  });
+}
+
+export async function shippingTools(client: MCPClient) {
+  const tools = await client.listTools();
+  return { [SHIPPING_TOOL]: tools[SHIPPING_TOOL] };
+}
+```
+
+Mastra namespaces tools as `<server>_<tool>`. Pass only the tools the agent should use:
+
+```ts
+const client = shippingClient();
+try {
+  const agent = new Agent({
+    id: "shipping",
+    name: "Shipping assistant",
+    instructions: "Answer shipping questions using the shipping policy tool.",
+    model: process.env.MASTRA_MODEL!,
+    tools: await shippingTools(client),
+  });
+  const result = await agent.generate("How long is shipping?");
+} finally {
+  await client.disconnect();
+}
+```
+
+## Expose a Mastra agent as an xmcp tool
+
+Run the agent inside an `ask-agent` tool and forward the request signal. Create and disconnect the `MCPClient` inside each call so callers never share a connection:
+
+```ts title="src/agent-client.ts"
+import { Agent } from "@mastra/core/agent";
+import { shippingClient, shippingTools } from "./connection";
+
+export async function askAgent(prompt: string, signal: AbortSignal) {
+  const client = shippingClient();
+  try {
+    const agent = new Agent({
+      id: "shipping",
+      name: "Shipping assistant",
+      instructions: "Answer shipping questions using the shipping policy tool.",
+      model: process.env.MASTRA_MODEL!,
+      tools: await shippingTools(client),
+    });
+    const result = await agent.generate(prompt, {
+      abortSignal: signal,
+      maxSteps: 3,
+    });
+    if (!result.text.trim()) throw new Error("Empty reply");
+    return result.text;
+  } catch {
+    signal.throwIfAborted();
+    throw new Error("Mastra agent request failed");
+  } finally {
+    await client.disconnect();
+  }
+}
+```
+
+The agent receives only `xmcp_get-shipping-policy`, so it cannot call `ask-agent` recursively.
+
+## Errors and cancellation
+
+`ask-agent` runs the agent once and never resubmits. Model or tool failures and empty replies return one generic tool error. Cancelling the MCP request aborts the in-process model and tool calls.
+
+## Testing without a model key
+
+The example's smoke test passes an AI SDK mock model to `askAgent`. The mock model calls the real xmcp tool and then answers, which exercises the full loop without provider credentials.
+
+## Tested versions
+
+`@mastra/core` 1.83.0 and `@mastra/mcp` 2.9.0.

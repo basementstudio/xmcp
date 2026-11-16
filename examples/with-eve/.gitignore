@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.xmcp/
+xmcp-env.d.ts
+.env
+.output/
+.eve/
+.nitro/

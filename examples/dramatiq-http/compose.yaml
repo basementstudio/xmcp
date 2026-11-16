@@ -1,0 +1,27 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+  bridge:
+    build: ./bridge
+    ports: ["127.0.0.1:8000:8000"]
+    environment: &bridge-env
+      REDIS_URL: redis://redis:6379/0
+      DRAMATIQ_BRIDGE_TOKEN: ${DRAMATIQ_BRIDGE_TOKEN:?Set DRAMATIQ_BRIDGE_TOKEN in .env}
+      RESULT_RETENTION_SECONDS: ${RESULT_RETENTION_SECONDS:-600}
+    depends_on:
+      redis: { condition: service_healthy }
+  worker:
+    build: ./bridge
+    command: ["dramatiq", "actors", "--processes", "1", "--threads", "1"]
+    environment: *bridge-env
+    depends_on:
+      redis: { condition: service_healthy }
+volumes:
+  redis-data:

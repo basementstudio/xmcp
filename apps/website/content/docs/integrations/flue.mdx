@@ -1,0 +1,153 @@
+---
+title: "Flue"
+metadataTitle: "Usage with Flue | xmcp Documentation"
+publishedAt: "2026-11-15"
+summary: "Give Flue agents xmcp tools, and expose a Flue agent as an xmcp tool."
+description: "Connect Flue agents to xmcp tools over Streamable HTTP, and call a deployed Flue agent from an xmcp tool."
+---
+
+[Flue](https://flueframework.com) agents can consume xmcp tools through Flue's native MCP connections, and an xmcp tool can call a deployed Flue agent. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-flue) does both with one read-only tool and one agent.
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i @flue/runtime @flue/sdk\npnpm i -D @flue/vite vite",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i @flue/runtime @flue/sdk\nnpm i -D @flue/vite vite",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add @flue/runtime @flue/sdk\nyarn add -D @flue/vite vite",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add @flue/runtime @flue/sdk\nbun add -D @flue/vite vite",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Give a Flue agent xmcp tools
+
+Protect the xmcp server with a bearer token. The server is stateless, so every request must carry the token. Compare it in constant time:
+
+```ts title="src/env.ts"
+import { timingSafeEqual } from "node:crypto";
+
+/** Checks an Authorization header against `Bearer <token>` in constant time. */
+export function isBearer(
+  header: string | null | undefined,
+  token: string | undefined
+): boolean {
+  if (!header || !token?.trim()) return false;
+  const received = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return (
+    received.length === expected.length && timingSafeEqual(received, expected)
+  );
+}
+```
+
+```ts title="src/middleware.ts"
+import { apiKeyAuthMiddleware } from "xmcp";
+import { isBearer } from "./env";
+
+export default apiKeyAuthMiddleware({
+  headerName: "authorization",
+  validateApiKey: async (header) => isBearer(header, process.env.MCP_API_KEY),
+});
+```
+
+Declare the connection with Flue's [`defineMcpConnection`](https://flueframework.com/docs/guide/mcp/) and mount it with `useMcpConnection`. Flue sends `auth` as `Authorization: Bearer <token>` on every request. `tools` is an allowlist of the server's tool names:
+
+```ts title="src/connection.ts"
+import { defineMcpConnection } from "@flue/runtime";
+
+export function shippingConnection() {
+  return defineMcpConnection({
+    name: "xmcp",
+    url: process.env.MCP_URL!,
+    auth: () => process.env.MCP_API_KEY!,
+    tools: ["get-shipping-policy"],
+  });
+}
+```
+
+```ts title="src/agents/assistant.ts"
+"use agent";
+import { useMcpConnection, useModel } from "@flue/runtime";
+import { shippingConnection } from "../connection";
+
+export function ShippingAssistant() {
+  useModel(process.env.FLUE_MODEL!);
+  useMcpConnection(shippingConnection());
+  return "Answer shipping questions using get-shipping-policy.";
+}
+```
+
+Flue names adapted tools `mcp__<server>__<tool>`, such as `mcp__xmcp__get-shipping-policy`. Adapted MCP tools run inside an agent turn. Mount the agent in `src/app.ts` with `createAgentRouter` and protect the route with your own middleware.
+
+## Expose a Flue agent as an xmcp tool
+
+Call the deployed agent with `createFlueClient`. Use a new conversation per call so callers never share history:
+
+```ts title="src/agent-client.ts"
+import { randomUUID } from "node:crypto";
+import { createFlueClient } from "@flue/sdk";
+
+export async function askAgent(prompt: string, signal: AbortSignal) {
+  const conversation = createFlueClient({
+    url: `${process.env.FLUE_AGENT_URL}/${randomUUID()}`,
+    token: process.env.FLUE_TOKEN,
+    fetch: (input, init) => fetch(input, { ...init, redirect: "error" }),
+  });
+  try {
+    const admission = await conversation.send({
+      message: { kind: "user", body: prompt },
+      signal,
+    });
+    const reply = await conversation.read(admission, { signal });
+    if (!reply.text.trim()) throw new Error("Empty reply");
+    return reply.text;
+  } catch {
+    signal.throwIfAborted();
+    throw new Error("Flue agent request failed");
+  }
+}
+```
+
+```ts title="src/tools/ask-agent.ts"
+import { z } from "zod";
+import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
+import { askAgent } from "../agent-client";
+
+export const schema = { prompt: z.string().trim().min(1).max(4000) };
+
+export const metadata: ToolMetadata = {
+  name: "ask-agent",
+  description: "Ask the shipping assistant in a new conversation.",
+};
+
+export default async function ask(input: InferSchema<typeof schema>) {
+  return askAgent(input.prompt, getRequestContext().signal);
+}
+```
+
+Keep `ask-agent` out of the agent's own connection allowlist so the agent cannot call itself.
+
+## Errors and cancellation
+
+`ask-agent` submits once and never retries, so a transient failure cannot run the agent twice. Failed runs, upstream errors, and empty replies return one generic tool error, and details stay in the agent server logs. Cancelling the MCP request stops reading the reply, but the agent may still finish its turn. Use the Flue client's `abort()` when you also need to stop the run.
+
+## Tested versions
+
+`@flue/runtime`, `@flue/sdk`, and `@flue/vite` 2.3.0 with Vite 8. Flue 2.3.0 accepts `@earendil-works/pi-ai` `^1.1.0`, but pi-ai 1.5 removed an export Flue imports. Pin Flue's `@earendil-works/pi-ai` and `@earendil-works/pi-agent-core` to 1.4.0 with your package manager's overrides until Flue publishes a fix.
+
+The example's README covers environment variables, the agent server, and its tests.

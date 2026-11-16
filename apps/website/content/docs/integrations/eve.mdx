@@ -1,0 +1,134 @@
+---
+title: "eve"
+metadataTitle: "Usage with eve | xmcp Documentation"
+publishedAt: "2026-11-15"
+summary: "Give eve agents xmcp tools, and expose an eve agent as an xmcp tool."
+description: "Connect eve agents to xmcp tools with an MCP client connection, and call an eve agent from an xmcp tool."
+---
+
+[eve](https://eve.dev) agents can consume xmcp tools through an MCP client connection, and an xmcp tool can start an eve session and return its reply. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-eve) does both with one read-only tool and one agent.
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm i eve",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i eve",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn add eve",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun add eve",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+## Give an eve agent xmcp tools
+
+Protect the xmcp server with a bearer token checked on every request, using `isBearer` below with `apiKeyAuthMiddleware` as in the [Flue guide](/docs/integrations/flue#give-a-flue-agent-xmcp-tools). Then add a connection under `agent/connections/` with [`defineMcpClientConnection`](https://eve.dev/docs/connections/mcp):
+
+```ts title="agent/connections/xmcp.ts"
+import { defineMcpClientConnection } from "eve/connections";
+
+export default defineMcpClientConnection({
+  url: process.env.MCP_URL || "http://localhost:3001/mcp",
+  description: "Read the demonstration store shipping policy.",
+  auth: {
+    getToken: async () => ({ token: process.env.MCP_API_KEY! }),
+  },
+  tools: { allow: ["get-shipping-policy"] },
+});
+```
+
+eve evaluates connection modules during `eve build`, so keep required secrets inside callbacks such as `getToken`. `tools.allow` limits what the agent can discover.
+
+## Expose an eve agent as an xmcp tool
+
+Protect the eve channel with its own token. `isBearer` compares the header in constant time:
+
+```ts title="src/env.ts"
+import { timingSafeEqual } from "node:crypto";
+
+/** Checks an Authorization header against `Bearer <token>` in constant time. */
+export function isBearer(
+  header: string | null | undefined,
+  token: string | undefined
+): boolean {
+  if (!header || !token?.trim()) return false;
+  const received = Buffer.from(header);
+  const expected = Buffer.from(`Bearer ${token}`);
+  return (
+    received.length === expected.length && timingSafeEqual(received, expected)
+  );
+}
+```
+
+```ts title="agent/channels/eve.ts"
+import { eveChannel } from "eve/channels/eve";
+import { isBearer } from "../../src/env";
+
+export default eveChannel({
+  auth: async (request) => {
+    if (
+      !isBearer(request.headers.get("authorization"), process.env.EVE_TOKEN)
+    ) {
+      return null;
+    }
+    return {
+      attributes: {},
+      authenticator: "xmcp-example",
+      principalId: "xmcp",
+      principalType: "app",
+    };
+  },
+});
+```
+
+Then start a session per tool call with `eve/client` and wait for its result:
+
+```ts title="src/agent-client.ts"
+import { Client } from "eve/client";
+
+export async function askAgent(prompt: string, signal: AbortSignal) {
+  const client = new Client({
+    baseUrl: process.env.EVE_URL!,
+    auth: { bearer: process.env.EVE_TOKEN! },
+  });
+  try {
+    const { delivery } = await client.sessions.create({
+      message: prompt,
+      signal,
+      reconnect: false,
+    });
+    const result = await delivery.result({ signal });
+    if (result.status === "failed" || !result.reply?.trim()) {
+      throw new Error("No completed reply");
+    }
+    return result.reply;
+  } catch {
+    signal.throwIfAborted();
+    throw new Error("eve agent request failed");
+  }
+}
+```
+
+Call it from an `ask-agent` tool with `getRequestContext().signal`, as in the [Flue guide](/docs/integrations/flue#expose-a-flue-agent-as-an-xmcp-tool). Keep `ask-agent` out of `tools.allow` so the agent cannot call itself.
+
+## Errors and cancellation
+
+Each call creates one session and never retries. Failed runs, upstream errors, and empty replies return one generic tool error. Cancelling the MCP request stops waiting for the reply; the eve run may still finish.
+
+## Tested versions
+
+`eve` 1.0.0-rc.18. The example's README covers environment variables, the eve server, and its tests.
