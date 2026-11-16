@@ -1,5 +1,17 @@
 # @xmcp-dev/compiler
 
+## 1.12.0
+
+### Minor Changes
+
+- a19cc4e: Add optional `cacheHints` config and a per-resource `cacheHint` metadata field for MCP 2026-07-28 cache hints. Configured listing and read results carry the given `ttlMs` and `cacheScope`; unset methods keep the SDK defaults (`ttlMs: 0`, `cacheScope: "private"`).
+- 6bbf233: Telemetry now sends one `dev:started` event per `xmcp dev` session, adds the command, package manager, deploy target, and a fixed list of enabled framework features to build and dev events, and reports config, compile, and client transpile failures in addition to bundler failures. `create-xmcp-app` and `init-xmcp` send one anonymous event when they finish and honour the same opt-out.
+- a19cc4e: Accept complete Zod schemas for a tool's `schema` and `outputSchema` alongside field maps. Complete output schemas can describe arrays, primitives, and unions, and tools with one can return the data directly as shorthand for `{ structuredContent: data }`. `InferSchema` infers both forms.
+
+### Patch Changes
+
+- 1900443: Add the `xmcp telemetry [status|enable|disable]` command the first-run notice already pointed to, stop build-failure telemetry from sending module paths as the error type, and hash only the package name for the anonymous project id so version bumps no longer count as new projects.
+
 ## 1.11.0
 
 No changes in this release.
