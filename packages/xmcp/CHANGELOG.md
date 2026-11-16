@@ -1,5 +1,17 @@
 # xmcp
 
+## 1.11.0
+
+### Minor Changes
+
+- b5bb292: Add an optional `authorize` export to `src/middleware.ts`. One policy hides denied tools, prompts, resources, resource templates, and skills from listings, rejects direct calls, prompt gets, and reads with the same errors as unknown components, and rejects denied completions like unknown references, on HTTP and STDIO.
+
+  Tool authorization receives raw arguments before SDK validation and shares request-local values with tool middleware and handlers. Skill catalogs authorize their SKILL.md resource before returning entries or pagination.
+
+## 1.10.4
+
+No changes in this release.
+
 ## 1.10.3
 
 No changes in this release.

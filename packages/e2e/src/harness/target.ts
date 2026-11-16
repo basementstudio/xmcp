@@ -25,6 +25,7 @@ export type Capability =
   | "request-helpers"
   | "mcp-middleware"
   | "operation-middleware"
+  | "authorization"
   | "middleware-input-required"
   | "middleware-cancellation"
   | "stateless-http";
@@ -58,6 +59,7 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "request-helpers",
   "mcp-middleware",
   "operation-middleware",
+  "authorization",
   "middleware-input-required",
   "middleware-cancellation",
 ];

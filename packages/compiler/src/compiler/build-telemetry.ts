@@ -26,9 +26,39 @@ export interface BuildSuccessTelemetry extends BaseTelemetryData {
   outputSize: number;
 }
 
+export type ErrorType = string & { readonly __sanitizedErrorType: true };
+
 export interface BuildFailureTelemetry extends BaseTelemetryData {
   errorPhase: ErrorPhase;
-  errorType: string;
+  errorType: ErrorType;
+}
+
+const ERROR_TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
+const FALLBACK_ERROR_TYPE = "WebpackError";
+const MODULE_NOT_FOUND_ERROR_TYPE = "ModuleNotFoundError";
+
+export function toErrorType(...candidates: unknown[]): ErrorType {
+  const errorType = candidates.find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && ERROR_TYPE_PATTERN.test(candidate)
+  );
+  return (errorType ?? FALLBACK_ERROR_TYPE) as ErrorType;
+}
+
+export function toBundlerErrorType(bundlerError?: {
+  code?: unknown;
+  name?: unknown;
+  message?: unknown;
+}): ErrorType {
+  const isModuleNotFound =
+    typeof bundlerError?.message === "string" &&
+    bundlerError.message.includes("Module not found");
+
+  return toErrorType(
+    bundlerError?.code,
+    bundlerError?.name,
+    isModuleNotFound ? MODULE_NOT_FOUND_ERROR_TYPE : undefined
+  );
 }
 
 function enqueueTelemetryEvent(

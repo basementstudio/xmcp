@@ -2,7 +2,7 @@
 
 Generated 2026-08-20 on Darwin 25.5.0 (arm64), Node v20.20.2, npm 11.17.0.
 
-> The repository targets Node 22. These results are provisional until rerun on Node 22.
+> The repository targets Node 26. These results are provisional until rerun on Node 26.
 
 The xmcp rows use the packed local 0.8.1 migration candidate. The comparison fixtures are exact-pinned: FastMCP 4.16.5, mcp-framework 0.2.22, tmcp 1.20.0, `@modelcontextprotocol/server`/`node` 2.0.0, Zod 4.4.3, and esbuild 0.28.2.
 

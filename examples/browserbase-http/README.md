@@ -12,7 +12,7 @@ This example manages the session lifecycle. Navigation, screenshots, and page in
 
 ## Run
 
-Use Node 22 and pnpm. Get a Browserbase API key from your [dashboard](https://www.browserbase.com/). From this repository's root:
+Use Node 26 and pnpm. Get a Browserbase API key from your [dashboard](https://www.browserbase.com/). From this repository's root:
 
 ```sh
 pnpm install

@@ -11,13 +11,7 @@ export async function getRawProjectId(): Promise<string> {
     const packageJsonPath = path.join(process.cwd(), "package.json");
     const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 
-    // Use package name and version as stable identifier
-    // This gives us a stable ID even across different machines
-    const identifier = `${packageJson.name || "unknown"}@${
-      packageJson.version || "0.0.0"
-    }`;
-
-    return identifier;
+    return packageJson.name || process.cwd();
   } catch (error) {
     // Fallback to directory path if package.json not found
     return process.cwd();

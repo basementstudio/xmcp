@@ -1,4 +1,9 @@
-import { type McpMiddleware, type Middleware, type RequestContext } from "xmcp";
+import {
+  type McpAuthorize,
+  type McpMiddleware,
+  type Middleware,
+  type RequestContext,
+} from "xmcp";
 
 // Public demo credentials only. Use your authentication provider in production.
 const demoCredentials = new Map([
@@ -36,7 +41,11 @@ const stampResult: McpMiddleware = async (ctx, next) => {
   const result = await next();
   return {
     ...result,
-    _meta: { ...result._meta, tool: ctx.get<string>("example.tool") },
+    _meta: {
+      ...result._meta,
+      tool: ctx.get<string>("example.tool"),
+      caller: ctx.get<string>("example.caller"),
+    },
   };
 };
 
@@ -56,54 +65,25 @@ const checkName: McpMiddleware = (ctx, next) => {
   return next();
 };
 
-const protectResource: McpMiddleware = async (ctx, next) => {
+// One policy hides components from every listing and rejects direct calls,
+// prompt gets, reads and completions as if they did not exist.
+export const authorize: McpAuthorize = (ctx, component, operation) => {
+  if (operation === "call") ctx.set("example.caller", ctx.authInfo?.clientId);
   if (
-    ctx.method === "resources/read" &&
-    new URL(ctx.params.uri).href === "demo://private"
+    component.type === "resource" &&
+    component.uri.startsWith("skill://greeting-guide/")
   ) {
-    throw new Error("This resource is private");
+    return ctx.authInfo?.scopes.includes("greet") ?? false;
   }
-  const result = await next();
-  if (ctx.method === "resources/list" && Array.isArray(result.resources)) {
-    return {
-      ...result,
-      resources: result.resources.filter(
-        (resource) => resource.uri !== "demo://private"
-      ),
-    };
-  }
-  return result;
-};
-
-function canCall(
-  meta: Readonly<Record<string, unknown>> | undefined,
-  authInfo: RequestContext["authInfo"]
-): boolean {
-  const required = meta?.["demo/requires"];
+  const required = component.metadata._meta?.["demo/requires"];
   if (required === undefined) return true;
   return (
     Array.isArray(required) &&
     required.every(
-      (scope) => typeof scope === "string" && authInfo?.scopes.includes(scope)
+      (scope) =>
+        typeof scope === "string" && ctx.authInfo?.scopes.includes(scope)
     )
   );
-}
-
-const authorizeTools: McpMiddleware = async (ctx, next) => {
-  if (
-    ctx.method === "tools/call" &&
-    !canCall(ctx.tool.metadata._meta, ctx.authInfo)
-  ) {
-    return { isError: true, content: [{ type: "text", text: "Forbidden" }] };
-  }
-  const result = await next();
-  if (ctx.method === "tools/list" && Array.isArray(result.tools)) {
-    return {
-      ...result,
-      tools: result.tools.filter((tool) => canCall(tool._meta, ctx.authInfo)),
-    };
-  }
-  return result;
 };
 
-export const mcp = [authorizeTools, stampResult, checkName, protectResource];
+export const mcp = [stampResult, checkName];

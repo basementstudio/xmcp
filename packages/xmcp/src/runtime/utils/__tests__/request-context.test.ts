@@ -8,7 +8,10 @@ import {
 } from "@modelcontextprotocol/server";
 
 import { httpRequestContextProvider } from "../../contexts/http-request-context";
-import { getRequestContext } from "../../contexts/request-context";
+import {
+  withRequestContext,
+  getRequestContext,
+} from "../../contexts/request-context";
 import { wrapToolWithMiddleware } from "../mcp-middleware";
 import {
   transformToolHandler as transform,
@@ -239,5 +242,35 @@ test("shares SDK auth with middleware and helpers without freezing it or retaini
     handler({}, serverContext(undefined, true))
   );
   await handler({}, serverContext());
+  outsideRequest();
+});
+
+test("scope reuse matches the SDK request and retry boundaries always start fresh", async () => {
+  const ctx = serverContext();
+  for (const round of [1, 2]) {
+    await withRequestContext(ctx, undefined, async () => {
+      assert.equal(getRequestContext().get("round"), undefined);
+      getRequestContext().set("round", round);
+      await withRequestContext(
+        ctx,
+        undefined,
+        async () => {
+          await Promise.resolve();
+          assert.equal(getRequestContext().get("round"), round);
+        },
+        true
+      );
+      await withRequestContext(
+        serverContext(),
+        undefined,
+        async () => {
+          assert.equal(getRequestContext().get("round"), undefined);
+          getRequestContext().set("round", "nested request");
+        },
+        true
+      );
+      assert.equal(getRequestContext().get("round"), round);
+    });
+  }
   outsideRequest();
 });

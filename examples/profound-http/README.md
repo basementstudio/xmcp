@@ -14,7 +14,7 @@ All three tools are read-only. They do not launch agents, create prompts, or mod
 
 Profound currently documents REST API key access as an [Enterprise feature](https://docs.tryprofound.com/rest-api/authentication). Create a personal API key in **Settings → Account → API Keys**. The key follows the owner's organization memberships.
 
-Use Node 22 and pnpm. From the repository root:
+Use Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

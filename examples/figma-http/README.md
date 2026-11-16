@@ -14,7 +14,7 @@ This is a focused development example, not a general-purpose Figma automation se
 
 ## Start the server
 
-Use Node 22 and pnpm. From the repository root:
+Use Node 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install

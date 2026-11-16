@@ -39,7 +39,10 @@ export interface RequestContext {
 
 // Reuse the shared context registry so bundled handlers and the runtime see
 // the same scope, without retaining the last request for out-of-scope reads.
-const requestContext = createContext<RequestContext>({
+const requestContext = createContext<{
+  request: ServerContext["mcpReq"];
+  value: RequestContext;
+}>({
   name: "request-context",
   fallback: false,
 });
@@ -47,7 +50,7 @@ const requestContext = createContext<RequestContext>({
 /** Read the current MCP request from a handler or one of its async helpers. */
 export function getRequestContext(): RequestContext {
   try {
-    return requestContext.getContext();
+    return requestContext.getContext().value;
   } catch {
     throw new Error(
       "getRequestContext() can only be used while handling an MCP request."
@@ -59,8 +62,20 @@ export function getRequestContext(): RequestContext {
 export function withRequestContext<T>(
   ctx: ServerContext,
   clientInfo: McpClientInfo | undefined,
-  callback: () => T
+  callback: () => T,
+  reuseCurrentRequest = false
 ): T {
+  // Only the inner tool callback reuses the scope opened before SDK validation.
+  // Matching the SDK request object prevents nested independent calls from sharing it.
+  if (reuseCurrentRequest) {
+    let current;
+    try {
+      current = requestContext.getContext();
+    } catch {
+      // A tool without an authorization policy opens its own scope below.
+    }
+    if (current?.request === ctx.mcpReq) return callback();
+  }
   // This map belongs to one invocation, including one round of a retried tool.
   const values = new Map<string | symbol, unknown>();
   let http: RequestContext["http"];
@@ -78,39 +93,37 @@ export function withRequestContext<T>(
       headers: Object.freeze(headers),
     });
   }
-  return requestContext.provider(
-    Object.freeze({
-      clientInfo: clientInfo ? Object.freeze({ ...clientInfo }) : undefined,
-      http,
-      authInfo: ctx.http?.authInfo,
-      _meta: ctx.mcpReq._meta
-        ? Object.freeze({ ...ctx.mcpReq._meta })
-        : undefined,
-      signal: ctx.mcpReq.signal,
-      set(key: string | symbol, value: unknown) {
-        values.set(key, value);
-      },
-      get<T = unknown>(key: string | symbol): T | undefined {
-        return values.get(key) as T | undefined;
-      },
-      async progress(value: number, total?: number) {
-        const progressToken = ctx.mcpReq._meta?.progressToken;
-        if (progressToken === undefined) return;
-        await ctx.mcpReq.notify({
-          method: "notifications/progress",
-          params: {
-            progressToken,
-            progress: value,
-            ...(total === undefined ? {} : { total }),
-          },
-        });
-      },
-      log(level: LoggingLevel, data: unknown) {
-        // The SDK already no-ops without logging capability and applies the
-        // per-request modern log level or the legacy connection's filter.
-        return ctx.mcpReq.log(level, data);
-      },
-    }),
-    callback
-  );
+  const value: RequestContext = Object.freeze({
+    clientInfo: clientInfo ? Object.freeze({ ...clientInfo }) : undefined,
+    http,
+    authInfo: ctx.http?.authInfo,
+    _meta: ctx.mcpReq._meta
+      ? Object.freeze({ ...ctx.mcpReq._meta })
+      : undefined,
+    signal: ctx.mcpReq.signal,
+    set(key: string | symbol, value: unknown) {
+      values.set(key, value);
+    },
+    get<T = unknown>(key: string | symbol): T | undefined {
+      return values.get(key) as T | undefined;
+    },
+    async progress(value: number, total?: number) {
+      const progressToken = ctx.mcpReq._meta?.progressToken;
+      if (progressToken === undefined) return;
+      await ctx.mcpReq.notify({
+        method: "notifications/progress",
+        params: {
+          progressToken,
+          progress: value,
+          ...(total === undefined ? {} : { total }),
+        },
+      });
+    },
+    log(level: LoggingLevel, data: unknown) {
+      // The SDK already no-ops without logging capability and applies the
+      // per-request modern log level or the legacy connection's filter.
+      return ctx.mcpReq.log(level, data);
+    },
+  });
+  return requestContext.provider({ request: ctx.mcpReq, value }, callback);
 }

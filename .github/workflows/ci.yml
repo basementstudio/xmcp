@@ -21,7 +21,7 @@ jobs:
           version: 10.8.1
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - name: Build xmcp config dependency
@@ -38,7 +38,7 @@ jobs:
           version: 10.8.1
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @xmcp-dev/e2e typecheck
@@ -143,7 +143,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: "pnpm"
 
       - name: Install dependencies
@@ -195,7 +195,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: "pnpm"
 
       - name: Install dependencies
@@ -209,7 +209,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22.x]
+        node-version: [22.x, 26.x]
 
     steps:
       - name: Checkout code
@@ -419,7 +419,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 26.x
           cache: "pnpm"
 
       - name: Verify lockfile and install dependencies

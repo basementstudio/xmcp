@@ -19,7 +19,7 @@ FIRECRAWL_API_KEY=your-firecrawl-api-key
 MCP_API_KEY=your-separate-client-secret
 ```
 
-Clients connect to the example's HTTP MCP endpoint with `x-api-key` on every request. The server forwards only the provider key to `https://api.firecrawl.dev` as a Bearer token. Follow the [example setup](https://github.com/basementstudio/xmcp/tree/main/examples/firecrawl-http#run) to install, build, and start it with Node 22 and pnpm.
+Clients connect to the example's HTTP MCP endpoint with `x-api-key` on every request. The server forwards only the provider key to `https://api.firecrawl.dev` as a Bearer token. Follow the [example setup](https://github.com/basementstudio/xmcp/tree/main/examples/firecrawl-http#run) to install, build, and start it with Node 26 and pnpm.
 
 This example shares one Firecrawl account with trusted clients. Calls consume that account's credits and send the requested URLs and extraction instructions to Firecrawl. Add per-user authorization and quotas if your application needs them.
 
