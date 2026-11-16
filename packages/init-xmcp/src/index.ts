@@ -16,6 +16,7 @@ import { detectPackageManager } from "./helpers/install.js";
 import fs from "fs-extra";
 import path from "path";
 import { checkNodeVersion } from "./utils/check-node.js";
+import { reportScaffold } from "./helpers/telemetry.js";
 import { fileURLToPath } from "url";
 
 checkNodeVersion();
@@ -351,6 +352,20 @@ const program = new Command()
       }
     }
 
+    const scaffoldStartTime = Date.now();
+    const getScaffoldReport = () => ({
+      command: "init-xmcp" as const,
+      version: packageJson.version,
+      projectName: readProjectName(projectRoot),
+      packageManager,
+      framework: detectedFramework,
+      features: [
+        ...(cloudflare ? ["cloudflare"] : []),
+        ...(detectedTypeScript ? ["typescript"] : []),
+      ],
+      duration: Date.now() - scaffoldStartTime,
+    });
+
     try {
       console.log(chalk.blue("\n Initializing xmcp..."));
 
@@ -503,11 +518,24 @@ export class AppModule {}`;
       console.log(
         `   \nRun "${packageManager} run dev" to start the development server\n`
       );
+      await reportScaffold(getScaffoldReport());
     } catch (error) {
       console.error(chalk.red("\nFailed to initialize xmcp:"));
       console.error(error);
+      await reportScaffold({ ...getScaffoldReport(), error });
       process.exit(1);
     }
   });
+
+function readProjectName(projectRoot: string): string {
+  try {
+    const projectPackageJson = JSON.parse(
+      fs.readFileSync(path.join(projectRoot, "package.json"), "utf8")
+    );
+    return projectPackageJson.name || projectRoot;
+  } catch {
+    return projectRoot;
+  }
+}
 
 program.parse();

@@ -12,6 +12,7 @@ import { createProject } from "./helpers/create.js";
 import { isFolderEmpty } from "./utils/is-folder-empty.js";
 import { downloadAndExtractExample, listExamples } from "./helpers/examples.js";
 import { applyCloudflareSettings } from "./helpers/cloudflare.js";
+import { reportScaffold } from "./helpers/telemetry.js";
 
 checkNodeVersion();
 
@@ -85,11 +86,22 @@ const program = new Command()
         fs.ensureDirSync(targetPath);
       }
 
+      const exampleStartTime = Date.now();
       await downloadAndExtractExample(targetPath, options.example);
 
       if (cloudflareFlag) {
         applyCloudflareSettings(targetPath);
       }
+
+      await reportScaffold({
+        command: "create-xmcp-app",
+        version: packageJson.version,
+        projectName: path.basename(targetPath),
+        packageManager: "pnpm",
+        template: "example",
+        features: cloudflareFlag ? ["cloudflare"] : [],
+        duration: Date.now() - exampleStartTime,
+      });
 
       console.log();
       if (cloudflareFlag) {
@@ -362,6 +374,23 @@ const program = new Command()
       );
     }
 
+    const scaffoldStartTime = Date.now();
+    const getScaffoldReport = () => ({
+      command: "create-xmcp-app" as const,
+      version: packageJson.version,
+      projectName,
+      packageManager,
+      template,
+      features: [
+        ...transports,
+        ...(cloudflareFlag ? ["cloudflare"] : []),
+        ...(tailwind ? ["tailwind"] : []),
+        ...(uiKit ? ["ui-kit"] : []),
+        ...(skipInstall ? ["skip-install"] : []),
+      ],
+      duration: Date.now() - scaffoldStartTime,
+    });
+
     const spinner = ora("Creating your xmcp app...").start();
     try {
       createProject({
@@ -412,9 +441,11 @@ const program = new Command()
       console.log();
       console.log("To learn more about xmcp:");
       console.log(`  - Read the documentation at https://xmcp.dev/docs\n`);
+      await reportScaffold(getScaffoldReport());
     } catch (error) {
       spinner.fail(chalk.red("Failed to create the project."));
       console.error(error);
+      await reportScaffold({ ...getScaffoldReport(), error });
       process.exit(1);
     }
   });
