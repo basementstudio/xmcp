@@ -13,7 +13,7 @@ const categories: Record<string, CategoryCopy> = {
     prerequisites:
       "You'll need Node.js 22 or later, an account with the selected service, and its API credentials. Follow the template's environment-variable setup and review write operations before connecting clients.",
     links: [
-      { label: "Integration setup guides", href: "/docs/integrations" },
+      { label: "Integration setup guides", href: "/integrations" },
       {
         label: "Build a TypeScript MCP server",
         href: "/blog/build-mcp-server-typescript",

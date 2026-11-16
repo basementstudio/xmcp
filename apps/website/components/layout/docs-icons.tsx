@@ -30,6 +30,7 @@ import {
   MagicWandIcon,
   PaperPlaneIcon,
   ScanLineIcon,
+  TimerIcon,
   TokensIcon,
 } from "@/components/ui/site-icons";
 
@@ -49,6 +50,7 @@ export const sidebarIcons: Partial<
   "/docs/configuration/bundler": CubeIcon,
   "/docs/configuration/telemetry": BarChartIcon,
   "/docs/configuration/observability": ActivityIcon,
+  "/docs/configuration/caching": TimerIcon,
   "/docs/configuration/components": Component2Icon,
   "/docs/configuration/schema-inference": ScanLineIcon,
   "/docs/core-concepts/request-context": FingerprintIcon,
@@ -56,6 +58,7 @@ export const sidebarIcons: Partial<
   "/docs/core-concepts/tools": LightningBoltIcon,
   "/docs/core-concepts/prompts": ChatBubbleIcon,
   "/docs/core-concepts/resources": FileTextIcon,
+  "/docs/core-concepts/skills": IntegrationIcons.agentSkills,
   "/docs/core-concepts/middlewares": LayersIcon,
   "/docs/core-concepts/css": ColorWheelIcon,
   "/docs/core-concepts/external-clients": GlobeIcon,

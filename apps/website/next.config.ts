@@ -59,6 +59,17 @@ const nextConfig: NextConfig = {
         destination: "/docs/discoverability/mcp-server-card",
         permanent: true,
       },
+      // The integrations hub moved out of the docs to a standalone page.
+      {
+        source: "/docs/integrations",
+        destination: "/integrations",
+        permanent: true,
+      },
+      {
+        source: "/docs/integrations.:ext(md|mdx)",
+        destination: "/integrations.md",
+        permanent: true,
+      },
       {
         source: "/blog/xmcp-vs-fastmcp-vs-mcp-sdk",
         destination: "/blog/xmcp-v1",
@@ -79,6 +90,11 @@ const nextConfig: NextConfig = {
         { source: "/", has: acceptsMarkdown, destination: "/index.md" },
         { source: "/blog", has: acceptsMarkdown, destination: "/blog.md" },
         { source: "/guides", has: acceptsMarkdown, destination: "/guides.md" },
+        {
+          source: "/integrations",
+          has: acceptsMarkdown,
+          destination: "/integrations.md",
+        },
         {
           source: "/changelog",
           has: acceptsMarkdown,

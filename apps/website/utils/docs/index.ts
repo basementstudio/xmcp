@@ -3,7 +3,6 @@ import fsPromises from "fs/promises";
 import path from "path";
 import { parseFrontmatter } from "@/utils/frontmatter";
 import { source } from "@/lib/source";
-import { getLLMText } from "@/lib/get-llm-text";
 import { docsSearchTitle } from "@/lib/seo";
 
 export function cleanId(id: string) {
@@ -28,10 +27,7 @@ export async function getPageContent(slugs: string[]) {
   }
 
   try {
-    const content =
-      page.url === "/docs/integrations"
-        ? await getLLMText(page)
-        : await fsPromises.readFile(mdxPath, "utf-8");
+    const content = await fsPromises.readFile(mdxPath, "utf-8");
 
     return {
       title: page.data.title,
