@@ -1,6 +1,6 @@
 # Stripe and Metronome example
 
-Use Node 22.13+ (the SQLite API is experimental in Node 22). Set a demo API key and provider customer ID. Configure the matching meter/metric and contract in the provider dashboard, and set its event name and API key. Choose Metronome for a new billing setup or Stripe for existing Billing Meters. Use a separate database per provider.
+Use Node.js 26 (recommended); this example requires at least Node.js 22.13. The SQLite API is experimental in Node 22. Set a demo API key and provider customer ID. Configure the matching meter/metric and contract in the provider dashboard, and set its event name and API key. Choose Metronome for a new billing setup or Stripe for existing Billing Meters. Use a separate database per provider.
 
 From the repository root:
 

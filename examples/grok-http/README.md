@@ -16,7 +16,7 @@ The server calls the native [Responses API](https://docs.x.ai/developers/rest-ap
 
 ## Run locally
 
-Use Node 26 and pnpm. This starter lives in the xmcp workspace. From the repository root:
+Use Node.js 26 and pnpm. This starter lives in the xmcp workspace. From the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/basementstudio/xmcp.git

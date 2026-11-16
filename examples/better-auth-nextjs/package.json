@@ -11,7 +11,7 @@
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@better-auth/mcp": "^1.7.23",

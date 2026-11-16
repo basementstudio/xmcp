@@ -12,7 +12,7 @@
     "dev": "xmcp dev & next dev --turbopack",
     "build": "xmcp build && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.117",

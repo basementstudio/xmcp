@@ -2,7 +2,7 @@
 
 This HTTP server gives each of two demo customers five units per fixed minute. `greet` costs one unit and `report` costs three. All instances share the same Upstash database and prefix.
 
-Requires Node 26, pnpm, and an Upstash Redis database. From the repository root:
+Node.js 26 is recommended. This example requires Node.js 22.12 or later, pnpm, and an Upstash Redis database. From the repository root:
 
 ```sh
 pnpm install

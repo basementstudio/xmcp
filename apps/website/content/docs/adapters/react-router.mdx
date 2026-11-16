@@ -83,7 +83,7 @@ The relative import preserves your existing aliases. Adjust it if you move the r
 
 The initial adapter build must finish before the host loads your routes. During development, xmcp updates discovery when handler files are added or removed, while the host processes their application imports. Keep `.xmcp/` ignored by Git and retain your host’s type-check command in CI. `skipTypeCheck` only disables xmcp’s separate check.
 
-The example uses React Router Framework Mode with SSR enabled. Run `react-router-serve build/server/index.js` after the Node build. It also runs `react-router typegen` and TypeScript checking. The example requires Node 22.22 or newer.
+The example uses React Router Framework Mode with SSR enabled. Run `react-router-serve build/server/index.js` after the Node build. It also runs `react-router typegen` and TypeScript checking. Node.js 26 is recommended; the example requires Node.js 22.22 or newer.
 
 ## Cloudflare Workers
 

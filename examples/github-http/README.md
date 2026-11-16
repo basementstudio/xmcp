@@ -10,7 +10,7 @@ An authenticated HTTP MCP server using GitHub's REST API and Node's built-in `fe
 
 ## Run
 
-Use Node 26 and pnpm. Create a fine-grained GitHub personal access token restricted to the repositories you intend to expose. Grant **Pull requests: read** for the PR tools and **Contents: read** for file reads. See GitHub's [pull request API](https://docs.github.com/en/rest/pulls/pulls) and [contents API](https://docs.github.com/en/rest/repos/contents).
+Use Node.js 26 and pnpm. Create a fine-grained GitHub personal access token restricted to the repositories you intend to expose. Grant **Pull requests: read** for the PR tools and **Contents: read** for file reads. See GitHub's [pull request API](https://docs.github.com/en/rest/pulls/pulls) and [contents API](https://docs.github.com/en/rest/repos/contents).
 
 From the repository root:
 

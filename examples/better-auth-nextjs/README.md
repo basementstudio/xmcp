@@ -69,3 +69,8 @@ This ensures all MCP requests are authenticated before being processed.
 
 - [Better Auth Documentation](https://www.better-auth.com/docs/installation)
 - [xmcp Documentation](https://xmcp.dev)
+
+## Build validation
+
+Use Node.js 26 (recommended; minimum 22.12) and pnpm. Run `pnpm build` in this directory. The xmcp compiler generates the adapter first with `typescript.skipTypeCheck`; the host build or `tsc --noEmit` then checks the application against the generated types.
+Run `pnpm lint` to check the application with the Next.js ESLint flat config.

@@ -42,7 +42,7 @@ export default function Login() {
       <button
         className="bg-white text-black"
         onClick={async () => {
-          const { error } = await authClient.signUp.email({
+          await authClient.signUp.email({
             email,
             name,
             password,
@@ -54,7 +54,7 @@ export default function Login() {
       <button
         className="bg-white text-black"
         onClick={async () => {
-          const { error } = await authClient.signIn.email({
+          await authClient.signIn.email({
             email,
             password,
           });
@@ -65,7 +65,7 @@ export default function Login() {
       <button
         className="border-white text-whtie"
         onClick={async () => {
-          const { error } = await authClient.signOut();
+          await authClient.signOut();
         }}
       >
         <p>Logout</p>

@@ -34,3 +34,8 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Build validation
+
+Use Node.js 26 (recommended; minimum 22.12) and pnpm. Run `pnpm build` in this directory. The xmcp compiler generates the adapter first with `typescript.skipTypeCheck`; the host build or `tsc --noEmit` then checks the application against the generated types.
+Run `pnpm lint` to check the application with the Next.js ESLint flat config.

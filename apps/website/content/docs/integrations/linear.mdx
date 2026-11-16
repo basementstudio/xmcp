@@ -58,4 +58,4 @@ An agent can inspect a page with the [Firecrawl integration](/docs/integrations/
 
 Provider HTTP failures, GraphQL errors (even with HTTP 200 or partial data), and unsuccessful mutations return tool errors without raw provider error bodies. Requests time out after 30 seconds and are never retried automatically. If creation times out or returns an uncertain error, check Linear before retrying to avoid duplicate issues.
 
-The [README](https://github.com/basementstudio/xmcp/tree/main/examples/linear-http#run) includes setup with Node 26 and pnpm, runnable discovery requests, and credential-free tests. All provider calls, including creation, are mocked in tests. HTTP smoke tests cover both MCP 2025-03-26 and 2026-07-28.
+The [README](https://github.com/basementstudio/xmcp/tree/main/examples/linear-http#run) includes setup with Node.js 26 and pnpm, runnable discovery requests, and credential-free tests. All provider calls, including creation, are mocked in tests. HTTP smoke tests cover both MCP 2025-03-26 and 2026-07-28.

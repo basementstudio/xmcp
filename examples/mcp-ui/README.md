@@ -1,4 +1,7 @@
-# xmcp Application
+# MCP UI example
+
+This example serves the supported `rawHtml` and `externalUrl` UI resource formats.
+The removed `remoteDom` format is no longer supported by `@mcp-ui/server`.
 
 This project was created with [create-xmcp-app](https://github.com/basementstudio/xmcp).
 

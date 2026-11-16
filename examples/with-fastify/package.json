@@ -4,7 +4,8 @@
   "description": "Build a Fastify server with xmcp's adapter",
   "scripts": {
     "dev": "xmcp dev & tsx watch src/index.ts",
-    "build": "xmcp build && tsx src/index.ts",
+    "build": "xmcp build && tsc --noEmit",
+    "start": "tsx src/index.ts",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

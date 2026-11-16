@@ -8,7 +8,7 @@ An authenticated HTTP MCP server for email sending and Resend Inboxes:
 
 ## Run
 
-Use Node 26 and pnpm. From the repository root:
+Use Node.js 26 and pnpm. From the repository root:
 
 ```sh
 pnpm install
