@@ -1,5 +1,7 @@
 import { clientComponentCompiler } from "./component-compiler";
 
+export class ClientTranspileError extends Error {}
+
 /**
  * Build a client-side bundle for a React component
  * Writes the bundle to disk at outputDir/${toolName}.bundle.js
@@ -14,7 +16,7 @@ export async function transpileClientComponent(
       outputDir,
     });
   } catch (error) {
-    throw new Error(
+    throw new ClientTranspileError(
       `Failed to transpile client component: ${error instanceof Error ? error.message : String(error)}`
     );
   }

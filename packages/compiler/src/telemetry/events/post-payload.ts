@@ -3,7 +3,7 @@ import type { TelemetryMeta } from "../metadata";
 import { isTelemetryDebugEnabled } from "../debug";
 
 /**
- * Build event data (only event type we track)
+ * Fields shared by build and dev events
  */
 export interface BuildEventData {
   success: boolean;
@@ -13,12 +13,16 @@ export interface BuildEventData {
   promptsCount: number;
   resourcesCount: number;
   outputSize?: number;
-  transport: string;
-  adapter: string;
+  transport?: string;
+  adapter?: string;
   nodeVersion?: string;
   xmcpVersion?: string;
   errorPhase?: string;
   errorType?: string;
+  command?: string;
+  packageManager?: string;
+  deployTarget?: string;
+  features?: string[];
 }
 
 /**

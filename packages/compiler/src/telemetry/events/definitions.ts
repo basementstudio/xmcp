@@ -5,6 +5,7 @@
 export enum TelemetryEventName {
   BUILD_COMPLETED = "build:completed",
   BUILD_FAILED = "build:failed",
+  DEV_STARTED = "dev:started",
 }
 
 export enum TransportType {

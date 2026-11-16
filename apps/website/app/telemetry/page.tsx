@@ -69,14 +69,17 @@ export default function TelemetryPage() {
           <section>
             <h2>What is being collected?</h2>
             <p>
-              We capture general usage information tied to the command you run (
-              <code>xmcp dev</code> or <code>xmcp build</code>) so we can spot
-              regressions. Specifically, we track the following anonymously:
+              We capture general usage information tied to the command you run
+              so we can spot regressions: one event when an{" "}
+              <code>xmcp dev</code> session starts and one per{" "}
+              <code>xmcp build</code>. Specifically, we track the following
+              anonymously:
             </p>
             <ul>
               <li>
                 <strong>Command + versions.</strong> Which command was invoked,
-                the xmcp release, and the Node.js version in use.
+                the xmcp release, the Node.js version, and the package manager
+                in use.
               </li>
               <li>
                 <strong>General machine info.</strong> OS family and release,
@@ -84,14 +87,19 @@ export default function TelemetryPage() {
                 happened in CI, Docker, or WSL.
               </li>
               <li>
-                <strong>Project traits.</strong> The selected adapter/transport
-                and counts of components (tools, prompts, resources) so we know
-                which surfaces are being exercised.
+                <strong>Project traits.</strong> The selected adapter/transport,
+                the deploy target (<code>--vercel</code> or <code>--cf</code>),
+                counts of components (tools, prompts, resources), and which
+                framework features are on, from a fixed list: middleware, a
+                custom bundler, execution logs, component filters, and official{" "}
+                <code>@xmcp-dev</code> plugins. Names of your tools, files, and
+                other dependencies are never sent.
               </li>
               <li>
                 <strong>Performance snapshots.</strong> Duration of each run,
-                bundle size for successful builds, and a coarse error category
-                if something fails.
+                bundle size for successful builds, and, if a build fails, the
+                phase that failed and the error class name. Error messages and
+                file paths are never sent.
               </li>
               <li>
                 <strong>Privacy guardrails.</strong> A random install ID links

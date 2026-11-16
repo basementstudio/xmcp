@@ -31,13 +31,23 @@ import { startHttpServer } from "./start-http-server";
 import {
   logBuildFailure,
   logBuildSuccess,
+  logDevStarted,
   toBundlerErrorType,
   toErrorType,
+  type CompilerCommand,
 } from "./build-telemetry";
+import {
+  collectFeatures,
+  detectPackageManager,
+  getDeployTarget,
+} from "./telemetry-traits";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "@/runtime-config";
 import { pathToToolName } from "./utils/path-utils";
-import { transpileClientComponent } from "./client/transpile";
+import {
+  ClientTranspileError,
+  transpileClientComponent,
+} from "./client/transpile";
 import { buildCloudflareOutput } from "../platforms/build-cloudflare-output";
 import { addWatchedPath, removeWatchedPath } from "./watcher-recovery";
 const { version: COMPILER_VERSION } = require("../../package.json");
@@ -55,7 +65,32 @@ export async function compile({ onBuild }: CompileOptions = {}) {
   const startTime = Date.now();
   let compilerStarted = false;
 
-  const xmcpConfig = await getConfig();
+  const command: CompilerCommand = mode === "development" ? "dev" : "build";
+  const environmentTelemetry = {
+    nodeVersion: process.version,
+    xmcpVersion: COMPILER_VERSION as string,
+    command,
+    packageManager: detectPackageManager(),
+    deployTarget: getDeployTarget(platforms),
+  };
+
+  const xmcpConfig = await getConfig().catch((error: unknown) => {
+    if (mode === "production") {
+      logBuildFailure({
+        ...environmentTelemetry,
+        duration: Date.now() - startTime,
+        toolsCount: 0,
+        reactToolsCount: 0,
+        promptsCount: 0,
+        resourcesCount: 0,
+        errorPhase: ErrorPhase.CONFIG,
+        errorType: toErrorType(
+          error instanceof Error ? error.constructor.name : undefined
+        ),
+      });
+    }
+    throw error;
+  });
   compilerContext.setContext({
     xmcpConfig: xmcpConfig,
   });
@@ -221,8 +256,43 @@ export async function compile({ onBuild }: CompileOptions = {}) {
     }
     createFolder(runtimeFolderPath);
 
+    const collectBaseTelemetryData = (duration: number) => {
+      const reactToolsCount = Array.from(toolPaths).filter(isReactFile).length;
+
+      return {
+        ...environmentTelemetry,
+        duration,
+        toolsCount: toolPaths.size,
+        reactToolsCount,
+        promptsCount: promptPaths.size,
+        resourcesCount: resourcePaths.size,
+        transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
+        adapter: xmcpConfig.experimental?.adapter
+          ? (xmcpConfig.experimental.adapter as AdapterType)
+          : AdapterType.NONE,
+        features: collectFeatures(
+          xmcpConfig,
+          compilerContext.getContext().hasMiddleware
+        ),
+      };
+    };
+
     // Generate all code (including client bundles) BEFORE bundler runs
-    await generateCode();
+    await generateCode().catch((error: unknown) => {
+      if (mode === "production") {
+        logBuildFailure({
+          ...collectBaseTelemetryData(Date.now() - startTime),
+          errorPhase:
+            error instanceof ClientTranspileError
+              ? ErrorPhase.TRANSPILE
+              : ErrorPhase.COMPILE,
+          errorType: toErrorType(
+            error instanceof Error ? error.constructor.name : undefined
+          ),
+        });
+      }
+      throw error;
+    });
 
     rspack(bundlerConfig, async (err, stats) => {
       // Track compilation time
@@ -232,25 +302,6 @@ export async function compile({ onBuild }: CompileOptions = {}) {
       } else {
         compilationTime = Date.now() - startTime;
       }
-
-      const collectBaseTelemetryData = () => {
-        const reactToolsCount =
-          Array.from(toolPaths).filter(isReactFile).length;
-
-        return {
-          duration: compilationTime,
-          toolsCount: toolPaths.size,
-          reactToolsCount,
-          promptsCount: promptPaths.size,
-          resourcesCount: resourcePaths.size,
-          transport: xmcpConfig.http ? TransportType.HTTP : TransportType.STDIO,
-          adapter: xmcpConfig.experimental?.adapter
-            ? (xmcpConfig.experimental.adapter as AdapterType)
-            : AdapterType.NONE,
-          nodeVersion: process.version,
-          xmcpVersion: COMPILER_VERSION,
-        };
-      };
 
       const getOutputSize = () => {
         let outputSize = 0;
@@ -332,7 +383,7 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             warnings: false,
           });
           logBuildFailure({
-            ...collectBaseTelemetryData(),
+            ...collectBaseTelemetryData(compilationTime),
             errorPhase: ErrorPhase.WEBPACK,
             errorType: err
               ? toErrorType(err.constructor?.name)
@@ -385,9 +436,11 @@ export async function compile({ onBuild }: CompileOptions = {}) {
 
       if (mode === "production") {
         logBuildSuccess({
-          ...collectBaseTelemetryData(),
+          ...collectBaseTelemetryData(compilationTime),
           outputSize: getOutputSize(),
         });
+      } else if (firstBuild) {
+        logDevStarted(collectBaseTelemetryData(compilationTime));
       }
 
       // user defined callback should fire after every successful build
