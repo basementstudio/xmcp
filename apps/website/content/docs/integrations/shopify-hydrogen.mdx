@@ -1,0 +1,130 @@
+---
+title: "Shopify Hydrogen"
+metadataTitle: "Usage with Shopify Hydrogen | xmcp Documentation"
+publishedAt: "2026-11-15"
+summary: "Serve read-only product search and lookup tools from a Hydrogen storefront at /mcp."
+description: "Mount xmcp in a React Router app that uses Shopify Hydrogen and share its server-side Storefront API client with MCP tools."
+---
+
+Mount an xmcp server inside a React Router app that uses [Hydrogen](https://shopify.dev/docs/storefronts/hydrogen) commerce primitives. Your storefront routes and MCP tools share one server-only Storefront client. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/with-hydrogen) runs on Node against Shopify's tokenless [mock.shop](https://mock.shop) catalog.
+
+```sh
+pnpm add xmcp @shopify/hydrogen zod
+```
+
+## Mount `/mcp`
+
+Use the [React Router adapter](/docs/adapters/react-router):
+
+```ts title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: { endpoint: "/mcp" },
+  experimental: { adapter: "react-router" },
+  paths: { tools: "./src/tools", prompts: false, resources: false },
+  typescript: { skipTypeCheck: true },
+};
+
+export default config;
+```
+
+Check a bearer token on every request in the route module:
+
+```ts title="app/routes/mcp.ts"
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import { xmcpHandler } from "../../.xmcp/adapter/index.js";
+
+function handle(request: Request) {
+  const key = process.env.MCP_API_KEY;
+  if (!key || request.headers.get("authorization") !== `Bearer ${key}`) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+  return xmcpHandler(request);
+}
+
+export const loader = ({ request }: LoaderFunctionArgs) => handle(request);
+export const action = ({ request }: ActionFunctionArgs) => handle(request);
+```
+
+Register it with `route("mcp", "routes/mcp.ts")` in `app/routes.ts`. Existing routes are unchanged.
+
+## Share the Storefront client
+
+Create the client in a `.server.ts` module so private tokens never reach the browser bundle. Catalog reads need no buyer context, so the MCP token and caller cookies are never forwarded to Shopify:
+
+```ts title="src/storefront.server.ts"
+import {
+  createShopifyRequestContext,
+  createStorefrontClient,
+  defineShopifyI18n,
+} from "@shopify/hydrogen";
+
+const i18n = defineShopifyI18n({
+  defaultLocale: { language: "EN", country: "US" },
+});
+
+export function storefront(signal?: AbortSignal) {
+  const requestContext = createShopifyRequestContext({
+    request: { headers: new Headers(), signal },
+    i18n,
+  });
+  const config = {
+    storeDomain: process.env.PUBLIC_STORE_DOMAIN || "pets.mock.shop",
+  };
+  const privateStorefrontToken = process.env.PRIVATE_STOREFRONT_API_TOKEN;
+  return privateStorefrontToken
+    ? createStorefrontClient({
+        type: "private_no_buyer_context",
+        requestContext,
+        config: { ...config, privateStorefrontToken },
+      })
+    : createStorefrontClient({ type: "public", requestContext, config });
+}
+```
+
+Query it from both loaders and tools. Bound tool inputs so clients cannot request unbounded pages:
+
+```ts title="src/tools/search-products.ts"
+import { z } from "zod";
+import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
+import { searchProducts } from "../storefront.server";
+
+export const schema = {
+  query: z.string().trim().min(1).max(200),
+  first: z.number().int().min(1).max(20).default(5),
+};
+
+export const metadata: ToolMetadata = {
+  name: "search-products",
+  description: "Search the store catalog with prices and availability.",
+  annotations: {
+    readOnlyHint: true,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+};
+
+export default async function search(input: InferSchema<typeof schema>) {
+  const products = await searchProducts(
+    input.query,
+    input.first,
+    getRequestContext().signal
+  );
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(products) }],
+  };
+}
+```
+
+`searchProducts` and `getProduct` in the example return handles, titles, availability, and minimum prices with currency. GraphQL errors become tool errors without upstream details.
+
+## Connect a real store
+
+Set `PUBLIC_STORE_DOMAIN` to your `*.myshopify.com` domain and `PRIVATE_STOREFRONT_API_TOKEN` to a token from the Headless or Hydrogen sales channel. Without a token, the client uses tokenless access, which mock.shop supports. Real stores need a token for some fields.
+
+Oxygen deployment, cart mutations, checkout, and Customer Account API access are out of scope.
+
+## Tested versions
+
+`@shopify/hydrogen` 2026.10.3 with React Router 8.4 and Vite 8 on Node.

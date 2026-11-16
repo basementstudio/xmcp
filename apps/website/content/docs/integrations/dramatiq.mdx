@@ -1,0 +1,79 @@
+---
+title: "Dramatiq"
+metadataTitle: "Usage with Dramatiq | xmcp Documentation"
+publishedAt: "2026-11-15"
+summary: "Enqueue Python background jobs and read their results from xmcp tools."
+description: "Call Dramatiq actors from xmcp tools through an authenticated HTTP bridge, with typed results and no automatic retries."
+---
+
+`@xmcp-dev/dramatiq` lets xmcp tools enqueue [Dramatiq](https://dramatiq.io) jobs and read their results. It calls a small HTTP bridge that runs next to your Python workers. The [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/dramatiq-http) includes the bridge, a demonstration actor, and Docker Compose for Redis and a worker.
+
+```sh
+pnpm add @xmcp-dev/dramatiq
+```
+
+## Enqueue and read jobs
+
+```ts title="src/bridge.ts"
+import { createDramatiqClient } from "@xmcp-dev/dramatiq";
+
+export function bridge() {
+  return createDramatiqClient({
+    baseUrl: process.env.DRAMATIQ_BRIDGE_URL!,
+    token: process.env.DRAMATIQ_BRIDGE_TOKEN!,
+  });
+}
+```
+
+```ts title="src/tools/enqueue-word-count.ts"
+import { z } from "zod";
+import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
+import { bridge } from "../bridge";
+
+export const schema = { text: z.string().min(1).max(10000) };
+
+export const metadata: ToolMetadata = {
+  name: "enqueue-word-count",
+  description: "Enqueue a background word count job and return its job ID.",
+};
+
+export default async function enqueueWordCount(
+  input: InferSchema<typeof schema>
+) {
+  const job = await bridge().enqueue(
+    { actor: "count_words", args: [input.text] },
+    { signal: getRequestContext().signal }
+  );
+  return { content: [{ type: "text" as const, text: JSON.stringify(job) }] };
+}
+```
+
+`getResult(jobId)` returns one of these states:
+
+| Status        | Meaning                                                                        |
+| ------------- | ------------------------------------------------------------------------------ |
+| `succeeded`   | The actor returned `result`.                                                   |
+| `failed`      | The actor raised. `error` is a sanitized message; details stay in worker logs. |
+| `unavailable` | No result is stored. This does **not** mean the job is queued or running.      |
+| `not_found`   | The job ID is unknown, or its retention expired.                               |
+
+Dramatiq's result backend cannot tell whether a job without a result is queued, running, or lost. Never report `unavailable` as progress.
+
+## Bridge API
+
+The bridge exposes a small versioned API, and every request requires `Authorization: Bearer <token>`:
+
+- `POST /v1/jobs` with `{ actor, args?, kwargs? }` returns `202 { "jobId" }`. Unknown actors and invalid arguments return `422`; Redis failures return `503`.
+- `GET /v1/jobs/{id}` returns `{ "status": ... }` as above, or `404` for unknown or expired jobs.
+
+The bridge validates actors against an explicit registry and never imports modules by name. The TypeScript client never serializes broker messages. Job metadata lives in Redis next to Dramatiq's results, so lookups survive bridge restarts. Both use one configurable retention period (`RESULT_RETENTION_SECONDS`).
+
+## Errors and retries
+
+The client never retries and rejects redirects so the token never leaves `baseUrl`. Non-success responses throw `DramatiqBridgeError` with the HTTP `status`. A `503` from `enqueue` means acceptance is unknown, so check before resubmitting. Request signals are forwarded, but cancelling a request does not cancel a job that was already enqueued.
+
+Scheduling, job cancellation, worker monitoring, and multi-tenant job ownership are out of scope.
+
+## Tested versions
+
+Dramatiq 2.2.0, FastAPI 0.135.1, Uvicorn 0.41.0, and Redis 7.4 and 8.10. The example's end-to-end test runs Redis, a worker, and the bridge. It covers results across bridge restarts, actor failures, expiry, auth, and Redis outages.
