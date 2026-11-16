@@ -115,7 +115,7 @@ export class TelemetryStorage {
     }
   }
 
-  private notify(): void {
+  notify(): void {
     if (this.isDisabled || !this.config) {
       return;
     }

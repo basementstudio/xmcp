@@ -16,7 +16,7 @@ import { detectPackageManager } from "./helpers/install.js";
 import fs from "fs-extra";
 import path from "path";
 import { checkNodeVersion } from "./utils/check-node.js";
-import { reportScaffold } from "./helpers/telemetry.js";
+import { readProjectName, reportScaffold } from "./helpers/telemetry.js";
 import { fileURLToPath } from "url";
 
 checkNodeVersion();
@@ -360,6 +360,9 @@ const program = new Command()
       packageManager,
       framework: detectedFramework,
       features: [
+        ...(toolsPath ? ["tools"] : []),
+        ...(promptsPath ? ["prompts"] : []),
+        ...(resourcesPath ? ["resources"] : []),
         ...(cloudflare ? ["cloudflare"] : []),
         ...(detectedTypeScript ? ["typescript"] : []),
       ],
@@ -526,16 +529,5 @@ export class AppModule {}`;
       process.exit(1);
     }
   });
-
-function readProjectName(projectRoot: string): string {
-  try {
-    const projectPackageJson = JSON.parse(
-      fs.readFileSync(path.join(projectRoot, "package.json"), "utf8")
-    );
-    return projectPackageJson.name || projectRoot;
-  } catch {
-    return projectRoot;
-  }
-}
 
 program.parse();

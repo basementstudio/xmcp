@@ -12,7 +12,7 @@ import { createProject } from "./helpers/create.js";
 import { isFolderEmpty } from "./utils/is-folder-empty.js";
 import { downloadAndExtractExample, listExamples } from "./helpers/examples.js";
 import { applyCloudflareSettings } from "./helpers/cloudflare.js";
-import { reportScaffold } from "./helpers/telemetry.js";
+import { readProjectName, reportScaffold } from "./helpers/telemetry.js";
 
 checkNodeVersion();
 
@@ -96,8 +96,7 @@ const program = new Command()
       await reportScaffold({
         command: "create-xmcp-app",
         version: packageJson.version,
-        projectName: path.basename(targetPath),
-        packageManager: "pnpm",
+        projectName: readProjectName(targetPath),
         template: "example",
         features: cloudflareFlag ? ["cloudflare"] : [],
         duration: Date.now() - exampleStartTime,

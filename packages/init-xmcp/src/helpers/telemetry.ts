@@ -12,13 +12,15 @@ const KEY_NOTIFIED_AT = "telemetry.notifiedAt";
 const KEY_ANONYMOUS_ID = "telemetry.anonymousId";
 const KEY_SALT = "telemetry.salt";
 
+const PACKAGE_MANAGERS = ["npm", "pnpm", "yarn", "bun"];
+
 type Preferences = Record<string, string | boolean | undefined>;
 
 export type ScaffoldReport = {
   command: "create-xmcp-app" | "init-xmcp";
   version: string;
   projectName: string;
-  packageManager: string;
+  packageManager?: string;
   features: string[];
   duration: number;
   template?: string;
@@ -36,16 +38,33 @@ function isDisabledByEnv(): boolean {
   return process.env.XMCP_TELEMETRY_DISABLED?.toLowerCase() === "true";
 }
 
-function getPreferencesPath(): string {
-  if (isCI || isDocker) {
-    return path.join(os.tmpdir(), ".xmcp-cache", "telemetry.json");
-  }
+const EPHEMERAL_PREFERENCES_PATH = path.join(
+  os.tmpdir(),
+  ".xmcp-cache",
+  "telemetry.json"
+);
 
-  return path.join(
-    os.homedir(),
-    process.platform === "win32" ? "AppData/Local/xmcp" : ".config/xmcp",
-    "telemetry.json"
+const USER_PREFERENCES_PATH = path.join(
+  os.homedir(),
+  process.platform === "win32" ? "AppData/Local/xmcp" : ".config/xmcp",
+  "telemetry.json"
+);
+
+function isDisabledByPreferences(): boolean {
+  return [EPHEMERAL_PREFERENCES_PATH, USER_PREFERENCES_PATH].some(
+    (filePath) => readPreferences(filePath)[KEY_ENABLED] === false
   );
+}
+
+export function readProjectName(projectRoot: string): string {
+  try {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(projectRoot, "package.json"), "utf-8")
+    );
+    return packageJson.name || path.basename(projectRoot);
+  } catch {
+    return path.basename(projectRoot);
+  }
 }
 
 function readPreferences(filePath: string): Preferences {
@@ -104,7 +123,9 @@ function buildPayload(report: ScaffoldReport, preferences: Preferences) {
           success: !failed,
           duration: report.duration,
           command: report.command,
-          packageManager: report.packageManager,
+          packageManager: PACKAGE_MANAGERS.includes(report.packageManager ?? "")
+            ? report.packageManager
+            : "unknown",
           features: report.features,
           template: report.template,
           framework: report.framework,
@@ -125,11 +146,13 @@ export async function reportScaffold(report: ScaffoldReport): Promise<void> {
   }
 
   try {
-    const filePath = getPreferencesPath();
-    const preferences = readPreferences(filePath);
-    if (preferences[KEY_ENABLED] === false) {
+    if (isDisabledByPreferences()) {
       return;
     }
+
+    const filePath =
+      isCI || isDocker ? EPHEMERAL_PREFERENCES_PATH : USER_PREFERENCES_PATH;
+    const preferences = readPreferences(filePath);
 
     if (!preferences[KEY_NOTIFIED_AT]) {
       preferences[KEY_NOTIFIED_AT] = Date.now().toString();
