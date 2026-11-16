@@ -64,6 +64,14 @@ export class TelemetryTracker {
     return this.storage.isEnabled;
   }
 
+  get isDisabledByEnv(): boolean {
+    return this.storage.isDisabledByEnv;
+  }
+
+  get configFilePath(): string {
+    return this.storage.configFilePath;
+  }
+
   setEnabled(enabled: boolean): string | undefined {
     return this.storage.setEnabled(enabled);
   }

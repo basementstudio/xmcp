@@ -31,6 +31,32 @@ export interface BuildFailureTelemetry extends BaseTelemetryData {
   errorType: string;
 }
 
+const ERROR_TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;
+const FALLBACK_ERROR_TYPE = "WebpackError";
+const MODULE_NOT_FOUND_ERROR_TYPE = "ModuleNotFoundError";
+
+export function toErrorType(...candidates: unknown[]): string {
+  const errorType = candidates.find(
+    (candidate): candidate is string =>
+      typeof candidate === "string" && ERROR_TYPE_PATTERN.test(candidate)
+  );
+  return errorType ?? FALLBACK_ERROR_TYPE;
+}
+
+export function toBundlerErrorType(bundlerError?: {
+  code?: unknown;
+  message?: unknown;
+}): string {
+  const isModuleNotFound =
+    typeof bundlerError?.message === "string" &&
+    bundlerError.message.includes("Module not found");
+
+  return toErrorType(
+    bundlerError?.code,
+    isModuleNotFound ? MODULE_NOT_FOUND_ERROR_TYPE : undefined
+  );
+}
+
 function enqueueTelemetryEvent(
   client: TelemetryClient,
   event: { eventName: TelemetryEventName; fields: BuildEventData }

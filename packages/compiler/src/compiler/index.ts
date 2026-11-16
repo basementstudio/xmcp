@@ -28,7 +28,12 @@ import {
 import { isReactFile } from "@/utils/is-react-file";
 import { compilerContext } from "./compiler-context";
 import { startHttpServer } from "./start-http-server";
-import { logBuildFailure, logBuildSuccess } from "./build-telemetry";
+import {
+  logBuildFailure,
+  logBuildSuccess,
+  toBundlerErrorType,
+  toErrorType,
+} from "./build-telemetry";
 import { isValidPath } from "@/utils/path-validation";
 import { getResolvedPathsConfig } from "@/runtime-config";
 import { pathToToolName } from "./utils/path-utils";
@@ -326,20 +331,12 @@ export async function compile({ onBuild }: CompileOptions = {}) {
             errors: true,
             warnings: false,
           });
-          const statsError = statsJson?.errors?.[0];
-          const errorType =
-            (err && err.constructor ? err.constructor.name : undefined) ||
-            (statsError?.name as string | undefined) ||
-            (typeof statsError?.moduleName === "string"
-              ? statsError.moduleName
-              : undefined) ||
-            (statsError?.message as string | undefined) ||
-            "WebpackError";
-
           logBuildFailure({
             ...collectBaseTelemetryData(),
             errorPhase: ErrorPhase.WEBPACK,
-            errorType,
+            errorType: err
+              ? toErrorType(err.constructor?.name)
+              : toBundlerErrorType(statsJson?.errors?.[0]),
           });
         }
 

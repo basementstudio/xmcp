@@ -55,17 +55,19 @@ interface TelemetryConfig {
 export class TelemetryStorage {
   private configPath: string;
   private config: TelemetryConfig | null = null;
-  private XMCP_TELEMETRY_DISABLED: string | undefined;
 
   constructor() {
     this.configPath = getConfigPath();
-    this.XMCP_TELEMETRY_DISABLED = process.env.XMCP_TELEMETRY_DISABLED;
     this.ensureConfig();
   }
 
   private isEnvTelemetryDisabled(): boolean {
-    const value = this.XMCP_TELEMETRY_DISABLED;
+    const value = process.env.XMCP_TELEMETRY_DISABLED;
     return typeof value === "string" && value.toLowerCase() === "true";
+  }
+
+  get isDisabledByEnv(): boolean {
+    return this.isEnvTelemetryDisabled();
   }
 
   private ensureConfig(): void {

@@ -11,6 +11,11 @@ import {
   compilerContextProvider,
 } from "./compiler/compiler-context";
 import { runCreate, type CreateType } from "./cli/commands/create";
+import {
+  isTelemetryAction,
+  runTelemetry,
+  TELEMETRY_ACTIONS,
+} from "./cli/commands/telemetry";
 import { assertCompatibleRuntimeVersion } from "./runtime-config";
 
 const { version: COMPILER_VERSION } = require("../package.json");
@@ -122,6 +127,21 @@ program
         chalk.red(error instanceof Error ? error.message : String(error))
       );
       process.exit(1);
+    }
+  });
+
+program
+  .command("telemetry [action]")
+  .description("Show, enable, or disable anonymous telemetry")
+  .action((action: string = "status") => {
+    if (!isTelemetryAction(action)) {
+      console.error(chalk.red(`Invalid action "${action}".`));
+      console.error(`Valid actions: ${TELEMETRY_ACTIONS.join(", ")}`);
+      process.exit(1);
+    }
+
+    for (const line of runTelemetry(action)) {
+      console.log(line);
     }
   });
 
