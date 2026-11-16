@@ -25,7 +25,7 @@ Only the literal string `true` (case-insensitive) disables telemetry, so values 
 
 - **CLI:** Run `npx xmcp telemetry disable` inside a project to turn telemetry off for your user account. `npx xmcp telemetry enable` turns it back on and `npx xmcp telemetry status` prints the current setting and the path of the preference file.
 - **Shell/CI env:** Export `XMCP_TELEMETRY_DISABLED=true` in your shell profile, `.env`, or CI secrets to stop telemetry everywhere.
-- **Config file:** Delete the generated `telemetry.json` (location printed in debug logs) after setting the env flag if you want to purge the existing anonymous ID. Removing the file while the env variable is set keeps telemetry off and regenerates a fresh opt-in prompt whenever you re-enable it.
+- **Config file:** Delete the generated `telemetry.json` (location printed by `npx xmcp telemetry status`) after setting the env flag if you want to purge the existing anonymous ID. Removing the file while the env variable is set keeps telemetry off and regenerates a fresh opt-in prompt whenever you re-enable it.
 
 When disabled, xmcp skips generating anonymous IDs, avoids writing telemetry event files, and no build metadata leaves the machine.
 

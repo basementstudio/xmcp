@@ -30,25 +30,29 @@ export class TelemetryTracker {
   private queue: Set<Promise<RecordObject>>;
   private loadProjectId: undefined | string | Promise<string>;
   private distDir: string;
+  private debugStateLogged = false;
 
   constructor(distDir: string = ".xmcp") {
     this.storage = new TelemetryStorage();
     this.sessionId = randomBytes(32).toString("hex");
     this.queue = new Set();
     this.distDir = distDir;
+  }
 
-    if (isTelemetryDebugEnabled()) {
-      const enabled = this.storage.isEnabled;
+  private logDebugState(): void {
+    if (this.debugStateLogged || !isTelemetryDebugEnabled()) {
+      return;
+    }
+    this.debugStateLogged = true;
+
+    const enabled = this.storage.isEnabled;
+    console.log(`[telemetry] Telemetry is ${enabled ? "enabled" : "disabled"}`);
+    if (enabled) {
+      console.log(`[telemetry] Anonymous ID ${this.storage.anonymousId}`);
+    } else if (this.storage.isDisabledByEnv) {
       console.log(
-        `[telemetry] Telemetry is ${enabled ? "enabled" : "disabled"}`
+        "[telemetry] Disabled via XMCP_TELEMETRY_DISABLED environment variable"
       );
-      if (enabled) {
-        console.log(`[telemetry] Anonymous ID ${this.storage.anonymousId}`);
-      } else if (process.env.XMCP_TELEMETRY_DISABLED) {
-        console.log(
-          "[telemetry] Disabled via XMCP_TELEMETRY_DISABLED environment variable"
-        );
-      }
     }
   }
 
@@ -91,6 +95,8 @@ export class TelemetryTracker {
     _events: TelemetryEvent | TelemetryEvent[],
     deferred?: boolean
   ): Promise<RecordObject> {
+    this.logDebugState();
+
     const eventsWithTimestamps = (
       Array.isArray(_events) ? _events : [_events]
     ).map((event) => ({

@@ -123,7 +123,7 @@ export default function TelemetryPage() {
             </p>
             <ul>
               <li>
-                <strong>From the CLI.</strong>{" "}
+                <strong>From the CLI.</strong> From inside an xmcp project,{" "}
                 <code>npx xmcp telemetry disable</code> turns telemetry off for
                 your user account, <code>npx xmcp telemetry enable</code> turns
                 it back on, and <code>npx xmcp telemetry status</code> shows the
