@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/sentry",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sentry integration for xmcp",
   "license": "MIT",
   "type": "module",
@@ -25,11 +25,11 @@
     "xmcp": "^1.6.0"
   },
   "devDependencies": {
-    "@sentry/node": "^11.4.0",
-    "xmcp": "workspace:*",
-    "@types/node": "^22.19.2",
+    "@sentry/node": "^11.12.0",
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "tsx": "^4.21.0"
+    "xmcp": "workspace:*"
   },
   "repository": {
     "type": "git",

@@ -1,6 +1,6 @@
 # xmcp conformance tests
 
-Private test infrastructure for compiled xmcp applications. Requires Node 22 and
+Private test infrastructure for compiled xmcp applications. Requires Node 26 and
 pnpm 10.8.1. Install workspace dependencies with `pnpm install --frozen-lockfile`.
 
 ```sh
@@ -185,6 +185,16 @@ For a new capability, add its name to `Capability` in `src/harness/target.ts`, a
 its feature group, and declare it on fixtures that supply the required files and
 config. Unsupported checks retain an explicit transport reason when available,
 otherwise they print `<fixture label> does not support <capability>`.
+
+## Skills
+
+The `skills` capability serves standard Agent Skill directories from
+`src/fixtures/skills.ts` through the MCP Skills extension on every target. It
+checks the declared extension, `skills/list` and `skills/get`, and that each
+listed file reads back with its published size and SHA-256 digest, including a
+file that is not valid UTF-8. `src/tests/skills.test.ts` additionally covers a
+server without skills, builds rejected for invalid skills, and a Cloudflare
+Workers bundle that serves skills after their sources are deleted.
 
 ## Client tests
 

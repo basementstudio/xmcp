@@ -1,5 +1,23 @@
 # @xmcp-dev/better-auth
 
+## 2.0.0
+
+### Major Changes
+
+- 8b54291: Upgrade to better-auth 1.7 and `@better-auth/mcp` to fix GHSA-965c-763c-88jm (critical), GHSA-q84f-53jg-9ppm, GHSA-r4xp-prcw-77qf and GHSA-44jh-23m7-hpcf. Breaking: it requires `xmcp` 1.10.3 or later, which serves the consent page on Vercel; run the database upgrade script in the README (it replaces the OAuth tables, so MCP clients must reconnect), users now approve each client on a new consent page, and the session no longer includes `refreshToken` or `refreshTokenExpiresAt`.
+
+## 1.0.2
+
+### Patch Changes
+
+- 6e13b56: The compiler now runs on Rspack 2, which is ESM-only, so xmcp requires Node.js 22.12 or later. Configs passed to the `bundler` hook receive Rspack 2 options. The Better Auth plugin bundles its sign-in UI, so React and React Router are no longer installed as runtime dependencies.
+
+## 1.0.1
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
 ## 1.0.0
 
 ### Patch Changes

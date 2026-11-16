@@ -3,6 +3,7 @@ import { SignInPage } from "./components/sign-in";
 import "./index.css";
 import ReactDOM from "react-dom/client";
 import { GoogleCallback } from "./components/callback/google";
+import { ConsentPage } from "./components/consent";
 
 const root = document.getElementById("root");
 
@@ -14,6 +15,10 @@ const router = createBrowserRouter([
   {
     path: "/auth/sign-in",
     element: <SignInPage />,
+  },
+  {
+    path: "/auth/consent",
+    element: <ConsentPage />,
   },
   {
     path: "/auth/callback/google",

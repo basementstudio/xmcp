@@ -15,11 +15,14 @@ declare const INJECTED_RESOURCES: Record<
   () => Promise<import("../runtime/utils/server").ResourceFile>
 >;
 
+declare const INJECTED_SKILLS: import("./skill").SkillDefinition[] | undefined;
+
 declare const INJECTED_MIDDLEWARE:
   | (() => Promise<{
       mcp?:
         | import("./mcp-middleware").McpMiddleware
         | import("./mcp-middleware").McpMiddleware[];
+      authorize?: import("./mcp-middleware").McpAuthorize;
       default?:
         | import("./middleware").Middleware
         | import("./middleware").Middleware[]

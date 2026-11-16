@@ -25,6 +25,11 @@ export interface VerifyNanoPaymentOptions {
   usedBlocks: NanoPaymentStore;
   /** Reject blocks the node first saw longer ago than this, when it reports a timestamp */
   maxPaymentAgeSeconds?: number;
+  /**
+   * When set, the block must carry the xno-binding v1 commitment to this
+   * order as its representative, and must send exactly `amount` raw.
+   */
+  orderId?: string;
 }
 
 export type NanoVerification =
@@ -222,6 +227,45 @@ export function publicKeyToNanoAddress(publicKeyHex: string): string {
   return `nano_${encodeBase32(key, 52)}${encodeBase32(checksumValue, 8)}`;
 }
 
+// --- Binding a payment to one order (xno-binding v1, representative commitment) ---
+
+/** Value of `extra.binding` on a 402 offer that requires an order commitment */
+export const NANO_BINDING_V1 = "xno-binding/v1/rep";
+
+const ORDER_ID_PATTERN = /^[A-Za-z0-9_-]{22,128}$/;
+
+/** An order id is opaque, URL-safe and long enough to carry 128 random bits */
+export function isValidNanoOrderId(orderId: unknown): orderId is string {
+  return typeof orderId === "string" && ORDER_ID_PATTERN.test(orderId);
+}
+
+/** A fresh random order id (128 bits, hex) */
+export function newNanoOrderId(): string {
+  const bytes = new Uint8Array(16);
+  globalThis.crypto.getRandomValues(bytes);
+  return bytesToHex(bytes).toLowerCase();
+}
+
+/**
+ * The account a payer sets as the representative of its send block to bind
+ * the payment to one order:
+ * SHA-256("xno-binding/v1/rep|" + orderId + "|" + payTo + "|" + amountRaw),
+ * encoded as a `nano_` address. The payer signs it, so a block hash seen on
+ * the public ledger cannot be claimed for another order or by someone who
+ * does not hold the order id.
+ */
+export async function nanoOrderCommitment(
+  orderId: string,
+  payTo: string,
+  amountRaw: string
+): Promise<string> {
+  const message = new TextEncoder().encode(
+    `${NANO_BINDING_V1}|${orderId}|${payTo}|${amountRaw}`
+  );
+  const digest = await globalThis.crypto.subtle.digest("SHA-256", message);
+  return publicKeyToNanoAddress(bytesToHex(new Uint8Array(digest)));
+}
+
 // --- RPC ---
 
 export function createNanoRpc(url: string): NanoRpc {
@@ -249,6 +293,7 @@ interface BlockInfo {
     previous?: string;
     balance?: string;
     link_as_account?: string;
+    representative?: string;
   };
 }
 
@@ -298,6 +343,10 @@ export async function verifyNanoPayment(
     return { valid: false, error: "Invalid required amount" };
   }
 
+  if (options.orderId !== undefined && !isValidNanoOrderId(options.orderId)) {
+    return { valid: false, error: "Invalid Nano order id" };
+  }
+
   if (usedBlocks.has(hash)) {
     return { valid: false, error: "Nano block has already been used" };
   }
@@ -317,6 +366,22 @@ export async function verifyNanoPayment(
     const destination = block.contents.link_as_account;
     if (!destination || nanoAddressToPublicKey(destination) !== payToKey) {
       return { valid: false, error: "Nano block pays a different account" };
+    }
+
+    if (options.orderId !== undefined) {
+      const commitment = await nanoOrderCommitment(
+        options.orderId,
+        payTo,
+        required.toString()
+      );
+      const representative = block.contents.representative;
+      if (
+        !representative ||
+        nanoAddressToPublicKey(representative) !==
+          nanoAddressToPublicKey(commitment)
+      ) {
+        return { valid: false, error: "Nano block is not bound to this order" };
+      }
     }
 
     const previousHash = block.contents.previous;
@@ -340,6 +405,12 @@ export async function verifyNanoPayment(
   }
 
   const paid = previousBalance - balance;
+  if (options.orderId !== undefined && paid !== required) {
+    return {
+      valid: false,
+      error: `Nano payment must be exactly ${required} raw, ${paid} raw sent`,
+    };
+  }
   if (paid < required) {
     return {
       valid: false,
@@ -361,7 +432,11 @@ export async function verifyNanoPayment(
   if (usedBlocks.has(hash)) {
     return { valid: false, error: "Nano block has already been used" };
   }
-  usedBlocks.add(hash);
+  try {
+    usedBlocks.add(hash);
+  } catch {
+    return { valid: false, error: "Nano payment could not be recorded" };
+  }
 
   return {
     valid: true,

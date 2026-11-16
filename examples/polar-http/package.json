@@ -12,9 +12,9 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "xmcp": "workspace:*",
     "@xmcp-dev/polar": "workspace:*",
-    "zod": "^4.0.10"
+    "xmcp": "workspace:*",
+    "zod": "^4.6.7"
   },
   "keywords": [
     "monetization",

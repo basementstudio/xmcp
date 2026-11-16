@@ -1,5 +1,35 @@
 # @xmcp-dev/compiler
 
+## 1.11.0
+
+No changes in this release.
+
+## 1.10.4
+
+### Patch Changes
+
+- 4623311: Target the Node.js 26 runtime in Vercel build output (`nodejs26.x`) instead of `nodejs22.x`, ahead of Node 22's end of life. On Node 26, Vercel Functions' built-in `fetch` negotiates HTTP/2, so `response.statusText` is empty for HTTP/2 responses; set `VERCEL_FETCH_DISABLE_H2=1` to keep HTTP/1.1.
+
+## 1.10.3
+
+### Patch Changes
+
+- 8b54291: Vercel builds now serve the auth UI at `/auth/consent`, the consent page the Better Auth plugin uses.
+
+## 1.10.2
+
+### Patch Changes
+
+- 6e13b56: The compiler now runs on Rspack 2, which is ESM-only, so xmcp requires Node.js 22.12 or later. Configs passed to the `bundler` hook receive Rspack 2 options. The Better Auth plugin bundles its sign-in UI, so React and React Router are no longer installed as runtime dependencies.
+
+## 1.10.1
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
+## 1.10.0
+
 ## 1.9.0
 
 ### Minor Changes

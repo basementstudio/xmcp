@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "xmcp": "workspace:*",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261113.1",
     "@xmcp-dev/compiler": "workspace:*",
-    "@cloudflare/workers-types": "^4.20241112.0",
-    "concurrently": "^9.2.0",
+    "concurrently": "^10.0.7",
     "typescript": "^5.7.2",
-    "wrangler": "^4.62.0"
+    "wrangler": "^4.161.0"
   },
   "keywords": [
     "adapter",

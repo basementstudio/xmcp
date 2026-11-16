@@ -1,7 +1,7 @@
 ---
 title: "Integrating Better Auth with xmcp"
 description: "Learn how to add secure authentication to your xmcp MCP server using Better Auth with PostgreSQL — sessions, account linking, and OAuth 2.1 providers."
-lastModified: "2026-10-23"
+lastModified: "2026-11-13"
 category: "guides"
 date: "2025-08-13"
 order: 5
@@ -59,105 +59,7 @@ Create a PostgreSQL database with the required schema. Better Auth requires spec
   [Neon](https://neon.tech/) using Vercel's storage integration.
 </Callout>
 
-Run the following SQL script to create the necessary tables:
-
-```sql
--- User table for storing user information
-CREATE TABLE "user" (
-  "id" text NOT NULL PRIMARY KEY,
-  "name" text NOT NULL,
-  "email" text NOT NULL UNIQUE,
-  "emailVerified" boolean NOT NULL,
-  "image" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
-
--- Session table for managing user sessions
-CREATE TABLE "session" (
-  "id" text NOT NULL PRIMARY KEY,
-  "expiresAt" timestamp NOT NULL,
-  "token" text NOT NULL UNIQUE,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL,
-  "ipAddress" text,
-  "userAgent" text,
-  "userId" text NOT NULL REFERENCES "user" ("id")
-);
-
--- Account table for OAuth and local authentication
-CREATE TABLE "account" (
-  "id" text NOT NULL PRIMARY KEY,
-  "accountId" text NOT NULL,
-  "providerId" text NOT NULL,
-  "userId" text NOT NULL REFERENCES "user" ("id"),
-  "accessToken" text,
-  "refreshToken" text,
-  "idToken" text,
-  "accessTokenExpiresAt" timestamp,
-  "refreshTokenExpiresAt" timestamp,
-  "scope" text,
-  "password" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
-
--- Verification table for email verification and password resets
-CREATE TABLE "verification" (
-  "id" text NOT NULL PRIMARY KEY,
-  "identifier" text NOT NULL,
-  "value" text NOT NULL,
-  "expiresAt" timestamp NOT NULL,
-  "createdAt" timestamp,
-  "updatedAt" timestamp
-);
-
--- OAuth application table for OAuth provider functionality
-CREATE TABLE "oauthApplication" (
-  "id" text NOT NULL PRIMARY KEY,
-  "name" text NOT NULL,
-  "icon" text,
-  "metadata" text,
-  "clientId" text NOT NULL UNIQUE,
-  "clientSecret" text,
-  "redirectURLs" text NOT NULL,
-  "type" text NOT NULL,
-  "disabled" boolean,
-  "userId" text,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
-
--- OAuth access token table
-CREATE TABLE "oauthAccessToken" (
-  "id" text NOT NULL PRIMARY KEY,
-  "accessToken" text NOT NULL UNIQUE,
-  "refreshToken" text NOT NULL UNIQUE,
-  "accessTokenExpiresAt" timestamp NOT NULL,
-  "refreshTokenExpiresAt" timestamp NOT NULL,
-  "clientId" text NOT NULL,
-  "userId" text,
-  "scopes" text NOT NULL,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL
-);
-
--- OAuth consent table for managing user consent
-CREATE TABLE "oauthConsent" (
-  "id" text NOT NULL PRIMARY KEY,
-  "clientId" text NOT NULL,
-  "userId" text NOT NULL,
-  "scopes" text NOT NULL,
-  "createdAt" timestamp NOT NULL,
-  "updatedAt" timestamp NOT NULL,
-  "consentGiven" boolean NOT NULL
-);
-```
-
-<Callout variant="info" icon="info">
-  The schema generation through Better Auth's CLI is not supported yet, so
-  you'll need to run this SQL manually.
-</Callout>
+Run the SQL script from the [Database Setup](/docs/integrations/better-auth#database-setup) section of the Better Auth docs. It creates the user, session and account tables, plus the OAuth and JWKS tables that `@xmcp-dev/better-auth` 2.0 needs. If you created your database with an earlier version of this guide, follow [Upgrading from 1.0](/docs/integrations/better-auth#upgrading-from-10) instead.
 
 ## Configure Environment Variables
 

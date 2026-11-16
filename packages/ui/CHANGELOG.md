@@ -1,5 +1,11 @@
 # @xmcp-dev/ui
 
+## 0.1.2
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
 ## 0.1.1
 
 ### Patch Changes

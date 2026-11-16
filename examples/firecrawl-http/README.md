@@ -12,7 +12,7 @@ These tools read source pages and consume the server owner's Firecrawl credits. 
 
 ## Run
 
-Use Node 22 and pnpm. Create an API key in your [Firecrawl dashboard](https://www.firecrawl.dev/app), then run from the repository root:
+Use Node 26 and pnpm. Create an API key in your [Firecrawl dashboard](https://www.firecrawl.dev/app), then run from the repository root:
 
 ```sh
 pnpm install

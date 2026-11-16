@@ -2,7 +2,7 @@
 title: "Project structure"
 metadataTitle: "Project structure | xmcp Documentation"
 publishedAt: "2025-07-06"
-summary: "Explore the xmcp project layout — file-system based auto-discovery for tools, prompts, and resources, plus config options for custom directory layouts."
+summary: "Explore the xmcp project layout — file-system based auto-discovery for tools, prompts, resources, and skills, plus config options for custom directory layouts."
 description: "Explore the file-system based architecture with auto-discovery for tools, prompts, and resources, plus configuration options for custom directory layouts"
 ---
 
@@ -23,6 +23,8 @@ my-project/
 │   └── resources/      # Resource files are auto-discovered here
 │       ├── (config)/app.ts
 │       ├── (users)/[userId]/profile.ts
+│   └── skills/         # Optional: Agent Skills are auto-discovered here
+│       ├── release-notes/SKILL.md
 ├── dist/               # Built output (generated)
 ├── package.json
 ├── tsconfig.json
@@ -41,7 +43,7 @@ There are the three top-level files that are required for your project:
 
 The `src/` directory houses your project's implementation. xmcp follows a declarative, file-system based approach—simply create a file in the appropriate directory, and it will be automatically discovered and registered.
 
-The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of `tools/`, `prompts/`, and `resources/` directories in your `xmcp.config.ts` file. See the [custom directories](/docs/configuration/custom-directories) documentation for details.
+The optional `middleware.ts` file at the root of `src/` processes HTTP requests and responses. You can customize the location of the `tools/`, `prompts/`, `resources/`, and `skills/` directories in your `xmcp.config.ts` file. See the [custom directories](/docs/configuration/custom-directories) documentation for details.
 
 <ConceptBoxes>
   <ConceptBox
@@ -58,6 +60,11 @@ The optional `middleware.ts` file at the root of `src/` processes HTTP requests 
     title="Resources"
     description="Understand how to expose data through resources."
     href="/docs/core-concepts/resources"
+  />
+  <ConceptBox
+    title="Skills"
+    description="Serve Agent Skills alongside your tools."
+    href="/docs/core-concepts/skills"
   />
   <ConceptBox
     title="Middleware"

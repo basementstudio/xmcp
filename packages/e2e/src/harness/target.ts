@@ -19,11 +19,13 @@ export type Capability =
   | "resources"
   | "templates"
   | "resource-completion"
+  | "skills"
   | "input-required"
   | "request-context"
   | "request-helpers"
   | "mcp-middleware"
   | "operation-middleware"
+  | "authorization"
   | "middleware-input-required"
   | "middleware-cancellation"
   | "stateless-http";
@@ -51,11 +53,13 @@ export const BASE_CAPABILITIES: readonly Capability[] = [
   "resources",
   "templates",
   "resource-completion",
+  "skills",
   "input-required",
   "request-context",
   "request-helpers",
   "mcp-middleware",
   "operation-middleware",
+  "authorization",
   "middleware-input-required",
   "middleware-cancellation",
 ];

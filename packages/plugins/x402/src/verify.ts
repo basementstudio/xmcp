@@ -5,7 +5,7 @@ import type {
   PaymentPayload,
 } from "./types.js";
 import type { PaymentRequirements as PaymentRequirementsV2 } from "@x402/core/types";
-import { log } from "./logger.js";
+import { log, logError } from "./logger.js";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { decodePaymentSignatureHeader } from "@x402/core/http";
 import {
@@ -15,7 +15,13 @@ import {
   DEFAULT_NANO_RPC_URL,
 } from "./constants.js";
 import { getToolContext } from "./context.js";
-import { createNanoRpc, verifyNanoPayment } from "./nano.js";
+import {
+  NANO_BINDING_V1,
+  createNanoRpc,
+  isValidNanoOrderId,
+  newNanoOrderId,
+  verifyNanoPayment,
+} from "./nano.js";
 
 /**
  * Convert a decimal price into atomic units of an asset with `decimals`
@@ -66,10 +72,12 @@ export function createPaymentRequirements(useV2Format: boolean = false) {
   const { networkName, networkConfig } = resolveNetwork();
   const price = toolOptions.price ?? config.defaults?.price ?? 0.01;
   const amount = priceToAtomicUnits(price, networkConfig.decimals);
-  const payTo =
-    networkConfig.id === NANO_NETWORK_ID
-      ? (config.nano?.wallet ?? config.wallet)
-      : config.wallet;
+  const isNano = networkConfig.id === NANO_NETWORK_ID;
+  const payTo = isNano ? (config.nano?.wallet ?? config.wallet) : config.wallet;
+  const extra =
+    isNano && config.nano?.requireBinding
+      ? { ...networkConfig.extra, binding: NANO_BINDING_V1 }
+      : networkConfig.extra;
 
   if (useV2Format) {
     return {
@@ -80,7 +88,7 @@ export function createPaymentRequirements(useV2Format: boolean = false) {
       asset: networkConfig.asset,
       maxTimeoutSeconds:
         toolOptions.maxPaymentAge ?? config.defaults?.maxPaymentAge ?? 300,
-      extra: networkConfig.extra,
+      extra,
     };
   }
 
@@ -96,7 +104,7 @@ export function createPaymentRequirements(useV2Format: boolean = false) {
     resource: `mcp://tool/${toolName}`,
     mimeType: "application/json",
     description: toolOptions.description ?? `Access to ${toolName} tool`,
-    extra: networkConfig.extra,
+    extra,
   };
 }
 
@@ -108,6 +116,11 @@ export function createPaymentRequiredResponse(
   useV2Format: boolean = false
 ) {
   const requirements = createPaymentRequirements(useV2Format);
+
+  // Each offer that requires a bound Nano payment carries a fresh order id
+  if (requirements.extra.binding === NANO_BINDING_V1) {
+    requirements.extra = { ...requirements.extra, orderId: newNanoOrderId() };
+  }
 
   return {
     x402Version: useV2Format ? 2 : 1,
@@ -213,14 +226,28 @@ async function verifyNano(
   const rpc =
     typeof rpcOption === "function" ? rpcOption : createNanoRpc(rpcOption);
 
+  const nanoPayload = payload.payload as Record<string, unknown> | undefined;
+  let orderId: string | undefined;
+  if (config.nano?.requireBinding) {
+    const claimedOrderId = nanoPayload?.orderId;
+    if (!isValidNanoOrderId(claimedOrderId)) {
+      return {
+        valid: false,
+        error: "Nano payment needs the orderId of its 402 offer",
+        isV2Format,
+      };
+    }
+    orderId = claimedOrderId;
+  }
+
   const result = await verifyNanoPayment({
-    blockHash: (payload.payload as Record<string, unknown> | undefined)
-      ?.blockHash,
+    blockHash: nanoPayload?.blockHash,
     payTo: requirements.payTo,
     amount: requirements.amount ?? requirements.maxAmountRequired,
     rpc,
     usedBlocks,
     maxPaymentAgeSeconds: requirements.maxTimeoutSeconds,
+    orderId,
   });
 
   log(config.debug ?? false, "Nano verification result:", result);
@@ -242,7 +269,14 @@ async function verifyNano(
     payload,
     requirements: requirements as PaymentRequirements,
     isV2Format,
-    release: () => usedBlocks.delete(result.blockHash),
+    release: () => {
+      try {
+        usedBlocks.delete(result.blockHash);
+      } catch (error) {
+        // The claim stays recorded, so the block is still refused
+        logError("Could not release Nano payment:", error);
+      }
+    },
   };
 }
 

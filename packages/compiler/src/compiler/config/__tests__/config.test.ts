@@ -217,6 +217,21 @@ describe("Config System - Resolution Functions", () => {
     assert.equal(resolved.tools, "custom/tools");
     assert.equal(resolved.prompts, "custom/prompts");
     assert.equal(resolved.resources, "custom/resources");
+    assert.equal(resolved.skills, "src/skills");
+  });
+
+  it("should resolve the skills path like the other paths", () => {
+    const resolve = (skills?: boolean | string) =>
+      getResolvedPathsConfig(configSchema.parse({ paths: { skills } })).skills;
+
+    assert.equal(
+      getResolvedPathsConfig(configSchema.parse({})).skills,
+      "src/skills"
+    );
+    assert.equal(resolve(), "src/skills");
+    assert.equal(resolve(true), "src/skills");
+    assert.equal(resolve("custom/skills"), "custom/skills");
+    assert.equal(resolve(false), null);
   });
 
   it("should resolve experimental config and extract adapter", () => {

@@ -1,5 +1,41 @@
 # xmcp
 
+## 1.11.0
+
+### Minor Changes
+
+- b5bb292: Add an optional `authorize` export to `src/middleware.ts`. One policy hides denied tools, prompts, resources, resource templates, and skills from listings, rejects direct calls, prompt gets, and reads with the same errors as unknown components, and rejects denied completions like unknown references, on HTTP and STDIO.
+
+  Tool authorization receives raw arguments before SDK validation and shares request-local values with tool middleware and handlers. Skill catalogs authorize their SKILL.md resource before returning entries or pagination.
+
+## 1.10.4
+
+No changes in this release.
+
+## 1.10.3
+
+No changes in this release.
+
+## 1.10.2
+
+### Patch Changes
+
+- 6e13b56: The compiler now runs on Rspack 2, which is ESM-only, so xmcp requires Node.js 22.12 or later. Configs passed to the `bundler` hook receive Rspack 2 options. The Better Auth plugin bundles its sign-in UI, so React and React Router are no longer installed as runtime dependencies.
+
+## 1.10.1
+
+### Patch Changes
+
+- f48c55e: Update dependencies to their latest versions.
+
+## 1.10.0
+
+### Minor Changes
+
+- 3f2eb0e: Serve Agent Skills through the MCP Skills extension (`io.modelcontextprotocol/skills`). Skill directories under `src/skills` (configurable with `paths.skills`) are validated and embedded at build time, published through `skills/list` and `skills/get`, and readable as `skill://` resources.
+
+  `src/skills` is now read by default: every directory there with a `SKILL.md` is served to MCP clients, and other files and directories are skipped with a warning. Set `paths.skills` to `false` if the directory is not for skills.
+
 ## 1.9.0
 
 ### Minor Changes

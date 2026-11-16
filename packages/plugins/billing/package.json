@@ -1,6 +1,6 @@
 {
   "name": "@xmcp-dev/billing",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Billing integration for xmcp",
   "license": "MIT",
   "type": "module",
@@ -24,10 +24,10 @@
     "xmcp": "^1.6.0"
   },
   "devDependencies": {
-    "xmcp": "workspace:*",
-    "@types/node": "^22.19.2",
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "tsx": "^4.21.0"
+    "xmcp": "workspace:*"
   },
   "repository": {
     "type": "git",

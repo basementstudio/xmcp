@@ -5,9 +5,11 @@ import { REQUEST_HELPERS_FILES } from "../fixtures/request-helpers.js";
 import { MIDDLEWARE_LIFECYCLE_FILES } from "../fixtures/middleware-lifecycle.js";
 import { MCP_MIDDLEWARE_FILES } from "../fixtures/mcp-middleware.js";
 import { OPERATION_MIDDLEWARE_FILES } from "../fixtures/operation-middleware.js";
+import { AUTHORIZATION_FILES } from "../fixtures/authorization.js";
 import { MULTI_MESSAGE_PROMPT_FILES } from "../fixtures/multi-message-prompts.js";
 import { RESOURCE_COMPLETION_FILES } from "../fixtures/resource-completion.js";
 import { MEDIA_CONTENT_FILES } from "../fixtures/media-content.js";
+import { SKILLS_FILES } from "../fixtures/skills.js";
 
 // These are real application modules compiled by xmcp, not mocked handlers.
 export const TOOL_ADD = `import { z } from "zod";
@@ -17,7 +19,7 @@ export const metadata = { name: "add", description: "Add two numbers", annotatio
 export default function add({ a, b }: { a: number; b: number }) { return { sum: a + b }; }
 `;
 
-export const DEFAULT_FILES: Record<string, string> = {
+export const DEFAULT_FILES: Record<string, string | Uint8Array> = {
   ...COMPONENT_VISIBILITY_FILES,
   ...COMPONENT_METADATA_FILES,
   ...REQUEST_CONTEXT_FILES,
@@ -25,9 +27,11 @@ export const DEFAULT_FILES: Record<string, string> = {
   ...MCP_MIDDLEWARE_FILES,
   ...MIDDLEWARE_LIFECYCLE_FILES,
   ...OPERATION_MIDDLEWARE_FILES,
+  ...AUTHORIZATION_FILES,
   ...MULTI_MESSAGE_PROMPT_FILES,
   ...RESOURCE_COMPLETION_FILES,
   ...MEDIA_CONTENT_FILES,
+  ...SKILLS_FILES,
   "src/tools/add.ts": TOOL_ADD,
   "src/tools/client-info.ts": `import type { ToolExtraArguments } from "xmcp";
 export const metadata = { name: "client-info", description: "Echo request client identity" };

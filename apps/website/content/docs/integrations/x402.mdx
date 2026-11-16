@@ -87,6 +87,8 @@ export default x402Provider({
 - **`nano`**: (Optional) Settings for tools on the `nano` network, see [Nano (XNO)](#nano-xno)
   - **`wallet`**: `nano_` address that receives XNO (falls back to `wallet`)
   - **`rpc`**: Nano node RPC URL used to verify payments (default: `https://rpc.nano.to`)
+  - **`claimsFile`**: (Optional) Path of a file that records used block hashes so they are still refused after a restart, see [Keeping claims across restarts](#keeping-claims-across-restarts)
+  - **`requireBinding`**: (Optional) Bind each payment to the order id of its 402 offer (default: `false`), see [Binding a payment to an order](#binding-a-payment-to-an-order)
 - **`defaults`**: (Optional) Default values for all paid tools
   - **`price`**: Price in USDC (default: `0.01`)
   - **`currency`**: Currency code (default: `"USDC"`)
@@ -224,9 +226,58 @@ The block hash and payer are returned in `payment()` and in the `x402/payment-re
 
 Things to know before using it:
 
-- The block hash is a bearer proof. Anyone who sees the block on the public ledger could present it first, so keep `maxPaymentAge` short.
-- Used block hashes are kept in memory. They are forgotten on restart and are not shared between server instances.
+- By default the block hash is a bearer proof. Anyone who sees the block on the public ledger could present it first, so keep `maxPaymentAge` short, or turn on `requireBinding`.
+- By default used block hashes are kept in memory. They are forgotten on restart and are not shared between server instances. Set `claimsFile` to keep them across restarts.
 - Verification depends on the Nano node RPC you configure. Use a node you trust.
+
+### Keeping claims across restarts
+
+Set `nano.claimsFile` to a path the server can write to:
+
+```typescript title="src/middleware.ts"
+export default x402Provider({
+  wallet: process.env.X402_WALLET!,
+  nano: {
+    wallet: process.env.X402_NANO_WALLET,
+    claimsFile: process.env.X402_NANO_CLAIMS_FILE,
+  },
+});
+```
+
+Each block hash that pays for a call is appended to the file and flushed to disk before the tool runs, and the file is read back when the server starts, so a block that already paid is still refused after a restart. When the tool returns an error, a release line is appended and the block can be used again for a retry. The file is compacted to the live claims when it is opened, and while running once released lines outnumber them.
+
+<Callout variant="warning">
+  One claims file belongs to one server process. It is not a shared store: instances that run side by side each need their own file and do not see each other's claims.
+</Callout>
+
+### Binding a payment to an order
+
+Set `nano.requireBinding: true` so a block hash seen on the public ledger cannot be presented by someone else. The 402 offer then carries two extra fields:
+
+```json
+{
+  "extra": {
+    "binding": "xno-binding/v1/rep",
+    "orderId": "<32 hex characters>"
+  }
+}
+```
+
+The payer:
+
+- sets the representative of its send block to the order commitment: the `nano_` encoding of `SHA-256("xno-binding/v1/rep|" + orderId + "|" + payTo + "|" + amount)`, with `amount` in raw
+- sends exactly the price in raw (`maxAmountRequired`, or `amount` in an x402 v2 offer); overpaying is refused
+- pays with the order id beside the block hash:
+
+```json
+{
+  "x402Version": 2,
+  "accepted": { "scheme": "exact", "network": "nano:mainnet" },
+  "payload": { "blockHash": "<64 hex characters>", "orderId": "<orderId from the offer>" }
+}
+```
+
+A payment without `orderId`, with a malformed one, or with a block whose representative is not the commitment for that order is rejected. The plugin keeps no order state: each 402 response carries a fresh random order id, and the block hash is still claimed once, so one block pays for one call.
 
 ## Troubleshooting
 

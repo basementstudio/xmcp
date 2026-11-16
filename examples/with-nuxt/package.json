@@ -13,17 +13,17 @@
     "deploy:cf": "pnpm build:cf && wrangler deploy"
   },
   "dependencies": {
+    "nuxt": "^4.6.4",
+    "vue": "^3.5.45",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10",
-    "nuxt": "^4.6.2",
-    "vue": "^3.5.40"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "@xmcp-dev/compiler": "workspace:*",
-    "@types/node": "^22.19.2",
-    "typescript": "^5.9.3",
-    "wrangler": "^4.147.0",
     "cross-env": "^7.0.3",
-    "vue-tsc": "^3.1.1"
+    "typescript": "^5.9.3",
+    "vue-tsc": "^3.3.14",
+    "wrangler": "^4.161.0"
   }
 }

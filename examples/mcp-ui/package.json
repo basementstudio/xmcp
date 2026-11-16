@@ -17,9 +17,9 @@
     "start": "node dist/http.js"
   },
   "dependencies": {
-    "@mcp-ui/server": "^5.16.2",
+    "@mcp-ui/server": "^6.1.0",
     "xmcp": "workspace:*",
-    "zod": "^4.0.10"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@xmcp-dev/compiler": "workspace:*"

@@ -22,7 +22,7 @@ Creating a session uses billable browser minutes. `keepAlive` defaults to `false
 
 ## Run locally
 
-Use Node 22 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
+Use Node 26 and pnpm. This starter lives in the xmcp workspace; run these commands from the repository root:
 
 ```sh
 git clone --depth 1 https://github.com/basementstudio/xmcp.git

@@ -29,7 +29,7 @@ export interface FixtureSpec {
   kind: FixtureKind;
   moduleType: ModuleType;
   /** Fixture-relative files written after all defaults; matching paths replace them. */
-  files?: Record<string, string>;
+  files?: Record<string, string | Uint8Array>;
   /** TypeScript config object members appended after defaultConfig is spread. */
   configFragment?: string;
   /** Conformance capabilities; omitted uses the standard fixture's capabilities. */
