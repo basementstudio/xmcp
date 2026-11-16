@@ -3,7 +3,11 @@ import assert from "node:assert";
 import { z as zodV3 } from "zod/v3";
 import { z as zodV4 } from "zod/v4";
 import { completable, isCompletable } from "@modelcontextprotocol/server";
-import { rawShapeToStandardSchema } from "../schema-compat";
+import {
+  assertObjectInputSchema,
+  rawShapeToStandardSchema,
+  toolSchemaToStandardSchema,
+} from "../schema-compat";
 
 test("rawShapeToStandardSchema validates and converts zod v3 fields", async () => {
   const schema = rawShapeToStandardSchema({
@@ -59,4 +63,84 @@ test("rawShapeToStandardSchema preserves completable fields", () => {
 
   assert.strictEqual(schema.shape.value, field);
   assert.strictEqual(isCompletable(schema.shape.value), true);
+});
+
+test("toolSchemaToStandardSchema wraps complete zod v3 and v4 schemas", async () => {
+  for (const list of [
+    zodV3.array(zodV3.object({ id: zodV3.number() })),
+    zodV4.array(zodV4.object({ id: zodV4.number() })),
+  ]) {
+    const schema = toolSchemaToStandardSchema(list);
+    assert.deepStrictEqual(await schema["~standard"].validate([{ id: 1 }]), {
+      value: [{ id: 1 }],
+    });
+    const invalid = await schema["~standard"].validate([{ id: "1" }]);
+    assert.ok("issues" in invalid && invalid.issues?.length);
+    const jsonSchema = schema["~standard"].jsonSchema.output({
+      target: "draft-2020-12",
+    });
+    assert.strictEqual(jsonSchema.type, "array");
+    assert.strictEqual(
+      (jsonSchema.items as Record<string, unknown>).type,
+      "object"
+    );
+  }
+});
+
+test("toolSchemaToStandardSchema keeps complete schema validation and shape", async () => {
+  const field = completable(zodV4.string(), async () => ["one"]);
+  const range = zodV4
+    .object({ from: zodV4.number(), to: zodV4.number(), label: field })
+    .refine(({ from, to }) => from <= to, "from must not exceed to");
+  const schema = toolSchemaToStandardSchema(range);
+
+  const invalid = await schema["~standard"].validate({
+    from: 2,
+    to: 1,
+    label: "x",
+  });
+  assert.ok("issues" in invalid);
+  assert.match(invalid.issues?.[0]?.message ?? "", /from must not exceed to/);
+
+  const object = toolSchemaToStandardSchema(
+    zodV4.object({ label: field, extra: zodV4.number().optional() })
+  );
+  assert.strictEqual(object.shape?.label, field);
+  const jsonSchema = object["~standard"].jsonSchema.input({
+    target: "draft-2020-12",
+  });
+  assert.strictEqual(jsonSchema.type, "object");
+  assert.notStrictEqual(jsonSchema.additionalProperties, false);
+});
+
+test("toolSchemaToStandardSchema converts discriminated unions", () => {
+  const schema = toolSchemaToStandardSchema(
+    zodV4.discriminatedUnion("kind", [
+      zodV4.object({ kind: zodV4.literal("id"), id: zodV4.number() }),
+      zodV4.object({ kind: zodV4.literal("name"), name: zodV4.string() }),
+    ])
+  );
+  const jsonSchema = schema["~standard"].jsonSchema.input({
+    target: "draft-2020-12",
+  });
+  assert.ok(Array.isArray(jsonSchema.oneOf ?? jsonSchema.anyOf));
+});
+
+test("assertObjectInputSchema rejects non-object input schemas", () => {
+  assert.throws(
+    () => assertObjectInputSchema(zodV4.array(zodV4.string()), "tags"),
+    /Invalid schema for tool "tags": tool input schemas must describe an object, got JSON Schema type "array"/
+  );
+  assert.doesNotThrow(() =>
+    assertObjectInputSchema(zodV3.object({ q: zodV3.string() }), "search")
+  );
+  assert.doesNotThrow(() =>
+    assertObjectInputSchema(
+      zodV4.union([
+        zodV4.object({ id: zodV4.number() }),
+        zodV4.object({ name: zodV4.string() }),
+      ]),
+      "lookup"
+    )
+  );
 });

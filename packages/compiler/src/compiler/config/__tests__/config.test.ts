@@ -14,6 +14,7 @@ import { configSchema } from "@/runtime-config";
 
 import {
   injectAdapterVariables,
+  injectCacheHintsVariables,
   injectComponentsVariables,
   injectCorsVariables,
   injectHttpVariables,
@@ -619,5 +620,39 @@ describe("experimental tool schema inference", () => {
         .success,
       false
     );
+  });
+});
+
+describe("Cache hints config", () => {
+  it("is optional and reaches the runtime injection", () => {
+    assert.equal(configSchema.parse({}).cacheHints, undefined);
+    assert.deepEqual(
+      JSON.parse(injectCacheHintsVariables({}).CACHE_HINTS_CONFIG),
+      {}
+    );
+
+    const cacheHints = {
+      "tools/list": { ttlMs: 60_000, cacheScope: "public" as const },
+      "resources/read": { ttlMs: 0 },
+      "server/discover": { cacheScope: "private" as const },
+    };
+    const parsed = configSchema.parse({ cacheHints });
+    assert.deepEqual(parsed.cacheHints, cacheHints);
+    assert.deepEqual(
+      JSON.parse(injectCacheHintsVariables(parsed).CACHE_HINTS_CONFIG),
+      cacheHints
+    );
+  });
+
+  it("rejects invalid hints and unknown methods", () => {
+    for (const cacheHints of [
+      { "tools/list": { ttlMs: -1 } },
+      { "tools/list": { ttlMs: 1.5 } },
+      { "tools/list": { cacheScope: "shared" } },
+      { "tools/list": { ttl: 1000 } },
+      { "tools/call": { ttlMs: 1000 } },
+    ]) {
+      assert.equal(configSchema.safeParse({ cacheHints }).success, false);
+    }
   });
 });

@@ -26,11 +26,12 @@ import { addToolsToServer } from "./tools";
 import { UserPromptHandler } from "./transformers/prompt";
 import { UserResourceHandler } from "./transformers/resource";
 import { UserToolHandler } from "./transformers/tool";
+import type { StandardFieldSchema } from "./schema-compat";
 
 export type ToolFile = {
   metadata: ToolMetadata;
-  schema: ZodRawShape;
-  outputSchema?: ZodRawShape;
+  schema: ZodRawShape | StandardFieldSchema;
+  outputSchema?: ZodRawShape | StandardFieldSchema;
   default: UserToolHandler;
 };
 
@@ -142,9 +143,17 @@ export async function loadResources() {
   return resourceModules;
 }
 
-export async function createServer() {
+/** Creates the SDK server from the injected server info and cache hints. */
+export function createMcpServer(): McpServer {
   const { instructions, ...serverInfo } = INJECTED_CONFIG;
-  const server = new McpServer(serverInfo, { instructions });
+  // Older compilers do not inject this optional configuration.
+  const cacheHints =
+    typeof CACHE_HINTS_CONFIG === "undefined" ? undefined : CACHE_HINTS_CONFIG;
+  return new McpServer(serverInfo, { instructions, cacheHints });
+}
+
+export async function createServer() {
+  const server = createMcpServer();
   const toolModulesPromise = loadTools();
   const promptModulesPromise = loadPrompts();
   const resourceModulesPromise = loadResources();

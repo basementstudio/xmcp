@@ -18,6 +18,7 @@ export { pathsConfigSchema, type PathsConfig, DEFAULT_PATHS } from "./paths";
 export { bundlerConfigSchema, type BundlerConfig } from "./bundler";
 export { templateConfigSchema, type TemplateConfig } from "./template";
 export { typescriptConfigSchema, type TypescriptConfig } from "./typescript";
+export { cacheHintsConfigSchema, type CacheHintsConfig } from "./cache-hints";
 export {
   componentsConfigSchema,
   type ComponentsConfig,

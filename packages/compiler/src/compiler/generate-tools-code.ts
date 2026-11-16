@@ -35,6 +35,16 @@ ${inferSchemas ? 'import { withInferredSchema } from "./inferred-tools.js";' : "
 
 ${importStatements}
 
+// A schema is either a complete zod schema or a { field: zodSchema } map
+const isCompleteSchema = (value) =>
+  typeof value === "object" && value !== null && typeof value["~standard"] === "object";
+const isFieldMap = (value) =>
+  typeof value === "object" && value !== null &&
+  Object.entries(value).every(([key, val]) =>
+    typeof key === "string" && typeof val === "object" && val !== null &&
+    "parse" in val && typeof val.parse === "function"
+  );
+
 /**
  * Runtime-accessible tools function that works from any context.
  * Generated at build time - always up to date with discovered tools.
@@ -57,38 +67,22 @@ export async function getTools() {
       ...((typeof metadata === "object" && metadata !== null) ? metadata : {})
     };
 
-    // Determine the actual schema to use
-    let toolSchema = {};
-    if (schema && typeof schema === "object" && schema !== null) {
-      // Basic validation for Zod schema object
-      const isValidSchema = Object.entries(schema).every(([key, val]) => {
-        if (typeof key !== "string") return false;
-        if (typeof val !== "object" || val === null) return false;
-        if (!("parse" in val) || typeof val.parse !== "function") return false;
-        return true;
-      });
-
-      if (isValidSchema) {
-        toolSchema = schema;
-      } else {
-        console.warn(\`Invalid schema for tool "\${toolConfig.name}" at \${path}. Expected Record<string, z.ZodType>\`);
-      }
+    let inputSchema = z.object({});
+    if (isCompleteSchema(schema)) {
+      inputSchema = schema;
+    } else if (isFieldMap(schema)) {
+      inputSchema = z.object(schema);
+    } else if (schema !== undefined && schema !== null) {
+      console.warn(\`Invalid schema for tool "\${toolConfig.name}" at \${path}. Expected a zod schema or Record<string, z.ZodType>\`);
     }
 
     let toolOutputSchema = undefined;
-    if (outputSchema && typeof outputSchema === "object" && outputSchema !== null) {
-      const isValidOutputSchema = Object.entries(outputSchema).every(([key, val]) => {
-        if (typeof key !== "string") return false;
-        if (typeof val !== "object" || val === null) return false;
-        if (!("parse" in val) || typeof val.parse !== "function") return false;
-        return true;
-      });
-
-      if (isValidOutputSchema) {
-        toolOutputSchema = outputSchema;
-      } else {
-        throw new Error(\`Invalid outputSchema for tool "\${toolConfig.name}" at \${path}. Expected Record<string, z.ZodType>\`);
-      }
+    if (isCompleteSchema(outputSchema)) {
+      toolOutputSchema = outputSchema;
+    } else if (isFieldMap(outputSchema)) {
+      toolOutputSchema = z.object(outputSchema).strict();
+    } else if (outputSchema !== undefined && outputSchema !== null) {
+      throw new Error(\`Invalid outputSchema for tool "\${toolConfig.name}" at \${path}. Expected a zod schema or Record<string, z.ZodType>\`);
     }
 
     // Make sure tools has annotations with a title — shallow copy to avoid mutating shared objects
@@ -100,10 +94,8 @@ export async function getTools() {
     // Add to registry in the formatted structure
     registry[toolConfig.name] = {
       description: toolConfig.description,
-      inputSchema: z.object(toolSchema || {}),
-      outputSchema: toolOutputSchema
-        ? z.object(toolOutputSchema).strict()
-        : undefined,
+      inputSchema,
+      outputSchema: toolOutputSchema,
       execute: async (args, extra) => {
         const result = await handler(args, extra);
         return result;
@@ -153,8 +145,8 @@ export interface ToolItem {
 
 export interface ToolRegistryItem {
   description: string;
-  inputSchema: z.ZodObject<any>;
-  outputSchema?: z.ZodObject<any>;
+  inputSchema: z.ZodTypeAny;
+  outputSchema?: z.ZodTypeAny;
   execute: (args: any) => Promise<any>;
 }
 

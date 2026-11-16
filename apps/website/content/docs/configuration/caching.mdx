@@ -1,0 +1,72 @@
+---
+title: "Cache Hints"
+metadataTitle: "Cache Hints | xmcp Documentation"
+description: "Tell MCP clients how long they can reuse tool, prompt, and resource listings and resource contents."
+---
+
+MCP protocol revision 2026-07-28 adds cache hints to cacheable results:
+`tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`,
+`resources/read`, and `server/discover`. Each result carries a `ttlMs` (how many
+milliseconds a client may reuse it) and a `cacheScope` (`"private"` to one
+caller, or `"public"` to any caller of the same server).
+
+By default, every result is sent with `ttlMs: 0` and `cacheScope: "private"`,
+so clients refetch each time. Use the optional `cacheHints` field in
+`xmcp.config.ts` to let clients reuse stable results. Update both `xmcp` and
+`@xmcp-dev/compiler` to use this option.
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  cacheHints: {
+    "tools/list": { ttlMs: 300_000 },
+    "prompts/list": { ttlMs: 300_000 },
+  },
+} satisfies XmcpConfig;
+```
+
+Each key is a cacheable method. Each hint accepts:
+
+| Field        | Type                    | Default     |
+| ------------ | ----------------------- | ----------- |
+| `ttlMs`      | Non-negative integer    | `0`         |
+| `cacheScope` | `"private" \| "public"` | `"private"` |
+
+Unknown methods and fields fail the build. Clients on earlier protocol
+revisions do not receive cache hints, so this option does not change their
+behavior. A `ttlMs` or `cacheScope` returned directly by a handler or
+[middleware](/docs/core-concepts/middlewares) takes precedence over configured
+hints.
+
+## Choosing a scope
+
+Keep the default `"private"` scope unless a result is identical for every
+caller. Results vary between callers when an
+[`authorize` policy](/docs/core-concepts/middlewares#authorize-components) or
+other auth-dependent [middleware](/docs/core-concepts/middlewares) filters
+components, or when resource contents depend on the caller. Mark only those
+results that are truly shared as `"public"`.
+
+## Per-resource hints
+
+A resource can set `cacheHint` in its metadata. It applies to `resources/read`
+for that resource and overrides `cacheHints["resources/read"]` field by field:
+
+```typescript title="src/resources/(config)/app.ts"
+import type { ResourceMetadata } from "xmcp";
+
+export const metadata: ResourceMetadata = {
+  name: "app-config",
+  description: "Application configuration",
+  cacheHint: { ttlMs: 60_000 },
+};
+
+export default function handler() {
+  return "App configuration here";
+}
+```
+
+The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+configures listing cache hints and a per-resource hint.

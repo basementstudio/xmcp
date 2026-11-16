@@ -45,8 +45,12 @@ type InferCompatibleZodType<T extends CompatibleZodType> =
       ? inferV4<T>
       : never;
 
-export type ToolSchema = Record<string, CompatibleZodType>;
-export type ToolOutputSchema = Record<string, CompatibleZodType>;
+/** A `{ field: zodSchema }` map, or a complete schema such as `z.object(...)`. */
+export type ToolSchema = Record<string, CompatibleZodType> | CompatibleZodType;
+/** A `{ field: zodSchema }` map, or a complete schema such as `z.array(...)`. */
+export type ToolOutputSchema =
+  | Record<string, CompatibleZodType>
+  | CompatibleZodType;
 export type ElicitResult = McpElicitResult;
 // Task-augmented sampling is not wired through xmcp yet; the base params also
 // exclude the tools/toolChoice loop, which needs client tool-call handling.
@@ -213,10 +217,12 @@ export interface ToolExtraArguments {
   requestState: <T = unknown>() => T | undefined;
 }
 
-export type InferSchema<T extends Record<string, unknown>> = {
-  [K in keyof T]: T[K] extends z.ZodTypeAny
-    ? z.infer<T[K]>
-    : T[K] extends ZodTypeV4<unknown>
-      ? inferV4<T[K]>
-      : never;
-};
+export type InferSchema<T extends object> = T extends CompatibleZodType
+  ? InferCompatibleZodType<T>
+  : {
+      [K in keyof T]: T[K] extends z.ZodTypeAny
+        ? z.infer<T[K]>
+        : T[K] extends ZodTypeV4<unknown>
+          ? inferV4<T[K]>
+          : never;
+    };

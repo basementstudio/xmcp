@@ -25,8 +25,18 @@ curl http://localhost:3001/mcp \
 
 Inspect `execution.log` for JSON `execution.start` / `execution.end` events sharing a `transaction.id`. The end event includes the outcome and nanosecond duration. The name argument and greeting result are not logged. The supplied trace and parent IDs are included for correlation.
 
+Clients can also send trace context in the request's MCP `_meta`, which works on every transport and takes precedence over the header:
+
+```sh
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"greet","arguments":{"name":"Ada"},"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}'
+```
+
 Call `fail` to see a safe failure summary. An MCP client can also retrieve the `greeting` prompt and read `example://info` to observe those operations.
 
-To use STDIO, configure your MCP client to run `node dist/stdio.js` with this example as its working directory. Logs go to stderr; stdout carries only MCP messages. You can also run `pnpm start:stdio` for local inspection.
+To use STDIO, configure your MCP client to run `node dist/stdio.js` with this example as its working directory. Logs go to stderr; stdout carries only MCP messages. Over STDIO, trace IDs come from `_meta.traceparent`. You can also run `pnpm start:stdio` for local inspection.
 
 Set `observability.enabled` to `false` and rebuild to disable execution logs. No original exception messages, arguments, results, or resource URI parameters are emitted. Logging does not enable the deprecated MCP logging capability or create OpenTelemetry spans.

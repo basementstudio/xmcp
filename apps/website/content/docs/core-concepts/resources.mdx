@@ -211,6 +211,22 @@ Rebuild and restart the server after changing metadata in production.
 The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
 demonstrates icons, tags, and a disabled experimental tool.
 
+### Cache hint
+
+Set `cacheHint` to let clients on protocol revision 2026-07-28 reuse a
+resource's contents. It applies to `resources/read`:
+
+```typescript
+export const metadata: ResourceMetadata = {
+  name: "app-config",
+  cacheHint: { ttlMs: 60_000, cacheScope: "private" },
+};
+```
+
+Without it, reads use the server-wide
+[cache hints](/docs/configuration/caching) or the defaults (`ttlMs: 0`,
+`cacheScope: "private"`).
+
 ### Implementation (required)
 
 The default export function that performs the actual work.

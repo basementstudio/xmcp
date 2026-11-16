@@ -38,11 +38,12 @@ The exported `RequestContext` type contains:
 | `clientInfo`   | Optional client name, version, and any supplied title, website URL, or description. For tools, uses the same identity as `extra.clientInfo`.     |
 | `http.id`      | xmcp's generated HTTP request ID. This is separate from the JSON-RPC message ID.                                                                 |
 | `http.headers` | A read-only copy of the current HTTP headers. Values can be strings, arrays of strings, or `undefined`. Standard HTTP header keys are lowercase. |
+| `_meta`        | A read-only copy of the current request's `params._meta`, such as W3C `traceparent`, `tracestate`, and `baggage`. Available on every transport.  |
 | `signal`       | The original SDK `AbortSignal`, also supplied as `extra.signal` for tools.                                                                       |
 
-`http` is absent on STDIO. Check that it exists before using HTTP-specific data. Client information can be absent on either transport when the client does not supply it.
+`http` is absent on STDIO. Check that it exists before using HTTP-specific data. `_meta` is absent when the request has no `params._meta`; it never includes values from earlier requests. Client information can be absent on either transport when the client does not supply it.
 
-The context object, client information, HTTP details, and header arrays are frozen. The methods below manage separate request-local values; they do not modify this metadata or change handler arguments. The cancellation signal remains live: pass it to operations such as `fetch(url, { signal })` or check `signal.throwIfAborted()` during work. Cancellation delivery follows the underlying transport's behavior.
+The context object, client information, HTTP details, `_meta`, and header arrays are frozen. The methods below manage separate request-local values; they do not modify this metadata or change handler arguments. The cancellation signal remains live: pass it to operations such as `fetch(url, { signal })` or check `signal.throwIfAborted()` during work. Cancellation delivery follows the underlying transport's behavior.
 
 ## Authentication
 

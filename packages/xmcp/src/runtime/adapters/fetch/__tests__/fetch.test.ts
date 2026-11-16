@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
+import { z } from "zod";
 
 import { getHttpRequestContext } from "@/runtime/contexts/http-request-context";
 import { getRequestContext } from "@/runtime/contexts/request-context";
@@ -11,6 +12,7 @@ Object.assign(globals, {
   HTTP_CONFIG: {},
   SERVER_INFO: { name: "fetch-test", version: "1.0.0" },
   IS_CLOUDFLARE: false,
+  CACHE_HINTS_CONFIG: { "tools/list": { ttlMs: 60_000, cacheScope: "public" } },
   INJECTED_CLIENT_BUNDLES: undefined,
   INJECTED_MIDDLEWARE: async () => ({
     mcp: (async (ctx, next) => {
@@ -41,6 +43,12 @@ Object.assign(globals, {
         });
       },
     }),
+    "src/tools/tags.ts": async () => ({
+      metadata: { name: "tags", description: "List tags" },
+      schema: {},
+      outputSchema: z.array(z.string()),
+      default: () => ["a", "b"],
+    }),
   },
   INJECTED_PROMPTS: {
     "src/prompts/hello.ts": async () => ({
@@ -51,7 +59,11 @@ Object.assign(globals, {
   },
   INJECTED_RESOURCES: {
     "src/resources/(config)/info.ts": async () => ({
-      metadata: { name: "info", mimeType: "text/plain" },
+      metadata: {
+        name: "info",
+        mimeType: "text/plain",
+        cacheHint: { ttlMs: 5_000 },
+      },
       default: () => "Resource content",
     }),
   },
@@ -194,6 +206,66 @@ describe("Fetch adapter", () => {
     );
     assert.ok(called.result, JSON.stringify(called));
     assert.equal(JSON.parse(called.result.content[0].text).client, "modern");
+    const tags = await body(
+      await xmcpHandler(
+        request(
+          "tools/call",
+          { name: "tags", arguments: {}, _meta: meta },
+          {
+            "mcp-protocol-version": "2026-07-28",
+            "mcp-method": "tools/call",
+            "mcp-name": "tags",
+          }
+        )
+      )
+    );
+    assert.deepEqual(tags.result.structuredContent, ["a", "b"]);
+    const listed = await body(
+      await xmcpHandler(
+        request(
+          "tools/list",
+          { _meta: meta },
+          {
+            "mcp-protocol-version": "2026-07-28",
+            "mcp-method": "tools/list",
+          }
+        )
+      )
+    );
+    const tagsTool = listed.result.tools.find(
+      (tool: { name: string }) => tool.name === "tags"
+    );
+    assert.equal(tagsTool.outputSchema.type, "array");
+
+    const modern = (
+      method: string,
+      params: object = {},
+      headers: Record<string, string> = {}
+    ) =>
+      xmcpHandler(
+        request(
+          method,
+          { ...params, _meta: meta },
+          {
+            "mcp-protocol-version": "2026-07-28",
+            "mcp-method": method,
+            ...headers,
+          }
+        )
+      ).then(body);
+    const tools = await modern("tools/list");
+    assert.equal(tools.result.ttlMs, 60_000);
+    assert.equal(tools.result.cacheScope, "public");
+    const prompts = await modern("prompts/list");
+    assert.equal(prompts.result.ttlMs, 0);
+    assert.equal(prompts.result.cacheScope, "private");
+    const resources = await modern("resources/list");
+    assert.equal("cacheHint" in resources.result.resources[0], false);
+    const { uri } = resources.result.resources[0];
+    const read = await modern("resources/read", { uri }, { "mcp-name": uri });
+    assert.ok(read.result, JSON.stringify(read));
+    assert.equal(read.result.ttlMs, 5_000);
+    assert.equal(read.result.cacheScope, "private");
   });
 
   it("registers tools, prompts, and resources through the shared loaders", async () => {

@@ -4,6 +4,7 @@ import { getResolvedHttpConfig } from "@/runtime-config";
 import { compilerContext } from "../compiler-context";
 import {
   injectAdapterVariables,
+  injectCacheHintsVariables,
   injectCorsVariables,
   InjectedVariables,
   injectHttpVariables,
@@ -47,5 +48,6 @@ export function getInjectedVariables(
     ...typescriptVariables,
     ...injectObservabilityVariables(xmcpConfig),
     ...injectComponentsVariables(xmcpConfig),
+    ...injectCacheHintsVariables(xmcpConfig),
   };
 }

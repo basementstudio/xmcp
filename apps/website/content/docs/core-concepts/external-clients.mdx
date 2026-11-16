@@ -100,7 +100,20 @@ Call `controller.abort()` from your application's cancel action. Modern HTTP and
 
 With SDK 2.0.0 servers, cancellation of numeric request ID `0` is ignored. This can affect the first operation on a modern STDIO connection. Call `listTools()` before starting cancellable work on those servers; this is an underlying SDK limitation.
 
-The existing `createHTTPClient`, `createSTDIOClient`, and generated clients keep their current behavior. For a runnable managed-client script, see [the external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients).
+`createHTTPClient` and `createSTDIOClient` follow the same rule: they advertise sampling, elicitation, or roots only when you pass a matching handler in their `handlers` option. Generated clients pass no handlers, so they advertise none of these capabilities.
+
+```typescript
+import { createHTTPClient } from "xmcp";
+
+const client = await createHTTPClient({
+  url: "http://localhost:3001/mcp",
+  handlers: {
+    roots: () => ({ roots: [{ uri: "file:///workspace" }] }),
+  },
+});
+```
+
+For a runnable managed-client script, see [the external-clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients).
 
 ## Inspecting servers from the CLI
 

@@ -167,6 +167,113 @@ test("transformToolHandler validates structured output", async () => {
   );
 });
 
+test("transformToolHandler accepts any JSON value as structuredContent", async () => {
+  for (const value of [[1, 2], "ok", 3, false, null, { nested: [] }]) {
+    const transformedHandler = transformToolHandler(() => ({
+      structuredContent: value,
+    }));
+
+    assert.deepStrictEqual(
+      await invokeHandler(transformedHandler, "rpc-json-value"),
+      {
+        structuredContent: value,
+        content: [{ type: "text", text: JSON.stringify(value) }],
+      }
+    );
+  }
+});
+
+test("transformToolHandler treats undefined structuredContent as absent", async () => {
+  const transformedHandler = transformToolHandler(() => ({
+    structuredContent: undefined,
+  }));
+
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-undefined-structured"),
+    /must return at least 'content' or 'structuredContent'/
+  );
+});
+
+test("transformToolHandler keeps field-map outputSchema object-only", async () => {
+  const transformedHandler = transformToolHandler(
+    () => ({ structuredContent: [1] }),
+    undefined,
+    { count: z.number() },
+    "count"
+  );
+
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-array-field-map"),
+    /Tool "count" returned structuredContent that does not match outputSchema: expected a plain object/
+  );
+});
+
+test("transformToolHandler wraps bare data for a complete outputSchema", async () => {
+  const tags = transformToolHandler(
+    () => ["a", "b"],
+    undefined,
+    z.array(z.string()),
+    "tags"
+  );
+  assert.deepStrictEqual(await invokeHandler(tags, "rpc-array-shorthand"), {
+    structuredContent: ["a", "b"],
+    content: [{ type: "text", text: '["a","b"]' }],
+  });
+
+  const flag = transformToolHandler(() => false, undefined, z.boolean());
+  assert.deepStrictEqual(await invokeHandler(flag, "rpc-boolean-shorthand"), {
+    structuredContent: false,
+    content: [{ type: "text", text: "false" }],
+  });
+
+  const label = transformToolHandler(() => "ready", undefined, z.string());
+  assert.deepStrictEqual(await invokeHandler(label, "rpc-string-shorthand"), {
+    content: [{ type: "text", text: "ready" }],
+    structuredContent: "ready",
+  });
+});
+
+test("transformToolHandler rejects bare strings a complete outputSchema does not accept", async () => {
+  const transformedHandler = transformToolHandler(
+    () => "No results",
+    undefined,
+    z.array(z.string()),
+    "search"
+  );
+  await assert.rejects(
+    invokeHandler(transformedHandler, "rpc-string-mismatch"),
+    /Tool "search" returned data that does not match outputSchema/
+  );
+});
+
+test("transformToolHandler validates bare data and structuredContent against a complete outputSchema", async () => {
+  const outputSchema = z.array(z.object({ id: z.number() }));
+  await assert.rejects(
+    invokeHandler(
+      transformToolHandler(
+        () => [{ id: "1" }],
+        undefined,
+        outputSchema,
+        "list"
+      ),
+      "rpc-invalid-bare"
+    ),
+    /Tool "list" returned data that does not match outputSchema: 0\.id: /
+  );
+  await assert.rejects(
+    invokeHandler(
+      transformToolHandler(
+        () => ({ structuredContent: { id: 1 } }),
+        undefined,
+        outputSchema,
+        "list"
+      ),
+      "rpc-invalid-structured"
+    ),
+    /Tool "list" returned structuredContent that does not match outputSchema/
+  );
+});
+
 test("transformToolHandler forwards clientInfo through tool extra arguments", async () => {
   const transformedHandler = transformToolHandler((args, extra) => {
     return {

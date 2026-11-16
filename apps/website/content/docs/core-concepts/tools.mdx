@@ -109,6 +109,37 @@ export default async function handler(args: InferSchema<typeof schema>) {
 }
 ```
 
+### Complete schemas
+
+Instead of a map of fields, `schema` can be a complete Zod object schema. Use
+this when the input needs cross-field refinements or a union of object shapes:
+
+```typescript title="src/tools/find-products.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = z
+  .object({
+    minPrice: z.number().describe("Lowest price to include"),
+    maxPrice: z.number().describe("Highest price to include"),
+  })
+  .refine(({ minPrice, maxPrice }) => minPrice <= maxPrice, {
+    message: "minPrice must not exceed maxPrice",
+  });
+
+export default async function findProducts({
+  minPrice,
+  maxPrice,
+}: InferSchema<typeof schema>) {
+  return `Products between ${minPrice} and ${maxPrice}`;
+}
+```
+
+MCP requires tool inputs to be objects, so xmcp rejects a complete input schema
+whose JSON Schema type is not `object` (for example `z.array(...)`) when the
+tool is registered. A complete schema is used as written: xmcp does not make it
+strict, and unknown keys follow your schema's own behavior.
+
 <Callout variant="info">
   Clear descriptions are crucial for LLM tool discovery. For comprehensive Zod
   validation options (regex patterns, constraints, transformations), see the
@@ -739,11 +770,47 @@ export default async function getUserData() {
 }
 ```
 
+`structuredContent` can be any JSON value: an object, an array, a string, a number, a boolean, or `null`.
+Clients on protocol revision 2026-07-28 receive the value as-is. Clients on earlier revisions receive non-object values wrapped as `{ "result": <value> }`, which the MCP SDK handles automatically.
+
+```typescript title="src/tools/list-tags.ts"
+export default async function listTags() {
+  return { structuredContent: ["billing", "support", "sales"] };
+}
+```
+
 `structuredContent` works without declaring `outputSchema`.
 If `outputSchema` is declared and `structuredContent` is returned, `structuredContent` must conform to it.
 If your handler returns a primitive (`string` or `number`) and `outputSchema` has exactly one field that accepts it, xmcp auto-injects it into `structuredContent` using that field.
 Undeclared keys are rejected when validating `structuredContent` against `outputSchema`.
 You can also return a plain object directly (for example `return content`) and xmcp will treat it as `structuredContent` when `outputSchema` is declared.
+
+`outputSchema` can also be a complete Zod schema, which lets a tool describe
+array, primitive, or union output. With a complete `outputSchema`, returning the
+data directly is shorthand for `{ structuredContent: data }`:
+
+```typescript title="src/tools/list-forecast.ts"
+import { z } from "zod";
+
+export const outputSchema = z.array(
+  z.object({ day: z.string(), high: z.number(), low: z.number() })
+);
+
+export default async function listForecast() {
+  return [
+    { day: "Mon", high: 24, low: 15 },
+    { day: "Tue", high: 21, low: 13 },
+  ];
+}
+```
+
+A bare value returned by a tool with a complete `outputSchema` must match it;
+a value that does not match makes the call fail with an error naming the tool.
+A matching bare string or number is also returned as plain text content. As
+with `structuredContent`, clients on earlier protocol revisions see a non-object
+`outputSchema` and its values wrapped under `result`. The
+[HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
+includes both tools above.
 When `structuredContent` is returned without `content`, xmcp auto-generates a text fallback (`JSON.stringify(structuredContent)`) for compatibility with clients that only render `content`.
 
 ### Combined Response
