@@ -100,7 +100,7 @@ export async function GET() {
   scanned.push(
     [
       "- [MCP guides](/guides): tutorials, comparisons, and troubleshooting",
-      "- [Integrations](/docs/integrations): service connections, authentication, and payments",
+      "- [Integrations](/integrations): service connections, authentication, and payments",
       "- [Changelog](/changelog): stable xmcp releases and release notes",
       "- [Showcase](/showcase): community MCP servers built with xmcp",
       "- [Telemetry](/telemetry): what anonymous telemetry xmcp collects and how to opt out",

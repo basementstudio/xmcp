@@ -112,7 +112,7 @@ export const MobileMenu = () => {
                 Guides
               </AnimatedLink>
               <AnimatedLink
-                href="/docs/integrations"
+                href="/integrations"
                 className="text-white text-lg"
                 onClick={handleLinkClick}
               >

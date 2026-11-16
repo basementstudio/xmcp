@@ -70,7 +70,7 @@ export default function GuidesPage() {
               template
             </Link>
             , or explore{" "}
-            <Link className="underline" href="/docs/integrations">
+            <Link className="underline" href="/integrations">
               integrations
             </Link>
             .

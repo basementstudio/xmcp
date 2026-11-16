@@ -22,7 +22,7 @@ Check the [MCP review requirements](https://developers.openai.com/plugins/deploy
 
 ## Prepare your xmcp server
 
-Deploy the server to a reachable HTTPS address and test it outside your development network. The [deployment docs](/docs/deployment/vercel) cover one supported path; the [integration catalog](/docs/integrations) covers authentication providers.
+Deploy the server to a reachable HTTPS address and test it outside your development network. The [deployment docs](/docs/deployment/vercel) cover one supported path; the [integration catalog](/integrations) covers authentication providers.
 
 For domain verification, serve the portal's exact challenge token at `/.well-known/openai-apps-challenge`. xmcp standalone HTTP supports this through `OPENAI_APPS_VERIFICATION_TOKEN`. In adapter mode, implement the route in the host application and check the deployed response.
 

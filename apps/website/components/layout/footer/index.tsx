@@ -13,7 +13,7 @@ const linkGroups = [
     id: "footer-build",
     links: [
       { label: "Documentation", href: "/docs" },
-      { label: "Integrations", href: "/docs/integrations" },
+      { label: "Integrations", href: "/integrations" },
       { label: "Installation", href: "/docs/getting-started/installation" },
       { label: "MCP tools", href: "/docs/core-concepts/tools" },
       { label: "Authentication", href: "/docs/guides/authentication" },

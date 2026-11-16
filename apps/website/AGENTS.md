@@ -28,8 +28,9 @@ Use this file for `apps/website/**`.
 - Use `metadataTitle` for an optional complete docs search title; visible titles
   remain independent. Set `lastModified: "YYYY-MM-DD"` only after a substantive
   content update. Do not refresh dates for builds or cosmetic changes.
-- Integration docs automatically appear in `/docs/integrations`, its Markdown
-  mirror, and the sitemap. The hub uses the same content source as the docs.
+- Integration docs automatically appear on the standalone `/integrations` hub,
+  its Markdown mirror (`/integrations.md`), and the sitemap. The hub reads the
+  same content source as the docs; `content/docs/integrations` has no index page.
 
 ## Checks
 

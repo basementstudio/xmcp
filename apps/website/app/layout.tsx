@@ -142,7 +142,7 @@ export default function RootLayout({
                 ["Configuration", "/docs/configuration/custom-directories"],
                 ["Core Concepts", "/docs/core-concepts/tools"],
                 ["Authentication", "/docs/authentication/api-key"],
-                ["Integrations", "/docs/integrations"],
+                ["Integrations", "/integrations"],
                 ["MCP guides", "/guides"],
                 ["Deployment", "/docs/deployment/vercel"],
               ],

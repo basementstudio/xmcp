@@ -24,7 +24,8 @@ assert.equal(new Set(urls).size, urls.length, "duplicate sitemap URLs");
 assert(urls.every((url) => url.startsWith(`${canonicalOrigin}/`)));
 const paths = new Set(urls.map(normalize));
 assert(paths.has("/guides"));
-assert(paths.has("/docs/integrations"));
+assert(paths.has("/integrations"));
+assert(!paths.has("/docs/integrations"));
 assert(!paths.has("/terminal"));
 for (const entry of xml.matchAll(/<url>(.*?)<\/url>/gs)) {
   const path = normalize(entry[1].match(/<loc>(.*?)<\/loc>/)[1]);
@@ -33,6 +34,7 @@ for (const entry of xml.matchAll(/<url>(.*?)<\/url>/gs)) {
       "/",
       "/docs",
       "/guides",
+      "/integrations",
       "/blog",
       "/templates",
       "/faq",
@@ -153,7 +155,7 @@ for (const path of guides) {
 for (const path of paths) {
   if (path.startsWith("/docs/integrations/"))
     assert(
-      graph.get("/docs/integrations").has(path),
+      graph.get("/integrations").has(path),
       `missing integration link: ${path}`
     );
 }
@@ -176,7 +178,7 @@ for (const path of new Set(
 assert.deepEqual(broken, [], "broken internal links or breadcrumbs");
 for (const [path, target] of [
   ["/guides.md", "/guides"],
-  ["/docs/integrations.md", "/docs/integrations"],
+  ["/integrations.md", "/integrations"],
   ...[...paths]
     .filter((path) => path.startsWith("/docs/integrations/"))
     .map((path) => [`${path}.md`, path]),
@@ -189,7 +191,7 @@ for (const [path, target] of [
   );
   const markdown = await response.text();
   assert(markdown.startsWith("#"));
-  if (path === "/docs/integrations.md") {
+  if (path === "/integrations.md") {
     for (const integration of paths)
       if (integration.startsWith("/docs/integrations/"))
         assert(markdown.includes(integration), integration);
@@ -204,13 +206,17 @@ assert.equal(
 );
 assert(/noindex/.test(await (await get("/terminal")).text()));
 
-// The directory index is exposed at its canonical route, not an /index alias.
+// The integrations hub left the docs; old links redirect to it.
 assert.equal((await get("/docs/integrations/index")).status, 404);
+const hub = await get("/docs/integrations");
+assert.equal(new URL(hub.url).pathname, "/integrations");
 assert(
-  (await (await get("/docs/integrations")).text()).includes(
+  (await hub.text()).includes(
     "<title>MCP Server Integrations for TypeScript | xmcp</title>"
   )
 );
+const hubMarkdown = await get("/docs/integrations.md");
+assert.equal(new URL(hubMarkdown.url).pathname, "/integrations.md");
 const oldComparison = await get("/blog/xmcp-vs-fastmcp-vs-mcp-sdk");
 assert.equal(new URL(oldComparison.url).pathname, "/blog/xmcp-v1");
 
@@ -225,6 +231,7 @@ const fullText = await (await get("/llms-full.txt")).text();
 for (const path of paths) {
   if (
     path === "/guides" ||
+    path === "/integrations" ||
     path.startsWith("/docs") ||
     path.startsWith("/blog/")
   )
