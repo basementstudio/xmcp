@@ -35,6 +35,11 @@ curl http://localhost:3001/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"greet","arguments":{"name":"Ada"},"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}'
 ```
 
+Call `trace-context` with either request to get the `traceparent` header a tool
+should forward to the services it calls. `src/tools/trace-context.ts` reads it
+from `getRequestContext()`, so trace context reaches your own code as well as
+the logs.
+
 Call `fail` to see a safe failure summary. An MCP client can also retrieve the `greeting` prompt and read `example://info` to observe those operations.
 
 To use STDIO, configure your MCP client to run `node dist/stdio.js` with this example as its working directory. Logs go to stderr; stdout carries only MCP messages. Over STDIO, trace IDs come from `_meta.traceparent`. You can also run `pnpm start:stdio` for local inspection.

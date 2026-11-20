@@ -1,0 +1,24 @@
+{
+  "name": "structured-output",
+  "private": true,
+  "type": "module",
+  "description": "Return typed, validated data from tools with outputSchema and structuredContent",
+  "keywords": [
+    "structured-output",
+    "output-schema",
+    "http"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js",
+    "client": "node client.mjs"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}
