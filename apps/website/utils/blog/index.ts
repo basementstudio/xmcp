@@ -1,5 +1,6 @@
 import fs from "fs";
 import { parseFrontmatter } from "@/utils/frontmatter";
+import { isGuideTopic, type GuideTopic } from "@/lib/guide-topics";
 
 export type BlogCategory = "changelog" | "guides" | "engineering";
 
@@ -79,6 +80,7 @@ export interface BlogFrontmatter {
   readonly summary?: string;
   readonly date?: string;
   readonly category?: BlogCategory;
+  readonly topic?: string;
   readonly order?: number;
   readonly featured?: boolean;
   readonly unlisted?: boolean;
@@ -96,6 +98,7 @@ export interface BlogPost {
   readonly path: string;
   readonly order: number;
   readonly category: BlogCategory;
+  readonly topic?: GuideTopic;
   readonly date?: string;
   readonly description?: string;
   readonly summary?: string;
@@ -152,6 +155,7 @@ export function getAllBlogPosts(): BlogPost[] {
         path: itemPath,
         order: data.order || order,
         category,
+        topic: isGuideTopic(data.topic) ? data.topic : undefined,
         date: data.date,
         description: data.description,
         summary: data.summary,

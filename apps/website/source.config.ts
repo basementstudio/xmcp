@@ -9,6 +9,7 @@ import {
   rehypeCodeDefaultOptions,
 } from "fumadocs-core/mdx-plugins";
 import { xmcpAyuDarkTheme, xmcpLightTheme } from "@/lib/shiki-theme";
+import { GUIDE_TOPICS } from "@/lib/guide-topics";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -32,6 +33,7 @@ export const blog = defineDocs({
     },
     schema: frontmatterSchema.extend({
       category: z.string().optional(),
+      topic: z.enum(GUIDE_TOPICS).optional(),
       order: z.number().optional(),
       featured: z.boolean().optional(),
       unlisted: z.boolean().optional(),

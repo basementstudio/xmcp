@@ -25,6 +25,8 @@ Use this file for `apps/website/**`.
   strip, and featured slot. Published posts remain in the sitemap; that permits
   discovery but does not guarantee indexing. Guides (including unlisted posts)
   appear in `/guides` and may be linked from relevant pages.
+- Give every guide a `topic` so it shows up under a `/guides` filter. Allowed
+  values live in `lib/guide-topics.ts`; the blog schema rejects anything else.
 - Use `metadataTitle` for an optional complete docs search title; visible titles
   remain independent. Set `lastModified: "YYYY-MM-DD"` only after a substantive
   content update. Do not refresh dates for builds or cosmetic changes.
@@ -39,3 +41,13 @@ Use this file for `apps/website/**`.
   or rendered docs can be affected.
 - If a docs change describes package behavior, run the relevant package or
   example check too.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
