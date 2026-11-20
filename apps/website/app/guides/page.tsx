@@ -80,7 +80,7 @@ export default function GuidesPage() {
           {posts.map((post) => (
             <ContentCard key={post.slug} href={`/blog/${post.slug}`}>
               <h2 className="site-card-title">{post.title}</h2>
-              <p className="text-sm text-brand-neutral-100">
+              <p className="site-card-description">
                 {post.description ?? post.summary}
               </p>
             </ContentCard>
