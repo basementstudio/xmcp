@@ -1,0 +1,126 @@
+---
+title: "Upgrading"
+metadataTitle: "Upgrade xmcp from 0.x to 1.x | xmcp Documentation"
+publishedAt: "2026-11-20"
+summary: "Upgrade an xmcp project from 0.x to the current 1.x release with one command, and handle the breaking changes it reports."
+description: "Upgrade xmcp 0.x projects to 1.x with npx xmcp@latest upgrade and a list of breaking changes"
+---
+
+## Upgrade with one command
+
+From your project folder, run:
+
+```bash
+npx xmcp@latest upgrade
+```
+
+Use `@latest`. Without it, `npx` runs the old `xmcp` already installed in your
+project, and 0.x versions have no `upgrade` command.
+
+The command:
+
+- sets `xmcp` to the current release
+- adds the `@xmcp-dev/compiler` development dependency that runs `xmcp dev` and `xmcp build`
+- moves `zod` to `^4.0.0` when it is older
+- removes `swc-loader`, which xmcp no longer uses
+- raises `engines.node` to `>=22.12` when your `package.json` sets a lower minimum
+- installs dependencies with the package manager that matches your lockfile, from the workspace root in a monorepo
+
+It then lists code changes it found but did not make. Your `package.json`
+scripts stay the same.
+
+| Option         | Behavior                                                       |
+| -------------- | -------------------------------------------------------------- |
+| `--dry-run`    | Prints the planned `package.json` changes without writing them |
+| `--no-install` | Updates `package.json` and skips installing dependencies       |
+
+The command never asks for input, so it also works in CI and in coding agents.
+
+<Callout variant="info" title="Why old projects stay on 0.x">
+  A dependency like `"xmcp": "^0.2.0"` never installs 1.x by itself. For 0.x
+  versions, a caret range only allows patch releases, so reinstalling an old
+  project keeps installing the same 0.x version.
+</Callout>
+
+## Breaking changes
+
+Projects created with `create-xmcp-app` 0.6.x usually need no manual changes.
+Projects from 0.2.x need the `src/resources` change below. The other items apply
+only if your project uses that feature.
+
+- **`xmcp dev` and `xmcp build` need `@xmcp-dev/compiler`** (since 0.8.0). Handled by the command.
+- **Node.js 22.12 or newer is required** (since 1.10.2). Update Node.js locally, in CI, and in your deploy target.
+- **`InferSchema` types need zod 4** (1.x). Handled by the command. See the [zod 4 changelog](https://zod.dev/v4/changelog) if your schemas use APIs that changed.
+- **The default `src/tools`, `src/prompts`, and `src/resources` folders must exist** (after 0.2.1). Create the missing folder, or disable it with `paths` in `xmcp.config.ts` (see below).
+- **The `webpack` option is now `bundler` and receives Rspack options** (since 0.5.0). Rename the option. See [Bundler](/docs/configuration/bundler).
+- **`experimental.oauth` was removed** (since 0.6.0). Use an [authentication plugin](/docs/authentication/oauth).
+- **`@modelcontextprotocol/sdk` is no longer installed with xmcp** (since 1.0.0). Import from `@modelcontextprotocol/server`, or add the SDK as your own dependency.
+- **`extra.elicit()` throws for clients on the 2026-07-28 protocol** (since 1.0.0). Return [`inputRequired()`](/docs/core-concepts/tools#multi-round-trip-input-inputrequired) instead.
+- **`src/skills` is loaded as agent skills** (since 1.10.0). If that folder holds something else, set `paths.skills` to `false`. See [Skills](/docs/core-concepts/skills).
+- **Deep imports such as `xmcp/src/...` are no longer published** (since 0.7.1). Import from `xmcp`.
+- **`jose` is an optional peer of the Cloudflare JWT middleware** (1.x). Install `jose` if you import the JWT middleware from `xmcp/cloudflare`.
+- **Client helpers only advertise sampling, elicitation, and roots when you pass `handlers`** (since 1.12.0). Pass `handlers` to `createHTTPClient` or `createSTDIOClient` if you relied on them.
+
+Projects scaffolded with 0.2.x have no `src/resources` folder. Disable it in
+your configuration:
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+  paths: { resources: false },
+};
+
+export default config;
+```
+
+These stay the same between 0.x and 1.x: the tool, prompt, and resource file
+conventions (`schema`, `metadata`, default export), `InferSchema`,
+`ToolMetadata`, `PromptMetadata`, the `http`, `stdio`, and `paths` options, and
+the `xmcp dev` and `xmcp build` scripts.
+
+## Upgrade manually
+
+Install the runtime, the compiler, and zod with your package manager:
+
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content:
+        "pnpm add xmcp@latest zod@^4 && pnpm add -D @xmcp-dev/compiler@latest",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm i xmcp@latest zod@^4 && npm i -D @xmcp-dev/compiler@latest",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content:
+        "yarn add xmcp@latest zod@^4 && yarn add -D @xmcp-dev/compiler@latest",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content:
+        "bun add xmcp@latest zod@^4 && bun add -D @xmcp-dev/compiler@latest",
+    },
+  ]}
+  defaultTab="pnpm"
+/>
+
+Then remove `swc-loader` if it is in your `package.json`, and work through the
+breaking changes above.
+
+## Check the result
+
+```bash
+npx xmcp build
+```
+
+If the build passes, start the server as before and test a tool from your MCP
+client.

@@ -50,22 +50,22 @@ To manually create an xmcp project, install the required dependencies:
     {
       label: "pnpm",
       value: "pnpm",
-      content: "pnpm add xmcp zod@^3.25.76 && pnpm add -D @xmcp-dev/compiler",
+      content: "pnpm add xmcp zod@^4 && pnpm add -D @xmcp-dev/compiler",
     },
     {
       label: "npm",
       value: "npm",
-      content: "npm i xmcp zod@^3.25.76 && npm i -D @xmcp-dev/compiler",
+      content: "npm i xmcp zod@^4 && npm i -D @xmcp-dev/compiler",
     },
     {
       label: "yarn",
       value: "yarn",
-      content: "yarn add xmcp zod@^3.25.76 && yarn add -D @xmcp-dev/compiler",
+      content: "yarn add xmcp zod@^4 && yarn add -D @xmcp-dev/compiler",
     },
     {
       label: "bun",
       value: "bun",
-      content: "bun add xmcp zod@^3.25.76 && bun add -D @xmcp-dev/compiler",
+      content: "bun add xmcp zod@^4 && bun add -D @xmcp-dev/compiler",
     },
   ]}
   defaultTab="pnpm"
@@ -110,7 +110,8 @@ If you encounter issues when running the built server, make sure the transport i
 
 If `xmcp dev` or `xmcp build` reports that the compiler is missing, install the
 matching compiler version with `npm i -D @xmcp-dev/compiler` (or the equivalent
-command for your package manager).
+command for your package manager). If the project uses xmcp 0.x, run
+`npx xmcp@latest upgrade` instead. See [Upgrading](/docs/getting-started/upgrading).
 
 If you're working with HTTP, your configuration should look like this:
 
