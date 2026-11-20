@@ -1,0 +1,164 @@
+---
+title: "MCP server observability: execution logs and trace context"
+description: "How to see what your MCP server is doing in production: structured execution logs for every tool call, W3C trace context from request _meta, and what replaces the deprecated MCP logging capability."
+summary: "Turn on structured execution logs in xmcp, correlate them with W3C trace context, and forward the trace to downstream services."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+To observe an MCP server, log one structured event when each tool call, prompt, or resource read starts and another when it ends, and attach the caller's trace ID to both. In xmcp that is one config line: `observability: { enabled: true }`. Events go to stderr as JSON, never include arguments or results, and carry the W3C trace context the client sent.
+
+This guide follows the repository's [execution observability example](https://github.com/basementstudio/xmcp/tree/main/examples/execution-observability).
+
+## What changed for observability in MCP 2026-07-28?
+
+Two things in the [2026-07-28 revision](https://modelcontextprotocol.io/specification/2026-07-28/changelog) affect how servers are observed:
+
+- **MCP logging is deprecated.** The protocol's Logging feature, where servers send `notifications/message` to the client, is deprecated together with Roots and Sampling. The changelog's suggested migration is to log to stderr or use OpenTelemetry.
+- **Trace context has a documented home.** The revision documents conventions for carrying `traceparent`, `tracestate`, and `baggage` in a request's `_meta`, so a trace can cross an MCP call on any transport, not only HTTP.
+
+The practical result: logs belong to the server operator, and correlation travels with the request.
+
+## How do I turn on execution logs?
+
+Set `observability.enabled` in `xmcp.config.ts`:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: { port: 3001 },
+  stdio: { silent: true },
+  observability: { enabled: true },
+} satisfies XmcpConfig;
+```
+
+Every tool call, prompt retrieval, and resource read now emits an `execution.start` event and an `execution.end` event. There is no handler wrapper to add: the logger runs before your [MCP middleware](/docs/core-concepts/middlewares), so it also records middleware failures and short-circuited results.
+
+Events are JSON lines written with `console.error`. That is stderr on Node.js, which keeps STDIO's stdout free for MCP messages, and the platform's error console on Cloudflare Workers. Nothing is sent to an external service.
+
+## What does an execution event contain?
+
+Events use [Elastic Common Schema](https://www.elastic.co/docs/reference/ecs/ecs-event) field names, with xmcp details under `xmcp`:
+
+| Field                   | Meaning                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `event.action`          | `execution.start` or `execution.end`                                   |
+| `event.duration`        | Elapsed time in nanoseconds, on the end event                          |
+| `event.outcome`         | `success`, `failure`, or `unknown`, on the end event                   |
+| `transaction.id`        | Correlation ID shared by one execution's start and end events          |
+| `xmcp.method`           | `tools/call`, `prompts/get`, or `resources/read`                       |
+| `xmcp.component`        | The tool, prompt, or registered resource name                          |
+| `xmcp.status`           | `success`, `failure`, `cancelled`, `input_required`, or `unknown`      |
+| `error.message`         | A safe summary for error results and thrown exceptions                 |
+| `trace.id`, `parent.id` | The incoming W3C trace and parent IDs, when a valid `traceparent` came |
+
+A successful tool call ends with an event like this:
+
+```json
+{
+  "@timestamp": "2026-10-02T12:00:00.000Z",
+  "log": { "level": "info" },
+  "transaction": { "id": "dce66534-9c5f-4fef-8562-219564b0a4cb" },
+  "xmcp": { "method": "tools/call", "component": "greet", "status": "success" },
+  "event": {
+    "kind": "event",
+    "category": ["api"],
+    "type": ["end"],
+    "action": "execution.end",
+    "duration": 3200000,
+    "outcome": "success"
+  }
+}
+```
+
+## What is deliberately not logged?
+
+Arguments, results, raw resource URIs, error stacks, original exception messages, credentials, and raw request headers are all excluded. Resource names come from registration, so dynamic URI parameters never reach the log. An error summary tells you whether a handler threw or returned an error result without copying its contents.
+
+Tool inputs often contain user data. Logging the shape of an execution and not its payload keeps the logs safe to ship to a shared platform.
+
+## How does trace context reach the logs?
+
+xmcp reads `traceparent` from the request's MCP `params._meta`, which works on HTTP and STDIO. When `_meta` has no valid value, it falls back to the HTTP `traceparent` header.
+
+```bash
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"greet","arguments":{"name":"Ada"},"_meta":{"traceparent":"00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"}}}'
+```
+
+Both events for that call include `"trace": { "id": "0af7651916cd43dd8448eb211c80319c" }` and `"parent": { "id": "b7ad6b7169203331" }`. Search your log platform for the trace ID and the MCP call lines up with the rest of the request that caused it.
+
+These IDs are caller-supplied correlation data, not authentication. Only the trace and parent IDs are logged; `tracestate` and `baggage` are not.
+
+## How do I forward the trace to downstream services?
+
+`getRequestContext()` exposes a read-only copy of the current request's `_meta`. Read `traceparent` from it and send it on the calls your tool makes:
+
+```typescript title="src/tools/trace-context.ts"
+import { getRequestContext, type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "trace-context",
+  description:
+    "Return the W3C trace context headers to forward to downstream services",
+  annotations: { readOnlyHint: true },
+};
+
+function downstreamTraceHeaders() {
+  const { _meta, http } = getRequestContext();
+  const traceparent = _meta?.traceparent ?? http?.headers.traceparent;
+  return typeof traceparent === "string" ? { traceparent } : {};
+}
+
+export default function traceContext() {
+  return { structuredContent: { headers: downstreamTraceHeaders() } };
+}
+```
+
+Pass the returned headers to `fetch` and the downstream service joins the same trace. `getRequestContext()` works inside async helpers, so the function that makes the HTTP call can read the context itself.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter execution-observability build
+cd examples/execution-observability
+pnpm start 2>execution.log
+```
+
+Send the request above from another terminal, then open `execution.log`. Call the `fail` tool to see a failure event with a safe summary in place of the original error message.
+
+## Common questions
+
+### Does xmcp create OpenTelemetry spans?
+
+No. Execution logs carry the incoming trace and parent IDs so they correlate with your traces, but xmcp does not create spans or configure an exporter. Use your own OpenTelemetry setup for spans.
+
+### Do execution logs work over STDIO?
+
+Yes. Events go to stderr, so stdout carries only MCP messages. Over STDIO, trace IDs come from `_meta.traceparent`.
+
+### Are listings logged?
+
+No. Tool calls, prompt retrievals, and resource reads are logged. Listings and completion requests are excluded, and so are tool arguments rejected by validation before the handler runs.
+
+### How are multi round-trip tools logged?
+
+A tool that returns `input_required` produces a separate event pair for each round. Intermediate rounds have status `input_required`; the final round has the real outcome. See [Human-in-the-loop MCP tools](/blog/mcp-input-required-human-in-the-loop).
+
+### Should I still use MCP log notifications?
+
+For new servers, prefer stderr logs or OpenTelemetry. `getRequestContext().log()` still exists in xmcp, but the default server does not enable the MCP logging capability, and the protocol feature is deprecated as of 2026-07-28.
+
+## Next steps
+
+- [Execution logs reference](/docs/configuration/observability) for every field and the privacy rules.
+- [Request context](/docs/core-concepts/request-context) for `_meta`, the cancellation signal, and request-local values.

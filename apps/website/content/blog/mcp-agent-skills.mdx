@@ -1,0 +1,173 @@
+---
+title: "How to serve Agent Skills from an MCP server"
+description: "Agent Skills are folders of instructions an agent loads when a task calls for them. Learn how the MCP Skills extension publishes them from your server and how to ship one with xmcp."
+summary: "What MCP skills are, how they differ from tools and prompts, and how to serve one from an xmcp server by adding a directory."
+category: "guides"
+date: "2026-11-13"
+textureImage: "/textures/text7.png"
+---
+
+An MCP server can ship [Agent Skills](https://agentskills.io/) alongside its tools. A skill is a directory with a `SKILL.md` file and any supporting files, and the [MCP Skills extension](https://modelcontextprotocol.io/extensions/skills) (`io.modelcontextprotocol/skills`) is how a server publishes it. With xmcp, you add the directory under `src/skills` and the server does the rest.
+
+This guide follows the repository's [skills example](https://github.com/basementstudio/xmcp/tree/main/examples/skills-http).
+
+## What is an Agent Skill?
+
+An Agent Skill is a set of written instructions for a task, packaged as files. `SKILL.md` holds YAML frontmatter with a `name` and a `description`, followed by the instructions in Markdown. Supporting files, such as a template or a reference table, sit next to it.
+
+The description says what the skill does and when to use it. A client that supports skills lists them, shows them to the user, and loads one when a task calls for it.
+
+## How are skills different from tools and prompts?
+
+A tool runs code. A prompt is a message template. A skill is the instructions for using them well.
+
+|                   | Tool                            | Prompt                            | Skill                                         |
+| ----------------- | ------------------------------- | --------------------------------- | --------------------------------------------- |
+| What it is        | A function with an input schema | A reusable message template       | Markdown instructions plus supporting files   |
+| What it returns   | A result from running your code | Messages for the model            | File contents                                 |
+| How it is fetched | `tools/list`, `tools/call`      | `prompts/list`, `prompts/get`     | `skills/list`, `skills/get`, `resources/read` |
+| Typical use       | Fetch data or perform an action | Start a task from a known request | Teach a multi-step workflow using your tools  |
+
+Skills and tools work together. The example's skill tells the agent to call the server's `list-merged-changes` tool, then format the result with a template file.
+
+See [MCP Tools vs Resources vs Prompts](/blog/mcp-tools-vs-resources-vs-prompts) for the three core primitives.
+
+## How do I add a skill to an xmcp server?
+
+Create a directory under `src/skills` whose name is the skill's name, and put a `SKILL.md` in it:
+
+```
+src/skills/
+└── release-notes/
+    ├── SKILL.md
+    └── references/
+        └── TEMPLATE.md
+```
+
+```markdown title="src/skills/release-notes/SKILL.md"
+---
+name: release-notes
+description: Draft release notes from the changes merged since a release tag. Use when the user asks for a changelog, release notes, or a summary of what shipped.
+license: MIT
+metadata:
+  author: xmcp
+  version: "1.0"
+---
+
+# Release notes
+
+1. Call the `list-merged-changes` tool with the previous release tag.
+2. Group the changes by type: features first, then fixes. Leave out chores
+   unless the user asks for them.
+3. Write the notes using the layout in `references/TEMPLATE.md`.
+
+Keep each entry to one line and describe the change from the user's point of
+view.
+```
+
+There is nothing to export and no wrapper to write. xmcp reads `src/skills` by default, validates each skill at build time, and embeds the files in the bundle. That means skills are served without filesystem access, including on Cloudflare Workers.
+
+The frontmatter follows the [Agent Skills specification](https://agentskills.io/specification):
+
+- `name` is required and must equal the directory name: at most 64 lowercase letters, numbers, and single hyphens.
+- `description` is required and can be up to 1024 characters.
+- Other fields, such as `license` and `metadata`, are published unchanged.
+
+## What does the server publish?
+
+When at least one skill exists, the server does three things:
+
+1. Declares `capabilities.extensions["io.modelcontextprotocol/skills"]`.
+2. Answers `skills/list` with an entry for every skill, and `skills/get` with the entry for one `SKILL.md` URI.
+3. Registers every file as a resource at `skill://<skill-name>/<file-path>`.
+
+Each entry carries the skill's frontmatter and a list of its files with a SHA-256 digest and size, so a client can verify what it reads:
+
+```json
+{
+  "uri": "skill://release-notes/SKILL.md",
+  "frontmatter": {
+    "name": "release-notes",
+    "description": "Draft release notes from the changes merged since a release tag. Use when the user asks for a changelog, release notes, or a summary of what shipped.",
+    "license": "MIT",
+    "metadata": { "author": "xmcp", "version": "1.0" }
+  },
+  "resources": [
+    {
+      "uri": "skill://release-notes/SKILL.md",
+      "digest": "sha256:…",
+      "size": 592
+    },
+    {
+      "uri": "skill://release-notes/references/TEMPLATE.md",
+      "digest": "sha256:…",
+      "size": 83
+    }
+  ]
+}
+```
+
+A server without skills is unchanged. The capability, the two methods, and the `skill://` resources exist only when a skill does.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter skills-http build
+pnpm --filter skills-http start
+```
+
+List the skills:
+
+```bash
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: skills/list' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"skills/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"skills-guide","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+```
+
+Read a supporting file as an ordinary resource:
+
+```bash
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: resources/read' \
+  -H 'Mcp-Name: skill://release-notes/references/TEMPLATE.md' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"skill://release-notes/references/TEMPLATE.md","_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"skills-guide","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+```
+
+The returned text hashes to the digest published for that file. The example's README includes the `server/discover` and `skills/get` requests too.
+
+## Common questions
+
+### Do I need to write code to serve a skill?
+
+No. A skill is plain files. Add a directory with a `SKILL.md` under `src/skills` and xmcp serves it. During development, `xmcp dev` picks up added, removed, and edited skill files.
+
+### What happens if a skill is invalid?
+
+The build fails with a message naming the problem: missing frontmatter, a `name` that differs from the directory, a missing or too-long `description`, or a skill larger than 512 files or 16 MiB.
+
+### Can a client without the Skills extension use my skills?
+
+Partly. Every skill file is also an ordinary MCP resource, so any client can find it with `resources/list` and read it with `resources/read`. Only clients that support the extension treat it as a skill.
+
+### Can I restrict who sees a skill?
+
+Yes. Skills follow the name rules of the [components configuration](/docs/configuration/components), and an [`authorize` policy](/docs/core-concepts/middlewares#authorize-components) applies to `skills/list` and `skills/get`. Protect the full `skill://<name>/` prefix in the policy to restrict every file. See [MCP tool permissions](/blog/mcp-tool-permissions-rbac) for the policy itself.
+
+### Can skill content be generated at request time?
+
+Not yet. Skills are read and embedded at build time. Skills nested under an organizational prefix and `resources/directory/read` are also not supported yet.
+
+## Next steps
+
+- [Skills reference](/docs/core-concepts/skills) for the directory rules, validation, and limits.
+- [Custom directories](/docs/configuration/custom-directories) to move or disable the skills path.

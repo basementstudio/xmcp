@@ -1,0 +1,160 @@
+---
+title: "MCP Server Cards: make your server discoverable"
+description: "An MCP Server Card is a JSON file at /.well-known/mcp/server-card.json that tells discovery tools what your server is and where to connect. Learn what it contains and how xmcp serves it."
+summary: "What an MCP Server Card is, what goes in it, how it differs from server/discover, and how to publish one with xmcp."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+An MCP Server Card is a small JSON document served at `/.well-known/mcp/server-card.json`. It describes an MCP server, its name, version, and the URL of its MCP endpoint, so a discovery tool can find the server from its domain and set up a connection without anyone pasting a URL. xmcp's HTTP server publishes one automatically from your config.
+
+This guide follows the repository's [server card example](https://github.com/basementstudio/xmcp/tree/main/examples/server-card).
+
+## What is an MCP Server Card?
+
+It is a well-known file for MCP, in the same spirit as `robots.txt` or `/.well-known/oauth-protected-resource`: a fixed path where software can look for a machine-readable description. A client that knows only `books.example.com` can fetch the card and learn that there is an MCP server at `https://books.example.com/mcp`.
+
+The Server Card is defined by an [MCP proposal](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2127) with a published JSON schema. It is not part of the `2026-07-28` core specification.
+
+## What does a server card contain?
+
+This is the card the example serves:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "com.example.books/mcp",
+  "version": "1.0.0",
+  "description": "Search the bookshop catalog and check stock.",
+  "title": "Bookshop",
+  "remotes": [
+    { "type": "streamable-http", "url": "https://books.example.com/mcp" }
+  ]
+}
+```
+
+| Field         | Meaning                                 | Where xmcp gets it                            |
+| ------------- | --------------------------------------- | --------------------------------------------- |
+| `name`        | A unique identifier in reverse-DNS form | The request's hostname, reversed, plus `/mcp` |
+| `title`       | The display name                        | `template.name` in `xmcp.config.ts`           |
+| `description` | What the server does                    | `template.description`                        |
+| `version`     | The server's version                    | `version` in `package.json`                   |
+| `remotes`     | How to connect: transport type and URL  | The request's host and your MCP endpoint      |
+
+The card says where the server is and what it is called. It does not list tools. A client connects and calls `tools/list` for those.
+
+## How do I publish a server card with xmcp?
+
+Describe your server in the config. There is no route to write:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: true,
+  paths: { prompts: false, resources: false },
+  template: {
+    name: "Bookshop",
+    description: "Search the bookshop catalog and check stock.",
+    icons: [{ src: "src/assets/icon.svg", mimeType: "image/svg+xml" }],
+  },
+} satisfies XmcpConfig;
+```
+
+Fetch it:
+
+```bash
+curl http://localhost:3001/.well-known/mcp/server-card.json
+```
+
+The response has the content type `application/mcp-server-card+json`, can be cached for an hour, and allows any origin to read it, so a browser-based tool can fetch it too.
+
+With the Next.js adapter the route is not created for you. Add it in one file:
+
+```typescript title="app/.well-known/mcp/server-card.json/route.ts"
+import { serverCardHandler } from "@xmcp/adapter";
+export { serverCardHandler as GET };
+```
+
+## How does the card know my public URL?
+
+It reads it from the request. `name` is the request's hostname in reverse-DNS form, and `remotes[0].url` is built from the request's host and protocol. Behind a proxy or load balancer that sets `x-forwarded-proto`, the card uses that protocol:
+
+```bash
+curl http://localhost:3001/.well-known/mcp/server-card.json \
+  -H 'Host: books.example.com' \
+  -H 'x-forwarded-proto: https'
+```
+
+This returns `"name":"com.example.books/mcp"` and `"url":"https://books.example.com/mcp"`. You do not configure the domain anywhere, and the same build serves a correct card on a preview URL and on production.
+
+## How is a server card different from server/discover?
+
+They answer different questions at different moments:
+
+|              | Server card                             | `server/discover`                                    |
+| ------------ | --------------------------------------- | ---------------------------------------------------- |
+| Fetched with | A plain HTTP `GET`                      | An MCP request to the MCP endpoint                   |
+| Needed first | Only the domain                         | The endpoint URL                                     |
+| Answers      | Is there an MCP server here, and where? | Which protocol versions and capabilities it supports |
+| Defined by   | The Server Card proposal                | The `2026-07-28` core specification                  |
+
+Both carry the same identity. The name and description you set under `template` are also the `serverInfo` that MCP clients receive, along with your icons:
+
+```json
+{
+  "supportedVersions": ["2026-07-28"],
+  "capabilities": { "tools": { "listChanged": true } },
+  "_meta": {
+    "io.modelcontextprotocol/serverInfo": {
+      "name": "Bookshop",
+      "version": "1.0.0",
+      "description": "Search the bookshop catalog and check stock."
+    }
+  }
+}
+```
+
+A discovery tool reads the card to find the endpoint, then a client calls `server/discover` to negotiate.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter server-card build
+pnpm --filter server-card start
+```
+
+Then fetch `http://localhost:3001/.well-known/mcp/server-card.json`. The example's README has the proxy request and the `server/discover` request.
+
+## Common questions
+
+### Do I need a server card for clients to connect?
+
+No. A client that has your MCP URL connects without it. The card helps tools that start from a domain and need to find the endpoint.
+
+### Does the card list my tools?
+
+No. It identifies the server and its endpoint. Tools, prompts, and resources are listed over MCP after connecting, where authentication and per-caller permissions apply.
+
+### Is the card public when my server requires authentication?
+
+Yes. xmcp serves the card without authentication, like other `.well-known` metadata. It contains the name, description, version, and endpoint URL, so keep secrets and internal details out of `template.description`.
+
+### How do I set the version?
+
+Set `version` in your project's `package.json`. xmcp reads it at build time.
+
+### Can I change the path?
+
+No. The path `/.well-known/mcp/server-card.json` is what discovery tools look for.
+
+## Next steps
+
+- [MCP Server Card reference](/docs/discoverability/mcp-server-card) for the Next.js route and validation.
+- [Server info](/docs/configuration/server-info) for the `template` fields, icons, and instructions.
+- [How to Deploy an MCP Server to Production](/blog/deploy-mcp-server-production) for hosting options.

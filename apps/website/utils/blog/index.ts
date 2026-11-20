@@ -6,27 +6,32 @@ export type BlogCategory = "changelog" | "guides" | "engineering";
 export interface BlogAuthor {
   readonly id: string;
   readonly name: string;
-  readonly profilePicture: string;
   readonly xHandle: string;
   readonly xUrl: string;
   readonly role?: string;
 }
 
 const DEFAULT_AUTHOR_ID = "valebearzotti";
+const DEFAULT_AUTHOR_IDS = [DEFAULT_AUTHOR_ID, "ragojose"];
 
 export const BLOG_AUTHORS: Record<string, BlogAuthor> = {
   [DEFAULT_AUTHOR_ID]: {
     id: DEFAULT_AUTHOR_ID,
     name: "Valentina Bearzotti",
-    profilePicture: "/blog/authors/valebearzotti.png",
     xHandle: "@valebearzotti",
     xUrl: "https://x.com/valebearzotti",
-    role: "Creator & Tech Lead",
+    role: "Co-author",
+  },
+  ragojose: {
+    id: "ragojose",
+    name: "Jose Rago",
+    xHandle: "@ragojose",
+    xUrl: "https://x.com/ragojose",
+    role: "Co-author",
   },
   fveiras_: {
     id: "fveiras_",
     name: "Francisco Veiras",
-    profilePicture: "/blog/authors/fveiras_.png",
     xHandle: "@fveiras_",
     xUrl: "https://x.com/fveiras_",
     role: "Core Maintainer",
@@ -34,7 +39,6 @@ export const BLOG_AUTHORS: Record<string, BlogAuthor> = {
   "0xkoller": {
     id: "0xkoller",
     name: "Jose Luis Koller",
-    profilePicture: "/blog/authors/0xkoller.png",
     xHandle: "@0xkoller",
     xUrl: "https://x.com/0xkoller",
     role: "DX Engineer",
@@ -54,7 +58,7 @@ export function resolveAuthors(authors?: unknown): BlogAuthor[] {
   );
 
   const finalIds =
-    normalizedIds.length > 0 ? normalizedIds : [DEFAULT_AUTHOR_ID];
+    normalizedIds.length > 0 ? normalizedIds : DEFAULT_AUTHOR_IDS;
 
   const fallback = BLOG_AUTHORS[DEFAULT_AUTHOR_ID];
 

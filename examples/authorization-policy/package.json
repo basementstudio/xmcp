@@ -1,0 +1,23 @@
+{
+  "name": "authorization-policy",
+  "private": true,
+  "type": "module",
+  "description": "Show each caller only the tools and resources their role allows with one authorize policy",
+  "keywords": [
+    "authorization",
+    "rbac",
+    "middleware"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { type BlogAuthor } from "@/utils/blog";
 import Link from "next/link";
 import { Icons } from "../icons";
@@ -18,16 +17,8 @@ export function PostAuthors({ authors }: PostAuthorsProps) {
           href={author.xUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group flex items-center gap-3 hover:text-brand-white transition-colors"
+          className="group flex items-center hover:text-brand-white transition-colors"
         >
-          <Image
-            src={author.profilePicture}
-            alt=""
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-full border border-brand-neutral-500 bg-brand-neutral-800 object-cover"
-            loading="lazy"
-          />
           <div className="flex flex-col leading-5">
             <span className="text-brand-white font-medium">{author.name}</span>
             <span className="relative inline-flex h-5 items-center text-brand-neutral-200">

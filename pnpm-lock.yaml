@@ -407,6 +407,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/authorization-policy:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/better-auth-http:
     dependencies:
       '@xmcp-dev/better-auth':
@@ -539,6 +552,19 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  examples/cache-hints:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
 
   examples/clerk-http:
     dependencies:
@@ -866,6 +892,19 @@ importers:
         version: link:../../packages/compiler
 
   examples/http-transport:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
+  examples/human-in-the-loop:
     dependencies:
       xmcp:
         specifier: workspace:*
@@ -1216,6 +1255,19 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  examples/server-card:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/skills-http:
     dependencies:
       xmcp:
@@ -1229,7 +1281,33 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/stateless-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
   examples/stdio-transport:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+
+  examples/structured-output:
     dependencies:
       xmcp:
         specifier: workspace:*

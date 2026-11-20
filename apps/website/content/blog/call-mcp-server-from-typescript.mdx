@@ -1,0 +1,239 @@
+---
+title: "How to call an MCP server from TypeScript"
+description: "Connect to any MCP server from Node.js: list its tools, call one, read structured results, answer its questions, and cancel long calls, using xmcp's managed client over HTTP or STDIO."
+summary: "A working MCP client in a few lines of TypeScript, plus when to use the CLI or generated typed clients instead."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+To call an MCP server from TypeScript, open a connection, call `listTools()` or `callTool()`, and close the connection. With xmcp that is one function: `withClient` from `xmcp/client` connects over HTTP or STDIO, runs your callback, and closes the connection even when the callback throws.
+
+```typescript
+import { withClient } from "xmcp/client";
+
+const tools = await withClient(
+  { type: "http", name: "local", url: "http://localhost:3001/mcp" },
+  async (client) => (await client.listTools()).tools
+);
+```
+
+The client works with any MCP server, not only ones built with xmcp. This guide uses three scripts from the repository's examples.
+
+## Which way of calling a server should I use?
+
+xmcp gives you three, for different jobs:
+
+| Option                         | Use it when                                              | You write                      |
+| ------------------------------ | -------------------------------------------------------- | ------------------------------ |
+| Managed client (`xmcp/client`) | A script, backend, or agent talks to a server at runtime | `createClient` or `withClient` |
+| CLI (`@xmcp-dev/cli`)          | You want to inspect or call a server from the terminal   | Nothing                        |
+| Generated typed clients        | Tools in your xmcp server call another MCP server        | A `src/clients.ts` entry       |
+
+This guide covers the first two. For generated clients, see [Connect to external MCPs and make their tools yours](/blog/cli-typed-clients).
+
+## How do I connect over HTTP?
+
+Pass a definition with `type: "http"` and the server's URL. `withClient` returns whatever your callback returns:
+
+```javascript title="examples/structured-output/client.mjs"
+import { withClient } from "xmcp/client";
+
+const forecast = await withClient(
+  {
+    type: "http",
+    name: "weather",
+    url: process.env.MCP_URL ?? "http://localhost:3001/mcp",
+  },
+  async (client) => {
+    const result = await client.callTool({
+      name: "list-forecast",
+      arguments: { days: 2 },
+    });
+    return result.structuredContent;
+  }
+);
+
+for (const { day, high, low } of forecast) {
+  console.log(`${day}: ${low} to ${high} °C`);
+}
+```
+
+The `client` is the connected MCP SDK client, with `listTools`, `callTool`, `readResource`, `getPrompt`, and the rest. The connection negotiates the protocol version on its own: it speaks `2026-07-28` to servers that support it and falls back to the `initialize` handshake for older ones.
+
+A tool that declares an `outputSchema` returns its data in `structuredContent`, so there is no text to parse. See [MCP structured output](/blog/mcp-structured-output).
+
+## How do I connect to a local STDIO server?
+
+Use `type: "stdio"` with the command that starts the server. The client spawns the process and waits for it to exit when the connection closes:
+
+```typescript
+import { withClient } from "xmcp/client";
+
+const names = await withClient(
+  {
+    type: "stdio",
+    name: "local",
+    command: "node",
+    args: ["./dist/stdio.js"],
+  },
+  async (client) => (await client.listTools()).tools.map((tool) => tool.name)
+);
+```
+
+STDIO definitions also accept `env`, `cwd`, and `stderr`. The server's stderr is inherited by default, so its logs appear in your terminal.
+
+## When should I use createClient instead?
+
+When the connection should outlive one operation. `createClient` returns the connected client and leaves closing it to you:
+
+```typescript
+import { createClient } from "xmcp/client";
+
+const client = await createClient({
+  type: "http",
+  name: "local",
+  url: "http://localhost:3001/mcp",
+});
+try {
+  const { tools } = await client.listTools();
+  console.log(tools);
+} finally {
+  await client.close();
+}
+```
+
+Prefer `withClient` for one-off work. It cannot leak a connection or a child process.
+
+## How do I handle errors?
+
+There are two kinds, and they arrive differently:
+
+| What went wrong                 | How it arrives                            |
+| ------------------------------- | ----------------------------------------- |
+| The tool ran and failed         | A result with `isError: true`             |
+| The arguments failed validation | A result with `isError: true`             |
+| The tool does not exist         | The promise rejects with a protocol error |
+| The server cannot be reached    | The promise rejects                       |
+
+Check `result.isError` before using a result. The error text is in `result.content`, written for the model to read and recover from.
+
+## How do I answer a question from the server?
+
+Some tools pause to ask the user something. Register a handler and the client answers on its own:
+
+```javascript title="examples/human-in-the-loop/client.mjs"
+import { withClient } from "xmcp/client";
+
+const [answer = "accept"] = process.argv.slice(2);
+
+const result = await withClient(
+  {
+    type: "http",
+    name: "human-in-the-loop",
+    url: process.env.MCP_URL ?? "http://localhost:3001/mcp",
+  },
+  (client) =>
+    client.callTool({
+      name: "delete-project",
+      arguments: { project: "atlas" },
+    }),
+  {
+    handlers: {
+      elicitation: (request) => {
+        console.log(`Server asks: ${request.params.message}`);
+        return answer === "accept"
+          ? { action: "accept", content: { confirmed: true } }
+          : { action: "decline" };
+      },
+    },
+  }
+);
+
+console.log(result.content[0].text);
+```
+
+On a `2026-07-28` connection the server returns an `input_required` result; the SDK passes the embedded question to your handler and retries the call with the answer. Your code sees one `callTool` that resolves with the final result.
+
+Handlers exist for `elicitation`, `sampling`, and `roots`. The client advertises a capability only when you register its handler, so a server never asks for something the client cannot do. See [Human-in-the-loop MCP tools](/blog/mcp-input-required-human-in-the-loop) for the server side.
+
+## How do I cancel a call or set a timeout?
+
+Pass an `AbortSignal` in the request options, and bound connection setup with `connect`:
+
+```typescript
+import { withClient } from "xmcp/client";
+
+const controller = new AbortController();
+const CONNECTION_TIMEOUT_MS = 10_000;
+
+await withClient(
+  { type: "http", name: "local", url: "http://localhost:3001/mcp" },
+  (client) =>
+    client.callTool(
+      { name: "long-running-task" },
+      { signal: controller.signal }
+    ),
+  { connect: { timeout: CONNECTION_TIMEOUT_MS, signal: controller.signal } }
+);
+```
+
+Call `controller.abort()` from your own cancel action. On `2026-07-28` connections and on STDIO the cancellation reaches the server's handler. Legacy stateless HTTP cannot route a cancellation to an earlier request.
+
+## How do I call a server without writing code?
+
+Use the CLI. It prints the complete MCP result as JSON:
+
+```bash
+npx @xmcp-dev/cli inspect http://localhost:3001/mcp
+npx @xmcp-dev/cli list http://localhost:3001/mcp --json
+npx @xmcp-dev/cli call http://localhost:3001/mcp list-forecast --arg days=1
+```
+
+`inspect` shows the server's identity, negotiated protocol version, and capabilities. `list` returns its tools, prompts, resources, and resource templates. `call` checks the arguments against the tool's schema, calls it, and exits with `1` when the tool returns an error, which makes it usable in scripts and CI.
+
+## Run the examples
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter structured-output build
+pnpm --filter structured-output start
+```
+
+In another terminal:
+
+```bash
+pnpm --filter structured-output client
+```
+
+It prints one line per forecast day. The [external clients example](https://github.com/basementstudio/xmcp/tree/main/examples/external-clients) has a script that lists a server's tools, and the [human-in-the-loop example](https://github.com/basementstudio/xmcp/tree/main/examples/human-in-the-loop) has the handler script above.
+
+## Common questions
+
+### Does the xmcp client work with servers not built with xmcp?
+
+Yes. It is an MCP client. It connects to any server that speaks MCP over Streamable HTTP or STDIO.
+
+### Does it run in the browser or on Cloudflare Workers?
+
+`xmcp/client` is a Node.js entry. It can spawn STDIO processes, which needs Node.js.
+
+### How do I send an API key or bearer token?
+
+Add `headers` to an HTTP definition. Headers accept static values and references to environment variables, so secrets stay out of source.
+
+### Do I need to call initialize first?
+
+No. The connection negotiates the protocol for you: a `server/discover` probe for `2026-07-28` servers, with a fallback to the `initialize` handshake. Pass `versionNegotiation: { mode: "legacy" }` to force the older handshake.
+
+### Is the client deprecated along with sampling and roots?
+
+No. MCP `2026-07-28` deprecates the Sampling and Roots features, not clients. The `sampling` and `roots` handlers remain for servers that still use those features during the deprecation window.
+
+## Next steps
+
+- [External clients reference](/docs/core-concepts/external-clients) for definitions, handlers, the CLI, and generated clients.
+- [What Are MCP Clients?](/blog/what-are-mcp-clients) for the applications that act as clients.

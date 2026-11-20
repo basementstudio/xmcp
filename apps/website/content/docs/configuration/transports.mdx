@@ -10,6 +10,8 @@ description: "Customize the transport types for your MCP server."
 
 xmcp servers speak both current MCP protocol generations over Streamable HTTP: requests carrying the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28) per-request `_meta` envelope (including `server/discover`) are served natively, and 2025-era clients that start with the classic `initialize` handshake are served through the stateless fallback. Both paths build a fresh server per request — no session state survives between requests.
 
+Because nothing is kept between requests, state that spans tool calls travels in a handle the client passes back. The [stateless HTTP example](https://github.com/basementstudio/xmcp/tree/main/examples/stateless-http) shows the pattern with requests for both protocol generations.
+
 The `http` configuration customizes the HTTP server. Set it to `true` to use defaults, or provide an object to override specific options:
 
 ```typescript title="xmcp.config.ts"

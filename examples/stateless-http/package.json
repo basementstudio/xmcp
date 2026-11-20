@@ -1,0 +1,23 @@
+{
+  "name": "stateless-http",
+  "private": true,
+  "type": "module",
+  "description": "Keep state across tool calls without sessions, using a signed handle the client passes back",
+  "keywords": [
+    "stateless",
+    "http",
+    "2026-07-28"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}

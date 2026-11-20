@@ -1,0 +1,24 @@
+{
+  "name": "human-in-the-loop",
+  "private": true,
+  "type": "module",
+  "description": "Ask the user for confirmation and missing details mid-call with multi round-trip input",
+  "keywords": [
+    "elicitation",
+    "input-required",
+    "http"
+  ],
+  "scripts": {
+    "build": "xmcp build",
+    "dev": "xmcp dev",
+    "start": "node dist/http.js",
+    "client": "node client.mjs"
+  },
+  "dependencies": {
+    "xmcp": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@xmcp-dev/compiler": "workspace:*"
+  }
+}
