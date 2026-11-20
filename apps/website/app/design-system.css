@@ -137,6 +137,37 @@ body .site-docs-body > :nth-child(1 of :not(.sr-only)) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+.guides-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.guides-topic-filter {
+  display: flex;
+  flex: 1 1 0;
+  gap: 8px;
+  min-width: 0;
+  padding-block: 2px;
+}
+@media (min-width: 640px) {
+  .guides-toolbar {
+    align-items: flex-start;
+  }
+  .guides-toolbar .guides-topic-filter {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+    animation: none;
+  }
+}
+.guides-view-toggle {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--site-well);
+}
 .blog-post-list {
   margin: 0;
   padding: 0;

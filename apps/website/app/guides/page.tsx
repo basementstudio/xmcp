@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getGuidePosts } from "@/utils/blog";
-import { ContentCard } from "@/components/ui/content-card";
+import { GuidesListing, type GuideSummary } from "@/components/guides/listing";
+import { GUIDE_TOPICS } from "@/lib/guide-topics";
 import { SITE_URL } from "@/lib/base-url";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getBreadcrumbSchema } from "@/lib/structured-data";
@@ -23,6 +24,17 @@ export const metadata: Metadata = {
 
 export default function GuidesPage() {
   const posts = getGuidePosts();
+  const guides: GuideSummary[] = posts.map((post) => ({
+    slug: post.slug,
+    title: post.title,
+    description: post.description ?? post.summary,
+    topic: post.topic,
+    date: post.date,
+    dateLabel: post.date && formatGuideDate(post.date),
+  }));
+  const topics = GUIDE_TOPICS.filter((topic) =>
+    posts.some((post) => post.topic === topic)
+  );
   return (
     <main id="main-content" className="site-page-grid">
       <JsonLd
@@ -76,17 +88,17 @@ export default function GuidesPage() {
             .
           </p>
         </div>
-        <div className="site-card-grid">
-          {posts.map((post) => (
-            <ContentCard key={post.slug} href={`/blog/${post.slug}`}>
-              <h2 className="site-card-title">{post.title}</h2>
-              <p className="site-card-description">
-                {post.description ?? post.summary}
-              </p>
-            </ContentCard>
-          ))}
-        </div>
+        <GuidesListing guides={guides} topics={topics} />
       </div>
     </main>
   );
+}
+
+function formatGuideDate(date: string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
