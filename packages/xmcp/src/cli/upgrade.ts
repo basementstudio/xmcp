@@ -307,42 +307,59 @@ const LOCKFILES: [string, PackageManager][] = [
   ["package-lock.json", "npm"],
 ];
 
+function readPackageJson(directory: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(
+      fs.readFileSync(path.join(directory, "package.json"), "utf8")
+    ) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function packageManagerIn(directory: string): PackageManager | null {
+  for (const [file, packageManager] of LOCKFILES) {
+    if (fs.existsSync(path.join(directory, file))) return packageManager;
+  }
+  const field = readPackageJson(directory)?.packageManager;
+  const name = typeof field === "string" ? field.split("@")[0] : "";
+  return ["npm", "pnpm", "yarn", "bun"].includes(name)
+    ? (name as PackageManager)
+    : null;
+}
+
 /**
- * Finds the package manager and the folder to install from. Walks up from the
- * project so apps inside a workspace install from the workspace root. Mirrors
- * init-xmcp's lockfile check; the runtime package cannot depend on init-xmcp.
+ * Finds the package manager and the folder to install from. A project with
+ * its own lockfile or packageManager field installs in place. Otherwise the
+ * nearest workspace root (pnpm-workspace.yaml or a "workspaces" field) is
+ * used, without climbing past the repository root. Mirrors init-xmcp's
+ * lockfile check; the runtime package cannot depend on init-xmcp.
  */
 export function detectPackageManager(projectPath: string): {
   packageManager: PackageManager;
   installPath: string;
 } {
-  let directory = path.resolve(projectPath);
-  while (true) {
-    for (const [file, packageManager] of LOCKFILES) {
-      if (fs.existsSync(path.join(directory, file))) {
-        return { packageManager, installPath: directory };
-      }
-    }
-    const packageJsonPath = path.join(directory, "package.json");
-    if (fs.existsSync(packageJsonPath)) {
-      const field = (
-        JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-          packageManager?: unknown;
-        }
-      ).packageManager;
-      const name = typeof field === "string" ? field.split("@")[0] : "";
-      if (["npm", "pnpm", "yarn", "bun"].includes(name)) {
-        return {
-          packageManager: name as PackageManager,
-          installPath: directory,
-        };
-      }
-    }
+  const project = path.resolve(projectPath);
+  const own = packageManagerIn(project);
+  if (own) return { packageManager: own, installPath: project };
+
+  let directory = project;
+  while (!fs.existsSync(path.join(directory, ".git"))) {
     const parent = path.dirname(directory);
     if (parent === directory) break;
     directory = parent;
+    const pnpmWorkspace = fs.existsSync(
+      path.join(directory, "pnpm-workspace.yaml")
+    );
+    if (pnpmWorkspace || readPackageJson(directory)?.workspaces) {
+      return {
+        packageManager:
+          packageManagerIn(directory) ?? (pnpmWorkspace ? "pnpm" : "npm"),
+        installPath: directory,
+      };
+    }
   }
-  return { packageManager: "npm", installPath: path.resolve(projectPath) };
+  return { packageManager: "npm", installPath: project };
 }
 
 const HELP = `Usage: npx xmcp@latest upgrade [options]
@@ -382,13 +399,14 @@ export function runUpgrade(
     return 1;
   }
   const raw = fs.readFileSync(packageJsonPath, "utf8");
-  const original = JSON.parse(raw) as PackageJson;
 
   let plan: UpgradePlan;
   try {
-    plan = planUpgrade(original);
+    plan = planUpgrade(JSON.parse(raw) as PackageJson);
   } catch (error) {
-    console.error((error as Error).message);
+    const prefix =
+      error instanceof SyntaxError ? "Could not parse package.json: " : "";
+    console.error(prefix + (error as Error).message);
     return 1;
   }
   const warnings = [

@@ -152,24 +152,48 @@ test("detects the package manager from the lockfile", () => {
 });
 
 test("installs from the workspace root of a monorepo app", () => {
-  const root = createProject({
+  const app = '{"dependencies":{"xmcp":"^0.2.1"}}';
+  const pnpm = createProject({
+    "pnpm-workspace.yaml": "packages:\n  - apps/*\n",
     "pnpm-lock.yaml": "",
-    "apps/mcp/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+    "apps/mcp/package.json": app,
   });
-  const app = path.join(root, "apps", "mcp");
-  assert.deepEqual(detectPackageManager(app), {
+  assert.deepEqual(detectPackageManager(path.join(pnpm, "apps", "mcp")), {
     packageManager: "pnpm",
-    installPath: root,
+    installPath: pnpm,
   });
 
-  const corepack = createProject({
-    "package.json": '{"packageManager":"yarn@4.5.0"}',
-    "apps/mcp/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+  const yarn = createProject({
+    "package.json": '{"packageManager":"yarn@4.5.0","workspaces":["apps/*"]}',
+    "apps/mcp/package.json": app,
   });
-  assert.deepEqual(detectPackageManager(path.join(corepack, "apps", "mcp")), {
+  assert.deepEqual(detectPackageManager(path.join(yarn, "apps", "mcp")), {
     packageManager: "yarn",
-    installPath: corepack,
+    installPath: yarn,
   });
+});
+
+test("does not install in unrelated parent folders", () => {
+  const parent = createProject({
+    "package-lock.json": "",
+    "package.json": "{ not json",
+    "old-app/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+  });
+  const app = path.join(parent, "old-app");
+  assert.deepEqual(detectPackageManager(app), {
+    packageManager: "npm",
+    installPath: app,
+  });
+
+  const repo = createProject({
+    "pnpm-workspace.yaml": "packages:\n  - '*'\n",
+    "repo/.git/HEAD": "",
+    "repo/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+  });
+  assert.equal(
+    detectPackageManager(path.join(repo, "repo")).installPath,
+    path.join(repo, "repo")
+  );
 });
 
 test("writes package.json without installing when asked", () => {
