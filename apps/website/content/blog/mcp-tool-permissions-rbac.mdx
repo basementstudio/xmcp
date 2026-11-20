@@ -1,5 +1,5 @@
 ---
-title: "MCP Tool Permissions: Show Each User Only the Tools They Can Use"
+title: "MCP tool permissions: show each user only the tools they can use"
 description: "How to add role-based access control to an MCP server: hide tools, prompts, and resources a caller is not allowed to use, and reject direct calls, with one authorize policy in xmcp."
 summary: "Role-based access control for MCP tools and resources with a single authorize function, including why hiding a tool from the listing is not enough."
 category: "guides"
@@ -163,11 +163,11 @@ Yes. On a tool call, `ctx.params.arguments` holds the raw arguments, before vali
 
 ### Does it apply to prompts, resources, and skills?
 
-Yes. The same function covers tools, prompts, resources, resource templates, and skill catalogs. For skills, protect the `skill://<name>/` prefix to restrict every file. See [How to Serve Agent Skills](/blog/mcp-agent-skills).
+Yes. The same function covers tools, prompts, resources, resource templates, and skill catalogs. For skills, protect the `skill://<name>/` prefix to restrict every file. See [How to serve Agent Skills](/blog/mcp-agent-skills).
 
 ### Should listings be cached when they vary per caller?
 
-Keep their cache scope `private`, which is the default. A `public` cache hint tells clients the result is the same for every caller. See [Caching MCP Listings](/blog/mcp-caching-and-subscriptions).
+Keep their cache scope `private`, which is the default. A `public` cache hint tells clients the result is the same for every caller. See [Caching MCP listings](/blog/mcp-caching-and-subscriptions).
 
 ### Where does authInfo come from?
 

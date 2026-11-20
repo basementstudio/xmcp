@@ -1,5 +1,5 @@
 ---
-title: "MCP Server Observability: Execution Logs and Trace Context"
+title: "MCP server observability: execution logs and trace context"
 description: "How to see what your MCP server is doing in production: structured execution logs for every tool call, W3C trace context from request _meta, and what replaces the deprecated MCP logging capability."
 summary: "Turn on structured execution logs in xmcp, correlate them with W3C trace context, and forward the trace to downstream services."
 category: "guides"
@@ -152,7 +152,7 @@ No. Tool calls, prompt retrievals, and resource reads are logged. Listings and c
 
 ### How are multi round-trip tools logged?
 
-A tool that returns `input_required` produces a separate event pair for each round. Intermediate rounds have status `input_required`; the final round has the real outcome. See [Human-in-the-Loop MCP Tools](/blog/mcp-input-required-human-in-the-loop).
+A tool that returns `input_required` produces a separate event pair for each round. Intermediate rounds have status `input_required`; the final round has the real outcome. See [Human-in-the-loop MCP tools](/blog/mcp-input-required-human-in-the-loop).
 
 ### Should I still use MCP log notifications?
 

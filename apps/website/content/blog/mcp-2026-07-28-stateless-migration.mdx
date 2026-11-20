@@ -1,5 +1,5 @@
 ---
-title: "MCP 2026-07-28: What Changed and How to Build a Stateless Server"
+title: "MCP 2026-07-28: what changed and how to build a stateless server"
 description: "The 2026-07-28 MCP revision removed sessions and the initialize handshake. Here is what changed, what it means for your server, and how to keep state across tool calls without a session."
 summary: "A plain-language summary of the MCP 2026-07-28 changes and a working pattern for stateless servers: signed handles passed as tool arguments."
 category: "guides"
@@ -173,7 +173,7 @@ A `2025-11-25` client can call the same tool without the envelope, and repeat it
 For most servers, upgrading to xmcp v1 or later is the whole migration. Tools, prompts, and resources keep working. Check these four things:
 
 1. **State.** Replace anything keyed by session with a handle, as above.
-2. **User input.** `extra.elicit()` relies on server-initiated requests and only works on 2025-era connections. Return `inputRequired()` to serve both generations. See [Human-in-the-Loop MCP Tools](/blog/mcp-input-required-human-in-the-loop).
+2. **User input.** `extra.elicit()` relies on server-initiated requests and only works on 2025-era connections. Return `inputRequired()` to serve both generations. See [Human-in-the-loop MCP tools](/blog/mcp-input-required-human-in-the-loop).
 3. **Custom CORS.** If you override `http.cors.allowedHeaders`, include `mcp-method` and `mcp-name`. The defaults already do.
 4. **Deprecated features.** Sampling and MCP log notifications still work but are deprecated. Plan to call your model provider directly and to [log on the server](/blog/mcp-server-observability-tracing).
 

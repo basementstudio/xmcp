@@ -1,5 +1,5 @@
 ---
-title: "How to Serve Agent Skills from an MCP Server"
+title: "How to serve Agent Skills from an MCP server"
 description: "Agent Skills are folders of instructions an agent loads when a task calls for them. Learn how the MCP Skills extension publishes them from your server and how to ship one with xmcp."
 summary: "What MCP skills are, how they differ from tools and prompts, and how to serve one from an xmcp server by adding a directory."
 category: "guides"
@@ -161,7 +161,7 @@ Partly. Every skill file is also an ordinary MCP resource, so any client can fin
 
 ### Can I restrict who sees a skill?
 
-Yes. Skills follow the name rules of the [components configuration](/docs/configuration/components), and an [`authorize` policy](/docs/core-concepts/middlewares#authorize-components) applies to `skills/list` and `skills/get`. Protect the full `skill://<name>/` prefix in the policy to restrict every file. See [MCP Tool Permissions](/blog/mcp-tool-permissions-rbac) for the policy itself.
+Yes. Skills follow the name rules of the [components configuration](/docs/configuration/components), and an [`authorize` policy](/docs/core-concepts/middlewares#authorize-components) applies to `skills/list` and `skills/get`. Protect the full `skill://<name>/` prefix in the policy to restrict every file. See [MCP tool permissions](/blog/mcp-tool-permissions-rbac) for the policy itself.
 
 ### Can skill content be generated at request time?
 
