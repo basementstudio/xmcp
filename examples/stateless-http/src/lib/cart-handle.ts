@@ -1,14 +1,20 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export interface CartItem {
   sku: string;
   quantity: number;
 }
 
-const signingKey = process.env.CART_HANDLE_SECRET ?? randomBytes(32);
+function signingKey() {
+  const secret = process.env.CART_HANDLE_SECRET;
+  if (!secret) {
+    throw new Error("Set CART_HANDLE_SECRET to sign cart handles");
+  }
+  return secret;
+}
 
 function sign(payload: string) {
-  return createHmac("sha256", signingKey).update(payload).digest("base64url");
+  return createHmac("sha256", signingKey()).update(payload).digest("base64url");
 }
 
 export function mintCartHandle(items: CartItem[]) {

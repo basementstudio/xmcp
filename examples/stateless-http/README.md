@@ -11,11 +11,12 @@ local framework and compiler with `pnpm build`.
 ```sh
 cd examples/stateless-http
 pnpm build
-pnpm start
+CART_HANDLE_SECRET=local-demo-secret pnpm start
 ```
 
-The server listens at `http://localhost:3001/mcp`. If that port is taken, xmcp
-uses the next free one and prints it.
+`CART_HANDLE_SECRET` signs the cart handles; the value above is a local demo
+value. The server listens at `http://localhost:3001/mcp`. If that port is taken,
+xmcp uses the next free one and prints it.
 
 ## Discover the server
 
@@ -62,14 +63,11 @@ curl http://localhost:3001/mcp \
 `"totalInCents": 5000`. A handle that was edited or minted by another server is
 rejected with the tool error `Cart handle was not issued by this server`.
 
-`src/lib/cart-handle.ts` signs handles with `CART_HANDLE_SECRET`. Without it the
-server signs with a random key created at startup, so handles stop working when
-the process restarts and are not accepted by other instances. Set the variable
-to the same value on every instance in production:
-
-```sh
-CART_HANDLE_SECRET=replace-with-a-long-random-value pnpm start
-```
+`src/lib/cart-handle.ts` signs handles with `CART_HANDLE_SECRET`. Every instance
+that shares the value accepts the same handles, including after a restart. The
+value in the start command is for local use: set a long random one, the same on
+every instance, in production. Without the variable the cart tools return the
+error `Set CART_HANDLE_SECRET to sign cart handles`.
 
 A handle that holds the state suits small values. For larger state, store it in
 a database and mint a handle that holds only its key.
