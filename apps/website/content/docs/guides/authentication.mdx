@@ -92,7 +92,7 @@ UI resources generated for [MCP Apps](/docs/core-concepts/mcp-apps) tools are au
 
 `authorize` checks direct access before the `mcp` middleware chain, so denied direct requests never reach your middleware or handlers. Catalog results are filtered before being returned. Values stored with `ctx.set()` during tool authorization remain available to tool middleware and the handler through `ctx.get()` or `getRequestContext().get()`. Each request and retry round has its own values. It runs on HTTP, STDIO, and the adapters. Authentication data comes only from the current request, so stateless HTTP keeps no per-client state. On STDIO, `ctx.authInfo` is absent unless you supply it. When `authorize` is not exported, behavior is unchanged.
 
-Supply verified authentication through your HTTP integration; see [request-context authentication](/docs/core-concepts/request-context#authentication). The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) shows a scope-based policy for tools, resources, and skills.
+Supply verified authentication through your HTTP integration; see [request-context authentication](/docs/core-concepts/request-context#authentication). The [middleware array example](https://github.com/basementstudio/xmcp/tree/main/examples/middlewares-array) shows a scope-based policy for tools, resources, and skills, and the [authorization policy example](https://github.com/basementstudio/xmcp/tree/main/examples/authorization-policy) shows role-based access driven by component tags.
 
 ## How MCP authentication works
 

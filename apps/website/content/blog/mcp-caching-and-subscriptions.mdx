@@ -1,0 +1,190 @@
+---
+title: "Caching MCP Listings: ttlMs, cacheScope, and subscriptions/listen"
+description: "MCP 2026-07-28 lets servers tell clients how long tool, prompt, and resource listings stay fresh. Learn what ttlMs and cacheScope mean, when to use subscriptions, and how to set both in xmcp."
+summary: "How MCP clients know when to refetch: cache hints on listings and resource reads, the subscriptions/listen stream, and which one fits a serverless server."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+Since MCP `2026-07-28`, a server tells clients how long a listing or a resource stays fresh with two fields on the result: `ttlMs`, a lifetime in milliseconds, and `cacheScope`, which says whether the result is the same for every caller. A client that honors them can skip `tools/list` on every turn. In xmcp you set them with `cacheHints` in `xmcp.config.ts`.
+
+This guide follows the repository's [cache hints example](https://github.com/basementstudio/xmcp/tree/main/examples/cache-hints).
+
+## What are ttlMs and cacheScope?
+
+They are freshness hints that ride on cacheable results:
+
+| Field        | Type                      | Meaning                                                              |
+| ------------ | ------------------------- | -------------------------------------------------------------------- |
+| `ttlMs`      | Non-negative integer      | How many milliseconds a client may reuse the result                  |
+| `cacheScope` | `"private"` or `"public"` | `private`: for this caller only. `public`: the same for every caller |
+
+The cacheable results are `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`, `resources/read`, and `server/discover`.
+
+By default xmcp sends `ttlMs: 0` and `cacheScope: "private"`, which means "do not reuse this". Nothing is cached until you say a result is stable.
+
+## How do I set cache hints in xmcp?
+
+Add `cacheHints` to the config, keyed by method:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const FIVE_MINUTES_MS = 300_000;
+const ONE_HOUR_MS = 3_600_000;
+
+export default {
+  http: { maxSubscriptions: 0 },
+  paths: { prompts: false },
+  cacheHints: {
+    "server/discover": { ttlMs: ONE_HOUR_MS, cacheScope: "public" },
+    "tools/list": { ttlMs: FIVE_MINUTES_MS, cacheScope: "public" },
+    "resources/list": { ttlMs: FIVE_MINUTES_MS, cacheScope: "public" },
+  },
+} satisfies XmcpConfig;
+```
+
+A `tools/list` result from this server now ends with:
+
+```json
+{ "resultType": "complete", "ttlMs": 300000, "cacheScope": "public" }
+```
+
+Unknown methods and fields fail the build, so a typo does not silently disable caching.
+
+A resource can set its own hint for `resources/read` in its metadata:
+
+```typescript title="src/resources/(docs)/pricing.ts"
+import type { ResourceMetadata } from "xmcp";
+
+const ONE_DAY_MS = 86_400_000;
+
+export const metadata: ResourceMetadata = {
+  name: "pricing",
+  title: "Pricing",
+  description: "Plan prices, updated at most once a day",
+  cacheHint: { ttlMs: ONE_DAY_MS, cacheScope: "public" },
+};
+
+export default function pricing() {
+  return JSON.stringify({ starter: 0, team: 2900, business: 9900 });
+}
+```
+
+A resource with no hint keeps the default. In the example, `status://now` returns the current time and is never reused:
+
+| Result                          | `ttlMs`    | `cacheScope` | Set by                     |
+| ------------------------------- | ---------- | ------------ | -------------------------- |
+| `server/discover`               | `3600000`  | `public`     | `cacheHints` in the config |
+| `tools/list`, `resources/list`  | `300000`   | `public`     | `cacheHints` in the config |
+| `resources/read docs://pricing` | `86400000` | `public`     | The resource's `cacheHint` |
+| `resources/read status://now`   | `0`        | `private`    | Default                    |
+
+A per-resource hint overrides `cacheHints["resources/read"]` field by field. A `ttlMs` or `cacheScope` returned directly by a handler or middleware takes precedence over both.
+
+## When is a result public?
+
+When it is identical for every caller of the server. Use `private`, the default, in these cases:
+
+- An [`authorize` policy](/blog/mcp-tool-permissions-rbac) or other auth-dependent middleware hides components from some callers.
+- A resource's contents depend on who is reading it.
+
+Marking a per-caller result `public` tells clients it can be shared across callers. When in doubt, keep it private and set only a `ttlMs`.
+
+## How long should the TTL be?
+
+Match it to how often the result changes:
+
+| Result                                   | Changes when      | Reasonable hint             |
+| ---------------------------------------- | ----------------- | --------------------------- |
+| Listings on a server with a fixed roster | You deploy        | Minutes                     |
+| A resource updated on a schedule         | The schedule runs | Up to the schedule interval |
+| A resource with live data                | Constantly        | `0`, the default            |
+
+An xmcp server's components come from files, so its roster is fixed for the life of a build and a listing only changes when you deploy. A TTL of a few minutes bounds how long a client can hold a stale listing after a deploy.
+
+Tool order matters for caching too. The `2026-07-28` revision says servers should return `tools/list` in a deterministic order, because a stable listing also keeps the model's prompt cache warm.
+
+## What is subscriptions/listen?
+
+It is the push alternative. A `2026-07-28` client opens one long-lived `subscriptions/listen` stream and chooses the notifications it wants: `toolsListChanged`, `promptsListChanged`, `resourcesListChanged`, or `resourceSubscriptions`. It replaces `resources/subscribe` and the standalone GET stream from earlier revisions.
+
+Cache hints and subscriptions answer the same question, when to refetch, in different ways:
+
+|            | Cache hints                        | Subscriptions                                  |
+| ---------- | ---------------------------------- | ---------------------------------------------- |
+| Model      | The client refetches after `ttlMs` | The server notifies the client of a change     |
+| Connection | None between requests              | One stream held open per client                |
+| Fits       | Serverless and fixed rosters       | Long-running servers whose roster changes live |
+| Staleness  | Up to `ttlMs`                      | Until the notification arrives                 |
+
+A held-open stream costs a connection for as long as the client stays, and on a platform with request duration limits it holds an invocation open. For a server with a fixed roster, cache hints do the job without it.
+
+## How do I limit or turn off subscriptions?
+
+Set `http.maxSubscriptions`. It caps concurrent subscription streams per HTTP handler instance; `0` refuses them all:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+export default {
+  http: { maxSubscriptions: 0 },
+} satisfies XmcpConfig;
+```
+
+A refused request gets JSON-RPC error `-32603`, `Subscription limit reached`, before any stream opens. Ordinary requests, tool calls, and progress notifications are unaffected. Omit the option to keep the MCP SDK's default.
+
+The limit applies to each process or serverless instance on its own. It is not a deployment-wide quota, and it does not limit how long an accepted stream stays open.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter cache-hints build
+pnpm --filter cache-hints start
+```
+
+List the tools and look at the end of the result:
+
+```bash
+curl http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: tools/list' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{"_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28","io.modelcontextprotocol/clientInfo":{"name":"cache-guide","version":"1.0.0"},"io.modelcontextprotocol/clientCapabilities":{}}}}'
+```
+
+The example's README has the resource reads and the refused subscription.
+
+## Common questions
+
+### Do MCP clients cache tools/list by default?
+
+Not from an xmcp server. The default hint is `ttlMs: 0`, so a client that follows the hints refetches each time. Set a `ttlMs` to allow reuse.
+
+### Do older clients get cache hints?
+
+No. Clients on protocol revisions before `2026-07-28` do not receive `ttlMs` or `cacheScope`, so setting them does not change behavior for those clients.
+
+### Do cache hints replace listChanged notifications?
+
+They complement them. A hint says how long a result may be reused; a notification says it changed now. A server can offer both, or cache hints alone.
+
+### Is this the same as HTTP caching?
+
+No. These fields are part of the MCP result and are read by the MCP client. They are not `Cache-Control` headers, and MCP requests are POSTs.
+
+### Can a tool result be cached?
+
+Cache hints apply to listings, resource reads, and `server/discover`. Tool calls are not in the list of cacheable results.
+
+## Next steps
+
+- [Cache hints reference](/docs/configuration/caching) for the config schema.
+- [Transports](/docs/configuration/transports#subscription-streams) for subscription stream limits.
+- [MCP 2026-07-28: What Changed](/blog/mcp-2026-07-28-stateless-migration) for the rest of the revision.

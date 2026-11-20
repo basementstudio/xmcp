@@ -1,0 +1,298 @@
+---
+title: "Human-in-the-Loop MCP Tools: Asking Users for Input with input_required"
+description: "How an MCP tool pauses to ask the user a question in the 2026-07-28 protocol: return an input_required result, let the client collect the answer, and finish on the retry."
+summary: "Build MCP tools that confirm destructive actions and collect missing details with multi round-trip requests, with working code for the server and the client."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+In MCP `2026-07-28`, a tool asks the user for input by returning a result with `resultType: "input_required"`. The client shows the question, collects the answer, and calls the same tool again with the answer attached. This pattern is called a multi round-trip request, and it replaces the server-initiated `elicitation/create` request from earlier revisions.
+
+This guide follows the repository's [human-in-the-loop example](https://github.com/basementstudio/xmcp/tree/main/examples/human-in-the-loop).
+
+## How does a tool ask the user a question?
+
+In two rounds, with nothing kept on the server between them:
+
+1. The client calls the tool.
+2. The tool returns `input_required` with one or more named questions under `inputRequests`.
+3. The client asks the user.
+4. The client calls the tool again, with the same arguments and the answers under `inputResponses`.
+5. The tool reads the answer and returns its real result.
+
+Your handler runs once per round, from the top. On the first round there is no answer yet, so it asks. On the retry it finds the answer and does the work.
+
+## How do I confirm a destructive action?
+
+Read the answer with `inputResponse()`. If there is none, return `inputRequired()` with the question:
+
+```typescript title="src/tools/delete-project.ts"
+import { z } from "zod";
+import {
+  inputRequired,
+  inputResponse,
+  type InferSchema,
+  type ToolExtraArguments,
+  type ToolMetadata,
+} from "xmcp";
+
+export const schema = {
+  project: z.string().describe("The project to delete"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "delete-project",
+  description: "Delete a project after the user confirms",
+  annotations: { destructiveHint: true },
+};
+
+export default function deleteProject(
+  { project }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const confirmation = inputResponse(extra.inputResponses, "confirmation");
+
+  if (confirmation.kind !== "elicit") {
+    return inputRequired({
+      inputRequests: {
+        confirmation: inputRequired.elicit({
+          message: `Delete "${project}"? This cannot be undone.`,
+          requestedSchema: {
+            type: "object",
+            properties: {
+              confirmed: { type: "boolean", title: "Delete the project" },
+            },
+            required: ["confirmed"],
+          },
+        }),
+      },
+    });
+  }
+
+  const confirmed =
+    confirmation.action === "accept" &&
+    confirmation.content?.confirmed === true;
+
+  return confirmed ? `Deleted "${project}".` : `Kept "${project}".`;
+}
+```
+
+`inputResponse()` returns a view of one answer. Its `kind` is `"missing"` until the user has answered, and `"elicit"` afterwards, with an `action` of `accept`, `decline`, or `cancel`. Checking the action matters: a user who dismisses the prompt has answered, and the answer is no.
+
+The key, `confirmation` here, is yours to choose. It ties the question in `inputRequests` to its answer in `inputResponses`.
+
+## How do I collect and validate details from the user?
+
+Use `acceptedContent()` with a schema. It returns the user's answer only when they accepted and the content passes validation:
+
+```typescript title="src/tools/invite-teammate.ts"
+import { z } from "zod";
+import {
+  acceptedContent,
+  inputRequired,
+  inputResponse,
+  type InferSchema,
+  type ToolExtraArguments,
+  type ToolMetadata,
+} from "xmcp";
+
+export const schema = {
+  project: z.string().describe("The project to invite the teammate to"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "invite-teammate",
+  description:
+    "Invite a teammate to a project, asking the user who and with which role",
+};
+
+const invitation = z.object({
+  email: z.string().email(),
+  role: z.enum(["viewer", "editor"]),
+});
+
+export default function inviteTeammate(
+  { project }: InferSchema<typeof schema>,
+  extra: ToolExtraArguments
+) {
+  const response = inputResponse(extra.inputResponses, "invitation");
+  if (response.kind === "elicit" && response.action !== "accept") {
+    return `No invitation sent for "${project}".`;
+  }
+
+  const invite = acceptedContent(
+    extra.inputResponses,
+    "invitation",
+    invitation
+  );
+  if (!invite) {
+    return inputRequired({
+      inputRequests: {
+        invitation: inputRequired.elicit({
+          message: `Who should join "${project}"?`,
+          requestedSchema: {
+            type: "object",
+            properties: {
+              email: { type: "string", format: "email", title: "Email" },
+              role: {
+                type: "string",
+                title: "Role",
+                enum: ["viewer", "editor"],
+                default: "viewer",
+              },
+            },
+            required: ["email", "role"],
+          },
+        }),
+      },
+    });
+  }
+
+  return `Invited ${invite.email} to "${project}" as ${invite.role}.`;
+}
+```
+
+The answers come from the client, so they are untrusted input. The `requestedSchema` tells the client what form to draw; the Zod schema is what your server enforces. An answer that fails validation makes this tool ask again.
+
+## What does it look like on the wire?
+
+Round one returns the question:
+
+```json
+{
+  "resultType": "input_required",
+  "inputRequests": {
+    "confirmation": {
+      "method": "elicitation/create",
+      "params": {
+        "message": "Delete \"atlas\"? This cannot be undone.",
+        "requestedSchema": {
+          "type": "object",
+          "properties": {
+            "confirmed": { "type": "boolean", "title": "Delete the project" }
+          },
+          "required": ["confirmed"]
+        },
+        "mode": "form"
+      }
+    }
+  }
+}
+```
+
+Round two is the same `tools/call` with the answer added to its params:
+
+```json
+{
+  "name": "delete-project",
+  "arguments": { "project": "atlas" },
+  "inputResponses": {
+    "confirmation": { "action": "accept", "content": { "confirmed": true } }
+  }
+}
+```
+
+The result of round two is an ordinary tool result with `resultType: "complete"`.
+
+## How does a client answer?
+
+An MCP client that supports elicitation does this for the user. To drive it from code, register an elicitation handler with `xmcp/client`. The SDK passes each embedded question to the handler and retries the call with what it returns:
+
+```javascript title="client.mjs"
+import { withClient } from "xmcp/client";
+
+const [answer = "accept"] = process.argv.slice(2);
+
+const result = await withClient(
+  {
+    type: "http",
+    name: "human-in-the-loop",
+    url: process.env.MCP_URL ?? "http://localhost:3001/mcp",
+  },
+  (client) =>
+    client.callTool({
+      name: "delete-project",
+      arguments: { project: "atlas" },
+    }),
+  {
+    handlers: {
+      elicitation: (request) => {
+        console.log(`Server asks: ${request.params.message}`);
+        return answer === "accept"
+          ? { action: "accept", content: { confirmed: true } }
+          : { action: "decline" };
+      },
+    },
+  }
+);
+
+console.log(result.content[0].text);
+```
+
+Registering the handler is also what advertises the `elicitation` capability. That matters because a server will not ask a question the client cannot show.
+
+## What happens when the client cannot show a question?
+
+The call fails instead of hanging:
+
+| Client                                                       | Round one returns                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------- |
+| `2026-07-28`, declares `elicitation`                         | The `input_required` result                             |
+| `2026-07-28`, no `elicitation` capability                    | JSON-RPC error `-32021`, naming the missing capability  |
+| `2025-11-25` over stateless HTTP                             | A tool error: the transport cannot deliver the question |
+| `2025-11-25` on a connection that keeps state, such as STDIO | A real elicitation request, converted by the SDK        |
+
+Write the tool once with `inputRequired()`. xmcp re-exports the SDK helpers, and the SDK converts the result into a classic elicitation request for 2025-era connections that can receive one.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter human-in-the-loop build
+pnpm --filter human-in-the-loop start
+```
+
+In another terminal, run both rounds with an answer of yes, then no:
+
+```bash
+pnpm --filter human-in-the-loop client
+pnpm --filter human-in-the-loop client decline
+```
+
+The first prints `Deleted "atlas".` and the second prints `Kept "atlas".` The example's README has the curl request for each round.
+
+## Common questions
+
+### Is elicitation deprecated in MCP 2026-07-28?
+
+No. Elicitation is still how a server asks the user for input. What changed is the delivery: the question is embedded in an `input_required` result, and the client answers by retrying the call. The server-initiated `elicitation/create` request and `notifications/elicitation/complete` are gone.
+
+### Does extra.elicit() still work in xmcp?
+
+Only on 2025-era connections. On protocol revision `2026-07-28` it throws with a message pointing at `inputRequired()`, which works on both generations.
+
+### Can a tool ask more than one question?
+
+Yes. `inputRequests` is a map, so one round can carry several named questions, and the retry carries an answer for each key. To ask a follow-up that depends on an earlier answer, return another `input_required` result on the retry.
+
+### Where do I keep state between rounds?
+
+Not on the server. Each round is a separate request and may reach a different instance. The original arguments are sent again on every round, and anything else you need can travel in `requestState`, which the client echoes back. It round-trips through the client, so sign it and verify it before you rely on it. The SDK's `createRequestStateCodec`, re-exported from `xmcp`, signs it with HMAC.
+
+### Should I ask for passwords or API keys this way?
+
+No. Do not collect secrets in a form. Send the user to a secure page with URL-mode elicitation or use OAuth.
+
+### When should the model ask instead?
+
+When the model can reasonably ask in conversation and a wrong guess is cheap. Use `input_required` when the answer must come from the user unmodified: a confirmation before something irreversible, or a structured value the model does not have.
+
+## Next steps
+
+- [Tools reference](/docs/core-concepts/tools#multi-round-trip-input-inputrequired) for `inputRequired`, `acceptedContent`, and `inputResponse`.
+- [External clients](/docs/core-concepts/external-clients#client-handlers) for the elicitation, sampling, and roots handlers.
+- [MCP 2026-07-28: What Changed](/blog/mcp-2026-07-28-stateless-migration) for the rest of the revision.

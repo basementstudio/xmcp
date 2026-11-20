@@ -459,6 +459,10 @@ same tool serves both client generations. To carry server state across rounds
 (remember: it round-trips through the client), mint and verify it with
 `createRequestStateCodec`, also re-exported from `xmcp`.
 
+The [human-in-the-loop example](https://github.com/basementstudio/xmcp/tree/main/examples/human-in-the-loop)
+has a confirmation tool that handles a declined prompt, a tool that validates
+the answer, and a client script that runs both rounds.
+
 ### Sampling
 
 Use `extra.sample()` when a tool needs an LLM completion from the connected client. The client keeps control of model access, selection, and permissions, so the server needs no model API key. Sampling only works when the connected client advertises the `sampling` capability; other clients reject the request.
@@ -810,7 +814,9 @@ A matching bare string or number is also returned as plain text content. As
 with `structuredContent`, clients on earlier protocol revisions see a non-object
 `outputSchema` and its values wrapped under `result`. The
 [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport)
-includes both tools above.
+includes both tools above, and the
+[structured output example](https://github.com/basementstudio/xmcp/tree/main/examples/structured-output)
+adds primitive and union output with a client that reads the result.
 When `structuredContent` is returned without `content`, xmcp auto-generates a text fallback (`JSON.stringify(structuredContent)`) for compatibility with clients that only render `content`.
 
 ### Combined Response

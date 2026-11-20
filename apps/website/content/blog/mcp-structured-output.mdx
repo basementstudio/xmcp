@@ -1,0 +1,260 @@
+---
+title: "MCP Structured Output: outputSchema and structuredContent Explained"
+description: "How MCP tools return typed data: declare an outputSchema, return structuredContent, and let clients read results without parsing text. Covers arrays, primitives, and unions in MCP 2026-07-28."
+summary: "Return validated, typed data from MCP tools with outputSchema and structuredContent, including the array, primitive, and union results allowed since MCP 2026-07-28."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+An MCP tool returns structured output by declaring an `outputSchema` and putting its data in the result's `structuredContent` field. The schema is published in `tools/list`, so a client knows the shape before it calls the tool, and the data arrives as JSON it can use directly. Since MCP `2026-07-28`, `structuredContent` can be any JSON value, not only an object.
+
+This guide follows the repository's [structured output example](https://github.com/basementstudio/xmcp/tree/main/examples/structured-output).
+
+## What is the difference between content and structuredContent?
+
+A tool result has two places for data, with different readers:
+
+|           | `content`                                   | `structuredContent`                            |
+| --------- | ------------------------------------------- | ---------------------------------------------- |
+| Holds     | Blocks of text, images, audio, or resources | One JSON value                                 |
+| Suits     | Text for people and models to read          | Code: clients, agents, and UI that need fields |
+| Described | Not described ahead of time                 | By the tool's `outputSchema`                   |
+| Validated | No                                          | Against `outputSchema` when one is declared    |
+
+Return both when you can. With xmcp you return the data once: when `structuredContent` has no `content` next to it, xmcp adds a text block with the same data as a JSON string, so clients that only read text still get the result.
+
+## How do I return an object?
+
+Export an `outputSchema` as a map of Zod fields and return the data under `structuredContent`:
+
+```typescript title="src/tools/get-weather.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  city: z.string().describe("The city to look up"),
+};
+
+export const outputSchema = {
+  city: z.string(),
+  temperatureCelsius: z.number(),
+  conditions: z.enum(["sunny", "cloudy", "rainy"]),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-weather",
+  description: "Get the current weather for a city",
+  annotations: { readOnlyHint: true },
+};
+
+export default function getWeather({ city }: InferSchema<typeof schema>) {
+  return {
+    structuredContent: {
+      city,
+      temperatureCelsius: 22.5,
+      conditions: "cloudy",
+    },
+  };
+}
+```
+
+The client receives both forms:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"city\":\"Rosario\",\"temperatureCelsius\":22.5,\"conditions\":\"cloudy\"}"
+    }
+  ],
+  "structuredContent": {
+    "city": "Rosario",
+    "temperatureCelsius": 22.5,
+    "conditions": "cloudy"
+  }
+}
+```
+
+If the data does not match the schema, the call fails. Undeclared keys are rejected too, so the schema stays an accurate description of what the tool returns.
+
+## How do I return an array, a number, or a union?
+
+Use a complete Zod schema as the `outputSchema`. A complete schema can describe any JSON value, and a tool that has one can return its data directly:
+
+```typescript title="src/tools/list-forecast.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  days: z.number().int().min(1).max(3).describe("Number of days, 1 to 3"),
+};
+
+export const outputSchema = z.array(
+  z.object({ day: z.string(), high: z.number(), low: z.number() })
+);
+
+export const metadata: ToolMetadata = {
+  name: "list-forecast",
+  description: "List the forecast for the next few days",
+  annotations: { readOnlyHint: true },
+};
+
+const FORECAST = [
+  { day: "Mon", high: 24, low: 15 },
+  { day: "Tue", high: 21, low: 13 },
+  { day: "Wed", high: 19, low: 12 },
+];
+
+export default function listForecast({ days }: InferSchema<typeof schema>) {
+  return FORECAST.slice(0, days);
+}
+```
+
+Returning the array is shorthand for `{ structuredContent: array }`. The same works for a primitive:
+
+```typescript title="src/tools/count-alerts.ts"
+import { z } from "zod";
+import type { ToolMetadata } from "xmcp";
+
+export const outputSchema = z.number().int().min(0);
+
+export const metadata: ToolMetadata = {
+  name: "count-alerts",
+  description: "Count the active weather alerts",
+  annotations: { readOnlyHint: true },
+};
+
+export default function countAlerts() {
+  return 2;
+}
+```
+
+And for a result with more than one shape, such as found or not found:
+
+```typescript title="src/tools/find-station.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  code: z.string().describe("Station code, e.g. EZE"),
+};
+
+export const outputSchema = z.union([
+  z.object({
+    found: z.literal(true),
+    code: z.string(),
+    name: z.string(),
+  }),
+  z.object({ found: z.literal(false) }),
+]);
+
+export const metadata: ToolMetadata = {
+  name: "find-station",
+  description: "Look up a weather station by its code",
+  annotations: { readOnlyHint: true },
+};
+
+const STATIONS: Record<string, string> = {
+  EZE: "Ezeiza",
+  AEP: "Aeroparque",
+};
+
+export default function findStation({ code }: InferSchema<typeof schema>) {
+  const name = STATIONS[code];
+  return name ? { found: true, code, name } : { found: false };
+}
+```
+
+| Tool            | `outputSchema`            | `structuredContent`                        |
+| --------------- | ------------------------- | ------------------------------------------ |
+| `get-weather`   | A map of Zod fields       | `{"city":"Rosario", ...}`                  |
+| `list-forecast` | `z.array(z.object(...))`  | `[{"day":"Mon","high":24,"low":15}, ...]`  |
+| `count-alerts`  | `z.number().int().min(0)` | `2`                                        |
+| `find-station`  | `z.union([...])`          | `{"found":true, ...}` or `{"found":false}` |
+
+## What do older clients receive?
+
+Before `2026-07-28`, `structuredContent` had to be an object. For clients on earlier revisions, the MCP SDK wraps other values under a `result` key, in the published schema and in the result:
+
+| Tool call      | `2026-07-28` client      | `2025-11-25` client                  |
+| -------------- | ------------------------ | ------------------------------------ |
+| `count-alerts` | `"structuredContent": 2` | `"structuredContent": {"result": 2}` |
+
+You write the tool once. The wrapping happens per request, based on the protocol version the client sent.
+
+## How does a client read structured output?
+
+Call the tool and use `structuredContent`. With `xmcp/client`:
+
+```javascript title="client.mjs"
+import { withClient } from "xmcp/client";
+
+const forecast = await withClient(
+  {
+    type: "http",
+    name: "weather",
+    url: process.env.MCP_URL ?? "http://localhost:3001/mcp",
+  },
+  async (client) => {
+    const result = await client.callTool({
+      name: "list-forecast",
+      arguments: { days: 2 },
+    });
+    return result.structuredContent;
+  }
+);
+
+for (const { day, high, low } of forecast) {
+  console.log(`${day}: ${low} to ${high} °C`);
+}
+```
+
+There is no JSON to parse out of a text block. See [How to Call an MCP Server from TypeScript](/blog/call-mcp-server-from-typescript) for the client API.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter structured-output build
+pnpm --filter structured-output start
+```
+
+In another terminal:
+
+```bash
+pnpm --filter structured-output client
+```
+
+It prints one line per forecast day. The example's README has curl requests for both protocol revisions.
+
+## Common questions
+
+### Is outputSchema required to return structuredContent?
+
+No. `structuredContent` works without a schema. Declare `outputSchema` when you want clients to know the shape in advance and want the server to validate what it returns.
+
+### Should I still return text content?
+
+Yes, for clients that only render `content`. xmcp generates it when you return only structured data, so you do not have to write both.
+
+### Can structuredContent be an array?
+
+Yes, since MCP `2026-07-28`. It can be any JSON value: an object, an array, a string, a number, a boolean, or `null`. Clients on earlier revisions receive non-object values wrapped as `{ "result": value }`.
+
+### What happens when the output does not match the schema?
+
+The call fails with an error instead of returning the data. The schema is enforced on the server, so a client never receives data that breaks the contract the tool published.
+
+### Can xmcp infer the output schema from my TypeScript types?
+
+No. [Schema inference](/blog/typescript-functions-as-mcp-tools) covers tool inputs. Output schemas are declared with Zod.
+
+## Next steps
+
+- [Tools reference](/docs/core-concepts/tools#structured-outputs) for every return format.
+- [MCP 2026-07-28: What Changed](/blog/mcp-2026-07-28-stateless-migration) for the rest of the revision.

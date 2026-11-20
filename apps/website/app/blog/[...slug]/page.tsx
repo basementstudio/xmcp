@@ -20,7 +20,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBlogPostingSchema,
   getBreadcrumbSchema,
+  getFaqSchema,
 } from "@/lib/structured-data";
+import { getPostFaqItems } from "@/utils/blog/faq";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -32,6 +34,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const authors = resolveAuthors(page.data.authors);
 
   const post = getBlogPostBySlug(slug);
+  const faqs = post ? getPostFaqItems(post.content, page.data.toc) : [];
   const structuredData = post
     ? [
         getBlogPostingSchema(post, SITE_URL),
@@ -43,6 +46,9 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
           ],
           SITE_URL
         ),
+        ...(faqs.length > 0
+          ? [getFaqSchema(faqs, `${SITE_URL}/blog/${post.slug}`)]
+          : []),
       ]
     : null;
 

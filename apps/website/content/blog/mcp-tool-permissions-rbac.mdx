@@ -1,0 +1,180 @@
+---
+title: "MCP Tool Permissions: Show Each User Only the Tools They Can Use"
+description: "How to add role-based access control to an MCP server: hide tools, prompts, and resources a caller is not allowed to use, and reject direct calls, with one authorize policy in xmcp."
+summary: "Role-based access control for MCP tools and resources with a single authorize function, including why hiding a tool from the listing is not enough."
+category: "guides"
+date: "2026-11-17"
+unlisted: true
+---
+
+To give different users different MCP tools, check the caller's verified identity in two places: when the server lists its tools, and when a tool is called. In xmcp both checks are one function. Export `authorize` from `src/middleware.ts`, return `false` for a component the caller may not use, and xmcp hides it from every listing and rejects direct access as if it did not exist.
+
+This guide follows the repository's [authorization policy example](https://github.com/basementstudio/xmcp/tree/main/examples/authorization-policy).
+
+## What is the difference between authentication and authorization in MCP?
+
+Authentication answers who is calling. Authorization answers what that caller may do.
+
+|                    | Authentication                                        | Authorization                                       |
+| ------------------ | ----------------------------------------------------- | --------------------------------------------------- |
+| Question           | Who is this?                                          | May they use this tool?                             |
+| Decided            | Once per request, before MCP handling                 | Per component, per operation                        |
+| In xmcp            | An auth plugin or HTTP middleware supplies `authInfo` | The `authorize` export reads `authInfo` and decides |
+| Failure looks like | HTTP 401                                              | The component is absent or "not found"              |
+
+Authentication has to come first. See [How to Add Authentication to Your MCP Server](/blog/mcp-server-authentication) for OAuth and the provider plugins. This guide starts where a request already has a verified caller.
+
+## Why is hiding a tool from the list not enough?
+
+Because a client can call a tool by name without listing it first. Filtering `tools/list` changes what the model sees. It does not stop a request for `tools/call` with the hidden tool's name.
+
+A complete policy covers every way to reach a component:
+
+- Listings: `tools/list`, `prompts/list`, `resources/list`, `resources/templates/list`, and skill catalogs.
+- Direct access: `tools/call`, `prompts/get`, `resources/read`.
+- Completions for prompt and resource template arguments.
+
+Writing those checks by hand means keeping several filters in sync. The `authorize` export applies one decision to all of them.
+
+## How do I write the policy?
+
+Decide how a component declares what it requires. The example uses `tags`: a tool tagged `admin` requires the `admin` role.
+
+```typescript title="src/tools/refund-invoice.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+export const schema = {
+  invoiceId: z.string().describe("The invoice to refund, e.g. inv_1042"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "refund-invoice",
+  description: "Refund an invoice in full",
+  tags: ["admin"],
+  annotations: { destructiveHint: true },
+};
+
+export default function refundInvoice({
+  invoiceId,
+}: InferSchema<typeof schema>) {
+  return `Refunded ${invoiceId}.`;
+}
+```
+
+The policy compares those tags with the scopes on the caller's `authInfo`:
+
+```typescript title="src/middleware.ts"
+import type { McpAuthorize, Middleware, RequestContext } from "xmcp";
+
+type AuthInfo = NonNullable<RequestContext["authInfo"]>;
+
+const demoCallers = new Map([
+  ["demo-support", { clientId: "support-agent", scopes: ["support"] }],
+  ["demo-admin", { clientId: "billing-admin", scopes: ["support", "admin"] }],
+]);
+
+const authenticate: Middleware = (req, res, next) => {
+  const token = req.header("x-api-key");
+  const caller = token ? demoCallers.get(token) : undefined;
+  if (!token || !caller) {
+    res.status(401).json({ error: "Missing or invalid demo API key" });
+    return;
+  }
+  const auth: AuthInfo = { token, ...caller };
+  Object.assign(req, { auth });
+  next();
+};
+
+export default authenticate;
+
+export const authorize: McpAuthorize = (ctx, component) => {
+  const requiredRoles = component.metadata.tags ?? [];
+  return requiredRoles.every(
+    (role) => ctx.authInfo?.scopes.includes(role) ?? false
+  );
+};
+```
+
+The default export is ordinary HTTP middleware. It stands in for your authentication provider: it checks a key and attaches verified `authInfo` to the request. The two keys are public demonstration values.
+
+The `authorize` export is the policy. It receives the request context, the component being accessed, and the operation (`list`, `call`, `get`, `read`, or `complete`). Only an explicit `true` allows access. A component with no tags requires nothing, so every authenticated caller can use it. A caller with no `authInfo` fails every role check.
+
+No tool wraps itself in a permission check. Tools declare what they need in metadata, and the policy lives in one file.
+
+## What does each caller see?
+
+| Component           | Tags      | Support caller | Admin caller |
+| ------------------- | --------- | -------------- | ------------ |
+| `get-status`        | none      | Listed         | Listed       |
+| `list-invoices`     | `support` | Listed         | Listed       |
+| `refund-invoice`    | `admin`   | Hidden         | Listed       |
+| `reports://revenue` | `admin`   | Hidden         | Listed       |
+
+When the support caller calls the hidden tool by name, the response is the same error an unknown tool produces:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "error": { "code": -32602, "message": "Tool refund-invoice not found" }
+}
+```
+
+Matching the unknown-tool error is deliberate. A caller cannot use the response to learn which restricted tools exist. Reading `reports://revenue` as the support caller returns `Resource not found` in the same way.
+
+## Run the example
+
+Use Node.js 22.12 or later and pnpm. From a checkout of the xmcp repository:
+
+```bash
+pnpm install
+pnpm build
+pnpm --filter authorization-policy build
+pnpm --filter authorization-policy start
+```
+
+List the tools as the support caller:
+
+```bash
+curl -s http://localhost:3001/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -H 'x-api-key: demo-support' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+```
+
+The listing has `get-status` and `list-invoices`. Change the key to `demo-admin` and `refund-invoice` appears. The example's README has the direct call and the resource read.
+
+## Common questions
+
+### Can different users see different tools on the same MCP server?
+
+Yes. The server decides per request. In xmcp, an `authorize` policy reads the caller's verified `authInfo` and returns whether each component is available, so two callers of the same endpoint get different listings.
+
+### Does the policy run on every request?
+
+Yes. HTTP is stateless, so each request is authenticated and authorized on its own. An earlier request does not establish an identity for later ones.
+
+### Can the policy look at the tool's arguments?
+
+Yes. On a tool call, `ctx.params.arguments` holds the raw arguments, before validation, defaults, or coercion. Check `ctx.method` first and type-check the values yourself. This lets a policy allow a tool in general and deny it for a specific record.
+
+### Does it apply to prompts, resources, and skills?
+
+Yes. The same function covers tools, prompts, resources, resource templates, and skill catalogs. For skills, protect the `skill://<name>/` prefix to restrict every file. See [How to Serve Agent Skills](/blog/mcp-agent-skills).
+
+### Should listings be cached when they vary per caller?
+
+Keep their cache scope `private`, which is the default. A `public` cache hint tells clients the result is the same for every caller. See [Caching MCP Listings](/blog/mcp-caching-and-subscriptions).
+
+### Where does authInfo come from?
+
+From your authentication integration, for the current request only. With HTTP middleware, verify the caller and set `req.auth` yourself, as the example does. `authInfo` is never inferred from headers: the built-in API-key helper only validates the key, and the JWT helper populates `req.user`.
+
+## Next steps
+
+- [Authorizing components](/docs/guides/authentication#authorize-components) for the full rules.
+- [Middlewares](/docs/core-concepts/middlewares) for HTTP middleware, MCP middleware, and the `authorize` export.
+- [Request context](/docs/core-concepts/request-context#authentication) for reading `authInfo` inside a handler.
