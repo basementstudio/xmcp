@@ -3,8 +3,8 @@ title: "MCP Tool Permissions: Show Each User Only the Tools They Can Use"
 description: "How to add role-based access control to an MCP server: hide tools, prompts, and resources a caller is not allowed to use, and reject direct calls, with one authorize policy in xmcp."
 summary: "Role-based access control for MCP tools and resources with a single authorize function, including why hiding a tool from the listing is not enough."
 category: "guides"
-date: "2026-11-17"
-unlisted: true
+date: "2026-11-10"
+textureImage: "/textures/text1.png"
 ---
 
 To give different users different MCP tools, check the caller's verified identity in two places: when the server lists its tools, and when a tool is called. In xmcp both checks are one function. Export `authorize` from `src/middleware.ts`, return `false` for a component the caller may not use, and xmcp hides it from every listing and rejects direct access as if it did not exist.

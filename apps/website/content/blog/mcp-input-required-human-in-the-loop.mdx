@@ -4,7 +4,7 @@ description: "How an MCP tool pauses to ask the user a question in the 2026-07-2
 summary: "Build MCP tools that confirm destructive actions and collect missing details with multi round-trip requests, with working code for the server and the client."
 category: "guides"
 date: "2026-11-17"
-unlisted: true
+textureImage: "/textures/text6.png"
 ---
 
 In MCP `2026-07-28`, a tool asks the user for input by returning a result with `resultType: "input_required"`. The client shows the question, collects the answer, and calls the same tool again with the answer attached. This pattern is called a multi round-trip request, and it replaces the server-initiated `elicitation/create` request from earlier revisions.
