@@ -238,6 +238,7 @@ jobs:
           pnpm --filter xmcp test:config
           pnpm --filter xmcp test:adapters
           pnpm --filter xmcp test:runtime
+          pnpm --filter xmcp test:upgrade
           pnpm --filter @xmcp-dev/compiler typecheck
 
       - name: Lint packages (if available)

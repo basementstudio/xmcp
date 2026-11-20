@@ -108,7 +108,12 @@ export function planUpgrade(
     );
   }
 
-  const compilerRange = `^${target[0]}.${target[1]}.0`;
+  // Compiler patch releases can lag the runtime (xmcp 1.12.1 shipped with
+  // compiler 1.12.0), so stable targets allow any patch of the same minor.
+  // Prereleases need the exact version: ^1.13.0 does not match 1.13.0-canary.
+  const compilerRange = targetVersion.includes("-")
+    ? `^${targetVersion}`
+    : `^${target[0]}.${target[1]}.0`;
   const compilerField = DEPENDENCY_FIELDS.find(
     (name) => packageJson[name]?.["@xmcp-dev/compiler"] !== undefined
   );
@@ -242,7 +247,7 @@ export function scanProject(
         file
       );
     }
-    if (/\.elicit\s*\(/.test(source)) {
+    if (/(?<!inputRequired)\.elicit\s*\(/.test(source)) {
       note(
         "uses extra.elicit(), which throws for 2026-07-28 clients. Return inputRequired(...) instead.",
         file
@@ -294,14 +299,50 @@ export function scanProject(
   return warnings;
 }
 
-// Mirrors init-xmcp's lockfile check; the runtime package cannot depend on
-// init-xmcp or the compiler.
-export function detectPackageManager(projectPath: string): PackageManager {
-  const has = (file: string) => fs.existsSync(path.join(projectPath, file));
-  if (has("bun.lock") || has("bun.lockb")) return "bun";
-  if (has("pnpm-lock.yaml")) return "pnpm";
-  if (has("yarn.lock")) return "yarn";
-  return "npm";
+const LOCKFILES: [string, PackageManager][] = [
+  ["bun.lock", "bun"],
+  ["bun.lockb", "bun"],
+  ["pnpm-lock.yaml", "pnpm"],
+  ["yarn.lock", "yarn"],
+  ["package-lock.json", "npm"],
+];
+
+/**
+ * Finds the package manager and the folder to install from. Walks up from the
+ * project so apps inside a workspace install from the workspace root. Mirrors
+ * init-xmcp's lockfile check; the runtime package cannot depend on init-xmcp.
+ */
+export function detectPackageManager(projectPath: string): {
+  packageManager: PackageManager;
+  installPath: string;
+} {
+  let directory = path.resolve(projectPath);
+  while (true) {
+    for (const [file, packageManager] of LOCKFILES) {
+      if (fs.existsSync(path.join(directory, file))) {
+        return { packageManager, installPath: directory };
+      }
+    }
+    const packageJsonPath = path.join(directory, "package.json");
+    if (fs.existsSync(packageJsonPath)) {
+      const field = (
+        JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
+          packageManager?: unknown;
+        }
+      ).packageManager;
+      const name = typeof field === "string" ? field.split("@")[0] : "";
+      if (["npm", "pnpm", "yarn", "bun"].includes(name)) {
+        return {
+          packageManager: name as PackageManager,
+          installPath: directory,
+        };
+      }
+    }
+    const parent = path.dirname(directory);
+    if (parent === directory) break;
+    directory = parent;
+  }
+  return { packageManager: "npm", installPath: path.resolve(projectPath) };
 }
 
 const HELP = `Usage: npx xmcp@latest upgrade [options]
@@ -376,10 +417,10 @@ export function runUpgrade(
   }
 
   if (!skipInstall && plan.changes.length > 0) {
-    const packageManager = detectPackageManager(projectPath);
+    const { packageManager, installPath } = detectPackageManager(projectPath);
     try {
       execSync(`${packageManager} install`, {
-        cwd: projectPath,
+        cwd: installPath,
         stdio: "inherit",
       });
     } catch {

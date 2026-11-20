@@ -86,6 +86,18 @@ test("leaves a current project and dist-tags alone", () => {
   assert.equal(tagged.warnings.length, 1);
 });
 
+test("pins the compiler to a prerelease target", () => {
+  const { packageJson } = planUpgrade(
+    { dependencies: { xmcp: "^0.6.13", zod: "^4.0.0" } },
+    "1.13.0-canary-20261120"
+  );
+  assert.equal(packageJson.dependencies?.xmcp, "^1.13.0-canary-20261120");
+  assert.equal(
+    packageJson.devDependencies?.["@xmcp-dev/compiler"],
+    "^1.13.0-canary-20261120"
+  );
+});
+
 test("rejects a package.json without xmcp", () => {
   assert.throws(
     () => planUpgrade({ dependencies: { zod: "^4.0.0" } }, "1.12.1"),
@@ -113,6 +125,15 @@ test("reports code changes it does not rewrite", () => {
   assert.match(warnings, /experimental\.oauth/);
   assert.match(warnings, /@modelcontextprotocol\/sdk/);
   assert.match(warnings, /extra\.elicit\(\)/);
+
+  const migrated = createProject({
+    "src/tools/ask.ts":
+      "export default async () => inputRequired.elicit({ message: 'Name?' });",
+  });
+  assert.doesNotMatch(
+    scanProject(migrated, { dependencies: { xmcp: "^1.12.1" } }).join("\n"),
+    /extra\.elicit/
+  );
   assert.match(warnings, /src\/skills/);
   assert.match(warnings, /Node\.js 20\.10\.0 is too old/);
   assert.match(warnings, /src\/resources does not exist/);
@@ -121,16 +142,34 @@ test("reports code changes it does not rewrite", () => {
 });
 
 test("detects the package manager from the lockfile", () => {
-  assert.equal(
-    detectPackageManager(createProject({ "pnpm-lock.yaml": "" })),
-    "pnpm"
-  );
-  assert.equal(detectPackageManager(createProject({ "bun.lock": "" })), "bun");
-  assert.equal(
-    detectPackageManager(createProject({ "yarn.lock": "" })),
-    "yarn"
-  );
-  assert.equal(detectPackageManager(createProject({})), "npm");
+  const manager = (files: Record<string, string>) =>
+    detectPackageManager(createProject(files)).packageManager;
+  assert.equal(manager({ "pnpm-lock.yaml": "" }), "pnpm");
+  assert.equal(manager({ "bun.lock": "" }), "bun");
+  assert.equal(manager({ "yarn.lock": "" }), "yarn");
+  assert.equal(manager({ "package-lock.json": "" }), "npm");
+  assert.equal(manager({}), "npm");
+});
+
+test("installs from the workspace root of a monorepo app", () => {
+  const root = createProject({
+    "pnpm-lock.yaml": "",
+    "apps/mcp/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+  });
+  const app = path.join(root, "apps", "mcp");
+  assert.deepEqual(detectPackageManager(app), {
+    packageManager: "pnpm",
+    installPath: root,
+  });
+
+  const corepack = createProject({
+    "package.json": '{"packageManager":"yarn@4.5.0"}',
+    "apps/mcp/package.json": '{"dependencies":{"xmcp":"^0.2.1"}}',
+  });
+  assert.deepEqual(detectPackageManager(path.join(corepack, "apps", "mcp")), {
+    packageManager: "yarn",
+    installPath: corepack,
+  });
 });
 
 test("writes package.json without installing when asked", () => {
