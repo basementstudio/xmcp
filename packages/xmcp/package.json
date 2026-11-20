@@ -110,7 +110,8 @@
     "test:config": "pnpm --dir ../compiler test:config",
     "test:adapters": "node --import tsx --test src/runtime/adapters/*/__tests__/*.test.ts",
     "test:runtime": "node --import tsx --test src/runtime/utils/__tests__/*.test.ts src/runtime/utils/ui/__tests__/*.test.ts",
-    "test:client": "node --import tsx --test src/client/__tests__/*.test.ts"
+    "test:client": "node --import tsx --test src/client/__tests__/*.test.ts",
+    "test:cli": "node --import tsx --test src/cli/__tests__/*.test.ts"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.4.0",

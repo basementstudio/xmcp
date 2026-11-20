@@ -110,7 +110,8 @@ If you encounter issues when running the built server, make sure the transport i
 
 If `xmcp dev` or `xmcp build` reports that the compiler is missing, install the
 matching compiler version with `npm i -D @xmcp-dev/compiler` (or the equivalent
-command for your package manager).
+command for your package manager). If the project uses xmcp 0.x, run
+`npx xmcp@latest upgrade` instead. See [Upgrading](/docs/getting-started/upgrading).
 
 If you're working with HTTP, your configuration should look like this:
 
