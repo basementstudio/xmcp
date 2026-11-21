@@ -2,10 +2,11 @@
  * Local verification of Nano (XNO) payments.
  *
  * Nano has no facilitator: the payer publishes a send block to the configured
- * wallet and passes its hash as the payment payload. The server reads the
- * block from a Nano node RPC and checks that it is a confirmed send of at
+ * wallet and passes its hash as the payment payload, or passes the signed
+ * block itself and the server publishes it through the node. The server reads
+ * the block from a Nano node RPC and checks that it is a confirmed send of at
  * least the required amount to the configured account. No private key is
- * held and nothing is broadcast.
+ * held; the only thing ever broadcast is a block the payer signed.
  */
 
 export type NanoRpc = (body: Record<string, string>) => Promise<unknown>;
@@ -290,6 +291,7 @@ interface BlockInfo {
   local_timestamp?: string;
   contents?: {
     type?: string;
+    account?: string;
     previous?: string;
     balance?: string;
     link_as_account?: string;
@@ -316,6 +318,279 @@ async function getBlockInfo(rpc: NanoRpc, hash: string): Promise<BlockInfo> {
 function parseRaw(value: unknown): bigint | undefined {
   if (typeof value !== "string" || !/^\d+$/.test(value)) return undefined;
   return BigInt(value);
+}
+
+// --- Signed send blocks (the `payload.block` form of the x402 Nano exact scheme) ---
+
+/** A signed state block in the JSON form a Nano node returns and accepts */
+export interface NanoStateBlock {
+  type: "state";
+  account: string;
+  previous: string;
+  representative: string;
+  balance: string;
+  link: string;
+  link_as_account?: string;
+  signature: string;
+  work: string;
+}
+
+const SIGNATURE_PATTERN = /^[0-9A-Fa-f]{128}$/;
+const WORK_PATTERN = /^[0-9A-Fa-f]{16}$/;
+const MAX_RAW = (1n << 128n) - 1n;
+const ZERO_HASH = "0".repeat(64);
+
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
+}
+
+/**
+ * Check the shape of a signed state block. Returns the block with its fields
+ * typed, or `undefined` when a field is missing or malformed. The signature and
+ * the work are checked by the node when the block is published.
+ */
+export function parseNanoStateBlock(
+  value: unknown
+): NanoStateBlock | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const block = value as Record<string, unknown>;
+  const isString = (key: string) => typeof block[key] === "string";
+  if (
+    block.type !== "state" ||
+    ![
+      "account",
+      "previous",
+      "representative",
+      "balance",
+      "link",
+      "signature",
+      "work",
+    ].every(isString)
+  ) {
+    return undefined;
+  }
+  const balance = parseRaw(block.balance);
+  if (
+    !isValidNanoAddress(block.account as string) ||
+    !isValidNanoAddress(block.representative as string) ||
+    !BLOCK_HASH_PATTERN.test(block.previous as string) ||
+    !BLOCK_HASH_PATTERN.test(block.link as string) ||
+    !SIGNATURE_PATTERN.test(block.signature as string) ||
+    !WORK_PATTERN.test(block.work as string) ||
+    balance === undefined ||
+    balance > MAX_RAW
+  ) {
+    return undefined;
+  }
+  if (
+    block.link_as_account !== undefined &&
+    (typeof block.link_as_account !== "string" ||
+      nanoAddressToPublicKey(block.link_as_account) !==
+        (block.link as string).toUpperCase())
+  ) {
+    return undefined;
+  }
+  // Only the block's own fields are kept, so nothing else reaches the node
+  const parsed: NanoStateBlock = {
+    type: "state",
+    account: block.account as string,
+    previous: block.previous as string,
+    representative: block.representative as string,
+    balance: block.balance as string,
+    link: block.link as string,
+    signature: block.signature as string,
+    work: block.work as string,
+  };
+  if (block.link_as_account !== undefined) {
+    parsed.link_as_account = block.link_as_account as string;
+  }
+  return parsed;
+}
+
+/**
+ * The hash of a state block: BLAKE2b-256 over the preamble (31 zero bytes and
+ * 6), account, previous, representative, balance (16 bytes, big endian) and
+ * link. It is the hash the node returns when the block is published.
+ */
+export function hashNanoStateBlock(block: NanoStateBlock): string {
+  const parts = [
+    bigintToBytes(6n, 32),
+    hexToBytes(nanoAddressToPublicKey(block.account) ?? ""),
+    hexToBytes(block.previous),
+    hexToBytes(nanoAddressToPublicKey(block.representative) ?? ""),
+    bigintToBytes(BigInt(block.balance), 16),
+    hexToBytes(block.link),
+  ];
+  const lengths = [32, 32, 32, 32, 16, 32];
+  const message = new Uint8Array(176);
+  let offset = 0;
+  parts.forEach((part, i) => {
+    if (part.length !== lengths[i]) {
+      throw new Error("Malformed Nano state block");
+    }
+    message.set(part, offset);
+    offset += part.length;
+  });
+  return bytesToHex(blake2b(message, 32));
+}
+
+export interface PublishNanoPaymentOptions extends Omit<
+  VerifyNanoPaymentOptions,
+  "blockHash"
+> {
+  /** The payer's signed, not yet published, send block */
+  block: unknown;
+  /** How many times to read the block back while it is not yet confirmed */
+  confirmAttempts?: number;
+  /** Pause between those reads */
+  wait?: () => Promise<void>;
+}
+
+const NOT_YET_CONFIRMED = new Set([
+  "Nano block is not confirmed",
+  "Nano RPC error: Block not found",
+]);
+
+/**
+ * Accept a payment sent as a signed send block instead of a block hash, as
+ * the x402 Nano exact scheme's clients do. The block is checked before
+ * anything is sent to the node: it must be a send of the price to `payTo`
+ * (and, with `orderId`, carry the order commitment). It is then published
+ * through the node with `process` (the node checks its signature and work),
+ * and once confirmed it is verified and claimed exactly like a block hash
+ * paid with `verifyNanoPayment`. A block that is already on the ledger is not
+ * published again; it is verified by its hash.
+ */
+export async function publishNanoPayment(
+  options: PublishNanoPaymentOptions
+): Promise<NanoVerification> {
+  const { rpc, usedBlocks } = options;
+  const block = parseNanoStateBlock(options.block);
+  if (!block) {
+    return { valid: false, error: "Invalid Nano send block" };
+  }
+
+  const payToKey = nanoAddressToPublicKey(options.payTo);
+  if (!payToKey) {
+    return { valid: false, error: "Invalid Nano wallet address" };
+  }
+  const required = parseRaw(options.amount);
+  if (required === undefined) {
+    return { valid: false, error: "Invalid required amount" };
+  }
+  if (options.orderId !== undefined && !isValidNanoOrderId(options.orderId)) {
+    return { valid: false, error: "Invalid Nano order id" };
+  }
+  if (block.link.toUpperCase() !== payToKey) {
+    return { valid: false, error: "Nano block pays a different account" };
+  }
+  if (block.previous === ZERO_HASH) {
+    return { valid: false, error: "Nano block is not a send block" };
+  }
+  if (options.orderId !== undefined) {
+    const commitment = await nanoOrderCommitment(
+      options.orderId,
+      options.payTo,
+      required.toString()
+    );
+    if (
+      nanoAddressToPublicKey(block.representative) !==
+      nanoAddressToPublicKey(commitment)
+    ) {
+      return { valid: false, error: "Nano block is not bound to this order" };
+    }
+  }
+
+  const hash = hashNanoStateBlock(block);
+  if (usedBlocks.has(hash)) {
+    return { valid: false, error: "Nano block has already been used" };
+  }
+
+  try {
+    const existing = (await rpc({
+      action: "block_info",
+      json_block: "true",
+      hash,
+    })) as { error?: string } | null;
+    if (!existing || typeof existing !== "object") {
+      throw new Error("Nano RPC returned an invalid response");
+    }
+
+    if (existing.error === "Block not found") {
+      const previous = await getBlockInfo(rpc, block.previous);
+      const previousKey = nanoAddressToPublicKey(
+        previous.block_account ?? previous.contents?.account ?? ""
+      );
+      if (previousKey !== nanoAddressToPublicKey(block.account)) {
+        return {
+          valid: false,
+          error: "Nano block does not follow its previous block",
+        };
+      }
+      const previousBalance = parseRaw(
+        previous.contents?.balance ?? previous.balance
+      );
+      if (previousBalance === undefined) {
+        return { valid: false, error: "Nano RPC returned an invalid balance" };
+      }
+      const paid = previousBalance - BigInt(block.balance);
+      if (options.orderId !== undefined ? paid !== required : paid < required) {
+        return {
+          valid: false,
+          error: `Nano payment must be ${options.orderId !== undefined ? "exactly" : "at least"} ${required} raw, ${paid} raw sent`,
+        };
+      }
+
+      const published = (await rpc({
+        action: "process",
+        subtype: "send",
+        block: JSON.stringify(block),
+      })) as { hash?: string; error?: string } | null;
+      if (!published || typeof published !== "object" || published.error) {
+        return {
+          valid: false,
+          error: `Nano node did not publish the block${published?.error ? `: ${published.error}` : ""}`,
+        };
+      }
+      if (String(published.hash).toUpperCase() !== hash) {
+        return { valid: false, error: "Nano node published a different block" };
+      }
+    } else if (existing.error) {
+      throw new Error(`Nano RPC error: ${existing.error}`);
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : "Nano RPC request failed",
+    };
+  }
+
+  const attempts = Math.max(1, options.confirmAttempts ?? 20);
+  const wait =
+    options.wait ??
+    (() => new Promise<void>((resolve) => setTimeout(resolve, 500)));
+  let result: NanoVerification = {
+    valid: false,
+    error: "Nano block is not confirmed",
+  };
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    if (attempt > 0) await wait();
+    result = await verifyNanoPayment({
+      blockHash: hash,
+      payTo: options.payTo,
+      amount: options.amount,
+      rpc,
+      usedBlocks,
+      maxPaymentAgeSeconds: options.maxPaymentAgeSeconds,
+      orderId: options.orderId,
+    });
+    if (result.valid || !NOT_YET_CONFIRMED.has(result.error)) return result;
+  }
+  return result;
 }
 
 /**
