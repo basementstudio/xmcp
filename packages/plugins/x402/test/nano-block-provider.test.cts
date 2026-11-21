@@ -34,7 +34,7 @@ interface CallResult {
 
 function callTool(
   middleware: ReturnType<typeof x402Provider>,
-  paymentHeader: string | undefined,
+  paymentHeader: string | object | undefined,
   toolResult: unknown = { content: [{ type: "text", text: "ok" }] }
 ): Promise<CallResult> {
   return new Promise((resolve) => {
@@ -127,6 +127,74 @@ test("x402Provider takes a nano payment sent as a signed block", async () => {
       payload: { block },
     })
   ).toString("base64");
+
+  const paid = await callTool(middleware, header);
+  assert.equal(paid.nextCalled, true);
+  assert.equal(paid.paymentContext?.transactionHash, hash);
+  assert.equal(paid.paymentContext?.amount, PRICE_RAW);
+  assert.deepEqual(published, [block]);
+
+  const replay = await callTool(middleware, header);
+  assert.equal(replay.nextCalled, false);
+  assert.equal(
+    replay.body.result.structuredContent.error,
+    "Nano block has already been used"
+  );
+  assert.equal(published.length, 1);
+});
+
+test("x402Provider takes the MCP transport's PaymentPayload object in _meta", async () => {
+  // The x402 MCP transport puts the PaymentPayload in _meta as an object, not
+  // as the base64 header string.
+  x402Registry.register("nano-tool", { network: "nano", price: 0.01 });
+  const previousBalance = 5n * RAW_PER_XNO;
+  const block = {
+    type: "state",
+    account: PAYER,
+    previous: newHash(),
+    representative: PAYER,
+    balance: (previousBalance - BigInt(PRICE_RAW)).toString(),
+    link: WALLET_PUBLIC_KEY,
+    link_as_account: WALLET,
+    signature: "AB".repeat(64),
+    work: "0123456789abcdef",
+  } as const;
+  const hash = hashNanoStateBlock(block);
+  const published: unknown[] = [];
+  const rpc: NanoRpc = async (body) => {
+    if (body.action === "process") {
+      published.push(JSON.parse(body.block));
+      return { hash };
+    }
+    if (body.hash === hash && published.length > 0) {
+      return {
+        block_account: PAYER,
+        balance: block.balance,
+        confirmed: "true",
+        subtype: "send",
+        contents: { ...block },
+      };
+    }
+    if (body.hash === block.previous) {
+      return {
+        block_account: PAYER,
+        balance: previousBalance.toString(),
+        confirmed: "true",
+        subtype: "receive",
+        contents: { type: "state", balance: previousBalance.toString() },
+      };
+    }
+    return { error: "Block not found" };
+  };
+  const middleware = x402Provider({
+    wallet: "0x1111111111111111111111111111111111111111",
+    nano: { wallet: WALLET, rpc },
+  });
+  const header = {
+    x402Version: 2,
+    accepted: { scheme: "exact", network: "nano:mainnet" },
+    payload: { block },
+  };
 
   const paid = await callTool(middleware, header);
   assert.equal(paid.nextCalled, true);
