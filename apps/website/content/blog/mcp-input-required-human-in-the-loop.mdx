@@ -6,6 +6,8 @@ category: "guides"
 topic: "building"
 date: "2026-11-17"
 textureImage: "/textures/text4.png"
+ogTitle: "Human-in-the-loop MCP tools"
+ogDescription: "Confirm destructive actions and collect missing details with input_required."
 ---
 
 In MCP `2026-07-28`, a tool asks the user for input by returning a result with `resultType: "input_required"`. The client shows the question, collects the answer, and calls the same tool again with the answer attached. This pattern is called a multi round-trip request, and it replaces the server-initiated `elicitation/create` request from earlier revisions.

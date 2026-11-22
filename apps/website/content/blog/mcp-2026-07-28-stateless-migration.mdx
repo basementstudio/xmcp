@@ -6,6 +6,8 @@ category: "guides"
 topic: "building"
 date: "2026-11-20"
 textureImage: "/textures/text9.png"
+ogTitle: "MCP 2026-07-28 and stateless servers"
+ogDescription: "What changed in the spec, and a pattern for stateless servers with signed handles."
 ---
 
 MCP revision `2026-07-28` made the protocol stateless. There is no `initialize` handshake and no `Mcp-Session-Id`: every request carries its own protocol version, client identity, and capabilities. State that has to span several tool calls now travels in a handle the server mints and the client passes back as an ordinary tool argument.

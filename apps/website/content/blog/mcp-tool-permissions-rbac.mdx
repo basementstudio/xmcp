@@ -6,6 +6,8 @@ category: "guides"
 topic: "security"
 date: "2026-11-10"
 textureImage: "/textures/text8.png"
+ogTitle: "MCP tool permissions"
+ogDescription: "Show each user only the tools they can use, with a single authorize function."
 ---
 
 To give different users different MCP tools, check the caller's verified identity in two places: when the server lists its tools, and when a tool is called. In xmcp both checks are one function. Export `authorize` from `src/middleware.ts`, return `false` for a component the caller may not use, and xmcp hides it from every listing and rejects direct access as if it did not exist.

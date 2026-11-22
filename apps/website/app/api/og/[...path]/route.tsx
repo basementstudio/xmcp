@@ -12,7 +12,7 @@ const OG_HEIGHT = 630;
 const SAFE_X = 84;
 const SAFE_TOP = 80;
 const SAFE_BOTTOM = 92;
-const DESCRIPTION_LIMIT = 96;
+const DESCRIPTION_LIMIT = 120;
 
 export const runtime = "nodejs";
 
@@ -111,10 +111,10 @@ function figureDataUrl(theme: OgTheme, key: string) {
   return figureCache.get(file) ?? null;
 }
 
-function truncate(text: string, limit: number) {
-  if (text.length <= limit) return text;
-  const cut = text.slice(0, limit);
-  return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[,.;:]$/, "")}…`;
+function fittedDescription(text: string) {
+  if (text.length <= DESCRIPTION_LIMIT) return text;
+  const sentence = text.match(/^.+?[.!?](?=\s|$)/)?.[0];
+  return sentence && sentence.length <= DESCRIPTION_LIMIT ? sentence : "";
 }
 
 function titleSize(title: string) {
@@ -174,8 +174,10 @@ function resolveOgContent(
       return {
         ok: true,
         content: {
-          title: post.title,
-          description: post.summary ?? post.description ?? "",
+          title: post.data.ogTitle ?? post.title,
+          description:
+            post.data.ogDescription ??
+            fittedDescription(post.summary ?? post.description ?? ""),
           pills: detail
             ? [CATEGORY_PILLS[post.category], detail]
             : [CATEGORY_PILLS[post.category]],
@@ -211,8 +213,10 @@ function resolveOgContent(
       return {
         ok: true,
         content: {
-          title: meta.title,
-          description: meta.summary ?? meta.description,
+          title: meta.ogTitle ?? meta.title,
+          description:
+            meta.ogDescription ??
+            fittedDescription(meta.summary ?? meta.description),
           pills: ["Docs"],
           theme: "dark",
         },
@@ -360,7 +364,7 @@ export async function GET(
                 lineHeight: "36px",
               }}
             >
-              {truncate(description, DESCRIPTION_LIMIT)}
+              {description}
             </div>
           )}
         </div>

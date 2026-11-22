@@ -44,6 +44,8 @@ export interface DocsFrontmatter {
   readonly description?: string;
   readonly summary?: string;
   readonly metadataTitle?: string;
+  readonly ogTitle?: string;
+  readonly ogDescription?: string;
   readonly publishedAt?: string;
   readonly [key: string]: unknown;
 }
@@ -63,6 +65,8 @@ export interface DocsMetadata {
   readonly searchTitle: string;
   readonly description: string;
   readonly summary: string | undefined;
+  readonly ogTitle: string | undefined;
+  readonly ogDescription: string | undefined;
   readonly ogImageUrl: string;
 }
 
@@ -118,6 +122,8 @@ export function getDocsMetadata(
     ),
     description: docsPage?.description ?? page.data.description ?? "",
     summary: docsPage?.summary,
+    ogTitle: docsPage?.data.ogTitle,
+    ogDescription: docsPage?.data.ogDescription,
     ogImageUrl: `${baseUrl}/api/og/docs/${slugPath}`,
   };
 }

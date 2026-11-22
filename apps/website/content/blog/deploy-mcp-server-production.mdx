@@ -9,6 +9,8 @@ lastModified: "2026-10-23"
 unlisted: true
 authors:
   - 0xkoller
+ogTitle: "Deploy an MCP server to production"
+ogDescription: "Vercel, AWS Lambda, Railway and ECS compared, with the tradeoffs of each."
 ---
 
 Getting an MCP server to production requires a different mental model than deploying a REST API. MCP connections can be long-lived, cold starts affect perceived latency, and the Streamable HTTP transport has specific requirements for serverless environments.
