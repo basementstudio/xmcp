@@ -22,7 +22,12 @@
   "license": "MIT",
   "keywords": [
     "mcp",
+    "mcp-server",
+    "mcp-framework",
     "modelcontextprotocol",
+    "model-context-protocol",
+    "typescript",
+    "ai-agents",
     "http",
     "stdio"
   ],
