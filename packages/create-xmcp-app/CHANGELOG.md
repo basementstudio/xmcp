@@ -1,5 +1,11 @@
 # create-xmcp-app
 
+## 1.13.2
+
+### Patch Changes
+
+- 8469a8e: `create-xmcp-app` now adds `AGENTS.md` and `CLAUDE.md` to new projects, pointing coding agents at the current xmcp docs, the docs MCP server, and the project conventions.
+
 ## 1.13.1
 
 ### Patch Changes
