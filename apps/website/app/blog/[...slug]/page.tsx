@@ -23,6 +23,8 @@ import {
   getFaqSchema,
 } from "@/lib/structured-data";
 import { getPostFaqItems } from "@/utils/blog/faq";
+import { getRelatedPosts } from "@/utils/blog/related";
+import { RelatedGuides } from "@/components/blog/related-guides";
 
 export default async function Page(props: PageProps<"/blog/[...slug]">) {
   const params = await props.params;
@@ -35,6 +37,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
 
   const post = getBlogPostBySlug(slug);
   const faqs = post ? getPostFaqItems(post.content, page.data.toc) : [];
+  const relatedPosts = getRelatedPosts(slug);
   const structuredData = post
     ? [
         getBlogPostingSchema(post, SITE_URL),
@@ -94,6 +97,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
           )}
         />
       </DocsBody>
+      <RelatedGuides posts={relatedPosts} />
     </BlogPage>
   );
 }

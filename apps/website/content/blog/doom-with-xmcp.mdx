@@ -1,6 +1,6 @@
 ---
 title: "Running DOOM in ChatGPT: A Step-by-Step Guide"
-description: "Learn how we made DOOM playable inside ChatGPT using xmcp — rendering frames as images, streaming inputs, and shipping an MCP-powered game loop."
+description: "How we made DOOM playable inside ChatGPT with xmcp: frames rendered as images and inputs sent as tool calls."
 lastModified: "2026-10-23"
 category: "guides"
 topic: "apps"
@@ -12,6 +12,13 @@ authors:
   - 0xkoller
 ogDescription: "How we made DOOM playable inside ChatGPT with an MCP-powered game loop."
 ---
+
+<Callout variant="warning">
+  This post was written for xmcp's original OpenAI Apps SDK support. The
+  `_meta.openai` keys in its examples were removed in favor of MCP Apps, so they
+  no longer render a widget. To move a widget to `_meta.ui`, follow the [Apps
+  SDK migration guide](/blog/apps-sdk).
+</Callout>
 
 Learn how we made DOOM playable in ChatGPT using xmcp's Apps SDK integration. This guide shows you how to build interactive game experiences that run directly inside ChatGPT.
 
@@ -98,7 +105,7 @@ export const metadata: ToolMetadata = {
 };
 ```
 
-To understand how the metadata works, you can read the [Tools Metadata](/docs/core-concepts/tools#openai-metadata).
+The current metadata fields are documented in [MCP Apps metadata](/docs/core-concepts/tools#mcp-apps-metadata).
 
 ## Implementing Tool Handlers
 

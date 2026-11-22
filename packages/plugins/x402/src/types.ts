@@ -77,6 +77,15 @@ export const x402ConfigSchema = z.object({
        * and the payload carries `orderId` beside `blockHash`.
        */
       requireBinding: z.boolean().optional(),
+      /**
+       * x402 version of the 402 offer for a tool on `nano` when the call
+       * carries no payment yet. 1 (default) sends network `nano` and
+       * `maxAmountRequired`; 2 sends network `nano:mainnet`, `amount` and a
+       * top-level `resource`, as x402 v2 Nano clients expect. Payments of
+       * either version are accepted, and a rejected payment is answered in
+       * its own version.
+       */
+      x402Version: z.union([z.literal(1), z.literal(2)]).optional(),
     })
     .optional(),
   defaults: z

@@ -1,6 +1,6 @@
 {
   "name": "create-xmcp-app",
-  "version": "1.13.0",
+  "version": "1.13.2",
   "author": {
     "name": "xmcp",
     "email": "support@xmcp.dev",
@@ -21,7 +21,12 @@
   "license": "MIT",
   "keywords": [
     "mcp",
+    "mcp-server",
+    "mcp-framework",
     "modelcontextprotocol",
+    "model-context-protocol",
+    "typescript",
+    "ai-agents",
     "http",
     "stdio"
   ],

@@ -75,6 +75,16 @@ const nextConfig: NextConfig = {
         destination: "/blog/xmcp-v1",
         permanent: true,
       },
+      {
+        source: "/blog/fastmcp-alternatives",
+        destination: "/blog/best-mcp-server-frameworks",
+        permanent: true,
+      },
+      {
+        source: "/blog/fastmcp-alternatives.:ext(md|mdx)",
+        destination: "/blog/best-mcp-server-frameworks.md",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

@@ -121,6 +121,9 @@ interface X402Config {
   nano?: {
     wallet?: string; // nano_ address, falls back to `wallet`
     rpc?: string; // default: https://rpc.nano.to
+    claimsFile?: string;
+    requireBinding?: boolean;
+    x402Version?: 1 | 2; // version of the unpaid offer, default 1
   };
   defaults?: {
     price?: number;
@@ -224,6 +227,38 @@ export default x402Provider({
   `payload: { blockHash, orderId }`. A block seen on the public ledger then
   cannot be presented by anyone who does not hold its order id, and one block
   pays for one order.
+
+The 402 offer for an unpaid call is x402 v1 by default: network `nano` and
+the price in raw under `maxAmountRequired`. Clients of the x402 v2 Nano
+`exact` scheme look for network `nano:mainnet` and `amount`. Set
+`nano.x402Version: 2` to send them that offer, with the tool named in a
+top-level `resource`:
+
+```json
+{
+  "x402Version": 2,
+  "error": "Payment required",
+  "resource": {
+    "url": "mcp://tool/word-count",
+    "description": "Access to word-count tool",
+    "mimeType": "application/json"
+  },
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "nano:mainnet",
+      "amount": "1000000000000000000000000000",
+      "payTo": "nano_...",
+      "asset": "XNO",
+      "maxTimeoutSeconds": 300,
+      "extra": { "name": "XNO", "decimals": 30 }
+    }
+  ]
+}
+```
+
+Payments of either version are accepted, and a rejected payment is answered
+in its own version. Tools on Base are not affected.
 
 ## License
 

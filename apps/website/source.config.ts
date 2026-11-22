@@ -23,6 +23,12 @@ export const docs = defineDocs({
       ogTitle: z.string().optional(),
       ogDescription: z.string().optional(),
       lastModified: z.string().date().optional(),
+      relatedGuides: z
+        .array(z.string())
+        .refine((slugs) => slugs.length === 2 || slugs.length === 4, {
+          message: "relatedGuides must list 2 or 4 posts",
+        })
+        .optional(),
     }),
   },
 });

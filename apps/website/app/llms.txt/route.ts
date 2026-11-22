@@ -2,6 +2,8 @@ import { source } from "../../lib/source";
 import { getAllBlogPosts } from "../../utils/blog";
 import { getTemplates } from "../templates/utils/content";
 import { FAQ_ITEMS } from "../../content/faq";
+import { listLLMSections } from "../../lib/llm-sections";
+import { estimateTokens } from "../../lib/estimate-tokens";
 
 export const revalidate = false;
 
@@ -107,10 +109,17 @@ export async function GET() {
     ].join("\n")
   );
 
+  const sections = await listLLMSections();
+  const sectionFiles = sections.map(
+    (section) =>
+      `- [${section.name}.txt](${section.path}): every ${section.name} page in one file, about ${estimateTokens(section.text).toLocaleString("en-US")} tokens`
+  );
+
   scanned.push("## Optional");
   scanned.push(
     [
       "- [llms-full.txt](/llms-full.txt): complete documentation and blog content in one file",
+      ...sectionFiles,
       "- [index.md](/index.md): site overview in markdown",
       "- [changelog.md](/changelog.md): stable xmcp release notes in markdown",
       "- [blog.md](/blog.md): blog index in markdown",

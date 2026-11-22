@@ -110,21 +110,52 @@ export function createPaymentRequirements(useV2Format: boolean = false) {
 }
 
 /**
- * Create the 402 Payment Required response body
+ * The x402 version of a 402 that does not answer a payment of a known
+ * version, such as the first, unpaid call: v1, unless the tool is on `nano`
+ * and `nano.x402Version` is 2
+ */
+function offerUsesV2Format(): boolean {
+  const { config } = getToolContext();
+  return (
+    config.nano?.x402Version === 2 &&
+    resolveNetwork().networkConfig.id === NANO_NETWORK_ID
+  );
+}
+
+/**
+ * Create the 402 Payment Required response body. Without `useV2Format`, the
+ * version comes from `offerUsesV2Format`.
  */
 export function createPaymentRequiredResponse(
   error?: string,
-  useV2Format: boolean = false
+  useV2Format?: boolean
 ) {
-  const requirements = createPaymentRequirements(useV2Format);
+  const v2 = useV2Format ?? offerUsesV2Format();
+  const requirements = createPaymentRequirements(v2);
 
   // Each offer that requires a bound Nano payment carries a fresh order id
   if (requirements.extra.binding === NANO_BINDING_V1) {
     requirements.extra = { ...requirements.extra, orderId: newNanoOrderId() };
   }
 
+  // An x402 v2 Nano offer names the resource at the top level, where v2
+  // clients read it
+  if (v2 && requirements.network === NANO_NETWORK_ID) {
+    const { toolName, toolOptions } = getToolContext();
+    return {
+      x402Version: 2,
+      error: error ?? "Payment required",
+      resource: {
+        url: `mcp://tool/${toolName}`,
+        description: toolOptions.description ?? `Access to ${toolName} tool`,
+        mimeType: "application/json",
+      },
+      accepts: [requirements],
+    };
+  }
+
   return {
-    x402Version: useV2Format ? 2 : 1,
+    x402Version: v2 ? 2 : 1,
     error: error ?? "Payment required",
     accepts: [requirements],
   };
