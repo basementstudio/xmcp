@@ -16,7 +16,10 @@ import type {
   OAuthAuthorizationServerMetadata,
 } from "./types.js";
 import { createVerifier, extractBearerToken } from "./jwt.js";
-import { isToolPermissionDefined, userHasToolPermission } from "./permissions.js";
+import {
+  fetchResourceServerScopes,
+  fetchUserPermissions,
+} from "./permissions.js";
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"] as const;
 
@@ -179,12 +182,20 @@ function auth0Middleware(
       }
 
       try {
-        await enforceToolPermissions(req, config, result.authInfo, managementClient);
+        await enforceToolPermissions(
+          req,
+          config,
+          result.authInfo,
+          managementClient
+        );
       } catch (error) {
         if (!res.headersSent) {
           const message = error instanceof Error ? error.message : "Forbidden";
 
-          const requestId = req.body?.id ?? null;
+          const requestId = findToolCallId(
+            req,
+            error instanceof ToolPermissionError ? error.toolName : undefined
+          );
 
           res.status(200).json({
             jsonrpc: "2.0",
@@ -224,40 +235,80 @@ async function enforceToolPermissions(
   authInfo: AuthInfo,
   managementClient: ManagementClient
 ): Promise<void> {
-  const toolNames = extractToolNamesFromRequest(req);
-  const toolName = toolNames[0];
+  const toolNames = [...new Set(extractToolNamesFromRequest(req))];
 
-  if (!toolName || typeof toolName !== "string" || toolName.length === 0) {
+  if (toolNames.length === 0) {
     return;
   }
 
-  // Check if tool permission is defined in Auth0
-  const isDefined = await isToolPermissionDefined(
+  const definedScopes = await fetchResourceServerScopes(
     managementClient,
-    config.audience,
-    toolName
-  );
+    config.audience
+  ).catch((error) => {
+    console.error("[Auth0] Failed to fetch resource server scopes:", error);
+    return null;
+  });
 
-  // Management API failed → deny (secure default)
-  if (isDefined === null) {
-    throw new Error(`You don't have permission to use the '${toolName}' tool.`);
+  if (!definedScopes) {
+    throw new ToolPermissionError(toolNames[0]);
   }
 
-  // Permission NOT defined in Auth0 → public tool, allow
-  if (!isDefined) {
+  const privateTools = toolNames.filter((name) =>
+    definedScopes.has(toolScope(name))
+  );
+
+  if (privateTools.length === 0) {
     return;
   }
 
-  // Permission IS defined in Auth0 → check user has it via Management API
-  const userId = authInfo.user.sub;
-  const hasPermission = await userHasToolPermission(
+  const userPermissions = await fetchUserPermissions(
     managementClient,
-    userId,
-    config.audience,
-    toolName
+    authInfo.user.sub,
+    config.audience
+  ).catch((error) => {
+    console.error("[Auth0] Failed to fetch user permissions:", error);
+    return null;
+  });
+
+  const deniedTool = privateTools.find(
+    (name) => !userPermissions?.has(toolScope(name))
   );
 
-  if (hasPermission === null || !hasPermission) {
-    throw new Error(`You don't have permission to use the '${toolName}' tool.`);
+  if (deniedTool) {
+    throw new ToolPermissionError(deniedTool);
   }
+}
+
+function toolScope(toolName: string): string {
+  return `tool:${toolName}`;
+}
+
+class ToolPermissionError extends Error {
+  constructor(readonly toolName: string) {
+    super(`You don't have permission to use the '${toolName}' tool.`);
+  }
+}
+
+function findToolCallId(
+  req: Request,
+  toolName: string | undefined
+): string | number | null {
+  const messages: unknown[] = Array.isArray(req.body) ? req.body : [req.body];
+  const message = messages.find(
+    (candidate) =>
+      isToolCall(candidate) &&
+      (toolName === undefined || candidate.params?.name === toolName)
+  );
+  return isToolCall(message) ? (message.id ?? null) : null;
+}
+
+function isToolCall(message: unknown): message is {
+  id?: string | number | null;
+  params?: { name?: unknown };
+} {
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    (message as { method?: unknown }).method === "tools/call"
+  );
 }
