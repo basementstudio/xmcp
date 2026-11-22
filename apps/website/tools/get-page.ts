@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { type InferSchema } from "xmcp";
-import { cleanId, getPageContent } from "@/utils/docs";
-import { parseFrontmatter } from "@/utils/frontmatter";
+import { source } from "@/lib/source";
+import { getLLMText } from "@/lib/get-llm-text";
+import { slugsFromId } from "@/utils/docs";
 
 export const schema = {
   id: z
@@ -22,9 +23,8 @@ export const metadata = {
 };
 
 export default async function getPage({ id }: InferSchema<typeof schema>) {
-  const slugs = cleanId(id).split("/").filter(Boolean);
-  const page = await getPageContent(slugs);
+  const page = source.getPage(slugsFromId(id));
   return page
-    ? `# ${page.title}\n\n${parseFrontmatter(page.content).content.trim()}`
+    ? getLLMText(page)
     : `Not found: ${id}. Call list-pages for the available ids.`;
 }
