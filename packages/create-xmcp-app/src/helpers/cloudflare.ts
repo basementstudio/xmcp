@@ -1,8 +1,8 @@
 import path from "path";
 import fs from "fs-extra";
 
-const DEFAULT_WRANGLER_VERSION = "^4.61.1";
-const DEFAULT_WORKERS_TYPES_VERSION = "^4.20241112.0";
+const DEFAULT_WRANGLER_VERSION = "^4.161.0";
+const DEFAULT_WORKERS_TYPES_VERSION = "^5.20261113.1";
 
 function sanitizeWorkerName(name: string): string {
   return name
