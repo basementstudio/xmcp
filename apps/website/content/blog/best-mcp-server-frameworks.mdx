@@ -1,43 +1,162 @@
 ---
 title: "Best MCP Server Frameworks in 2026: TypeScript Edition"
-description: "A practical guide to the main TypeScript frameworks for building MCP servers — the official SDK, FastMCP, Vercel's mcp-handler, and xmcp — with a clear recommendation for each use case."
-summary: "A practical guide to the main TypeScript frameworks for building MCP servers — the official SDK, FastMCP, Vercel's mcp-handler, and xmcp — with a clear recommendation for each use case."
+description: "Compare the official SDK, FastMCP, mcp-handler, and xmcp, and choose a TypeScript MCP framework for your project."
+summary: "A practical guide to the main TypeScript frameworks for building MCP servers — the official SDK, FastMCP, Vercel's mcp-handler, and xmcp — including FastMCP alternatives and how to migrate."
 category: "guides"
 topic: "comparisons"
 date: "2026-06-30"
-lastModified: "2026-10-23"
+lastModified: "2026-11-22"
 unlisted: true
 authors:
   - 0xkoller
 ---
 
-The best MCP framework depends on the application you are building. This comparison covers four TypeScript options; it is not an exhaustive ranking or a benchmark. Package interfaces below were reviewed on October 23, 2026.
+The best MCP framework depends on what you are building and which protocol version your clients speak. This guide compares four TypeScript options, shows the same tool written in each, and covers how to move off FastMCP if it no longer fits. It is not a popularity ranking or a benchmark. Package interfaces were reviewed on November 22, 2026.
 
-## Compare the programming models
+## The short answer
 
-| Option               | Tool organization         | Useful when                                                       |
-| -------------------- | ------------------------- | ----------------------------------------------------------------- |
-| Official SDK         | Explicit registration     | You want direct protocol control                                  |
-| FastMCP (TypeScript) | Programmatic registration | You prefer a server object with convenience APIs                  |
-| mcp-handler          | HTTP request handler      | You want to mount MCP inside an application                       |
-| xmcp                 | File-based discovery      | You want tools, resources, and prompts organized as project files |
+| Your requirement                                              | Start with              |
+| ------------------------------------------------------------- | ----------------------- |
+| Direct control of protocol registration and transports        | Official TypeScript SDK |
+| One MCP route inside an existing Fetch-compatible web app     | mcp-handler             |
+| A server object with many convenience APIs, on 2025-era MCP   | FastMCP (TypeScript)    |
+| Tools, resources, and prompts as files, with a build workflow | xmcp                    |
 
-The [official TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) publishes separate server and client packages in v2. Use documentation matching your installed major version.
+## Protocol support matters first
 
-[FastMCP for TypeScript](https://github.com/punkpeye/fastmcp) supports authentication and multiple transport configurations. It is distinct from the Python project with the same name.
+The MCP revision of [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28) removed the `initialize` handshake and the `Mcp-Session-Id` header. Every request now carries what the server needs. Clients are moving to it at different speeds, so check which revision each framework serves before comparing APIs.
 
-[mcp-handler](https://github.com/vercel-labs/mcp-handler) works with Fetch-compatible frameworks and provides authorization helpers. Its v2 interface differs from older SSE and Redis examples.
+| Framework            | 2026-07-28 (stateless) | 2025-era clients                     |
+| -------------------- | ---------------------- | ------------------------------------ |
+| Official SDK v2      | Yes                    | Through the SDK's stateless fallback |
+| mcp-handler 2.x      | Yes                    | Through the SDK's stateless fallback |
+| FastMCP (TypeScript) | No, per its README     | Yes                                  |
+| xmcp                 | Yes                    | Yes, through the stateless fallback  |
 
-## Where xmcp fits
+If your server has to run on serverless hosting or behind a load balancer, stateless HTTP removes a whole class of problems, such as the ["Session not found" error](/blog/mcp-session-not-found-error) after a redeploy. The [2026-07-28 migration guide](/blog/mcp-2026-07-28-stateless-migration) explains what changed.
 
-xmcp discovers files under `src/tools/`, `src/resources/`, and `src/prompts/`. You define input schemas with Zod, export a handler, and let the compiler register the capability. [Scaffold a project](/docs/getting-started/installation) or start from a [runnable template](/templates).
+## The same tool in each framework
 
-The framework supports standalone servers and [existing Next.js applications](/docs/adapters/nextjs), alongside other framework adapters. Authentication, payments, databases, and observability are covered by [integration guides](/integrations). These integrations still require provider credentials and application-specific access rules.
+A `greet` tool that takes a name and returns a sentence shows how each framework organizes code.
 
-For HTTP deployments, xmcp keeps requests independent of server-side session memory. Choose your transport based on the clients and hosting environment you actually use.
+### Official TypeScript SDK
+
+```typescript title="server.ts"
+import { McpServer } from "@modelcontextprotocol/server";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import * as z from "zod/v4";
+
+const server = new McpServer({ name: "greeting-server", version: "1.0.0" });
+
+server.registerTool(
+  "greet",
+  {
+    description: "Greet someone by name",
+    inputSchema: z.object({ name: z.string() }),
+  },
+  async ({ name }) => ({
+    content: [{ type: "text", text: `Hello, ${name}!` }],
+  })
+);
+
+await server.connect(new StdioServerTransport());
+```
+
+The [official SDK](https://github.com/modelcontextprotocol/typescript-sdk) is the reference implementation. Version 2 splits server and client into `@modelcontextprotocol/server` and `@modelcontextprotocol/client`, accepts any Standard Schema library, and ships adapters for Express, Fastify, and Hono. You register every capability and choose the transport yourself. Version 1 examples import from `@modelcontextprotocol/sdk`, so check the major version before copying code.
+
+### mcp-handler
+
+```typescript title="app/api/mcp/route.ts"
+import { createMcpHandler } from "mcp-handler";
+import { z } from "zod";
+
+const handler = createMcpHandler((server) => {
+  server.registerTool(
+    "greet",
+    {
+      description: "Greet someone by name",
+      inputSchema: z.object({ name: z.string() }),
+    },
+    async ({ name }) => ({
+      content: [{ type: "text", text: `Hello, ${name}!` }],
+    })
+  );
+});
+
+export { handler as GET, handler as POST };
+```
+
+[mcp-handler](https://github.com/vercel-labs/mcp-handler) wraps SDK v2 in a Fetch-compatible request handler. It works in Next.js route handlers, Nuxt, SvelteKit, Hono, and other frameworks that pass a Web `Request`. Version 2 removed the HTTP+SSE transport and the Redis dependency from 1.x. It includes `withMcpAuth` for bearer-token checks and `protectedResourceHandler` for OAuth protected resource metadata. Registration still lives in one function, so large servers need their own module structure.
+
+### FastMCP (TypeScript)
+
+```typescript title="server.ts"
+import { FastMCP } from "fastmcp";
+import { z } from "zod";
+
+const server = new FastMCP({ name: "My Server", version: "1.0.0" });
+
+server.addTool({
+  name: "greet",
+  description: "Greet someone by name",
+  parameters: z.object({ name: z.string() }),
+  execute: async ({ name }) => `Hello, ${name}!`,
+});
+
+server.start({ transportType: "stdio" });
+```
+
+[FastMCP for TypeScript](https://github.com/punkpeye/fastmcp) is built on the official SDK and adds a server object with conveniences: an `imageContent` helper, structured output, an `authenticate` hook with per-tool `canAccess` checks and scopes, and a `fastmcp dev` command that opens the MCP Inspector. It serves STDIO and HTTP streaming, with an optional stateless mode. Its README states that it implements protocol revisions up to 2025-11-25, not 2026-07-28. It is a separate project from [FastMCP for Python](https://gofastmcp.com/).
+
+### xmcp
+
+```typescript title="src/tools/greet.ts"
+import { z } from "zod";
+import type { InferSchema } from "xmcp";
+
+export const schema = { name: z.string().describe("Name to greet") };
+export const metadata = { name: "greet", description: "Greet someone by name" };
+
+export default function greet({ name }: InferSchema<typeof schema>) {
+  return `Hello, ${name}!`;
+}
+```
+
+xmcp discovers files under `src/tools/`, `src/resources/`, and `src/prompts/`, so there is no registration code. Each file is one capability, and `xmcp build` produces HTTP or STDIO entry points. A React component in `src/tools/` becomes an [MCP App](/blog/mcp-apps) with no extra registration, and the CLI can [generate typed clients](/blog/cli-typed-clients) for other servers. xmcp is built on SDK v2, accepts Zod 3.25 or 4, and serves both protocol generations without server-side sessions. The same project can run standalone or inside an existing app through [adapters](/docs/adapters/nextjs) for Next.js, Express, Fastify, Hono, NestJS, Nuxt, SvelteKit, Astro, React Router, and TanStack.
+
+## Compare beyond hello world
+
+| Concern           | Official SDK          | mcp-handler           | FastMCP                      | xmcp                                             |
+| ----------------- | --------------------- | --------------------- | ---------------------------- | ------------------------------------------------ |
+| Code organization | Explicit registration | Registration callback | Server object                | One file per capability                          |
+| Hosting model     | You wire transports   | Your web app's route  | Its own HTTP or STDIO server | Standalone build or framework adapter            |
+| Authentication    | Auth helpers          | Bearer-token helpers  | `authenticate` and scopes    | [Provider plugins](/integrations) and middleware |
+
+The row that usually decides it is code organization. Registration-based frameworks keep everything in a few files, which reads well at five tools and gets crowded at fifty. File-based discovery adds a build step in exchange for one module per tool that can be reviewed, tested, and deleted on its own.
+
+## Looking for a FastMCP alternative?
+
+Teams usually look for a FastMCP alternative for one of three reasons:
+
+- **They need the 2026-07-28 protocol.** FastMCP's README points to the legacy handshake revisions. The official SDK, mcp-handler, and xmcp all serve the new stateless protocol.
+- **The server has to live inside an existing app.** FastMCP runs as its own server. mcp-handler or an xmcp adapter mounts MCP on a route in the app you already deploy.
+- **The tool count has grown.** A single server object with dozens of `addTool` calls is hard to review. xmcp's file-based layout splits it by capability.
+
+If none of these apply, FastMCP may still be the simplest choice. Switching frameworks is a decision about protocol support and code organization, not something you need just to add authentication.
+
+## Migrate one tool first
+
+Move one representative tool before the rest:
+
+1. Keep its name, description, and input schema identical, so clients and prompts that reference it keep working.
+2. Keep the result shape. If clients read `structuredContent`, declare the same [output schema](/blog/mcp-structured-output).
+3. Port authorization checks explicitly, and test a denied request as well as an allowed one.
+4. Point the same client at the new server and compare results side by side.
+
+Review transport semantics on the way. A server that keeps per-client state in memory cannot move to stateless HTTP by changing imports. That state has to travel with each request or live in a store. Keep the original server running until every client has been checked against the replacement.
 
 ## Evaluate with a working tool
 
-Try the same small tool in your shortlisted frameworks. Check input validation, authentication failures, result compatibility, cancellation, and deployment behavior. Compare the amount of application code your team must maintain, not just the length of a hello-world example.
+Build the same small tool in each framework on your shortlist. Check input validation, an authentication failure, result compatibility with your target clients, cancellation, and a production deploy. Compare how much application code your team will maintain, not just the length of the hello-world example.
 
-Continue with [building a TypeScript server](/blog/build-mcp-server-typescript), [comparing xmcp and mcp-handler](/blog/xmcp-vs-mcp-handler), or [choosing a deployment target](/blog/deploy-mcp-server-production).
+To try xmcp, follow [building a TypeScript MCP server](/blog/build-mcp-server-typescript), compare it in more depth with [mcp-handler](/blog/xmcp-vs-mcp-handler), or choose a [deployment target](/blog/deploy-mcp-server-production).

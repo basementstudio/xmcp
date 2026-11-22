@@ -1,95 +1,158 @@
 ---
-title: "OpenAI Apps SDK Support"
-description: "xmcp now supports building UI resources and tools compatible with the OpenAI Apps SDK out of the box — ship ChatGPT apps without custom rendering code."
+title: "OpenAI Apps SDK in xmcp: migrating to MCP Apps"
+description: "xmcp shipped OpenAI Apps SDK support in 2025 and now builds MCP Apps. How to move a ChatGPT widget to _meta.ui."
 category: "changelog"
 date: "2025-10-11"
+lastModified: "2026-11-22"
 order: 1
 previewImage: "/blog/apps-sdk.png"
 ---
 
-xmcp now supports building and serving UI resources compatible with OpenAI's Apps SDK. Get started by running:
-
-```bash
-npx create-xmcp-app@latest
-```
+In October 2025, xmcp added support for building ChatGPT apps with OpenAI's Apps SDK. A tool could return a UI, xmcp registered the matching widget resource, and ChatGPT rendered it inline in the conversation.
 
 <Video
   src="https://j2fbnka41vq9pfap.public.blob.vercel-storage.com/videos/gpt-apps-2.mp4"
   controls
 />
 
-<Callout variant="warning">
-  OpenAI now supports MCP Apps. This post contains legacy context, so older
-  syntax examples may be outdated. New projects should use the MCP App template
-  and `_meta.ui` metadata.
-</Callout>
+Since then, interactive UIs moved into the protocol itself. [MCP Apps](https://modelcontextprotocol.github.io/ext-apps/api/) is the MCP extension for UI resources, and ChatGPT supports it. xmcp followed: the OpenAI-specific `_meta.openai` keys and the `text/html+skybridge` resource type were removed, and every widget is now an MCP App. This post covers what changed and how to move a project built on the original Apps SDK support.
 
-Once your project is set up, you'll find two main folders. The prompts folder is excluded from this template by default, but you can easily enable it by modifying the `xmcp.config.ts` file.
+## What the Apps SDK support did
 
-## Resources
+The first version mapped xmcp files onto OpenAI's conventions:
 
-This folder contains your UI resources. The Apps SDK requires URI template paths to use the `.html` extension. By setting `mimeType: "text/html+skybridge"`, xmcp handles this automatically.
+- A tool declared its widget with `_meta.openai` keys, such as `widgetCSP`, `widgetDomain`, and `widgetPrefersBorder`. xmcp flattened them into the `openai/*` keys ChatGPT reads.
+- Each widget was served as a resource with the `text/html+skybridge` MIME type at `ui://widget/<name>.html`.
+- `openai/outputTemplate` connected the tool to that resource.
 
-```typescript
-export const metadata: ResourceMetadata = {
-  name: "your-ui-resource",
-  title: "Show your UI resource",
-  mimeType: "text/html+skybridge",
-};
-```
+The approach worked in ChatGPT only. Other clients ignored the `openai/*` keys, so the same server showed text everywhere else.
 
-Then, your handler can return the HTML content:
+## What xmcp does now
 
-```typescript
-export default function handler() {
-  return `
-    <div>Hello, world!</div>
-  `;
-}
-```
+A tool becomes an MCP App when it has `_meta.ui` metadata or is a React component in a `.tsx` file. For each one, xmcp:
 
-This resource will be accessible at `ui://widget/your-ui-resource.html`, corresponding to the folder structure `(ui)/widget/your-ui-resource`.
+1. Registers a resource at `ui://app/<tool-name>.html` with the `text/html;profile=mcp-app` MIME type.
+2. Sets `_meta.ui.resourceUri` on the tool so the host knows which resource to render, unless you set it yourself.
+3. Bundles React components for the browser and serves the bundle from that resource.
+4. Adds `https://esm.sh` to the widget's allowed resource domains, so the default runtime can load.
 
-For more information on constructing resource URIs, check out the [resources documentation](/docs#resources).
+You don't create the resource file. The tool is the single source for both the model-facing definition and the UI.
 
-## Tools
+## Migrate a widget
 
-This folder contains your tools, which interact with and retrieve your UI resources.
+### 1. Replace `_meta.openai` with `_meta.ui`
 
-The `ToolMetadata` includes a `_meta.ui` property for MCP Apps metadata, enabling your resources to be displayed within widgets.
+Most keys have a direct equivalent. CSP origins move from snake_case to camelCase:
 
-Available metadata keys:
+| Apps SDK support (removed)                | MCP Apps (current)                              |
+| ----------------------------------------- | ----------------------------------------------- |
+| `_meta.openai.widgetCSP.connect_domains`  | `_meta.ui.csp.connectDomains`                   |
+| `_meta.openai.widgetCSP.resource_domains` | `_meta.ui.csp.resourceDomains`                  |
+| `_meta.openai.widgetDomain`               | `_meta.ui.domain`                               |
+| `_meta.openai.widgetPrefersBorder`        | `_meta.ui.prefersBorder`                        |
+| `openai/outputTemplate`                   | `_meta.ui.resourceUri`, generated automatically |
+| `text/html+skybridge` resource            | `text/html;profile=mcp-app`, generated          |
+| `ui://widget/<name>.html`                 | `ui://app/<tool-name>.html`                     |
 
-- `ui.csp.connectDomains`: Origins allowed for fetch/XHR/WebSocket calls
-- `ui.csp.resourceDomains`: Origins for images, scripts, stylesheets, and media
-- `ui.domain`: Optional dedicated subdomain for your widget sandbox origin
-- `ui.prefersBorder`: Requests a bordered card layout for widgets
+A tool that used to look like this:
 
-```typescript
-import { type ToolMetadata } from "xmcp";
-
-export const metadata: ToolMetadata = {
-  name: "get-your-ui-resource",
-  description: "Show Your UI Resource",
+```typescript title="src/tools/show-map.ts (before)"
+export const metadata = {
+  name: "show-map",
+  description: "Show an interactive map",
   _meta: {
-    ui: {
-      csp: {
-        connectDomains: ["https://api.example.com"],
-        resourceDomains: ["https://cdn.example.com"],
-      }
+    openai: {
+      widgetPrefersBorder: true,
+      widgetCSP: {
+        connect_domains: ["https://api.mapbox.com"],
+        resource_domains: ["https://cdn.mapbox.com"],
+      },
     },
   },
 };
+```
 
-export default async function handler() {
-  return {
-    content: [{ type: "text", text: "Widget ready" }],
-  };
+becomes:
+
+```typescript title="src/tools/show-map.ts (after)"
+import { type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "show-map",
+  description: "Show an interactive map",
+  _meta: {
+    ui: {
+      prefersBorder: true,
+      csp: {
+        connectDomains: ["https://api.mapbox.com"],
+        resourceDomains: ["https://cdn.mapbox.com"],
+      },
+    },
+  },
+};
+```
+
+The `ui` block also accepts `csp.frameDomains`, `csp.baseUriDomains`, browser `permissions` such as `clipboardWrite`, and `visibility` to control whether the model, the app, or both can see the tool. The [MCP Apps metadata reference](/docs/core-concepts/tools#mcp-apps-metadata) lists every field.
+
+The loading and completion messages from `openai/toolInvocation` have no `_meta.ui` equivalent. Remove them.
+
+### 2. Delete the hand-written widget resource
+
+If you kept the HTML in `src/resources/` with `mimeType: "text/html+skybridge"`, move the markup into the tool handler and delete the resource file. A handler can return an HTML string, or the tool file can be a React component:
+
+```tsx title="src/tools/show-map.tsx"
+import { type ToolMetadata } from "xmcp";
+import { useState } from "react";
+
+export const metadata: ToolMetadata = {
+  name: "show-map",
+  description: "Show an interactive map",
+};
+
+export default function ShowMap() {
+  const [zoom, setZoom] = useState(10);
+
+  return (
+    <div>
+      <p>Zoom: {zoom}</p>
+      <button onClick={() => setZoom(zoom + 1)}>Zoom in</button>
+    </div>
+  );
 }
 ```
 
-If you don't need CSP or rendering hints, you can omit `_meta.ui` entirely.
+React tools need `react` and `react-dom` installed and `"jsx": "react-jsx"` in `tsconfig.json`. The [handler types guide](/docs/core-concepts/tools#handler-types) covers both options.
 
-## References
+### 3. Replace `window.openai` calls
 
-For more details, see the [MCP Apps docs](https://modelcontextprotocol.github.io/ext-apps/api/) and [OpenAI Apps SDK docs](https://developers.openai.com/apps-sdk). You can test your resources and tools using [MCPJam](https://mcpjam.com), an open source MCP inspector.
+Widgets written for the Apps SDK called `window.openai` directly. MCP Apps talk to the host over a standard bridge, and `@xmcp-dev/ui` wraps it in a React hook:
+
+```tsx
+import { useMcpApp } from "@xmcp-dev/ui";
+
+export default function ShowMap() {
+  const { callTool, openLink, requestDisplayMode } = useMcpApp();
+
+  async function refresh() {
+    await callTool("get-map-data", { city: "Berlin" });
+  }
+
+  // ...
+}
+```
+
+The hook also exposes `readResource`, `sendMessage`, `updateModelContext`, and the host's context and capabilities. Check `hostCapabilities` before relying on one, because hosts don't all support the same set. The [MCP Apps reference](/docs/core-concepts/mcp-apps) documents each call.
+
+### 4. Test in more than one host
+
+Run the server with `xmcp dev` and open it in [MCPJam](https://www.mcpjam.com) to check the widget outside ChatGPT. Then connect it to ChatGPT in developer mode to confirm CSP origins and display modes. Because the widget no longer depends on `openai/*` keys, the same build also works in other clients that support MCP Apps.
+
+## Start a new app
+
+New projects don't need any of the above. Scaffold one with the MCP App template:
+
+```bash
+npx create-xmcp-app@latest --ui
+```
+
+Use `--ui-kit` instead to include `@xmcp-dev/ui` components and Tailwind CSS. From there, follow [how to build an MCP App](/blog/mcp-apps), and [prepare it for OpenAI review](/blog/build-and-submit-gpt-apps) when you're ready to submit it to ChatGPT.

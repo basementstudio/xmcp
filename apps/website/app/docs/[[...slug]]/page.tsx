@@ -12,6 +12,8 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/page-actions";
 import { SITE_URL } from "@/lib/base-url";
 import { getDocsMetadata } from "@/utils/docs";
+import { getPostsBySlugs } from "@/utils/blog/related";
+import { RelatedGuides } from "@/components/blog/related-guides";
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getBreadcrumbSchema,
@@ -35,6 +37,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     (page.data as { displayTitle?: string })?.displayTitle || page.data.title;
 
   const meta = getDocsMetadata(params.slug, SITE_URL);
+  const relatedGuides = getPostsBySlugs(page.data.relatedGuides ?? []);
   const slugSegments = params.slug ?? [];
   const crumbs: BreadcrumbItem[] = [
     { name: "Home", url: "/" },
@@ -84,6 +87,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           })}
         />
       </DocsBody>
+      <RelatedGuides posts={relatedGuides} title="Related guides" />
     </DocsPage>
   );
 }

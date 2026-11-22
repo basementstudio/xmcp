@@ -1,18 +1,81 @@
 ---
 title: "Deploy to Vercel with zero-configuration"
-description: "Kick off your xmcp project instantly with the Vercel template — zero-configuration deploys, instant previews on every push, and serverless MCP hosting."
+description: "Vercel deploys xmcp with zero configuration. What the build does, how to connect clients, and what to check before production."
 category: "changelog"
 date: "2025-08-23"
+lastModified: "2026-11-22"
 order: 4
 previewImage: "/blog/xmcp-vercel.png"
 ---
 
-We're excited to announce that Vercel now natively supports xmcp with zero-configuration. Get started instantly with the [template](https://vercel.com/templates/backend/xmcp-boilerplate), or import your existing projects.
+Vercel supports xmcp natively with zero configuration. Start from the [Vercel template](https://vercel.com/templates/backend/xmcp-boilerplate), or import an existing xmcp project, and Vercel builds and serves it without a config file or a deploy-specific setup step. The CLI no longer asks whether you're deploying to Vercel, because the build detects it.
 
-Zero-configuration means you don't need to configure support manually when creating a new project. This step has been removed from the CLI for consistency and simplicity.
+This post explains what happens during that build, how to connect a client to the deployed server, and what to check before you put it in front of users.
 
-This is a step forward on making xmcp more accessible to the community, and more importantly, to make it easier and faster to deploy MCP servers.
+## Deploy in two steps
 
-When you deploy an xmcp app to Vercel, your server endpoints automatically run as Functions and use Fluid compute by default.
+Scaffold a project, then deploy it with the Vercel CLI or by importing the Git repository at [vercel.com/new](https://vercel.com/new):
 
-Learn more in the [documentation](https://vercel.com/docs/frameworks/backend/xmcp).
+```bash
+npx create-xmcp-app@latest my-server
+cd my-server
+vc deploy
+```
+
+Your MCP endpoint is then live at `https://<your-project>.vercel.app/mcp`. If you prefer to start from Vercel's side, `vc init xmcp` clones the [xmcp example](https://github.com/vercel/vercel/tree/main/examples/xmcp) into a new directory.
+
+## What zero-configuration does
+
+Vercel sets `VERCEL=1` in every build it runs. When `xmcp build` sees it, it produces Vercel's [Build Output API](https://vercel.com/docs/build-output-api) structure in addition to the normal `dist` folder:
+
+- **One function for the whole server.** The handler is built from `dist/vercel.js`, a request handler Vercel invokes per request, instead of `dist/http.js`, which starts a server that listens on a port. It's placed in `.vercel/output/functions/api/index.func` with the files it depends on.
+- **A Node.js 26 runtime.** The function targets `nodejs26.x` and runs on [Fluid compute](https://vercel.com/docs/fluid-compute) by default.
+- **Routing to the function.** Every path is routed to that function, so your configured endpoint, `/mcp` by default, works without rewrites.
+- **Static auth pages.** If you use the Better Auth plugin, its sign-in and consent pages are copied to static output and served without invoking the function.
+
+To produce the same output on your machine, for example to inspect it, run:
+
+```bash
+npx xmcp build --vercel
+```
+
+If your xmcp project uses a framework adapter, such as the [Next.js adapter](/docs/adapters/nextjs), xmcp skips this step and Vercel deploys the framework as usual, with the MCP route inside it.
+
+## Requirements
+
+Zero configuration still depends on two things in your project:
+
+1. **The HTTP transport is enabled.** Projects from `create-xmcp-app` set `http: true` in `xmcp.config.ts` by default. A STDIO-only project has nothing for Vercel to serve.
+2. **Development dependencies install during the build.** The compiler, `@xmcp-dev/compiler`, is a development dependency. Keep Vercel's default install behavior. The generated server is self-contained at runtime.
+
+Environment variables you set in the Vercel dashboard are available to your tools through `process.env`, the same as in local development.
+
+## Connect a client
+
+Clients that support remote Streamable HTTP servers connect to the deployment URL directly. For example, in Cursor:
+
+```json title=".cursor/mcp.json"
+{
+  "mcpServers": {
+    "my-server": {
+      "url": "https://my-server.vercel.app/mcp"
+    }
+  }
+}
+```
+
+For clients that only launch local processes, the [connection guide](/docs/getting-started/connecting) shows how to bridge them to a remote URL. If a client can't connect, the [Claude Desktop troubleshooting checklist](/blog/fix-mcp-server-claude-desktop-connection) covers the most common causes.
+
+## Why serverless fits MCP
+
+xmcp serves HTTP without server-side sessions: each request carries what the server needs, and a fresh server handles it. That matches how Vercel Functions scale. Any instance can answer any request, so there's no sticky routing to configure and no ["Session not found" errors](/blog/mcp-session-not-found-error) when a new deployment replaces the old instances. Clients on the 2026-07-28 protocol and older 2025-era clients are both served this way.
+
+## Before you go to production
+
+- **Preview deployments.** Every push gets its own URL, which is a quick way to test a tool change in a real client before merging. If [Deployment Protection](https://vercel.com/docs/deployment-protection) is enabled for previews, MCP clients can't pass its login page. Use a protection bypass, or test against a deployment that isn't protected.
+- **Long-lived streams.** A `subscriptions/listen` stream keeps a function invocation open until the client disconnects or the function reaches its maximum duration. If your server's tools and resources don't change at runtime, set [`maxSubscriptions`](/docs/configuration/transports#subscription-streams) to `0`.
+- **HTTP/2 responses.** On Node.js 26, the built-in `fetch` negotiates HTTP/2, so `response.statusText` is empty. Check `response.status`, or set `VERCEL_FETCH_DISABLE_H2=1` to keep HTTP/1.1.
+- **Authentication.** A public URL means anyone can list your tools. Add [authentication](/blog/mcp-server-authentication) before exposing anything that reads or writes user data.
+- **Observability.** Function logs show each invocation. For per-tool detail, enable [execution logs and trace context](/blog/mcp-server-observability-tracing).
+
+The [Vercel deployment docs](/docs/deployment/vercel) cover the same setup as a reference, and Vercel documents the integration on its side in the [xmcp framework guide](https://vercel.com/docs/frameworks/backend/xmcp). To compare Vercel with Lambda, Railway, or containers, read [how to deploy an MCP server to production](/blog/deploy-mcp-server-production).

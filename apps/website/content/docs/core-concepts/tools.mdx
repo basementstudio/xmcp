@@ -4,6 +4,10 @@ metadataTitle: "Tools | xmcp Documentation"
 publishedAt: "2025-07-06"
 summary: "Create and register tools in your xmcp MCP server — typed functions your LLM can call to interact with APIs, databases, files, and other systems."
 description: "Tools are functions that your LLM can actively call and decides when to use based on user requests. They enable AI models to perform actions such as writing to databases, calling external APIs, modifying files, or triggering other logic."
+relatedGuides:
+  - "mcp-structured-output"
+  - "mcp-input-required-human-in-the-loop"
+  - "mcp-elicitation-explained"
 ---
 
 By default, `xmcp` detects files under the `/src/tools/` directory and registers them as tools, but you can specify a [custom directory](/docs/configuration/custom-directories) if you prefer. The directory to use can be configured in the `xmcp.config.ts` file.

@@ -1,6 +1,6 @@
 ---
 title: "How to build an MCP App"
-description: "Learn how to build an MCP App with xmcp — ship interactive React widgets, tool-rendered UIs, and ChatGPT-compatible resources with out-of-the-box support."
+description: "Build an MCP App with xmcp: interactive React widgets and tool-rendered UIs that work in ChatGPT and other clients."
 lastModified: "2026-10-23"
 category: "guides"
 topic: "apps"
@@ -20,10 +20,12 @@ npx create-xmcp-app@latest
 And select the template:
 
 <TerminalPrompt>
-  {"? Select a template: (Use arrow keys)\n Default \n GPT App \n❯ MCP App \n"}
+  {
+    "? Select a template: (Use arrow keys)\n  Default (Standard MCP server)\n❯ MCP App (React widgets for ext-apps)\n  MCP App with UI kit (components and JSON renderer)\n"
+  }
 </TerminalPrompt>
 
-This will kickstart your MCP server with the configuration for building an MCP app. You can optionally choose to include Tailwind CSS. By default, widgets are scaffolded using React.
+This will kickstart your MCP server with the configuration for building an MCP app. You can optionally choose to include Tailwind CSS. By default, widgets are scaffolded using React. Choose **MCP App with UI kit** to also include `@xmcp-dev/ui` components and Tailwind CSS.
 
 <Callout type="info">
   You can also scaffold this template by running `npx create-xmcp-app@latest
