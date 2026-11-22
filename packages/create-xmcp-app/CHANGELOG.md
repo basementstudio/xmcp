@@ -1,5 +1,11 @@
 # create-xmcp-app
 
+## 1.13.1
+
+### Patch Changes
+
+- 0e0a03e: Scaffold `--cloudflare` projects with `@cloudflare/workers-types` 5 so `npm install` no longer fails with ERESOLVE against current wrangler 4.
+
 ## 1.13.0
 
 No changes in this release.
