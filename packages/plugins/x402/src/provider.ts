@@ -201,8 +201,9 @@ function sendPaymentRequired(
   res: Response,
   req: Request,
   error?: string,
-  isV2Format: boolean = false
+  isV2Format?: boolean
 ): void {
+  // Without a payment of a known version, the configured offer version applies
   const paymentRequired = createPaymentRequiredResponse(error, isV2Format);
 
   res.status(200).json({
