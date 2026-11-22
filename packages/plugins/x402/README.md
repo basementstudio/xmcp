@@ -181,7 +181,17 @@ On `nano`, `price` is in XNO (no USD conversion). There is no facilitator: the
 payer publishes a send block to `nano.wallet` and sends its hash as
 `payload.blockHash`. The plugin reads the block from the Nano node RPC and
 accepts it when it is a confirmed send of at least the price to `nano.wallet`
-that has not paid for an earlier call. No key is held and nothing is broadcast.
+that has not paid for an earlier call. No key is held.
+
+Clients of the x402 Nano `exact` scheme (for example `@x402nano/exact`) send
+the signed send block itself as `payload.block` instead of a hash. The plugin
+then checks the block before sending anything (a send to `nano.wallet` of at
+least the price that follows the payer's previous block, and the order
+commitment when `requireBinding` is on), publishes it through `nano.rpc` with
+`process`, waits for the node to confirm it, and verifies and claims it by its
+hash like a `payload.blockHash` payment. The node checks the signature and
+the work. A block that is already on the ledger is not published again. The
+only thing the plugin ever broadcasts is a block the payer signed.
 
 By default the block hash is a bearer proof, and used hashes are kept in
 memory, so they are forgotten on restart and not shared between instances.

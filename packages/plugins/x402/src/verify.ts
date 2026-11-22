@@ -20,6 +20,7 @@ import {
   createNanoRpc,
   isValidNanoOrderId,
   newNanoOrderId,
+  publishNanoPayment,
   verifyNanoPayment,
 } from "./nano.js";
 
@@ -212,8 +213,9 @@ export async function verifyPayment(
 
 /**
  * Nano has no facilitator. The payment payload carries the hash of a send
- * block the payer already published; it is checked against a Nano node and
- * claimed in the provider's used-block store so it cannot pay twice.
+ * block the payer already published, or the signed block itself, which is
+ * published through the node; it is checked against a Nano node and claimed
+ * in the provider's used-block store so it cannot pay twice.
  */
 async function verifyNano(
   payload: PaymentPayload,
@@ -240,15 +242,23 @@ async function verifyNano(
     orderId = claimedOrderId;
   }
 
-  const result = await verifyNanoPayment({
-    blockHash: nanoPayload?.blockHash,
+  const check = {
     payTo: requirements.payTo,
     amount: requirements.amount ?? requirements.maxAmountRequired,
     rpc,
     usedBlocks,
     maxPaymentAgeSeconds: requirements.maxTimeoutSeconds,
     orderId,
-  });
+  };
+  // `payload.block` is the signed send block clients of the x402 Nano exact
+  // scheme send; `payload.blockHash` names a block the payer already published
+  const result =
+    nanoPayload?.blockHash === undefined && nanoPayload?.block !== undefined
+      ? await publishNanoPayment({ ...check, block: nanoPayload.block })
+      : await verifyNanoPayment({
+          ...check,
+          blockHash: nanoPayload?.blockHash,
+        });
 
   log(config.debug ?? false, "Nano verification result:", result);
 

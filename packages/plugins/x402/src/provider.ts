@@ -25,6 +25,7 @@ import {
 import { NETWORKS } from "./constants.js";
 import { isValidNanoAddress, type NanoPaymentStore } from "./nano.js";
 import { createNanoFileStore } from "./nano-store.js";
+import { toPaymentHeader } from "./payment-header.js";
 
 interface PendingSettlement {
   payload: PaymentPayload;
@@ -163,11 +164,11 @@ function extractPaymentFromMeta(req: Request): string | undefined {
       const meta = message.params?._meta;
       if (meta) {
         const payment = meta["x402/payment"] ?? meta["x402.payment"];
-        if (payment) return payment;
+        if (payment) return toPaymentHeader(payment);
       }
 
       const authPayment = message.params?.arguments?.paymentAuthorization;
-      if (authPayment) return authPayment;
+      if (authPayment) return toPaymentHeader(authPayment);
     }
   }
 

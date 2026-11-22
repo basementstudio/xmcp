@@ -171,7 +171,7 @@ The plugin supports three networks:
 
 ## Nano (XNO)
 
-Tools can also be paid in XNO on the Nano network, next to USDC on Base. Nano has no facilitator: the payer publishes a send block to your Nano address first, then retries the call with the block hash as the payment payload. The plugin checks the block against a Nano node and does not hold a key or broadcast anything.
+Tools can also be paid in XNO on the Nano network, next to USDC on Base. Nano has no facilitator: the payer either publishes a send block to your Nano address first and retries the call with the block hash, or sends the signed block itself and the plugin publishes it (see [Paying with a signed block](#paying-with-a-signed-block)). The plugin checks the block against a Nano node and does not hold a key. The only thing it ever broadcasts is a block the payer signed.
 
 ```typescript title="src/middleware.ts"
 import { x402Provider } from "@xmcp-dev/x402";
@@ -230,6 +230,43 @@ Things to know before using it:
 - By default used block hashes are kept in memory. They are forgotten on restart and are not shared between server instances. Set `claimsFile` to keep them across restarts.
 - Verification depends on the Nano node RPC you configure. Use a node you trust.
 
+### Paying with a signed block
+
+Clients of the x402 Nano `exact` scheme (for example `@x402nano/exact`) send the signed send block itself as `payload.block` instead of a hash:
+
+```json
+{
+  "x402Version": 2,
+  "accepted": { "scheme": "exact", "network": "nano:mainnet" },
+  "payload": {
+    "block": {
+      "type": "state",
+      "account": "nano_...",
+      "previous": "<64 hex characters>",
+      "representative": "nano_...",
+      "balance": "<raw>",
+      "link": "<64 hex characters: the public key of nano.wallet>",
+      "signature": "<128 hex characters>",
+      "work": "<16 hex characters>"
+    }
+  }
+}
+```
+
+When `payload.blockHash` is present it is used and `payload.block` is ignored. With a block, the plugin:
+
+1. checks it before sending anything: a state send block to `nano.wallet` that follows the payer's previous block and sends at least the price (exactly the price, with the order commitment as representative, when `requireBinding` is on, in which case `payload.orderId` is sent beside the block)
+2. publishes it through the node with the RPC `process` action; the node checks the signature and the work
+3. reads it back until the node confirms it (up to 20 reads 500 ms apart), then verifies and claims it by its hash like a `payload.blockHash` payment
+
+A block that is already on the ledger is not published again; it is verified by its hash.
+
+<Callout variant="warning">
+  The node behind `nano.rpc` must allow the `process` action. Public RPC endpoints often restrict it, and the call is then refused with `Nano node did not publish the block`. Payments sent as `payload.blockHash` only need `block_info`.
+</Callout>
+
+If the block was published but the node has not confirmed it in time, the call gets a 402 whose `error` names the block hash and says it may still confirm. The payer's XNO has already left its account, so a client should retry with that hash as `payload.blockHash` (or the same block, and the same `orderId` when `requireBinding` is on) instead of signing a new block and paying again.
+
 ### Keeping claims across restarts
 
 Set `nano.claimsFile` to a path the server can write to:
@@ -287,7 +324,7 @@ If clients receive a 402 response, they need to:
 
 - Extract payment requirements from `result.structuredContent.accepts`
 - Sign a payment authorization using their wallet
-- Retry with payment in `params._meta["x402/payment"]`
+- Retry with payment in `params._meta["x402/payment"]`, either as the PaymentPayload JSON object (as the x402 MCP transport sends it) or as the same payload base64-encoded
 
 ### Payment Verification Failed
 
