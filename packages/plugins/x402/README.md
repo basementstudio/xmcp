@@ -238,7 +238,11 @@ top-level `resource`:
 {
   "x402Version": 2,
   "error": "Payment required",
-  "resource": { "url": "mcp://tool/word-count", "mimeType": "application/json" },
+  "resource": {
+    "url": "mcp://tool/word-count",
+    "description": "Access to word-count tool",
+    "mimeType": "application/json"
+  },
   "accepts": [
     {
       "scheme": "exact",
