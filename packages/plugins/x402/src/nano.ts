@@ -456,6 +456,25 @@ const NOT_YET_CONFIRMED = new Set([
 ]);
 
 /**
+ * After `process`, the block is read back until the node confirms it. Nano
+ * blocks usually confirm in well under a second, so 20 reads 500 ms apart
+ * (about 10 seconds) cover a slow network without holding the request open
+ * much longer than a client would wait for a tool call.
+ */
+export const NANO_CONFIRM_ATTEMPTS = 20;
+export const NANO_CONFIRM_INTERVAL_MS = 500;
+
+/**
+ * The error returned when a block is on the ledger but the node has not
+ * confirmed it in time. The payer's funds have left their account and the
+ * block may still confirm, so the error names the hash: a client should retry
+ * with that `blockHash` instead of signing a new block and paying again.
+ */
+export function nanoBlockNotConfirmedError(blockHash: string): string {
+  return `Nano block ${blockHash} was published but is not confirmed yet; it may still confirm, so retry with payload.blockHash ${blockHash} instead of paying again`;
+}
+
+/**
  * Accept a payment sent as a signed send block instead of a block hash, as
  * the x402 Nano exact scheme's clients do. The block is checked before
  * anything is sent to the node: it must be a send of the price to `payTo`
@@ -569,10 +588,16 @@ export async function publishNanoPayment(
     };
   }
 
-  const attempts = Math.max(1, options.confirmAttempts ?? 20);
+  const attempts = Math.max(
+    1,
+    options.confirmAttempts ?? NANO_CONFIRM_ATTEMPTS
+  );
   const wait =
     options.wait ??
-    (() => new Promise<void>((resolve) => setTimeout(resolve, 500)));
+    (() =>
+      new Promise<void>((resolve) =>
+        setTimeout(resolve, NANO_CONFIRM_INTERVAL_MS)
+      ));
   let result: NanoVerification = {
     valid: false,
     error: "Nano block is not confirmed",
@@ -590,7 +615,7 @@ export async function publishNanoPayment(
     });
     if (result.valid || !NOT_YET_CONFIRMED.has(result.error)) return result;
   }
-  return result;
+  return { valid: false, error: nanoBlockNotConfirmedError(hash) };
 }
 
 /**

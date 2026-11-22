@@ -2,11 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   hashNanoStateBlock,
+  NANO_CONFIRM_ATTEMPTS,
+  nanoBlockNotConfirmedError,
   nanoOrderCommitment,
   newNanoOrderId,
   parseNanoStateBlock,
   publicKeyToNanoAddress,
   publishNanoPayment,
+  verifyNanoPayment,
   type NanoRpc,
   type NanoStateBlock,
 } from "../src/nano.js";
@@ -219,9 +222,42 @@ test("a published block is read back until the node confirms it", async () => {
   });
   assert.deepEqual(late, {
     valid: false,
-    error: "Nano block is not confirmed",
+    error: nanoBlockNotConfirmedError(slowNode.hash),
   });
   assert.equal(usedBlocks.size, 0);
+});
+
+test("a confirmation timeout after publishing names the published hash, and that hash can be retried", async () => {
+  const block = signedSend();
+  const node = mockNode(block, { unconfirmedReads: NANO_CONFIRM_ATTEMPTS });
+  const usedBlocks = new Set<string>();
+  let waits = 0;
+  const late = await publish(block, node.rpc, {
+    usedBlocks,
+    wait: async () => {
+      waits += 1;
+    },
+  });
+  assert.equal(late.valid, false);
+  const error = late.valid ? "" : late.error;
+  assert.ok(error.includes(node.hash));
+  assert.match(error, /may still confirm/);
+  assert.equal(waits, NANO_CONFIRM_ATTEMPTS - 1);
+  assert.equal(node.processed.length, 1);
+  assert.equal(usedBlocks.size, 0);
+
+  // The node confirms the block later: retrying with its hash pays once,
+  // without publishing anything again
+  const retry = await verifyNanoPayment({
+    blockHash: node.hash,
+    payTo: WALLET,
+    amount: PRICE_RAW,
+    rpc: node.rpc,
+    usedBlocks,
+    maxPaymentAgeSeconds: 300,
+  });
+  assert.equal(retry.valid, true);
+  assert.equal(node.processed.length, 1);
 });
 
 test("a block already on the ledger is verified by its hash, not published again", async () => {
