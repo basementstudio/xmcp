@@ -76,16 +76,16 @@ function fbm(x, y) {
   return sum / 0.97;
 }
 const disc = (sx = 1, sy = 1, a = 1.25, b = 0.1) => (x, y) => smooth(a, b, Math.hypot(x * sx, y * sy));
-const vein = ({ seed, freq, warp, sx = 1, sy = 1, ridge, gain, fade }) => (x, y, shift) => {
+const vein = ({ seed, freq, warp, sx = 1, sy = 1, ridge, gain, lo = 0.05, fade }) => (x, y, shift) => {
   const X = x * sx + shift, Y = y * sy - shift * 0.7;
   const wx = fbm(X * 1.3 + 4.1 + seed, Y * 1.3 + 1.7), wy = fbm(X * 1.3 + 8.3, Y * 1.3 + 2.9 + seed);
   const f = (1 - Math.abs(2 * fbm(X * freq + wx * warp + seed * 3.1, Y * freq + wy * warp) - 1)) ** ridge;
-  return fade(x, y) * clamp((f - 0.05) * gain) ** 1.4;
+  return fade(x, y) * clamp((f - lo) * gain) ** 1.4;
 };
 const SHAPES = {
   base: vein({ seed: 3, freq: 1.1, warp: 2.4, ridge: 3, gain: 1.6, fade: disc(0.85) }),
   silk: vein({ seed: 4, sx: 0.5, sy: 1.5, freq: 1.1, warp: 2, ridge: 4, gain: 1.6, fade: disc(0.6, 1.3) }),
-  fine: vein({ seed: 6, freq: 2, warp: 2.2, ridge: 6, gain: 1.8, fade: disc(0.85) }),
+  fine: vein({ seed: 6, freq: 2, warp: 2.2, ridge: 6, gain: 1.8, lo: 0.04, fade: disc(0.85) }),
   swirl: vein({ seed: 12, freq: 1, warp: 3.6, ridge: 4, gain: 1.7, fade: disc(0.9) }),
   rain: vein({ seed: 10, sx: 1.6, sy: 0.45, freq: 1.1, warp: 2, ridge: 4, gain: 1.6, fade: disc(1.1, 0.7) }),
   tangle: vein({ seed: 13, freq: 1.4, warp: 3, ridge: 4, gain: 1.7, fade: disc(0.9) })
@@ -106,27 +106,32 @@ const canvas = document.querySelector('canvas'), g = canvas.getContext('2d');
 const state = { theme: 'light', shift: 0 };
 const figureCache = new Map();
 
-function figureLayer(theme, name, shift) {
-  const key = [theme, name, shift].join(':');
-  if (!figureCache.has(key)) {
-    const layer = new OffscreenCanvas(W, H), lg = layer.getContext('2d');
-    const f = FIGURES[name], t = THEMES[theme];
-    if (f.shape) {
-      const tone = SHAPES[f.shape], p = 6, cx = f.cx + (W - f.cx) * 0.25, size = f.size * 0.78;
-      lg.fillStyle = t.ink;
-      for (let y = p / 2; y < H + p; y += p) {
-        for (let x = p / 2; x < W + p; x += p) {
-          const keep = smooth(0, 280, x - 900);
-          const v = tone((x - cx) / size, (y - f.cy) / size, shift) * t.max * keep;
-          const r = v >= 0.04 ? p * 0.71 * Math.sqrt(v) : v > 0.002 && hash(x * 0.37, y * 0.71) < v / 0.04 ? p * 0.71 * 0.2 : 0;
-          if (r < 0.35) continue;
-          lg.beginPath(); lg.arc(x, y, r, 0, Math.PI * 2); lg.fill();
-        }
-      }
+function renderFigure(theme, name, shift, w, h) {
+  const layer = new OffscreenCanvas(w, h), lg = layer.getContext('2d');
+  const f = FIGURES[name], t = THEMES[theme];
+  if (!f.shape) return layer;
+  const scale = w / W, tone = SHAPES[f.shape];
+  const p = Math.max(5, Math.round(6 * scale)), max = t.max * (w < W ? 0.8 : 1);
+  const cx = (f.cx + (W - f.cx) * 0.25) * scale, cy = f.cy * h / H, size = f.size * 0.78 * scale;
+  lg.fillStyle = t.ink;
+  for (let y = p / 2; y < h + p; y += p) {
+    for (let x = p / 2; x < w + p; x += p) {
+      const keep = smooth(0, 280 * scale, x - 900 * scale);
+      const v = tone((x - cx) / size, (y - cy) / size, shift) * max * keep;
+      const r = v >= 0.04 ? p * 0.71 * Math.sqrt(v) : v > 0.002 && hash(x * 0.37, y * 0.71) < v / 0.04 ? p * 0.71 * 0.2 : 0;
+      if (r < 0.35) continue;
+      lg.beginPath(); lg.arc(x, y, r, 0, Math.PI * 2); lg.fill();
     }
-    figureCache.set(key, layer);
   }
-  return figureCache.get(key);
+  return layer;
+}
+
+function figureLayer(theme, name, shift) {
+  const key = `${theme}:${name}`, cached = figureCache.get(key);
+  if (cached?.shift === shift) return cached.layer;
+  const layer = renderFigure(theme, name, shift, W, H);
+  figureCache.set(key, { shift, layer });
+  return layer;
 }
 
 function setFont(size, weight, tracking) { g.font = `${weight} ${size}px ${FONT}`; g.letterSpacing = tracking + 'px' }
@@ -246,11 +251,19 @@ $('download').addEventListener('click', () => {
 });
 
 const params = new URLSearchParams(location.search);
-Promise.all([document.fonts.load(`400 38px ${FONT}`), document.fonts.load(`500 104px ${FONT}`)]).then(() => {
+if (params.get('figure') in FIGURES && params.has('w')) {
+  const w = +params.get('w'), h = +params.get('h') || Math.round(w * H / W);
+  const theme = params.get('theme') === 'dark' ? 'dark' : 'light';
+  canvas.width = w; canvas.height = h;
+  g.drawImage(renderFigure(theme, params.get('figure'), 0, w, h), 0, 0);
+  document.body.style.cssText = 'margin:0;padding:0;max-width:none;background:transparent';
+  document.querySelector('header').hidden = true; document.querySelector('form').hidden = true;
+  document.querySelector('main').style.cssText = 'display:block;margin:0';
+  canvas.style.cssText = `width:${w}px;border-radius:0;box-shadow:none`;
+} else Promise.all([document.fonts.load(`400 38px ${FONT}`), document.fonts.load(`500 104px ${FONT}`)]).then(() => {
   applyPreset(params.get('preset') in PRESETS ? params.get('preset') : 'patch');
   if (params.get('theme') === 'dark') setTheme('dark');
   if (params.has('solo')) { document.body.style.cssText = 'margin:0;padding:0;max-width:none'; document.querySelector('header').hidden = true; document.querySelector('form').hidden = true; document.querySelector('main').style.cssText = 'display:block;margin:0'; canvas.style.cssText = 'width:1600px;border-radius:0;box-shadow:none' }
-  document.title = 'ready';
 });
 </script>
 </html>

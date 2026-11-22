@@ -21,7 +21,7 @@ export const docs = defineDocs({
       displayTitle: z.string().optional(),
       metadataTitle: z.string().optional(),
       ogTitle: z.string().optional(),
-      ogDescription: z.string().optional(),
+      ogDescription: z.string().max(120).optional(),
       lastModified: z.string().date().optional(),
       relatedGuides: z
         .array(z.string())
@@ -52,7 +52,7 @@ export const blog = defineDocs({
       lastModified: z.string().date().optional(),
       summary: z.string().optional(),
       ogTitle: z.string().optional(),
-      ogDescription: z.string().optional(),
+      ogDescription: z.string().max(120).optional(),
     }),
   },
 });

@@ -72,6 +72,11 @@ const pillDate = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+function formatPillDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : pillDate.format(date);
+}
+
 function fetchGeist(weight: 400 | 500) {
   return fetch(
     `https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-${weight}-normal.woff`
@@ -169,7 +174,7 @@ function resolveOgContent(
       const detail =
         post.category === "guides"
           ? post.topic && GUIDE_TOPIC_LABELS[post.topic]
-          : post.date && pillDate.format(new Date(post.date));
+          : post.date && formatPillDate(post.date);
 
       return {
         ok: true,
