@@ -4,7 +4,7 @@ metadataTitle: "xmcp Documentation MCP Server for Coding Agents | xmcp Documenta
 publishedAt: "2025-12-27"
 summary: "Connect AI coding agents to the xmcp documentation MCP server for real-time answers about features, configuration, and best practices."
 description: "Connect coding agents to xmcp's documentation MCP server to get real-time answers about xmcp features, configuration, and best practices."
-displayTitle: "xmcp MCP server setup guide for agents" 
+displayTitle: "xmcp MCP server setup guide for agents"
 ---
 
 ## Getting started
@@ -26,17 +26,19 @@ For clients not listed above, you can use the following connection method.
 }
 ```
 
-## Available tool
+## Available tools
 
-The server exposes a `search` tool that agents use automatically:
+The server exposes three read-only tools that agents use automatically:
 
-```typescript
-// Search by query
-search({ query: "how to configure transports" });
+| Tool         | Use it to                                                         |
+| ------------ | ----------------------------------------------------------------- |
+| `search`     | Find pages that answer a question                                 |
+| `list-pages` | Browse every page by section, with its id, title, and description |
+| `get-page`   | Read one page as markdown by its id                               |
 
-// Get specific page by ID
-search({ id: "configuration/transports" });
-```
+Page ids look like `configuration/transports`. `search` also accepts an `id` and returns that page, so existing setups keep working.
+
+The server describes itself at [`/.well-known/mcp/server-card.json`](https://xmcp.dev/.well-known/mcp/server-card.json), so discovery tools can find the endpoint from the domain.
 
 ## Example usage
 
@@ -51,5 +53,5 @@ The agent will search the docs and provide accurate answers with code examples.
 ## Troubleshooting
 
 - **Not connecting**: Verify the URL `https://xmcp.dev/mcp` is correct and restart your agent
-- **No results**: Try more specific queries or use exact doc IDs
+- **No results**: Try more specific queries, or call `list-pages` to find the exact page id
 - **Agent not using MCP**: Check your agent's MCP configuration and logs

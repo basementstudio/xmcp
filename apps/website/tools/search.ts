@@ -14,7 +14,8 @@ export const schema = {
 
 export const metadata = {
   name: "search",
-  description: "Search xmcp documentation.",
+  description:
+    "Search the xmcp documentation. Returns the matching pages with their ids, or the page itself when only one matches. Read a listed page with get-page.",
   annotations: {
     title: "Search xmcp documentation.",
     readOnlyHint: true,
