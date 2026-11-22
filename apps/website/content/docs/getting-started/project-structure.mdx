@@ -26,6 +26,8 @@ my-project/
 │   └── skills/         # Optional: Agent Skills are auto-discovered here
 │       ├── release-notes/SKILL.md
 ├── dist/               # Built output (generated)
+├── AGENTS.md           # Guidance for coding agents
+├── CLAUDE.md           # Points Claude Code at AGENTS.md
 ├── package.json
 ├── tsconfig.json
 └── xmcp.config.ts       # Configuration file for xmcp
@@ -38,6 +40,8 @@ There are the three top-level files that are required for your project:
 - `package.json`: Contains your project's dependencies and scripts.
 - `tsconfig.json`: Contains your project's TypeScript configuration.
 - `xmcp.config.ts`: Contains your project's xmcp configuration.
+
+Projects created with `create-xmcp-app` also include `AGENTS.md` and `CLAUDE.md`. They tell coding agents where to find the current xmcp docs, the [docs MCP server](/docs/guides/xmcp-mcp-server), and the conventions of the project. Both are optional: edit them to add your own rules, or delete them.
 
 ## Source directory
 

@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs-extra";
 import { fileURLToPath } from "url";
 import { copyTemplate } from "./copy-template.js";
+import { copyAgentGuides } from "./copy-agent-guides.js";
 import { renameFiles } from "./rename.js";
 import { updatePackageJson } from "./update-package.js";
 import { install } from "./install.js";
@@ -71,6 +72,8 @@ export function createProject(options: ProjectOptions): void {
 
   // Copy template files to project directory
   copyTemplate(templateDir, projectPath, paths);
+
+  copyAgentGuides(projectPath);
 
   // Rename special files (e.g., _gitignore to .gitignore)
   renameFiles(projectPath);
