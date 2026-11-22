@@ -97,12 +97,7 @@ export default async function Page(props: PageProps<"/blog/[...slug]">) {
           )}
         />
       </DocsBody>
-      <RelatedGuides
-        posts={relatedPosts}
-        title={
-          post?.category === "guides" ? "Related guides" : "More from the blog"
-        }
-      />
+      <RelatedGuides posts={relatedPosts} />
     </BlogPage>
   );
 }
