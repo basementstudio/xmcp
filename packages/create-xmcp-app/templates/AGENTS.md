@@ -1,8 +1,8 @@
 # Agent guidance
 
 This is an [xmcp](https://xmcp.dev) project: a TypeScript MCP server. xmcp
-registers every file under `src/tools`, `src/prompts` and `src/resources`
-automatically, so there is no server to create and nothing to register by hand.
+registers the files in its component directories automatically, so there is no
+server to create and nothing to register by hand.
 
 ## Read the current docs first
 
@@ -17,19 +17,26 @@ code instead of relying on memory:
 
 ## Conventions
 
-- One component per file. A tool exports `schema` (a map of Zod fields),
-  `metadata`, and a default handler function.
+- `paths` in `xmcp.config.ts` decides which directories are loaded:
+  `src/tools`, `src/prompts` and `src/resources`. A path set to `false` is off,
+  so enable it there before adding files to that directory.
+- One component per file. The default export is the handler. The `metadata`
+  and `schema` exports are optional, and `schema` can be a map of Zod fields or
+  a complete Zod schema.
+- A tool in a `.tsx` file renders a React widget.
 - Resource folders define the URI: `src/resources/(users)/[userId]/profile.ts`
   is served as `users://{userId}/profile`.
 - `src/middleware.ts` is optional and holds HTTP middleware, MCP middleware
   and the `authorize` policy.
-- Server options live in `xmcp.config.ts`.
 - HTTP is stateless. Do not keep per-client state in memory between requests;
   pass state back to the client as a tool result and accept it as an argument.
 
 ## Commands
 
-- `xmcp dev` starts the server and reloads on change.
-- `xmcp build` compiles to `dist`.
-- `xmcp create tool <name>`, `xmcp create prompt <name>` and
-  `xmcp create resource <name>` add a starter file in the right directory.
+Run the package scripts with the project's package manager:
+
+- `dev` starts the server and reloads on change.
+- `build` compiles to `dist`.
+
+`npx xmcp create tool <name>` adds a starter file in the right directory. It
+also accepts `prompt`, `resource` and `widget`.
