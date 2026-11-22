@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type InferSchema } from "xmcp";
 import { source } from "@/lib/source";
-import { cleanId, getPageContent } from "@/utils/docs";
+import { cleanId, getPageContent, slugsFromId } from "@/utils/docs";
 import { getBaseUrl } from "@/lib/base-url";
 
 export const schema = {
@@ -14,7 +14,8 @@ export const schema = {
 
 export const metadata = {
   name: "search",
-  description: "Search xmcp documentation.",
+  description:
+    "Search the xmcp documentation. Returns the matching pages with their ids, or the page itself when only one matches. Read a listed page with get-page.",
   annotations: {
     title: "Search xmcp documentation.",
     readOnlyHint: true,
@@ -27,9 +28,7 @@ export default async function search({
   id,
 }: InferSchema<typeof schema>) {
   if (id) {
-    const clean = cleanId(id);
-    const slugs = clean ? clean.split("/").filter(Boolean) : [];
-    const page = await getPageContent(slugs);
+    const page = await getPageContent(slugsFromId(id));
 
     if (!page) {
       return `Not found: ${id}`;

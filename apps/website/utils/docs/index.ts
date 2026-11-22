@@ -9,6 +9,13 @@ export function cleanId(id: string) {
   return id.replace(/^\/docs\/?/, "").replace(/-\d+$/, "");
 }
 
+const ROOT_PAGE_ID = "index";
+
+export function slugsFromId(id: string): string[] {
+  const clean = cleanId(id);
+  return clean === ROOT_PAGE_ID ? [] : clean.split("/").filter(Boolean);
+}
+
 export async function getPageContent(slugs: string[]) {
   const page = source.getPage(slugs);
   if (!page) return null;

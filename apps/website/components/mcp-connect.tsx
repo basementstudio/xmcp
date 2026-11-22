@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/utils/cn";
 import { toast } from "@/lib/hooks/use-toast";
-import { Icons } from "@/components/icons";
+import { ActionCard } from "@/components/action-card";
+import { ActionCardGrid } from "@/components/action-card-grid";
 
 type ClientIconKey = "cursor" | "claude" | "windsurf" | "gemini" | "codex";
 
@@ -98,34 +98,15 @@ export function McpConnect({
   };
 
   return (
-    <div className="not-prose">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 my-6">
-        {CONNECTION_OPTIONS.map((option) => {
-          const IconComponent = Icons[option.icon];
-          return (
-            <button
-              key={option.label}
-              onClick={() => handleClick(option)}
-              className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5",
-                "rounded-lg border border-brand-neutral-600 bg-[rgba(5,5,5,0.85)]",
-                "hover:border-brand-neutral-400 hover:bg-[rgba(15,15,15,0.85)]",
-                "transition-all duration-200 cursor-pointer text-left overflow-hidden"
-              )}
-            >
-              <span className="w-8 h-8 rounded-md border border-dashed border-brand-neutral-400 bg-brand-neutral-600 grid place-items-center shrink-0">
-                <IconComponent className="w-4 h-4 text-brand-w1" />
-              </span>
-              <span className="text-brand-w1 font-medium text-sm relative z-10">
-                {option.label}
-              </span>
-              <span className="absolute -right-2 top-1/2 -translate-y-1/2 text-brand-neutral-600 pointer-events-none">
-                <IconComponent className="size-12" />
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+    <ActionCardGrid>
+      {CONNECTION_OPTIONS.map((option) => (
+        <ActionCard
+          key={option.label}
+          label={option.label}
+          icon={option.icon}
+          onClick={() => handleClick(option)}
+        />
+      ))}
+    </ActionCardGrid>
   );
 }
