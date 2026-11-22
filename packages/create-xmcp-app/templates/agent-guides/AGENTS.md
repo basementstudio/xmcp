@@ -23,7 +23,6 @@ code instead of relying on memory:
 - One component per file. The default export is the handler. The `metadata`
   and `schema` exports are optional, and `schema` can be a map of Zod fields or
   a complete Zod schema.
-- A tool in a `.tsx` file renders a React widget.
 - Resource folders define the URI: `src/resources/(users)/[userId]/profile.ts`
   is served as `users://{userId}/profile`.
 - `src/middleware.ts` is optional and holds HTTP middleware, MCP middleware
@@ -39,4 +38,4 @@ Run the package scripts with the project's package manager:
 - `build` compiles to `dist`.
 
 `npx xmcp create tool <name>` adds a starter file in the right directory. It
-also accepts `prompt`, `resource` and `widget`.
+also accepts `prompt` and `resource`.
