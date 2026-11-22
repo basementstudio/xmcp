@@ -15,5 +15,7 @@ export default x402Provider({
     // Keep used Nano block hashes across restarts when a path is given
     claimsFile: process.env.X402_NANO_CLAIMS_FILE,
     requireBinding: process.env.X402_NANO_REQUIRE_BINDING === "true",
+    // Offer x402 v2 terms (nano:mainnet, amount) to unpaid calls
+    x402Version: 2,
   },
 });
