@@ -87,7 +87,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           })}
         />
       </DocsBody>
-      <RelatedGuides posts={relatedGuides} title="Related guides" />
+      <RelatedGuides posts={relatedGuides} />
     </DocsPage>
   );
 }

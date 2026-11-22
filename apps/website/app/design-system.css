@@ -1195,6 +1195,18 @@ body {
   font-weight: 550;
   color: var(--site-ink);
 }
+.site-related-guides {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: var(--site-grid-gap);
+}
+.site-related-guides-title {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 550;
+  color: var(--site-ink);
+}
 .site-card-title,
 body .prose .site-card-title {
   font-size: var(--site-card-title-size);
