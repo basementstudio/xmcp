@@ -21,6 +21,7 @@ export const docs = defineDocs({
       displayTitle: z.string().optional(),
       metadataTitle: z.string().optional(),
       lastModified: z.string().date().optional(),
+      relatedGuides: z.array(z.string()).max(3).optional(),
     }),
   },
 });
