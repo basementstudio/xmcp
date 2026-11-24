@@ -32,6 +32,8 @@ pnpm install
 pnpm dev
 ```
 
+Requires Node.js 22.12 or newer. `pnpm install` also installs `@xmcp-dev/compiler`, the dev dependency that runs `xmcp dev` and `xmcp build`.
+
 The NestJS server starts at `http://localhost:3000`, and the MCP endpoint is available at `/mcp`.
 
 ## Project Structure

@@ -56,6 +56,8 @@ pnpm install
 pnpm dev
 ```
 
+Requires Node.js 22.12 or newer. `pnpm install` also installs `@xmcp-dev/compiler`, the dev dependency that runs `xmcp dev` and `xmcp build`.
+
 ## How It Works
 
 1. MCP clients send requests with `Authorization: Bearer <token>` header
