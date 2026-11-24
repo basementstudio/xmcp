@@ -450,7 +450,7 @@ const program = new Command()
 
       // code integration for express projects
       if (detectedFramework === "express") {
-        const integrationCode = `import { xmcpHandler } from '@xmcp/adapter';
+        const integrationCode = `import { xmcpHandler } from '../.xmcp/adapter/index.js';
 
 myApp.post("/mcp", xmcpHandler);
 myApp.get("/mcp", xmcpHandler);`;
@@ -459,7 +459,7 @@ myApp.get("/mcp", xmcpHandler);`;
         const maxLength = Math.max(...lines.map((line) => line.length)) + 2;
 
         console.log(
-          "\nTo get started with the xmcpHandler in your Express application, add this code to your server:\n"
+          "\nTo get started with the xmcpHandler in your Express application, add this code to your server. The import path assumes the server file is in src/; adjust it if yours is elsewhere:\n"
         );
         console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
         lines.forEach((line) => {
@@ -471,7 +471,7 @@ myApp.get("/mcp", xmcpHandler);`;
 
       // code integration for Fastify projects
       if (detectedFramework === "fastify") {
-        const integrationCode = `import { xmcpHandler } from '@xmcp/adapter';
+        const integrationCode = `import { xmcpHandler } from '../.xmcp/adapter/index.js';
 
 app.post("/mcp", xmcpHandler);
 app.get("/mcp", xmcpHandler);`;
@@ -480,7 +480,7 @@ app.get("/mcp", xmcpHandler);`;
         const maxLength = Math.max(...lines.map((line) => line.length)) + 2;
 
         console.log(
-          "\nTo get started with the xmcpHandler in your Fastify application, add this code to your server:\n"
+          "\nTo get started with the xmcpHandler in your Fastify application, add this code to your server. The import path assumes the server file is in src/; adjust it if yours is elsewhere:\n"
         );
         console.log(chalk.green(chalk.bgBlack(`  ${" ".repeat(maxLength)}`)));
         lines.forEach((line) => {
