@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import {
+  applyPublishDates,
+  fetchNpmPublishDates,
   fetchReleases,
   normalizeReleases,
   writeReleaseSnapshot,
@@ -172,4 +174,53 @@ test("refresh replaces the snapshot and failure removes it instead of keeping st
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("prefers npm publish dates and reorders by them", () => {
+  const result = applyPublishDates(
+    [
+      { version: "1.2.0", publishedAt: "2026-11-24T00:00:00Z" },
+      { version: "1.1.0", publishedAt: "2026-11-23T00:00:00Z" },
+      { version: "1.0.0", publishedAt: "2026-11-01T00:00:00Z" },
+    ],
+    {
+      "1.2.0": "2026-11-10T00:00:00Z",
+      "1.1.0": "2026-11-20T00:00:00Z",
+      "1.0.0": "not a date",
+    }
+  );
+  assert.deepEqual(
+    result.map((item) => [item.version, item.publishedAt]),
+    [
+      ["1.1.0", "2026-11-20T00:00:00Z"],
+      ["1.2.0", "2026-11-10T00:00:00Z"],
+      ["1.0.0", "2026-11-01T00:00:00Z"],
+    ]
+  );
+});
+
+test("npm publish dates fall back to none when npm fails", async () => {
+  assert.deepEqual(
+    await fetchNpmPublishDates({
+      fetchImpl: async () => {
+        throw new Error("offline");
+      },
+    }),
+    {}
+  );
+  assert.deepEqual(
+    await fetchNpmPublishDates({
+      fetchImpl: async () => new Response("", { status: 503 }),
+    }),
+    {}
+  );
+  assert.deepEqual(
+    await fetchNpmPublishDates({
+      fetchImpl: async (url) => {
+        assert.equal(url, "https://registry.npmjs.org/xmcp");
+        return Response.json({ time: { "1.0.0": "2026-11-01T00:00:00Z" } });
+      },
+    }),
+    { "1.0.0": "2026-11-01T00:00:00Z" }
+  );
 });

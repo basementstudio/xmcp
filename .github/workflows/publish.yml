@@ -76,13 +76,19 @@ jobs:
 
       - name: Create version PR or publish
         if: github.event_name == 'push'
-        uses: changesets/action@v1
+        # v2 is required for @changesets/cli v3. v1 parses CLI v2 stdout to find
+        # published packages, so with CLI v3 it silently skips git tags and
+        # GitHub releases (which also feed the website changelog).
+        # Pinned to v2.1.2: it is the first v2 release whose version step resets
+        # the checkout before committing in the default GitHub API push mode,
+        # which restores the changesets prepare-stable-release.cjs hides.
+        # v2.0.0 through v2.1.1 skip that reset and would commit their deletion.
+        uses: changesets/action@v2.1.2
         with:
-          version: pnpm version-packages
-          publish: pnpm publish-packages
+          version-script: pnpm version-packages
+          publish-script: pnpm publish-packages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # setup-node's npmrc takes precedence over the file Changesets writes.
+          # setup-node's npmrc (registry-url above) supplies npm auth; v2 no
+          # longer writes an .npmrc from NPM_TOKEN.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
