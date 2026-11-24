@@ -1,5 +1,9 @@
 # xmcp
 
+## 1.13.3
+
+No changes in this release.
+
 ## 1.13.2
 
 No changes in this release.
