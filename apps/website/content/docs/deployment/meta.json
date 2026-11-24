@@ -1,6 +1,14 @@
 {
   "title": "Deployment",
-  "pages": ["vercel", "cloudflare", "alpic", "replit", "railway", "render"],
+  "pages": [
+    "vercel",
+    "cloudflare",
+    "alpic",
+    "replit",
+    "railway",
+    "render",
+    "prisma-compute"
+  ],
   "defaultOpen": true,
   "root": true
 }

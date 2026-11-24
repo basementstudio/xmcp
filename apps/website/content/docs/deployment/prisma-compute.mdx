@@ -1,0 +1,113 @@
+---
+title: "Prisma Compute"
+metadataTitle: "Prisma Compute Deployment | xmcp Documentation"
+publishedAt: "2026-11-24"
+summary: "Deploy your xmcp MCP server to Prisma Compute from the command line with a standalone HTTP server and a public HTTP endpoint."
+description: "Deploy your xmcp application to Prisma Compute."
+relatedGuides:
+  - "deploy-mcp-server-production"
+  - "mcp-server-observability-tracing"
+---
+
+Prisma Compute can run your xmcp server as an HTTP service, exposing your tools over Streamable HTTP. It deploys the built server from your terminal and runs it on Bun.
+
+Start with an existing standalone xmcp project or create one with `pnpm create xmcp-app@latest`, choosing HTTP transport. The [HTTP transport example](https://github.com/basementstudio/xmcp/tree/main/examples/http-transport) demonstrates the server and build script used here.
+
+## Configure your server
+
+Set the HTTP host to `0.0.0.0` and the port to `3000`:
+
+```typescript title="xmcp.config.ts"
+import type { XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: {
+    host: "0.0.0.0",
+    port: 3000,
+  },
+};
+
+export default config;
+```
+
+Keep your existing tools and other configuration. Prisma Compute sends requests to port `3000`, and the HTTP port is compiled into the server, so set it before you build. The default MCP endpoint is `/mcp`.
+
+## Describe the service
+
+Install the Prisma Composer packages and the Prisma CLI:
+
+```bash
+pnpm add @prisma/composer @prisma/composer-prisma-cloud
+pnpm add -D prisma
+```
+
+Add three files to the root of your project. The first declares a service that runs the server `xmcp build` produces:
+
+```typescript title="service.ts"
+import node from "@prisma/composer/node";
+import { compute } from "@prisma/composer-prisma-cloud";
+
+export default compute({
+  name: "mcp",
+  deps: {},
+  build: node({ module: import.meta.url, entry: "./dist/http.js" }),
+});
+```
+
+The second names the project and adds the service to it:
+
+```typescript title="module.ts"
+import { module } from "@prisma/composer";
+import mcpService from "./service.ts";
+
+export default module("my-xmcp-app", ({ provision }) => {
+  provision(mcpService);
+});
+```
+
+The third tells the Prisma CLI where the module is and which region to deploy to:
+
+```typescript title="prisma.config.ts"
+import { defineConfig as composer } from "@prisma/composer/config";
+import { nodeBuild } from "@prisma/composer/node/control";
+import {
+  prismaCloud,
+  prismaState,
+} from "@prisma/composer-prisma-cloud/control";
+import { definePrismaConfig } from "prisma/config";
+
+export default definePrismaConfig({
+  composer: composer({
+    entry: "./module.ts",
+    extensions: [prismaCloud({ region: "us-east-1" }), nodeBuild()],
+    state: prismaState(),
+  }),
+});
+```
+
+## Deploy from the CLI
+
+Sign in once with `npx prisma auth login`. The deploy does not build your project, so build first and then deploy:
+
+```bash
+pnpm run build
+npx prisma deploy
+```
+
+For a project using npm, use `npm run build` instead. The build requires the `@xmcp-dev/compiler` development dependency included by the scaffolder. The first deploy creates a project named after your module and prints the public URL of the service. Run both commands again to ship a new version.
+
+Your MCP endpoint is `https://<your-service-url>/mcp`. If you customized `http.endpoint`, use that path instead. Add this URL to an [MCP client](/docs/getting-started/connecting) to list and call your tools.
+
+You can also check that the server is running with:
+
+```bash
+curl https://<your-service-url>/health
+```
+
+A deploy succeeds even when the server listens on a different port, so check the health endpoint after the first deploy. If the request times out, read the service output to see which port the server opened. The service address is your module name followed by the service name:
+
+```bash
+npx prisma service logs @my-xmcp-app.mcp
+```
+
+Learn more in the [Prisma Compute documentation](https://www.prisma.io/docs/compute).
