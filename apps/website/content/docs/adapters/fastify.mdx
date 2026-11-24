@@ -24,7 +24,7 @@ After setting up the project, your build command should look like this:
 }
 ```
 
-`xmcp build` bundles your tools into `.xmcp/adapter`.
+`xmcp build` bundles your tools into `.xmcp/adapter`. Import it by relative path: `tsc` does not rewrite path aliases, so an alias import fails when you run the compiled server with Node. The examples below assume the server file is in `src/`; adjust the path if yours is elsewhere.
 
 ## Usage
 
@@ -36,7 +36,7 @@ npm install fastify
 
 ```typescript
 import Fastify from "fastify";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter";
 
 const app = Fastify({ logger: false });
 
@@ -63,7 +63,7 @@ npm install fastify @fastify/aws-lambda
 ```typescript
 import Fastify from "fastify";
 import awsLambdaFastify from "@fastify/aws-lambda";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter";
 
 const app = Fastify({ logger: false });
 
@@ -81,7 +81,7 @@ To support SSE via `GET /mcp`, use a Lambda Function URL with `InvokeMode: RESPO
 ```typescript
 import Fastify from "fastify";
 import awsLambdaFastify from "@fastify/aws-lambda";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter";
 import { promisify } from "node:util";
 import stream from "node:stream";
 
