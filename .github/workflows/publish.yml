@@ -79,7 +79,11 @@ jobs:
         # v2 is required for @changesets/cli v3. v1 parses CLI v2 stdout to find
         # published packages, so with CLI v3 it silently skips git tags and
         # GitHub releases (which also feed the website changelog).
-        uses: changesets/action@v2
+        # Pinned to v2.1.2: it is the first v2 release whose version step resets
+        # the checkout before committing in the default GitHub API push mode,
+        # which restores the changesets prepare-stable-release.cjs hides.
+        # v2.0.0 through v2.1.1 skip that reset and would commit their deletion.
+        uses: changesets/action@v2.1.2
         with:
           version-script: pnpm version-packages
           publish-script: pnpm publish-packages
