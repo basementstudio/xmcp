@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { cancel } from "../topaz";
-import { textResult } from "../jobs";
 import { asToolError } from "../results";
 
 export const schema = {
@@ -10,6 +9,9 @@ export const schema = {
     .regex(/^[\w-]{1,128}$/)
     .describe("jobId from upscale-image"),
 };
+
+// The plain object returned below becomes structuredContent.
+export const outputSchema = { jobId: z.string(), status: z.string() };
 
 export const metadata: ToolMetadata = {
   name: "cancel-upscale-job",
@@ -29,7 +31,7 @@ export default async function cancelUpscaleJob(
   const call = getRequestContext();
   try {
     await cancel(input.jobId, call);
-    return textResult({ jobId: input.jobId, status: "Cancelled" });
+    return { jobId: input.jobId, status: "Cancelled" };
   } catch (error) {
     return asToolError(error, call);
   }

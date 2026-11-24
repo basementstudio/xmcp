@@ -74,7 +74,7 @@ for (const protocolVersion of PROTOCOL_VERSIONS) {
         name: "cancel-image-job",
         arguments: { jobId: "job-1" },
       });
-      assert.deepEqual(JSON.parse(cancelled.result.content[0].text), {
+      assert.deepEqual(cancelled.result.structuredContent, {
         jobId: "job-1",
         status: "cancelled",
       });

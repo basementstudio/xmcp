@@ -9,9 +9,6 @@ import {
   type WaitOptions,
 } from "./jobs";
 
-/** BFL result links stop working ten minutes after the task finishes. */
-const RESULT_LINK_LIFETIME_MS = 10 * 60 * 1000;
-
 export async function settle(
   pollingUrl: string,
   call: Call,
@@ -33,14 +30,8 @@ export async function settle(
   if (value.status === "Ready" && value.result)
     return imagesResult(
       { pollingUrl, status: value.status },
-      [
-        {
-          url: value.result.sample,
-          expiresAt: new Date(
-            Date.now() + RESULT_LINK_LIFETIME_MS
-          ).toISOString(),
-        },
-      ],
+      // Links expire ten minutes after the task finished; BFL reports no finish time.
+      [{ url: value.result.sample }],
       call
     );
   if (value.status.includes("Moderated"))
@@ -58,4 +49,21 @@ export function asToolError(error: unknown, call: Call): ToolResult {
   return toolError(
     "Black Forest Labs could not be reached. Requests are not retried automatically."
   );
+}
+
+/**
+ * After a submission the job exists and is billed, so a failure while waiting
+ * or downloading still hands back its pollingUrl for get-image-job.
+ */
+export function resumable(
+  error: unknown,
+  call: Call,
+  pollingUrl: string
+): ToolResult {
+  call.signal.throwIfAborted();
+  return textResult({
+    pollingUrl,
+    status: "unknown",
+    message: `${error instanceof BflError ? error.message : "Black Forest Labs could not be reached."} The job was submitted; call get-image-job with this pollingUrl to check it.`,
+  });
 }

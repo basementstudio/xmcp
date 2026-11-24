@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
+import { once } from "node:events";
 import { afterEach, beforeEach, mock, test } from "node:test";
+import { requestSignal, type ToolResult } from "../src/jobs";
 import { submitGeneration } from "../src/krea";
-import { settle } from "../src/results";
+import { resumable, settle } from "../src/results";
 
 const PNG = new Uint8Array([137, 80, 78, 71]);
+/** Parses the JSON summary or status a tool result carries first. */
+const json = (result: ToolResult) =>
+  JSON.parse((result.content[0] as { text: string }).text) as Record<
+    string,
+    unknown
+  >;
 const fast = { pollIntervalMs: 1, waitBudgetMs: 1_000 };
 const originalEnv = { ...process.env };
 const call = (progress: number[] = []) => ({
@@ -94,9 +102,12 @@ test("returns the job ID instead of waiting past the budget", async () => {
     pollIntervalMs: 1,
     waitBudgetMs: 0,
   });
-  const summary = JSON.parse((result.content[0] as { text: string }).text);
-  assert.equal(summary.jobId, "j1");
-  assert.equal(summary.status, "queued");
+  assert.deepEqual(json(result), {
+    jobId: "j1",
+    status: "queued",
+    message:
+      "Still running. Call get-image-job with this jobId to check again.",
+  });
 });
 
 test("reports failures by code and keeps oversized or non-https outputs as links", async () => {
@@ -172,4 +183,31 @@ test("stops waiting when the MCP request is cancelled", async () => {
   );
   setImmediate(() => controller.abort());
   await assert.rejects(pending, { name: "AbortError" });
+});
+
+test("hands back the job ID when polling fails after submission", async () => {
+  routes(() =>
+    Response.json({ status: 503, message: "busy" }, { status: 503 })
+  );
+  const result = await settle("j1", call(), fast).catch((error) =>
+    resumable(error, call(), "j1")
+  );
+  assert.equal(json(result).jobId, "j1");
+  assert.equal(json(result).status, "unknown");
+  assert.match(String(json(result).message), /get-image-job/);
+});
+
+test("one deadline bounds the whole call, including each request", async () => {
+  routes(() => Response.json({ job_id: "j1", status: "processing" }));
+  const result = await settle("j1", {
+    signal: new AbortController().signal,
+    deadline: Date.now(),
+  });
+  assert.equal(json(result).status, "processing");
+  const signal = requestSignal({
+    signal: new AbortController().signal,
+    deadline: Date.now() - 1,
+  });
+  await once(signal, "abort");
+  assert.equal(signal.reason.name, "TimeoutError");
 });

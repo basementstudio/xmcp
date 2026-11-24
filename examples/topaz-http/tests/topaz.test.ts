@@ -57,18 +57,29 @@ test("sends a source URL to the generative endpoint with its default model", asy
   assert.equal(form.get("output_width"), null);
 });
 
-test("reports Topaz's percentage progress and hands back running jobs", async () => {
+test("reports Topaz's percentage only when it increases and hands back running jobs", async () => {
+  const percents = [10, 10, 5, 30];
   let polls = 0;
-  routes(() => Response.json({ status: "Processing", progress: ++polls * 25 }));
+  routes(() =>
+    Response.json({
+      status: "Processing",
+      progress: percents[Math.min(polls++, 3)],
+    })
+  );
   const progress: unknown[] = [];
   const result = await settle("p1", call(progress), {
     pollIntervalMs: 1,
-    waitBudgetMs: 30,
+    waitBudgetMs: 40,
   });
-  assert.deepEqual(progress[0], [25, 100]);
-  const summary = JSON.parse((result.content[0] as { text: string }).text);
-  assert.equal(summary.status, "Processing");
-  assert.equal(typeof summary.progress, "number");
+  assert.deepEqual(progress.slice(0, 2), [
+    [10, 100],
+    [30, 100],
+  ]);
+  assert.equal(progress.length, 2);
+  assert.equal(
+    JSON.parse((result.content[0] as { text: string }).text).status,
+    "Processing"
+  );
 });
 
 test("explains credit and subscription errors", async () => {

@@ -62,3 +62,20 @@ export function asToolError(error: unknown, call: Call): ToolResult {
     "Topaz could not be reached. Requests are not retried automatically."
   );
 }
+
+/**
+ * After a submission the job exists and is billed, so a failure while waiting
+ * or downloading still hands back its jobId for get-upscale-job.
+ */
+export function resumable(
+  error: unknown,
+  call: Call,
+  jobId: string
+): ToolResult {
+  call.signal.throwIfAborted();
+  return textResult({
+    jobId,
+    status: "unknown",
+    message: `${error instanceof TopazError ? error.message : "Topaz could not be reached."} The job was submitted; call get-upscale-job with this jobId to check it.`,
+  });
+}

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { submitGeneration } from "../krea";
-import { asToolError, settle } from "../results";
+import { startCall } from "../jobs";
+import { asToolError, resumable, settle } from "../results";
 
 export const schema = {
   prompt: z.string().trim().min(1).max(4000),
@@ -45,9 +46,12 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function generateImage(input: InferSchema<typeof schema>) {
-  const call = getRequestContext();
+  const call = startCall(getRequestContext());
   try {
-    return await settle(await submitGeneration(input, call), call);
+    const jobId = await submitGeneration(input, call);
+    return await settle(jobId, call).catch((error) =>
+      resumable(error, call, jobId)
+    );
   } catch (error) {
     return asToolError(error, call);
   }

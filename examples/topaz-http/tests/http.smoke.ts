@@ -81,7 +81,10 @@ for (const protocolVersion of PROTOCOL_VERSIONS) {
         name: "cancel-upscale-job",
         arguments: { jobId: "p-1" },
       });
-      assert.equal(cancelled.result.isError, undefined);
+      assert.deepEqual(cancelled.result.structuredContent, {
+        jobId: "p-1",
+        status: "Cancelled",
+      });
     }
   );
 }

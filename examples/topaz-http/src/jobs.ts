@@ -4,11 +4,13 @@ import { image } from "xmcp";
 /** Providers recommend polling every 2–5 seconds. */
 export const POLL_INTERVAL_MS = 2_000;
 /**
- * Stay under the ~60 s request timeout many MCP clients use. Jobs that run
- * longer return their job ID so the client can check back later.
+ * Each call answers within this budget, measured from when the tool starts, to
+ * stay under the ~60 s request timeout many MCP clients use. Submission,
+ * polling, and the result download all share it. Jobs that run longer return
+ * their job ID so the client can check back later.
  */
 export const WAIT_BUDGET_MS = 50_000;
-/** Bounds each individual provider request. */
+/** Bounds each individual provider request, within what is left of the budget. */
 export const REQUEST_TIMEOUT_MS = 30_000;
 /** Larger outputs are returned as a link instead of inline image content. */
 export const MAX_INLINE_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -17,6 +19,17 @@ export const MAX_INLINE_IMAGE_BYTES = 8 * 1024 * 1024;
 export interface Call {
   signal: AbortSignal;
   progress?: (value: number, total?: number) => Promise<void>;
+  /** Epoch milliseconds by which the tool must answer. */
+  deadline?: number;
+}
+
+/** Starts the wait budget when the tool starts. */
+export function startCall(context: Call): Call {
+  return {
+    signal: context.signal,
+    progress: context.progress,
+    deadline: Date.now() + WAIT_BUDGET_MS,
+  };
 }
 
 export interface WaitOptions {
@@ -28,8 +41,9 @@ export interface WaitOptions {
 export type Measure<T> = (value: T) => number | undefined;
 
 /**
- * Polls until `done` returns true or the wait budget runs out. Cancelling the
- * MCP request stops waiting; it does not cancel the provider job.
+ * Polls until `done` returns true or the call's budget runs out. Progress is
+ * only reported when it increases, as MCP requires. Cancelling the MCP request
+ * stops waiting; it does not cancel the provider job.
  */
 export async function waitFor<T>(
   poll: () => Promise<T>,
@@ -39,25 +53,32 @@ export async function waitFor<T>(
   measure?: Measure<T>
 ): Promise<{ settled: boolean; value: T }> {
   const interval = options.pollIntervalMs ?? POLL_INTERVAL_MS;
-  const deadline = Date.now() + (options.waitBudgetMs ?? WAIT_BUDGET_MS);
+  const deadline =
+    options.waitBudgetMs !== undefined
+      ? Date.now() + options.waitBudgetMs
+      : (call.deadline ?? Date.now() + WAIT_BUDGET_MS);
+  let reported = 0;
   for (let step = 1; ; step++) {
     call.signal.throwIfAborted();
     const value = await poll();
     if (done(value)) return { settled: true, value };
     if (Date.now() + interval > deadline) return { settled: false, value };
-    const percent = measure?.(value);
-    await (percent === undefined
-      ? call.progress?.(step)
-      : call.progress?.(percent, 100));
+    const next = measure ? measure(value) : step;
+    if (next !== undefined && next > reported) {
+      reported = next;
+      await call.progress?.(next, measure ? 100 : undefined);
+    }
     await sleep(interval, undefined, { signal: call.signal });
   }
 }
 
+/** Aborts a provider request on cancellation, its own timeout, or the call's deadline. */
 export function requestSignal(call: Call): AbortSignal {
-  return AbortSignal.any([
-    call.signal,
-    AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-  ]);
+  const remaining =
+    call.deadline === undefined
+      ? REQUEST_TIMEOUT_MS
+      : Math.min(REQUEST_TIMEOUT_MS, Math.max(0, call.deadline - Date.now()));
+  return AbortSignal.any([call.signal, AbortSignal.timeout(remaining)]);
 }
 
 export type ToolResult = {
@@ -65,12 +86,16 @@ export type ToolResult = {
   content: ({ type: "text"; text: string } | ReturnType<typeof image>)[];
 };
 
-export function toolError(message: string): ToolResult {
-  return { isError: true, content: [{ type: "text", text: message }] };
+/**
+ * Status results share a tool with image results, so they can't declare an
+ * outputSchema; they return their JSON as text content instead.
+ */
+export function textResult(value: Record<string, unknown>): ToolResult {
+  return { content: [{ type: "text", text: JSON.stringify(value) }] };
 }
 
-export function textResult(value: unknown): ToolResult {
-  return { content: [{ type: "text", text: JSON.stringify(value) }] };
+export function toolError(message: string): ToolResult {
+  return { isError: true, content: [{ type: "text", text: message }] };
 }
 
 export interface Output {

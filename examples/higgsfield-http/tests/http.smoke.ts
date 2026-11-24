@@ -77,7 +77,10 @@ for (const protocolVersion of PROTOCOL_VERSIONS) {
         name: "cancel-image-job",
         arguments: { jobId: "req-1" },
       });
-      assert.equal(cancelled.result.isError, undefined);
+      assert.deepEqual(cancelled.result.structuredContent, {
+        jobId: "req-1",
+        status: "canceled",
+      });
     }
   );
 }

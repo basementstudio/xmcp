@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { cancelJob } from "../krea";
-import { textResult } from "../jobs";
 import { asToolError } from "../results";
 
 export const schema = {
@@ -10,6 +9,9 @@ export const schema = {
     .regex(/^[\w-]{1,128}$/)
     .describe("jobId from generate-image"),
 };
+
+// The plain object returned below becomes structuredContent.
+export const outputSchema = { jobId: z.string(), status: z.string() };
 
 export const metadata: ToolMetadata = {
   name: "cancel-image-job",
@@ -29,7 +31,7 @@ export default async function cancelImageJob(
   const call = getRequestContext();
   try {
     await cancelJob(input.jobId, call);
-    return textResult({ jobId: input.jobId, status: "cancelled" });
+    return { jobId: input.jobId, status: "cancelled" };
   } catch (error) {
     return asToolError(error, call);
   }

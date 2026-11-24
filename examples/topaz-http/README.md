@@ -43,7 +43,7 @@ Connect an MCP client to `http://localhost:3001/mcp` and send the client key as 
 
 ## Results
 
-Generation runs as a provider job. The tool waits up to about 50 seconds and sends MCP progress notifications while it polls. When the job finishes, the result contains the image inline and a JSON summary with the provider link and its expiry. Longer jobs return their `jobId` instead; call `get-upscale-job` with it to keep waiting. Cancelling the MCP request stops waiting but does not cancel the provider job. Images larger than 8 MB come back as a link only. Topaz download links expire one hour after they are issued. Call `get-upscale-job` again for a fresh one; results are kept for seven days.
+Generation runs as a provider job. Each call answers within about 50 seconds, counted from when the tool starts, and sends MCP progress notifications while it polls. When the job finishes, the result contains the image inline and a JSON summary with the provider link and its expiry. Longer jobs return their `jobId` instead; call `get-upscale-job` with it to keep waiting. If the provider stops responding after a submission, the tool still returns the `jobId`. Cancelling the MCP request stops waiting but does not cancel the provider job. Images larger than 8 MB come back as a link only. Topaz download links expire one hour after they are issued. Call `get-upscale-job` again for a fresh one; results are kept for seven days.
 
 Pass a Topaz model name in `model`, for example `"High Fidelity V2"`, or leave it out for Topaz's default. Check the names in Topaz's model playground, because the documented lists differ. A finished job is charged in full even if you cancel it.
 

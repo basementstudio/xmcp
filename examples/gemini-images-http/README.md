@@ -44,7 +44,7 @@ Connect an MCP client to `http://localhost:3001/mcp` and send the client key as 
 
 The tool returns each image inline as MCP image content, with a JSON summary first.
 
-Images come back in the response, so there are no jobs. Source images for `edit-image` are sent inline as base64, up to about 5 MB each, because this server never downloads client-supplied URLs. The server waits up to two minutes for an image. If Gemini declines a prompt and returns no image, the tool returns an error.
+Images come back in the response, so there are no jobs. Source images for `edit-image` are sent inline as base64, up to about 5 MB each, because this server never downloads client-supplied URLs. The example raises xmcp's request body limit to 30 MB to fit four of them. The server waits up to two minutes for an image. If Gemini declines a prompt and returns no image, the tool returns an error.
 
 ## Tests
 

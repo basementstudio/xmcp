@@ -17,7 +17,7 @@ GEMINI_API_KEY=your-provider-credential
 MCP_API_KEY=your-separate-client-secret
 ```
 
-MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls the Gemini Interactions API at `https://generativelanguage.googleapis.com/v1beta/interactions` with the `x-goog-api-key` header. Requests are never retried, because a retry would bill a new image. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls the Gemini Interactions API at `https://generativelanguage.googleapis.com/v1beta/interactions` with the `x-goog-api-key` header. Requests are never retried, because a retry would bill a new image. All authorized MCP clients share the same provider account and its credits.
 
 ## Available tools
 
@@ -30,7 +30,7 @@ MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in cons
 
 The tool returns each image inline as MCP image content, with a JSON summary first.
 
-Images come back in the response, so there are no jobs. Source images for `edit-image` are sent inline as base64, up to about 5 MB each, because this server never downloads client-supplied URLs. The server waits up to two minutes for an image. If Gemini declines a prompt and returns no image, the tool returns an error.
+Images come back in the response, so there are no jobs. Source images for `edit-image` are sent inline as base64, up to about 5 MB each, because this server never downloads client-supplied URLs. The example raises xmcp's request body limit to 30 MB to fit four of them. The server waits up to two minutes for an image. If Gemini declines a prompt and returns no image, the tool returns an error.
 
 ## Run the example
 

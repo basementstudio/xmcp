@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
+import { startCall } from "../jobs";
 import { asToolError, settle } from "../results";
 
 export const schema = {
@@ -21,7 +22,7 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function getUpscaleJob(input: InferSchema<typeof schema>) {
-  const call = getRequestContext();
+  const call = startCall(getRequestContext());
   try {
     return await settle(input.jobId, call);
   } catch (error) {

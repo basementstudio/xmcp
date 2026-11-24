@@ -60,3 +60,20 @@ export function asToolError(error: unknown, call: Call): ToolResult {
     "Higgsfield could not be reached. Requests are not retried automatically."
   );
 }
+
+/**
+ * After a submission the job exists and is billed, so a failure while waiting
+ * or downloading still hands back its jobId for get-image-job.
+ */
+export function resumable(
+  error: unknown,
+  call: Call,
+  jobId: string
+): ToolResult {
+  call.signal.throwIfAborted();
+  return textResult({
+    jobId,
+    status: "unknown",
+    message: `${error instanceof HiggsfieldError ? error.message : "Higgsfield could not be reached."} The job was submitted; call get-image-job with this jobId to check it.`,
+  });
+}

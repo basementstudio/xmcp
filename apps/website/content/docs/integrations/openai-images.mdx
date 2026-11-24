@@ -17,7 +17,7 @@ OPENAI_API_KEY=your-provider-credential
 MCP_API_KEY=your-separate-client-secret
 ```
 
-MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.openai.com/v1/images/generations` and `/images/edits` with a Bearer token. OpenAI downloads the edit source and mask URLs itself; this server never fetches client-supplied URLs. Requests are never retried, because a retry would bill new images. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.openai.com/v1/images/generations` and `/images/edits` with a Bearer token. OpenAI downloads the edit source and mask URLs itself; this server never fetches client-supplied URLs. Requests are never retried, because a retry would bill new images. All authorized MCP clients share the same provider account and its credits.
 
 ## Available tools
 

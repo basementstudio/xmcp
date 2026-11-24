@@ -2,7 +2,8 @@ import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { submit } from "../bfl";
 import { outputOptions } from "../options";
-import { asToolError, settle } from "../results";
+import { startCall } from "../jobs";
+import { asToolError, resumable, settle } from "../results";
 
 export const schema = {
   prompt: z.string().trim().min(1).max(4000).describe("The change to make"),
@@ -26,9 +27,12 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function editImage(input: InferSchema<typeof schema>) {
-  const call = getRequestContext();
+  const call = startCall(getRequestContext());
   try {
-    return await settle(await submit(input, call), call);
+    const pollingUrl = await submit(input, call);
+    return await settle(pollingUrl, call).catch((error) =>
+      resumable(error, call, pollingUrl)
+    );
   } catch (error) {
     return asToolError(error, call);
   }

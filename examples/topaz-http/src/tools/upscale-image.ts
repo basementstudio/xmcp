@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { getRequestContext, type InferSchema, type ToolMetadata } from "xmcp";
 import { submitUpscale } from "../topaz";
-import { asToolError, settle } from "../results";
+import { startCall } from "../jobs";
+import { asToolError, resumable, settle } from "../results";
 
 /** Topaz accepts output dimensions up to 32,000 pixels per side. */
 const MAX_DIMENSION = 32_000;
@@ -49,9 +50,12 @@ export const metadata: ToolMetadata = {
 };
 
 export default async function upscaleImage(input: InferSchema<typeof schema>) {
-  const call = getRequestContext();
+  const call = startCall(getRequestContext());
   try {
-    return await settle(await submitUpscale(input, call), call);
+    const jobId = await submitUpscale(input, call);
+    return await settle(jobId, call).catch((error) =>
+      resumable(error, call, jobId)
+    );
   } catch (error) {
     return asToolError(error, call);
   }
