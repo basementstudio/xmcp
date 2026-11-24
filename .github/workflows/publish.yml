@@ -76,12 +76,14 @@ jobs:
 
       - name: Create version PR or publish
         if: github.event_name == 'push'
-        uses: changesets/action@v1
+        # v2 is required for @changesets/cli v3. v1 parses CLI v2 stdout to find
+        # published packages, so with CLI v3 it silently skips git tags and
+        # GitHub releases (which also feed the website changelog).
+        uses: changesets/action@v2
         with:
-          version: pnpm version-packages
-          publish: pnpm publish-packages
+          version-script: pnpm version-packages
+          publish-script: pnpm publish-packages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           # setup-node's npmrc takes precedence over the file Changesets writes.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

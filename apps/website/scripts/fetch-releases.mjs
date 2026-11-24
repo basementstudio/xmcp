@@ -15,6 +15,10 @@ const SNAPSHOT_PATH = fileURLToPath(
 // Bound each GitHub request so an unavailable upstream cannot hang a deploy.
 const REQUEST_TIMEOUT_MS = 30_000;
 const STABLE_TAG = /^(?:xmcp@|v)(\d+\.\d+\.\d+)$/;
+const NPM_PACKAGE_URL = "https://registry.npmjs.org/xmcp";
+
+const newestFirst = (a, b) =>
+  Date.parse(b.publishedAt) - Date.parse(a.publishedAt);
 
 export function normalizeReleases(data) {
   if (!Array.isArray(data)) throw new Error("Expected a GitHub releases array");
@@ -87,9 +91,36 @@ export async function fetchReleases({
   }
   if (!releases.length)
     throw new Error("GitHub returned no stable xmcp releases");
-  return releases.sort(
-    (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt)
-  );
+  return releases.sort(newestFirst);
+}
+
+// GitHub dates a release when the release is created, so a release created
+// after its npm publish (for example a backfill) shows the wrong day. npm
+// records when each version shipped. The lookup is best effort: the GitHub
+// date stays when npm is unreachable or has no entry for a version.
+export async function fetchNpmPublishDates({ fetchImpl = fetch } = {}) {
+  try {
+    const response = await fetchImpl(NPM_PACKAGE_URL, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) return {};
+    const { time } = await response.json();
+    return time && typeof time === "object" ? time : {};
+  } catch {
+    return {};
+  }
+}
+
+export function applyPublishDates(releases, dates) {
+  return releases
+    .map((release) => {
+      const date = dates[release.version];
+      return typeof date === "string" && Number.isFinite(Date.parse(date))
+        ? { ...release, publishedAt: date }
+        : release;
+    })
+    .sort(newestFirst);
 }
 
 export async function writeReleaseSnapshot({
@@ -98,7 +129,10 @@ export async function writeReleaseSnapshot({
 } = {}) {
   // Remove the previous snapshot first: a failed refresh must never reuse it.
   await rm(outputPath, { force: true });
-  const releases = await fetchReleases(options);
+  const releases = applyPublishDates(
+    await fetchReleases(options),
+    await fetchNpmPublishDates({ fetchImpl: options.fetchImpl })
+  );
   await mkdir(dirname(outputPath), { recursive: true });
   const temporaryPath = `${outputPath}.tmp`;
   await writeFile(temporaryPath, `${JSON.stringify(releases, null, 2)}\n`);
