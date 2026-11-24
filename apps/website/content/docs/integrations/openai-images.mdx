@@ -1,0 +1,39 @@
+---
+title: "OpenAI Images"
+metadataTitle: "Usage with OpenAI Images | xmcp Documentation"
+publishedAt: "2026-11-24"
+summary: "Generate and edit images with OpenAI's image models from an xmcp server."
+description: "Build an xmcp server that generates and edits images with the OpenAI Images API and returns them inline."
+---
+
+Generate and edit images with OpenAI's GPT image models. Start with the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/openai-images-http).
+
+## Configure access
+
+Create an API key in the [OpenAI platform](https://platform.openai.com/api-keys). Some image models require organization verification. The default model is `gpt-image-2.6-flare`; set `OPENAI_IMAGE_MODEL` to use another.
+
+```bash
+OPENAI_API_KEY=your-provider-credential
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.openai.com/v1/images/generations` and `/images/edits` with a Bearer token. OpenAI downloads the edit source and mask URLs itself; this server never fetches client-supplied URLs. Requests are never retried, because a retry would bill new images. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+
+## Available tools
+
+| Tool             | Purpose                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| `generate-image` | Generate up to 4 images from a prompt.                                             |
+| `edit-image`     | Edit or combine up to 16 images given as public https URLs, with an optional mask. |
+
+## Results
+
+The tool returns each image inline as MCP image content, with a JSON summary first.
+
+Images come back in the response, so there are no jobs. High-quality images can take more than a minute; the server waits up to two minutes. If your MCP client times out sooner, raise its timeout. A cancelled or timed-out call may still be billed. `background: "transparent"` needs `png` or `webp` output.
+
+## Run the example
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/openai-images-http#run-locally) for installation and startup. Its tests replace every provider request with a local fake, so they need no credentials.
+
+Tested against the OpenAI Images API reference on November 24, 2026.

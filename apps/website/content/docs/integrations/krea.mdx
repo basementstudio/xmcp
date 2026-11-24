@@ -1,0 +1,40 @@
+---
+title: "Krea"
+metadataTitle: "Usage with Krea | xmcp Documentation"
+publishedAt: "2026-11-24"
+summary: "Generate and edit images with Krea 3 from an xmcp server."
+description: "Build an xmcp server that generates and edits images with Krea 3, with job polling and cancellation."
+---
+
+Generate images with Krea 3, or edit them by passing reference images. Start with the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/krea-http).
+
+## Configure access
+
+Create an API token on the [Krea API page](https://www.krea.ai/app/api). API access must be enabled for the workspace; if it is not, contact Krea support. Jobs are paid from a prepaid API balance, separate from app compute units. Failed and cancelled jobs are not billed.
+
+```bash
+KREA_API_KEY=your-provider-credential
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.krea.ai/generate/image/krea/krea-3` and `/jobs/{id}` with a Bearer token. Submissions are never retried. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+
+## Available tools
+
+| Tool               | Purpose                                                                         |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `generate-image`   | Generate an image, or edit up to 8 reference images given as public https URLs. |
+| `get-image-job`    | Wait for a job and return its image, or its status.                             |
+| `cancel-image-job` | Cancel a job that is still queued or processing.                                |
+
+## Results
+
+Generation runs as a provider job. The tool waits up to about 50 seconds and sends MCP progress notifications while it polls. When the job finishes, the result contains the image inline and a JSON summary with the provider link and its expiry. Longer jobs return their `jobId` instead; call `get-image-job` with it to keep waiting. Cancelling the MCP request stops waiting but does not cancel the provider job. Images larger than 8 MB come back as a link only.
+
+`thinkingMode: "high"` reasons longer about the prompt and costs more. An empty balance or a plan without the requested option returns a tool error instead of a job.
+
+## Run the example
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/krea-http#run-locally) for installation and startup. Its tests replace every provider request with a local fake, so they need no credentials.
+
+Tested against Krea's documented API on November 24, 2026.

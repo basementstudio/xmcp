@@ -1,0 +1,64 @@
+import {
+  getDownload,
+  getStatus,
+  TERMINAL,
+  TopazError,
+  type TopazStatus,
+} from "./topaz";
+import {
+  imagesResult,
+  textResult,
+  toolError,
+  waitFor,
+  type Call,
+  type ToolResult,
+  type WaitOptions,
+} from "./jobs";
+
+/** Waits for an upscale within the budget and turns it into a tool result. */
+export async function settle(
+  jobId: string,
+  call: Call,
+  options?: WaitOptions
+): Promise<ToolResult> {
+  const { settled, value } = await waitFor(
+    () => getStatus(jobId, call),
+    (job: TopazStatus) => TERMINAL.has(job.status),
+    call,
+    options,
+    (job) => job.progress ?? undefined
+  );
+  if (!settled)
+    return textResult({
+      jobId,
+      status: value.status,
+      progress: value.progress ?? null,
+      message:
+        "Still running. Call get-upscale-job with this jobId to check again.",
+    });
+  if (value.status === "Completed")
+    return imagesResult(
+      {
+        jobId,
+        status: value.status,
+        width: value.output_width ?? null,
+        height: value.output_height ?? null,
+        credits: value.credits ?? null,
+      },
+      [await getDownload(jobId, call)],
+      call
+    );
+  if (value.status === "Cancelled")
+    return toolError(`Topaz job ${jobId} was cancelled.`);
+  return toolError(
+    `Topaz job ${jobId} failed. Service-side failures are refunded.`
+  );
+}
+
+export function asToolError(error: unknown, call: Call): ToolResult {
+  call.signal.throwIfAborted();
+  if (error instanceof TopazError) return toolError(error.message);
+  return toolError(
+    "Topaz could not be reached. Requests are not retried automatically."
+  );
+}

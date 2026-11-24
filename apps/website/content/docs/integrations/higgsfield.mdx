@@ -1,0 +1,42 @@
+---
+title: "Higgsfield"
+metadataTitle: "Usage with Higgsfield | xmcp Documentation"
+publishedAt: "2026-11-24"
+summary: "Generate and edit images with Higgsfield from an xmcp server."
+description: "Build an xmcp server that generates images with Higgsfield Soul and edits them with Grok Image 2.0, with job polling and cancellation."
+---
+
+Generate images with Higgsfield Soul and edit them with Grok Image 2.0 on Higgsfield. Start with the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/higgsfield-http).
+
+## Configure access
+
+Create an API key in the [Higgsfield console](https://console.higgsfield.ai). It has two parts, an ID and a secret. Higgsfield bills each output from the account balance; failed and blocked jobs are not charged.
+
+```bash
+HIGGSFIELD_API_KEY_ID=your-key-id
+HIGGSFIELD_API_KEY_SECRET=your-key-secret
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.higgsfield.ai` with `Authorization: Key <id>:<secret>`. Each submission sends a fresh `Idempotency-Key` and is never retried. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+
+## Available tools
+
+| Tool               | Purpose                                                              |
+| ------------------ | -------------------------------------------------------------------- |
+| `generate-image`   | Generate an image from a prompt with Higgsfield Soul.                |
+| `edit-image`       | Edit up to 10 source images (public https URLs) with Grok Image 2.0. |
+| `get-image-job`    | Wait for a job and return its image, or its status.                  |
+| `cancel-image-job` | Cancel a job that is still queued.                                   |
+
+## Results
+
+Generation runs as a provider job. The tool waits up to about 50 seconds and sends MCP progress notifications while it polls. When the job finishes, the result contains the image inline and a JSON summary with the provider link and its expiry. Longer jobs return their `jobId` instead; call `get-image-job` with it to keep waiting. Cancelling the MCP request stops waiting but does not cancel the provider job. Images larger than 8 MB come back as a link only. Output links stay valid until the `expiresAt` Higgsfield reports, at least seven days.
+
+Higgsfield only cancels jobs that are still queued. A job that already started runs to completion.
+
+## Run the example
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/higgsfield-http#run-locally) for installation and startup. Its tests replace every provider request with a local fake, so they need no credentials.
+
+Tested against Higgsfield's documented API on November 24, 2026.
