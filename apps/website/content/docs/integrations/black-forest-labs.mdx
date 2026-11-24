@@ -1,0 +1,40 @@
+---
+title: "Black Forest Labs (FLUX)"
+metadataTitle: "Usage with Black Forest Labs (FLUX) | xmcp Documentation"
+publishedAt: "2026-11-24"
+summary: "Generate and edit images with FLUX.2 from an xmcp server."
+description: "Build an xmcp server that generates and edits images with Black Forest Labs' FLUX.2 [pro] API."
+---
+
+Generate images with FLUX.2 [pro], or edit and combine up to eight source images. Start with the [runnable example](https://github.com/basementstudio/xmcp/tree/main/examples/bfl-http).
+
+## Configure access
+
+Create an API key in the [BFL dashboard](https://dashboard.bfl.ai) and add credits. Set `BFL_MODEL` to use another FLUX model path, such as `flux-2-max`.
+
+```bash
+BFL_API_KEY=your-provider-credential
+MCP_API_KEY=your-separate-client-secret
+```
+
+MCP clients send `MCP_API_KEY` as `x-api-key` on every request, compared in constant time. The server is stateless: it keeps no sessions and no job records. The server calls `https://api.bfl.ai/v1/flux-2-pro` with the `x-key` header and polls the `polling_url` BFL returns. It only polls `https://*.bfl.ai/v1/get_result` URLs, so the key never reaches another host. Submissions are never retried. All authorized MCP clients share the same provider account and its credits, and any of them can read a job whose ID they have.
+
+## Available tools
+
+| Tool             | Purpose                                                                  |
+| ---------------- | ------------------------------------------------------------------------ |
+| `generate-image` | Generate an image from a prompt.                                         |
+| `edit-image`     | Edit or combine up to 8 images given as public https URLs.               |
+| `get-image-job`  | Wait for a task by its `pollingUrl` and return its image, or its status. |
+
+## Results
+
+Generation runs as a provider job. Each call answers within about 50 seconds, counted from when the tool starts, and sends MCP progress notifications while it polls. When the job finishes, the result contains the image inline and a JSON summary with the provider link. Longer jobs return their `pollingUrl` instead; call `get-image-job` with it to keep waiting. If the provider stops responding after a submission, the tool still returns the `pollingUrl`. Cancelling the MCP request stops waiting but does not cancel the provider job. Images larger than 8 MB come back as a link only. BFL result links expire ten minutes after the task finishes and cannot be served to browsers directly, which is why the server returns the image itself.
+
+BFL has no cancel endpoint. Moderated requests return a tool error naming the moderation status. `safetyTolerance` runs from 0 (strictest) to 5.
+
+## Run the example
+
+Follow the [example README](https://github.com/basementstudio/xmcp/tree/main/examples/bfl-http#run-locally) for installation and startup. Its tests replace every provider request with a local fake, so they need no credentials.
+
+Tested against the BFL API reference on November 24, 2026.

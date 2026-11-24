@@ -108,6 +108,30 @@ jobs:
       - run: pnpm --filter github-http typecheck
       - run: pnpm --filter github-http test
       - run: pnpm --filter github-http test:smoke
+      - run: pnpm --filter higgsfield-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter higgsfield-http typecheck
+      - run: pnpm --filter higgsfield-http test
+      - run: pnpm --filter higgsfield-http test:smoke
+      - run: pnpm --filter krea-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter krea-http typecheck
+      - run: pnpm --filter krea-http test
+      - run: pnpm --filter krea-http test:smoke
+      - run: pnpm --filter topaz-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter topaz-http typecheck
+      - run: pnpm --filter topaz-http test
+      - run: pnpm --filter topaz-http test:smoke
+      - run: pnpm --filter bfl-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter bfl-http typecheck
+      - run: pnpm --filter bfl-http test
+      - run: pnpm --filter bfl-http test:smoke
+      - run: pnpm --filter openai-images-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter openai-images-http typecheck
+      - run: pnpm --filter openai-images-http test
+      - run: pnpm --filter openai-images-http test:smoke
+      - run: pnpm --filter gemini-images-http exec node ../../packages/xmcp/dist/cli.js build
+      - run: pnpm --filter gemini-images-http typecheck
+      - run: pnpm --filter gemini-images-http test
+      - run: pnpm --filter gemini-images-http test:smoke
       - run: pnpm --filter @xmcp-dev/upstash test
       - run: pnpm --filter upstash-http exec node ../../packages/xmcp/dist/cli.js build
       - run: pnpm --filter upstash-http exec tsc --noEmit

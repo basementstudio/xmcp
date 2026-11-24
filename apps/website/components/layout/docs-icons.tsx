@@ -88,6 +88,13 @@ export const sidebarIcons: Partial<
   "/docs/integrations/commet": Icons.commet,
   "/docs/integrations/descope": Icons.descope,
   "/docs/integrations/figma": IntegrationIcons.figma,
+  "/docs/integrations/higgsfield": IntegrationIcons.higgsfield,
+  "/docs/integrations/krea": IntegrationIcons.krea,
+  "/docs/integrations/topaz": IntegrationIcons.topaz,
+  "/docs/integrations/black-forest-labs": IntegrationIcons.bfl,
+  // The OpenAI and Gemini marks already ship with the page actions.
+  "/docs/integrations/openai-images": Icons.codex,
+  "/docs/integrations/gemini-images": Icons.gemini,
   "/docs/integrations/flue": IntegrationIcons.flue,
   "/docs/integrations/eve": IntegrationIcons.eve,
   "/docs/integrations/mastra": IntegrationIcons.mastra,

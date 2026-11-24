@@ -506,6 +506,28 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  examples/bfl-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   examples/billing-http:
     dependencies:
       '@xmcp-dev/billing':
@@ -834,6 +856,28 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  examples/gemini-images-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   examples/github-http:
     dependencies:
       xmcp:
@@ -891,6 +935,28 @@ importers:
         specifier: workspace:*
         version: link:../../packages/compiler
 
+  examples/higgsfield-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   examples/http-transport:
     dependencies:
       xmcp:
@@ -929,6 +995,28 @@ importers:
       '@xmcp-dev/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
+
+  examples/krea-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   examples/linear-http:
     dependencies:
@@ -1109,6 +1197,28 @@ importers:
       '@xmcp-dev/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
+
+  examples/openai-images-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   examples/openapi-import:
     dependencies:
@@ -1357,6 +1467,28 @@ importers:
       '@xmcp-dev/compiler':
         specifier: workspace:*
         version: link:../../packages/compiler
+
+  examples/topaz-http:
+    dependencies:
+      xmcp:
+        specifier: workspace:*
+        version: link:../../packages/xmcp
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      '@xmcp-dev/compiler':
+        specifier: workspace:*
+        version: link:../../packages/compiler
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   examples/ui-showcase:
     dependencies:
