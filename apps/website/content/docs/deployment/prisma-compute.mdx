@@ -30,16 +30,49 @@ const config: XmcpConfig = {
 export default config;
 ```
 
-Keep your existing tools and other configuration. Prisma Compute sends requests to port `3000`, and the HTTP port is compiled into the server, so set it before you build. The default MCP endpoint is `/mcp`.
+If your config has `http: true`, replace it with this object and keep the rest of your configuration. Prisma Compute sends requests to port `3000`, and the HTTP port is compiled into the server, so set it before you build. The default MCP endpoint is `/mcp`.
 
 ## Describe the service
 
 Install the Prisma Composer packages and the Prisma CLI:
 
-```bash
-pnpm add @prisma/composer @prisma/composer-prisma-cloud
-pnpm add -D prisma
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content:
+        "pnpm add --allow-build=esbuild @prisma/composer @prisma/composer-prisma-cloud @prisma/orm-postgres pg temporal-polyfill\npnpm add -D prisma",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content:
+        "npm i @prisma/composer @prisma/composer-prisma-cloud\nnpm i -D prisma",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content:
+        "yarn add @prisma/composer @prisma/composer-prisma-cloud @prisma/orm-postgres pg temporal-polyfill\nyarn add -D prisma",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content:
+        "bun add @prisma/composer @prisma/composer-prisma-cloud\nbun add -D prisma",
+    },
+  ]}
+/>
+
+`prisma deploy` needs the peer dependencies of `@prisma/composer-prisma-cloud` even when your server has no database. npm and Bun install them for you. pnpm 10 and Yarn may skip them, so those commands list them. `--allow-build=esbuild` approves the `esbuild` install script, which pnpm blocks by default. Without it, pnpm 11 exits with `ERR_PNPM_IGNORED_BUILDS`.
+
+<Callout variant="info">
+  This guide was tested with `prisma` 8.0.0-rc.35, `@prisma/composer` and
+  `@prisma/composer-prisma-cloud` 0.40.0, and xmcp 1.13.2. Prisma Compute and
+  Composer are pre-1.0, so commands and options may change. If a step differs,
+  check the [Prisma Compute documentation](https://www.prisma.io/docs/compute).
+</Callout>
 
 Add three files to the root of your project. The first declares a service that runs the server `xmcp build` produces:
 
@@ -89,12 +122,32 @@ export default definePrismaConfig({
 
 Sign in once with `npx prisma auth login`. The deploy does not build your project, so build first and then deploy:
 
-```bash
-pnpm run build
-npx prisma deploy
-```
+<TerminalTabs
+  tabs={[
+    {
+      label: "pnpm",
+      value: "pnpm",
+      content: "pnpm run build && pnpm prisma deploy",
+    },
+    {
+      label: "npm",
+      value: "npm",
+      content: "npm run build && npx prisma deploy",
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      content: "yarn build && yarn prisma deploy",
+    },
+    {
+      label: "bun",
+      value: "bun",
+      content: "bun run build && bunx prisma deploy",
+    },
+  ]}
+/>
 
-For a project using npm, use `npm run build` instead. The build requires the `@xmcp-dev/compiler` development dependency included by the scaffolder. The first deploy creates a project named after your module and prints the public URL of the service. Run both commands again to ship a new version.
+The build requires the `@xmcp-dev/compiler` development dependency included by the scaffolder. The first deploy creates a project named after your module and prints the public URL of the service. Run the same command again to ship a new version.
 
 Your MCP endpoint is `https://<your-service-url>/mcp`. If you customized `http.endpoint`, use that path instead. Add this URL to an [MCP client](/docs/getting-started/connecting) to list and call your tools.
 
