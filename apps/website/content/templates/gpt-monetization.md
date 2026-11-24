@@ -53,6 +53,8 @@ pnpm install
 pnpm dev
 ```
 
+Requires Node.js 22.12 or newer. `pnpm install` also installs `@xmcp-dev/compiler`, the dev dependency that runs `xmcp dev` and `xmcp build`.
+
 This starts both the xmcp dev server and Next.js concurrently.
 
 ## Project Structure

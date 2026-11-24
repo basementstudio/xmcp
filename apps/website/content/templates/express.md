@@ -31,6 +31,8 @@ pnpm install
 pnpm dev
 ```
 
+Requires Node.js 22.12 or newer. `pnpm install` also installs `@xmcp-dev/compiler`, the dev dependency that runs `xmcp dev` and `xmcp build`.
+
 The Express server starts at `http://localhost:3000`, and the MCP endpoint is available at `/mcp`.
 
 ## Project Structure
@@ -47,11 +49,11 @@ The Express server starts at `http://localhost:3000`, and the MCP endpoint is av
 
 ## MCP Endpoint
 
-The MCP server is mounted through the generated adapter:
+The MCP server is mounted through the generated adapter. `xmcp build` writes it to `.xmcp/adapter`, and the relative import keeps the compiled `dist/index.js` runnable with plain Node:
 
 ```typescript
 import express from "express";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter";
 
 const app = express();
 const handleMcp = xmcpHandler as unknown as express.RequestHandler;

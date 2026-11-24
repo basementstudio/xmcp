@@ -32,6 +32,8 @@ pnpm install
 pnpm dev
 ```
 
+Requires Node.js 22.12 or newer. `pnpm install` also installs `@xmcp-dev/compiler`, the dev dependency that runs `xmcp dev` and `xmcp build`.
+
 The MCP server will start with HTTP transport at `http://localhost:3001`.
 
 ## Project Structure
