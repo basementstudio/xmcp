@@ -24,7 +24,7 @@ After setting up the project, your build command should look like this:
 }
 ```
 
-`xmcp build` bundles your tools into `.xmcp/adapter`.
+`xmcp build` bundles your tools into `.xmcp/adapter`. Import it by relative path, including `index.js`: `tsc` does not rewrite path aliases, so an alias import fails when you run the compiled server with Node. The examples below assume the server file is in `src/`; adjust the path if yours is elsewhere.
 
 ## Usage
 
@@ -36,14 +36,27 @@ npm install fastify
 
 ```typescript
 import Fastify from "fastify";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter/index.js";
 
 const app = Fastify({ logger: false });
 
 app.post("/mcp", xmcpHandler);
 app.get("/mcp", xmcpHandler); // required for SSE / streaming clients
 
-await app.listen({ port: 3000 });
+app.listen({ port: 3000 }, (err) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
+});
+```
+
+The adapter is emitted as CommonJS. In an ES module project (`"type": "module"`), Node cannot read its named exports, so use a default import:
+
+```typescript
+import adapter from "../.xmcp/adapter/index.js";
+
+const { xmcpHandler } = adapter;
 ```
 
 <Callout variant="info">
@@ -63,7 +76,7 @@ npm install fastify @fastify/aws-lambda
 ```typescript
 import Fastify from "fastify";
 import awsLambdaFastify from "@fastify/aws-lambda";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter/index.js";
 
 const app = Fastify({ logger: false });
 
@@ -81,7 +94,7 @@ To support SSE via `GET /mcp`, use a Lambda Function URL with `InvokeMode: RESPO
 ```typescript
 import Fastify from "fastify";
 import awsLambdaFastify from "@fastify/aws-lambda";
-import { xmcpHandler } from "@xmcp/adapter";
+import { xmcpHandler } from "../.xmcp/adapter/index.js";
 import { promisify } from "node:util";
 import stream from "node:stream";
 
