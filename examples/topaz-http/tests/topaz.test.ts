@@ -10,7 +10,7 @@ const call = (progress: unknown[] = []) => ({
     progress.push([value, total]);
   },
 });
-function routes(handler: (request: Request) => Response) {
+function routes(handler: (request: Request) => Response | Promise<Response>) {
   const seen: Request[] = [];
   mock.method(
     globalThis,
@@ -98,4 +98,30 @@ test("explains credit and subscription errors", async () => {
     ),
     /too few credits/
   );
+});
+
+test("a download cut off by the deadline still reports the finished job", async () => {
+  routes((request) =>
+    request.url.includes("/status/")
+      ? Response.json({
+          status: "Completed",
+          output_width: 8,
+          output_height: 8,
+        })
+      : new Promise<Response>((_, reject) =>
+          request.signal.addEventListener(
+            "abort",
+            () => reject(request.signal.reason),
+            { once: true }
+          )
+        )
+  );
+  const result = await settle("p1", {
+    signal: new AbortController().signal,
+    deadline: Date.now() + 200,
+  });
+  const summary = JSON.parse((result.content[0] as { text: string }).text);
+  assert.equal(result.isError, undefined);
+  assert.equal(summary.status, "Completed");
+  assert.match(summary.message, /get-upscale-job/);
 });

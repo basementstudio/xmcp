@@ -58,11 +58,22 @@ export async function waitFor<T>(
       ? Date.now() + options.waitBudgetMs
       : (call.deadline ?? Date.now() + WAIT_BUDGET_MS);
   let reported = 0;
+  let last: { value: T } | undefined;
   for (let step = 1; ; step++) {
     call.signal.throwIfAborted();
-    const value = await poll();
+    let value: T;
+    try {
+      value = await poll();
+    } catch (error) {
+      // The last poll can start with little of the budget left. If the
+      // deadline cuts it off, the job is still running, not unreachable.
+      if (last && hitDeadline(error, call, deadline))
+        return { settled: false, value: last.value };
+      throw error;
+    }
     if (done(value)) return { settled: true, value };
     if (Date.now() + interval > deadline) return { settled: false, value };
+    last = { value };
     const next = measure ? measure(value) : step;
     if (next !== undefined && next > reported) {
       reported = next;
@@ -70,6 +81,24 @@ export async function waitFor<T>(
     }
     await sleep(interval, undefined, { signal: call.signal });
   }
+}
+
+/**
+ * True when a provider request was aborted by the call's deadline, rather than
+ * cancelled by the client or failed on its own.
+ */
+export function hitDeadline(
+  error: unknown,
+  call: Call,
+  deadline = call.deadline
+): boolean {
+  return (
+    !call.signal.aborted &&
+    error instanceof Error &&
+    error.name === "TimeoutError" &&
+    deadline !== undefined &&
+    Date.now() >= deadline
+  );
 }
 
 /** Aborts a provider request on cancellation, its own timeout, or the call's deadline. */

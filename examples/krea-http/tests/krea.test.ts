@@ -211,3 +211,28 @@ test("one deadline bounds the whole call, including each request", async () => {
   await once(signal, "abort");
   assert.equal(signal.reason.name, "TimeoutError");
 });
+
+test("a final poll cut off by the deadline reports the job as still running", async () => {
+  let polls = 0;
+  // After the first poll the fake provider never answers; only the deadline
+  // abort of the request ends it, as with a slow real round trip.
+  routes((request) =>
+    polls++ === 0
+      ? Response.json({ job_id: "j1", status: "processing" })
+      : new Promise<Response>((_, reject) =>
+          request.signal.addEventListener(
+            "abort",
+            () => reject(request.signal.reason),
+            { once: true }
+          )
+        )
+  );
+  const result = await settle(
+    "j1",
+    { signal: new AbortController().signal, deadline: Date.now() + 200 },
+    { pollIntervalMs: 20 }
+  );
+  assert.equal(result.isError, undefined);
+  assert.equal(json(result).status, "processing");
+  assert.match(String(json(result).message), /get-image-job/);
+});

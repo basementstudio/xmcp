@@ -6,6 +6,7 @@ import {
   type TopazStatus,
 } from "./topaz";
 import {
+  hitDeadline,
   imagesResult,
   textResult,
   toolError,
@@ -36,18 +37,27 @@ export async function settle(
       message:
         "Still running. Call get-upscale-job with this jobId to check again.",
     });
-  if (value.status === "Completed")
-    return imagesResult(
-      {
-        jobId,
-        status: value.status,
-        width: value.output_width ?? null,
-        height: value.output_height ?? null,
-        credits: value.credits ?? null,
-      },
-      [await getDownload(jobId, call)],
-      call
-    );
+  if (value.status === "Completed") {
+    const summary = {
+      jobId,
+      status: value.status,
+      width: value.output_width ?? null,
+      height: value.output_height ?? null,
+      credits: value.credits ?? null,
+    };
+    let download: Awaited<ReturnType<typeof getDownload>>;
+    try {
+      download = await getDownload(jobId, call);
+    } catch (error) {
+      if (!hitDeadline(error, call)) throw error;
+      return textResult({
+        ...summary,
+        message:
+          "Finished, but the call ran out of time before the download link. Call get-upscale-job with this jobId to get the image.",
+      });
+    }
+    return imagesResult(summary, [download], call);
+  }
   if (value.status === "Cancelled")
     return toolError(`Topaz job ${jobId} was cancelled.`);
   return toolError(
