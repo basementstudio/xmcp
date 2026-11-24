@@ -81,6 +81,7 @@ export const sidebarIcons: Partial<
   "/docs/deployment/replit": Icons.replit,
   "/docs/deployment/railway": Icons.railway,
   "/docs/deployment/render": Icons.render,
+  "/docs/deployment/prisma-compute": Icons.prisma,
   "/docs/integrations/auth0": Icons.auth0,
   "/docs/integrations/better-auth": Icons.betterAuth,
   "/docs/integrations/clerk": Icons.clerk,
