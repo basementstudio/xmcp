@@ -1,5 +1,11 @@
 # xmcp
 
+## 1.13.4
+
+### Patch Changes
+
+- 0c3991f: Validate forwarded protocol and host before building discovery URLs (MCP server card, NestJS OAuth metadata).
+
 ## 1.13.3
 
 No changes in this release.
