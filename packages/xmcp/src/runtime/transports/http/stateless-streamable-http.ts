@@ -20,6 +20,7 @@ import {
 import { Provider } from "@/runtime/middlewares/utils";
 import { extractClientInfoFromMessages } from "@/runtime/utils/client-info";
 import { findAvailablePort } from "@/runtime/utils/port-utils";
+import { resolveRequestOrigin } from "@/runtime/utils/request-origin";
 import {
   extractToolNamesFromRequest,
   storeToolNamesOnRequestHeaders,
@@ -175,13 +176,13 @@ export class StatelessStreamableHTTPTransport {
     this.app.get(
       "/.well-known/mcp/server-card.json",
       (req: Request, res: Response) => {
-        const host = req.get("host") ?? "localhost";
-        const hostname = host.replace(/:\d+$/, "");
+        const origin = resolveRequestOrigin({
+          forwardedProto: req.headers["x-forwarded-proto"],
+          protocol: req.protocol,
+          host: req.get("host"),
+        });
+        const hostname = new URL(origin).hostname;
         const reversedName = hostname.split(".").reverse().join(".");
-        const proto =
-          (req.headers["x-forwarded-proto"] as string | undefined)
-            ?.split(",")[0]
-            ?.trim() ?? req.protocol;
         const card: Record<string, unknown> = {
           $schema:
             "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
@@ -192,7 +193,7 @@ export class StatelessStreamableHTTPTransport {
           remotes: [
             {
               type: "streamable-http",
-              url: `${proto}://${host}${this.endpoint}`,
+              url: `${origin}${this.endpoint}`,
             },
           ],
         };
@@ -203,6 +204,7 @@ export class StatelessStreamableHTTPTransport {
           .setHeader("Content-Type", "application/mcp-server-card+json")
           .setHeader("Cache-Control", "public, max-age=3600, must-revalidate")
           .setHeader("Access-Control-Allow-Origin", "*")
+          .setHeader("Vary", "Host, X-Forwarded-Proto")
           .json(card);
       }
     );
