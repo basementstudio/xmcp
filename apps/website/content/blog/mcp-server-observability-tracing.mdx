@@ -6,6 +6,8 @@ category: "guides"
 topic: "production"
 date: "2026-11-17"
 unlisted: true
+ogTitle: "MCP server observability"
+ogDescription: "Structured execution logs in xmcp, correlated with W3C trace context."
 ---
 
 To observe an MCP server, log one structured event when each tool call, prompt, or resource read starts and another when it ends, and attach the caller's trace ID to both. In xmcp that is one config line: `observability: { enabled: true }`. Events go to stderr as JSON, never include arguments or results, and carry the W3C trace context the client sent.

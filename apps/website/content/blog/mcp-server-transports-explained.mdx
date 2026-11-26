@@ -8,6 +8,8 @@ date: "2026-06-19"
 unlisted: true
 authors:
   - 0xkoller
+ogTitle: "MCP transports explained"
+ogDescription: "STDIO, legacy HTTP+SSE and Streamable HTTP, and when to use each."
 ---
 
 Every MCP server talks to its client over a **transport** — the channel that carries JSON-RPC messages back and forth. Pick the wrong one and your server either won't connect, won't scale, or won't deploy to serverless. This guide explains the three transports you'll encounter and how to choose.

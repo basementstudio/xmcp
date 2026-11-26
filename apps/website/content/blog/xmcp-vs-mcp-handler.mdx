@@ -9,6 +9,8 @@ lastModified: "2026-11-22"
 unlisted: true
 authors:
   - 0xkoller
+ogTitle: "xmcp vs Vercel mcp-handler"
+ogDescription: "A standalone framework versus MCP added to an existing Next.js or Nuxt app."
 ---
 
 xmcp and [mcp-handler](https://github.com/vercel-labs/mcp-handler) can both expose MCP tools from an existing web application, and both serve the stateless 2026-07-28 protocol. The real difference is how you organize and build those tools: registration code inside one request handler, or one file per capability with a compiler. This guide compares them on the same Next.js app. Package interfaces were reviewed on November 22, 2026.

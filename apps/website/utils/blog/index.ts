@@ -87,6 +87,8 @@ export interface BlogFrontmatter {
   readonly previewImage?: string;
   readonly textureImage?: string;
   readonly authors?: string[];
+  readonly ogTitle?: string;
+  readonly ogDescription?: string;
   readonly [key: string]: unknown;
 }
 

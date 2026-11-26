@@ -6,6 +6,8 @@ category: "guides"
 topic: "building"
 date: "2026-11-17"
 unlisted: true
+ogTitle: "Caching MCP listings"
+ogDescription: "Cache hints, the subscriptions/listen stream, and which fits a serverless server."
 ---
 
 Since MCP `2026-07-28`, a server tells clients how long a listing or a resource stays fresh with two fields on the result: `ttlMs`, a lifetime in milliseconds, and `cacheScope`, which says whether the result is the same for every caller. A client that honors them can skip `tools/list` on every turn. In xmcp you set them with `cacheHints` in `xmcp.config.ts`.

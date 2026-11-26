@@ -30,6 +30,11 @@ Use this file for `apps/website/**`.
 - Use `metadataTitle` for an optional complete docs search title; visible titles
   remain independent. Set `lastModified: "YYYY-MM-DD"` only after a substantive
   content update. Do not refresh dates for builds or cosmetic changes.
+- Use `ogTitle` and `ogDescription` (120 characters max) for shorter social
+  card copy (blog and docs). Without them the card uses the title and the first
+  sentence of `summary` or `description` that fits, and drops the paragraph
+  otherwise. A post with `previewImage` uses that image instead of the
+  generated card, so these fields have no effect there.
 - Integration docs automatically appear on the standalone `/integrations` hub,
   its Markdown mirror (`/integrations.md`), and the sitemap. The hub reads the
   same content source as the docs; `content/docs/integrations` has no index page.

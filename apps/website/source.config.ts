@@ -20,6 +20,8 @@ export const docs = defineDocs({
     schema: frontmatterSchema.extend({
       displayTitle: z.string().optional(),
       metadataTitle: z.string().optional(),
+      ogTitle: z.string().optional(),
+      ogDescription: z.string().max(120).optional(),
       lastModified: z.string().date().optional(),
       relatedGuides: z
         .array(z.string())
@@ -49,6 +51,8 @@ export const blog = defineDocs({
       date: z.string().optional(),
       lastModified: z.string().date().optional(),
       summary: z.string().optional(),
+      ogTitle: z.string().optional(),
+      ogDescription: z.string().max(120).optional(),
     }),
   },
 });

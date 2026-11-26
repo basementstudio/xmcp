@@ -6,6 +6,8 @@ category: "guides"
 topic: "concepts"
 date: "2026-11-17"
 unlisted: true
+ogTitle: "MCP structured output explained"
+ogDescription: "Return validated, typed data from tools with outputSchema and structuredContent."
 ---
 
 An MCP tool returns structured output by declaring an `outputSchema` and putting its data in the result's `structuredContent` field. The schema is published in `tools/list`, so a client knows the shape before it calls the tool, and the data arrives as JSON it can use directly. Since MCP `2026-07-28`, `structuredContent` can be any JSON value, not only an object.
