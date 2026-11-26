@@ -260,6 +260,40 @@ top-level `resource`:
 Payments of either version are accepted, and a rejected payment is answered
 in its own version. Tools on Base are not affected.
 
+### Paying a Nano tool from a client
+
+`planNanoPayment` reads the 402 offer a tool on `nano` returned (the
+`tools/call` result, its `structuredContent`, or the offer JSON) and says
+what the payer's wallet has to send. `nanoPaymentPayload` then builds the
+payment for the retried call from the hash of the published send. Neither
+signs nor holds a key: the wallet signs and publishes the send.
+
+```typescript
+import { planNanoPayment, nanoPaymentPayload } from "@xmcp-dev/x402";
+
+const unpaid = await client.callTool({ name: "word-count", arguments });
+const plan = await planNanoPayment(unpaid, {
+  maxAmountRaw: 10n ** 28n, // pay at most 0.01 XNO for one call
+  allowedPayees: [process.env.EXPECTED_NANO_PAYEE!],
+});
+
+// Send exactly plan.amountRaw to plan.payTo. When the offer is bound to an
+// order, plan.representative is the representative the send block must carry.
+const blockHash = await wallet.send(plan); // your wallet
+
+await client.callTool({
+  name: "word-count",
+  arguments,
+  _meta: { "x402/payment": nanoPaymentPayload(plan, blockHash) },
+});
+```
+
+An offer is refused before anything is sent when it has no `exact` entry on
+`nano`, its `payTo` fails the `nano_` checksum or is not in `allowedPayees`,
+its amount is above `maxAmountRaw`, or it names a binding other than
+`xno-binding/v1/rep`. The payment is made in the offer's x402 version and
+carries `orderId` for a bound offer.
+
 ## License
 
 MIT
