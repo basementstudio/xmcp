@@ -1,9 +1,14 @@
 import { Request } from "express";
 
+import { resolveRequestOrigin } from "@/runtime/utils/request-origin";
+
 export function buildBaseUrl(req: Request): string {
-  const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-  const host = req.headers["x-forwarded-host"] || req.get("host");
-  return `${protocol}://${host}`;
+  return resolveRequestOrigin({
+    forwardedProto: req.headers["x-forwarded-proto"],
+    forwardedHost: req.headers["x-forwarded-host"],
+    protocol: req.protocol,
+    host: req.get("host"),
+  });
 }
 
 export function buildResourceMetadataUrl(req: Request): string {
