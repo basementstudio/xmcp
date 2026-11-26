@@ -43,6 +43,7 @@ export const blog = defineDocs({
       order: z.number().optional(),
       featured: z.boolean().optional(),
       unlisted: z.boolean().optional(),
+      hidden: z.boolean().optional(),
       previewImage: z.string().optional(),
       textureImage: z.string().optional(),
       authors: z.array(z.string()).optional(),

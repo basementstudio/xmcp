@@ -21,11 +21,11 @@ On initialization, you'll see the following prompts:
 
 <TerminalPrompt>
   {
-    "? Tools directory path: (tools)\n? Prompts directory path: (prompts)\n? Resources directory path: (resources)\n? Route directory path: (app/mcp)"
+    "? Select components to initialize: Tools, Prompts, Resources\n? Route directory path: (app/mcp)\n? Continue with initialization? (Y/n)"
   }
 </TerminalPrompt>
 
-The package manager and framework will be detected automatically.
+The package manager and framework will be detected automatically. If no package manager is detected, you'll be asked to pick one. Pass `--yes` to skip the prompts and use the defaults.
 
 After setting up the project, your build and dev commands should look like this:
 
@@ -107,7 +107,6 @@ const options = {
   verifyToken,
   required: true,
   requiredScopes: ["read:messages"],
-  resourceMetadataPath: "/.well-known/oauth-protected-resource",
 };
 
 const handler = withAuth(xmcpHandler, options);

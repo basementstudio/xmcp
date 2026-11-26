@@ -102,7 +102,6 @@ const handler = withAuth(xmcpHandler, {
   verifyToken,
   required: true,
   requiredScopes: ["read:messages"],
-  resourceMetadataPath: "/.well-known/oauth-protected-resource",
 });
 
 export { handler as GET, handler as POST };
