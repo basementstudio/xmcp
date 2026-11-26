@@ -69,10 +69,15 @@ for (const file of docs) {
   assert(paths.has(normalize(`/docs/${slug}`)), `missing doc: ${slug}`);
 }
 const guides = [];
+const hiddenArticles = new Set();
 for (const file of await contentFiles("../content/blog/", ".mdx")) {
   const content = await readFile(`${file.parentPath}/${file.name}`, "utf8");
   const path = `/blog/${file.name.slice(0, -4)}`;
   assert(paths.has(path), `missing article: ${path}`);
+  if (/^hidden: true$/m.test(content)) {
+    hiddenArticles.add(path);
+    continue;
+  }
   const category = content.match(/^category: ["']?([^"'\n]+)["']?$/m)?.[1];
   if (category !== "engineering" && category !== "changelog") guides.push(path);
 }
@@ -146,8 +151,16 @@ for (const [path, depth] of depths) {
     if (paths.has(link) && !depths.has(link)) depths.set(link, depth + 1);
   }
 }
-for (const path of paths)
+for (const path of paths) {
+  if (hiddenArticles.has(path)) {
+    assert(
+      ![...graph.values()].some((links) => links.has(path)),
+      `hidden article linked on-site: ${path}`
+    );
+    continue;
+  }
   assert(depths.has(path), `unreachable from homepage: ${path}`);
+}
 for (const path of guides) {
   assert(graph.get("/guides").has(path), `missing guide hub link: ${path}`);
   assert(depths.get(path) <= 2, `guide deeper than two links: ${path}`);
@@ -218,7 +231,10 @@ assert(
 const hubMarkdown = await get("/docs/integrations.md");
 assert.equal(new URL(hubMarkdown.url).pathname, "/integrations.md");
 const oldComparison = await get("/blog/xmcp-vs-fastmcp-vs-mcp-sdk");
-assert.equal(new URL(oldComparison.url).pathname, "/blog/xmcp-v1");
+assert.equal(
+  new URL(oldComparison.url).pathname,
+  "/blog/best-mcp-server-frameworks"
+);
 
 // Search and AI retrieval share the same public content and discovery indexes.
 const robots = await (await get("/robots.txt")).text();

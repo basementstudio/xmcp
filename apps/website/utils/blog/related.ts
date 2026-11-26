@@ -14,7 +14,7 @@ export function getRelatedPosts(slug: string): BlogPost[] {
   const current = posts.find((post) => post.slug === slug);
   if (!current) return [];
 
-  const candidates = postsAfter(posts, current);
+  const candidates = postsAfter(posts, current).filter((post) => !post.hidden);
   const ranked = new Set([
     ...candidates.filter(
       (post) => relatedGroup(post) === relatedGroup(current)

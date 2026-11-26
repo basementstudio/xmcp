@@ -84,6 +84,7 @@ export interface BlogFrontmatter {
   readonly order?: number;
   readonly featured?: boolean;
   readonly unlisted?: boolean;
+  readonly hidden?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
   readonly authors?: string[];
@@ -104,6 +105,7 @@ export interface BlogPost {
   readonly summary?: string;
   readonly featured?: boolean;
   readonly unlisted?: boolean;
+  readonly hidden?: boolean;
   readonly previewImage?: string;
   readonly textureImage?: string;
   readonly authors: BlogAuthor[];
@@ -161,6 +163,7 @@ export function getAllBlogPosts(): BlogPost[] {
         summary: data.summary,
         featured: data.featured || false,
         unlisted: data.unlisted || false,
+        hidden: data.hidden || false,
         previewImage: data.previewImage,
         textureImage: data.textureImage,
         authors: resolveAuthors(data.authors),
@@ -189,7 +192,9 @@ export function getListedBlogPosts(): BlogPost[] {
 }
 
 export function getGuidePosts(): BlogPost[] {
-  return getAllBlogPosts().filter((post) => post.category === "guides");
+  return getAllBlogPosts().filter(
+    (post) => post.category === "guides" && !post.hidden
+  );
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | null {

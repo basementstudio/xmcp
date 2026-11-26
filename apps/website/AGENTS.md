@@ -25,6 +25,10 @@ Use this file for `apps/website/**`.
   strip, and featured slot. Published posts remain in the sitemap; that permits
   discovery but does not guarantee indexing. Guides (including unlisted posts)
   appear in `/guides` and may be linked from relevant pages.
+- Set `hidden: true` (with `unlisted: true`) for a search-landing page that
+  should not be linked anywhere on-site: it stays in the sitemap and `llms.txt`
+  but is left out of `/guides`, related-post lists, and in-content links. The
+  SEO smoke test fails if any page links to it.
 - Give every guide a `topic` so it shows up under a `/guides` filter. Allowed
   values live in `lib/guide-topics.ts`; the blog schema rejects anything else.
 - Use `metadataTitle` for an optional complete docs search title; visible titles

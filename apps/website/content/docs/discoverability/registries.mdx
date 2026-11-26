@@ -1,0 +1,212 @@
+---
+title: "MCP Registries"
+metadataTitle: "Publish to MCP Registries (Smithery, PulseMCP) | xmcp Documentation"
+publishedAt: "2026-11-26"
+summary: "List an xmcp server in the official MCP Registry with server.json and mcp-publisher, and see where Smithery and PulseMCP stand for submissions today."
+description: "Publish an xmcp server to the official MCP Registry and community MCP directories such as Smithery and PulseMCP."
+relatedGuides:
+  - "mcp-server-card"
+  - "deploy-mcp-server-production"
+---
+
+An MCP registry is a public list of MCP servers that people and directories use to find a server's URL or package. To list an xmcp server, publish a `server.json` file to the [official MCP Registry](https://modelcontextprotocol.io/registry/about) with the `mcp-publisher` CLI. The registry stores metadata only. It points to your deployed HTTP endpoint or to a package on npm.
+
+Community directories have changed in 2026. Smithery stopped its connection services and no longer documents a way to submit a server, and PulseMCP has paused submissions and recommends the official registry. Publishing to the official registry is the one step that works today.
+
+| Registry                                                          | How to list a server                         | Status                                                                                           |
+| ----------------------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [Official MCP Registry](https://registry.modelcontextprotocol.io) | `mcp-publisher publish` with a `server.json` | Open, [in preview](https://modelcontextprotocol.io/registry/about)                               |
+| [Smithery](https://smithery.ai)                                   | No documented submission process             | Now part of Arcade; [connection services shut down October 31, 2026](https://smithery.ai/future) |
+| [PulseMCP](https://www.pulsemcp.com/submit)                       | Submission page paused                       | Recommends publishing to the official registry first                                             |
+
+## Registry entry vs MCP Server Card
+
+Standalone xmcp HTTP servers serve an [MCP Server Card](/docs/discoverability/mcp-server-card) at `/.well-known/mcp/server-card.json`. The card describes your server to a tool that already knows your domain. A registry entry is how people find the server in the first place.
+
+Publishing to a registry does not use the card. You submit `server.json` yourself with `mcp-publisher`. The two documents share most fields, so the card is a good starting point for `server.json`. The [field mapping](#map-xmcp-config-to-serverjson) below shows where each value comes from.
+
+## Choose a remote server or an npm package
+
+A `server.json` lists one or both ways to run your server:
+
+- **`remotes`**: a deployed xmcp HTTP server. The URL must be publicly reachable. The registry [does not support private servers](https://modelcontextprotocol.io/registry/about) on internal networks or private package registries.
+- **`packages`**: an npm package that clients run locally over STDIO. The package must be published to npm before you publish to the registry.
+
+[Remote and package entries can coexist](https://modelcontextprotocol.io/registry/remote-servers) in one `server.json`, so clients can pick either.
+
+## Choose a namespace
+
+The `name` in `server.json` uses reverse-DNS format, and [your login method decides which names you can publish](https://modelcontextprotocol.io/registry/authentication):
+
+| Login                        | Name format              | Example                   |
+| ---------------------------- | ------------------------ | ------------------------- |
+| `mcp-publisher login github` | `io.github.<username>/*` | `io.github.alice/weather` |
+| `mcp-publisher login dns`    | `com.example.*/*`        | `com.example/weather`     |
+| `mcp-publisher login http`   | `com.example.*/*`        | `com.example/weather`     |
+
+GitHub login is the quickest. The interactive GitHub login [cannot currently publish to an organization namespace](https://modelcontextprotocol.io/registry/authentication#personal-vs-organization-namespaces); use GitHub Actions or a personal access token for `io.github.<orgname>/*`.
+
+The registry verifies that you control the namespace, [not the remote URL](https://modelcontextprotocol.io/registry/remote-servers#ownership-verification). If your server runs on your own domain, DNS or HTTP login lets the server name match that domain.
+
+## Map xmcp config to server.json
+
+| `server.json` field | Value from xmcp                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `title`             | `template.name` in [`xmcp.config.ts`](/docs/configuration/server-info)                                                     |
+| `description`       | `template.description`. The registry limits it to 100 characters.                                                          |
+| `version`           | The `version` in your `package.json`, read at build time                                                                   |
+| `remotes[].url`     | Your deployed origin plus `http.endpoint`, which defaults to `/mcp`                                                        |
+| `icons`             | `template.icons`. The registry requires HTTPS URLs. Local icon files are inlined as data URIs by xmcp and do not validate. |
+| `name`              | Your registry namespace. Not taken from xmcp config.                                                                       |
+
+The Server Card's `name` is the request hostname reversed plus `/mcp`, so `mcp.example.com` produces `com.example.mcp/mcp`. Reuse it only when it falls under the namespace your login grants.
+
+To start from the card of a deployed server:
+
+```bash
+curl -s https://mcp.example.com/.well-known/mcp/server-card.json > server.json
+```
+
+Then set `$schema` to `https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json` and `name` to your namespace.
+
+## Publish a remote xmcp server
+
+A remote-only entry needs no package and no `packages` array:
+
+```json title="server.json"
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.alice/weather",
+  "title": "Weather",
+  "description": "Weather forecasts and alerts for any city.",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.example.com/mcp"
+    }
+  ]
+}
+```
+
+If the server uses [API key authentication](/docs/authentication/api-key), declare the header so clients know to send it. The registry's [remote server reference](https://modelcontextprotocol.io/registry/remote-servers#http-headers) also covers URL template variables for multi-tenant deployments.
+
+```json title="server.json"
+{
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.example.com/mcp",
+      "headers": [
+        {
+          "name": "x-api-key",
+          "description": "API key for the Weather server",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Publish an npm package
+
+With `stdio` enabled, `xmcp build` writes `dist/stdio.js` with a Node shebang. Expose it with `bin`, ship `dist` with `files`, and add `mcpName`. The registry [checks `mcpName`](https://modelcontextprotocol.io/registry/quickstart) to confirm the npm package belongs to the server, and the value must equal `name` in `server.json`.
+
+```json title="package.json"
+{
+  "name": "@alice/weather-mcp",
+  "version": "1.0.0",
+  "mcpName": "io.github.alice/weather",
+  "bin": {
+    "weather-mcp": "./dist/stdio.js"
+  },
+  "files": ["dist"]
+}
+```
+
+The [STDIO transport example](https://github.com/basementstudio/xmcp/tree/main/examples/stdio-transport) uses the same `bin` and `files` setup. Publish the package to npm, then reference it in `server.json`:
+
+```json title="server.json"
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.alice/weather",
+  "description": "Weather forecasts and alerts for any city.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@alice/weather-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+## Log in and publish
+
+Install `mcp-publisher` with Homebrew, or download a binary from the [registry releases](https://github.com/modelcontextprotocol/registry/releases):
+
+```bash
+brew install mcp-publisher
+```
+
+`mcp-publisher init` generates a `server.json` template with a `packages` entry. For a remote-only server, replace it with `remotes`. Validate the file, log in, and publish:
+
+```bash
+mcp-publisher validate
+mcp-publisher login github
+mcp-publisher publish
+```
+
+Check that the entry is live:
+
+```bash
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.alice/weather"
+```
+
+### Log in with your domain
+
+DNS login proves control of a domain with a TXT record on the apex domain. Generate an Ed25519 key pair and print the record:
+
+```bash
+MY_DOMAIN="example.com"
+openssl genpkey -algorithm Ed25519 -out key.pem
+PUBLIC_KEY="$(openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64)"
+echo "${MY_DOMAIN}. IN TXT \"v=MCPv1; k=ed25519; p=${PUBLIC_KEY}\""
+```
+
+Add the record with your DNS provider, wait for it to propagate, then log in:
+
+```bash
+PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')"
+mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+```
+
+Ed25519 needs OpenSSL 3. The `openssl` that ships with macOS is LibreSSL; install `openssl@3` with Homebrew and call it by full path. HTTP login uses the same key pair with the record served at `https://example.com/.well-known/mcp-registry-auth`. See the [authentication reference](https://modelcontextprotocol.io/registry/authentication) for both methods.
+
+## Publish new versions
+
+A [published version cannot be changed](https://modelcontextprotocol.io/registry/versioning), and each publish needs a new version string. Bump `version` in `package.json` and in `server.json` together. The rebuilt server then reports the same version in its Server Card and `initialize` response.
+
+To publish from CI, the registry documents a [GitHub Actions workflow](https://modelcontextprotocol.io/registry/github-actions) that logs in with `mcp-publisher login github-oidc` and needs the `id-token: write` permission.
+
+## Smithery
+
+[Smithery is now part of Arcade](https://smithery.ai/future). Its connection management services shut down on October 31, 2026:
+
+- Server URLs on `run.tools` and `server.smithery.ai` stopped working.
+- The Smithery API, accounts, and API keys were shut down.
+- The Smithery CLI and SDKs are deprecated.
+
+`smithery.ai` remains a public directory with a curated set of verified servers whose pages show direct MCP URLs. Smithery no longer documents a way to submit a server. If your users connected through a Smithery URL, give them your server's own URL.
+
+## PulseMCP and other directories
+
+[PulseMCP's submission page](https://www.pulsemcp.com/submit) is paused for new servers and for changes to existing listings. It recommends publishing to the official MCP Registry and says it will pick those servers up when submissions reopen.
+
+The official registry is [designed to be read by downstream aggregators](https://modelcontextprotocol.io/registry/about) such as server marketplaces, which pull new metadata on a schedule. A directory that syncs from the registry lists your server without a separate submission. For any other directory, follow its own submission page.

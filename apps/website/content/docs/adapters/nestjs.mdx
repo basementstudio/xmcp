@@ -27,9 +27,13 @@ npx init-xmcp@latest
 
 On initialization, you'll see the following prompts:
 
-<TerminalPrompt>{"? Tools directory path: (tools)"}</TerminalPrompt>
+<TerminalPrompt>
+  {
+    "? Select components to initialize: Tools, Prompts, Resources\n? Continue with initialization? (Y/n)"
+  }
+</TerminalPrompt>
 
-The package manager and framework will be detected automatically.
+The package manager and framework will be detected automatically. If no package manager is detected, you'll be asked to pick one. Pass `--yes` to skip the prompts and use the defaults.
 
 After initialization, xmcp generates a `src/xmcp/` folder with customizable module files:
 

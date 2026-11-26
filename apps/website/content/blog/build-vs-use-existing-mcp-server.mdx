@@ -1,0 +1,137 @@
+---
+title: "Open Source vs Custom MCP Server: Build or Use Existing?"
+description: "When to use an official or open-source MCP server, a managed MCP platform, or build your own, judged on auth, security, scope, and maintenance."
+summary: "A decision guide for choosing between an existing MCP server, a managed MCP platform, and a custom server you build, with the criteria that decide it."
+category: "guides"
+topic: "concepts"
+date: "2026-11-26"
+unlisted: true
+hidden: true
+authors:
+  - valebearzotti
+---
+
+Use an existing MCP server when the vendor publishes an official one that covers the tools your agent needs. Use a maintained open-source server when no official one exists and you can review its code. Use a managed MCP platform when you need many SaaS connectors with per-user sign-in handled for you, and you accept the dependency. Build your own when the data is yours, when the agent needs a narrow set of tools, when you need your own auth model, or when one tool has to combine several APIs.
+
+The options are not exclusive. One agent can use official servers for third-party products and a custom server for your own systems.
+
+| Option                 | Pick it when                                                        | Watch out for                                          |
+| ---------------------- | ------------------------------------------------------------------- | ------------------------------------------------------ |
+| Official vendor server | The vendor ships one and it covers your tools                       | Tool count, which scopes it requests                   |
+| Open-source server     | No official server exists and the project is maintained             | Code you run with your credentials, abandoned projects |
+| Managed MCP platform   | You need many connectors with per-user OAuth handled for you        | Token storage, tool limits, the platform's future      |
+| Custom server          | Your own API or data, narrow tools, your auth, several APIs at once | You own maintenance and protocol upgrades              |
+
+## Does an official MCP server already exist for the API?
+
+Check this first. Search the [official MCP Registry](https://registry.modelcontextprotocol.io) and the vendor's docs. Registry names use reverse-DNS namespaces that [tie each server to a verified GitHub account or domain](https://modelcontextprotocol.io/registry/about), so a name under the vendor's domain tells you who published it.
+
+An official remote server is usually the best option. The vendor runs it, keeps it in sync with its API, and handles sign-in. GitHub, for example, runs its server at `https://api.githubcopilot.com/mcp/` ([README](https://github.com/github/github-mcp-server)).
+
+Be careful with the servers in the [`modelcontextprotocol/servers`](https://github.com/modelcontextprotocol/servers) repository. Its README says they are "educational examples for developers building their own MCP servers," not production-ready solutions.
+
+## How many tools does the agent need?
+
+Every tool a server exposes is described to the model. A general-purpose server for a large API can expose dozens of tools, which uses context and makes tool selection harder.
+
+Some official servers let you narrow the list. The GitHub server groups tools into toolsets you enable with `--toolsets`, and its README states that "enabling only the toolsets that you need can help the LLM with tool choice and reduce the context size." It also has a `--read-only` mode that skips write tools.
+
+If the existing server cannot be narrowed and your agent needs three operations out of fifty, a custom server with those three tools, named and described for your workflow, often works better.
+
+## Who signs in, and as whom?
+
+For one developer on their own machine, a local server with a personal token is usually fine.
+
+For a team or for customers, each person should sign in as themselves so that tools act with their permissions and audit logs show who did what. That needs OAuth on a remote server. Official remote servers often provide this. If yours has to wrap an API that has no such server, you are building the auth layer anyway. [Securing your MCP server](/blog/securing-your-mcp-server) covers the options.
+
+One rule applies whichever way you go: the MCP spec says servers [MUST NOT accept tokens that were not explicitly issued for the MCP server](https://modelcontextprotocol.io/specification/2026-07-28/basic/security_best_practices#token-passthrough). A wrapper that forwards the client's token to a downstream API breaks that rule.
+
+## Can you review third-party code?
+
+A local MCP server is code you run with your credentials. The spec's security guidance warns that a malicious local server can [execute any command with the MCP client's privileges](https://modelcontextprotocol.io/specification/2026-07-28/basic/security_best_practices#local-mcp-server-compromise), and recommends running servers in a sandbox with minimal default privileges.
+
+The official registry checks who published an entry, not what the code does. It [delegates security scanning](https://modelcontextprotocol.io/registry/about#security-scanning) to package registries such as npm and to downstream aggregators. Before you adopt an open-source server:
+
+- Read the tool list and tool descriptions. They become part of your agent's prompt.
+- Check which credentials and scopes it asks for, and grant the minimum.
+- Pin a version instead of running the latest release on every start.
+- Run it in a container or sandbox if it touches files or the network.
+
+If a security review of someone else's server would take longer than writing the few tools you need, building is the cheaper path.
+
+## Who maintains it?
+
+An existing server moves at its maintainer's pace. If the API or the MCP spec changes and the project stalls, you inherit a fork. Even the reference servers repository has moved servers it no longer maintains to a separate [archive repository](https://github.com/modelcontextprotocol/servers-archived).
+
+A managed platform adds a vendor dependency. Smithery, for example, [shut down its MCP proxy and managed identity on October 31, 2026](https://smithery.ai/future). Smithery server URLs stopped working, and its users had to switch to each vendor's own URL.
+
+A custom server means you own upgrades. A framework takes most of the protocol work off your plate, so maintenance is mostly about your own tools. [Best MCP server frameworks](/blog/best-mcp-server-frameworks) compares the TypeScript options.
+
+## Does one task span several APIs?
+
+Connecting an agent to four separate servers means four sign-in flows, a long tool list, and no place to put logic that spans them. The model has to chain calls and pass data between them correctly every time.
+
+A custom server can expose one tool that does the whole task, such as reading a support ticket, looking up the customer in your billing system, and drafting a refund. You can still reuse existing servers inside it. xmcp [generates typed clients for external MCP servers](/blog/cli-typed-clients), so your tools call them like TypeScript functions. To start from an existing HTTP API, [import its OpenAPI document](/docs/guides/import-openapi) to generate tool files.
+
+## When does a managed MCP platform make sense?
+
+Managed MCP platforms run prebuilt servers for popular SaaS products and handle OAuth and token storage for each of your users. They fit agents that need broad coverage of third-party apps and teams that do not want to run auth infrastructure.
+
+Questions to ask before choosing one:
+
+- Where are user tokens stored, and who can access them?
+- Can you limit which tools each agent sees?
+- Can you add your own internal API, or only their catalog?
+- What happens to your integration if the service changes or shuts down?
+
+The same criteria apply if you hire an agency to build a server for you. The scope decisions above decide the size of that project.
+
+## What does building one involve?
+
+Less than most teams expect. With [xmcp](/docs), a tool is one file in `src/tools/`: an input schema, metadata, and a handler. This one wraps an internal orders API:
+
+```typescript title="src/tools/get-order-status.ts"
+import { z } from "zod";
+import { type InferSchema } from "xmcp";
+
+export const schema = {
+  orderId: z.string().describe("The order ID to look up"),
+};
+
+export const metadata = {
+  name: "get_order_status",
+  description: "Get the shipping status of an order",
+  annotations: {
+    title: "Get order status",
+    readOnlyHint: true,
+  },
+};
+
+export default async function getOrderStatus({
+  orderId,
+}: InferSchema<typeof schema>) {
+  const response = await fetch(
+    `https://api.example.com/orders/${encodeURIComponent(orderId)}`,
+    { headers: { Authorization: `Bearer ${process.env.ORDERS_API_TOKEN}` } }
+  );
+  if (!response.ok) {
+    return {
+      isError: true,
+      content: [
+        { type: "text", text: `Orders API returned HTTP ${response.status}` },
+      ],
+    };
+  }
+  const order = await response.json();
+  return `Order ${orderId} is ${order.status}.`;
+}
+```
+
+xmcp registers the file automatically. [How to build an MCP server in TypeScript](/blog/build-mcp-server-typescript) walks through scaffolding, running, and connecting a client. [Deploying an MCP server to production](/blog/deploy-mcp-server-production) covers hosting.
+
+## A quick way to decide
+
+1. An official server covers the task and lets you limit its tools: use it.
+2. A maintained open-source server covers it and passes your review: use it, pinned and sandboxed.
+3. You need many third-party connectors with per-user OAuth and accept a vendor dependency: evaluate a managed platform.
+4. It is your own API or data, the task spans several APIs, or none of the above fit: build a custom server.
