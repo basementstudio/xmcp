@@ -1,5 +1,9 @@
 # @xmcp-dev/compiler
 
+## 1.13.4
+
+No changes in this release.
+
 ## 1.13.3
 
 No changes in this release.
