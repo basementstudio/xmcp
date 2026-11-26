@@ -83,7 +83,7 @@ If your account uses an [IP allowlist](https://docs.x.com/fundamentals/ip-allowl
 
 [xurl](https://docs.x.com/tools/xurl) is X's official curl-style CLI for the X API. It runs the OAuth flow and stores tokens in `~/.xurl`. Its `mcp` subcommand turns it into a local stdio bridge to the hosted server. According to the [xurl README](https://github.com/xdevplatform/xurl#mcp-server-xurl-mcp), the bridge reads JSON-RPC from stdin, forwards each message to `https://api.x.com/mcp` with a Bearer token, and refreshes the token as it expires.
 
-Use the bridge when your client can't do MCP OAuth with a pre-registered Client ID, on headless machines (authenticate first with `xurl auth oauth2 --headless`), or to switch between apps and accounts with `--app` and `-u`. Register `http://localhost:8080/callback` on your app, then:
+Use the bridge when your client can't do MCP OAuth with a pre-registered Client ID, on headless machines (authenticate first with `xurl auth oauth2 --headless`), or to switch between apps and accounts with `--app` and `-u`. Register `http://localhost:8080/callback` on your app. With the Native App from the previous section, the bridge needs only `CLIENT_ID`. Add `CLIENT_SECRET` to `env` only if you use a confidential app (Web App or Automated App) instead ([X's notes](https://docs.x.com/tools/mcp#optional-xurl-mcp-bridge-setup)).
 
 ```json title="mcp.json"
 {
@@ -92,8 +92,7 @@ Use the bridge when your client can't do MCP OAuth with a pre-registered Client 
       "command": "npx",
       "args": ["-y", "@xdevplatform/xurl", "mcp", "https://api.x.com/mcp"],
       "env": {
-        "CLIENT_ID": "YOUR_X_APP_CLIENT_ID",
-        "CLIENT_SECRET": "YOUR_X_APP_CLIENT_SECRET"
+        "CLIENT_ID": "YOUR_X_APP_CLIENT_ID"
       }
     }
   }
@@ -174,7 +173,7 @@ export default async function searchProductPosts({
     };
   }
 
-  return { content: [{ type: "text", text: await response.text() }] };
+  return await response.text();
 }
 ```
 

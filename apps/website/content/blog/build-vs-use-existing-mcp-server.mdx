@@ -109,9 +109,18 @@ export const metadata = {
 export default async function getOrderStatus({
   orderId,
 }: InferSchema<typeof schema>) {
-  const response = await fetch(`https://api.example.com/orders/${orderId}`, {
-    headers: { Authorization: `Bearer ${process.env.ORDERS_API_TOKEN}` },
-  });
+  const response = await fetch(
+    `https://api.example.com/orders/${encodeURIComponent(orderId)}`,
+    { headers: { Authorization: `Bearer ${process.env.ORDERS_API_TOKEN}` } }
+  );
+  if (!response.ok) {
+    return {
+      isError: true,
+      content: [
+        { type: "text", text: `Orders API returned HTTP ${response.status}` },
+      ],
+    };
+  }
   const order = await response.json();
   return `Order ${orderId} is ${order.status}.`;
 }
