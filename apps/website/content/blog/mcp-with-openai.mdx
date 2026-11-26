@@ -1,0 +1,170 @@
+---
+title: "MCP with OpenAI: Responses API, Agents SDK, Codex, ChatGPT"
+description: "Does OpenAI support MCP? Yes. How to connect an MCP server to the Responses API, the Agents SDK, Codex, and ChatGPT, with working config for each."
+summary: "OpenAI products act as MCP clients in four places. Here is how each one connects to an MCP server, what it needs from your server, and how to point it at an xmcp HTTP endpoint."
+category: "guides"
+topic: "building"
+date: "2026-11-26"
+unlisted: true
+authors:
+  - valebearzotti
+---
+
+Yes, OpenAI uses the Model Context Protocol. Its products act as MCP clients: you give them the URL of an MCP server (or a command that starts one), and the model can list and call that server's tools. You don't write per-tool glue code.
+
+Four OpenAI surfaces support MCP today. The main difference between them is **who opens the connection**. The Responses API and ChatGPT connect from OpenAI's infrastructure, so your server must be reachable from the internet. Codex and the Agents SDK's local server classes connect from your own machine, so `localhost` works.
+
+| Surface                                      | Who connects to your server | Transports                | Local server?                  | Auth                                       |
+| -------------------------------------------- | --------------------------- | ------------------------- | ------------------------------ | ------------------------------------------ |
+| Responses API `mcp` tool                     | OpenAI                      | Streamable HTTP, HTTP/SSE | Only through Secure MCP Tunnel | `authorization` (OAuth token), `headers`   |
+| Agents SDK hosted tool                       | OpenAI, via Responses API   | Same as Responses API     | Only through Secure MCP Tunnel | Same as Responses API                      |
+| Agents SDK `MCPServerStreamableHttp`/`Stdio` | Your process                | Streamable HTTP, STDIO    | Yes                            | Headers or an OAuth provider you configure |
+| Codex (CLI, IDE extension, ChatGPT desktop)  | Your machine                | Streamable HTTP, STDIO    | Yes                            | Bearer token, static or env headers, OAuth |
+| ChatGPT web                                  | OpenAI                      | Streaming HTTP, SSE       | Only through Secure MCP Tunnel | OAuth or no auth                           |
+
+If you are deciding between MCP and plain function calling, read [MCP vs OpenAI function calling](/blog/mcp-vs-openai-function-calling) first. This guide assumes you already have an MCP server.
+
+## What URL does an xmcp server expose?
+
+An xmcp server with `http: true` serves MCP at `http://127.0.0.1:3001/mcp` by default. The port, host and endpoint path are configurable in [the transports config](/docs/configuration/transports). The HTTP transport is stateless, so each request from an OpenAI client is handled without any session from a previous request.
+
+```typescript title="xmcp.config.ts"
+import { type XmcpConfig } from "xmcp";
+
+const config: XmcpConfig = {
+  http: true,
+};
+
+export default config;
+```
+
+To require a key on every request, add the [API key middleware](/docs/authentication/api-key). It reads the `x-api-key` header by default:
+
+```typescript title="src/middleware.ts"
+import { apiKeyAuthMiddleware, type Middleware } from "xmcp";
+
+const middleware: Middleware = apiKeyAuthMiddleware({
+  validateApiKey: async (apiKey) => apiKey === process.env.MCP_API_KEY,
+});
+
+export default middleware;
+```
+
+For per-user access, use [OAuth](/docs/authentication/oauth) instead. The [authentication guide](/docs/guides/authentication) compares the options.
+
+## How do I use an MCP server with the Responses API?
+
+Add a tool with `type: "mcp"` to a [Responses API](https://developers.openai.com/api/docs/guides/tools-connectors-mcp) request. OpenAI lists the server's tools, lets the model call them, and returns the results in the same response. This example calls an xmcp server deployed to Vercel:
+
+```typescript title="responses.ts"
+import OpenAI from "openai";
+
+const client = new OpenAI();
+
+const response = await client.responses.create({
+  model: "gpt-6.2-astra",
+  tools: [
+    {
+      type: "mcp",
+      server_label: "my_xmcp_server",
+      server_description: "Greets users by name.",
+      server_url: "https://your-server.vercel.app/mcp",
+      allowed_tools: ["greet"],
+      require_approval: "never",
+      headers: { "x-api-key": process.env.MCP_API_KEY ?? "" },
+    },
+  ],
+  input: "Greet Ada.",
+});
+
+console.log(response.output_text);
+```
+
+The fields that matter:
+
+- **`server_url`**: the full MCP endpoint, including `/mcp`. Use `tunnel_id` instead for a server behind [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels).
+- **`allowed_tools`**: imports only the listed tools. Large tool lists add cost and latency.
+- **`require_approval`**: defaults to `"always"`. Set `"never"`, or pass an object such as `{ "never": { "read_only": true } }` to skip approval only for tools annotated with `readOnlyHint`. xmcp sets that hint from the `annotations` in a [tool's metadata](/docs/core-concepts/tools).
+- **`authorization`**: an OAuth access token your application obtained. The [API reference](https://developers.openai.com/api/reference/resources/responses/methods/create) says your app must run the OAuth flow itself. OpenAI does not store this value, so send it on every request.
+- **`headers`**: any other HTTP headers to send to the server, such as the `x-api-key` header above.
+
+The response contains MCP output items. `mcp_list_tools` holds the imported tools; while it stays in the conversation context, the API does not fetch the list again. Each call appears as an `mcp_call` with its arguments, output and any error. When approval is required, you get an `mcp_approval_request`, and you reply in a new request that includes an `mcp_approval_response` and the `previous_response_id`.
+
+OpenAI's docs say to [use only servers you trust](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#risks-and-safety) and to keep approvals on for sensitive actions, because a server's tool output can carry prompt injections.
+
+## Why can't the Responses API reach my localhost server?
+
+Because the request does not come from your machine. OpenAI's guide says remote MCP servers "can be any server on the public Internet." The Agents SDK docs say the hosted MCP tool lets [OpenAI's Responses API call a publicly reachable MCP server](https://openai.github.io/openai-agents-python/mcp/) and that hosted tools "push the entire tool round-trip into OpenAI's infrastructure." OpenAI's servers cannot open `http://127.0.0.1:3001/mcp` on your laptop.
+
+You have three options:
+
+1. **Deploy the server.** [Vercel](/docs/deployment/vercel) works with no extra config; [deploying to production](/blog/deploy-mcp-server-production) covers other hosts. If you self-host, note that xmcp binds to `127.0.0.1` by default, so set `http.host` to an address the outside network can reach.
+2. **Use Secure MCP Tunnel.** You run `tunnel-client` inside your network. It opens an outbound connection to OpenAI, and you pass `tunnel_id` instead of `server_url`.
+3. **Use a development tunnel for testing.** OpenAI's [plugin testing guide](https://developers.openai.com/plugins/deploy/connect-chatgpt) mentions development tunnels and HTTPS forwarding services for local tests.
+
+## How do I use MCP with the OpenAI Agents SDK?
+
+The [Agents SDK for TypeScript](https://openai.github.io/openai-agents-js/guides/mcp/) supports both connection models:
+
+- `hostedMcpTool({ serverLabel, serverUrl })` goes in the agent's `tools`. It uses the Responses API MCP tool, so the same public-URL rule applies.
+- `MCPServerStreamableHttp` and `MCPServerStdio` go in the agent's `mcpServers`. Your process connects to the server, so a local xmcp dev server works.
+
+```typescript title="agent.ts"
+import { Agent, run, MCPServerStreamableHttp } from "@openai/agents";
+
+const server = new MCPServerStreamableHttp({
+  url: "http://127.0.0.1:3001/mcp",
+  name: "xmcp",
+  requestInit: { headers: { "x-api-key": process.env.MCP_API_KEY ?? "" } },
+});
+
+const agent = new Agent({
+  name: "Assistant",
+  instructions: "Use the tools to answer.",
+  mcpServers: [server],
+});
+
+try {
+  await server.connect();
+  const result = await run(agent, "Greet Ada.");
+  console.log(result.finalOutput);
+} finally {
+  await server.close();
+}
+```
+
+The [Python SDK](https://openai.github.io/openai-agents-python/mcp/) has the same split: `HostedMCPTool` for OpenAI-hosted calls, and `MCPServerStreamableHttp` or `MCPServerStdio` from `agents.mcp`, passed through `mcp_servers`. Both SDKs keep an SSE class for legacy servers and recommend Streamable HTTP or STDIO for new work.
+
+If you only need to call tools from your own code, without a model choosing them, use an MCP client directly. See [how to call an MCP server from TypeScript](/blog/call-mcp-server-from-typescript).
+
+## How do I add an MCP server to Codex?
+
+Codex connects from your machine, so it can use both local and deployed servers. The Codex CLI, the IDE extension and the ChatGPT desktop app [share one MCP configuration](https://learn.chatgpt.com/docs/extend/mcp), stored in `~/.codex/config.toml` or a project's `.codex/config.toml` (trusted projects only).
+
+Add a running xmcp dev server from the CLI:
+
+```bash
+codex mcp add my_xmcp --url http://127.0.0.1:3001/mcp
+```
+
+Or edit `config.toml` for a deployed server that needs a key:
+
+```toml title="~/.codex/config.toml"
+[mcp_servers.my_xmcp]
+url = "https://your-server.vercel.app/mcp"
+env_http_headers = { "x-api-key" = "MCP_API_KEY" }
+```
+
+`env_http_headers` maps a header name to an environment variable name, so the key stays out of the file. Streamable HTTP servers also accept `bearer_token_env_var` for an `Authorization` bearer token and `http_headers` for static values. For a server that uses OAuth, run `codex mcp login my_xmcp`. A STDIO server uses `command` and `args` instead of `url`, and `enabled_tools` or `disabled_tools` limit which tools Codex sees. Run `/mcp` in the Codex TUI to check which servers are active.
+
+## Can ChatGPT use MCP servers?
+
+Yes. On ChatGPT web you add a remote server as a plugin ([OpenAI's setup steps](https://developers.openai.com/api/docs/guides/developer-mode)). ChatGPT connects from OpenAI's side, so the server needs a public HTTPS URL or a Secure MCP Tunnel. Full read and write support depends on your plan.
+
+For what ChatGPT supports (tools, resources, prompts, MCP Apps UI, auth and plans), see [the ChatGPT section of MCP Clients Explained](/blog/what-are-mcp-clients#chatgpt). To publish a server for other ChatGPT users, follow [How to submit your ChatGPT MCP app](/blog/build-and-submit-gpt-apps). To add an interactive UI, see [How to build an MCP App](/blog/mcp-apps).
+
+## Next steps
+
+- **[MCP vs OpenAI function calling](/blog/mcp-vs-openai-function-calling)**: when to use each.
+- **[Connecting to your server](/docs/getting-started/connecting)**: client configs for Cursor and Claude Desktop.
+- **[How to build an MCP server in TypeScript](/blog/build-mcp-server-typescript)**: start the server this guide connects to.

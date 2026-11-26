@@ -1,0 +1,188 @@
+---
+title: "X MCP server (xdevplatform/xmcp): what it is and how to use it"
+description: "X's MCP server lets Grok, Cursor, and other AI clients call the X API. How to connect to api.x.com/mcp, auth options, xurl, and the GitHub repo."
+summary: "X runs an MCP server for the X API that is also called xmcp. What it does, how to connect to api.x.com/mcp or run the open-source repo, how xurl fits in, and how it differs from the xmcp TypeScript framework."
+category: "guides"
+topic: "concepts"
+date: "2026-11-26"
+unlisted: true
+authors:
+  - valebearzotti
+---
+
+"xmcp" is the name of two unrelated projects. If you searched for X's (Twitter's) MCP server, you want [xdevplatform/xmcp](https://github.com/xdevplatform/xmcp) and the hosted endpoint at `https://api.x.com/mcp`. They let AI clients such as Grok and Cursor call the X API with your account's permissions. This site, xmcp.dev, is a TypeScript framework from basement.studio for building your own MCP servers. It is not made by X.
+
+The short answer: point an OAuth-capable MCP client at `https://api.x.com/mcp` with your X app's OAuth 2.0 Client ID. If your client can't do that, run the `xurl mcp` bridge. Run the GitHub repo only if you want a self-hosted copy.
+
+|               | X's xmcp                                                    | xmcp.dev                                                 |
+| ------------- | ----------------------------------------------------------- | -------------------------------------------------------- |
+| What it is    | An MCP server for the X API                                 | A framework for building MCP servers                     |
+| Maintained by | X Developer Platform (`xdevplatform`)                       | basement.studio                                          |
+| Language      | Python (repo); hosted service at `api.x.com/mcp`            | TypeScript                                               |
+| Tools         | X API endpoints (posts, search, users, bookmarks, and more) | Whatever you write in `src/tools`                        |
+| Use it when   | You want an AI client to use your X account now             | You are building your own server, for X or anything else |
+
+## What is X's MCP server?
+
+X documents two hosted MCP servers on its [MCP servers page](https://docs.x.com/tools/mcp):
+
+- **X MCP** at `https://api.x.com/mcp`. A Streamable HTTP server that calls X API endpoints. It reports its server name as `xmcp`. X's [agent resources page](https://docs.x.com/tools/ai) says it exposes 200+ endpoints as tools.
+- **Docs MCP** at `https://docs.x.com/mcp`. It searches and reads the X developer docs with two tools, `search_x` and `get_page_x`.
+
+Through the X MCP, a model can fetch posts and see who liked, reposted, or quoted them; run full-archive post search, user search, and news search; look up users and read their posts, timeline, and mentions; manage bookmarks and bookmark folders; get news stories and trends for a location; and create and publish Articles. For advertising, X runs a separate [Ads MCP](https://docs.x.com/x-ads-api/mcp) at `https://ads-api.x.com/mcp`.
+
+## Is there a hosted X MCP server?
+
+Yes. `https://api.x.com/mcp` is hosted by X, so you don't run anything yourself. It supports standard MCP OAuth discovery: an unauthenticated request returns `401` with a pointer to `https://api.x.com/.well-known/oauth-protected-resource`, and the client takes it from there.
+
+There is no dynamic client registration, so you still need your own app in the [X Developer Console](https://developer.x.com). X's [docs](https://docs.x.com/tools/mcp) list three ways to connect:
+
+| Route                          | Auth                                                 | Can it act as you?           |
+| ------------------------------ | ---------------------------------------------------- | ---------------------------- |
+| Native OAuth 2.0 (recommended) | Your app's OAuth 2.0 Client ID, PKCE                 | Yes, within granted scopes   |
+| App-only Bearer                | Your app's Bearer token in an `Authorization` header | No, read-only endpoints only |
+| `xurl mcp` bridge              | Local stdio process that handles OAuth 2.0           | Yes                          |
+
+## How do I connect Cursor or Grok to the X MCP server?
+
+1. Create an app with OAuth 2.0 enabled and choose the **Native App** type (a public client using PKCE only).
+2. Register your client's callback URI on the app. For Cursor Desktop it is `http://localhost:8787/callback`. For the Grok Build CLI it is `http://127.0.0.1:8080/callback`. The [docs](https://docs.x.com/tools/mcp) list the URIs for Grok web and Cursor web.
+3. Copy the OAuth 2.0 Client ID from **Keys and tokens**.
+4. Add the server to your client. This is X's documented Cursor config for `~/.cursor/mcp.json`:
+
+```json title="~/.cursor/mcp.json"
+{
+  "mcpServers": {
+    "xapi": {
+      "url": "https://api.x.com/mcp",
+      "auth": {
+        "CLIENT_ID": "YOUR_OAUTH2_CLIENT_ID",
+        "scopes": [
+          "tweet.read",
+          "users.read",
+          "bookmark.read",
+          "bookmark.write",
+          "offline.access"
+        ]
+      }
+    }
+  }
+}
+```
+
+Include `offline.access` so the client gets a refresh token, and request only the scopes your agent needs.
+
+Two details from X's docs that commonly cause failures:
+
+- X keeps one live OAuth grant per app and user. Signing in from a second client with the same app revokes the first client's tokens, so use one app per client.
+- A `client-not-enrolled` error after login means the app must be moved to the **Pay-per-use** package and **Production** environment in the console.
+
+If your account uses an [IP allowlist](https://docs.x.com/fundamentals/ip-allowlist), tool calls from unapproved IPs return `403`, while `initialize` and `tools/list` still work.
+
+## How does xurl relate to the X MCP server?
+
+[xurl](https://docs.x.com/tools/xurl) is X's official curl-style CLI for the X API. It runs the OAuth flow and stores tokens in `~/.xurl`. Its `mcp` subcommand turns it into a local stdio bridge to the hosted server. According to the [xurl README](https://github.com/xdevplatform/xurl#mcp-server-xurl-mcp), the bridge reads JSON-RPC from stdin, forwards each message to `https://api.x.com/mcp` with a Bearer token, and refreshes the token as it expires.
+
+Use the bridge when your client can't do MCP OAuth with a pre-registered Client ID, on headless machines (authenticate first with `xurl auth oauth2 --headless`), or to switch between apps and accounts with `--app` and `-u`. Register `http://localhost:8080/callback` on your app, then:
+
+```json title="mcp.json"
+{
+  "mcpServers": {
+    "xapi": {
+      "command": "npx",
+      "args": ["-y", "@xdevplatform/xurl", "mcp", "https://api.x.com/mcp"],
+      "env": {
+        "CLIENT_ID": "YOUR_X_APP_CLIENT_ID",
+        "CLIENT_SECRET": "YOUR_X_APP_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+
+The first run opens a browser to sign in and holds the MCP handshake until you finish. X recommends a client startup timeout of at least 300 seconds where your client supports one.
+
+## What is in the xdevplatform/xmcp GitHub repo?
+
+The [repo](https://github.com/xdevplatform/xmcp) is a self-hosted server. X's [changelog](https://docs.x.com/changelog) linked it as "An MCP server for AI models" when pay-per-use pricing launched in February 2026. It is a Python server (`server.py`) that uses FastMCP to turn [X's OpenAPI spec](https://api.x.com/2/openapi.json) into tools at startup, skipping streaming and webhook endpoints.
+
+From the README: you need Python 3.9+ and an X app, and you set `X_OAUTH_CONSUMER_KEY`, `X_OAUTH_CONSUMER_SECRET`, and `X_BEARER_TOKEN` in `.env`. Register `http://127.0.0.1:8976/oauth/callback` on the app. On startup the server opens a browser for OAuth 1.0a consent and keeps the tokens in memory for the life of the process.
+
+```bash
+git clone https://github.com/xdevplatform/xmcp.git
+cd xmcp
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp env.example .env
+python server.py
+```
+
+The endpoint is `http://127.0.0.1:8000/mcp`. For a remote client, the README suggests a tunnel such as ngrok. The repo's last commit was in April 2026. X's MCP docs recommend connecting directly to the hosted URL.
+
+## Does X's MCP server have toolsets?
+
+X does not document a toolsets feature. There are two ways to limit what the model sees:
+
+- **Hosted server:** add `?read_only=true` to the URL. [Read-only mode](https://docs.x.com/tools/mcp#read-only-mode) removes tools that post, message, create, change, or delete anything, and the server refuses them even if your token has write scopes. OAuth scopes still apply to the remaining tools.
+- **Repo:** set `X_API_TOOL_ALLOWLIST` to a comma-separated list of operation IDs, such as `getUsersByUsername,createPosts,searchPostsRecent`. The README lists every allowed ID.
+
+If you searched for `X-MCP-Toolsets`, that is a request header from [GitHub's MCP server](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md), not X's.
+
+## When should you build your own X MCP server?
+
+X's server maps tools to X API endpoints and authenticates with your X app. That is the right choice for personal use in an AI client. Build your own server when you need something it doesn't do:
+
+- **Fewer, task-shaped tools.** A handful of tools with descriptions and validation for one job is easier for a model to use than hundreds of endpoint tools.
+- **Your own auth in front.** Your users authenticate to your server with an [API key](/docs/authentication/api-key) or [OAuth](/blog/mcp-server-authentication), and the server holds the X credential.
+- **Rules enforced in code.** Fixed search queries, write limits, or confirmation steps live in your tool, not in a prompt.
+- **More than X.** One server can combine X with your database or another API, such as [Grok](/docs/integrations/grok).
+
+With xmcp, each tool is a file in `src/tools`. This one only searches recent posts that mention a fixed product, using an app-only Bearer token:
+
+```typescript title="src/tools/search-product-posts.ts"
+import { z } from "zod";
+import type { InferSchema, ToolMetadata } from "xmcp";
+
+const PRODUCT_QUERY = '"Acme" -is:retweet';
+
+export const schema = {
+  keywords: z.string().max(200).describe("Extra words to narrow the search"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "search-product-posts",
+  description: "Search posts from the last 7 days that mention Acme",
+  annotations: { readOnlyHint: true, openWorldHint: true },
+};
+
+export default async function searchProductPosts({
+  keywords,
+}: InferSchema<typeof schema>) {
+  const url = new URL("https://api.x.com/2/tweets/search/recent");
+  url.searchParams.set("query", `${PRODUCT_QUERY} ${keywords}`.trim());
+  url.searchParams.set("max_results", "10");
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${process.env.X_BEARER_TOKEN}` },
+  });
+
+  if (!response.ok) {
+    return {
+      isError: true,
+      content: [{ type: "text", text: `X returned HTTP ${response.status}` }],
+    };
+  }
+
+  return { content: [{ type: "text", text: await response.text() }] };
+}
+```
+
+For a complete server that reads mentions and publishes replies with an OAuth 2.0 user token, start from the [X Bot Assistant template](/templates/x). The [X integration docs](/docs/integrations/x) cover tokens, scopes, the API-key middleware, and X's automation rules.
+
+## Which should you use?
+
+- **You want Grok, Cursor, or another client to use your X account:** connect to `https://api.x.com/mcp`.
+- **Your client can't do MCP OAuth, or you're on a headless machine:** use `xurl mcp`.
+- **You want to self-host X's server and filter tools by operation ID:** run the xdevplatform/xmcp repo.
+- **You're shipping your own product's tools on top of X:** [build an MCP server](/blog/build-mcp-server-typescript) with xmcp.

@@ -1,0 +1,91 @@
+---
+title: "MCP Alternatives: Function Calling, OpenAPI, A2A, and Skills"
+description: "What else connects LLMs and agents to tools besides MCP: function calling, OpenAPI and GPT Actions, A2A, Agent Skills, AG-UI, and UTCP."
+summary: "The real alternatives to the Model Context Protocol, what each one is for, and when to pick it over MCP. Some are substitutes; others, like A2A, solve a different problem."
+category: "guides"
+topic: "comparisons"
+date: "2026-11-26"
+unlisted: true
+authors:
+  - valebearzotti
+---
+
+The main alternatives to MCP are provider-native function calling, plain REST APIs described with OpenAPI (including GPT Actions), and Agent Skills with CLIs that a coding agent runs itself. Each one can give a model access to tools without an MCP server. They trade MCP's portability for something else: less infrastructure, tighter control, or reuse of an API you already have.
+
+Other protocols that show up in the same searches are not substitutes. A2A connects agents to other agents, and AG-UI connects agents to user interfaces. Their own docs place them in a different layer from MCP. Facts below were checked against official sources on November 26, 2026.
+
+## The short answer
+
+| Alternative                   | What it is                                                        | Who calls the tool                                                  | Pick it over MCP when                                                      |
+| ----------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Provider function calling     | Tool schemas sent with each model API request                     | Your application, after the model requests a call                   | You own the agent loop and target one model provider                       |
+| OpenAPI tools and GPT Actions | An existing REST API described with an OpenAPI schema             | The host (for GPT Actions, ChatGPT) calls your API directly         | You already have a documented REST API and one host that accepts OpenAPI   |
+| Agent Skills and CLIs         | `SKILL.md` instructions plus scripts or CLIs in the agent's files | The agent, by reading files and running commands in its environment | The agent has a shell and the task is a workflow, not a remote integration |
+| A2A (Agent2Agent)             | A protocol for agents to delegate work to other agents            | A client agent calls a remote agent                                 | Not a replacement. Use it for agent-to-agent work, alongside MCP           |
+| AG-UI                         | An event-based protocol between an agent backend and a frontend   | The user-facing app talks to the agent                              | Not a replacement. Use it for agent-to-user UI, alongside MCP              |
+| UTCP                          | A "manual" telling agents how to call existing endpoints directly | The agent calls your native HTTP, CLI, or gRPC endpoint             | Your client supports UTCP and you want no wrapper server                   |
+
+## Function calling: the closest substitute
+
+Model APIs such as Claude's and OpenAI's let you pass tool definitions with a request. The model returns a structured call, your code runs it, and you send the result back. Anthropic's docs describe these as [client tools that run in your application](https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview), and OpenAI's [function calling](https://developers.openai.com/api/docs/guides/function-calling) works the same way.
+
+The trade-off is reach. Tools defined in your API payload exist only inside your app. An MCP server can be used by any MCP client. Both vendors also accept MCP servers directly: Claude through the [MCP connector](https://platform.claude.com/docs/en/agents-and-tools/mcp-connector) and OpenAI's Responses API through [remote MCP tools](https://developers.openai.com/api/docs/guides/tools-connectors-mcp). For a full comparison, see [MCP vs OpenAI function calling](/blog/mcp-vs-openai-function-calling).
+
+## REST and OpenAPI: give the agent your existing API
+
+If you already run a REST API with an OpenAPI document, some hosts can call it with no MCP layer at all.
+
+### GPT Actions vs MCP
+
+[GPT Actions](https://developers.openai.com/api/docs/actions/introduction) let a custom GPT in ChatGPT call external REST APIs. You describe the API with an [OpenAPI schema](https://developers.openai.com/api/docs/actions/getting-started), configure authentication, and ChatGPT uses function calling to pick the operation and fill in its JSON input. The custom GPT then executes the call.
+
+The difference from MCP is scope. An Action is configured inside one custom GPT in ChatGPT. An MCP server is a standalone service that Claude, Cursor, VS Code, ChatGPT and other MCP clients can connect to. If ChatGPT custom GPTs are your only target and the API already exists, Actions are less work. If you want more than one client, MCP is the portable option.
+
+You do not have to choose between your API and an MCP server. [MCP vs REST API](/blog/mcp-vs-rest-api) explains why they are usually layers, not rivals. If you have an OpenAPI 3.x JSON document, xmcp can generate tool files from it:
+
+```bash
+npx @xmcp-dev/cli import-openapi ./openapi.json
+```
+
+See [Import an OpenAPI API](/docs/guides/import-openapi) for operation selection, base URLs, and credentials.
+
+## Agent Skills and CLIs: let the agent run things itself
+
+Coding agents such as Claude Code have a filesystem and a shell. For them, a tool can be a script or an existing CLI, and the instructions for using it can live in a skill.
+
+[Agent Skills](https://agentskills.io/) is an open format, originally developed by Anthropic: a folder with a `SKILL.md` file holding a name, a description, and instructions, plus optional scripts and reference files. Agents load only the name and description at startup and read the rest when a task matches. In [Anthropic's implementation](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview), Claude reads skill files and runs bundled scripts with bash, so only the script's output enters context.
+
+Pick skills and CLIs over MCP when the agent runs where the tools are, such as a developer's machine or a sandbox, and the task is a repeatable workflow. They are a weaker fit when the agent has no shell, for example in a chat app, or when the tool needs remote auth and access control that a hosted server provides.
+
+The two also combine. The [MCP Skills extension](https://modelcontextprotocol.io/extensions/skills) lets an MCP server publish skills next to its tools. [How to serve Agent Skills from an MCP server](/blog/mcp-agent-skills) shows how with xmcp.
+
+## Is A2A an alternative to MCP?
+
+No. The [Agent2Agent (A2A) protocol](https://a2a-protocol.org/latest/) is for communication between independent agents that do not share their memory, tools, or logic. An A2A server publishes an Agent Card, a JSON document listing its identity, skills, endpoint, and auth requirements, and work is tracked as stateful Tasks. The [v1.0 specification](https://a2a-protocol.org/latest/specification/) defines JSON-RPC, gRPC, and HTTP+JSON/REST bindings.
+
+A2A's own docs say it complements MCP: ["A2A connects the agents to each other; MCP connects each agent to its own tools."](https://a2a-protocol.org/latest/topics/a2a-and-mcp/) Use A2A when your agent needs to hand a task to another team's or vendor's agent. Use MCP for the tools and data each agent calls.
+
+## Other protocols worth knowing
+
+**AG-UI.** [AG-UI](https://docs.ag-ui.com/introduction) is an open, event-based protocol that connects an agent backend to a user-facing application over HTTP or WebSockets. Its docs place it in a separate layer: AG-UI for agent-to-user, MCP for agent-to-tools and data, A2A for agent-to-agent. It is not a way to expose tools.
+
+**UTCP.** The [Universal Tool Calling Protocol](https://www.utcp.io/) is the one project here that positions itself as a direct MCP alternative. A provider publishes a manual describing how to call its existing endpoints (HTTP, CLI, gRPC, and others), and the agent calls them directly instead of going through a wrapper server. Its docs are at version 1.1. Check that your agent framework supports it before building on it.
+
+## Is MCP being replaced? What is its successor?
+
+There is no announced successor to MCP. These are the verifiable facts as of November 26, 2026:
+
+- **Governance moved to a neutral foundation.** In December 2025, [MCP became a founding project of the Agentic AI Foundation](https://blog.modelcontextprotocol.io/posts/2025-12-09-mcp-joins-agentic-ai-foundation/) (AAIF), a directed fund under the Linux Foundation co-founded by Anthropic, Block, and OpenAI. The post says the Linux Foundation will not dictate MCP's technical direction and the existing maintainer model continues. Changes go through [Specification Enhancement Proposals](https://modelcontextprotocol.io/community/governance).
+- **A2A joined the same foundation.** A2A [joined the AAIF in August 2026](https://a2a-protocol.org/latest/blog/2026/08/27/a-new-chapter-for-a2a-joining-the-agentic-ai-foundation/) and describes MCP as a sibling project, not a competitor.
+- **The spec keeps changing in place.** The [current revision is 2026-07-28](https://modelcontextprotocol.io/specification/versioning). It [removed sessions and the `initialize` handshake](https://modelcontextprotocol.io/specification/2026-07-28/changelog), making the protocol stateless. That is a large change, but it is a new MCP revision, not a new protocol. Deprecated features stay in the spec for at least twelve months under the [feature lifecycle policy](https://modelcontextprotocol.io/community/feature-lifecycle).
+
+If you saw "MCP is dead" or "MCP 2.0" claims, check them against the [MCP changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog). [MCP 2026-07-28: what changed](/blog/mcp-2026-07-28-stateless-migration) covers the revision and how to build for it.
+
+## When MCP is still the right choice
+
+- **You want one integration for many clients.** MCP has been [adopted by Claude, Cursor, Microsoft Copilot, Gemini, VS Code, and ChatGPT](https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation), and the Claude and OpenAI APIs can connect to the same server. Function calling and GPT Actions are tied to one host.
+- **The agent has no shell.** Chat apps and hosted agents cannot run your CLI, but they can call a remote MCP server.
+- **You need auth and access control on the server.** A hosted MCP server can apply [OAuth](/blog/mcp-server-authentication) and [per-tool permissions](/blog/mcp-tool-permissions-rbac) in one place.
+- **You expose more than tools.** MCP also carries resources, prompts, skills, and [UI](/blog/mcp-apps) in the same protocol.
+
+If MCP fits, [Best MCP Server Frameworks](/blog/best-mcp-server-frameworks) compares the TypeScript options, and [How to Build an MCP Server in TypeScript](/blog/build-mcp-server-typescript) gets one running with xmcp.

@@ -56,7 +56,13 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/docs/discoverability/smithery",
-        destination: "/docs/discoverability/mcp-server-card",
+        destination: "/docs/discoverability/registries",
+        permanent: true,
+      },
+      // ChatGPT widget pages were replaced by MCP Apps.
+      {
+        source: "/docs/integrations/:slug(openai|mcp-ui)",
+        destination: "/docs/core-concepts/mcp-apps",
         permanent: true,
       },
       // The integrations hub moved out of the docs to a standalone page.
@@ -72,7 +78,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/blog/xmcp-vs-fastmcp-vs-mcp-sdk",
-        destination: "/blog/xmcp-v1",
+        destination: "/blog/best-mcp-server-frameworks",
+        permanent: true,
+      },
+      {
+        source: "/blog/xmcp-vs-rest-api",
+        destination: "/blog/mcp-vs-rest-api",
         permanent: true,
       },
       {

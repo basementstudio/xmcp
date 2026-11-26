@@ -1,11 +1,11 @@
 ---
 title: "MCP Clients Explained: Claude, Cursor, and the Growing Ecosystem"
-description: "A guide to MCP clients like Claude Desktop, Cursor, and GitHub Copilot, and how each one connects to MCP servers."
+description: "A guide to MCP clients like Claude Desktop, ChatGPT, Cursor, and GitHub Copilot, and how each one connects to MCP servers."
 summary: "An MCP server is only half the picture — here's a guide to the clients (Claude Desktop, Cursor, GitHub Copilot, and others) that connect to MCP servers, and how each one works."
 category: "guides"
 topic: "concepts"
 date: "2026-06-30"
-lastModified: "2026-10-23"
+lastModified: "2026-11-26"
 unlisted: true
 authors:
   - 0xkoller
@@ -55,6 +55,32 @@ A command-based local configuration can bridge to an HTTP server with `mcp-remot
 ```
 
 Claude also supports [custom remote MCP connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp). Use that setup for hosted endpoints; it is separate from local command-based configuration.
+
+## ChatGPT
+
+**Connection options:** remote servers over streaming HTTP or SSE, added as a plugin on ChatGPT web, or private servers through Secure MCP Tunnel
+
+ChatGPT connects to your server from OpenAI's infrastructure, so it cannot reach `localhost`. Give it a public HTTPS endpoint, including the `/mcp` path, or connect a private server through [Secure MCP Tunnel](https://developers.openai.com/api/docs/guides/secure-mcp-tunnels). To [add a server](https://developers.openai.com/api/docs/guides/developer-mode), open ChatGPT Plugins, select the plus button, then **Add custom MCP server**. Enter the URL, choose authentication, accept the risk warning, and select **Create as a plugin**. Install the plugin, then type `@` in the prompt box to use it.
+
+What ChatGPT supports, according to OpenAI's documentation:
+
+| Feature               | Support in ChatGPT                                                                                                                                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tools                 | Read and write tools. Tools without the `readOnlyHint` annotation are treated as write actions and need confirmation by default.                                                                                                   |
+| Resources             | Used for MCP Apps UI: a tool points to a UI resource with `_meta.ui.resourceUri`. OpenAI does not document other resource use.                                                                                                     |
+| Prompts               | Not documented. OpenAI's [MCP server page](https://developers.openai.com/plugins/concepts/mcp-server) says plugins "primarily use tools."                                                                                          |
+| Server `instructions` | Read from the server and refreshed with the tool list.                                                                                                                                                                             |
+| MCP Apps UI           | Yes. ChatGPT [implements the open MCP Apps standard](https://developers.openai.com/plugins/build/chatgpt-ui) and renders UI in an iframe.                                                                                          |
+| Transport             | Streaming HTTP and SSE, remote only.                                                                                                                                                                                               |
+| Auth                  | OAuth (static client credentials, Client ID Metadata Documents, or Dynamic Client Registration), no authentication, or a mix where some tools need OAuth.                                                                          |
+| Developer mode        | Not required. You don't need to turn it on first; you acknowledge a risk warning for each server you add.                                                                                                                          |
+| Plans                 | [Full MCP](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt) (read and write) on Business and Enterprise/Edu. Pro can connect servers with read/fetch permissions only. Web only, not mobile. |
+
+So can a ChatGPT MCP connector use resources and prompts, or only tools? In practice, tools. ChatGPT reads UI resources for [MCP Apps](/blog/mcp-apps), but OpenAI doesn't document it reading other resources into the conversation or offering MCP prompts to users. If the model needs some data, return it from a tool.
+
+When an admin publishes a custom server to a Business or Enterprise/Edu workspace, ChatGPT uses a frozen snapshot of its tools. Later changes to the server reach users only after an admin refreshes and republishes it. To publish a server in the ChatGPT directory, follow [How to submit your ChatGPT MCP app](/blog/build-and-submit-gpt-apps).
+
+The ChatGPT desktop app works differently: it [shares MCP configuration](https://learn.chatgpt.com/docs/extend/mcp) with the Codex CLI and IDE extension, and can add local STDIO or Streamable HTTP servers under **Settings > MCP servers**. [MCP with OpenAI](/blog/mcp-with-openai) covers that setup and the Responses API.
 
 ## Cursor
 

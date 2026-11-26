@@ -218,7 +218,10 @@ assert(
 const hubMarkdown = await get("/docs/integrations.md");
 assert.equal(new URL(hubMarkdown.url).pathname, "/integrations.md");
 const oldComparison = await get("/blog/xmcp-vs-fastmcp-vs-mcp-sdk");
-assert.equal(new URL(oldComparison.url).pathname, "/blog/xmcp-v1");
+assert.equal(
+  new URL(oldComparison.url).pathname,
+  "/blog/best-mcp-server-frameworks"
+);
 
 // Search and AI retrieval share the same public content and discovery indexes.
 const robots = await (await get("/robots.txt")).text();

@@ -1,0 +1,261 @@
+---
+title: "Next.js MCP Server: Add MCP to Your Next.js App"
+description: "Add an MCP server to an existing Next.js app with xmcp: route handler, first tool, local testing, auth, and deploying to Vercel."
+summary: "An end-to-end tutorial for adding an MCP endpoint to a Next.js App Router project with xmcp, from the first tool to an authenticated deployment on Vercel."
+category: "guides"
+topic: "building"
+date: "2026-11-26"
+unlisted: true
+authors:
+  - valebearzotti
+---
+
+To add an MCP server to a Next.js app, run `npx init-xmcp@latest` in the project. It installs xmcp, creates a tools folder, and adds a route handler at `app/mcp/route.ts` that serves MCP over HTTP. Run `xmcp dev` alongside `next dev`, and your server is live at `http://localhost:3000/mcp`. It deploys to Vercel as part of your Next.js app.
+
+This tutorial goes from an existing App Router project to a deployed, authenticated MCP endpoint. For every adapter option, see the [Next.js adapter reference](/docs/adapters/nextjs).
+
+| File                   | What it does                                                   |
+| ---------------------- | -------------------------------------------------------------- |
+| `xmcp.config.ts`       | Turns on HTTP and the Next.js adapter, and sets the tools path |
+| `tools/greet.ts`       | A sample tool. Each file in `tools/` is one MCP tool           |
+| `app/mcp/route.ts`     | Exports the MCP handler as `GET` and `POST`                    |
+| `package.json` scripts | Runs `xmcp dev` and `xmcp build` before Next.js                |
+| `tsconfig.json`        | Maps `@xmcp/*` to the generated `.xmcp` folder                 |
+
+## What do you need before you start?
+
+- A Next.js project that uses the App Router and TypeScript. The xmcp examples use Next.js 16.
+- Node.js 22.12 or later, which xmcp requires.
+
+## How do I add xmcp to an existing Next.js app?
+
+From the project root, run:
+
+```bash
+npx init-xmcp@latest
+```
+
+The CLI detects Next.js and your package manager, then asks which components to create (tools, prompts, resources) and where to put the route. Pass `--yes` to accept the defaults in CI. If your project has a `src` folder, the defaults become `src/tools` and `src/app/mcp`.
+
+It installs `xmcp`, `zod`, and `@xmcp-dev/compiler`, writes `xmcp.config.ts`, adds `.xmcp` and `xmcp-env.d.ts` to `.gitignore`, and prepends xmcp to your scripts:
+
+```json title="package.json"
+{
+  "scripts": {
+    "dev": "xmcp dev & next dev",
+    "build": "xmcp build && next build"
+  }
+}
+```
+
+## What does the route handler look like?
+
+The CLI creates this file. It stays two lines no matter how many tools you add:
+
+```typescript title="app/mcp/route.ts"
+import { xmcpHandler } from "@xmcp/adapter";
+
+export { xmcpHandler as GET, xmcpHandler as POST };
+```
+
+`@xmcp/adapter` points at the `.xmcp` folder that `xmcp build` generates. Until that folder exists, TypeScript can't resolve the import. Run the build once:
+
+```bash
+npx xmcp build
+```
+
+The CLI already added the matching path to `tsconfig.json`:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "paths": {
+      "@xmcp/*": ["./.xmcp/*"]
+    }
+  }
+}
+```
+
+The handler is stateless. Each request builds a fresh MCP server, so nothing is kept between requests. That fits serverless hosting, where requests can land on different instances.
+
+## How do I write my first tool?
+
+Add a file to the tools folder. The file exports a schema, metadata, and a default handler:
+
+```typescript title="tools/get-order-status.ts"
+import { z } from "zod";
+import { type InferSchema, type ToolMetadata } from "xmcp";
+
+export const schema = {
+  orderId: z.string().describe("The order ID to look up"),
+};
+
+export const metadata: ToolMetadata = {
+  name: "get-order-status",
+  description: "Get the shipping status of an order",
+  annotations: {
+    title: "Get order status",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+  },
+};
+
+const orders: Record<string, string> = {
+  "1001": "shipped",
+  "1002": "processing",
+};
+
+export default async function getOrderStatus({
+  orderId,
+}: InferSchema<typeof schema>) {
+  return {
+    structuredContent: { orderId, status: orders[orderId] ?? "not_found" },
+  };
+}
+```
+
+You don't register the tool anywhere. The compiler finds the file and adds it to the handler. Replace the in-file data with a call to your database or the same functions your pages use. See [Tools](/docs/core-concepts/tools) for schemas, annotations, and return types.
+
+## How do I run the MCP server locally?
+
+```bash
+npm run dev
+```
+
+This starts two processes. `xmcp dev` watches the tools folder and rebuilds `.xmcp` when a file changes. `next dev` serves the app, including the MCP route. In adapter mode, xmcp doesn't start a server of its own, so the endpoint is on the Next.js port: `http://localhost:3000/mcp`.
+
+To check the endpoint without a client, list the tools with curl:
+
+```bash
+curl http://localhost:3000/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2025-11-25' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+The response should include `get-order-status`.
+
+## How do I connect Cursor or Claude to it?
+
+Write the Cursor config with the xmcp CLI:
+
+```bash
+npx @xmcp-dev/cli install http://localhost:3000/mcp --name my-app --client cursor
+```
+
+Or add the entry to `~/.cursor/mcp.json` yourself:
+
+```json title="~/.cursor/mcp.json"
+{
+  "mcpServers": {
+    "my-app": {
+      "url": "http://localhost:3000/mcp"
+    }
+  }
+}
+```
+
+In Claude Code, add it as an HTTP server:
+
+```bash
+claude mcp add --transport http my-app http://localhost:3000/mcp
+```
+
+Claude Desktop's local config uses STDIO and needs the `mcp-remote` bridge. See [Connecting to your server](/docs/getting-started/connecting) for that config and other clients.
+
+## How do I add authentication?
+
+xmcp's `middleware.ts` isn't used in the Next.js adapter. Wrap the route handler with `withAuth` instead. It reads the bearer token, calls your `verifyToken` function, and returns `401` with a `WWW-Authenticate` header when the token is missing or invalid:
+
+```typescript title="app/mcp/route.ts"
+import { xmcpHandler, withAuth, type VerifyToken } from "@xmcp/adapter";
+import { verifyAccessToken } from "@/lib/verify-access-token";
+
+const verifyToken: VerifyToken = async (req, bearerToken) => {
+  if (!bearerToken) return undefined;
+  return verifyAccessToken(bearerToken);
+};
+
+const handler = withAuth(xmcpHandler, {
+  verifyToken,
+  required: true,
+  requiredScopes: ["read:orders"],
+});
+
+export { handler as GET, handler as POST };
+```
+
+`verifyAccessToken` is your code. It should check the signature, expiry, and that the token was issued for this MCP server. It returns `{ token, clientId, scopes, extra }`, or `undefined` to reject the request. A token without a required scope gets `403`.
+
+The `401` points clients to `/.well-known/oauth-protected-resource`, so serve that document from your app:
+
+```typescript title="app/.well-known/oauth-protected-resource/route.ts"
+import {
+  resourceMetadataHandler,
+  resourceMetadataOptions,
+} from "@xmcp/adapter";
+
+const handler = resourceMetadataHandler({
+  authorizationServers: ["https://auth.example.com"],
+});
+
+export { handler as GET, resourceMetadataOptions as OPTIONS };
+```
+
+Tools read the verified result from the [request context](/docs/core-concepts/request-context). Whatever `verifyToken` put in `extra` is available on every call:
+
+```typescript title="tools/whoami.ts"
+import { getRequestContext, type ToolMetadata } from "xmcp";
+
+export const metadata: ToolMetadata = {
+  name: "whoami",
+  description: "Show the signed-in user's ID",
+};
+
+export default async function whoami() {
+  const userId = getRequestContext().authInfo?.extra?.userId;
+  return { structuredContent: { userId: userId ?? null } };
+}
+```
+
+The token is verified on every request. No identity is stored on the server between calls.
+
+The [auth-nextjs example](https://github.com/basementstudio/xmcp/tree/main/examples/auth-nextjs) has this setup with a test verifier. If you want the app to be the OAuth server too, the [better-auth-nextjs example](https://github.com/basementstudio/xmcp/tree/main/examples/better-auth-nextjs) protects the route with Better Auth's MCP plugin and adds login and consent pages:
+
+```typescript title="src/app/mcp/route.ts"
+import { xmcpHandler } from "@xmcp/adapter";
+import { requireMcpAuth } from "@better-auth/mcp";
+import { auth, mcpResource } from "@/lib/auth";
+
+const handler = requireMcpAuth(auth, (request) => xmcpHandler(request), {
+  resource: mcpResource,
+});
+
+export { handler as GET, handler as POST };
+```
+
+It needs PostgreSQL and `npx auth migrate`; the example README lists the steps. For choosing an approach, see [MCP server authentication](/blog/mcp-server-authentication).
+
+## How do I deploy a Next.js MCP server to Vercel?
+
+Push the project to Git and import it in Vercel. Nothing MCP-specific needs configuring:
+
+- Vercel uses your `build` script when one exists ([Vercel docs](https://vercel.com/docs/builds/configure-a-build)), so `xmcp build` runs before `next build`.
+- `@xmcp-dev/compiler` is a dev dependency. Vercel installs dev dependencies by default; keep it that way.
+- The MCP route ships as part of the Next.js deployment, at `https://<your-project>.vercel.app/mcp`.
+
+Add secrets such as API keys or auth server credentials in the project's environment variable settings, not as `NEXT_PUBLIC_` variables, which Next.js inlines into browser code ([Next.js docs](https://nextjs.org/docs/app/guides/environment-variables)). Changes to environment variables apply only to new deployments ([Vercel docs](https://vercel.com/docs/environment-variables)), so redeploy after editing them. For more on handling keys, see [MCP credentials](/blog/mcp-server-credentials).
+
+If you added auth, update production values before sharing the URL: the authorization server in the metadata route, the audience your verifier expects, and, for Better Auth, the `baseURL` and `mcpResource` in `src/lib/auth.ts`. Then point your client at the production URL and check that a request without a token gets `401`.
+
+## Should I use xmcp or Vercel's mcp-handler?
+
+Both mount an MCP route in Next.js. mcp-handler registers tools in code inside the route file. xmcp keeps one file per tool and adds a build step. [xmcp vs mcp-handler](/blog/xmcp-vs-mcp-handler) compares them on the same app.
+
+## Next steps
+
+- [Next.js adapter reference](/docs/adapters/nextjs): all options for the adapter.
+- [Tools](/docs/core-concepts/tools): schemas, annotations, and structured output.
+- [How to debug an MCP server](/blog/how-to-debug-mcp-server): when a client won't list your tools.
